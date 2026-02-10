@@ -92,7 +92,7 @@ export default function BitcoinPaymentModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full">
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-bold">Bitcoin Payment</h2>
+          <h2 className="text-xl font-semibold">Bitcoin Payment</h2>
           <Button variant="ghost" onClick={onClose}>
             <X className="w-5 h-5" />
           </Button>

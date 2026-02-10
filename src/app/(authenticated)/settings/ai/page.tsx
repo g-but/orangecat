@@ -13,6 +13,7 @@ import { AIKeyManager } from '@/components/ai/AIKeyManager';
 import { AIModelPreferences, type AIPreferences } from '@/components/ai/AIModelPreferences';
 import { AIUsageStats } from '@/components/ai/AIUsageStats';
 import { AIGuidanceSidebar } from '@/components/ai/AIGuidanceSidebar';
+import { AICreditsPricing } from '@/components/ai/AICreditsPricing';
 import type { AIFieldType } from '@/lib/ai-guidance';
 import { logger } from '@/utils/logger';
 
@@ -125,7 +126,7 @@ export default function AISettingsPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Status Card */}
@@ -179,6 +180,12 @@ export default function AISettingsPage() {
                   periodLabel: 'All time',
                 }}
               />
+            </section>
+
+            {/* Credits Pricing */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Credits & Pricing</h2>
+              <AICreditsPricing />
             </section>
           </div>
 

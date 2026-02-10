@@ -24,7 +24,7 @@ export default function ProofSection() {
             <Lightbulb className="w-4 h-4" />
             <span className="text-sm font-medium">Possibilities</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold text-gray-900 mb-3 sm:mb-4">
             {exampleUseCases.title}
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
@@ -52,7 +52,9 @@ export default function ProofSection() {
               </div>
 
               {/* Title & Description */}
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{useCase.title}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
+                {useCase.title}
+              </h3>
               <p className="text-sm sm:text-base text-gray-700 mb-4 leading-relaxed">
                 {useCase.description}
               </p>

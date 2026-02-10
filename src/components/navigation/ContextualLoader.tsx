@@ -243,8 +243,8 @@ export function ContextualLoader({ className, pathname: propPathname }: Contextu
           { icon: Target, text: 'Set collective goals' },
           { icon: CheckCircle, text: 'Vote on decisions' },
         ],
-        color: 'text-slate-600',
-        bgColor: 'bg-slate-50',
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-50',
       };
     }
 
@@ -365,7 +365,7 @@ export function ContextualLoader({ className, pathname: propPathname }: Contextu
         </div>
 
         {/* Title and subtitle */}
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">{content.title}</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">{content.title}</h2>
         <p className="text-gray-600 mb-8">{content.subtitle}</p>
 
         {/* Action list */}

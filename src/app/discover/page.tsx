@@ -397,7 +397,7 @@ export default function DiscoverPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 1.3 }}
-          className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-8"
+          className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-6"
         >
           {/* Left Sidebar - always visible on desktop, collapsible on mobile */}
           <aside className="hidden lg:block lg:col-span-3">

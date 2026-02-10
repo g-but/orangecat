@@ -81,13 +81,13 @@ function AssistantCard({ assistant }: { assistant: AIAssistant }) {
   return (
     <Link
       href={`/ai-chat/${assistant.id}`}
-      className="block bg-white rounded-xl border border-gray-200 hover:border-sky-300 hover:shadow-md transition-all p-5"
+      className="block bg-white rounded-xl border border-gray-200 hover:border-sky-300 hover:shadow-md transition-all p-6"
     >
       <div className="flex items-start gap-4">
         <Avatar className="h-14 w-14 flex-shrink-0">
           <AvatarImage src={assistant.avatar_url || undefined} />
           <AvatarFallback className="bg-purple-100 text-purple-600">
-            <Bot className="h-7 w-7" />
+            <Bot className="h-8 w-8" />
           </AvatarFallback>
         </Avatar>
 

@@ -1,44 +1,30 @@
-import type { MDXComponents } from 'mdx/types'
-import Link from 'next/link'
-import Image from 'next/image'
+import type { MDXComponents } from 'mdx/types';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     // Customize markdown elements
     h1: ({ children }) => (
-      <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
+      <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 leading-tight">
         {children}
       </h1>
     ),
     h2: ({ children }) => (
-      <h2 className="text-3xl font-bold text-gray-900 mb-6 mt-12 flex items-center">
+      <h2 className="text-2xl font-semibold text-gray-900 mb-6 mt-12 flex items-center">
         {children}
       </h2>
     ),
     h3: ({ children }) => (
-      <h3 className="text-2xl font-semibold text-gray-900 mb-4 mt-8">
-        {children}
-      </h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4 mt-8">{children}</h3>
     ),
     h4: ({ children }) => (
-      <h4 className="text-xl font-semibold text-gray-900 mb-3 mt-6">
-        {children}
-      </h4>
+      <h4 className="text-base font-semibold text-gray-900 mb-3 mt-6">{children}</h4>
     ),
-    p: ({ children }) => (
-      <p className="text-lg text-gray-700 leading-relaxed mb-6">
-        {children}
-      </p>
-    ),
-    ul: ({ children }) => (
-      <ul className="space-y-3 text-gray-700 mb-6 ml-6">
-        {children}
-      </ul>
-    ),
+    p: ({ children }) => <p className="text-lg text-gray-700 leading-relaxed mb-6">{children}</p>,
+    ul: ({ children }) => <ul className="space-y-3 text-gray-700 mb-6 ml-6">{children}</ul>,
     ol: ({ children }) => (
-      <ol className="space-y-3 text-gray-700 mb-6 ml-6 list-decimal">
-        {children}
-      </ol>
+      <ol className="space-y-3 text-gray-700 mb-6 ml-6 list-decimal">{children}</ol>
     ),
     li: ({ children }) => (
       <li className="flex items-start">
@@ -48,9 +34,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ),
     blockquote: ({ children }) => (
       <blockquote className="border-l-4 border-tiffany-500 pl-6 my-8 bg-tiffany-50 py-4 rounded-r-lg">
-        <div className="text-lg text-gray-700 italic">
-          {children}
-        </div>
+        <div className="text-lg text-gray-700 italic">{children}</div>
       </blockquote>
     ),
     code: ({ children }) => (
@@ -64,7 +48,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       </pre>
     ),
     a: ({ href, children }) => (
-      <Link 
+      <Link
         href={href || '#'}
         className="text-tiffany-600 hover:text-tiffany-700 font-medium underline"
       >
@@ -83,20 +67,22 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       </div>
     ),
     // Custom components for blog posts
-    Alert: ({ type = 'info', children }: { type?: 'info' | 'warning' | 'success' | 'error', children: React.ReactNode }) => {
+    Alert: ({
+      type = 'info',
+      children,
+    }: {
+      type?: 'info' | 'warning' | 'success' | 'error';
+      children: React.ReactNode;
+    }) => {
       const styles = {
         info: 'bg-blue-50 border-blue-200 text-blue-800',
         warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
         success: 'bg-green-50 border-green-200 text-green-800',
-        error: 'bg-red-50 border-red-200 text-red-800'
-      }
-      return (
-        <div className={`border rounded-xl p-6 mb-6 ${styles[type]}`}>
-          {children}
-        </div>
-      )
+        error: 'bg-red-50 border-red-200 text-red-800',
+      };
+      return <div className={`border rounded-xl p-6 mb-6 ${styles[type]}`}>{children}</div>;
     },
-    SecurityFeature: ({ title, description }: { title: string, description: string }) => (
+    SecurityFeature: ({ title, description }: { title: string; description: string }) => (
       <div className="bg-white border border-green-200 rounded-xl p-6 mb-6">
         <h4 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
           <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
@@ -106,5 +92,5 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       </div>
     ),
     ...components,
-  }
-} 
+  };
+}

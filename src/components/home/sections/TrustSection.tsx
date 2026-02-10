@@ -17,7 +17,7 @@ export default function TrustSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-10 sm:mb-12 lg:mb-16">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold text-gray-900 mb-3 sm:mb-4">
             {whyBitcoin.title}
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
@@ -132,7 +132,7 @@ export default function TrustSection() {
               className="text-center"
             >
               <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-100 to-orange-50 mb-3 sm:mb-4">
-                <benefit.icon className="w-7 h-7 sm:w-8 sm:h-8 text-bitcoinOrange" />
+                <benefit.icon className="w-6 h-6 sm:w-8 sm:h-8 text-bitcoinOrange" />
               </div>
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                 {benefit.title}

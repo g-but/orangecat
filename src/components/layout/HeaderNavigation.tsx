@@ -63,7 +63,7 @@ export function HeaderNavigation(props: HeaderNavigationProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className="block px-3 py-2 rounded-lg text-base text-gray-700 hover:text-orange-600 hover:bg-gray-50"
+                className="block px-3 py-2 min-h-[44px] rounded-lg text-base text-gray-700 hover:text-orange-600 hover:bg-gray-50"
                 onClick={onClose}
               >
                 {item.name}
@@ -89,7 +89,7 @@ export function HeaderNavigation(props: HeaderNavigationProps) {
                     <Link
                       key={`${sectionKey}-${link.href}`}
                       href={link.href}
-                      className="px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-orange-600 hover:bg-gray-50"
+                      className="px-3 py-2 min-h-[44px] rounded-lg text-sm text-gray-600 hover:text-orange-600 hover:bg-gray-50"
                       onClick={onClose}
                     >
                       {link.name}
@@ -197,7 +197,7 @@ function HeaderNavDropdown({ item, isActive }: HeaderNavDropdownProps) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-150 relative flex items-center gap-1',
+          'px-4 py-2.5 min-h-[44px] text-sm font-medium rounded-xl transition-all duration-150 relative flex items-center gap-1',
           hasActiveChild
             ? 'text-orange-600 bg-orange-50 shadow-sm'
             : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'
@@ -223,7 +223,7 @@ function HeaderNavDropdown({ item, isActive }: HeaderNavDropdownProps) {
                 key={child.href}
                 href={child.href}
                 className={cn(
-                  'block px-4 py-2.5 text-sm transition-colors',
+                  'block px-4 py-2.5 min-h-[44px] text-sm transition-colors',
                   isActive(child.href)
                     ? 'text-orange-600 bg-orange-50 font-medium'
                     : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'

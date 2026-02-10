@@ -191,7 +191,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Almost there! 🚀</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Almost there! 🚀</h2>
               <p className="text-gray-600">
                 Your project is ready to publish. Just sign in or create a quick account to post it.
               </p>

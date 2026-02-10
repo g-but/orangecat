@@ -332,14 +332,14 @@ export function LocationInput({
               key={suggestion.id}
               type="button"
               onClick={() => handleSuggestionSelect(suggestion)}
-              className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 focus:outline-none focus:bg-gray-50"
+              className="w-full px-4 py-3 min-h-[44px] text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 focus:outline-none focus:bg-gray-50"
             >
               <div className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-gray-900 truncate">{suggestion.mainText}</div>
                   {suggestion.secondaryText && (
-                    <div className="text-sm text-gray-500 truncate">{suggestion.secondaryText}</div>
+                    <div className="text-sm text-gray-600 truncate">{suggestion.secondaryText}</div>
                   )}
                 </div>
               </div>
@@ -350,7 +350,7 @@ export function LocationInput({
 
       {showSuggestions && inputValue.length >= 2 && suggestions.length === 0 && !isLoading && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-          <div className="text-sm text-gray-500 text-center">
+          <div className="text-sm text-gray-600 text-center">
             No locations found. Try typing a city name or address.
           </div>
         </div>

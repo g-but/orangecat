@@ -136,7 +136,7 @@ export function AssetRentalForm({
         <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
           <CheckCircle className="h-8 w-8 text-green-600" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Rental Request Sent!</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Rental Request Sent!</h3>
         <p className="text-gray-600 mb-6">
           Your rental request has been sent to the asset owner. You&apos;ll receive a notification
           when they respond.
@@ -179,9 +179,9 @@ export function AssetRentalForm({
             <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
             <div>
               <p className="font-medium text-gray-900">{formatDate(selectedStartDate)}</p>
-              <p className="text-sm text-gray-500">to</p>
+              <p className="text-sm text-gray-600">to</p>
               <p className="font-medium text-gray-900">{formatDate(selectedEndDate)}</p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-600 mt-1">
                 {periods} {getPeriodLabel()}
               </p>
             </div>
@@ -190,7 +190,7 @@ export function AssetRentalForm({
           <div className="flex items-start gap-3">
             <CreditCard className="h-5 w-5 text-gray-400 mt-0.5" />
             <div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-600">
                 {formatPrice(rentalPriceSats)} per {periodType.replace('ly', '')} × {periods}
               </p>
               <p className="font-medium text-gray-900">{formatPrice(totalPrice)}</p>
@@ -204,7 +204,7 @@ export function AssetRentalForm({
                 <p className="font-medium text-orange-600">
                   Security deposit: {formatPrice(depositAmountSats)}
                 </p>
-                <p className="text-sm text-gray-500">Refundable upon return</p>
+                <p className="text-sm text-gray-600">Refundable upon return</p>
               </div>
             </div>
           )}
@@ -222,7 +222,7 @@ export function AssetRentalForm({
 
       {/* Notes */}
       <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="notes" className="block text-sm font-medium text-gray-900 mb-2">
           <MessageSquare className="h-4 w-4 inline mr-1" />
           Notes for owner (optional)
         </label>

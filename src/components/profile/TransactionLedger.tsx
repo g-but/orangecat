@@ -53,7 +53,7 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
     >
-      <h2 className="text-2xl font-bold mb-6 text-center">Transaction History</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-center">Transaction History</h2>
 
       <div className="space-y-4">
         {transactions.map(transaction => (
@@ -83,7 +83,7 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
                   <div className="font-semibold">
                     {transaction.type === 'incoming' ? 'Received' : 'Sent'} {transaction.amount} BTC
                   </div>
-                  <div className="text-sm text-slate-500">
+                  <div className="text-sm text-gray-500">
                     {formatDistanceToNow(new Date(transaction.timestamp), { addSuffix: true })}
                   </div>
                 </div>
@@ -94,7 +94,7 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
                   className={`flex items-center gap-1 transition-colors ${
                     activeReactions[transaction.id] === 'like'
                       ? 'text-tiffany'
-                      : 'text-slate-500 hover:text-tiffany'
+                      : 'text-gray-500 hover:text-tiffany'
                   }`}
                   onClick={() => handleReaction(transaction.id, 'like')}
                 >
@@ -105,7 +105,7 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
                   className={`flex items-center gap-1 transition-colors ${
                     activeReactions[transaction.id] === 'dislike'
                       ? 'text-tiffany'
-                      : 'text-slate-500 hover:text-tiffany'
+                      : 'text-gray-500 hover:text-tiffany'
                   }`}
                   onClick={() => handleReaction(transaction.id, 'dislike')}
                 >
@@ -116,7 +116,7 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
                   className={`flex items-center gap-1 transition-colors ${
                     expandedComments[transaction.id]
                       ? 'text-tiffany'
-                      : 'text-slate-500 hover:text-tiffany'
+                      : 'text-gray-500 hover:text-tiffany'
                   }`}
                   onClick={() => toggleComments(transaction.id)}
                 >
@@ -127,8 +127,8 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
             </div>
 
             {transaction.explanation && (
-              <div className="mt-3 p-3 bg-slate-50 rounded-lg">
-                <p className="text-slate-600">{transaction.explanation}</p>
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <p className="text-gray-600">{transaction.explanation}</p>
               </div>
             )}
 
@@ -136,18 +136,18 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
               <div className="mt-4 space-y-3">
                 {transaction.comments.length > 0 ? (
                   transaction.comments.map(comment => (
-                    <div key={comment.id} className="pl-4 border-l-2 border-slate-200">
+                    <div key={comment.id} className="pl-4 border-l-2 border-gray-200">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold">{comment.author}</span>
-                        <span className="text-sm text-slate-500">
+                        <span className="text-sm text-gray-500">
                           {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
                         </span>
                       </div>
-                      <p className="text-slate-600 mt-1">{comment.text}</p>
+                      <p className="text-gray-600 mt-1">{comment.text}</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-slate-500 text-center py-2">No comments yet</p>
+                  <p className="text-gray-500 text-center py-2">No comments yet</p>
                 )}
               </div>
             )}

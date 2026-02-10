@@ -43,7 +43,7 @@ function WalletCard({ rec, index }: { rec: WalletRecommendation; index: number }
               )}
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">{rec.wallet.name}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{rec.wallet.name}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -143,7 +143,7 @@ export function WalletResultsView({
     >
       {/* Results Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
           Your Personalized Wallet Recommendations
         </h2>
         <p className="text-gray-600">

@@ -60,17 +60,13 @@ export function BulkActionsToolbar({
             onClick={onSelectAll}
             disabled={isProcessing}
             className={cn(
-              "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-              "hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed",
-              allSelected ? "text-sky-600" : "text-gray-600"
+              'flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors',
+              'hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed',
+              allSelected ? 'text-sky-600' : 'text-gray-600'
             )}
-            aria-label={allSelected ? "Deselect all" : "Select all"}
+            aria-label={allSelected ? 'Deselect all' : 'Select all'}
           >
-            {allSelected ? (
-              <CheckSquare className="w-4 h-4" />
-            ) : (
-              <Square className="w-4 h-4" />
-            )}
+            {allSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
             <span className="hidden sm:inline">{allSelected ? 'Deselect all' : 'Select all'}</span>
           </button>
 
@@ -101,10 +97,7 @@ export function BulkActionsToolbar({
             {showVisibilityMenu && (
               <>
                 {/* Backdrop to close menu */}
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setShowVisibilityMenu(false)}
-                />
+                <div className="fixed inset-0 z-40" onClick={() => setShowVisibilityMenu(false)} />
                 <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1">
                   <button
                     onClick={() => {
@@ -156,7 +149,7 @@ export function BulkActionsToolbar({
             size="sm"
             onClick={onExitSelectionMode}
             disabled={isProcessing}
-            className="text-gray-500 hover:text-gray-700 p-2"
+            className="text-gray-500 hover:text-gray-700 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Exit selection mode"
           >
             <X className="w-4 h-4" />

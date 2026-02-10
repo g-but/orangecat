@@ -243,7 +243,7 @@ export default function FeaturedProjects({
     <div className={`space-y-6 ${className}`}>
       {showHeader && (
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2 flex items-center justify-center gap-2">
             <Zap className="w-6 h-6 text-orange-500" />
             Featured Projects
           </h2>

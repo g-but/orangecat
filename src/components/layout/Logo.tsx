@@ -24,8 +24,8 @@ export interface LogoProps {
 }
 
 const iconSizeClasses = {
-  sm: 'w-7 h-7',
-  md: 'w-8 h-8 sm:w-9 sm:h-9',
+  sm: 'w-8 h-8',
+  md: 'w-8 h-8 sm:w-10 sm:h-10',
   lg: 'w-12 h-12',
   xl: 'w-16 h-16',
 };

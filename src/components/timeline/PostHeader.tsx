@@ -79,7 +79,7 @@ export function PostHeader({
       {/* User Info - X-style inline */}
       <Link
         href={`/profiles/${displayAuthor.username}`}
-        className="font-bold text-[15px] text-gray-900 hover:underline"
+        className="font-bold text-sm text-gray-900 hover:underline"
         onClick={e => e.stopPropagation()}
       >
         {displayAuthor.name}
@@ -87,7 +87,7 @@ export function PostHeader({
 
       <Link
         href={`/profiles/${displayAuthor.username}`}
-        className="text-gray-500 text-[15px]"
+        className="text-gray-500 text-sm"
         onClick={e => e.stopPropagation()}
       >
         @{displayAuthor.username}
@@ -98,7 +98,7 @@ export function PostHeader({
       {/* Timestamp */}
       <time
         dateTime={timestamp}
-        className="text-gray-500 text-[15px] hover:underline"
+        className="text-gray-500 text-sm hover:underline"
         title={timestamp ? new Date(timestamp).toLocaleString() : undefined}
       >
         {timestamp ? formatTimestamp(timestamp) : ''}
@@ -107,14 +107,14 @@ export function PostHeader({
       {/* Visibility Indicator - only show if private */}
       {event.visibility === 'private' && (
         <span title="Private post">
-          <Lock className="w-3.5 h-3.5 text-gray-400 ml-1" />
+          <Lock className="w-4 h-4 text-gray-400 ml-1" />
         </span>
       )}
 
       {/* Edited indicator */}
       {isEdited && (
         <span
-          className="text-gray-400 text-[13px]"
+          className="text-gray-400 text-xs"
           title={updatedTimestamp ? `Edited ${formatTimestamp(updatedTimestamp)}` : 'Edited'}
         >
           · edited
@@ -129,7 +129,7 @@ export function PostHeader({
               e.stopPropagation();
               onMenuToggle();
             }}
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1.5 -mr-1.5 transition-colors"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1.5 -mr-1.5 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Post options"
             aria-expanded={showMenu}
             aria-haspopup="menu"
@@ -149,7 +149,7 @@ export function PostHeader({
                     e.stopPropagation();
                     onEdit?.();
                   }}
-                  className="w-full text-left px-4 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
                   role="menuitem"
                 >
                   <Pencil className="w-4 h-4" />
@@ -160,7 +160,7 @@ export function PostHeader({
                     e.stopPropagation();
                     onDelete?.();
                   }}
-                  className="w-full text-left px-4 py-2.5 text-[15px] text-red-600 hover:bg-red-50 flex items-center gap-3"
+                  className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
                   role="menuitem"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -176,4 +176,3 @@ export function PostHeader({
 }
 
 export default PostHeader;
-

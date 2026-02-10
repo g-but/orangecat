@@ -36,11 +36,11 @@ export default function TechnologyPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Core Principles */}
         <div className="mb-20">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Core Principles</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-8 text-center">Core Principles</h2>
+          <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-orange-500">
               <Bitcoin className="h-12 w-12 text-orange-600 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Bitcoin-Native</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Bitcoin-Native</h3>
               <p className="text-gray-600">
                 True peer-to-peer payments with no intermediaries. Your Bitcoin, your control.
               </p>
@@ -48,7 +48,7 @@ export default function TechnologyPage() {
 
             <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-orange-500">
               <Shield className="h-12 w-12 text-orange-600 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Transparent</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Transparent</h3>
               <p className="text-gray-600">
                 All transactions are publicly verifiable on the Bitcoin blockchain. No hidden fees.
               </p>
@@ -56,7 +56,7 @@ export default function TechnologyPage() {
 
             <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-orange-500">
               <Zap className="h-12 w-12 text-orange-600 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Zero Platform Fees</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Zero Platform Fees</h3>
               <p className="text-gray-600">
                 We don't take a cut. 100% of your support goes directly to creators.
               </p>
@@ -66,14 +66,16 @@ export default function TechnologyPage() {
 
         {/* Tech Stack */}
         <div className="mb-20">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Technology Stack</h2>
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="grid md:grid-cols-2 gap-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-8 text-center">
+            Technology Stack
+          </h2>
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="grid md:grid-cols-2 gap-6">
               {/* Frontend */}
               <div>
                 <div className="flex items-center mb-4">
                   <Globe className="h-6 w-6 text-orange-600 mr-2" />
-                  <h3 className="text-xl font-semibold text-gray-900">Frontend</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Frontend</h3>
                 </div>
                 <ul className="space-y-3">
                   <li className="flex items-start">
@@ -106,7 +108,7 @@ export default function TechnologyPage() {
               <div>
                 <div className="flex items-center mb-4">
                   <Server className="h-6 w-6 text-orange-600 mr-2" />
-                  <h3 className="text-xl font-semibold text-gray-900">Backend</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Backend</h3>
                 </div>
                 <ul className="space-y-3">
                   <li className="flex items-start">
@@ -139,7 +141,7 @@ export default function TechnologyPage() {
               <div>
                 <div className="flex items-center mb-4">
                   <Bitcoin className="h-6 w-6 text-orange-600 mr-2" />
-                  <h3 className="text-xl font-semibold text-gray-900">Bitcoin Integration</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Bitcoin Integration</h3>
                 </div>
                 <ul className="space-y-3">
                   <li className="flex items-start">
@@ -170,7 +172,7 @@ export default function TechnologyPage() {
               <div>
                 <div className="flex items-center mb-4">
                   <Lock className="h-6 w-6 text-orange-600 mr-2" />
-                  <h3 className="text-xl font-semibold text-gray-900">Security</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Security</h3>
                 </div>
                 <ul className="space-y-3">
                   <li className="flex items-start">
@@ -201,9 +203,9 @@ export default function TechnologyPage() {
         </div>
 
         {/* Open Source */}
-        <div className="bg-gradient-to-r from-orange-100 to-orange-50 rounded-lg p-8 text-center">
+        <div className="bg-gradient-to-r from-orange-100 to-orange-50 rounded-lg p-6 text-center">
           <Code className="h-16 w-16 text-orange-600 mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Open Source Philosophy</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Open Source Philosophy</h2>
           <p className="text-lg text-gray-700 mb-6 max-w-3xl mx-auto">
             We believe in transparency and community-driven development. Our code is open for
             review, contributions, and audits by the Bitcoin community.

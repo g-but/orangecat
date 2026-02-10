@@ -140,7 +140,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
 
           <button
             onClick={handleDismiss}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-white/50 transition-colors"
+            className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-white/50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Dismiss"
           >
             <X className="w-5 h-5" />

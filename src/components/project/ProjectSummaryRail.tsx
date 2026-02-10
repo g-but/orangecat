@@ -97,7 +97,7 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
   }, [project.id, project.bitcoin_address]);
 
   return (
-    <aside className="sticky top-6 rounded-xl border bg-white p-5 space-y-4">
+    <aside className="sticky top-6 rounded-xl border bg-white p-6 space-y-4">
       <div>
         <div className="text-2xl font-bold">{formatCurrency(amountRaised, goalCurrency)}</div>
         {project.goal_amount && (

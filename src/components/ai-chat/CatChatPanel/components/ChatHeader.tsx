@@ -92,7 +92,7 @@ export function ChatHeader({
           </Badge>
         )}
         <button
-          className="p-2 rounded-lg hover:bg-gray-100"
+          className="p-2 rounded-lg hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
           onClick={onSettingsClick}
           title="Local model settings"
         >

@@ -51,7 +51,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
               <TypeBadge />
             </div>
             {profile.username && (
-              <p className="text-sm text-gray-500 truncate">@{profile.username}</p>
+              <p className="text-sm text-gray-600 truncate">@{profile.username}</p>
             )}
             {profile.bio && (
               <p className="text-sm text-gray-600 mt-1 line-clamp-2">{profile.bio}</p>
@@ -94,7 +94,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
           <TypeBadge />
         </div>
 
-        {profile.username && <p className="text-sm text-gray-500 mb-3">@{profile.username}</p>}
+        {profile.username && <p className="text-sm text-gray-600 mb-3">@{profile.username}</p>}
 
         {profile.bio && <p className="text-sm text-gray-600 mb-4 line-clamp-3">{profile.bio}</p>}
 

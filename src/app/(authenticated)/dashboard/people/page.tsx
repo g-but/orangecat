@@ -418,7 +418,7 @@ export default function PeoplePage() {
           <Card>
             <CardContent className="p-12 text-center">
               <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No connections yet</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No connections yet</h3>
               <p className="text-gray-600 mb-6">{emptyMessage}</p>
               <Link href="/discover?section=people">
                 <Button>

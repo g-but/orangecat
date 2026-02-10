@@ -18,7 +18,7 @@ export default function StoriesPageClient({ stories, categories }: StoriesPageCl
   const [searchTerm, setSearchTerm] = useState('');
 
   // Filter stories based on category and search term
-  const filteredStories = stories.filter((story) => {
+  const filteredStories = stories.filter(story => {
     const matchesCategory = selectedCategory === 'All' || story.category === selectedCategory;
     const matchesSearch =
       searchTerm === '' ||
@@ -45,14 +45,20 @@ export default function StoriesPageClient({ stories, categories }: StoriesPageCl
               <span className="bg-white bg-clip-text text-transparent">Real Projects.</span>
             </h1>
             <p className="text-lg sm:text-xl max-w-3xl mx-auto opacity-90 mb-8">
-              From artists to entrepreneurs, medical researchers to educators—real stories of how direct Bitcoin funding makes real change.
+              From artists to entrepreneurs, medical researchers to educators—real stories of how
+              direct Bitcoin funding makes real change.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="secondary" size="lg" href="/">
                 <ArrowLeft className="mr-2 h-5 w-5" />
                 Back to Home
               </Button>
-              <Button variant="outline" size="lg" href="/auth" className="bg-white/10 border-white/30 hover:bg-white/20">
+              <Button
+                variant="outline"
+                size="lg"
+                href="/auth"
+                className="bg-white/10 border-white/30 hover:bg-white/20"
+              >
                 Start Your Project
               </Button>
             </div>
@@ -70,7 +76,7 @@ export default function StoriesPageClient({ stories, categories }: StoriesPageCl
                 type="text"
                 placeholder="Search stories..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bitcoinOrange focus:border-transparent"
               />
             </div>
@@ -78,7 +84,7 @@ export default function StoriesPageClient({ stories, categories }: StoriesPageCl
             {/* Category Filter */}
             <div className="flex items-center gap-2 flex-wrap justify-center">
               <Filter className="w-5 h-5 text-gray-500 hidden sm:block" />
-              {categories.map((category) => (
+              {categories.map(category => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
@@ -119,7 +125,7 @@ export default function StoriesPageClient({ stories, categories }: StoriesPageCl
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {filteredStories.map((story, index) => (
                 <motion.div
                   key={story.id}
@@ -128,7 +134,9 @@ export default function StoriesPageClient({ stories, categories }: StoriesPageCl
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <Card className={`h-full bg-gradient-to-br ${story.gradient} border-0 shadow-lg hover:shadow-xl transition-shadow`}>
+                  <Card
+                    className={`h-full bg-gradient-to-br ${story.gradient} border-0 shadow-lg hover:shadow-xl transition-shadow`}
+                  >
                     <div className="p-8">
                       {/* Story Header */}
                       <div className="flex items-start gap-4 mb-6">
@@ -136,7 +144,9 @@ export default function StoriesPageClient({ stories, categories }: StoriesPageCl
                           {story.emoji}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-2xl font-bold text-gray-900 mb-1">{story.name}</h3>
+                          <h3 className="text-2xl font-semibold text-gray-900 mb-1">
+                            {story.name}
+                          </h3>
                           <p className="text-gray-700 font-medium">{story.role}</p>
                           <p className="text-gray-600 text-sm">{story.location}</p>
                         </div>
@@ -163,7 +173,9 @@ export default function StoriesPageClient({ stories, categories }: StoriesPageCl
                       </div>
 
                       {/* Summary */}
-                      <p className="text-gray-700 font-medium mb-6 leading-relaxed">{story.summary}</p>
+                      <p className="text-gray-700 font-medium mb-6 leading-relaxed">
+                        {story.summary}
+                      </p>
 
                       {/* Story Content (MDX) */}
                       <div className="prose prose-sm max-w-none mb-6 text-gray-700">

@@ -145,7 +145,7 @@ export function BookingCalendar({ serviceId, onSlotSelect, selectedSlot }: Booki
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <button
           onClick={handlePrevMonth}
-          className="p-1 rounded hover:bg-gray-100"
+          className="p-2 min-h-[44px] min-w-[44px] rounded hover:bg-gray-100"
           aria-label="Previous month"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -155,7 +155,7 @@ export function BookingCalendar({ serviceId, onSlotSelect, selectedSlot }: Booki
         </h3>
         <button
           onClick={handleNextMonth}
-          className="p-1 rounded hover:bg-gray-100"
+          className="p-2 min-h-[44px] min-w-[44px] rounded hover:bg-gray-100"
           aria-label="Next month"
         >
           <ChevronRight className="h-5 w-5" />
@@ -177,7 +177,7 @@ export function BookingCalendar({ serviceId, onSlotSelect, selectedSlot }: Booki
         <div className="grid grid-cols-7 gap-1">
           {days.map((date, index) => {
             if (!date) {
-              return <div key={`empty-${index}`} className="h-10" />;
+              return <div key={`empty-${index}`} className="h-11" />;
             }
 
             const isPast = date < today;
@@ -190,7 +190,7 @@ export function BookingCalendar({ serviceId, onSlotSelect, selectedSlot }: Booki
                 onClick={() => handleDateClick(date)}
                 disabled={isPast}
                 className={cn(
-                  'h-10 w-full rounded-md text-sm font-medium transition-colors',
+                  'h-11 w-full rounded-md text-sm font-medium transition-colors',
                   isPast && 'text-gray-300 cursor-not-allowed',
                   !isPast && !isSelected && 'hover:bg-gray-100 text-gray-700',
                   isSelected && 'bg-sky-500 text-white',
@@ -222,7 +222,7 @@ export function BookingCalendar({ serviceId, onSlotSelect, selectedSlot }: Booki
               <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             </div>
           ) : slots.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-8">
+            <p className="text-sm text-gray-600 text-center py-8">
               No available slots for this date
             </p>
           ) : (

@@ -50,7 +50,7 @@ export default function WhatCanYouDoSection() {
             <Sparkles className="w-4 h-4" />
             <span className="text-sm font-medium">Super-App</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold text-gray-900 mb-3 sm:mb-4">
             {whatCanYouDo.title}
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
@@ -84,7 +84,7 @@ export default function WhatCanYouDoSection() {
                       <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+                      <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">
                         {category.title}
                       </h3>
                       <p className="text-sm sm:text-base text-gray-600">{category.description}</p>

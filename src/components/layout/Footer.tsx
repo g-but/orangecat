@@ -50,10 +50,10 @@ const Footer = React.memo(function Footer() {
                   className="opacity-80 hover:opacity-100 transition-opacity"
                 />
               </div>
-              <p className="text-slate-600 text-base leading-relaxed max-w-xs">
+              <p className="text-gray-600 text-base leading-relaxed max-w-xs">
                 Making Bitcoin funding simple and accessible for everyone.
               </p>
-              <p className="text-slate-500 text-sm">
+              <p className="text-gray-500 text-sm">
                 A{' '}
                 <Link
                   href="/company/about"
@@ -71,7 +71,7 @@ const Footer = React.memo(function Footer() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="group w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-gradient-to-r hover:from-orange-500 hover:to-tiffany-500 transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                  className="group w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-orange-500 hover:to-tiffany-500 transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Follow us on ${item.name}`}
@@ -86,7 +86,7 @@ const Footer = React.memo(function Footer() {
 
           {/* Navigation Links */}
           <div className="space-y-6">
-            <h3 className="text-sm font-bold text-gray-900 tracking-wider uppercase relative">
+            <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase relative">
               <span className="bg-gradient-to-r from-orange-500 to-tiffany-500 bg-clip-text text-transparent">
                 Navigation
               </span>
@@ -97,7 +97,7 @@ const Footer = React.memo(function Footer() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="group flex items-center text-base text-slate-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
+                    className="group flex items-center text-base text-gray-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
                   >
                     <span className="group-hover:translate-x-1 transition-transform duration-300">
                       {item.name}
@@ -110,7 +110,7 @@ const Footer = React.memo(function Footer() {
 
           {/* Company Links */}
           <div className="space-y-6">
-            <h3 className="text-sm font-bold text-gray-900 tracking-wider uppercase relative">
+            <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase relative">
               <span className="bg-gradient-to-r from-orange-500 to-tiffany-500 bg-clip-text text-transparent">
                 Company
               </span>
@@ -124,7 +124,7 @@ const Footer = React.memo(function Footer() {
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group flex items-center text-base text-slate-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
+                      className="group flex items-center text-base text-gray-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
                     >
                       <span className="group-hover:translate-x-1 transition-transform duration-300">
                         {item.name}
@@ -133,7 +133,7 @@ const Footer = React.memo(function Footer() {
                   ) : (
                     <Link
                       href={item.href}
-                      className="group flex items-center text-base text-slate-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
+                      className="group flex items-center text-base text-gray-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
                     >
                       <span className="group-hover:translate-x-1 transition-transform duration-300">
                         {item.name}
@@ -147,7 +147,7 @@ const Footer = React.memo(function Footer() {
 
           {/* Legal Links */}
           <div className="space-y-6">
-            <h3 className="text-sm font-bold text-gray-900 tracking-wider uppercase relative">
+            <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase relative">
               <span className="bg-gradient-to-r from-orange-500 to-tiffany-500 bg-clip-text text-transparent">
                 Legal
               </span>
@@ -158,7 +158,7 @@ const Footer = React.memo(function Footer() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="group flex items-center text-base text-slate-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
+                    className="group flex items-center text-base text-gray-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
                   >
                     <span className="group-hover:translate-x-1 transition-transform duration-300">
                       {item.name}
@@ -171,14 +171,14 @@ const Footer = React.memo(function Footer() {
 
           {/* Newsletter/CTA Section */}
           <div className="space-y-6 sm:col-span-2 lg:col-span-1">
-            <h3 className="text-sm font-bold text-gray-900 tracking-wider uppercase relative">
+            <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase relative">
               <span className="bg-gradient-to-r from-orange-500 to-tiffany-500 bg-clip-text text-transparent">
                 Stay Updated
               </span>
               <div className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-orange-500 to-tiffany-500 rounded-full"></div>
             </h3>
             <div className="space-y-4">
-              <p className="text-sm text-slate-600 leading-relaxed">
+              <p className="text-sm text-gray-600 leading-relaxed">
                 Get the latest updates on Bitcoin fundraising and community building.
               </p>
               <Link
@@ -194,7 +194,7 @@ const Footer = React.memo(function Footer() {
         {/* Bottom Section */}
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gradient-to-r from-orange-200/50 to-tiffany-200/50">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
-            <div className="text-sm text-slate-500 text-center sm:text-left">
+            <div className="text-sm text-gray-500 text-center sm:text-left">
               <p>&copy; 2025 BitBaum AG. All rights reserved.</p>
               <p className="mt-1">
                 OrangeCat is a product of{' '}
@@ -212,7 +212,7 @@ const Footer = React.memo(function Footer() {
             <div className="flex items-center space-x-6 text-sm">
               <Link
                 href="/docs"
-                className="text-slate-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
+                className="text-gray-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
               >
                 Documentation
               </Link>
@@ -220,19 +220,19 @@ const Footer = React.memo(function Footer() {
                 href="https://github.com/g-but/orangecat"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-slate-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
+                className="text-gray-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
               >
                 Source Code
               </a>
               <Link
                 href="/technology"
-                className="text-slate-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
+                className="text-gray-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
               >
                 Technology
               </Link>
               <Link
                 href="/faq"
-                className="text-slate-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
+                className="text-gray-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
               >
                 FAQ
               </Link>

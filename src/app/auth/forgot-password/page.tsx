@@ -1,61 +1,61 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, Mail, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import Card from '@/components/ui/Card'
-import { resetPassword } from '@/services/supabase/auth'
-import Link from 'next/link'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Mail, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Card from '@/components/ui/Card';
+import { resetPassword } from '@/services/supabase/auth';
+import Link from 'next/link';
 
 export default function ForgotPasswordPage() {
-  const router = useRouter()
-  const [step, setStep] = useState<'form' | 'success' | 'error'>('form')
-  const [email, setEmail] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const [step, setStep] = useState<'form' | 'success' | 'error'>('form');
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
     try {
       if (!email) {
-        throw new Error('Please enter your email address')
+        throw new Error('Please enter your email address');
       }
 
       // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        throw new Error('Please enter a valid email address')
+        throw new Error('Please enter a valid email address');
       }
 
-      const result = await resetPassword({ email })
+      const result = await resetPassword({ email });
 
       if (result.error) {
-        throw new Error(result.error.message || 'Failed to send reset email')
+        throw new Error(result.error.message || 'Failed to send reset email');
       }
 
-      setStep('success')
+      setStep('success');
     } catch (error: unknown) {
       const catchError = error as { message?: string };
-      setError(catchError.message || 'Failed to send password reset email')
-      setStep('error')
+      setError(catchError.message || 'Failed to send password reset email');
+      setStep('error');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRetry = () => {
-    setStep('form')
-    setError(null)
-  }
+    setStep('form');
+    setError(null);
+  };
 
   const handleBackToLogin = () => {
-    router.push('/auth?mode=login')
-  }
+    router.push('/auth?mode=login');
+  };
 
   if (step === 'success') {
     return (
@@ -66,18 +66,14 @@ export default function ForgotPasswordPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-6">
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
-            
+
             {/* Success Message */}
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">
-              Check Your Email
-            </h1>
-            <p className="text-gray-600 mb-2">
-              We've sent password reset instructions to:
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Check Your Email</h1>
+            <p className="text-gray-600 mb-2">We've sent password reset instructions to:</p>
             <p className="text-sm font-medium text-orange-600 bg-orange-50 px-3 py-2 rounded-lg mb-6">
               {email}
             </p>
-            
+
             {/* Instructions */}
             <div className="text-left bg-gray-50 rounded-lg p-4 mb-6">
               <h3 className="font-medium text-gray-900 mb-2">Next steps:</h3>
@@ -90,17 +86,13 @@ export default function ForgotPasswordPage() {
 
             {/* Actions */}
             <div className="space-y-3">
-              <Button
-                onClick={handleBackToLogin}
-                variant="primary"
-                className="w-full"
-              >
+              <Button onClick={handleBackToLogin} variant="primary" className="w-full">
                 Back to Login
               </Button>
-              
+
               <p className="text-xs text-gray-500">
                 Didn't receive an email? Check your spam folder or{' '}
-                <button 
+                <button
                   onClick={handleRetry}
                   className="text-orange-600 hover:text-orange-700 underline"
                 >
@@ -111,7 +103,7 @@ export default function ForgotPasswordPage() {
           </div>
         </Card>
       </div>
-    )
+    );
   }
 
   if (step === 'error') {
@@ -123,37 +115,25 @@ export default function ForgotPasswordPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 mb-6">
               <AlertCircle className="h-8 w-8 text-red-600" />
             </div>
-            
+
             {/* Error Message */}
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">
-              Something Went Wrong
-            </h1>
-            <p className="text-gray-600 mb-6">
-              {error}
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Something Went Wrong</h1>
+            <p className="text-gray-600 mb-6">{error}</p>
 
             {/* Actions */}
             <div className="space-y-3">
-              <Button
-                onClick={handleRetry}
-                variant="primary"
-                className="w-full"
-              >
+              <Button onClick={handleRetry} variant="primary" className="w-full">
                 Try Again
               </Button>
-              
-              <Button
-                onClick={handleBackToLogin}
-                variant="outline"
-                className="w-full"
-              >
+
+              <Button onClick={handleBackToLogin} variant="outline" className="w-full">
                 Back to Login
               </Button>
             </div>
           </div>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -165,23 +145,21 @@ export default function ForgotPasswordPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-orange-100 to-tiffany-100 mb-6">
             <Mail className="h-8 w-8 text-orange-600" />
           </div>
-          
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Reset Your Password
-          </h1>
+
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Reset Your Password</h1>
           <p className="text-gray-600">
             Enter your email address and we'll send you instructions to reset your password.
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Input
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               placeholder="Enter your email address"
               icon={Mail}
               disabled={isLoading}
@@ -189,12 +167,7 @@ export default function ForgotPasswordPage() {
             />
           </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            className="w-full"
-            disabled={isLoading || !email}
-          >
+          <Button type="submit" variant="primary" className="w-full" disabled={isLoading || !email}>
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -224,12 +197,15 @@ export default function ForgotPasswordPage() {
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
             Remember your password?{' '}
-            <Link href="/auth?mode=login" className="text-orange-600 hover:text-orange-700 underline">
+            <Link
+              href="/auth?mode=login"
+              className="text-orange-600 hover:text-orange-700 underline"
+            >
               Sign in instead
             </Link>
           </p>
         </div>
       </Card>
     </div>
-  )
-} 
+  );
+}

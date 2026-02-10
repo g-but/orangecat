@@ -147,7 +147,7 @@ export default function DashboardInfoPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           {/* Main Content - 2/3 width on desktop */}
           <div className="xl:col-span-2 space-y-4 sm:space-y-6">
             {/* Profile Overview */}
@@ -174,7 +174,7 @@ export default function DashboardInfoPage() {
                   {/* Profile Info */}
                   <div className="flex-1 min-w-0 text-center sm:text-left">
                     <div className="mb-4">
-                      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                      <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
                         {profile.name || profile.username || 'Anonymous User'}
                       </h2>
                       {profile.username && (

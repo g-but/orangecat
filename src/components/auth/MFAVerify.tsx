@@ -136,7 +136,7 @@ export function MFAVerify({ onVerificationComplete, onCancel }: MFAVerifyProps) 
         <CardDescription>Enter the 6-digit code from your authenticator app</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Code input */}
           <div className="space-y-2">
             <input

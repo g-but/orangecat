@@ -107,7 +107,7 @@ export default function IntelligentOnboarding() {
         <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <MessageSquare className="w-8 h-8 text-orange-600" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">What do you need Bitcoin for?</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">What do you need Bitcoin for?</h2>
         <p className="text-gray-600">
           Tell us about your project, cause, or idea. We'll help you set up the perfect Bitcoin
           fundraising solution.
@@ -234,7 +234,7 @@ export default function IntelligentOnboarding() {
         <div className="w-16 h-16 bg-gradient-to-br from-tiffany-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Lightbulb className="w-8 h-8 text-tiffany-600" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Analyzing Your Needs...</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Analyzing Your Needs...</h2>
         <p className="text-gray-600">Analyzing keywords, context, and requirements...</p>
       </div>
 
@@ -327,7 +327,7 @@ export default function IntelligentOnboarding() {
   const Step4 = (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Ready to Get Started?</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Ready to Get Started?</h2>
         <p className="text-gray-600">
           Create your personal Bitcoin fundraising project and start making an impact.
         </p>
@@ -343,7 +343,7 @@ export default function IntelligentOnboarding() {
           </div>
           <div className="flex items-center gap-3 mb-4">
             <User className="w-8 h-8 text-orange-600" />
-            <h3 className="text-xl font-semibold text-orange-800">Create Your Personal Project</h3>
+            <h3 className="text-lg font-semibold text-orange-800">Create Your Personal Project</h3>
           </div>
           <p className="text-orange-700 mb-4">
             Start your Bitcoin fundraising journey with a personal project. Full control,

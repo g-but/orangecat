@@ -121,7 +121,7 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
     <div className="space-y-4">
       {/* Header with count */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
           <Target className="w-5 h-5 text-orange-500" />
           {publicProjects.length} {publicProjects.length === 1 ? 'Project' : 'Projects'}
         </h3>

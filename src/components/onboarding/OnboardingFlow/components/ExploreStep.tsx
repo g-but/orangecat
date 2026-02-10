@@ -47,7 +47,7 @@ export function ExploreStep() {
   return (
     <div className="space-y-6">
       <div className="text-center mb-4">
-        <h3 className="text-xl font-bold mb-2">Explore & Connect</h3>
+        <h3 className="text-lg font-semibold mb-2">Explore & Connect</h3>
         <p className="text-sm text-muted-foreground">
           Discover what's happening on OrangeCat and find your community.
         </p>

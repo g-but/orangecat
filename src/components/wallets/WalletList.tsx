@@ -58,12 +58,12 @@ export function WalletList({ wallets, onRefresh: _onRefresh, onTransfer }: Walle
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-500">{behaviorInfo.label}</p>
+              <p className="text-sm text-gray-600">{behaviorInfo.label}</p>
             </div>
           </div>
           <div className="text-right">
             <p className="font-medium text-gray-900">{formatBtc(wallet.balance_btc)} BTC</p>
-            <p className="text-sm text-gray-500">{formatUsd(wallet.balance_btc)}</p>
+            <p className="text-sm text-gray-600">{formatUsd(wallet.balance_btc)}</p>
           </div>
         </div>
 

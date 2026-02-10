@@ -34,7 +34,7 @@ export function WalletEmptyState({ isOwner, onAddClick }: WalletEmptyStateProps)
             className="text-sm text-gray-600 hover:text-orange-600 transition-colors inline-flex items-center gap-1"
           >
             I don't have a wallet yet
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink className="w-4 h-4" />
           </Link>
         </div>
       )}

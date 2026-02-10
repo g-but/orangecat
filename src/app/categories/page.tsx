@@ -46,13 +46,13 @@ export default function CategoriesPage() {
               return null;
             }
             return (
-              <div key={category.id} className="bg-white rounded-lg shadow-sm p-8">
+              <div key={category.id} className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex items-center mb-6">
                   <div className="w-12 h-12 rounded-full bg-tiffany-50 flex items-center justify-center">
                     <Icon className="w-6 h-6 text-tiffany-500" />
                   </div>
                   <div className="ml-4">
-                    <h2 className="text-2xl font-bold text-gray-900">{category.name}</h2>
+                    <h2 className="text-2xl font-semibold text-gray-900">{category.name}</h2>
                     <p className="text-gray-600">{category.description}</p>
                   </div>
                 </div>

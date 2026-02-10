@@ -42,7 +42,7 @@ export function GetStartedStep({ hasWallet = false, hasProjects = false }: GetSt
         <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <Target className="h-8 w-8 text-white" />
         </div>
-        <h3 className="text-2xl font-bold mb-2">You're Ready to Launch!</h3>
+        <h3 className="text-2xl font-semibold mb-2">You're Ready to Launch!</h3>
         <p className="text-muted-foreground">{headerText}</p>
       </div>
 

@@ -246,7 +246,7 @@ export function QRScanner({
             variant="ghost"
             size="sm"
             onClick={handleClose}
-            className="text-white hover:bg-white/20 p-2"
+            className="text-white hover:bg-white/20 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -288,7 +288,7 @@ export function QRScanner({
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-white p-8">
             <AlertCircle className="w-16 h-16 mb-4 text-orange-500" />
-            <h3 className="text-xl font-semibold mb-2">Camera Not Available</h3>
+            <h3 className="text-lg font-semibold mb-2">Camera Not Available</h3>
             <p className="text-center text-gray-300 mb-6">
               {error || 'Unable to access camera on this device'}
             </p>

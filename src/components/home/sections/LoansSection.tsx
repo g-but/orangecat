@@ -11,7 +11,8 @@ export default function LoansSection() {
     {
       icon: DollarSign,
       title: 'List Your Loans',
-      description: 'Add your existing loans from any lender and make them available for refinancing offers.',
+      description:
+        'Add your existing loans from any lender and make them available for refinancing offers.',
     },
     {
       icon: Target,
@@ -42,15 +43,13 @@ export default function LoansSection() {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
-          <Badge className="mb-4 bg-blue-100 text-blue-800 hover:bg-blue-200">
-            New Feature
-          </Badge>
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <Badge className="mb-4 bg-blue-100 text-blue-800 hover:bg-blue-200">New Feature</Badge>
+          <h2 className="text-4xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             My Loans - Peer-to-Peer Lending
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            List your loans for refinancing or browse community lending opportunities.
-            Beat high-interest lenders with competitive peer-to-peer offers.
+            List your loans for refinancing or browse community lending opportunities. Beat
+            high-interest lenders with competitive peer-to-peer offers.
           </p>
         </div>
 
@@ -86,8 +85,8 @@ export default function LoansSection() {
 
         {/* CTA */}
         <div className="text-center">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-bold mb-4">Ready to Save Money on Your Loans?</h3>
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+            <h3 className="text-2xl font-semibold mb-4">Ready to Save Money on Your Loans?</h3>
             <p className="text-muted-foreground mb-6">
               Join the peer-to-peer lending revolution. List your loans today and start receiving
               competitive offers from lenders who want to help you save.
@@ -111,15 +110,16 @@ export default function LoansSection() {
 
         {/* How It Works */}
         <div className="mt-20">
-          <h3 className="text-2xl font-bold text-center mb-12">How It Works</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <h3 className="text-2xl font-semibold text-center mb-12">How It Works</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 1
               </div>
               <h4 className="text-lg font-semibold mb-2">List Your Loans</h4>
               <p className="text-muted-foreground">
-                Add your existing loans with details like amount, interest rate, and lender information.
+                Add your existing loans with details like amount, interest rate, and lender
+                information.
               </p>
             </div>
             <div className="text-center">

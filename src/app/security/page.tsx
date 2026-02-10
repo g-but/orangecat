@@ -87,7 +87,7 @@ export default function SecurityPage() {
         </div>
 
         {/* Security Overview */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">Our Security Philosophy</h2>
           <p className="text-gray-700 mb-6">
             OrangeCat is built on Bitcoin-first principles, which means we prioritize
@@ -132,8 +132,8 @@ export default function SecurityPage() {
         {/* Security Practices */}
         <div className="space-y-8">
           {securityPractices.map((practice, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6">{practice.title}</h3>
+            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">{practice.title}</h3>
               <ul className="space-y-3">
                 {practice.items.map((item, itemIndex) => (
                   <li key={itemIndex} className="flex items-start">
@@ -147,7 +147,7 @@ export default function SecurityPage() {
         </div>
 
         {/* Contact Section */}
-        <div className="mt-12 bg-gray-900 text-white rounded-lg p-8">
+        <div className="mt-12 bg-gray-900 text-white rounded-lg p-6">
           <div className="text-center">
             <h3 className="text-2xl font-semibold mb-4">Security Concerns?</h3>
             <p className="mb-6 text-gray-300">
@@ -182,6 +182,3 @@ export default function SecurityPage() {
     </div>
   );
 }
-
-
-

@@ -166,7 +166,7 @@ export function AssetRentalCalendar({
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <button
           onClick={handlePrevMonth}
-          className="p-1 rounded hover:bg-gray-100"
+          className="p-1 rounded hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Previous month"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -176,7 +176,7 @@ export function AssetRentalCalendar({
         </h3>
         <button
           onClick={handleNextMonth}
-          className="p-1 rounded hover:bg-gray-100"
+          className="p-1 rounded hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Next month"
         >
           <ChevronRight className="h-5 w-5" />

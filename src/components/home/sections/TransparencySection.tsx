@@ -12,7 +12,7 @@ export default function TransparencySection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-10 sm:mb-12 lg:mb-16">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold text-gray-900 mb-3 sm:mb-4">
             {transparency.title}
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
@@ -34,7 +34,7 @@ export default function TransparencySection() {
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-bitcoinOrange to-orange-500 rounded-lg sm:rounded-xl flex items-center justify-center">
                   <Eye className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+                <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">
                   How Transparency Works
                 </h3>
               </div>
@@ -84,7 +84,7 @@ export default function TransparencySection() {
 
                 <div className="flex items-start gap-2 sm:gap-3">
                   <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600" />
+                    <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900 text-sm sm:text-base mb-0.5 sm:mb-1">
@@ -113,7 +113,9 @@ export default function TransparencySection() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg sm:rounded-xl flex items-center justify-center">
                     <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">Profile Preview</h3>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
+                    Profile Preview
+                  </h3>
                 </div>
                 <span className="px-2 py-1 bg-gray-100 text-gray-500 text-[10px] sm:text-xs font-medium rounded">
                   UI Example

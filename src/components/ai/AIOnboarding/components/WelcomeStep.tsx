@@ -14,7 +14,7 @@ export function WelcomeStep() {
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold mb-2">{aiOnboardingContent.welcome.whyTitle}</h3>
+        <h3 className="text-lg font-semibold mb-2">{aiOnboardingContent.welcome.whyTitle}</h3>
         <p className="text-gray-600">{aiOnboardingContent.welcome.whyContent}</p>
       </div>
 

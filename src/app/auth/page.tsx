@@ -398,7 +398,7 @@ export default function AuthPage() {
         <div className="w-full max-w-md">
           {/* Header */}
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2 text-gray-900">
+            <h2 className="text-2xl font-semibold mb-2 text-gray-900">
               {mode === 'login'
                 ? 'Welcome back'
                 : mode === 'register'
@@ -458,7 +458,7 @@ export default function AuthPage() {
           {/* Clean Form */}
           <form
             onSubmit={mode === 'forgot' ? handleForgotPassword : handleSubmit}
-            className="space-y-6"
+            className="space-y-4"
           >
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">

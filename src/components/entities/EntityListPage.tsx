@@ -75,7 +75,7 @@ export default function EntityListPage<T>(props: EntityListPageProps<T>) {
 
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
         {explanation || examples?.length ? (
-          <div className="bg-white rounded-lg border p-5">
+          <div className="bg-white rounded-lg border p-6">
             {explanation ? (
               <div>
                 <h2 className="text-base font-medium text-gray-900 mb-2">
@@ -103,7 +103,7 @@ export default function EntityListPage<T>(props: EntityListPageProps<T>) {
         ) : null}
 
         {hasItems ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {items.map((item, idx) => (
               <Card
                 key={idx}
@@ -116,7 +116,7 @@ export default function EntityListPage<T>(props: EntityListPageProps<T>) {
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-lg border">
             <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-              <AlertCircle className="w-7 h-7 text-gray-400" />
+              <AlertCircle className="w-8 h-8 text-gray-400" />
             </div>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">{emptyTitle}</h2>
             <p className="text-gray-600 max-w-md mb-6">{emptyDescription}</p>

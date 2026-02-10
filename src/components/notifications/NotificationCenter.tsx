@@ -291,7 +291,9 @@ export default function NotificationCenter({
                               </p>
                             )}
                             <p className="text-xs text-gray-500 mt-2">
-                              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                              {formatDistanceToNow(new Date(notification.created_at), {
+                                addSuffix: true,
+                              })}
                             </p>
                           </div>
 
@@ -302,7 +304,7 @@ export default function NotificationCenter({
                                   e.stopPropagation();
                                   handleMarkAsRead(notification.id);
                                 }}
-                                className="p-1 hover:bg-white rounded"
+                                className="p-1 hover:bg-white rounded min-h-[44px] min-w-[44px] flex items-center justify-center"
                                 title="Mark as read"
                               >
                                 <Check className="w-3 h-3 text-green-500" />
@@ -314,7 +316,7 @@ export default function NotificationCenter({
                                 e.stopPropagation();
                                 handleDeleteNotification(notification.id);
                               }}
-                              className="p-1 hover:bg-white rounded"
+                              className="p-1 hover:bg-white rounded min-h-[44px] min-w-[44px] flex items-center justify-center"
                               title="Delete notification"
                             >
                               <Trash2 className="w-3 h-3 text-red-500" />
@@ -334,12 +336,7 @@ export default function NotificationCenter({
                 {/* Load More */}
                 {hasMore && (
                   <div className="pt-2 text-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={loadMore}
-                      disabled={isLoading}
-                    >
+                    <Button variant="ghost" size="sm" onClick={loadMore} disabled={isLoading}>
                       {isLoading ? 'Loading...' : 'Load more'}
                     </Button>
                   </div>
@@ -364,12 +361,7 @@ export default function NotificationCenter({
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Messages
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={handleClearRead}
-                >
+                <Button variant="outline" size="sm" className="flex-1" onClick={handleClearRead}>
                   <Trash2 className="w-4 h-4 mr-2" />
                   Clear Read
                 </Button>
@@ -380,10 +372,7 @@ export default function NotificationCenter({
       </Card>
 
       {/* Message Panel */}
-      <MessagePanel
-        isOpen={showMessages}
-        onClose={() => setShowMessages(false)}
-      />
+      <MessagePanel isOpen={showMessages} onClose={() => setShowMessages(false)} />
     </div>
   );
 }

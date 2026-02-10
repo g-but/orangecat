@@ -5,7 +5,7 @@ import { Home, Search, ArrowLeft } from 'lucide-react';
 export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-orange-50 to-white px-4">
-      <div className="max-w-lg w-full space-y-8 p-8 bg-white rounded-xl shadow-xl border border-orange-100">
+      <div className="max-w-lg w-full space-y-8 p-6 bg-white rounded-xl shadow-xl border border-orange-100">
         {/* Icon */}
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-orange-100 rounded-full flex items-center justify-center">
@@ -15,7 +15,7 @@ export default function NotFound() {
 
         {/* Title */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Page Not Found</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">Page Not Found</h2>
           <p className="mt-3 text-base text-gray-600">
             The page you're looking for doesn't exist or has been moved.
           </p>

@@ -57,7 +57,7 @@ export function ProjectTile({
               className="flex-shrink-0 text-gray-400 hover:text-gray-600"
             >
               {isSelected ? (
-                <CheckSquare className="w-5 h-5 text-[#F7931A]" />
+                <CheckSquare className="w-5 h-5 text-bitcoin-orange" />
               ) : (
                 <Square className="w-5 h-5" />
               )}
@@ -75,7 +75,7 @@ export function ProjectTile({
           <span
             className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
               project.isDraft
-                ? 'bg-slate-100 text-slate-700'
+                ? 'bg-gray-100 text-gray-700'
                 : project.isPaused
                   ? 'bg-yellow-100 text-yellow-700'
                   : project.isActive
@@ -104,7 +104,7 @@ export function ProjectTile({
             <button
               onClick={() => onDelete(project)}
               disabled={isDeleting}
-              className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+              className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Delete project"
             >
               <Trash2 className="w-4 h-4" />

@@ -50,7 +50,7 @@ export function PostActions({
         {/* Reply */}
         <button
           onClick={onToggleComments}
-          className="group flex items-center gap-1 text-gray-500 hover:text-blue-500 hover:bg-blue-50/50 rounded-full p-2 -ml-2 transition-colors"
+          className="group flex items-center gap-1 text-gray-500 hover:text-blue-500 hover:bg-blue-50/50 rounded-full p-2 -ml-2 transition-colors min-h-[44px]"
         >
           <MessageCircle className="w-5 h-5" />
           <span className="text-sm">
@@ -69,7 +69,7 @@ export function PostActions({
         <button
           onClick={onRepostClick}
           disabled={isReposting}
-          className={`group flex items-center gap-1 rounded-full p-2 transition-colors ${
+          className={`group flex items-center gap-1 rounded-full p-2 transition-colors min-h-[44px] ${
             event.userReposted
               ? 'text-green-500 hover:bg-green-50/50'
               : 'text-gray-500 hover:text-green-500 hover:bg-green-50/50'
@@ -83,7 +83,7 @@ export function PostActions({
         <button
           onClick={handleLike}
           disabled={isLiking}
-          className={`group flex items-center gap-1 rounded-full p-2 transition-colors ${
+          className={`group flex items-center gap-1 rounded-full p-2 transition-colors min-h-[44px] ${
             event.userLiked
               ? 'text-red-500 hover:bg-red-50/50'
               : 'text-gray-500 hover:text-red-500 hover:bg-red-50/50'
@@ -97,7 +97,7 @@ export function PostActions({
         <button
           onClick={handleDislike}
           disabled={isDisliking}
-          className={`group flex items-center gap-1 rounded-full p-2 transition-colors ${
+          className={`group flex items-center gap-1 rounded-full p-2 transition-colors min-h-[44px] ${
             event.userDisliked
               ? 'text-orange-500 hover:bg-orange-50/50'
               : 'text-gray-500 hover:text-orange-500 hover:bg-orange-50/50'
@@ -114,7 +114,7 @@ export function PostActions({
         <button
           onClick={handleShareOpen}
           disabled={isSharing}
-          className={`group flex items-center gap-1 rounded-full p-2 transition-colors ${
+          className={`group flex items-center gap-1 rounded-full p-2 transition-colors min-h-[44px] ${
             event.userShared
               ? 'text-blue-500 hover:bg-blue-50/50'
               : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50/50'
@@ -135,6 +135,3 @@ export function PostActions({
     </>
   );
 }
-
-
-

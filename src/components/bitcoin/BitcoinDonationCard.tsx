@@ -46,7 +46,7 @@ function AddressCard({ type, address, label, description }: AddressCardProps) {
 
   return (
     <div
-      className={`bg-white rounded-lg border-2 p-5 ${isBitcoin ? 'border-orange-200' : 'border-yellow-200'}`}
+      className={`bg-white rounded-lg border-2 p-6 ${isBitcoin ? 'border-orange-200' : 'border-yellow-200'}`}
       data-bitcoin-card={isBitcoin ? 'true' : undefined}
       data-lightning-card={!isBitcoin ? 'true' : undefined}
     >
@@ -135,11 +135,11 @@ export default function BitcoinDonationCard({
 
   return (
     <div
-      className={`bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200 p-5 ${className}`}
+      className={`bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200 p-6 ${className}`}
     >
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Bitcoin className="w-5 h-5 text-orange-500" />
             Accept Bitcoin Funding
           </h3>

@@ -100,7 +100,7 @@ export function ProfilePageSkeleton() {
         </div>
 
         {/* Main Content Skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-16 sm:mt-20">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-16 sm:mt-20">
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Info Card Skeleton */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">

@@ -94,7 +94,7 @@ export function WalletCard({
             {!wallet.is_primary && (
               <button
                 onClick={handleSetPrimary}
-                className="p-2 rounded-lg hover:bg-orange-50 text-orange-600 hover:text-orange-700 transition-colors"
+                className="p-2 rounded-lg hover:bg-orange-50 text-orange-600 hover:text-orange-700 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                 title="Set as primary wallet"
                 aria-label="Set as primary wallet"
               >
@@ -103,7 +103,7 @@ export function WalletCard({
             )}
             <button
               onClick={onEdit}
-              className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Edit wallet"
               aria-label="Edit wallet"
             >
@@ -111,7 +111,7 @@ export function WalletCard({
             </button>
             <button
               onClick={onDelete}
-              className="p-2 rounded-lg hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Delete wallet"
               aria-label="Delete wallet"
             >
@@ -124,11 +124,11 @@ export function WalletCard({
       {/* Balance */}
       <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700">Current Balance</span>
+          <span className="text-sm font-medium text-gray-900">Current Balance</span>
           {isOwner && wallet.balance_updated_at && (
             <button
               onClick={onRefresh}
-              className="p-1.5 rounded-md hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+              className="p-1.5 rounded-md hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Refresh balance"
               aria-label="Refresh balance"
             >
@@ -173,11 +173,11 @@ export function WalletCard({
           </span>
           <button
             onClick={handleCopy}
-            className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-orange-600 transition-colors flex items-center gap-1"
+            className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-orange-600 transition-colors flex items-center gap-1 min-h-[44px]"
             title="Copy address"
             aria-label="Copy address"
           >
-            <Copy className="w-3.5 h-3.5" />
+            <Copy className="w-4 h-4" />
             <span className="text-xs hidden sm:inline">Copy</span>
           </button>
         </div>

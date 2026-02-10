@@ -58,7 +58,7 @@ export default function TimelineLayout({
   inlineComposer,
 }: TimelineLayoutProps) {
   return (
-    <div className="min-h-screen bg-[#f5f8fa]">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto flex justify-center px-0 sm:px-4 lg:px-8">
         <div className="w-full max-w-2xl border-x border-gray-200 bg-white">
           <div
@@ -75,7 +75,9 @@ export default function TimelineLayout({
                 {description && <p className="text-sm text-gray-500">{description}</p>}
               </div>
             </div>
-            {additionalHeaderContent && <div className="flex items-center gap-2">{additionalHeaderContent}</div>}
+            {additionalHeaderContent && (
+              <div className="flex items-center gap-2">{additionalHeaderContent}</div>
+            )}
           </div>
 
           {inlineComposer || postComposer}

@@ -103,7 +103,7 @@ export function EmailConfirmationBanner({
         </div>
         <button
           onClick={handleDismiss}
-          className="text-amber-600 hover:text-amber-800 p-1.5 rounded-md hover:bg-amber-100 transition-colors flex-shrink-0"
+          className="text-amber-600 hover:text-amber-800 p-1.5 rounded-md hover:bg-amber-100 transition-colors flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Dismiss notification"
         >
           <X className="w-4 h-4" />

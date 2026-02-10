@@ -168,11 +168,11 @@ export function PendingActionsCard({ action, onConfirm, onReject }: PendingActio
       {/* Details */}
       <div className="flex items-center gap-4 text-xs text-amber-600">
         <div className="flex items-center gap-1">
-          <Icon className="h-3.5 w-3.5" />
+          <Icon className="h-4 w-4" />
           <span className="capitalize">{action.actionId.replace(/_/g, ' ')}</span>
         </div>
         <div className="flex items-center gap-1">
-          <Clock className="h-3.5 w-3.5" />
+          <Clock className="h-4 w-4" />
           <span>{timeLeft}</span>
         </div>
       </div>

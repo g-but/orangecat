@@ -43,7 +43,7 @@ export default function ProfileWalletSection({
   if (wallets.length > 0) {
     return (
       <div className="space-y-4" data-wallet-section>
-        <h3 className="text-lg font-bold flex items-center gap-2">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
           <Bitcoin className="w-5 h-5 text-orange-500" />
           Support This Profile
         </h3>

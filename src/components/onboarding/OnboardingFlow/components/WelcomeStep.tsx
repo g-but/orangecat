@@ -22,7 +22,7 @@ export function WelcomeStep() {
           <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span className="text-4xl">🐾</span>
           </div>
-          <h2 className="text-2xl font-bold mb-2">Welcome to OrangeCat</h2>
+          <h2 className="text-2xl font-semibold mb-2">Welcome to OrangeCat</h2>
           <p className="text-muted-foreground">
             Create a project, share your story, and receive Bitcoin funding directly from supporters
             around the world.

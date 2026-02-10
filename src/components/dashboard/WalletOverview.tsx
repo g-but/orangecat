@@ -308,7 +308,7 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
                           variant="ghost"
                           size="sm"
                           onClick={() => window.open(getTransactionUrl(tx.txid), '_blank')}
-                          className="p-1 sm:p-2 opacity-0 group-hover:opacity-100 transition-opacity min-h-[32px] min-w-[32px] touch-manipulation"
+                          className="p-1 sm:p-2 opacity-0 group-hover:opacity-100 transition-opacity min-h-[44px] min-w-[44px] touch-manipulation flex items-center justify-center"
                           title="View transaction on Mempool.space"
                         >
                           <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />

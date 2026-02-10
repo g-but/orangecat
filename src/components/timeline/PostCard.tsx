@@ -85,7 +85,7 @@ export function PostCard({
 
   // Handle menu toggle
   const handleMenuToggle = useCallback(() => {
-    setShowMenu((prev) => !prev);
+    setShowMenu(prev => !prev);
   }, []);
 
   // Handle edit
@@ -155,7 +155,7 @@ export function PostCard({
 
   // Handle toggling reply input (X-style inline reply)
   const handleToggleReply = useCallback(() => {
-    setShowReplyInput((prev) => !prev);
+    setShowReplyInput(prev => !prev);
   }, []);
 
   // Handle reply submission (creates a new timeline event with parent_event_id)
@@ -264,10 +264,12 @@ export function PostCard({
       >
         {/* X-style repost indicator at top */}
         {isSimpleRepost && (
-          <div className={cn(
-            "flex items-center gap-2 text-gray-500 text-[13px] mb-1",
-            isSelectionMode ? "ml-14" : "ml-12"
-          )}>
+          <div
+            className={cn(
+              'flex items-center gap-2 text-gray-500 text-xs mb-1',
+              isSelectionMode ? 'ml-14' : 'ml-12'
+            )}
+          >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
               <path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H11V4h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z" />
             </svg>
@@ -282,16 +284,16 @@ export function PostCard({
               <button
                 onClick={handleSelectionClick}
                 className={cn(
-                  "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                  'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
                   isSelected
-                    ? "bg-sky-500 border-sky-500 text-white"
-                    : "border-gray-300 hover:border-sky-400 bg-white"
+                    ? 'bg-sky-500 border-sky-500 text-white'
+                    : 'border-gray-300 hover:border-sky-400 bg-white'
                 )}
-                aria-label={isSelected ? "Deselect post" : "Select post"}
+                aria-label={isSelected ? 'Deselect post' : 'Select post'}
                 aria-checked={isSelected}
                 role="checkbox"
               >
-                {isSelected && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+                {isSelected && <Check className="w-4 h-4" strokeWidth={3} />}
               </button>
             </div>
           )}
@@ -303,7 +305,9 @@ export function PostCard({
                 isSimpleRepost ? event.metadata?.original_actor_username : event.actor.username
               }
               userId={isSimpleRepost ? event.metadata?.original_actor_id : event.actor.id}
-              avatarUrl={isSimpleRepost ? event.metadata?.original_actor_avatar : event.actor.avatar}
+              avatarUrl={
+                isSimpleRepost ? event.metadata?.original_actor_avatar : event.actor.avatar
+              }
               name={isSimpleRepost ? event.metadata?.original_actor_name : event.actor.name}
               size={40}
             />
@@ -378,9 +382,9 @@ export function PostCard({
                 <div className="flex-1">
                   <Textarea
                     value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
+                    onChange={e => setReplyText(e.target.value)}
                     placeholder="Post your reply"
-                    className="min-h-[44px] text-[15px] border-none bg-transparent p-0 focus:ring-0 resize-none placeholder:text-gray-500"
+                    className="min-h-[44px] text-sm border-none bg-transparent p-0 focus:ring-0 resize-none placeholder:text-gray-500"
                     disabled={isReplying}
                     autoFocus
                   />
@@ -410,9 +414,14 @@ export function PostCard({
           isReposting={isReposting}
           currentUser={{
             id: user?.id,
-            name: (user?.user_metadata as { name?: string } | undefined)?.name || user?.email || 'You',
-            username: (user?.user_metadata as { preferred_username?: string } | undefined)?.preferred_username || '',
-            avatar: (user?.user_metadata as { avatar_url?: string | null } | undefined)?.avatar_url || null,
+            name:
+              (user?.user_metadata as { name?: string } | undefined)?.name || user?.email || 'You',
+            username:
+              (user?.user_metadata as { preferred_username?: string } | undefined)
+                ?.preferred_username || '',
+            avatar:
+              (user?.user_metadata as { avatar_url?: string | null } | undefined)?.avatar_url ||
+              null,
           }}
         />
       </article>

@@ -104,10 +104,10 @@ export default function ExperimentalBanner({
           {dismissible && (
             <button
               onClick={handleDismiss}
-              className="ml-2 sm:ml-4 p-1 hover:bg-orange-200 rounded-full transition-colors"
+              className="ml-2 sm:ml-4 p-1 hover:bg-orange-200 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Dismiss banner"
             >
-              <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-600" />
+              <X className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600" />
             </button>
           )}
         </div>

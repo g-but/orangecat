@@ -355,7 +355,7 @@ export default function ProjectMediaUpload({
               </div>
               <button
                 onClick={() => deleteMedia(item.id)}
-                className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-600 shadow-lg"
+                className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-600 shadow-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
                 disabled={uploading}
                 aria-label="Delete image"
               >

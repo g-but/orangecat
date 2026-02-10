@@ -28,7 +28,7 @@ export default function ResultsSection({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {icon && <span className="text-gray-600">{icon}</span>}
-          <h3 className="text-xl font-bold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900">
             {title}
             <span className="ml-2 text-base font-normal text-gray-500">({count})</span>
           </h3>

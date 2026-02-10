@@ -72,7 +72,7 @@ function RadioGroup({ name, label, options, value, onChange }: RadioGroupProps) 
             />
             <div>
               <div className="font-medium">{option.label}</div>
-              <div className="text-sm text-gray-500">{option.desc}</div>
+              <div className="text-sm text-gray-600">{option.desc}</div>
             </div>
           </label>
         ))}
@@ -93,12 +93,12 @@ export function WalletPreferencesForm({
       className="max-w-4xl mx-auto"
     >
       <Card className="p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Tell us about your needs</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Tell us about your needs</h2>
         <p className="text-gray-600 mb-8">
           We'll recommend the best Bitcoin wallets based on your preferences and requirements.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <RadioGroup
             name="experience"
             label="Your Experience Level"

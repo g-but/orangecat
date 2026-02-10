@@ -187,7 +187,7 @@ export function DynamicSidebar<T extends string = string>({
           <ul className="space-y-1.5">
             {content.tips.map((tip, index) => (
               <li key={index} className="flex items-start gap-2 text-xs text-gray-600">
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-600 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                 <span>{tip}</span>
               </li>
             ))}

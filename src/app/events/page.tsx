@@ -133,12 +133,12 @@ export default function EventsPage() {
 
       {/* Key Features */}
       <PageSection>
-        <h2 className="text-3xl font-bold text-center mb-12">Why Choose Bitcoin for Events?</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <h2 className="text-2xl font-semibold text-center mb-12">Why Choose Bitcoin for Events?</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
             <Card key={index} className="p-6 text-center">
               <feature.icon className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+              <h3 className="text-lg font-semibold mb-3">{feature.title}</h3>
               <p className="text-gray-600">{feature.description}</p>
             </Card>
           ))}
@@ -147,7 +147,7 @@ export default function EventsPage() {
 
       {/* Event Types */}
       <PageSection background="tiffany">
-        <h2 className="text-3xl font-bold text-center mb-12">What Events Can You Organize?</h2>
+        <h2 className="text-2xl font-semibold text-center mb-12">What Events Can You Organize?</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {eventTypes.map((type, index) => (
             <Card key={index} className="p-6">
@@ -170,7 +170,7 @@ export default function EventsPage() {
       <PageSection>
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-3xl font-bold mb-6">Why Event Organizers Choose OrangeCat</h2>
+            <h2 className="text-2xl font-semibold mb-6">Why Event Organizers Choose OrangeCat</h2>
             <div className="space-y-4">
               {benefits.map((benefit, index) => (
                 <div key={index} className="flex items-start">
@@ -207,13 +207,13 @@ export default function EventsPage() {
 
       {/* How It Works */}
       <PageSection background="gray">
-        <h2 className="text-3xl font-bold text-center mb-12">How Event Organization Works</h2>
-        <div className="grid md:grid-cols-4 gap-8">
+        <h2 className="text-2xl font-semibold text-center mb-12">How Event Organization Works</h2>
+        <div className="grid md:grid-cols-4 gap-6">
           <div className="text-center">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold text-blue-600">1</span>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Create Your Event</h3>
+            <h3 className="text-lg font-semibold mb-3">Create Your Event</h3>
             <p className="text-gray-600">
               Set up your event details, ticket pricing, and Bitcoin payment address
             </p>
@@ -222,7 +222,7 @@ export default function EventsPage() {
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold text-blue-600">2</span>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Promote & Sell</h3>
+            <h3 className="text-lg font-semibold mb-3">Promote & Sell</h3>
             <p className="text-gray-600">
               Share your event and sell tickets with instant Bitcoin payments
             </p>
@@ -231,7 +231,7 @@ export default function EventsPage() {
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold text-blue-600">3</span>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Manage Attendees</h3>
+            <h3 className="text-lg font-semibold mb-3">Manage Attendees</h3>
             <p className="text-gray-600">
               Track RSVPs, send updates, and manage your attendee list
             </p>
@@ -240,7 +240,7 @@ export default function EventsPage() {
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold text-blue-600">4</span>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Run the Event</h3>
+            <h3 className="text-lg font-semibold mb-3">Run the Event</h3>
             <p className="text-gray-600">
               Use QR check-in, track attendance, and create memorable experiences
             </p>
@@ -251,7 +251,7 @@ export default function EventsPage() {
       {/* CTA Section */}
       <PageSection>
         <div className="text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to Organize Your Event?</h2>
+          <h2 className="text-2xl font-semibold mb-6">Ready to Organize Your Event?</h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Join event organizers worldwide who have created amazing experiences with
             Bitcoin-powered event management

@@ -47,7 +47,7 @@ export function ChatInput({ value, onChange, onSend, isLoading }: ChatInputProps
             className={cn(
               'w-full resize-none rounded-2xl border border-gray-200 px-4 py-3 pr-12',
               'focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300',
-              'text-[15px] leading-relaxed placeholder:text-gray-400',
+              'text-sm leading-relaxed placeholder:text-gray-400',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               'max-h-[200px]'
             )}

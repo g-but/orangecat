@@ -268,7 +268,7 @@ export default function ResearchDashboard() {
       {filteredEntities.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🔬</div>
-          <h3 className="text-xl font-semibold mb-2">No research entities found</h3>
+          <h3 className="text-lg font-semibold mb-2">No research entities found</h3>
           <p className="text-muted-foreground mb-4">
             {searchTerm || fieldFilter !== 'all' || statusFilter !== 'all'
               ? 'Try adjusting your filters'

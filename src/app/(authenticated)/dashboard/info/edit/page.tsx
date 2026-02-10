@@ -290,7 +290,7 @@ export default function DashboardInfoEditPage() {
             </div>
             {completionPercentage === 100 ? (
               <div className="flex items-center gap-2 text-xs text-green-700 mt-2">
-                <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                 <span className="font-medium">Profile complete!</span>
               </div>
             ) : (
@@ -325,7 +325,7 @@ export default function DashboardInfoEditPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Desktop: Progress Card & Guidance Sidebar */}
           <div className="hidden lg:block lg:col-span-5 lg:order-2">
             <div className="lg:sticky lg:top-8 space-y-6">

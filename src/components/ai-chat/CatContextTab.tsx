@@ -125,7 +125,7 @@ export function CatContextTab() {
     <div className="space-y-6">
       {/* Completeness meter */}
       {!summaryLoading && summary && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900">Context Completeness</h3>
             <span className={`text-sm font-medium ${getCompletenessColor(summary.completeness)}`}>

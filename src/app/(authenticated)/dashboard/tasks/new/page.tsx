@@ -201,7 +201,7 @@ export default function NewTaskPage() {
             <p className="text-gray-600 mt-1">Create a new task for the team</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -93,7 +93,7 @@ export default function ProjectStatusManager({
 
   const getStatusBadge = (status: ProjectStatus) => {
     const badges = {
-      draft: { label: 'Draft', className: 'bg-slate-100 text-slate-700 border-slate-200' },
+      draft: { label: 'Draft', className: 'bg-gray-100 text-gray-700 border-gray-200' },
       active: { label: 'Active', className: 'bg-green-100 text-green-700 border-green-200' },
       paused: { label: 'Paused', className: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
       completed: { label: 'Completed', className: 'bg-blue-100 text-blue-700 border-blue-200' },
