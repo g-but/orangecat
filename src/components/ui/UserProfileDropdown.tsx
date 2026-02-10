@@ -318,7 +318,7 @@ export default function UserProfileDropdown({
                     onClick={handlePublicProfileClick}
                     className="group flex items-center space-x-2 hover:text-orange-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-1 rounded-lg p-1 -m-1"
                   >
-                    <h3 className="font-bold text-lg text-gray-900 group-hover:text-orange-600 transition-colors duration-200 truncate">
+                    <h3 className="font-semibold text-lg text-gray-900 group-hover:text-orange-600 transition-colors duration-200 truncate">
                       {displayName}
                     </h3>
                     <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-orange-500 transition-all duration-200 opacity-0 group-hover:opacity-100 transform group-hover:scale-110" />

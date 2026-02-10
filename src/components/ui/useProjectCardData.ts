@@ -54,7 +54,7 @@ export interface ProjectCardDataResult {
 }
 
 export const STATUS_BADGE_CONFIG: Record<string, { label: string; className: string }> = {
-  draft: { label: 'Draft', className: 'bg-slate-100 text-slate-600 border border-slate-200' },
+  draft: { label: 'Draft', className: 'bg-gray-100 text-gray-600 border border-gray-200' },
   active: { label: 'Active', className: 'bg-green-100 text-green-700 border border-green-200' },
   paused: { label: 'Paused', className: 'bg-yellow-100 text-yellow-700 border border-yellow-200' },
   completed: {
@@ -84,7 +84,7 @@ export const ICON_COLOR_BY_CATEGORY: Record<string, string> = {
   environment: 'text-emerald-600',
   business: 'text-orange-600',
   community: 'text-teal-600',
-  default: 'text-slate-600',
+  default: 'text-gray-600',
 };
 
 function getStatusBadge(status: string) {

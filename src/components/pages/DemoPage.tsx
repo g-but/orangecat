@@ -417,7 +417,7 @@ export default function DemoPage({ initiative }: DemoPageProps) {
           className={`bg-gradient-to-r from-${initiative.color.bg} to-${initiative.color.bg}/50 border-${initiative.color.border}`}
         >
           <CardContent className="text-center py-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Demo Complete! 🎉</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Demo Complete! 🎉</h3>
             <p className="text-gray-600 mb-6">
               You&apos;ve seen how {initiative.name.toLowerCase()} work on our platform. Ready to
               get started?

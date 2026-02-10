@@ -11,7 +11,7 @@ export default function HowItWorksSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-10 sm:mb-12 lg:mb-16">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold text-gray-900 mb-3 sm:mb-4">
             {howItWorks.title}
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
@@ -54,7 +54,7 @@ export default function HowItWorksSection() {
                   </div>
 
                   {/* Content */}
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
                     {step.title}
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600 leading-relaxed">

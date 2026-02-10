@@ -32,7 +32,7 @@ export function CreateProjectStep() {
   return (
     <div className="space-y-6">
       <div className="text-center mb-4">
-        <h3 className="text-xl font-bold mb-2">What would you like to create?</h3>
+        <h3 className="text-lg font-semibold mb-2">What would you like to create?</h3>
         <p className="text-sm text-muted-foreground">
           Pick a type to get started. You can always create more later.
         </p>

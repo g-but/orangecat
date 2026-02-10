@@ -232,7 +232,9 @@ export default function BitcoinWalletGuidePage() {
 
         {/* Progress Steps */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">How to Get Started</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
+            How to Get Started
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {steps.map((step, index) => {
               const Icon = step.icon;
@@ -278,10 +280,10 @@ export default function BitcoinWalletGuidePage() {
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Wallet Options */}
           <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Wallet</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Choose Your Wallet</h2>
 
             <div className="space-y-4">
               {walletOptions.map(wallet => {
@@ -458,7 +460,7 @@ export default function BitcoinWalletGuidePage() {
           transition={{ delay: 0.3 }}
           className="mt-16"
         >
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-8 text-center">
             Frequently Asked Questions
           </h2>
 
@@ -529,7 +531,7 @@ export default function BitcoinWalletGuidePage() {
           >
             <CardContent className="p-8">
               <Bitcoin className="w-16 h-16 text-bitcoinOrange mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Ready to Get Started?</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Ready to Get Started?</h2>
               <p className="text-gray-600 mb-6">
                 Once you have your Bitcoin wallet set up, you can add your Bitcoin address to your
                 OrangeCat profile and start receiving funding for your projects.

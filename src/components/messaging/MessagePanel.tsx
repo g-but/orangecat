@@ -353,9 +353,9 @@ export default function MessagePanel({
             <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
               <div className="text-center p-10 max-w-md">
                 <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center">
-                  <MessageSquare className="w-9 h-9 text-gray-400" />
+                  <MessageSquare className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Select a chat</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Select a chat</h3>
                 <p className="text-sm text-gray-600 mb-5">
                   Choose from your existing conversations or start a new one.
                 </p>

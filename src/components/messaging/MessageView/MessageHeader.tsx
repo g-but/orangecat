@@ -82,7 +82,13 @@ export default function MessageHeader({
   return (
     <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={onBack} className="p-2" aria-label="Go back">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+          aria-label="Go back"
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
 

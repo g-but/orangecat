@@ -18,7 +18,7 @@ export default function DocsPage() {
         <Card className="mb-8 hover:shadow-lg transition-shadow duration-200">
           <div className="p-6">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">Tech Stack</h2>
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Frontend</h3>
                 <ul className="space-y-3">

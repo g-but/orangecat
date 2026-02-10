@@ -131,14 +131,14 @@ export default function HowItWorksPage() {
         {/* What You Can Do Section */}
         <motion.div className="mb-20" {...fadeInUp}>
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">What You Can Do</h2>
+            <h2 className="text-2xl font-semibold mb-4">What You Can Do</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               OrangeCat combines commerce, funding, community, and AI—all in one Bitcoin-powered
               platform.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
             {SUPER_APP_CATEGORIES.map((category, index) => {
               const Icon = category.icon;
               return (
@@ -154,7 +154,7 @@ export default function HowItWorksPage() {
                         <Icon className="w-6 h-6 text-gray-700" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold mb-2">{category.title}</h3>
+                        <h3 className="text-lg font-semibold mb-2">{category.title}</h3>
                         <p className="text-gray-600 mb-3">{category.description}</p>
                         <ul className="space-y-1">
                           {category.features.map(feature => (
@@ -181,14 +181,14 @@ export default function HowItWorksPage() {
         {/* Why Bitcoin Section */}
         <motion.div className="mb-20" {...fadeInUp}>
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Bitcoin Powers Everything</h2>
+            <h2 className="text-2xl font-semibold mb-4">Why Bitcoin Powers Everything</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Bitcoin isn't just a payment method—it's the foundation for transparent, global,
               permissionless transactions.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
             {whyBitcoin.map((item, index) => {
               const Icon = item.icon;
               return (
@@ -204,7 +204,7 @@ export default function HowItWorksPage() {
                         <Icon className="w-6 h-6 text-tiffany-600" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                        <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
                         <p className="text-gray-600 leading-relaxed">{item.description}</p>
                       </div>
                     </div>
@@ -218,7 +218,7 @@ export default function HowItWorksPage() {
         {/* CTA Section */}
         <motion.div className="text-center" {...fadeInUp}>
           <Card className="p-12 bg-gradient-to-br from-tiffany-50 via-white to-orange-50 border-2 border-tiffany-100">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
+            <h2 className="text-2xl font-semibold mb-4">Ready to Get Started?</h2>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
               Join OrangeCat for commerce, funding, community, and AI—all powered by Bitcoin.
             </p>

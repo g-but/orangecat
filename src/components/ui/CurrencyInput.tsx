@@ -197,7 +197,7 @@ export function CurrencyInput({
     <div className="space-y-2">
       {/* Label */}
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+        <label htmlFor={id} className="block text-sm font-medium text-gray-900">
           {label}
         </label>
       )}

@@ -91,7 +91,7 @@ export default function DashboardWalletsPage() {
         {/* Page Header */}
         <WalletsPageHeader isDesktop={isDesktop} />
 
-        <div className="grid grid-cols-1 gap-6 md:gap-6 lg:gap-8 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Desktop: Guidance Sidebar */}
           <WalletsGuidanceSidebar focusedField={focusedField} />
 

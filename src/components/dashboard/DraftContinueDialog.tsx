@@ -104,7 +104,7 @@ export default function DraftContinueDialog({
               </div>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-white/50 transition-colors"
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-white/50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />

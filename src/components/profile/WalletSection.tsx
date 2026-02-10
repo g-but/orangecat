@@ -1,24 +1,24 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Copy, Check, Bitcoin, Zap } from 'lucide-react'
-import { QRCodeSVG } from 'qrcode.react'
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Copy, Check, Bitcoin, Zap } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface WalletSectionProps {
-  walletAddress: string
-  lightningAddress?: string
+  walletAddress: string;
+  lightningAddress?: string;
 }
 
 export function WalletSection({ walletAddress, lightningAddress }: WalletSectionProps) {
-  const [copied, setCopied] = useState(false)
-  const [activeTab, setActiveTab] = useState<'bitcoin' | 'lightning'>('bitcoin')
+  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'bitcoin' | 'lightning'>('bitcoin');
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(walletAddress)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    await navigator.clipboard.writeText(walletAddress);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <motion.div
@@ -27,7 +27,7 @@ export function WalletSection({ walletAddress, lightningAddress }: WalletSection
       className="bg-white rounded-lg shadow-lg p-6"
     >
       <h3 className="text-lg font-medium text-gray-900 mb-4">Funding Options</h3>
-      
+
       {/* Tab Navigation */}
       <div className="flex space-x-4 mb-6">
         <button
@@ -64,11 +64,7 @@ export function WalletSection({ walletAddress, lightningAddress }: WalletSection
               Scan this QR code with your Bitcoin wallet to send funding
             </p>
             <div className="flex justify-center p-4 bg-white rounded-lg border border-gray-200">
-              <QRCodeSVG
-                value={`bitcoin:${walletAddress}`}
-                size={200}
-                className="rounded-lg"
-              />
+              <QRCodeSVG value={`bitcoin:${walletAddress}`} size={200} className="rounded-lg" />
             </div>
           </div>
 
@@ -124,7 +120,7 @@ export function WalletSection({ walletAddress, lightningAddress }: WalletSection
               />
               <button
                 onClick={() => navigator.clipboard.writeText(lightningAddress)}
-                className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+                className="p-2 text-gray-600 hover:text-gray-900 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                 aria-label="Copy address"
               >
                 <Copy className="h-5 w-5" />
@@ -134,5 +130,5 @@ export function WalletSection({ walletAddress, lightningAddress }: WalletSection
         </div>
       )}
     </motion.div>
-  )
-} 
+  );
+}

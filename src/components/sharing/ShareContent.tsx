@@ -35,7 +35,7 @@ export interface ShareContentProps {
 
 /**
  * Reusable ShareContent Component
- * 
+ *
  * DRY, modular sharing UI that works for profiles, projects, and any shareable content.
  * Best practices:
  * - Single source of truth for share platforms
@@ -167,11 +167,11 @@ export default function ShareContent({
       style={{
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       }}
-      onClick={(e) => e.stopPropagation()}
+      onClick={e => e.stopPropagation()}
     >
       {showTitle && (
         <div className="flex items-center justify-between mb-5 sm:mb-6 pb-4 border-b border-gray-100">
-          <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg sm:text-xl">
+          <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-lg">
             <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
               <Share2 className="w-4 h-4 text-white" />
             </div>
@@ -180,7 +180,7 @@ export default function ShareContent({
           {onClose && (
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full touch-manipulation"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Close share menu"
             >
               <X className="w-5 h-5" />
@@ -211,7 +211,9 @@ export default function ShareContent({
               className={`group flex flex-col items-center gap-2 p-3 sm:p-4 rounded-xl transition-all touch-manipulation active:scale-95 ${platform.bgColor} hover:shadow-md`}
               aria-label={`Share on ${platform.name}`}
             >
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full ${platform.bgColor} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+              <div
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full ${platform.bgColor} flex items-center justify-center group-hover:scale-110 transition-transform`}
+              >
                 <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${platform.color}`} />
               </div>
               <span className="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-gray-900">
@@ -277,4 +279,3 @@ export default function ShareContent({
   // Desktop: Dropdown
   return shareContent;
 }
-

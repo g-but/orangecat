@@ -37,7 +37,7 @@ function ToastItem({ toast }: { toast: ToastType }) {
       <p className="flex-1 text-sm font-medium">{toast.message}</p>
       <button
         onClick={() => removeToast(toast.id)}
-        className="shrink-0 p-1 hover:bg-black/5 rounded transition-colors"
+        className="shrink-0 p-1 hover:bg-black/5 rounded transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
         aria-label="Close notification"
       >
         <X className="w-4 h-4" />

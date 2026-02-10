@@ -1,88 +1,88 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { Shield, CheckCircle, Circle, TrendingUp, Info } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import { Progress } from '@/components/ui/progress'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip'
-import { cn } from '@/lib/utils'
+import { useEffect, useState } from 'react';
+import { Shield, CheckCircle, Circle, TrendingUp, Info } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip';
+import { cn } from '@/lib/utils';
 
 interface TransparencyScoreProps {
-  profileId: string
-  className?: string
-  showDetails?: boolean
-  compact?: boolean
+  profileId: string;
+  className?: string;
+  showDetails?: boolean;
+  compact?: boolean;
 }
 
 interface TransparencyScoreData {
-  score: number
-  maxScore: number
-  factors: Record<string, number>
-  calculatedAt: string
+  score: number;
+  maxScore: number;
+  factors: Record<string, number>;
+  calculatedAt: string;
 }
 
 interface _ProfileCompletion {
-  username: boolean
-  displayName: boolean
-  avatar: boolean
-  bio: boolean
-  bitcoinAddress: boolean
-  lightningAddress: boolean
-  website: boolean
-  location: boolean
-  verified: boolean
+  username: boolean;
+  displayName: boolean;
+  avatar: boolean;
+  bio: boolean;
+  bitcoinAddress: boolean;
+  lightningAddress: boolean;
+  website: boolean;
+  location: boolean;
+  verified: boolean;
 }
 
 export function TransparencyScore({
   profileId,
   className,
   showDetails = false,
-  compact = false
+  compact = false,
 }: TransparencyScoreProps) {
-  const [scoreData, setScoreData] = useState<TransparencyScoreData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [scoreData, setScoreData] = useState<TransparencyScoreData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTransparencyScore = async () => {
       try {
-        setLoading(true)
-        setError(null)
+        setLoading(true);
+        setError(null);
 
-        const response = await fetch(`/api/transparency/${profileId}`)
+        const response = await fetch(`/api/transparency/${profileId}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch transparency score')
+          throw new Error('Failed to fetch transparency score');
         }
 
-        const data = await response.json()
-        setScoreData(data)
+        const data = await response.json();
+        setScoreData(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load transparency score')
+        setError(err instanceof Error ? err.message : 'Failed to load transparency score');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
     if (profileId) {
-      fetchTransparencyScore()
+      fetchTransparencyScore();
     }
-  }, [profileId])
+  }, [profileId]);
 
   if (loading) {
     return (
-      <Card className={cn("animate-pulse", className)}>
+      <Card className={cn('animate-pulse', className)}>
         <CardContent className="p-4">
           <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
           <div className="h-3 bg-gray-200 rounded w-1/3"></div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error || !scoreData) {
     return (
-      <Card className={cn("border-orange-200", className)}>
+      <Card className={cn('border-orange-200', className)}>
         <CardContent className="p-4">
           <div className="flex items-center gap-2 text-orange-600">
             <Info className="w-4 h-4" />
@@ -90,65 +90,63 @@ export function TransparencyScore({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const { score, maxScore, factors } = scoreData
-  const percentage = Math.round((score / maxScore) * 100)
+  const { score, maxScore, factors } = scoreData;
+  const percentage = Math.round((score / maxScore) * 100);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) {
-      return 'text-green-600'
+      return 'text-green-600';
     }
     if (score >= 60) {
-      return 'text-blue-600'
+      return 'text-blue-600';
     }
     if (score >= 40) {
-      return 'text-orange-600'
+      return 'text-orange-600';
     }
-    return 'text-red-600'
-  }
+    return 'text-red-600';
+  };
 
   const getScoreBgColor = (score: number) => {
     if (score >= 80) {
-      return 'bg-green-50 border-green-200'
+      return 'bg-green-50 border-green-200';
     }
     if (score >= 60) {
-      return 'bg-blue-50 border-blue-200'
+      return 'bg-blue-50 border-blue-200';
     }
     if (score >= 40) {
-      return 'bg-orange-50 border-orange-200'
+      return 'bg-orange-50 border-orange-200';
     }
-    return 'bg-red-50 border-red-200'
-  }
+    return 'bg-red-50 border-red-200';
+  };
 
   const getScoreLabel = (score: number) => {
     if (score >= 90) {
-      return 'Excellent'
+      return 'Excellent';
     }
     if (score >= 80) {
-      return 'Very Good'
+      return 'Very Good';
     }
     if (score >= 70) {
-      return 'Good'
+      return 'Good';
     }
     if (score >= 60) {
-      return 'Fair'
+      return 'Fair';
     }
     if (score >= 40) {
-      return 'Needs Improvement'
+      return 'Needs Improvement';
     }
-    return 'Incomplete'
-  }
+    return 'Incomplete';
+  };
 
   if (compact) {
     return (
-      <div className={cn("flex items-center gap-2", className)}>
+      <div className={cn('flex items-center gap-2', className)}>
         <div className="flex items-center gap-1">
-          <Shield className={cn("w-4 h-4", getScoreColor(score))} />
-          <span className={cn("text-sm font-medium", getScoreColor(score))}>
-            {percentage}%
-          </span>
+          <Shield className={cn('w-4 h-4', getScoreColor(score))} />
+          <span className={cn('text-sm font-medium', getScoreColor(score))}>{percentage}%</span>
         </div>
         <TooltipProvider>
           <Tooltip>
@@ -161,14 +159,14 @@ export function TransparencyScore({
           </Tooltip>
         </TooltipProvider>
       </div>
-    )
+    );
   }
 
   return (
     <Card className={cn(getScoreBgColor(score), className)}>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Shield className={cn("w-5 h-5", getScoreColor(score))} />
+          <Shield className={cn('w-5 h-5', getScoreColor(score))} />
           Transparency Score
           <TooltipProvider>
             <Tooltip>
@@ -176,7 +174,10 @@ export function TransparencyScore({
                 <Info className="w-4 h-4 text-gray-400" />
               </TooltipTrigger>
               <TooltipContent className="max-w-sm">
-                <p>Your transparency score reflects how complete and trustworthy your profile appears to others. Higher scores build trust and encourage more engagement.</p>
+                <p>
+                  Your transparency score reflects how complete and trustworthy your profile appears
+                  to others. Higher scores build trust and encourage more engagement.
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -186,15 +187,11 @@ export function TransparencyScore({
         {/* Score Display */}
         <div className="flex items-center justify-between">
           <div>
-            <div className={cn("text-3xl font-bold", getScoreColor(score))}>
-              {percentage}%
-            </div>
-            <div className="text-sm text-gray-600">
-              {getScoreLabel(score)}
-            </div>
+            <div className={cn('text-3xl font-bold', getScoreColor(score))}>{percentage}%</div>
+            <div className="text-sm text-gray-600">{getScoreLabel(score)}</div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-600">
               {score.toFixed(1)} / {maxScore}
             </div>
             <div className="text-xs text-gray-400">
@@ -216,7 +213,7 @@ export function TransparencyScore({
         {/* Score Breakdown */}
         {showDetails && Object.keys(factors).length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-gray-700">Score Breakdown</h4>
+            <h4 className="text-sm font-medium text-gray-900">Score Breakdown</h4>
             <div className="grid grid-cols-2 gap-2 text-xs">
               {Object.entries(factors).map(([factor, points]) => (
                 <div key={factor} className="flex items-center gap-2">
@@ -246,8 +243,7 @@ export function TransparencyScore({
                 <p className="text-gray-600">
                   {score >= 60
                     ? 'Add a few more details to reach excellent transparency.'
-                    : 'Complete more profile fields to build trust and increase your score.'
-                  }
+                    : 'Complete more profile fields to build trust and increase your score.'}
                 </p>
               </div>
             </div>
@@ -255,7 +251,7 @@ export function TransparencyScore({
               variant="outline"
               size="sm"
               className="mt-2 w-full"
-              onClick={() => window.location.href = '/profile'}
+              onClick={() => (window.location.href = '/profile')}
             >
               Update Profile
             </Button>
@@ -270,12 +266,13 @@ export function TransparencyScore({
               <span className="text-sm font-medium">Excellent transparency!</span>
             </div>
             <p className="text-xs text-green-600 mt-1">
-              Your profile demonstrates high transparency and builds strong trust with the community.
+              Your profile demonstrates high transparency and builds strong trust with the
+              community.
             </p>
           </div>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
-export default TransparencyScore
+export default TransparencyScore;

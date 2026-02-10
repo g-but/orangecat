@@ -206,7 +206,7 @@ export default function ProfileEntityTab({
     <div className="space-y-4">
       {/* Header with count */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
           <Icon className="w-5 h-5 text-orange-500" />
           {entities.length} {entities.length === 1 ? metadata?.name : metadata?.namePlural}
         </h3>
@@ -285,7 +285,7 @@ export default function ProfileEntityTab({
                     {/* Event location/date */}
                     {entityType === 'event' && entity.start_date && (
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
+                        <Calendar className="w-4 h-4" />
                         {new Date(entity.start_date).toLocaleDateString()}
                       </span>
                     )}
@@ -293,12 +293,12 @@ export default function ProfileEntityTab({
                       <span className="flex items-center gap-1">
                         {entity.is_online ? (
                           <>
-                            <Globe className="w-3.5 h-3.5" />
+                            <Globe className="w-4 h-4" />
                             Online
                           </>
                         ) : (
                           <>
-                            <MapPin className="w-3.5 h-3.5" />
+                            <MapPin className="w-4 h-4" />
                             {entity.venue_city}
                           </>
                         )}
@@ -308,7 +308,7 @@ export default function ProfileEntityTab({
                     {/* Asset type */}
                     {entityType === 'asset' && entity.type && (
                       <span className="flex items-center gap-1">
-                        <Tag className="w-3.5 h-3.5" />
+                        <Tag className="w-4 h-4" />
                         {entity.type}
                       </span>
                     )}

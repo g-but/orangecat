@@ -1,13 +1,20 @@
-'use client'
+'use client';
 
-import { motion } from 'framer-motion'
-import { ArrowDownCircle, ArrowUpCircle, ExternalLink, ThumbsUp, ThumbsDown, MessageCircle } from 'lucide-react'
-import { BitcoinTransaction } from '@/types/bitcoin/index'
-import { getTransactionUrl, formatBtcValue } from '@/services/bitcoin'
-import { formatDistanceToNow } from 'date-fns'
+import { motion } from 'framer-motion';
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  ExternalLink,
+  ThumbsUp,
+  ThumbsDown,
+  MessageCircle,
+} from 'lucide-react';
+import { BitcoinTransaction } from '@/types/bitcoin/index';
+import { getTransactionUrl, formatBtcValue } from '@/services/bitcoin';
+import { formatDistanceToNow } from 'date-fns';
 
 interface TransactionCardProps {
-  transaction: BitcoinTransaction
+  transaction: BitcoinTransaction;
 }
 
 export function TransactionCard({ transaction }: TransactionCardProps) {
@@ -19,11 +26,13 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white rounded-xl shadow-lg p-5 border border-gray-200 hover:shadow-xl transition-shadow duration-300 ease-in-out"
+      className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300 ease-in-out"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          <div className={`flex items-center space-x-2.5 ${isIncoming ? 'text-green-600' : 'text-red-600'}`}>
+          <div
+            className={`flex items-center space-x-2.5 ${isIncoming ? 'text-green-600' : 'text-red-600'}`}
+          >
             {isIncoming ? (
               <ArrowDownCircle className="h-6 w-6 stroke-[1.5px]" />
             ) : (
@@ -56,7 +65,7 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
             rel="noopener noreferrer"
             className="text-tiffany-600 hover:text-tiffany-700 transition-colors duration-200 text-xs flex items-center"
           >
-            View Details <ExternalLink className="h-3.5 w-3.5 ml-1" />
+            View Details <ExternalLink className="h-4 w-4 ml-1" />
           </a>
         </div>
       </div>
@@ -76,5 +85,5 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
         </button>
       </div>
     </motion.div>
-  )
-} 
+  );
+}

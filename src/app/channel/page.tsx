@@ -22,7 +22,7 @@ export default function ChannelComingSoonPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg">
-            <PlayCircle className="w-7 h-7" />
+            <PlayCircle className="w-8 h-8" />
           </div>
           <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">
             Stream anything. Get paid directly.

@@ -175,7 +175,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
             <AlertTriangle className="h-6 w-6 text-red-600" />
           </div>

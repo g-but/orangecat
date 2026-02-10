@@ -40,9 +40,7 @@ export function SmartQuestionsPanel({
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
   // Filter out dismissed questions
-  const visibleQuestions = questions
-    .filter(q => !dismissedIds.has(q.id))
-    .slice(0, maxQuestions);
+  const visibleQuestions = questions.filter(q => !dismissedIds.has(q.id)).slice(0, maxQuestions);
 
   const dismissQuestion = (id: string) => {
     setDismissedIds(prev => {
@@ -64,7 +62,7 @@ export function SmartQuestionsPanel({
       </div>
 
       <div className="space-y-2">
-        {visibleQuestions.map((question) => (
+        {visibleQuestions.map(question => (
           <QuestionCard
             key={question.id}
             question={question}
@@ -79,13 +77,7 @@ export function SmartQuestionsPanel({
 /**
  * Individual question card
  */
-function QuestionCard({
-  question,
-  onDismiss,
-}: {
-  question: SmartQuestion;
-  onDismiss: () => void;
-}) {
+function QuestionCard({ question, onDismiss }: { question: SmartQuestion; onDismiss: () => void }) {
   return (
     <div className="flex items-center justify-between gap-3 p-3 bg-amber-50 border border-amber-100 rounded-lg hover:bg-amber-100 transition-colors group">
       <p className="text-sm text-gray-700 flex-1">{question.question}</p>
@@ -104,7 +96,7 @@ function QuestionCard({
 
         <button
           onClick={onDismiss}
-          className="p-1 text-gray-400 hover:text-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+          className="p-1 text-gray-400 hover:text-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Dismiss question"
         >
           <X className="w-4 h-4" />
@@ -129,7 +121,11 @@ export function SmartQuestionInline({
       <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0" />
       <span className="text-gray-600">{question.question}</span>
       <Link href={question.action.href}>
-        <Button size="sm" variant="ghost" className="text-tiffany-600 hover:text-tiffany-700 p-1 h-auto">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-tiffany-600 hover:text-tiffany-700 p-1 h-auto"
+        >
           {question.action.label}
           <ArrowRight className="w-3 h-3 ml-0.5" />
         </Button>
@@ -137,7 +133,7 @@ export function SmartQuestionInline({
       {onDismiss && (
         <button
           onClick={onDismiss}
-          className="p-1 text-gray-400 hover:text-gray-600 rounded"
+          className="p-1 text-gray-400 hover:text-gray-600 rounded min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Dismiss"
         >
           <X className="w-3 h-3" />

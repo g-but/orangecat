@@ -1,50 +1,51 @@
-'use client'
+'use client';
 
-import { LucideIcon , 
-  ArrowLeft, 
+import {
+  LucideIcon,
+  ArrowLeft,
   Clock,
   Star,
   CheckCircle,
   ExternalLink,
-  BookOpen
-} from 'lucide-react'
-import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
+  BookOpen,
+} from 'lucide-react';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 
 export interface FeatureInfo {
-  title: string
-  icon: LucideIcon
-  color: string
-  iconColor: string
-  description: string
-  longDescription: string
-  features: string[]
-  timeline: string
-  useCases: string[]
-  landingPageUrl: string // New: URL to the main feature page
+  title: string;
+  icon: LucideIcon;
+  color: string;
+  iconColor: string;
+  description: string;
+  longDescription: string;
+  features: string[];
+  timeline: string;
+  useCases: string[];
+  landingPageUrl: string; // New: URL to the main feature page
 }
 
 interface ComingSoonPageProps {
-  featureInfo: FeatureInfo
-  isAuthenticated: boolean
+  featureInfo: FeatureInfo;
+  isAuthenticated: boolean;
 }
 
 export default function ComingSoonPage({ featureInfo, isAuthenticated }: ComingSoonPageProps) {
-  const IconComponent = featureInfo.icon
-  
+  const IconComponent = featureInfo.icon;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-8">
-          <Link href={isAuthenticated ? "/dashboard" : "/"}>
+          <Link href={isAuthenticated ? '/dashboard' : '/'}>
             <Button variant="outline" className="mb-6">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to {isAuthenticated ? 'Dashboard' : 'Home'}
             </Button>
           </Link>
-          
+
           <div className="flex items-center mb-6">
             <div className={`p-4 rounded-xl bg-gradient-to-r ${featureInfo.color} mr-6`}>
               <IconComponent className="w-8 h-8 text-white" />
@@ -62,7 +63,7 @@ export default function ComingSoonPage({ featureInfo, isAuthenticated }: ComingS
         </div>
 
         {/* Feature Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
           {/* Main Description */}
           <div className="lg:col-span-2">
             <Card>
@@ -74,7 +75,7 @@ export default function ComingSoonPage({ featureInfo, isAuthenticated }: ComingS
               </CardHeader>
               <CardContent>
                 <p className="text-gray-700 mb-6 leading-relaxed">{featureInfo.longDescription}</p>
-                
+
                 <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
                   <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
                   Key Features
@@ -102,7 +103,9 @@ export default function ComingSoonPage({ featureInfo, isAuthenticated }: ComingS
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600 mb-2">{featureInfo.timeline}</div>
+                  <div className="text-2xl font-bold text-orange-600 mb-2">
+                    {featureInfo.timeline}
+                  </div>
                   <p className="text-gray-600 text-sm">Expected release</p>
                 </div>
               </CardContent>
@@ -137,8 +140,8 @@ export default function ComingSoonPage({ featureInfo, isAuthenticated }: ComingS
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 text-sm mb-3">
-                  Want to see what {featureInfo.title.toLowerCase()} will look like? 
-                  Check out our detailed concept page.
+                  Want to see what {featureInfo.title.toLowerCase()} will look like? Check out our
+                  detailed concept page.
                 </p>
                 <Link href={featureInfo.landingPageUrl}>
                   <Button variant="outline" size="sm" className="w-full">
@@ -156,10 +159,12 @@ export default function ComingSoonPage({ featureInfo, isAuthenticated }: ComingS
           {/* Stay Updated Card */}
           <Card className="bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200">
             <CardContent className="p-6 text-center">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Stay Updated</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Stay Updated</h3>
               <p className="text-gray-700 mb-4 text-sm">
-                Want to be notified when {featureInfo.title.toLowerCase()} launches? 
-                {isAuthenticated ? ' You\'ll be notified automatically as a registered user.' : ' Create an account to stay in the loop.'}
+                Want to be notified when {featureInfo.title.toLowerCase()} launches?
+                {isAuthenticated
+                  ? " You'll be notified automatically as a registered user."
+                  : ' Create an account to stay in the loop.'}
               </p>
               {!isAuthenticated ? (
                 <Link href="/auth">
@@ -181,13 +186,16 @@ export default function ComingSoonPage({ featureInfo, isAuthenticated }: ComingS
           {/* Learn More Card */}
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
             <CardContent className="p-6 text-center">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Learn More</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Learn More</h3>
               <p className="text-gray-700 mb-4 text-sm">
-                Explore our detailed vision and see how {featureInfo.title.toLowerCase()} will transform 
-                your Bitcoin experience.
+                Explore our detailed vision and see how {featureInfo.title.toLowerCase()} will
+                transform your Bitcoin experience.
               </p>
               <Link href={featureInfo.landingPageUrl}>
-                <Button variant="outline" className="w-full border-blue-300 hover:border-blue-400 hover:bg-blue-50">
+                <Button
+                  variant="outline"
+                  className="w-full border-blue-300 hover:border-blue-400 hover:bg-blue-50"
+                >
                   <BookOpen className="w-4 h-4 mr-2" />
                   Explore {featureInfo.title}
                 </Button>
@@ -199,11 +207,9 @@ export default function ComingSoonPage({ featureInfo, isAuthenticated }: ComingS
         {/* Bottom Navigation */}
         <div className="mt-8 pt-6 border-t border-gray-200">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-gray-600">
-              Part of the OrangeCat platform roadmap
-            </div>
+            <div className="text-sm text-gray-600">Part of the OrangeCat platform roadmap</div>
             <div className="flex gap-3">
-              <Link href={isAuthenticated ? "/dashboard" : "/"}>
+              <Link href={isAuthenticated ? '/dashboard' : '/'}>
                 <Button variant="outline" size="sm">
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   {isAuthenticated ? 'Dashboard' : 'Home'}
@@ -220,5 +226,5 @@ export default function ComingSoonPage({ featureInfo, isAuthenticated }: ComingS
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

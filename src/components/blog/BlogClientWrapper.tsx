@@ -1,132 +1,149 @@
-'use client'
+'use client';
 
-import { useState, useMemo } from 'react'
-import Card from '@/components/ui/Card'
-import { Calendar, Clock, Tag, Filter } from 'lucide-react'
-import Link from 'next/link'
-import { BlogPost } from '@/lib/blog'
+import { useState, useMemo } from 'react';
+import Card from '@/components/ui/Card';
+import { Calendar, Clock, Tag, Filter } from 'lucide-react';
+import Link from 'next/link';
+import { BlogPost } from '@/lib/blog';
 
 interface BlogClientWrapperProps {
-  posts: BlogPost[]
-  featuredPost: BlogPost | null
-  tags: string[]
+  posts: BlogPost[];
+  featuredPost: BlogPost | null;
+  tags: string[];
 }
 
-type TimeFilter = 'all' | 'thisyear' | 'last6months' | 'thismonth' | string // string for specific year/month
+type TimeFilter = 'all' | 'thisyear' | 'last6months' | 'thismonth' | string; // string for specific year/month
 
 export default function BlogClientWrapper({ posts, featuredPost, tags }: BlogClientWrapperProps) {
-  const [selectedTag, setSelectedTag] = useState<string | null>(null)
-  const [selectedTimeFilter, setSelectedTimeFilter] = useState<TimeFilter>('all')
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState<TimeFilter>('all');
 
   // Generate time filter options based on available posts
   const timeFilterOptions = useMemo(() => {
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const currentMonth = now.getMonth()
-    
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
     // Get unique years and months from posts
-    const postDates = posts.map(post => new Date(post.date))
-    const years = Array.from(new Set(postDates.map(date => date.getFullYear()))).sort((a, b) => b - a)
-    const yearMonths = Array.from(new Set(postDates.map(date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`))).sort().reverse()
-    
-    const options = [
-      { key: 'all', label: 'All Time', count: posts.length }
-    ]
-    
+    const postDates = posts.map(post => new Date(post.date));
+    const years = Array.from(new Set(postDates.map(date => date.getFullYear()))).sort(
+      (a, b) => b - a
+    );
+    const yearMonths = Array.from(
+      new Set(
+        postDates.map(
+          date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        )
+      )
+    )
+      .sort()
+      .reverse();
+
+    const options = [{ key: 'all', label: 'All Time', count: posts.length }];
+
     // Add current year if we have posts from it
     if (years.includes(currentYear)) {
-      const thisYearPosts = posts.filter(post => new Date(post.date).getFullYear() === currentYear)
-      options.push({ key: 'thisyear', label: 'This Year', count: thisYearPosts.length })
+      const thisYearPosts = posts.filter(post => new Date(post.date).getFullYear() === currentYear);
+      options.push({ key: 'thisyear', label: 'This Year', count: thisYearPosts.length });
     }
-    
+
     // Add last 6 months if relevant
-    const sixMonthsAgo = new Date()
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-    const last6MonthsPosts = posts.filter(post => new Date(post.date) >= sixMonthsAgo)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const last6MonthsPosts = posts.filter(post => new Date(post.date) >= sixMonthsAgo);
     if (last6MonthsPosts.length > 0 && last6MonthsPosts.length < posts.length) {
-      options.push({ key: 'last6months', label: 'Last 6 Months', count: last6MonthsPosts.length })
+      options.push({ key: 'last6months', label: 'Last 6 Months', count: last6MonthsPosts.length });
     }
-    
+
     // Add this month if we have posts from it
     const thisMonthPosts = posts.filter(post => {
-      const postDate = new Date(post.date)
-      return postDate.getFullYear() === currentYear && postDate.getMonth() === currentMonth
-    })
+      const postDate = new Date(post.date);
+      return postDate.getFullYear() === currentYear && postDate.getMonth() === currentMonth;
+    });
     if (thisMonthPosts.length > 0) {
-      options.push({ key: 'thismonth', label: 'This Month', count: thisMonthPosts.length })
+      options.push({ key: 'thismonth', label: 'This Month', count: thisMonthPosts.length });
     }
-    
+
     // Add specific year/month combinations for easy access
     yearMonths.forEach(yearMonth => {
-      const [year, month] = yearMonth.split('-')
-      const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      const [year, month] = yearMonth.split('-');
+      const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      });
       const monthPosts = posts.filter(post => {
-        const postDate = new Date(post.date)
-        return postDate.getFullYear() === parseInt(year) && postDate.getMonth() === parseInt(month) - 1
-      })
-      options.push({ key: yearMonth, label: monthName, count: monthPosts.length })
-    })
-    
-    return options
-  }, [posts])
+        const postDate = new Date(post.date);
+        return (
+          postDate.getFullYear() === parseInt(year) && postDate.getMonth() === parseInt(month) - 1
+        );
+      });
+      options.push({ key: yearMonth, label: monthName, count: monthPosts.length });
+    });
+
+    return options;
+  }, [posts]);
 
   // Filter posts by both tag and time
   const filteredPosts = useMemo(() => {
-    let filtered = posts
+    let filtered = posts;
 
     // Apply tag filter
     if (selectedTag) {
-      filtered = filtered.filter(post => 
+      filtered = filtered.filter(post =>
         post.tags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())
-      )
+      );
     }
 
     // Apply time filter
     if (selectedTimeFilter !== 'all') {
-      const now = new Date()
-      
+      const now = new Date();
+
       switch (selectedTimeFilter) {
         case 'thisyear':
-          filtered = filtered.filter(post => 
-            new Date(post.date).getFullYear() === now.getFullYear()
-          )
-          break
+          filtered = filtered.filter(
+            post => new Date(post.date).getFullYear() === now.getFullYear()
+          );
+          break;
         case 'last6months':
-          const sixMonthsAgo = new Date()
-          sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-          filtered = filtered.filter(post => new Date(post.date) >= sixMonthsAgo)
-          break
+          const sixMonthsAgo = new Date();
+          sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+          filtered = filtered.filter(post => new Date(post.date) >= sixMonthsAgo);
+          break;
         case 'thismonth':
           filtered = filtered.filter(post => {
-            const postDate = new Date(post.date)
-            return postDate.getFullYear() === now.getFullYear() && 
-                   postDate.getMonth() === now.getMonth()
-          })
-          break
+            const postDate = new Date(post.date);
+            return (
+              postDate.getFullYear() === now.getFullYear() && postDate.getMonth() === now.getMonth()
+            );
+          });
+          break;
         default:
           // Handle specific year-month (YYYY-MM format)
           if (selectedTimeFilter.includes('-')) {
-            const [year, month] = selectedTimeFilter.split('-')
+            const [year, month] = selectedTimeFilter.split('-');
             filtered = filtered.filter(post => {
-              const postDate = new Date(post.date)
-              return postDate.getFullYear() === parseInt(year) && 
-                     postDate.getMonth() === parseInt(month) - 1
-            })
+              const postDate = new Date(post.date);
+              return (
+                postDate.getFullYear() === parseInt(year) &&
+                postDate.getMonth() === parseInt(month) - 1
+              );
+            });
           }
       }
     }
 
-    return filtered
-  }, [posts, selectedTag, selectedTimeFilter])
+    return filtered;
+  }, [posts, selectedTag, selectedTimeFilter]);
 
   // When no tag filter and All Time selected, show featured post separately + all other posts
   // When any filter is selected, show all matching posts in grid (no separate featured section)
-  const postsToShow = (selectedTag || selectedTimeFilter !== 'all')
-    ? filteredPosts  // Show all filtered posts including featured
-    : posts  // Show ALL posts in grid when "All Topics" is selected
+  const postsToShow =
+    selectedTag || selectedTimeFilter !== 'all'
+      ? filteredPosts // Show all filtered posts including featured
+      : posts; // Show ALL posts in grid when "All Topics" is selected
 
   // Only show featured section when no filters AND user hasn't selected any specific filtering
-  const showFeaturedSection = false  // Disable featured section for now to test unified grid
+  const showFeaturedSection = false; // Disable featured section for now to test unified grid
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -139,13 +156,11 @@ export default function BlogClientWrapper({ posts, featuredPost, tags }: BlogCli
               Featured Article
             </div>
             <Link href={`/blog/${featuredPost.slug}`}>
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 hover:text-orange-600 transition-colors cursor-pointer">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-900 hover:text-orange-600 transition-colors cursor-pointer">
                 {featuredPost.title}
               </h2>
             </Link>
-            <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-              {featuredPost.excerpt}
-            </p>
+            <p className="text-lg text-gray-700 mb-6 leading-relaxed">{featuredPost.excerpt}</p>
             <div className="flex items-center justify-between">
               <div className="flex items-center text-sm text-gray-500">
                 <Calendar className="w-4 h-4 mr-2" />
@@ -247,12 +262,14 @@ export default function BlogClientWrapper({ posts, featuredPost, tags }: BlogCli
                 </span>
               )}
               <span className="text-gray-500">•</span>
-              <span className="text-gray-600 font-medium">{filteredPosts.length} post{filteredPosts.length !== 1 ? 's' : ''}</span>
+              <span className="text-gray-600 font-medium">
+                {filteredPosts.length} post{filteredPosts.length !== 1 ? 's' : ''}
+              </span>
             </div>
             <button
               onClick={() => {
-                setSelectedTag(null)
-                setSelectedTimeFilter('all')
+                setSelectedTag(null);
+                setSelectedTimeFilter('all');
               }}
               className="ml-auto text-xs text-gray-500 hover:text-gray-700 underline"
             >
@@ -264,7 +281,7 @@ export default function BlogClientWrapper({ posts, featuredPost, tags }: BlogCli
 
       {/* Blog Posts Grid */}
       {postsToShow.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {postsToShow.map(post => (
             <Card key={post.slug} className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-center text-sm text-gray-500 mb-4">
@@ -300,19 +317,17 @@ export default function BlogClientWrapper({ posts, featuredPost, tags }: BlogCli
         </div>
       ) : (
         <div className="text-center py-16">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">
-            No posts found
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">No posts found</h3>
           <p className="text-gray-600 mb-8">
-            {selectedTag || selectedTimeFilter !== 'all' 
-              ? 'Try adjusting your filters or clear them to see all posts.' 
+            {selectedTag || selectedTimeFilter !== 'all'
+              ? 'Try adjusting your filters or clear them to see all posts.'
               : 'We have more great content in development. Check back soon for our latest insights and updates.'}
           </p>
           {(selectedTag || selectedTimeFilter !== 'all') && (
             <button
               onClick={() => {
-                setSelectedTag(null)
-                setSelectedTimeFilter('all')
+                setSelectedTag(null);
+                setSelectedTimeFilter('all');
               }}
               className="px-6 py-3 bg-tiffany-500 text-white rounded-lg hover:bg-tiffany-600 transition-colors"
             >
@@ -325,7 +340,7 @@ export default function BlogClientWrapper({ posts, featuredPost, tags }: BlogCli
       {/* Newsletter Signup */}
       <div className="mt-16">
         <Card className="p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Stay Updated</h2>
+          <h2 className="text-2xl font-semibold mb-4">Stay Updated</h2>
           <p className="text-gray-600 mb-6">
             Subscribe to our newsletter for the latest updates and insights about Bitcoin funding
           </p>
@@ -344,5 +359,5 @@ export default function BlogClientWrapper({ posts, featuredPost, tags }: BlogCli
         </Card>
       </div>
     </div>
-  )
-} 
+  );
+}

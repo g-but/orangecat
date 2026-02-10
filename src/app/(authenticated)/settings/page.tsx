@@ -184,7 +184,7 @@ export default function SettingsPage() {
             <div className="flex items-center text-white">
               <Lock className="w-8 h-8 mr-4" />
               <div>
-                <h2 className="text-2xl font-bold">Account & Security</h2>
+                <h2 className="text-2xl font-semibold">Account & Security</h2>
                 <p className="text-blue-100 text-sm mt-1">
                   Manage your login credentials and account security
                 </p>
@@ -195,7 +195,7 @@ export default function SettingsPage() {
           <div className="p-8 space-y-10">
             {/* Email Update */}
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Email Address</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Email Address</h3>
               <p className="text-gray-600 mb-6">
                 This is the email address associated with your account. You&apos;ll receive
                 important notifications here.
@@ -231,7 +231,7 @@ export default function SettingsPage() {
 
             {/* Password Update */}
             <div className="border-t border-gray-100 pt-10">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Change Password</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
               <p className="text-gray-600 mb-6">
                 Choose a strong password to keep your account secure.
               </p>
@@ -281,7 +281,7 @@ export default function SettingsPage() {
 
             {/* Two-Factor Authentication */}
             <div className="border-t border-gray-100 pt-10">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Shield className="w-6 h-6 mr-2 text-tiffany-600" />
                 Two-Factor Authentication
               </h3>
@@ -315,7 +315,7 @@ export default function SettingsPage() {
 
             {/* Danger Zone */}
             <div className="border-t border-red-200 pt-10">
-              <h3 className="text-xl font-semibold text-red-800 mb-4 flex items-center">
+              <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
                 <AlertTriangle className="w-6 h-6 mr-2" />
                 Danger Zone
               </h3>

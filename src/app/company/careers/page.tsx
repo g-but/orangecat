@@ -103,7 +103,7 @@ export default function CareersPage() {
       {/* Our Mission */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Why BitBaum?</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Why BitBaum?</h2>
           <p className="text-lg text-gray-600 max-w-4xl mx-auto">
             We're not just building software – we're creating the infrastructure for a more
             transparent, community-driven economy powered by Bitcoin. Every role at BitBaum
@@ -112,7 +112,7 @@ export default function CareersPage() {
         </div>
 
         {/* Values */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {values.map((value, index) => (
             <div key={index} className="text-center p-6 bg-white rounded-xl shadow-sm">
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-600">
@@ -126,7 +126,7 @@ export default function CareersPage() {
 
         {/* Open Positions */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Open Positions</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 text-center mb-12">Open Positions</h2>
 
           {openPositions.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -137,7 +137,7 @@ export default function CareersPage() {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-1">{position.title}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{position.title}</h3>
                       <p className="text-orange-600 font-medium text-sm">{position.department}</p>
                     </div>
                     <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
@@ -161,7 +161,7 @@ export default function CareersPage() {
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Coffee className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 No Open Positions Right Now
               </h3>
               <p className="text-gray-600 mb-6">
@@ -177,7 +177,9 @@ export default function CareersPage() {
 
         {/* Perks & Benefits */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">Why Work With Us?</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 text-center mb-8">
+            Why Work With Us?
+          </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {perks.map((perk, index) => (
@@ -200,7 +202,7 @@ export default function CareersPage() {
 
         {/* CTA */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Join Our Mission?</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Ready to Join Our Mission?</h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
             Whether we have an open position or not, we'd love to hear from talented individuals who
             share our passion for Bitcoin and community building.

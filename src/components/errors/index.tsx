@@ -29,7 +29,7 @@ interface ErrorFallbackProps {
 
 function ErrorFallback({ icon, title, message, onRetry }: ErrorFallbackProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="flex flex-col items-center justify-center p-6 text-center bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
         {icon}
       </div>
@@ -67,7 +67,7 @@ export function TimelineErrorBoundary({ children, onError }: TimelineErrorBounda
     <ErrorBoundary
       fallback={TimelineFallback}
       level="component"
-      onError={onError ? (error) => onError(error) : undefined}
+      onError={onError ? error => onError(error) : undefined}
       maxRetries={2}
     >
       {children}
@@ -97,7 +97,7 @@ export function MessagingErrorBoundary({ children, onError }: MessagingErrorBoun
     <ErrorBoundary
       fallback={MessagingFallback}
       level="component"
-      onError={onError ? (error) => onError(error) : undefined}
+      onError={onError ? error => onError(error) : undefined}
       maxRetries={3}
     >
       {children}
@@ -122,12 +122,15 @@ interface CreateWorkflowErrorBoundaryProps {
   onError?: (error: Error) => void;
 }
 
-export function CreateWorkflowErrorBoundary({ children, onError }: CreateWorkflowErrorBoundaryProps) {
+export function CreateWorkflowErrorBoundary({
+  children,
+  onError,
+}: CreateWorkflowErrorBoundaryProps) {
   return (
     <ErrorBoundary
       fallback={CreateWorkflowFallback}
       level="component"
-      onError={onError ? (error) => onError(error) : undefined}
+      onError={onError ? error => onError(error) : undefined}
       maxRetries={2}
     >
       {children}
@@ -145,7 +148,11 @@ interface ComponentErrorBoundaryProps {
   onError?: (error: Error) => void;
 }
 
-export function ComponentErrorBoundary({ children, name = 'Component', onError }: ComponentErrorBoundaryProps) {
+export function ComponentErrorBoundary({
+  children,
+  name = 'Component',
+  onError,
+}: ComponentErrorBoundaryProps) {
   return (
     <ErrorBoundary
       fallback={
@@ -156,7 +163,7 @@ export function ComponentErrorBoundary({ children, name = 'Component', onError }
         />
       }
       level="component"
-      onError={onError ? (error) => onError(error) : undefined}
+      onError={onError ? error => onError(error) : undefined}
       maxRetries={3}
     >
       {children}
@@ -182,7 +189,9 @@ export const withMessagingErrorBoundary = <T extends object>(Component: React.Co
     maxRetries: 3,
   });
 
-export const withCreateWorkflowErrorBoundary = <T extends object>(Component: React.ComponentType<T>) =>
+export const withCreateWorkflowErrorBoundary = <T extends object>(
+  Component: React.ComponentType<T>
+) =>
   withErrorBoundary(Component, {
     fallback: CreateWorkflowFallback,
     level: 'component',

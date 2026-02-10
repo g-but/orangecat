@@ -49,7 +49,7 @@ export function MessageBubble({ message, isLast, onActionClick }: MessageBubbleP
               : 'bg-gray-100 text-gray-900 rounded-tl-sm'
           )}
         >
-          <div className="whitespace-pre-wrap break-words text-[15px] leading-relaxed">
+          <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">
             {displayContent}
             {isLast && !isUser && !displayContent && (
               <span className="inline-flex items-center gap-1">

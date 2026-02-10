@@ -175,7 +175,7 @@ function DocumentPageContent() {
         </div>
 
         {/* Info banner */}
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-5 mb-8">
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-6 mb-8">
           <div className="flex items-start gap-3">
             <Sparkles className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
             <div>
@@ -201,7 +201,7 @@ function DocumentPageContent() {
             <div className="p-4 bg-indigo-100 rounded-xl w-fit mb-4 group-hover:bg-indigo-200 transition-colors">
               <Upload className="h-8 w-8 text-indigo-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Upload a file</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload a file</h3>
             <p className="text-gray-600 mb-4">
               Drop a .txt or .md file and we'll extract the content automatically.
             </p>
@@ -232,7 +232,7 @@ function DocumentPageContent() {
             <div className="p-4 bg-purple-100 rounded-xl w-fit mb-4 group-hover:bg-purple-200 transition-colors">
               <PenLine className="h-8 w-8 text-purple-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Write from scratch</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Write from scratch</h3>
             <p className="text-gray-600 mb-4">Type or paste your content directly into the form.</p>
             <div className="flex flex-wrap gap-2">
               <span className="px-2 py-1 bg-gray-100 rounded-md text-xs font-medium text-gray-600">

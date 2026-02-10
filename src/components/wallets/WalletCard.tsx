@@ -107,7 +107,7 @@ export function WalletCard({ wallet, isExpanded, onToggle, className }: WalletCa
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-xl font-bold text-gray-900">{wallet.name}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{wallet.name}</h3>
                   {wallet.recommended && (
                     <Badge variant="secondary" className="bg-orange-100 text-orange-800">
                       <Award className="w-3 h-3 mr-1" />

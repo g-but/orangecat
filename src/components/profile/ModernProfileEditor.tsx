@@ -143,7 +143,7 @@ export default function ModernProfileEditor({
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">Edit profile</h2>
+            <h2 className="text-xl font-semibold">Edit profile</h2>
             <Button
               type="button"
               variant="ghost"

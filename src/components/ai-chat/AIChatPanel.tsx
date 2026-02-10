@@ -221,7 +221,7 @@ export function AIChatPanel({
       <div className="flex items-center gap-3 p-4 bg-white border-b border-gray-200">
         <Link
           href={`/dashboard/ai-assistants`}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
           <ArrowLeft className="h-5 w-5 text-gray-600" />
         </Link>

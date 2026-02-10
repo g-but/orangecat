@@ -107,7 +107,7 @@ export default function DiscoverResults({
   // Results Header
   const resultsHeader = (
     <div className="flex items-center justify-between mb-6">
-      <h2 className="text-2xl font-bold text-gray-900">
+      <h2 className="text-2xl font-semibold text-gray-900">
         {totalResults > 0 ? (
           <>
             {totalResults} result{totalResults !== 1 ? 's' : ''} found

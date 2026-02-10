@@ -1,142 +1,147 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/Button'
-import { Download, X, Smartphone } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { logger } from '@/utils/logger'
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Download, X, Smartphone } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { logger } from '@/utils/logger';
 
 interface PWAInstallButtonProps {
-  className?: string
+  className?: string;
   // Keep public API, map to Button variants internally
-  variant?: 'default' | 'outline' | 'ghost' | 'banner' | 'primary' | 'secondary'
-  size?: 'sm' | 'md' | 'lg'
-  showBanner?: boolean
+  variant?: 'default' | 'outline' | 'ghost' | 'banner' | 'primary' | 'secondary';
+  size?: 'sm' | 'md' | 'lg';
+  showBanner?: boolean;
 }
 
 interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[]
+  readonly platforms: string[];
   readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed'
-    platform: string
-  }>
-  prompt(): Promise<void>
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
 }
 
 declare global {
   interface WindowEventMap {
-    beforeinstallprompt: BeforeInstallPromptEvent
+    beforeinstallprompt: BeforeInstallPromptEvent;
   }
 }
 
-export function PWAInstallButton({ 
-  className, 
+export function PWAInstallButton({
+  className,
   variant = 'default',
   size = 'md',
-  showBanner = false 
+  showBanner = false,
 }: PWAInstallButtonProps) {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [canInstall, setCanInstall] = useState(false)
-  const [isInstalled, setIsInstalled] = useState(false)
-  const [showInstallBanner, setShowInstallBanner] = useState(false)
-  const [isInstalling, setIsInstalling] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [canInstall, setCanInstall] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
 
   useEffect(() => {
     // Check if already installed
     const checkIfInstalled = () => {
       // Check for PWA display mode
       if (window.matchMedia('(display-mode: standalone)').matches) {
-        setIsInstalled(true)
-        return
+        setIsInstalled(true);
+        return;
       }
-      
+
       // Check for iOS Safari standalone
       interface NavigatorStandalone extends Navigator {
         standalone?: boolean;
       }
       const nav = navigator as NavigatorStandalone;
       if (nav.standalone === true) {
-        setIsInstalled(true)
-        return
+        setIsInstalled(true);
+        return;
       }
-      
+
       // Check for Android TWA
       if (document.referrer.startsWith('android-app://')) {
-        setIsInstalled(true)
-        return
+        setIsInstalled(true);
+        return;
       }
-    }
+    };
 
-    checkIfInstalled()
+    checkIfInstalled();
 
     // Listen for install prompt
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
-      e.preventDefault()
-      setDeferredPrompt(e)
-      setCanInstall(true)
-      
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setCanInstall(true);
+
       // Show banner if requested and not shown recently
-      const lastBannerShown = localStorage.getItem('pwa-banner-shown')
-      const daysSinceLastShown = lastBannerShown 
+      const lastBannerShown = localStorage.getItem('pwa-banner-shown');
+      const daysSinceLastShown = lastBannerShown
         ? (Date.now() - parseInt(lastBannerShown)) / (1000 * 60 * 60 * 24)
-        : 999
-        
+        : 999;
+
       if (showBanner && daysSinceLastShown > 7) {
-        setShowInstallBanner(true)
-        localStorage.setItem('pwa-banner-shown', Date.now().toString())
+        setShowInstallBanner(true);
+        localStorage.setItem('pwa-banner-shown', Date.now().toString());
       }
-    }
+    };
 
     // Listen for app installed
     const handleAppInstalled = () => {
-      setIsInstalled(true)
-      setCanInstall(false)
-      setDeferredPrompt(null)
-      setShowInstallBanner(false)
-    }
+      setIsInstalled(true);
+      setCanInstall(false);
+      setDeferredPrompt(null);
+      setShowInstallBanner(false);
+    };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-    window.addEventListener('appinstalled', handleAppInstalled)
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-      window.removeEventListener('appinstalled', handleAppInstalled)
-    }
-  }, [showBanner])
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, [showBanner]);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {return}
+    if (!deferredPrompt) {
+      return;
+    }
 
-    setIsInstalling(true)
-    
+    setIsInstalling(true);
+
     try {
-      await deferredPrompt.prompt()
-      const choiceResult = await deferredPrompt.userChoice
-      
-      
+      await deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+
       if (choiceResult.outcome === 'accepted') {
-        logger.info('PWA install prompt accepted by user', undefined, 'PWA')
+        logger.info('PWA install prompt accepted by user', undefined, 'PWA');
       } else {
-        logger.info('PWA install prompt dismissed by user', undefined, 'PWA')
+        logger.info('PWA install prompt dismissed by user', undefined, 'PWA');
       }
     } catch (error) {
-      logger.error('PWA installation failed', { error: error instanceof Error ? error.message : String(error) }, 'PWA')
+      logger.error(
+        'PWA installation failed',
+        { error: error instanceof Error ? error.message : String(error) },
+        'PWA'
+      );
     } finally {
-      setDeferredPrompt(null)
-      setCanInstall(false)
-      setIsInstalling(false)
-      setShowInstallBanner(false)
+      setDeferredPrompt(null);
+      setCanInstall(false);
+      setIsInstalling(false);
+      setShowInstallBanner(false);
     }
-  }
+  };
 
   const handleBannerDismiss = () => {
-    setShowInstallBanner(false)
-    localStorage.setItem('pwa-banner-dismissed', Date.now().toString())
-  }
+    setShowInstallBanner(false);
+    localStorage.setItem('pwa-banner-dismissed', Date.now().toString());
+  };
 
   // Don't show if installed or can't install
   if (isInstalled || !canInstall) {
-    return null
+    return null;
   }
 
   // Banner variant
@@ -184,37 +189,39 @@ export function PWAInstallButton({
           </div>
           <button
             onClick={handleBannerDismiss}
-            className="flex-shrink-0 text-white/80 hover:text-white p-1"
+            className="flex-shrink-0 text-white/80 hover:text-white p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   // Button variant
   const sizeClasses = {
     sm: 'text-xs px-2 py-1',
     md: 'text-sm px-4 py-2',
-    lg: 'text-base px-6 py-3'
-  }
+    lg: 'text-base px-6 py-3',
+  };
 
   // Map external variants to Button variants
-  const mapVariant = (v: PWAInstallButtonProps['variant']): 'primary' | 'secondary' | 'outline' | 'ghost' => {
+  const mapVariant = (
+    v: PWAInstallButtonProps['variant']
+  ): 'primary' | 'secondary' | 'outline' | 'ghost' => {
     switch (v) {
       case 'secondary':
-        return 'secondary'
+        return 'secondary';
       case 'outline':
-        return 'outline'
+        return 'outline';
       case 'ghost':
-        return 'ghost'
+        return 'ghost';
       case 'banner':
       case 'default':
       default:
-        return 'primary'
+        return 'primary';
     }
-  }
+  };
 
   return (
     <Button
@@ -223,11 +230,7 @@ export function PWAInstallButton({
       size={size}
       onClick={handleInstallClick}
       disabled={isInstalling}
-      className={cn(
-        'transition-all duration-150',
-        sizeClasses[size],
-        className
-      )}
+      className={cn('transition-all duration-150', sizeClasses[size], className)}
     >
       {isInstalling ? (
         <>
@@ -241,7 +244,7 @@ export function PWAInstallButton({
         </>
       )}
     </Button>
-  )
+  );
 }
 
 // iOS Install Instructions Component
@@ -251,62 +254,67 @@ export function IOSInstallInstructions({ onClose }: { onClose: () => void }) {
       <div className="bg-white rounded-lg p-6 max-w-sm w-full">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Install OrangeCat</h3>
-          <button onClick={onClose} className="p-1">
+          <button
+            onClick={onClose}
+            className="p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <div className="space-y-4 text-sm">
           <div className="flex items-start space-x-3">
             <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="text-blue-600 font-bold text-xs">1</span>
             </div>
-            <p>Tap the <strong>Share</strong> button at the bottom of Safari</p>
+            <p>
+              Tap the <strong>Share</strong> button at the bottom of Safari
+            </p>
           </div>
-          
+
           <div className="flex items-start space-x-3">
             <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="text-blue-600 font-bold text-xs">2</span>
             </div>
-            <p>Scroll down and tap <strong>"Add to Home Screen"</strong></p>
+            <p>
+              Scroll down and tap <strong>"Add to Home Screen"</strong>
+            </p>
           </div>
-          
+
           <div className="flex items-start space-x-3">
             <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="text-blue-600 font-bold text-xs">3</span>
             </div>
-            <p>Tap <strong>"Add"</strong> to install OrangeCat on your home screen</p>
+            <p>
+              Tap <strong>"Add"</strong> to install OrangeCat on your home screen
+            </p>
           </div>
         </div>
-        
-        <Button 
-          onClick={onClose} 
-          className="w-full mt-6"
-          variant="outline"
-        >
+
+        <Button onClick={onClose} className="w-full mt-6" variant="outline">
           Got it
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 // Hook to detect iOS Safari
 export function useIOSSafari() {
-  const [isIOSSafari, setIsIOSSafari] = useState(false)
+  const [isIOSSafari, setIsIOSSafari] = useState(false);
 
   useEffect(() => {
-    const userAgent = navigator.userAgent
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent)
-    const isSafari = /Safari/.test(userAgent) && !/Chrome|CriOS|OPiOS|FxiOS/.test(userAgent)
+    const userAgent = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const isSafari = /Safari/.test(userAgent) && !/Chrome|CriOS|OPiOS|FxiOS/.test(userAgent);
     interface NavigatorStandalone extends Navigator {
       standalone?: boolean;
     }
     const nav = navigator as NavigatorStandalone;
     const isStandalone = nav.standalone === true;
-    
-    setIsIOSSafari(isIOS && isSafari && !isStandalone)
-  }, [])
 
-  return isIOSSafari
-} 
+    setIsIOSSafari(isIOS && isSafari && !isStandalone);
+  }, []);
+
+  return isIOSSafari;
+}

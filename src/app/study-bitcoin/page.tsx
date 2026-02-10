@@ -174,13 +174,13 @@ export default function StudyBitcoinPage() {
       {/* Featured Resources */}
       <PageSection background="white">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Resources</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Featured Resources</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             Start here with our most popular and essential Bitcoin education resources
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {featuredResources.map(resource => {
             const Icon = resource.icon;
             return (
@@ -194,7 +194,7 @@ export default function StudyBitcoinPage() {
                       <Icon className="w-6 h-6 text-orange-600" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
                         {resource.title}
                       </h3>
                       <p className="text-gray-600 mb-4 leading-relaxed">{resource.description}</p>
@@ -224,7 +224,7 @@ export default function StudyBitcoinPage() {
       {/* Learning Paths */}
       <PageSection>
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Learning Paths</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Learning Paths</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
             Structured courses designed to take you from beginner to Bitcoin expert
           </p>
@@ -286,7 +286,7 @@ export default function StudyBitcoinPage() {
                     </div>
                   </div>
 
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
                     {path.title}
                   </h3>
                   <p className="text-gray-600 mb-4 leading-relaxed">{path.description}</p>
@@ -324,7 +324,7 @@ export default function StudyBitcoinPage() {
       {/* Quick Resources */}
       <PageSection background="gray">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Quick Resources</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Quick Resources</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             Essential tools, guides, and external resources for your Bitcoin journey
           </p>
@@ -373,13 +373,13 @@ export default function StudyBitcoinPage() {
       {/* Why Learn Bitcoin */}
       <PageSection background="white">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Learn About Bitcoin?</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Why Learn About Bitcoin?</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             Understanding Bitcoin is essential in today&apos;s digital economy
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             {
               icon: Shield,
@@ -419,7 +419,7 @@ export default function StudyBitcoinPage() {
       {/* Call to Action */}
       <PageSection background="tiffany">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
             Ready to Start Your Bitcoin Journey?
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">

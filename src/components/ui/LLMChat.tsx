@@ -207,7 +207,7 @@ export function LLMChat({
             variant="ghost"
             size="sm"
             onClick={() => setIsOpen(false)}
-            className="p-2 hover:bg-white/50 rounded-lg"
+            className="p-2 hover:bg-white/50 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Close chat"
           >
             <X className="w-5 h-5 text-gray-600" />

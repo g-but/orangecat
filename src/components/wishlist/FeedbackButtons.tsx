@@ -49,24 +49,32 @@ export function FeedbackButtons({
   };
 
   const iconSizes = {
-    sm: 'h-3.5 w-3.5',
+    sm: 'h-3 w-3',
     md: 'h-4 w-4',
     lg: 'h-5 w-5',
   };
 
   const handleLikeClick = () => {
-    if (disabled || userFeedback === 'like') {return;}
+    if (disabled || userFeedback === 'like') {
+      return;
+    }
     onLike?.();
   };
 
   const handleDislikeClick = () => {
-    if (disabled) {return;}
-    if (userFeedback === 'dislike') {return;}
+    if (disabled) {
+      return;
+    }
+    if (userFeedback === 'dislike') {
+      return;
+    }
     setShowDislikeDialog(true);
   };
 
   const handleSubmitDislike = async () => {
-    if (dislikeComment.length < MIN_DISLIKE_COMMENT_LENGTH) {return;}
+    if (dislikeComment.length < MIN_DISLIKE_COMMENT_LENGTH) {
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -95,12 +103,7 @@ export function FeedbackButtons({
           onClick={handleLikeClick}
           disabled={disabled}
         >
-          <ThumbsUp
-            className={cn(
-              iconSizes[size],
-              userFeedback === 'like' && 'fill-current'
-            )}
-          />
+          <ThumbsUp className={cn(iconSizes[size], userFeedback === 'like' && 'fill-current')} />
           <span>{likes}</span>
         </Button>
 
@@ -116,10 +119,7 @@ export function FeedbackButtons({
           disabled={disabled}
         >
           <ThumbsDown
-            className={cn(
-              iconSizes[size],
-              userFeedback === 'dislike' && 'fill-current'
-            )}
+            className={cn(iconSizes[size], userFeedback === 'dislike' && 'fill-current')}
           />
           <span>{dislikes}</span>
         </Button>
@@ -131,8 +131,8 @@ export function FeedbackButtons({
           <DialogHeader>
             <DialogTitle>Why are you disliking this proof?</DialogTitle>
             <DialogDescription>
-              Please explain your concerns. This helps maintain trust in the
-              community and gives the creator a chance to respond.
+              Please explain your concerns. This helps maintain trust in the community and gives the
+              creator a chance to respond.
             </DialogDescription>
           </DialogHeader>
 
@@ -140,12 +140,10 @@ export function FeedbackButtons({
             <Textarea
               placeholder="Explain why you think this proof is not valid..."
               value={dislikeComment}
-              onChange={(e) => setDislikeComment(e.target.value)}
+              onChange={e => setDislikeComment(e.target.value)}
               rows={4}
               maxLength={500}
-              className={cn(
-                !isCommentValid && dislikeComment.length > 0 && 'border-yellow-500'
-              )}
+              className={cn(!isCommentValid && dislikeComment.length > 0 && 'border-yellow-500')}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>

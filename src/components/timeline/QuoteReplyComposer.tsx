@@ -176,7 +176,7 @@ export function QuoteReplyComposer({
               value={content}
               onChange={e => setContent(e.target.value)}
               placeholder={`Reply to ${parentPost.actor.name}...`}
-              className="min-h-[80px] text-[15px] border-none bg-transparent p-0 focus:ring-0 resize-none placeholder:text-gray-500"
+              className="min-h-[80px] text-sm border-none bg-transparent p-0 focus:ring-0 resize-none placeholder:text-gray-500"
               disabled={isSubmitting}
               onKeyDown={handleKeyDown}
               autoFocus
@@ -250,6 +250,3 @@ export function QuoteReplyButton({ onClick, disabled, className }: QuoteReplyBut
     </Button>
   );
 }
-
-
-

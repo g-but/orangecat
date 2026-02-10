@@ -203,7 +203,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
             aria-label="Compose new post"
             className={cn(
               'w-full leading-6',
-              simpleMode ? 'min-h-[3.25rem] text-[16px]' : 'min-h-[6rem] text-[17px]',
+              simpleMode ? 'min-h-[3.25rem] text-base' : 'min-h-[6rem] text-base',
               'border-none bg-transparent p-0 focus:outline-none',
               'leading-relaxed break-words',
               'max-h-[60vh] overflow-y-auto',
@@ -263,7 +263,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
                         title={preset.description}
                       >
                         <span className="inline-flex items-center gap-1">
-                          <Icon className="w-3.5 h-3.5" />
+                          <Icon className="w-4 h-4" />
                           {preset.label}
                         </span>
                       </button>

@@ -342,16 +342,24 @@ export default function WalletVault() {
                           variant="outline"
                           size="sm"
                           onClick={() => toggleFavorite(address.id)}
-                          className="p-1"
+                          className="p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
                         >
                           <Heart
                             className={`w-3 h-3 ${address.isFavorite ? 'fill-red-500 text-red-500' : ''}`}
                           />
                         </Button>
-                        <Button variant="outline" size="sm" className="p-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        >
                           <Edit className="w-3 h-3" />
                         </Button>
-                        <Button variant="outline" size="sm" className="p-1 text-red-600">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="p-1 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-600"
+                        >
                           <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
@@ -409,7 +417,7 @@ export default function WalletVault() {
                 onClick={e => e.stopPropagation()}
               >
                 <div className="p-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Add Bitcoin Address</h2>
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-6">Add Bitcoin Address</h2>
 
                   {/* Form would go here - simplified for demo */}
                   <div className="space-y-6">

@@ -54,7 +54,7 @@ export default function WalletOnboarding() {
             <Bitcoin className="w-10 h-10 text-bitcoinOrange" />
           </div>
           <div>
-            <h3 className="text-xl font-semibold mb-2">Why do you need a Bitcoin wallet?</h3>
+            <h3 className="text-lg font-semibold mb-2">Why do you need a Bitcoin wallet?</h3>
             <p className="text-gray-600">
               A Bitcoin wallet lets you receive, store, and send Bitcoin. It's like a digital bank
               account that you control completely - no bank can freeze your funds or charge you
@@ -299,7 +299,7 @@ export default function WalletOnboarding() {
         <div className="space-y-6">
           <div className="text-center">
             <QrCode className="w-16 h-16 text-bitcoinOrange mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Your Bitcoin Address</h3>
+            <h3 className="text-lg font-semibold mb-2">Your Bitcoin Address</h3>
             <p className="text-gray-600 mb-6">
               This is your unique Bitcoin address. People can send Bitcoin to this address.
             </p>
@@ -402,7 +402,7 @@ export default function WalletOnboarding() {
               <div className="w-16 h-16 bg-bitcoinOrange/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <currentStepData.icon className="w-8 h-8 text-bitcoinOrange" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{currentStepData.title}</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">{currentStepData.title}</h2>
               <p className="text-gray-600 max-w-2xl mx-auto">{currentStepData.description}</p>
             </div>
 

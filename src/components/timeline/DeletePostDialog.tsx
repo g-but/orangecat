@@ -72,10 +72,10 @@ export function DeletePostDialog({
           </div>
 
           {/* Title */}
-          <h2 className="text-xl font-bold text-gray-900 text-center mb-2">Delete post?</h2>
+          <h2 className="text-lg font-semibold text-gray-900 text-center mb-2">Delete post?</h2>
 
           {/* Description */}
-          <p className="text-gray-600 text-center text-[15px] mb-2">
+          <p className="text-gray-600 text-center text-sm mb-2">
             This can&apos;t be undone and it will be removed from your profile, the timeline, and
             search results.
           </p>

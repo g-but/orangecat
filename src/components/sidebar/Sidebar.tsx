@@ -78,14 +78,12 @@ export function Sidebar({
     : '-translate-x-full lg:translate-x-0';
 
   // Determine sidebar width based on desktop collapse state
-  const sidebarWidth = isDesktop
-    ? navigationState.isSidebarCollapsed
-      ? 'w-16'
-      : 'w-64'
-    : 'w-64';
+  const sidebarWidth = isDesktop ? (navigationState.isSidebarCollapsed ? 'w-16' : 'w-64') : 'w-64';
 
   // isExpanded true on desktop when not collapsed, and on mobile when drawer is open
-  const isExpanded = isDesktop ? !navigationState.isSidebarCollapsed : navigationState.isSidebarOpen;
+  const isExpanded = isDesktop
+    ? !navigationState.isSidebarCollapsed
+    : navigationState.isSidebarOpen;
 
   return (
     <>
@@ -136,15 +134,17 @@ export function Sidebar({
 
             {/* Desktop Collapse Toggle Button */}
             {isDesktop && (
-              <div
-                className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 mt-auto`}
-              >
+              <div className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 mt-auto`}>
                 <button
                   onClick={toggleSidebarCollapse}
                   className={`w-full flex items-center gap-3 p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-colors duration-200 ${
                     !isExpanded ? 'justify-center' : ''
                   }`}
-                  aria-label={navigationState.isSidebarCollapsed ? navigationLabels.SIDEBAR_EXPAND : navigationLabels.SIDEBAR_COLLAPSE}
+                  aria-label={
+                    navigationState.isSidebarCollapsed
+                      ? navigationLabels.SIDEBAR_EXPAND
+                      : navigationLabels.SIDEBAR_COLLAPSE
+                  }
                   title={navigationState.isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
                   {navigationState.isSidebarCollapsed ? (
@@ -152,19 +152,19 @@ export function Sidebar({
                   ) : (
                     <PanelLeftClose className="h-5 w-5 flex-shrink-0" />
                   )}
-                  {isExpanded && <span>{navigationState.isSidebarCollapsed ? 'Expand' : 'Collapse'}</span>}
+                  {isExpanded && (
+                    <span>{navigationState.isSidebarCollapsed ? 'Expand' : 'Collapse'}</span>
+                  )}
                 </button>
               </div>
             )}
 
             {/* Mobile Close Button */}
             {navigationState.isSidebarOpen && !isDesktop && (
-              <div
-                className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 mt-auto`}
-              >
+              <div className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 mt-auto`}>
                 <button
                   onClick={toggleSidebar}
-                  className="w-full flex items-center gap-3 p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-colors duration-200"
+                  className="w-full flex items-center gap-3 p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-colors duration-200 min-h-[44px]"
                   aria-label={navigationLabels.SIDEBAR_COLLAPSE}
                 >
                   <X className="h-5 w-5" />

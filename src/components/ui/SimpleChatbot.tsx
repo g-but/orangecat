@@ -114,7 +114,7 @@ export function SimpleChatbot() {
           {topic.back && (
             <button
               onClick={handleBack}
-              className="p-1.5 hover:bg-white/50 rounded-lg transition-colors mr-1"
+              className="p-1.5 hover:bg-white/50 rounded-lg transition-colors mr-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Go back"
             >
               <ArrowLeft className="w-4 h-4 text-gray-600" />
@@ -130,7 +130,7 @@ export function SimpleChatbot() {
         </div>
         <button
           onClick={handleClose}
-          className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+          className="p-2 hover:bg-white/50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Close chat"
         >
           <X className="w-5 h-5 text-gray-600" />

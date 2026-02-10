@@ -102,7 +102,7 @@ export default function SocialTimeline({
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/20 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Please sign in</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Please sign in</h2>
           <p className="text-gray-600 mb-6">You need to be signed in to view this page.</p>
           <Button onClick={() => (window.location.href = '/auth')}>Sign In</Button>
         </div>
@@ -248,7 +248,7 @@ export default function SocialTimeline({
   ) : timelineFeed?.events.length === 0 ? (
     <div className="text-center py-16">
       <Icon className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-      <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">No posts yet</h3>
       <p className="text-gray-600 max-w-md mx-auto">
         {mode === 'timeline'
           ? "Share your first update about what you're working on!"

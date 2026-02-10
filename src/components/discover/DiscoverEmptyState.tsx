@@ -46,7 +46,7 @@ export default function DiscoverEmptyState({
               <Target className="w-8 h-8 text-orange-600" />
             )}
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">
+          <h3 className="text-2xl font-semibold text-gray-900 mb-3">
             {activeTab === 'profiles'
               ? 'No People Found'
               : activeTab === 'loans'
@@ -152,7 +152,7 @@ export default function DiscoverEmptyState({
         ) : (
           <Target className="w-16 h-16 text-orange-300 mx-auto mb-4" />
         )}
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">No matches found</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">No matches found</h3>
         <p className="text-gray-600 mb-8">
           {activeTab === 'profiles'
             ? 'Try different filters or browse all people to discover someone new.'

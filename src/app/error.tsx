@@ -29,7 +29,7 @@ export default function Error({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-orange-50 to-white px-4">
-      <div className="max-w-lg w-full space-y-8 p-8 bg-white rounded-xl shadow-xl border border-orange-100">
+      <div className="max-w-lg w-full space-y-8 p-6 bg-white rounded-xl shadow-xl border border-orange-100">
         {/* Icon */}
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-orange-100 rounded-full flex items-center justify-center">
@@ -39,7 +39,7 @@ export default function Error({
 
         {/* Title */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Oops! Something went wrong</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">Oops! Something went wrong</h2>
           {isAuthError ? (
             <p className="mt-3 text-base text-gray-600">
               It looks like you need to be logged in to access this page.

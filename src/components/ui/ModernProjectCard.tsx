@@ -144,7 +144,7 @@ export default function ModernProjectCard({
           : 'rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-600'
       }`}
     >
-      <Clock className="h-3.5 w-3.5" />
+      <Clock className="h-4 w-4" />
       <span>{createdLabel}</span>
     </div>
   );
@@ -261,7 +261,7 @@ export default function ModernProjectCard({
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <h3 className="text-xl font-semibold leading-snug text-gray-900 line-clamp-2">
+                <h3 className="text-lg font-semibold leading-snug text-gray-900 line-clamp-2">
                   {project.title}
                 </h3>
                 <ProjectTypeBadge />

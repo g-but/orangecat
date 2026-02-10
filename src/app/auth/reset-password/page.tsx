@@ -1,110 +1,110 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { CheckCircle2, AlertCircle, Loader2, Key, Eye, EyeOff, ArrowLeft } from 'lucide-react'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import Card from '@/components/ui/Card'
-import supabase from '@/lib/supabase/browser'
-import Link from 'next/link'
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { CheckCircle2, AlertCircle, Loader2, Key, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Card from '@/components/ui/Card';
+import supabase from '@/lib/supabase/browser';
+import Link from 'next/link';
 
 export default function ResetPasswordPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [step, setStep] = useState<'loading' | 'reset' | 'success' | 'error'>('loading')
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [step, setStep] = useState<'loading' | 'reset' | 'success' | 'error'>('loading');
   const [formData, setFormData] = useState({
     password: '',
-    confirmPassword: ''
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+    confirmPassword: '',
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Supabase v2 may deliver tokens via hash fragment. Merge hash into search params if present.
-    const url = typeof window !== 'undefined' ? new URL(window.location.href) : null
-    const hashParams = new URLSearchParams(url?.hash.startsWith('#') ? url.hash.substring(1) : '')
+    const url = typeof window !== 'undefined' ? new URL(window.location.href) : null;
+    const hashParams = new URLSearchParams(url?.hash.startsWith('#') ? url.hash.substring(1) : '');
 
-    const qp = searchParams || new URLSearchParams()
-    const accessToken = qp.get('access_token') || hashParams.get('access_token')
-    const refreshToken = qp.get('refresh_token') || hashParams.get('refresh_token')
-    const type = qp.get('type') || hashParams.get('type')
+    const qp = searchParams || new URLSearchParams();
+    const accessToken = qp.get('access_token') || hashParams.get('access_token');
+    const refreshToken = qp.get('refresh_token') || hashParams.get('refresh_token');
+    const type = qp.get('type') || hashParams.get('type');
 
     if (type === 'recovery' && accessToken && refreshToken) {
       supabase.auth
         .setSession({ access_token: accessToken, refresh_token: refreshToken })
         .then(({ error }) => {
           if (error) {
-            setStep('error')
-            setError('Invalid or expired reset link. Please request a new password reset.')
+            setStep('error');
+            setError('Invalid or expired reset link. Please request a new password reset.');
           } else {
-            setStep('reset')
+            setStep('reset');
           }
-        })
+        });
     } else {
-      setStep('error')
-      setError('Invalid reset link. Please request a new password reset from the login page.')
+      setStep('error');
+      setError('Invalid reset link. Please request a new password reset from the login page.');
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
-      return 'Password must be at least 8 characters long'
+      return 'Password must be at least 8 characters long';
     }
     if (!/(?=.*[a-z])/.test(password)) {
-      return 'Password must contain at least one lowercase letter'
+      return 'Password must contain at least one lowercase letter';
     }
     if (!/(?=.*[A-Z])/.test(password)) {
-      return 'Password must contain at least one uppercase letter'
+      return 'Password must contain at least one uppercase letter';
     }
     if (!/(?=.*\d)/.test(password)) {
-      return 'Password must contain at least one number'
+      return 'Password must contain at least one number';
     }
-    return null
-  }
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
     try {
       // Validate passwords
       if (formData.password !== formData.confirmPassword) {
-        throw new Error('Passwords do not match')
+        throw new Error('Passwords do not match');
       }
 
-      const passwordError = validatePassword(formData.password)
+      const passwordError = validatePassword(formData.password);
       if (passwordError) {
-        throw new Error(passwordError)
+        throw new Error(passwordError);
       }
 
       const { error } = await supabase.auth.updateUser({
-        password: formData.password
-      })
+        password: formData.password,
+      });
 
       if (error) {
-        throw error
+        throw error;
       }
 
-      setStep('success')
+      setStep('success');
     } catch (error: unknown) {
       const catchError = error as { message?: string };
-      setError(catchError.message || 'Failed to reset password. Please try again.')
+      setError(catchError.message || 'Failed to reset password. Please try again.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleReturnToLogin = () => {
-    router.push('/auth?mode=login')
-  }
+    router.push('/auth?mode=login');
+  };
 
   const handleRequestNewReset = () => {
-    router.push('/auth/forgot-password')
-  }
+    router.push('/auth/forgot-password');
+  };
 
   if (step === 'loading') {
     return (
@@ -112,16 +112,12 @@ export default function ResetPasswordPage() {
         <Card className="max-w-md w-full p-8 shadow-xl">
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin mx-auto text-orange-600 mb-6" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Verifying Reset Link
-            </h2>
-            <p className="text-gray-600">
-              Please wait while we verify your password reset link...
-            </p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Verifying Reset Link</h2>
+            <p className="text-gray-600">Please wait while we verify your password reset link...</p>
           </div>
         </Card>
       </div>
-    )
+    );
   }
 
   if (step === 'error') {
@@ -132,32 +128,20 @@ export default function ResetPasswordPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 mb-6">
               <AlertCircle className="h-8 w-8 text-red-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">
-              Reset Link Invalid
-            </h1>
-            <p className="text-gray-600 mb-6">
-              {error}
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Reset Link Invalid</h1>
+            <p className="text-gray-600 mb-6">{error}</p>
             <div className="space-y-3">
-              <Button
-                onClick={handleRequestNewReset}
-                variant="primary"
-                className="w-full"
-              >
+              <Button onClick={handleRequestNewReset} variant="primary" className="w-full">
                 Request New Reset Link
               </Button>
-              <Button
-                onClick={handleReturnToLogin}
-                variant="outline"
-                className="w-full"
-              >
+              <Button onClick={handleReturnToLogin} variant="outline" className="w-full">
                 Back to Login
               </Button>
             </div>
           </div>
         </Card>
       </div>
-    )
+    );
   }
 
   if (step === 'success') {
@@ -168,23 +152,17 @@ export default function ResetPasswordPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-6">
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">
-              Password Updated Successfully
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Password Updated Successfully</h1>
             <p className="text-gray-600 mb-6">
               Your password has been updated. You can now sign in with your new password.
             </p>
-            <Button
-              onClick={handleReturnToLogin}
-              variant="primary"
-              className="w-full"
-            >
+            <Button onClick={handleReturnToLogin} variant="primary" className="w-full">
               Sign In Now
             </Button>
           </div>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -195,12 +173,8 @@ export default function ResetPasswordPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-orange-100 to-tiffany-100 mb-6">
             <Key className="h-8 w-8 text-orange-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Create New Password
-          </h1>
-          <p className="text-gray-600">
-            Enter a strong password to secure your account
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Create New Password</h1>
+          <p className="text-gray-600">Enter a strong password to secure your account</p>
         </div>
 
         {error && (
@@ -214,13 +188,13 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Input
               type={showPassword ? 'text' : 'password'}
               required
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={e => setFormData({ ...formData, password: e.target.value })}
               placeholder="New password"
               disabled={isLoading}
               className="w-full"
@@ -231,20 +205,16 @@ export default function ResetPasswordPage() {
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               style={{ marginTop: '20px', position: 'relative', float: 'right' }}
             >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          
+
           <div>
             <Input
               type={showConfirmPassword ? 'text' : 'password'}
               required
               value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
               placeholder="Confirm new password"
               disabled={isLoading}
               className="w-full"
@@ -255,11 +225,7 @@ export default function ResetPasswordPage() {
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               style={{ marginTop: '20px', position: 'relative', float: 'right' }}
             >
-              {showConfirmPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
 
@@ -311,5 +277,5 @@ export default function ResetPasswordPage() {
         </div>
       </Card>
     </div>
-  )
-} 
+  );
+}

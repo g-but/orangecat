@@ -37,7 +37,7 @@ export default function BitBaumAboutPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-6">
             <Target className="w-8 h-8 text-orange-600" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Our Mission</h2>
           <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
             To inspire creativity, enrich lives, and grow interconnected communities through
             Bitcoin-powered platforms that make commerce transparent, conversations meaningful, and
@@ -55,7 +55,7 @@ export default function BitBaumAboutPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* BitBaum */}
             <div className="text-center p-6 border border-gray-200 rounded-xl">
               <div className="flex justify-center mb-4">
@@ -109,7 +109,7 @@ export default function BitBaumAboutPage() {
         {/* Values */}
         <div className="mb-16">
           <h3 className="text-3xl font-bold text-gray-900 text-center mb-12">BitBaum Values</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TreePine className="w-8 h-8 text-orange-600" />

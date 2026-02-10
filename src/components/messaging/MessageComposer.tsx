@@ -339,7 +339,7 @@ export default function MessageComposer({
           type="button"
           variant="ghost"
           size="sm"
-          className="hidden sm:flex p-2 text-gray-400 hover:text-gray-600 flex-shrink-0"
+          className="hidden sm:flex p-2 text-gray-400 hover:text-gray-600 flex-shrink-0 min-h-[44px] min-w-[44px] items-center justify-center"
           disabled={isSending}
           aria-label="Attach file"
         >

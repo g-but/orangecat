@@ -12,22 +12,22 @@ import { ComponentProps } from 'react';
 const mdxComponents = {
   // Customize markdown elements
   h1: ({ children, ...props }: ComponentProps<'h1'>) => (
-    <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight" {...props}>
+    <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 leading-tight" {...props}>
       {children}
     </h1>
   ),
   h2: ({ children, ...props }: ComponentProps<'h2'>) => (
-    <h2 className="text-3xl font-bold text-gray-900 mb-6 mt-12 flex items-center" {...props}>
+    <h2 className="text-2xl font-semibold text-gray-900 mb-6 mt-12 flex items-center" {...props}>
       {children}
     </h2>
   ),
   h3: ({ children, ...props }: ComponentProps<'h3'>) => (
-    <h3 className="text-2xl font-semibold text-gray-900 mb-4 mt-8" {...props}>
+    <h3 className="text-lg font-semibold text-gray-900 mb-4 mt-8" {...props}>
       {children}
     </h3>
   ),
   h4: ({ children, ...props }: ComponentProps<'h4'>) => (
-    <h4 className="text-xl font-semibold text-gray-900 mb-3 mt-6" {...props}>
+    <h4 className="text-base font-semibold text-gray-900 mb-3 mt-6" {...props}>
       {children}
     </h4>
   ),

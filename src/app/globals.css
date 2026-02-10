@@ -234,7 +234,7 @@ html {
     min-height: 44px;
     min-width: 44px;
     /* iOS tap highlight */
-    -webkit-tap-highlight-color: rgba(247, 147, 26, 0.2);
+    -webkit-tap-highlight-color: hsl(var(--accent) / 0.2);
   }
 
   /* Mobile-first image optimization */
@@ -247,6 +247,8 @@ html {
     overscroll-behavior: contain;
   }
   :root {
+    --bitcoin-orange: #f7931a;
+    --bitcoin-orange-dark: #e8830f;
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -731,7 +733,7 @@ html {
   /* PWA status bar styling */
   .pwa-status-bar {
     height: env(safe-area-inset-top);
-    background: linear-gradient(135deg, #f7931a 0%, #e8830f 100%);
+    background: linear-gradient(135deg, var(--bitcoin-orange, #f7931a) 0%, var(--bitcoin-orange-dark, #e8830f) 100%);
   }
   
   /* Ensure mobile menu is above everything */

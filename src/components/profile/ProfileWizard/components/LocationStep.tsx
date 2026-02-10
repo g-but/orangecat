@@ -25,7 +25,7 @@ export function LocationStep({ form }: LocationStepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Where are you located?</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Where are you located?</h2>
         <p className="text-gray-600 mb-3">Help local people find and support your projects.</p>
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 text-xs rounded-full">
           <span>🌍</span>

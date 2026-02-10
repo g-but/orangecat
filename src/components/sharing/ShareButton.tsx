@@ -1,18 +1,18 @@
-'use client'
+'use client';
 
-import { useState, useRef, useEffect } from 'react'
-import { Share2 } from 'lucide-react'
-import Button from '@/components/ui/Button'
-import CampaignShare from './CampaignShare'
+import { useState, useRef, useEffect } from 'react';
+import { Share2 } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import CampaignShare from './CampaignShare';
 
 interface ShareButtonProps {
-  projectId: string
-  projectTitle: string
-  projectDescription?: string
-  projectImage?: string
-  variant?: 'button' | 'icon'
-  size?: 'sm' | 'md' | 'lg'
-  className?: string
+  projectId: string;
+  projectTitle: string;
+  projectDescription?: string;
+  projectImage?: string;
+  variant?: 'button' | 'icon';
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }
 
 export default function ShareButton({
@@ -22,11 +22,11 @@ export default function ShareButton({
   projectImage,
   variant = 'button',
   size = 'md',
-  className = ''
+  className = '',
 }: ShareButtonProps) {
-  const [showShare, setShowShare] = useState(false)
-  const buttonRef = useRef<HTMLButtonElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [showShare, setShowShare] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -36,36 +36,36 @@ export default function ShareButton({
         !dropdownRef.current.contains(event.target as Node) &&
         !buttonRef.current?.contains(event.target as Node)
       ) {
-        setShowShare(false)
+        setShowShare(false);
       }
-    }
+    };
 
     if (showShare) {
-      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showShare])
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showShare]);
 
   // Handle escape key
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setShowShare(false)
+        setShowShare(false);
       }
-    }
+    };
 
     if (showShare) {
-      document.addEventListener('keydown', handleEscape)
+      document.addEventListener('keydown', handleEscape);
     }
 
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [showShare])
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showShare]);
 
   const toggleShare = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setShowShare(!showShare)
-  }
+    e.stopPropagation();
+    setShowShare(!showShare);
+  };
 
   if (variant === 'icon') {
     return (
@@ -73,21 +73,18 @@ export default function ShareButton({
         <button
           ref={buttonRef}
           onClick={toggleShare}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Share project"
         >
-          <Share2 className={`${
-            size === 'sm' ? 'w-4 h-4' :
-            size === 'lg' ? 'w-6 h-6' :
-            'w-5 h-5'
-          } text-gray-600`} />
+          <Share2
+            className={`${
+              size === 'sm' ? 'w-4 h-4' : size === 'lg' ? 'w-6 h-6' : 'w-5 h-5'
+            } text-gray-600`}
+          />
         </button>
 
         {showShare && (
-          <div
-            ref={dropdownRef}
-            className="absolute top-full right-0 mt-2 z-50"
-          >
+          <div ref={dropdownRef} className="absolute top-full right-0 mt-2 z-50">
             <CampaignShare
               projectId={projectId}
               projectTitle={projectTitle}
@@ -99,7 +96,7 @@ export default function ShareButton({
           </div>
         )}
       </div>
-    )
+    );
   }
 
   return (
@@ -111,19 +108,14 @@ export default function ShareButton({
         size={size}
         className="flex items-center gap-2"
       >
-        <Share2 className={`${
-          size === 'sm' ? 'w-3 h-3' :
-          size === 'lg' ? 'w-5 h-5' :
-          'w-4 h-4'
-        }`} />
+        <Share2
+          className={`${size === 'sm' ? 'w-3 h-3' : size === 'lg' ? 'w-5 h-5' : 'w-4 h-4'}`}
+        />
         Share
       </Button>
 
       {showShare && (
-        <div
-          ref={dropdownRef}
-          className="absolute top-full right-0 mt-2 z-50"
-        >
+        <div ref={dropdownRef} className="absolute top-full right-0 mt-2 z-50">
           <CampaignShare
             projectId={projectId}
             projectTitle={projectTitle}
@@ -135,5 +127,5 @@ export default function ShareButton({
         </div>
       )}
     </div>
-  )
-} 
+  );
+}

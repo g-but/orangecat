@@ -70,7 +70,7 @@ export function Step1({
       )}
 
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Tell us about your project</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Tell us about your project</h2>
         <p className="text-gray-600">Share what you're building and why it matters</p>
       </div>
 
@@ -167,7 +167,7 @@ export function Step2({
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Setup</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Payment Setup</h2>
         <p className="text-gray-600">Configure how supporters can send you Bitcoin</p>
       </div>
 
@@ -267,7 +267,7 @@ export function Step3({ formData, formErrors, handleChange, nextStep, prevStep }
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Final Details</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Final Details</h2>
         <p className="text-gray-600">Add website and finishing touches</p>
       </div>
 
@@ -361,7 +361,7 @@ export function Step4({
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Media & Launch</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Media & Launch</h2>
         <p className="text-gray-600">Add images and launch your project</p>
       </div>
 

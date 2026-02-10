@@ -28,7 +28,7 @@ export function DashboardProjectCard({ project }: DashboardProjectCardProps) {
       return {
         label: 'Draft',
         className:
-          'px-3 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap',
+          'px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap',
       };
     }
     if (project.isPaused) {
@@ -131,6 +131,3 @@ export function DashboardProjectCard({ project }: DashboardProjectCardProps) {
     </div>
   );
 }
-
-
-

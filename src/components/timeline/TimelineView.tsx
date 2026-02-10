@@ -227,7 +227,7 @@ export default function TimelineView({
   if (hydrated && !authLoading && !user && (feedType === 'journey' || feedType === 'community')) {
     return (
       <div className="text-center py-16">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Please sign in</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-4">Please sign in</h2>
         <p className="text-gray-600 mb-6">You need to be signed in to view this timeline.</p>
         <Button onClick={() => (window.location.href = '/auth')}>Sign In</Button>
       </div>
@@ -285,7 +285,7 @@ export default function TimelineView({
 
     return (
       <div className="text-center py-16">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
           {emptyStateTitle || defaultTitle}
         </h3>
         <p className="text-gray-600 max-w-md mx-auto">

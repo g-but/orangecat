@@ -121,13 +121,13 @@ export function EditPostModal({
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 -ml-2 transition-colors"
+            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 -ml-2 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <h2 className="text-[17px] font-bold text-gray-900">Edit post</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Edit post</h2>
 
           <Button
             onClick={handleSave}
@@ -161,7 +161,7 @@ export function EditPostModal({
             onChange={e => setContent(e.target.value)}
             placeholder="What's happening?"
             className={cn(
-              'min-h-[150px] text-[17px] leading-relaxed border-none bg-transparent p-0 focus:ring-0 resize-none placeholder:text-gray-500',
+              'min-h-[150px] text-base leading-relaxed border-none bg-transparent p-0 focus:ring-0 resize-none placeholder:text-gray-500',
               isOverLimit && 'text-red-600'
             )}
             disabled={isSaving}

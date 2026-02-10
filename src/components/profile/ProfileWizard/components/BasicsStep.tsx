@@ -24,7 +24,7 @@ export function BasicsStep({ form }: BasicsStepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
           Welcome! Let's set up your profile
         </h2>
         <p className="text-gray-600 mb-3">
