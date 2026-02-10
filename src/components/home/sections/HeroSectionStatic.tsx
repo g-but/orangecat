@@ -40,12 +40,14 @@ export default function HeroSectionStatic() {
 
             {/* Subheadline */}
             <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 leading-relaxed mb-3 sm:mb-4">
-              Sell products. Offer services. Fund projects. Connect communities. Build with AI. All powered by Bitcoin.
+              Sell products. Offer services. Fund projects. Connect communities. Build with AI. All
+              powered by Bitcoin.
             </p>
 
             {/* Supporting text */}
             <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8">
-              Commerce, finance, community, and AI—unified in one platform. Whether you're a creator, entrepreneur, or community builder, OrangeCat has the tools you need.
+              Commerce, finance, community, and AI—unified in one platform. Whether you're a
+              creator, entrepreneur, or community builder, OrangeCat has the tools you need.
             </p>
 
             {/* CTA Buttons */}
@@ -78,11 +80,8 @@ export default function HeroSectionStatic() {
                 { icon: Bitcoin, text: 'Bitcoin-powered' },
                 { icon: Shield, text: 'Transparent' },
                 { icon: Zap, text: 'Instant setup' },
-              ].map((benefit) => (
-                <div
-                  key={benefit.text}
-                  className="flex items-center gap-2 text-gray-600"
-                >
+              ].map(benefit => (
+                <div key={benefit.text} className="flex items-center gap-2 text-gray-600">
                   <benefit.icon className="w-4 h-4 text-bitcoinOrange flex-shrink-0" />
                   <span className="text-sm font-medium">{benefit.text}</span>
                 </div>
@@ -102,7 +101,9 @@ export default function HeroSectionStatic() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Orange Cat</h3>
-                    <p className="text-xs sm:text-sm text-gray-600">Transparent Bitcoin Fundraising Platform</p>
+                    <p className="text-xs sm:text-sm text-gray-600">
+                      Transparent Bitcoin Fundraising Platform
+                    </p>
                   </div>
                 </div>
               </div>
@@ -112,16 +113,16 @@ export default function HeroSectionStatic() {
                 {/* Progress Bar */}
                 <div>
                   <div className="flex justify-between text-xs sm:text-sm mb-2">
-                    <span className="font-semibold text-gray-900">69,420 CHF</span>
-                    <span className="text-gray-600">goal</span>
+                    <span className="font-semibold text-gray-900">24,297 CHF raised</span>
+                    <span className="text-gray-600">of 69,420 CHF</span>
                   </div>
                   <div className="w-full h-2 sm:h-3 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-bitcoinOrange to-orange-500 rounded-full"
-                      style={{ width: '2%' }}
+                      style={{ width: '35%' }}
                     />
                   </div>
-                  <p className="text-xs text-gray-600 mt-1 sm:mt-2">Just getting started - be an early supporter!</p>
+                  <p className="text-xs text-gray-600 mt-1 sm:mt-2">Backed by 142 supporters</p>
                 </div>
 
                 {/* Stats */}

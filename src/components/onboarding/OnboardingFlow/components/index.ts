@@ -3,6 +3,8 @@
  */
 
 export { WelcomeStep } from './WelcomeStep';
+export { CreateProjectStep } from './CreateProjectStep';
+export { ExploreStep } from './ExploreStep';
 export { WalletSetupStep } from './WalletSetupStep';
 export { GetStartedStep } from './GetStartedStep';
 export { OnboardingHeader } from './OnboardingHeader';

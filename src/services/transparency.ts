@@ -1,3 +1,5 @@
+import { TRANSPARENCY_CONFIG, getTransparencyCriteria } from '@/config/transparency';
+
 export interface TransparencyData {
   isOpenSource: boolean;
   hasContributionGuidelines: boolean;
@@ -17,14 +19,25 @@ export interface TransparencyScore {
   score: number;
 }
 
+/**
+ * Calculates a weighted transparency score using category and criterion weights
+ * from the transparency config (SSOT: src/config/transparency.ts).
+ *
+ * Each category has a weight, and each criterion within it has a weight.
+ * The final score is the sum of (categoryWeight * criterionWeight * booleanValue).
+ */
 export const calculateTransparencyScore = async (
   data: TransparencyData
 ): Promise<TransparencyScore> => {
-  // Convert boolean values to numbers (1 for true, 0 for false)
-  const scores = Object.values(data).map(value => (value ? 1 : 0));
+  const criteria = getTransparencyCriteria();
+  const dataRecord = data as unknown as Record<string, boolean>;
 
-  // Calculate the average score
-  const score = scores.reduce((acc: number, curr: number) => acc + curr, 0) / scores.length;
+  let score = 0;
+  for (const criterion of criteria) {
+    if (dataRecord[criterion.key]) {
+      score += criterion.effectiveWeight;
+    }
+  }
 
   return {
     score: Math.round(score * 100) / 100,
@@ -39,3 +52,19 @@ export const generateTransparencyReport = async (data: TransparencyData) => {
     last_updated: new Date().toISOString(),
   };
 };
+
+/**
+ * Returns labeled criteria grouped by category, for UI display.
+ */
+export function getTransparencyCriteriaForDisplay() {
+  return Object.entries(TRANSPARENCY_CONFIG.categories).map(([key, category]) => ({
+    key,
+    label: category.label,
+    weight: category.weight,
+    criteria: category.criteria.map(c => ({
+      key: c.key,
+      label: c.label,
+      description: c.description,
+    })),
+  }));
+}
