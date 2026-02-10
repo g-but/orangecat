@@ -165,6 +165,13 @@ export function getPaymentProvider(): PaymentProvider {
   const provider = process.env.PAYMENT_PROVIDER || 'mock';
 
   switch (provider) {
+    case 'btcpay': {
+      // Dynamic import wrapped in sync function — BTCPayProvider must be loaded
+      // at call time to avoid requiring env vars when using mock provider
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { BTCPayProvider } = require('./btcpayProvider');
+      return new BTCPayProvider();
+    }
     case 'mock':
     default:
       return new MockPaymentProvider();

@@ -4,29 +4,23 @@
  *
  * Shows entity type cards from ENTITY_REGISTRY so users get value
  * before being asked for wallet setup.
+ *
+ * Uses OnboardingContext to mark onboarding complete before navigating away.
  */
 
-import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/Card';
 import { ArrowRight } from 'lucide-react';
 import { getEntitiesByCategory } from '@/config/entity-registry';
+import { ONBOARDING_CATEGORIES, CATEGORY_LABELS } from '@/config/onboarding';
+import { useOnboardingContext } from '../context';
 import type { EntityMetadata } from '@/config/entity-registry';
 
-/** Categories to show during onboarding (subset — keep it simple) */
-const ONBOARDING_CATEGORIES = ['business', 'community', 'finance'] as const;
-
-const CATEGORY_LABELS: Record<string, string> = {
-  business: 'Commerce',
-  community: 'Community',
-  finance: 'Finance',
-};
-
 export function CreateProjectStep() {
-  const router = useRouter();
+  const { onNavigateAway } = useOnboardingContext();
   const entitiesByCategory = getEntitiesByCategory();
 
   const handleEntityClick = (entity: EntityMetadata) => {
-    router.push(entity.createPath);
+    onNavigateAway(entity.createPath);
   };
 
   return (

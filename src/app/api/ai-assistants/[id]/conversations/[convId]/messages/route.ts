@@ -26,8 +26,12 @@ import { logger } from '@/utils/logger';
 import {
   createOpenRouterService,
   createOpenRouterServiceWithByok,
+  createGroqService,
+  isGroqAvailable,
+  DEFAULT_GROQ_MODEL,
   createApiKeyService,
   type OpenRouterMessage,
+  type GroqMessage,
 } from '@/services/ai';
 import {
   DEFAULT_FREE_MODEL_ID,
@@ -144,10 +148,27 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Assistant not found' }, { status: 404 });
     }
 
-    // Check BYOK status
+    // Check BYOK status — try OpenRouter first, then Groq
     const keyService = createApiKeyService(supabase);
-    const userApiKey = await keyService.getDecryptedKey(user.id, 'openrouter');
-    const hasByok = !!userApiKey;
+    const userOpenRouterKey = await keyService.getDecryptedKey(user.id, 'openrouter');
+    const hasByok = !!userOpenRouterKey;
+
+    // Determine provider: OpenRouter BYOK → Platform OpenRouter → Platform Groq → error
+    type AIProvider = 'openrouter' | 'groq';
+    let provider: AIProvider;
+
+    if (userOpenRouterKey) {
+      provider = 'openrouter';
+    } else if (process.env.OPENROUTER_API_KEY) {
+      provider = 'openrouter';
+    } else if (isGroqAvailable()) {
+      provider = 'groq';
+    } else {
+      return NextResponse.json(
+        { error: 'AI service not configured', code: 'NO_API_KEY' },
+        { status: 503 }
+      );
+    }
 
     // For non-BYOK users, check platform limits
     if (!hasByok) {
@@ -176,38 +197,45 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       .limit(20);
     const history = historyData as any[] | null;
 
-    // Determine which model to use using centralized auto-router logic
-    let modelToUse = requestedModel || assistant.model_preference || 'auto';
+    // Determine which model to use
+    let modelToUse: string;
 
-    // For non-BYOK users, enforce free models only
-    if (!hasByok) {
-      if (modelToUse === 'auto' || modelToUse === 'any' || !isModelFree(modelToUse)) {
-        // Use auto-router but restrict to free models
-        const freeModelIds = getFreeModels().map(m => m.id);
+    if (provider === 'groq') {
+      // Groq: use default Groq model (ignores OpenRouter model selection)
+      modelToUse = DEFAULT_GROQ_MODEL;
+    } else {
+      // OpenRouter: centralized auto-router logic
+      modelToUse = requestedModel || assistant.model_preference || 'auto';
+
+      if (!hasByok) {
+        if (modelToUse === 'auto' || modelToUse === 'any' || !isModelFree(modelToUse)) {
+          const freeModelIds = getFreeModels().map(m => m.id);
+          const autoRouter = createAutoRouter();
+          const routingResult = autoRouter.selectModel({
+            message: content,
+            conversationHistory: (history || []).map(m => ({ role: m.role, content: m.content })),
+            allowedModels: freeModelIds,
+          });
+          modelToUse = routingResult.model;
+        }
+      } else if (modelToUse === 'auto' || modelToUse === 'any') {
         const autoRouter = createAutoRouter();
+        const allowedModels = assistant.allowed_models?.length
+          ? assistant.allowed_models
+          : undefined;
         const routingResult = autoRouter.selectModel({
           message: content,
           conversationHistory: (history || []).map(m => ({ role: m.role, content: m.content })),
-          allowedModels: freeModelIds,
+          allowedModels,
         });
         modelToUse = routingResult.model;
       }
-    } else if (modelToUse === 'auto' || modelToUse === 'any') {
-      // BYOK users with 'auto': use intelligent model selection based on complexity
-      const autoRouter = createAutoRouter();
-      const allowedModels = assistant.allowed_models?.length ? assistant.allowed_models : undefined;
-      const routingResult = autoRouter.selectModel({
-        message: content,
-        conversationHistory: (history || []).map(m => ({ role: m.role, content: m.content })),
-        allowedModels,
-      });
-      modelToUse = routingResult.model;
-    }
 
-    // Validate model exists (safety fallback)
-    const modelMeta = getModelMetadata(modelToUse);
-    if (!modelMeta) {
-      modelToUse = DEFAULT_FREE_MODEL_ID;
+      // Validate model exists (safety fallback)
+      const modelMeta = getModelMetadata(modelToUse);
+      if (!modelMeta) {
+        modelToUse = DEFAULT_FREE_MODEL_ID;
+      }
     }
 
     // Initialize payment service for creator payments
@@ -297,13 +325,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Failed to store message' }, { status: 500 });
     }
 
-    // Create OpenRouter service (BYOK or platform)
-    const openRouter = hasByok
-      ? createOpenRouterServiceWithByok(userApiKey)
-      : createOpenRouterService();
-
-    // Build messages array for OpenRouter
-    const messages: OpenRouterMessage[] = [
+    // Build messages array
+    const messages: (OpenRouterMessage | GroqMessage)[] = [
       ...(history || []).map(m => ({
         role: m.role as 'user' | 'assistant' | 'system',
         content: m.content,
@@ -312,17 +335,58 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     ];
 
     // Generate AI response using creator's settings
-    let aiResponse;
+    let aiResponse: {
+      content: string;
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      isFreeModel: boolean;
+      costSats: number;
+    };
+
     try {
-      aiResponse = await openRouter.chatCompletion({
-        model: modelToUse,
-        messages,
-        systemPrompt: assistant.system_prompt || undefined,
-        temperature: assistant.temperature ?? 0.7,
-        maxTokens: assistant.max_tokens_per_response || undefined,
-      });
+      if (provider === 'groq') {
+        const groq = createGroqService();
+        const result = await groq.chatCompletion({
+          model: modelToUse,
+          messages: messages as GroqMessage[],
+          systemPrompt: assistant.system_prompt || undefined,
+          temperature: assistant.temperature ?? 0.7,
+          maxTokens: assistant.max_tokens_per_response || undefined,
+        });
+        aiResponse = {
+          content: result.content,
+          model: result.model,
+          inputTokens: result.inputTokens,
+          outputTokens: result.outputTokens,
+          totalTokens: result.totalTokens,
+          isFreeModel: result.isFreeModel,
+          costSats: 0,
+        };
+      } else {
+        const openRouter = hasByok
+          ? createOpenRouterServiceWithByok(userOpenRouterKey!)
+          : createOpenRouterService();
+        const result = await openRouter.chatCompletion({
+          model: modelToUse,
+          messages: messages as OpenRouterMessage[],
+          systemPrompt: assistant.system_prompt || undefined,
+          temperature: assistant.temperature ?? 0.7,
+          maxTokens: assistant.max_tokens_per_response || undefined,
+        });
+        aiResponse = {
+          content: result.content,
+          model: result.model,
+          inputTokens: result.inputTokens,
+          outputTokens: result.outputTokens,
+          totalTokens: result.totalTokens,
+          isFreeModel: result.isFreeModel,
+          costSats: result.costSats,
+        };
+      }
     } catch (aiError: unknown) {
-      logger.error('OpenRouter API error', aiError, 'AIMessagesAPI');
+      logger.error('AI API error', aiError, 'AIMessagesAPI');
 
       // Clean up user message on AI failure
       await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any).delete().eq('id', userMessage.id);
@@ -338,7 +402,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Calculate costs
-    const apiCostSats = aiResponse.costSats; // 0 for free models
+    const apiCostSats = aiResponse.costSats; // 0 for free/Groq models
     const creatorMarkupSats = creatorCharge;
     const totalCostSats = apiCostSats + creatorMarkupSats;
 
@@ -409,7 +473,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         assistantMessage: {
           ...assistantMessage,
           // Add helpful metadata for frontend
-          model_name: modelMeta?.name || modelToUse,
+          model_name:
+            (provider === 'openrouter' ? getModelMetadata(modelToUse)?.name : null) || modelToUse,
           is_free_model: aiResponse.isFreeModel,
           used_byok: hasByok,
         },

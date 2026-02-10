@@ -219,7 +219,7 @@ export class ApiKeyService {
     try {
       return decryptApiKey(data.encrypted_key);
     } catch {
-      logger.error('Failed to decrypt API key', { keyId }, 'APIKeyService');
+      logger.error('Failed to decrypt API key', { userId, provider }, 'APIKeyService');
       return null;
     }
   }
