@@ -1,31 +1,18 @@
-'use client'
+'use client';
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/stores/auth'
-import Loading from '@/components/Loading'
+import { useRequireAuth } from '@/hooks/useAuth';
+import Loading from '@/components/Loading';
 
-export default function ProfileLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const router = useRouter()
-  const { user, isLoading } = useAuthStore()
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/auth')
-    }
-  }, [isLoading, user, router])
+export default function ProfileLayout({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useRequireAuth();
 
   if (isLoading) {
-    return <Loading fullScreen message="Loading your profile..." />
+    return <Loading fullScreen message="Loading your profile..." />;
   }
 
   if (!user) {
-    return null
+    return null;
   }
 
-  return <>{children}</>
-} 
+  return <>{children}</>;
+}

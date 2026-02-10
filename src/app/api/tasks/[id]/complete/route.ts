@@ -71,7 +71,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (taskError) {
       if (taskError.code === 'PGRST116') {
-        return ApiResponses.notFound('Aufgabe');
+        return ApiResponses.notFound('Task');
       }
       logger.error('Failed to fetch task for completion', { error: taskError, taskId }, 'TasksAPI');
       return ApiResponses.internalServerError();
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const task = taskData as unknown as TaskRow;
 
     if (task.is_completed && task.task_type === 'one_time') {
-      return ApiResponses.badRequest('Diese Aufgabe wurde bereits erledigt');
+      return ApiResponses.badRequest('This task has already been completed');
     }
 
     // Create completion record
@@ -133,12 +133,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       const completerProfile = profileData as ProfileRow | null;
       const completerName =
-        completerProfile?.display_name || completerProfile?.username || 'Jemand';
+        completerProfile?.display_name || completerProfile?.username || 'Someone';
 
       await notificationService.createNotification({
         recipientUserId: task.created_by,
         type: 'task_completed',
-        title: `${completerName} hat "${task.title}" erledigt`,
+        title: `${completerName} completed "${task.title}"`,
         message: completionData.notes || null,
         actionUrl: `/dashboard/tasks/${taskId}`,
         sourceEntityType: 'task',
@@ -146,11 +146,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       });
     }
 
-    return createSuccessResponse(
-      { completion },
-      HttpStatus.CREATED,
-      'Aufgabe als erledigt markiert'
-    );
+    return createSuccessResponse({ completion }, HttpStatus.CREATED, 'Task marked as completed');
   } catch (err) {
     logger.error('Exception in POST /api/tasks/[id]/complete', { error: err }, 'TasksAPI');
     return ApiResponses.internalServerError();

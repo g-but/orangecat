@@ -14,7 +14,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import { ModernChatPanel } from '@/components/ai-chat/ModernChatPanel';
 import { CatContextTab } from '@/components/ai-chat/CatContextTab';
@@ -25,7 +25,7 @@ import { MessageSquare, FolderOpen, Settings, Cat } from 'lucide-react';
 type TabValue = 'chat' | 'context' | 'settings';
 
 export default function CatHubPage() {
-  const { user, isLoading, hydrated } = useAuth();
+  const { user, isLoading, hydrated } = useRequireAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabValue>('chat');
@@ -50,13 +50,7 @@ export default function CatHubPage() {
     window.history.replaceState({}, '', url.toString());
   };
 
-  useEffect(() => {
-    if (hydrated && !isLoading && !user) {
-      router.push('/auth');
-    }
-  }, [hydrated, isLoading, user, router]);
-
-  if (!hydrated || isLoading) {
+  if (isLoading) {
     return <Loading fullScreen message="Loading..." />;
   }
 

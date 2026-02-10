@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import { isLocationHidden, getLocationGroupLabel } from '@/lib/location-privacy';
 import { Profile } from '@/types/database';
@@ -39,7 +39,7 @@ import { SocialLink } from '@/types/social';
  * - Easy to scan and understand
  */
 export default function DashboardInfoPage() {
-  const { user, profile: storeProfile, isLoading: authLoading } = useAuth();
+  const { user, profile: storeProfile, isLoading: authLoading } = useRequireAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,8 +81,7 @@ export default function DashboardInfoPage() {
 
   // Not authenticated
   if (!user) {
-    router.push('/auth');
-    return <Loading />;
+    return null;
   }
 
   // No profile loaded yet – fall back to loading state instead of error to avoid flash

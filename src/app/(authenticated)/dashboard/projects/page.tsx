@@ -11,9 +11,8 @@
  * Last Modified Summary: Refactored to use modular EntityList pattern with EntityListShell
  */
 
-import { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, useMemo } from 'react';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
 import EntityListShell from '@/components/entity/EntityListShell';
@@ -30,8 +29,7 @@ import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 
 export default function ProjectsDashboardPage() {
-  const { user, isLoading, hydrated, session } = useAuth();
-  const router = useRouter();
+  const { user, isLoading, hydrated, session } = useRequireAuth();
   const { selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelection();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showSelection, setShowSelection] = useState(false);
@@ -119,12 +117,6 @@ export default function ProjectsDashboardPage() {
 
     return items;
   }, [activeTab, myProjects, favorites, searchQuery, statusFilter]);
-
-  useEffect(() => {
-    if (hydrated && !isLoading && !user) {
-      router.push('/auth?from=projects');
-    }
-  }, [user, hydrated, isLoading, router]);
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) {

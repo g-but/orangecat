@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
       return ApiResponses.internalServerError('Failed to create task');
     }
 
-    return createSuccessResponse({ task }, HttpStatus.CREATED, 'Aufgabe erstellt');
+    return createSuccessResponse({ task }, HttpStatus.CREATED, 'Task created');
   } catch (err) {
     logger.error('Exception in POST /api/tasks', { error: err }, 'TasksAPI');
     return ApiResponses.internalServerError();

@@ -63,7 +63,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return ApiResponses.notFound('Projekt');
+        return ApiResponses.notFound('Project');
       }
       logger.error('Failed to fetch task project', { error, id }, 'TaskProjectsAPI');
       return ApiResponses.internalServerError('Failed to fetch project');
@@ -102,7 +102,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        return ApiResponses.notFound('Projekt');
+        return ApiResponses.notFound('Project');
       }
       logger.error(
         'Failed to fetch project for update',
@@ -115,7 +115,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const existingProject = projectData as ProjectOwnership;
 
     if (existingProject.created_by !== user.id) {
-      return ApiResponses.authorizationFailed('Nur der Ersteller kann dieses Projekt bearbeiten');
+      return ApiResponses.authorizationFailed('Only the creator can edit this project');
     }
 
     // Parse and validate body
@@ -157,7 +157,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return ApiResponses.internalServerError('Failed to update project');
     }
 
-    return createSuccessResponse({ project }, HttpStatus.OK, 'Projekt aktualisiert');
+    return createSuccessResponse({ project }, HttpStatus.OK, 'Project updated');
   } catch (err) {
     logger.error('Exception in PATCH /api/task-projects/[id]', { error: err }, 'TaskProjectsAPI');
     return ApiResponses.internalServerError();
@@ -190,7 +190,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        return ApiResponses.notFound('Projekt');
+        return ApiResponses.notFound('Project');
       }
       logger.error(
         'Failed to fetch project for deletion',
@@ -203,7 +203,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const deleteProject = deleteProjectData as ProjectOwnership;
 
     if (deleteProject.created_by !== user.id) {
-      return ApiResponses.authorizationFailed('Nur der Ersteller kann dieses Projekt löschen');
+      return ApiResponses.authorizationFailed('Only the creator can delete this project');
     }
 
     // Delete project (tasks will have project_id set to null via ON DELETE SET NULL)
@@ -214,7 +214,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       return ApiResponses.internalServerError('Failed to delete project');
     }
 
-    return createSuccessResponse(null, HttpStatus.OK, 'Projekt gelöscht');
+    return createSuccessResponse(null, HttpStatus.OK, 'Project deleted');
   } catch (err) {
     logger.error('Exception in DELETE /api/task-projects/[id]', { error: err }, 'TaskProjectsAPI');
     return ApiResponses.internalServerError();

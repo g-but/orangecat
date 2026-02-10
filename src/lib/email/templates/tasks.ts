@@ -27,7 +27,7 @@ export function taskAttentionNotification(
   message: string | null,
   taskUrl: string
 ): EmailContent {
-  const subject = `Aufgabe braucht Aufmerksamkeit: ${taskTitle}`;
+  const subject = `Task needs attention: ${taskTitle}`;
 
   const html = `
 <!DOCTYPE html>
@@ -49,18 +49,18 @@ export function taskAttentionNotification(
 <body>
   <div class="container">
     <div class="header">
-      <h1>⚠️ Aufgabe braucht Aufmerksamkeit</h1>
+      <h1>⚠️ Task needs attention</h1>
     </div>
     <div class="content">
       <p class="task-title">${taskTitle}</p>
-      <p><strong>${flaggedBy}</strong> hat diese Aufgabe als dringend markiert.</p>
+      <p><strong>${flaggedBy}</strong> has flagged this task as urgent.</p>
       ${message ? `<div class="message-box"><p>${message}</p></div>` : ''}
       <p style="margin-top: 24px;">
-        <a href="${taskUrl}" class="button">Aufgabe ansehen</a>
+        <a href="${taskUrl}" class="button">View task</a>
       </p>
     </div>
     <div class="footer">
-      <p>Diese E-Mail wurde automatisch von OrangeCat gesendet.</p>
+      <p>This email was sent automatically by OrangeCat.</p>
     </div>
   </div>
 </body>
@@ -68,14 +68,14 @@ export function taskAttentionNotification(
   `.trim();
 
   const text = `
-Aufgabe braucht Aufmerksamkeit: ${taskTitle}
+Task needs attention: ${taskTitle}
 
-${flaggedBy} hat diese Aufgabe als dringend markiert.
-${message ? `\nNachricht: ${message}\n` : ''}
-Aufgabe ansehen: ${taskUrl}
+${flaggedBy} has flagged this task as urgent.
+${message ? `\nMessage: ${message}\n` : ''}
+View task: ${taskUrl}
 
 --
-Diese E-Mail wurde automatisch von OrangeCat gesendet.
+This email was sent automatically by OrangeCat.
   `.trim();
 
   return { subject, html, text };
@@ -90,7 +90,7 @@ export function taskRequestNotification(
   message: string | null,
   taskUrl: string
 ): EmailContent {
-  const subject = `Aufgabenanfrage: ${taskTitle}`;
+  const subject = `Task request: ${taskTitle}`;
 
   const html = `
 <!DOCTYPE html>
@@ -112,18 +112,18 @@ export function taskRequestNotification(
 <body>
   <div class="container">
     <div class="header">
-      <h1>📋 Aufgabenanfrage</h1>
+      <h1>📋 Task request</h1>
     </div>
     <div class="content">
       <p class="task-title">${taskTitle}</p>
-      <p><strong>${requestedBy}</strong> bittet dich, diese Aufgabe zu erledigen.</p>
+      <p><strong>${requestedBy}</strong> is asking you to complete this task.</p>
       ${message ? `<div class="message-box"><p>${message}</p></div>` : ''}
       <p style="margin-top: 24px;">
-        <a href="${taskUrl}" class="button">Aufgabe ansehen</a>
+        <a href="${taskUrl}" class="button">View task</a>
       </p>
     </div>
     <div class="footer">
-      <p>Diese E-Mail wurde automatisch von OrangeCat gesendet.</p>
+      <p>This email was sent automatically by OrangeCat.</p>
     </div>
   </div>
 </body>
@@ -131,14 +131,14 @@ export function taskRequestNotification(
   `.trim();
 
   const text = `
-Aufgabenanfrage: ${taskTitle}
+Task request: ${taskTitle}
 
-${requestedBy} bittet dich, diese Aufgabe zu erledigen.
-${message ? `\nNachricht: ${message}\n` : ''}
-Aufgabe ansehen: ${taskUrl}
+${requestedBy} is asking you to complete this task.
+${message ? `\nMessage: ${message}\n` : ''}
+View task: ${taskUrl}
 
 --
-Diese E-Mail wurde automatisch von OrangeCat gesendet.
+This email was sent automatically by OrangeCat.
   `.trim();
 
   return { subject, html, text };
@@ -153,7 +153,7 @@ export function taskBroadcastRequestNotification(
   message: string | null,
   taskUrl: string
 ): EmailContent {
-  const subject = `Team-Aufgabenanfrage: ${taskTitle}`;
+  const subject = `Team task request: ${taskTitle}`;
 
   const html = `
 <!DOCTYPE html>
@@ -176,19 +176,19 @@ export function taskBroadcastRequestNotification(
 <body>
   <div class="container">
     <div class="header">
-      <h1>📢 Team-Aufgabenanfrage</h1>
+      <h1>📢 Team task request</h1>
     </div>
     <div class="content">
-      <span class="broadcast-badge">An alle Teammitglieder</span>
+      <span class="broadcast-badge">To all team members</span>
       <p class="task-title">${taskTitle}</p>
-      <p><strong>${requestedBy}</strong> bittet das Team, diese Aufgabe zu erledigen.</p>
+      <p><strong>${requestedBy}</strong> is asking the team to complete this task.</p>
       ${message ? `<div class="message-box"><p>${message}</p></div>` : ''}
       <p style="margin-top: 24px;">
-        <a href="${taskUrl}" class="button">Aufgabe ansehen</a>
+        <a href="${taskUrl}" class="button">View task</a>
       </p>
     </div>
     <div class="footer">
-      <p>Diese E-Mail wurde automatisch von OrangeCat gesendet.</p>
+      <p>This email was sent automatically by OrangeCat.</p>
     </div>
   </div>
 </body>
@@ -196,16 +196,16 @@ export function taskBroadcastRequestNotification(
   `.trim();
 
   const text = `
-Team-Aufgabenanfrage: ${taskTitle}
+Team task request: ${taskTitle}
 
-An alle Teammitglieder
+To all team members
 
-${requestedBy} bittet das Team, diese Aufgabe zu erledigen.
-${message ? `\nNachricht: ${message}\n` : ''}
-Aufgabe ansehen: ${taskUrl}
+${requestedBy} is asking the team to complete this task.
+${message ? `\nMessage: ${message}\n` : ''}
+View task: ${taskUrl}
 
 --
-Diese E-Mail wurde automatisch von OrangeCat gesendet.
+This email was sent automatically by OrangeCat.
   `.trim();
 
   return { subject, html, text };
@@ -220,7 +220,7 @@ export function newTaskNotification(
   category: string,
   taskUrl: string
 ): EmailContent {
-  const subject = `Neue Aufgabe: ${taskTitle}`;
+  const subject = `New task: ${taskTitle}`;
 
   const html = `
 <!DOCTYPE html>
@@ -242,18 +242,18 @@ export function newTaskNotification(
 <body>
   <div class="container">
     <div class="header">
-      <h1>✨ Neue Aufgabe</h1>
+      <h1>✨ New task</h1>
     </div>
     <div class="content">
       <p class="task-title">${taskTitle}</p>
-      <p><strong>${createdBy}</strong> hat eine neue Aufgabe erstellt.</p>
+      <p><strong>${createdBy}</strong> has created a new task.</p>
       <p><span class="category-badge">${category}</span></p>
       <p style="margin-top: 24px;">
-        <a href="${taskUrl}" class="button">Aufgabe ansehen</a>
+        <a href="${taskUrl}" class="button">View task</a>
       </p>
     </div>
     <div class="footer">
-      <p>Diese E-Mail wurde automatisch von OrangeCat gesendet.</p>
+      <p>This email was sent automatically by OrangeCat.</p>
     </div>
   </div>
 </body>
@@ -261,15 +261,15 @@ export function newTaskNotification(
   `.trim();
 
   const text = `
-Neue Aufgabe: ${taskTitle}
+New task: ${taskTitle}
 
-${createdBy} hat eine neue Aufgabe erstellt.
-Kategorie: ${category}
+${createdBy} has created a new task.
+Category: ${category}
 
-Aufgabe ansehen: ${taskUrl}
+View task: ${taskUrl}
 
 --
-Diese E-Mail wurde automatisch von OrangeCat gesendet.
+This email was sent automatically by OrangeCat.
   `.trim();
 
   return { subject, html, text };
@@ -284,7 +284,7 @@ export function taskCompletedNotification(
   notes: string | null,
   taskUrl: string
 ): EmailContent {
-  const subject = `Aufgabe erledigt: ${taskTitle}`;
+  const subject = `Task completed: ${taskTitle}`;
 
   const html = `
 <!DOCTYPE html>
@@ -306,18 +306,18 @@ export function taskCompletedNotification(
 <body>
   <div class="container">
     <div class="header">
-      <h1>✅ Aufgabe erledigt</h1>
+      <h1>✅ Task completed</h1>
     </div>
     <div class="content">
       <p class="task-title">${taskTitle}</p>
-      <p><strong>${completedBy}</strong> hat diese Aufgabe erledigt.</p>
-      ${notes ? `<div class="message-box"><p><strong>Notizen:</strong> ${notes}</p></div>` : ''}
+      <p><strong>${completedBy}</strong> has completed this task.</p>
+      ${notes ? `<div class="message-box"><p><strong>Notes:</strong> ${notes}</p></div>` : ''}
       <p style="margin-top: 24px;">
-        <a href="${taskUrl}" class="button">Details ansehen</a>
+        <a href="${taskUrl}" class="button">View details</a>
       </p>
     </div>
     <div class="footer">
-      <p>Diese E-Mail wurde automatisch von OrangeCat gesendet.</p>
+      <p>This email was sent automatically by OrangeCat.</p>
     </div>
   </div>
 </body>
@@ -325,14 +325,14 @@ export function taskCompletedNotification(
   `.trim();
 
   const text = `
-Aufgabe erledigt: ${taskTitle}
+Task completed: ${taskTitle}
 
-${completedBy} hat diese Aufgabe erledigt.
-${notes ? `\nNotizen: ${notes}\n` : ''}
-Details ansehen: ${taskUrl}
+${completedBy} has completed this task.
+${notes ? `\nNotes: ${notes}\n` : ''}
+View details: ${taskUrl}
 
 --
-Diese E-Mail wurde automatisch von OrangeCat gesendet.
+This email was sent automatically by OrangeCat.
   `.trim();
 
   return { subject, html, text };

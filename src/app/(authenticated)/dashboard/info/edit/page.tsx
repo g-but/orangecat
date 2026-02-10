@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/auth';
 import Loading from '@/components/Loading';
 import ModernProfileEditor from '@/components/profile/ModernProfileEditor';
@@ -121,7 +121,7 @@ const getProfileCompletionPercentage = (profile: Profile | null): number => {
  * - Returns to view mode after save
  */
 export default function DashboardInfoEditPage() {
-  const { user, profile: storeProfile, isLoading: authLoading } = useAuth();
+  const { user, profile: storeProfile, isLoading: authLoading } = useRequireAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -262,8 +262,7 @@ export default function DashboardInfoEditPage() {
 
   // Not authenticated
   if (!user) {
-    router.push('/auth');
-    return <Loading />;
+    return null;
   }
 
   // No profile loaded yet – fall back to loading state instead of error to avoid flash

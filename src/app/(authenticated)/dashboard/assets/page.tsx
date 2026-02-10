@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
 import EntityListShell from '@/components/entity/EntityListShell';
@@ -30,7 +30,7 @@ import { logger } from '@/utils/logger';
  * Last Modified Summary: Moved to /dashboard/assets for path consistency
  */
 export default function AssetsPage() {
-  const { user, isLoading, hydrated } = useAuth();
+  const { user, isLoading, hydrated } = useRequireAuth();
   const router = useRouter();
   const { selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelection();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -54,24 +54,22 @@ export default function AssetsPage() {
   // Memoize assets to prevent unnecessary re-renders
   const memoizedAssets = useMemo(() => assets, [assets]);
 
-  useEffect(() => {
-    if (hydrated && !isLoading && !user) {
-      router.push('/auth');
-    }
-  }, [user, hydrated, isLoading, router]);
-
   const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) {return;}
+    if (selectedIds.size === 0) {
+      return;
+    }
 
     const confirmed = window.confirm(
       `Are you sure you want to delete ${selectedIds.size} asset${selectedIds.size > 1 ? 's' : ''}? This action cannot be undone.`
     );
 
-    if (!confirmed) {return;}
+    if (!confirmed) {
+      return;
+    }
 
     setIsDeleting(true);
     try {
-      const deletePromises = Array.from(selectedIds).map(async (id) => {
+      const deletePromises = Array.from(selectedIds).map(async id => {
         const response = await fetch(`/api/assets/${id}`, {
           method: 'DELETE',
         });
@@ -87,7 +85,9 @@ export default function AssetsPage() {
       });
 
       await Promise.all(deletePromises);
-      toast.success(`Successfully deleted ${selectedIds.size} asset${selectedIds.size > 1 ? 's' : ''}`);
+      toast.success(
+        `Successfully deleted ${selectedIds.size} asset${selectedIds.size > 1 ? 's' : ''}`
+      );
       clearSelection();
       await refresh();
     } catch (error) {
@@ -109,15 +109,14 @@ export default function AssetsPage() {
   const headerActions = (
     <div className="flex items-center gap-2">
       {memoizedAssets.length > 0 && (
-        <Button
-          onClick={() => setShowSelection(!showSelection)}
-          variant="outline"
-          size="sm"
-        >
+        <Button onClick={() => setShowSelection(!showSelection)} variant="outline" size="sm">
           {showSelection ? 'Cancel' : 'Select'}
         </Button>
       )}
-      <Button href={assetEntityConfig.createPath} className="bg-gradient-to-r from-green-600 to-green-700 w-full sm:w-auto">
+      <Button
+        href={assetEntityConfig.createPath}
+        className="bg-gradient-to-r from-green-600 to-green-700 w-full sm:w-auto"
+      >
         Add Asset
       </Button>
     </div>
@@ -139,7 +138,9 @@ export default function AssetsPage() {
                 <label className="flex items-center gap-2 text-sm text-gray-700">
                   <input
                     type="checkbox"
-                    checked={selectedIds.size === memoizedAssets.length && memoizedAssets.length > 0}
+                    checked={
+                      selectedIds.size === memoizedAssets.length && memoizedAssets.length > 0
+                    }
                     onChange={() => toggleSelectAll(memoizedAssets.map(a => a.id))}
                     className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                   />

@@ -70,7 +70,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (taskError) {
       if (taskError.code === 'PGRST116') {
-        return ApiResponses.notFound('Aufgabe');
+        return ApiResponses.notFound('Task');
       }
       logger.error('Failed to fetch task', { error: taskError, taskId }, 'TasksAPI');
       return ApiResponses.internalServerError();
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         .single();
 
       if (userError || !requestedUser) {
-        return ApiResponses.notFound('Angefragter Benutzer');
+        return ApiResponses.notFound('Requested user');
       }
     }
 
@@ -139,14 +139,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
       .single();
 
     const requesterProfile = profileData as ProfileRow | null;
-    const requesterName = requesterProfile?.display_name || requesterProfile?.username || 'Jemand';
+    const requesterName = requesterProfile?.display_name || requesterProfile?.username || 'Someone';
 
     if (isBroadcast) {
       // Broadcast to all team members
       await notificationService.createBroadcastNotification({
         excludeUserId: user.id,
         type: 'task_broadcast',
-        title: `${requesterName} bittet um Hilfe: "${task.title}"`,
+        title: `${requesterName} is asking for help: "${task.title}"`,
         message: requestData.message || null,
         actionUrl: `/dashboard/tasks/${taskId}`,
         sourceEntityType: 'task',
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       await notificationService.createNotification({
         recipientUserId: requestData.requested_user_id!,
         type: 'task_request',
-        title: `${requesterName} bittet dich: "${task.title}"`,
+        title: `${requesterName} is asking you: "${task.title}"`,
         message: requestData.message || null,
         actionUrl: `/dashboard/tasks/${taskId}`,
         sourceEntityType: 'task',
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return createSuccessResponse(
       { request: taskRequest },
       HttpStatus.CREATED,
-      isBroadcast ? 'Anfrage an alle gesendet' : 'Anfrage gesendet'
+      isBroadcast ? 'Request sent to all' : 'Request sent'
     );
   } catch (err) {
     logger.error('Exception in POST /api/tasks/[id]/request', { error: err }, 'TasksAPI');

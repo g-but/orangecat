@@ -10,9 +10,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
 import EntityListShell from '@/components/entity/EntityListShell';
@@ -23,8 +21,7 @@ import { wishlistEntityConfig, type WishlistListItem } from '@/config/entities/w
 import { Plus } from 'lucide-react';
 
 export default function WishlistsPage() {
-  const { user, isLoading: authLoading, hydrated } = useAuth();
-  const router = useRouter();
+  const { user, isLoading } = useRequireAuth();
 
   const {
     items: wishlists,
@@ -36,16 +33,10 @@ export default function WishlistsPage() {
     apiEndpoint: wishlistEntityConfig.apiEndpoint,
     userId: user?.id,
     limit: 12,
-    enabled: !!user?.id && hydrated && !authLoading,
+    enabled: !!user?.id && !isLoading,
   });
 
-  useEffect(() => {
-    if (hydrated && !authLoading && !user) {
-      router.push('/auth?from=wishlists');
-    }
-  }, [user, hydrated, authLoading, router]);
-
-  if (!hydrated || authLoading) {
+  if (isLoading) {
     return <Loading fullScreen message="Loading your wishlists..." />;
   }
 
@@ -54,8 +45,8 @@ export default function WishlistsPage() {
   }
 
   const headerActions = (
-    <Button 
-      href={wishlistEntityConfig.createPath} 
+    <Button
+      href={wishlistEntityConfig.createPath}
       className="bg-gradient-to-r from-rose-600 to-rose-700"
     >
       <Plus className="h-4 w-4 mr-2" />
@@ -78,14 +69,9 @@ export default function WishlistsPage() {
           emptyState={wishlistEntityConfig.emptyState}
           gridCols={wishlistEntityConfig.gridCols}
         />
-        
+
         {total > 12 && (
-          <CommercePagination 
-            page={page} 
-            limit={12} 
-            total={total} 
-            onPageChange={setPage} 
-          />
+          <CommercePagination page={page} limit={12} total={total} onPageChange={setPage} />
         )}
       </div>
     </EntityListShell>

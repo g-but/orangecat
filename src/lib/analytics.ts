@@ -10,6 +10,8 @@
  * 3. Add provider-specific tracking in trackEvent()
  */
 
+import { logger } from '@/utils/logger';
+
 // Event types for type safety
 export type AnalyticsEvent =
   // Registration funnel
@@ -66,7 +68,9 @@ const analyticsProvider = process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER || 'console
  * Initialize analytics - call this once in your app layout
  */
 export function initAnalytics() {
-  if (typeof window === 'undefined') {return;}
+  if (typeof window === 'undefined') {
+    return;
+  }
 
   switch (analyticsProvider) {
     case 'mixpanel':
@@ -82,8 +86,7 @@ export function initAnalytics() {
       break;
     default:
       if (isDev) {
-        // eslint-disable-next-line no-console -- Intentional dev-only analytics logging
-        console.log('📊 Analytics initialized (console mode)');
+        logger.debug('Analytics initialized (console mode)', undefined, 'analytics');
       }
   }
 }
@@ -92,7 +95,9 @@ export function initAnalytics() {
  * Track an analytics event
  */
 export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperties) {
-  if (typeof window === 'undefined') {return;}
+  if (typeof window === 'undefined') {
+    return;
+  }
 
   const enrichedProperties = {
     ...properties,
@@ -117,8 +122,7 @@ export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperti
     default:
       // Console logging for development
       if (isDev) {
-        // eslint-disable-next-line no-console -- Intentional dev-only analytics logging
-        console.log(`📊 [${event}]`, enrichedProperties);
+        logger.debug(`[${event}]`, enrichedProperties, 'analytics');
       }
   }
 
@@ -127,7 +131,9 @@ export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperti
     const events = JSON.parse(localStorage.getItem('orangecat_analytics') || '[]');
     events.push({ event, properties: enrichedProperties });
     // Keep only last 100 events
-    if (events.length > 100) {events.shift();}
+    if (events.length > 100) {
+      events.shift();
+    }
     localStorage.setItem('orangecat_analytics', JSON.stringify(events));
   } catch {
     // Ignore storage errors
@@ -138,7 +144,9 @@ export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperti
  * Identify a user for analytics
  */
 export function identifyUser(properties: UserProperties) {
-  if (typeof window === 'undefined') {return;}
+  if (typeof window === 'undefined') {
+    return;
+  }
 
   switch (analyticsProvider) {
     case 'mixpanel':
@@ -153,8 +161,7 @@ export function identifyUser(properties: UserProperties) {
       break;
     default:
       if (isDev) {
-        // eslint-disable-next-line no-console -- Intentional dev-only analytics logging
-        console.log('📊 User identified:', properties);
+        logger.debug('User identified', properties, 'analytics');
       }
   }
 }
@@ -170,57 +177,52 @@ export function trackPageView(pageName: string, properties?: AnalyticsProperties
  * Track registration funnel events
  */
 export const registrationEvents = {
-  started: (properties?: AnalyticsProperties) =>
-    trackEvent('registration_started', properties),
+  started: (properties?: AnalyticsProperties) => trackEvent('registration_started', properties),
   formSubmitted: (properties?: AnalyticsProperties) =>
     trackEvent('registration_form_submitted', properties),
-  success: (properties?: AnalyticsProperties) =>
-    trackEvent('registration_success', properties),
+  success: (properties?: AnalyticsProperties) => trackEvent('registration_success', properties),
   error: (error: string, properties?: AnalyticsProperties) =>
     trackEvent('registration_error', { error, ...properties }),
   emailSent: (properties?: AnalyticsProperties) =>
     trackEvent('email_confirmation_sent', properties),
-  emailConfirmed: (properties?: AnalyticsProperties) =>
-    trackEvent('email_confirmed', properties),
+  emailConfirmed: (properties?: AnalyticsProperties) => trackEvent('email_confirmed', properties),
 };
 
 /**
  * Track onboarding funnel events
  */
 export const onboardingEvents = {
-  started: (userId?: string) =>
-    trackEvent('onboarding_started', { userId }),
+  started: (userId?: string) => trackEvent('onboarding_started', { userId }),
   stepViewed: (step: number, stepName: string, userId?: string) =>
     trackEvent('onboarding_step_viewed', { step, stepName, userId }),
   stepCompleted: (step: number, stepName: string, userId?: string) =>
     trackEvent('onboarding_step_completed', { step, stepName, userId }),
   skipped: (atStep: number, userId?: string) =>
     trackEvent('onboarding_skipped', { atStep, userId }),
-  completed: (userId?: string) =>
-    trackEvent('onboarding_completed', { userId }),
+  completed: (userId?: string) => trackEvent('onboarding_completed', { userId }),
 };
 
 /**
  * Track key user actions
  */
 export const userActions = {
-  walletAdded: (userId?: string) =>
-    trackEvent('wallet_address_added', { userId }),
+  walletAdded: (userId?: string) => trackEvent('wallet_address_added', { userId }),
   projectCreated: (projectId: string, userId?: string) =>
     trackEvent('project_created', { projectId, userId }),
   projectPublished: (projectId: string, userId?: string) =>
     trackEvent('project_published', { projectId, userId }),
   profileUpdated: (fields: string[], userId?: string) =>
     trackEvent('profile_updated', { fields: fields.join(','), userId }),
-  postCreated: (userId?: string) =>
-    trackEvent('timeline_post_created', { userId }),
+  postCreated: (userId?: string) => trackEvent('timeline_post_created', { userId }),
 };
 
 /**
  * Debug function to view stored analytics events
  */
 export function getStoredEvents(): Array<{ event: string; properties: AnalyticsProperties }> {
-  if (typeof window === 'undefined') {return [];}
+  if (typeof window === 'undefined') {
+    return [];
+  }
   try {
     return JSON.parse(localStorage.getItem('orangecat_analytics') || '[]');
   } catch {
@@ -232,6 +234,8 @@ export function getStoredEvents(): Array<{ event: string; properties: AnalyticsP
  * Clear stored analytics events
  */
 export function clearStoredEvents() {
-  if (typeof window === 'undefined') {return;}
+  if (typeof window === 'undefined') {
+    return;
+  }
   localStorage.removeItem('orangecat_analytics');
 }

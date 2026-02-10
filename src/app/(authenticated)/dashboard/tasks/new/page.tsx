@@ -8,9 +8,9 @@
  * Created: 2026-02-05
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
@@ -45,7 +45,7 @@ interface TaskFormData {
 }
 
 export default function NewTaskPage() {
-  const { user, isLoading: authLoading, hydrated } = useAuth();
+  const { user, isLoading: authLoading } = useRequireAuth();
   const router = useRouter();
 
   const [formData, setFormData] = useState<TaskFormData>({
@@ -65,12 +65,6 @@ export default function NewTaskPage() {
   const [tagInput, setTagInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (hydrated && !authLoading && !user) {
-      router.push('/auth');
-    }
-  }, [user, hydrated, authLoading, router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -112,24 +106,24 @@ export default function NewTaskPage() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Titel ist erforderlich';
+      newErrors.title = 'Title is required';
     } else if (formData.title.length > 200) {
-      newErrors.title = 'Titel darf maximal 200 Zeichen haben';
+      newErrors.title = 'Title must be at most 200 characters';
     }
 
     if (formData.description && formData.description.length > 2000) {
-      newErrors.description = 'Beschreibung darf maximal 2000 Zeichen haben';
+      newErrors.description = 'Description must be at most 2000 characters';
     }
 
     if (formData.instructions && formData.instructions.length > 5000) {
-      newErrors.instructions = 'Anleitung darf maximal 5000 Zeichen haben';
+      newErrors.instructions = 'Instructions must be at most 5000 characters';
     }
 
     if (
       formData.estimated_minutes &&
       (formData.estimated_minutes < 1 || formData.estimated_minutes > 480)
     ) {
-      newErrors.estimated_minutes = 'Geschätzte Zeit muss zwischen 1 und 480 Minuten liegen';
+      newErrors.estimated_minutes = 'Estimated time must be between 1 and 480 minutes';
     }
 
     setErrors(newErrors);
@@ -140,7 +134,7 @@ export default function NewTaskPage() {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error('Bitte korrigiere die Fehler im Formular');
+      toast.error('Please fix the errors in the form');
       return;
     }
 
@@ -171,7 +165,7 @@ export default function NewTaskPage() {
         throw new Error(data.error || 'Failed to create task');
       }
 
-      toast.success('Aufgabe erstellt!');
+      toast.success('Task created!');
       router.push(`/dashboard/tasks/${data.data.task.id}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create task';
@@ -182,8 +176,8 @@ export default function NewTaskPage() {
     }
   };
 
-  if (!hydrated || authLoading) {
-    return <Loading fullScreen message="Laden..." />;
+  if (authLoading) {
+    return <Loading fullScreen message="Loading..." />;
   }
 
   if (!user) {
@@ -197,28 +191,28 @@ export default function NewTaskPage() {
         <div className="flex items-center justify-between mb-6">
           <Button onClick={() => router.back()} variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück
+            Back
           </Button>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Neue Aufgabe</h1>
-            <p className="text-gray-600 mt-1">Erstelle eine neue Aufgabe für das Team</p>
+            <h1 className="text-2xl font-bold text-gray-900">New Task</h1>
+            <p className="text-gray-600 mt-1">Create a new task for the team</p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Titel <span className="text-red-500">*</span>
+                Title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                placeholder="z.B. Küche reinigen"
+                placeholder="e.g. Clean kitchen"
                 className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500 ${
                   errors.title ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -229,7 +223,7 @@ export default function NewTaskPage() {
             {/* Task Type */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Aufgabentyp <span className="text-red-500">*</span>
+                Task Type <span className="text-red-500">*</span>
               </label>
               <select
                 name="task_type"
@@ -245,28 +239,28 @@ export default function NewTaskPage() {
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 {formData.task_type === TASK_TYPES.ONE_TIME &&
-                  'Einmalige Aufgabe, wird nach Erledigung als abgeschlossen markiert'}
+                  'One-time task, marked as completed once done'}
                 {formData.task_type === TASK_TYPES.RECURRING_SCHEDULED &&
-                  'Wiederkehrende Aufgabe mit festem Zeitplan'}
+                  'Recurring task with a fixed schedule'}
                 {formData.task_type === TASK_TYPES.RECURRING_AS_NEEDED &&
-                  'Wiederkehrende Aufgabe, wird nach Bedarf erledigt'}
+                  'Recurring task, completed as needed'}
               </p>
             </div>
 
             {/* Schedule (only for recurring_scheduled) */}
             {formData.task_type === TASK_TYPES.RECURRING_SCHEDULED && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Zeitplan</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Schedule</label>
                 <input
                   type="text"
                   name="schedule_human"
                   value={formData.schedule_human}
                   onChange={handleChange}
-                  placeholder="z.B. Jeden Montag, Täglich um 9 Uhr"
+                  placeholder="e.g. Every Monday, Daily at 9 AM"
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Beschreibe wann diese Aufgabe erledigt werden sollte
+                  Describe when this task should be completed
                 </p>
               </div>
             )}
@@ -274,7 +268,7 @@ export default function NewTaskPage() {
             {/* Category */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Kategorie <span className="text-red-500">*</span>
+                Category <span className="text-red-500">*</span>
               </label>
               <select
                 name="category"
@@ -292,7 +286,7 @@ export default function NewTaskPage() {
 
             {/* Priority */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Priorität</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
               <select
                 name="priority"
                 value={formData.priority}
@@ -310,7 +304,7 @@ export default function NewTaskPage() {
             {/* Estimated Time */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Geschätzte Zeit (Minuten)
+                Estimated Time (Minutes)
               </label>
               <input
                 type="number"
@@ -324,7 +318,7 @@ export default function NewTaskPage() {
                 }
                 min={1}
                 max={480}
-                placeholder="z.B. 30"
+                placeholder="e.g. 30"
                 className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500 ${
                   errors.estimated_minutes ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -336,13 +330,13 @@ export default function NewTaskPage() {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Beschreibung</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 rows={3}
-                placeholder="Was muss bei dieser Aufgabe gemacht werden?"
+                placeholder="What needs to be done for this task?"
                 className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500 ${
                   errors.description ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -354,13 +348,13 @@ export default function NewTaskPage() {
 
             {/* Instructions */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Anleitung</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
               <textarea
                 name="instructions"
                 value={formData.instructions}
                 onChange={handleChange}
                 rows={4}
-                placeholder="Schritt-für-Schritt Anleitung (optional)"
+                placeholder="Step-by-step instructions (optional)"
                 className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500 ${
                   errors.instructions ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -384,11 +378,11 @@ export default function NewTaskPage() {
                       handleAddTag();
                     }
                   }}
-                  placeholder="Tag hinzufügen..."
+                  placeholder="Add tag..."
                   className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
                 />
                 <Button type="button" variant="outline" onClick={handleAddTag}>
-                  Hinzufügen
+                  Add
                 </Button>
               </div>
               {formData.tags.length > 0 && (
@@ -415,11 +409,11 @@ export default function NewTaskPage() {
             {/* Submit */}
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <Button type="button" variant="outline" onClick={() => router.back()}>
-                Abbrechen
+                Cancel
               </Button>
               <Button type="submit" isLoading={submitting}>
                 <Save className="h-4 w-4 mr-2" />
-                Aufgabe erstellen
+                Create Task
               </Button>
             </div>
           </form>

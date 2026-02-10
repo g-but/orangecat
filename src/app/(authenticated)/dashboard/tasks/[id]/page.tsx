@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
@@ -61,7 +61,7 @@ interface CompletionWithUser extends TaskCompletion {
 }
 
 export default function TaskDetailPage() {
-  const { user, isLoading: authLoading, hydrated } = useAuth();
+  const { user, isLoading: authLoading, hydrated } = useRequireAuth();
   const router = useRouter();
   const params = useParams();
   const taskId = params?.id as string;
@@ -121,12 +121,6 @@ export default function TaskDetailPage() {
     }
   }, [hydrated, authLoading, user, loadTask]);
 
-  useEffect(() => {
-    if (hydrated && !authLoading && !user) {
-      router.push('/auth');
-    }
-  }, [user, hydrated, authLoading, router]);
-
   // Handle complete task
   const handleComplete = async () => {
     setActionLoading(true);
@@ -145,7 +139,7 @@ export default function TaskDetailPage() {
         throw new Error(data.error || 'Failed to complete task');
       }
 
-      toast.success('Aufgabe erledigt!');
+      toast.success('Task completed!');
       setShowCompleteModal(false);
       setCompletionNotes('');
       setCompletionDuration('');
@@ -173,7 +167,7 @@ export default function TaskDetailPage() {
         throw new Error(data.error || 'Failed to flag task');
       }
 
-      toast.success('Aufgabe markiert');
+      toast.success('Task flagged');
       setShowAttentionModal(false);
       setAttentionMessage('');
       loadTask();
@@ -203,7 +197,7 @@ export default function TaskDetailPage() {
         throw new Error(data.error || 'Failed to send request');
       }
 
-      toast.success(requestUserId ? 'Anfrage gesendet' : 'Anfrage an alle gesendet');
+      toast.success(requestUserId ? 'Request sent' : 'Request sent to everyone');
       setShowRequestModal(false);
       setRequestMessage('');
       setRequestUserId('');
@@ -218,7 +212,7 @@ export default function TaskDetailPage() {
 
   // Handle archive
   const handleArchive = async () => {
-    if (!window.confirm('Möchtest du diese Aufgabe wirklich archivieren?')) {
+    if (!window.confirm('Are you sure you want to archive this task?')) {
       return;
     }
 
@@ -232,7 +226,7 @@ export default function TaskDetailPage() {
         throw new Error(data.error || 'Failed to archive task');
       }
 
-      toast.success('Aufgabe archiviert');
+      toast.success('Task archived');
       router.push('/dashboard/tasks');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to archive task';
@@ -240,8 +234,8 @@ export default function TaskDetailPage() {
     }
   };
 
-  if (!hydrated || authLoading || loading) {
-    return <Loading fullScreen message="Aufgabe wird geladen..." />;
+  if (authLoading || loading) {
+    return <Loading fullScreen message="Loading task..." />;
   }
 
   if (!user) {
@@ -254,10 +248,10 @@ export default function TaskDetailPage() {
         <div className="max-w-3xl mx-auto">
           <Button onClick={() => router.back()} variant="ghost" size="sm" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück
+            Back
           </Button>
           <div className="bg-white rounded-xl border border-red-200 p-6 text-red-600">
-            {error || 'Aufgabe nicht gefunden'}
+            {error || 'Task not found'}
           </div>
         </div>
       </div>
@@ -274,12 +268,12 @@ export default function TaskDetailPage() {
         <div className="flex items-center justify-between">
           <Button onClick={() => router.back()} variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück
+            Back
           </Button>
           <div className="flex items-center gap-2">
             <Button href={`/dashboard/tasks/${taskId}/edit`} variant="outline" size="sm">
               <Edit className="h-4 w-4 mr-2" />
-              Bearbeiten
+              Edit
             </Button>
             <Button
               onClick={handleArchive}
@@ -327,7 +321,7 @@ export default function TaskDetailPage() {
               <div className="mb-6">
                 <h2 className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2">
                   <FileText className="h-4 w-4" />
-                  Beschreibung
+                  Description
                 </h2>
                 <p className="text-gray-700 whitespace-pre-wrap">{task.description}</p>
               </div>
@@ -336,7 +330,7 @@ export default function TaskDetailPage() {
             {/* Instructions */}
             {task.instructions && (
               <div className="mb-6 bg-blue-50 rounded-lg p-4">
-                <h2 className="text-sm font-medium text-blue-800 mb-2">Anleitung</h2>
+                <h2 className="text-sm font-medium text-blue-800 mb-2">Instructions</h2>
                 <p className="text-blue-700 whitespace-pre-wrap">{task.instructions}</p>
               </div>
             )}
@@ -346,7 +340,7 @@ export default function TaskDetailPage() {
               <div>
                 <span className="text-gray-500 flex items-center gap-1">
                   <Tag className="h-4 w-4" />
-                  Kategorie
+                  Category
                 </span>
                 <span className="font-medium text-gray-900">
                   {TASK_CATEGORY_LABELS[task.category as keyof typeof TASK_CATEGORY_LABELS]}
@@ -355,7 +349,7 @@ export default function TaskDetailPage() {
               <div>
                 <span className="text-gray-500 flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  Typ
+                  Type
                 </span>
                 <span className="font-medium text-gray-900">
                   {TASK_TYPE_LABELS[task.task_type as keyof typeof TASK_TYPE_LABELS]}
@@ -365,10 +359,10 @@ export default function TaskDetailPage() {
                 <div>
                   <span className="text-gray-500 flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    Geschätzte Zeit
+                    Estimated Time
                   </span>
                   <span className="font-medium text-gray-900">
-                    ~{task.estimated_minutes} Minuten
+                    ~{task.estimated_minutes} minutes
                   </span>
                 </div>
               )}
@@ -376,7 +370,7 @@ export default function TaskDetailPage() {
                 <div>
                   <span className="text-gray-500 flex items-center gap-1">
                     <User className="h-4 w-4" />
-                    Erstellt von
+                    Created by
                   </span>
                   <span className="font-medium text-gray-900">
                     {task.creator.display_name || task.creator.username}
@@ -390,7 +384,7 @@ export default function TaskDetailPage() {
           <div className="border-t border-gray-200 p-4 bg-gray-50 flex flex-wrap gap-2">
             <Button onClick={() => setShowCompleteModal(true)} className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4" />
-              Erledigt
+              Done
             </Button>
             <Button
               onClick={() => setShowRequestModal(true)}
@@ -398,7 +392,7 @@ export default function TaskDetailPage() {
               className="flex items-center gap-2"
             >
               <Send className="h-4 w-4" />
-              Anfragen
+              Request
             </Button>
             <Button
               onClick={() => setShowAttentionModal(true)}
@@ -406,7 +400,7 @@ export default function TaskDetailPage() {
               className="flex items-center gap-2 text-amber-600 border-amber-300 hover:bg-amber-50"
             >
               <AlertTriangle className="h-4 w-4" />
-              Markieren
+              Flag
             </Button>
           </div>
         </div>
@@ -415,10 +409,10 @@ export default function TaskDetailPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <History className="h-5 w-5" />
-            Erledigungen ({completions.length})
+            Completions ({completions.length})
           </h2>
           {completions.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">Noch keine Erledigungen</p>
+            <p className="text-gray-500 text-center py-4">No completions yet</p>
           ) : (
             <div className="space-y-3">
               {completions.map(completion => (
@@ -434,10 +428,10 @@ export default function TaskDetailPage() {
                       <span className="font-medium text-gray-900">
                         {completion.completer?.display_name ||
                           completion.completer?.username ||
-                          'Unbekannt'}
+                          'Unknown'}
                       </span>
                       <span className="text-gray-500">
-                        {new Date(completion.completed_at).toLocaleDateString('de-CH', {
+                        {new Date(completion.completed_at).toLocaleDateString('en-US', {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric',
@@ -446,7 +440,7 @@ export default function TaskDetailPage() {
                         })}
                       </span>
                       {completion.duration_minutes && (
-                        <span className="text-gray-500">• {completion.duration_minutes} Min.</span>
+                        <span className="text-gray-500">• {completion.duration_minutes} min.</span>
                       )}
                     </div>
                     {completion.notes && (
@@ -462,11 +456,11 @@ export default function TaskDetailPage() {
 
       {/* Complete Modal */}
       {showCompleteModal && (
-        <Modal onClose={() => setShowCompleteModal(false)} title="Aufgabe erledigen">
+        <Modal onClose={() => setShowCompleteModal(false)} title="Complete Task">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dauer (Minuten)
+                Duration (minutes)
               </label>
               <input
                 type="number"
@@ -480,22 +474,22 @@ export default function TaskDetailPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notizen (optional)
+                Notes (optional)
               </label>
               <textarea
                 value={completionNotes}
                 onChange={e => setCompletionNotes(e.target.value)}
                 rows={3}
-                placeholder="Anmerkungen zur Erledigung..."
+                placeholder="Notes about the completion..."
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
               />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowCompleteModal(false)}>
-                Abbrechen
+                Cancel
               </Button>
               <Button onClick={handleComplete} isLoading={actionLoading}>
-                Erledigt markieren
+                Mark as Done
               </Button>
             </div>
           </div>
@@ -504,34 +498,33 @@ export default function TaskDetailPage() {
 
       {/* Attention Modal */}
       {showAttentionModal && (
-        <Modal onClose={() => setShowAttentionModal(false)} title="Aufgabe markieren">
+        <Modal onClose={() => setShowAttentionModal(false)} title="Flag Task">
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Markiere diese Aufgabe als &quot;braucht Aufmerksamkeit&quot;. Alle Teammitglieder
-              werden benachrichtigt.
+              Flag this task as &quot;needs attention&quot;. All team members will be notified.
             </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nachricht (optional)
+                Message (optional)
               </label>
               <textarea
                 value={attentionMessage}
                 onChange={e => setAttentionMessage(e.target.value)}
                 rows={3}
-                placeholder="Was ist das Problem?"
+                placeholder="What is the problem?"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
               />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowAttentionModal(false)}>
-                Abbrechen
+                Cancel
               </Button>
               <Button
                 onClick={handleFlagAttention}
                 isLoading={actionLoading}
                 className="bg-amber-600 hover:bg-amber-700"
               >
-                Markieren
+                Flag
               </Button>
             </div>
           </div>
@@ -540,10 +533,10 @@ export default function TaskDetailPage() {
 
       {/* Request Modal */}
       {showRequestModal && (
-        <Modal onClose={() => setShowRequestModal(false)} title="Aufgabe anfragen">
+        <Modal onClose={() => setShowRequestModal(false)} title="Request Task">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">An wen?</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">To whom?</label>
               <select
                 value={requestUserId}
                 onChange={e => setRequestUserId(e.target.value)}
@@ -551,32 +544,30 @@ export default function TaskDetailPage() {
               >
                 <option value="">
                   <Users className="h-4 w-4 inline mr-2" />
-                  Alle Teammitglieder (Broadcast)
+                  All Team Members (Broadcast)
                 </option>
                 {/* TODO: Load team members here */}
               </select>
-              <p className="text-xs text-gray-500 mt-1">
-                Leer lassen, um alle Teammitglieder zu benachrichtigen
-              </p>
+              <p className="text-xs text-gray-500 mt-1">Leave empty to notify all team members</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nachricht (optional)
+                Message (optional)
               </label>
               <textarea
                 value={requestMessage}
                 onChange={e => setRequestMessage(e.target.value)}
                 rows={3}
-                placeholder="Könntest du diese Aufgabe übernehmen?"
+                placeholder="Could you take care of this task?"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
               />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowRequestModal(false)}>
-                Abbrechen
+                Cancel
               </Button>
               <Button onClick={handleRequest} isLoading={actionLoading}>
-                Anfrage senden
+                Send Request
               </Button>
             </div>
           </div>

@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
@@ -70,7 +70,7 @@ interface DashboardStats {
 }
 
 export default function TaskAnalyticsPage() {
-  const { user, isLoading: authLoading, hydrated } = useAuth();
+  const { user, isLoading: authLoading, hydrated } = useRequireAuth();
   const router = useRouter();
 
   // State
@@ -134,14 +134,8 @@ export default function TaskAnalyticsPage() {
     }
   }, [hydrated, authLoading, user, loadData]);
 
-  useEffect(() => {
-    if (hydrated && !authLoading && !user) {
-      router.push('/auth');
-    }
-  }, [user, hydrated, authLoading, router]);
-
-  if (!hydrated || authLoading || loading) {
-    return <Loading fullScreen message="Statistiken werden geladen..." />;
+  if (authLoading || loading) {
+    return <Loading fullScreen message="Loading statistics..." />;
   }
 
   if (!user) {
@@ -154,7 +148,7 @@ export default function TaskAnalyticsPage() {
         <div className="max-w-4xl mx-auto">
           <Button onClick={() => router.back()} variant="ghost" size="sm" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück
+            Back
           </Button>
           <div className="bg-white rounded-xl border border-red-200 p-6 text-red-600">{error}</div>
         </div>
@@ -173,9 +167,9 @@ export default function TaskAnalyticsPage() {
           <div className="flex items-center gap-4">
             <Button onClick={() => router.back()} variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
+              Back
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">Aufgaben-Statistiken</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Task Statistics</h1>
           </div>
           <div className="flex items-center gap-2">
             <select
@@ -183,9 +177,9 @@ export default function TaskAnalyticsPage() {
               onChange={e => setDays(parseInt(e.target.value))}
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tiffany-500"
             >
-              <option value={7}>Letzte 7 Tage</option>
-              <option value={30}>Letzte 30 Tage</option>
-              <option value={90}>Letzte 90 Tage</option>
+              <option value={7}>Last 7 days</option>
+              <option value={30}>Last 30 days</option>
+              <option value={90}>Last 90 days</option>
             </select>
           </div>
         </div>
@@ -195,25 +189,25 @@ export default function TaskAnalyticsPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatCard
               icon={CheckCircle}
-              label="Heute erledigt"
+              label="Completed today"
               value={stats.completedToday}
               color="green"
             />
             <StatCard
               icon={TrendingUp}
-              label="Diese Woche"
+              label="This week"
               value={stats.completedThisWeek}
               color="blue"
             />
             <StatCard
               icon={AlertTriangle}
-              label="Braucht Aufmerksamkeit"
+              label="Needs attention"
               value={stats.needsAttention}
               color="amber"
             />
             <StatCard
               icon={Clock}
-              label="Offene Anfragen"
+              label="Open requests"
               value={stats.openRequests}
               color="purple"
             />
@@ -224,10 +218,10 @@ export default function TaskAnalyticsPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Beiträge nach Person
+            Contributions by Person
           </h2>
           {contributions.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">Keine Daten für den gewählten Zeitraum</p>
+            <p className="text-gray-500 text-center py-8">No data for the selected period</p>
           ) : (
             <div className="space-y-4">
               {contributions.map((contribution, index) => (
@@ -241,7 +235,7 @@ export default function TaskAnalyticsPage() {
                         {contribution.user.display_name || contribution.user.username}
                       </span>
                       <span className="text-sm text-gray-600">
-                        {contribution.totalCompletions} Aufgaben
+                        {contribution.totalCompletions} tasks
                         {contribution.totalMinutes > 0 && (
                           <span className="text-gray-400 ml-2">
                             ({Math.round(contribution.totalMinutes / 60)}h)
@@ -286,16 +280,14 @@ export default function TaskAnalyticsPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Award className="h-5 w-5" />
-            Fairness-Übersicht
+            Fairness Overview
           </h2>
           <p className="text-sm text-gray-600 mb-4">
-            Zeigt wie gleichmäßig wiederkehrende Aufgaben verteilt sind. Niedrige Werte bedeuten,
-            dass eine Aufgabe von wenigen Personen erledigt wird.
+            Shows how evenly recurring tasks are distributed. Low values indicate that a task is
+            being completed by only a few people.
           </p>
           {fairnessData.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
-              Keine wiederkehrenden Aufgaben mit Erledigungen
-            </p>
+            <p className="text-gray-500 text-center py-8">No recurring tasks with completions</p>
           ) : (
             <div className="space-y-3">
               {fairnessData.slice(0, 10).map(item => (
@@ -308,8 +300,8 @@ export default function TaskAnalyticsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-gray-900 truncate">{item.task.title}</div>
                     <div className="text-sm text-gray-500">
-                      {item.totalCompletions} Erledigungen von {item.uniqueCompleterCount} Person
-                      {item.uniqueCompleterCount !== 1 && 'en'}
+                      {item.totalCompletions} completions by {item.uniqueCompleterCount} person
+                      {item.uniqueCompleterCount !== 1 && 's'}
                     </div>
                   </div>
                   <div className="text-right">

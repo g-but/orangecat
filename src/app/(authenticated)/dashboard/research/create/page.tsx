@@ -17,6 +17,17 @@ import { ArrowLeft, Plus, Minus, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import {
+  RESEARCH_FIELDS,
+  METHODOLOGIES,
+  TIMELINES,
+  FUNDING_MODELS,
+  PROGRESS_FREQUENCIES,
+  TRANSPARENCY_LEVELS,
+  type ResourceNeedType,
+  type ResourceNeedPriority,
+  type ImpactArea as ImpactAreaType,
+} from '@/config/research';
 
 interface TeamMember {
   name: string;
@@ -26,32 +37,14 @@ interface TeamMember {
 }
 
 interface ResourceNeed {
-  type:
-    | 'compute'
-    | 'data'
-    | 'equipment'
-    | 'collaboration'
-    | 'publication'
-    | 'travel'
-    | 'software'
-    | 'other';
+  type: ResourceNeedType;
   description?: string;
   estimated_cost_sats?: number;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: ResourceNeedPriority;
 }
 
 interface ImpactArea {
-  area:
-    | 'scientific_understanding'
-    | 'technological_innovation'
-    | 'medical_advancement'
-    | 'environmental_protection'
-    | 'social_progress'
-    | 'economic_development'
-    | 'education'
-    | 'policy_making'
-    | 'philosophical_insight'
-    | 'other';
+  area: ImpactAreaType;
   description?: string;
 }
 
@@ -253,24 +246,11 @@ export default function CreateResearchEntity() {
                     <SelectValue placeholder="Select field" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fundamental_physics">Fundamental Physics</SelectItem>
-                    <SelectItem value="mathematics">Mathematics</SelectItem>
-                    <SelectItem value="computer_science">Computer Science</SelectItem>
-                    <SelectItem value="biology">Biology</SelectItem>
-                    <SelectItem value="chemistry">Chemistry</SelectItem>
-                    <SelectItem value="neuroscience">Neuroscience</SelectItem>
-                    <SelectItem value="psychology">Psychology</SelectItem>
-                    <SelectItem value="economics">Economics</SelectItem>
-                    <SelectItem value="philosophy">Philosophy</SelectItem>
-                    <SelectItem value="engineering">Engineering</SelectItem>
-                    <SelectItem value="medicine">Medicine</SelectItem>
-                    <SelectItem value="environmental_science">Environmental Science</SelectItem>
-                    <SelectItem value="social_science">Social Science</SelectItem>
-                    <SelectItem value="artificial_intelligence">Artificial Intelligence</SelectItem>
-                    <SelectItem value="blockchain_cryptography">
-                      Blockchain & Cryptography
-                    </SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    {RESEARCH_FIELDS.map(f => (
+                      <SelectItem key={f.value} value={f.value}>
+                        {f.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -282,16 +262,11 @@ export default function CreateResearchEntity() {
                     <SelectValue placeholder="Select methodology" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="theoretical">Theoretical Research</SelectItem>
-                    <SelectItem value="experimental">Experimental Research</SelectItem>
-                    <SelectItem value="computational">Computational Research</SelectItem>
-                    <SelectItem value="empirical">Empirical Research</SelectItem>
-                    <SelectItem value="qualitative">Qualitative Research</SelectItem>
-                    <SelectItem value="mixed_methods">Mixed Methods</SelectItem>
-                    <SelectItem value="meta_analysis">Meta-Analysis</SelectItem>
-                    <SelectItem value="survey">Survey Research</SelectItem>
-                    <SelectItem value="case_study">Case Study</SelectItem>
-                    <SelectItem value="action_research">Action Research</SelectItem>
+                    {METHODOLOGIES.map(m => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -317,11 +292,11 @@ export default function CreateResearchEntity() {
                   <SelectValue placeholder="Select timeline" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="short_term">Short-term (3-6 months)</SelectItem>
-                  <SelectItem value="medium_term">Medium-term (6-18 months)</SelectItem>
-                  <SelectItem value="long_term">Long-term (1-3 years)</SelectItem>
-                  <SelectItem value="ongoing">Ongoing Research</SelectItem>
-                  <SelectItem value="indefinite">Indefinite/Exploratory</SelectItem>
+                  {TIMELINES.map(t => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -356,11 +331,11 @@ export default function CreateResearchEntity() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="donation">Funding-based (pure support)</SelectItem>
-                    <SelectItem value="subscription">Subscription (ongoing support)</SelectItem>
-                    <SelectItem value="milestone">Milestone-based (progress payments)</SelectItem>
-                    <SelectItem value="royalty">Royalty-share (revenue sharing)</SelectItem>
-                    <SelectItem value="hybrid">Hybrid (multiple models)</SelectItem>
+                    {FUNDING_MODELS.map(fm => (
+                      <SelectItem key={fm.value} value={fm.value}>
+                        {fm.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -480,11 +455,11 @@ export default function CreateResearchEntity() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="weekly">Weekly Updates</SelectItem>
-                    <SelectItem value="biweekly">Bi-weekly Updates</SelectItem>
-                    <SelectItem value="monthly">Monthly Updates</SelectItem>
-                    <SelectItem value="milestone">Milestone-based Updates</SelectItem>
-                    <SelectItem value="as_needed">As-needed Updates</SelectItem>
+                    {PROGRESS_FREQUENCIES.map(pf => (
+                      <SelectItem key={pf.value} value={pf.value}>
+                        {pf.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -496,10 +471,11 @@ export default function CreateResearchEntity() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="full">Full transparency</SelectItem>
-                    <SelectItem value="progress">Progress updates</SelectItem>
-                    <SelectItem value="milestone">Milestone updates</SelectItem>
-                    <SelectItem value="minimal">Minimal updates</SelectItem>
+                    {TRANSPARENCY_LEVELS.map(tl => (
+                      <SelectItem key={tl.value} value={tl.value}>
+                        {tl.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

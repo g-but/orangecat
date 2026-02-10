@@ -80,7 +80,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return ApiResponses.notFound('Aufgabe');
+        return ApiResponses.notFound('Task');
       }
       logger.error('Failed to fetch task', { error, id }, 'TasksAPI');
       return ApiResponses.internalServerError('Failed to fetch task');
@@ -179,13 +179,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return ApiResponses.notFound('Aufgabe');
+        return ApiResponses.notFound('Task');
       }
       logger.error('Failed to update task', { error, id }, 'TasksAPI');
       return ApiResponses.internalServerError('Failed to update task');
     }
 
-    return createSuccessResponse({ task }, HttpStatus.OK, 'Aufgabe aktualisiert');
+    return createSuccessResponse({ task }, HttpStatus.OK, 'Task updated');
   } catch (err) {
     logger.error('Exception in PATCH /api/tasks/[id]', { error: err }, 'TasksAPI');
     return ApiResponses.internalServerError();
@@ -218,7 +218,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        return ApiResponses.notFound('Aufgabe');
+        return ApiResponses.notFound('Task');
       }
       logger.error('Failed to fetch task for deletion', { error: fetchError, id }, 'TasksAPI');
       return ApiResponses.internalServerError();
@@ -227,7 +227,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const existingTask = existingTaskData as unknown as TaskOwnership;
 
     if (existingTask.created_by !== user.id) {
-      return ApiResponses.authorizationFailed('Nur der Ersteller kann diese Aufgabe archivieren');
+      return ApiResponses.authorizationFailed('Only the creator can archive this task');
     }
 
     // Soft delete (archive)
@@ -242,7 +242,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       return ApiResponses.internalServerError('Failed to archive task');
     }
 
-    return createSuccessResponse(null, HttpStatus.OK, 'Aufgabe archiviert');
+    return createSuccessResponse(null, HttpStatus.OK, 'Task archived');
   } catch (err) {
     logger.error('Exception in DELETE /api/tasks/[id]', { error: err }, 'TasksAPI');
     return ApiResponses.internalServerError();

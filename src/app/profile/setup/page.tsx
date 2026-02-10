@@ -1,5 +1,5 @@
 /**
- * REDIRECT PAGE: /profile/setup → /profiles/me
+ * REDIRECT PAGE: /profile/setup -> /profiles/me
  *
  * Profile setup is now handled by the edit modal on the profile page
  */
@@ -8,22 +8,17 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 
 export default function ProfileSetupRedirect() {
   const router = useRouter();
-  const { user, isLoading } = useAuthStore();
+  const { user, isLoading } = useRequireAuth();
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        // Not authenticated, go to auth
-        router.push('/auth');
-      } else {
-        // Redirect to profile page (edit modal will open automatically)
-        router.push('/profiles/me');
-      }
+    if (!isLoading && user) {
+      // Redirect to profile page (edit modal will open automatically)
+      router.push('/profiles/me');
     }
   }, [user, isLoading, router]);
 

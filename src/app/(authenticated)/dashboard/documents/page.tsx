@@ -10,9 +10,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
 import EntityListShell from '@/components/entity/EntityListShell';
@@ -23,8 +21,7 @@ import { documentEntityConfig, type DocumentListItem } from '@/config/entities/d
 import { Plus, Cat } from 'lucide-react';
 
 export default function DocumentsPage() {
-  const { user, isLoading: authLoading, hydrated } = useAuth();
-  const router = useRouter();
+  const { user, isLoading } = useRequireAuth();
 
   const {
     items: documents,
@@ -36,16 +33,10 @@ export default function DocumentsPage() {
     apiEndpoint: documentEntityConfig.apiEndpoint,
     userId: user?.id,
     limit: 12,
-    enabled: !!user?.id && hydrated && !authLoading,
+    enabled: !!user?.id && !isLoading,
   });
 
-  useEffect(() => {
-    if (hydrated && !authLoading && !user) {
-      router.push('/auth?from=documents');
-    }
-  }, [user, hydrated, authLoading, router]);
-
-  if (!hydrated || authLoading) {
+  if (isLoading) {
     return <Loading fullScreen message="Loading your documents..." />;
   }
 

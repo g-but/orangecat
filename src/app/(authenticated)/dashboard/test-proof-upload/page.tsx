@@ -8,11 +8,11 @@
 
 import React from 'react';
 import { ProofUploadForm } from '@/components/wishlist/ProofUploadForm';
+import { logger } from '@/utils/logger';
 
 export default function TestProofUploadPage() {
   const handleSuccess = (proof: unknown) => {
-    // eslint-disable-next-line no-console -- Test page uses console for debugging
-    console.log('Proof uploaded successfully:', proof);
+    logger.debug('Proof uploaded successfully', proof, 'test-proof-upload');
     alert('Proof uploaded successfully! Check console for details.');
   };
 
