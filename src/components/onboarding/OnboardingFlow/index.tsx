@@ -10,14 +10,13 @@
  */
 
 import { useMemo } from 'react';
-import { Sparkles, Bitcoin, TrendingUp } from 'lucide-react';
+import { Sparkles, Layers, Compass } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboardingProgress } from './hooks';
-import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import {
   WelcomeStep,
-  WalletSetupStep,
-  GetStartedStep,
+  CreateProjectStep,
+  ExploreStep,
   OnboardingHeader,
   OnboardingNavigation,
   StepIndicators,
@@ -26,13 +25,9 @@ import {
 import type { OnboardingStep } from './types';
 
 export function OnboardingFlow() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
 
-  // Derive user state from profile
-  const hasWallet = Boolean(profile?.bitcoin_address || profile?.lightning_address);
-  const hasProjects = Boolean(profile?.project_count && profile.project_count > 0);
-
-  // Build steps with their content - context-aware
+  // Build steps — wallet setup is deferred to dashboard journey
   const steps: OnboardingStep[] = useMemo(
     () => [
       {
@@ -43,25 +38,21 @@ export function OnboardingFlow() {
         content: <WelcomeStep />,
       },
       {
-        id: 'wallet-setup',
-        title: 'Add Your Bitcoin Address',
-        description: 'Paste your Bitcoin address to receive funds',
-        icon: Bitcoin,
-        content: <WalletSetupStep />,
-        action: {
-          label: 'Add My Bitcoin Address',
-          href: ENTITY_REGISTRY.wallet.basePath,
-        },
+        id: 'create-project',
+        title: 'Create Your First Project',
+        description: 'Pick what you want to build — you can always add more later',
+        icon: Layers,
+        content: <CreateProjectStep />,
       },
       {
-        id: 'get-started',
-        title: 'Ready to Start Your Journey?',
-        description: 'Choose your first action and begin building with OrangeCat',
-        icon: TrendingUp,
-        content: <GetStartedStep hasWallet={hasWallet} hasProjects={hasProjects} />,
+        id: 'explore',
+        title: 'Explore & Connect',
+        description: 'Discover projects, meet the community, and find your people',
+        icon: Compass,
+        content: <ExploreStep />,
       },
     ],
-    [hasWallet, hasProjects]
+    []
   );
 
   const {

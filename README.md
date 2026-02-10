@@ -23,35 +23,38 @@ cp config/production.env.template .env.local
 npm run dev
 ```
 
-## ⚠️ Experimental Status
+## 🌐 Live Platform
 
-**This is a development preview.** Features may not work as expected. We're actively developing and testing the platform. Please report any issues or suggestions on our [GitHub Issues](https://github.com/g-but/orangecat/issues).
-
-**🔗 Open Source**: This project is fully open source under the MIT license. View the source code, contribute, or run your own instance!
+**OrangeCat is live at [orangecat.ch](https://orangecat.ch).** Open source under the MIT license — view the source, contribute, or run your own instance. Report issues or ideas on [GitHub Issues](https://github.com/g-but/orangecat/issues).
 
 ## 💡 What You Can Do
 
 ### Commerce
+
 - **Sell Products** - Physical or digital goods
 - **Offer Services** - Professional services and consultations
 - **List Assets** - Real estate and other assets
 
 ### Finance
+
 - **Launch Projects** - Fund initiatives and creative endeavors
 - **Support Causes** - Contribute to charitable causes
 - **P2P Loans** - Bitcoin-based lending
 - **Manage Wallets** - Bitcoin wallet management
 
 ### Community
+
 - **Build Groups** - Create and manage communities
 - **Host Events** - Organize meetups and gatherings
 - **Share Wishlists** - Collaborative gift lists
 
 ### AI & Innovation
+
 - **Deploy AI Assistants** - Custom chatbots and automation
 - **Fund Research** - Support scientific research
 
 **Everything with**:
+
 - ✓ Zero platform fees
 - ✓ Direct peer-to-peer Bitcoin payments
 - ✓ Complete transparency on-chain
