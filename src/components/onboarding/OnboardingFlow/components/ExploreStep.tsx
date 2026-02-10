@@ -4,45 +4,18 @@
  *
  * Points users to Discover, My Cat, and community features.
  * Includes a subtle note about adding a Bitcoin wallet later in Settings.
+ *
+ * Uses OnboardingContext to mark onboarding complete before navigating away.
  */
 
-import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Compass, MessageCircle, Users, Bitcoin, ArrowRight } from 'lucide-react';
+import { Bitcoin, ArrowRight } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
-
-const EXPLORE_OPTIONS = [
-  {
-    icon: Compass,
-    title: 'Discover Projects',
-    description: 'Browse what others are building and find inspiration',
-    href: ROUTES.DISCOVER,
-    color: 'orange',
-  },
-  {
-    icon: MessageCircle,
-    title: 'My Cat',
-    description: 'Your AI assistant for questions about OrangeCat',
-    href: '/dashboard/my-cat',
-    color: 'purple',
-  },
-  {
-    icon: Users,
-    title: 'Community',
-    description: 'Connect with creators and supporters',
-    href: ROUTES.COMMUNITY,
-    color: 'blue',
-  },
-] as const;
-
-const COLOR_CLASSES: Record<string, { bg: string; text: string; border: string }> = {
-  orange: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'hover:border-orange-300' },
-  purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'hover:border-purple-300' },
-  blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'hover:border-blue-300' },
-};
+import { EXPLORE_OPTIONS, EXPLORE_COLOR_CLASSES } from '@/config/onboarding';
+import { useOnboardingContext } from '../context';
 
 export function ExploreStep() {
-  const router = useRouter();
+  const { onNavigateAway } = useOnboardingContext();
 
   return (
     <div className="space-y-6">
@@ -56,12 +29,12 @@ export function ExploreStep() {
       <div className="space-y-3">
         {EXPLORE_OPTIONS.map(option => {
           const Icon = option.icon;
-          const colors = COLOR_CLASSES[option.color];
+          const colors = EXPLORE_COLOR_CLASSES[option.color];
           return (
             <Card
               key={option.title}
               className={`${colors.border} hover:shadow-md transition-all cursor-pointer`}
-              onClick={() => router.push(option.href)}
+              onClick={() => onNavigateAway(option.href)}
             >
               <CardContent className="p-4 flex items-center gap-4">
                 <div className={`p-3 ${colors.bg} rounded-xl flex-shrink-0`}>
@@ -87,7 +60,7 @@ export function ExploreStep() {
               <p className="text-sm text-amber-900">
                 <strong>Bitcoin wallet?</strong> You can add your Bitcoin address anytime in{' '}
                 <button
-                  onClick={() => router.push(ROUTES.SETTINGS)}
+                  onClick={() => onNavigateAway(ROUTES.SETTINGS)}
                   className="underline hover:text-amber-700 font-medium"
                 >
                   Settings

@@ -35,7 +35,7 @@ export interface OnboardingActions {
   handleNext: () => void;
   handlePrevious: () => void;
   handleSkip: () => Promise<void>;
-  handleAction: (href: string) => void;
+  handleAction: (href: string) => Promise<void>;
   handleCompleteOnboarding: () => Promise<void>;
   setCurrentStep: (step: number) => void;
 }

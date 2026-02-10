@@ -143,9 +143,24 @@ export function useOnboardingProgress(
   }, [currentStep, userId, router]);
 
   const handleAction = useCallback(
-    (href: string) => {
+    async (href: string) => {
       onboardingEvents.stepCompleted(currentStep, steps[currentStep].id, userId);
       setCompletedSteps(prev => new Set([...prev, currentStep]));
+
+      // Mark onboarding complete before navigating away
+      clearProgress();
+      if (userId) {
+        try {
+          await ProfileService.fallbackProfileUpdate(userId, {
+            onboarding_completed: true,
+            onboarding_method: ONBOARDING_METHOD.STANDARD,
+          });
+          onboardingEvents.completed(userId);
+        } catch (error) {
+          logger.error('Failed to mark onboarding complete on navigate-away', error, 'Onboarding');
+        }
+      }
+
       router.push(href);
     },
     [currentStep, steps, userId, router]
