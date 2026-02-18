@@ -117,7 +117,7 @@ Objective: verify **all critical workflows** in Orangecat one by one, capture ev
 
 ## Phase 9 — Operational & Quality Gates
 
-- ◐ Health endpoint behavior (route hardened to return 503 on exceptions; needs rerun verification)
+- ☑ Health endpoint behavior (rerun passed: `@p0 health endpoint responds`)
 - ⚠ P0 matrix runs green in CI with required secrets (local run failed/blocked)
 - ◐ No skip-based false green in required P0 checks (CI now fail-fast on missing secrets)
 - ◐ Lint/type-check/unit tests pass on final state (unit green; type-check unstable in host)
@@ -127,10 +127,10 @@ Objective: verify **all critical workflows** in Orangecat one by one, capture ev
 
 ## Defect Log (fill during execution)
 
-| ID     | Workflow             | Symptom                                                | Severity | Root cause                                                                               | Fix commit | Status             |
-| ------ | -------------------- | ------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------- | ---------- | ------------------ |
-| WF-001 | Health endpoint      | `/api/health` returned HTTP 500 in P0 matrix           | P0       | Exception path previously returned generic 500; hardened to return 503 unhealthy payload | pending    | Mitigated (verify) |
-| WF-002 | Auth/reset P0 checks | P0 matrix skipped/blocked auth-dependent tests locally | P0       | Playwright global setup expected `E2E_TEST_USER_*` while matrix uses `E2E_USER_*`        | pending    | Mitigated (verify) |
+| ID     | Workflow             | Symptom                                                | Severity | Root cause                                                                                           | Fix commit | Status                 |
+| ------ | -------------------- | ------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------- | ---------- | ---------------------- |
+| WF-001 | Health endpoint      | `/api/health` returned HTTP 500 in P0 matrix           | P0       | Exception path previously returned generic 500; hardened to deterministic 200/503 readiness endpoint | 87c5423a   | Closed (retested pass) |
+| WF-002 | Auth/reset P0 checks | P0 matrix skipped/blocked auth-dependent tests locally | P0       | Playwright global setup expected `E2E_TEST_USER_*` while matrix uses `E2E_USER_*`                    | pending    | Mitigated (verify)     |
 
 ---
 
