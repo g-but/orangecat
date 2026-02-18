@@ -70,8 +70,8 @@ jobs:
         if: ${{ !github.event.inputs.skip_tests }}
         run: |
           echo "🧹 Running code quality checks..."
-          npm run lint || true
-          echo "✅ Code quality check complete (warnings allowed)"
+          npm run lint
+          echo "✅ Code quality check complete"
 
       - name: ✅ Type Check (tsc)
         if: ${{ !github.event.inputs.skip_tests }}
