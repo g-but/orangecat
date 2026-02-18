@@ -1,0 +1,55 @@
+# ORANGECAT Entity Workflow Checklist
+
+Locked project:
+
+- LOCKED_PROJECT=orangecat
+- LOCKED_PATH=/home/g/dev/orangecat
+- LOCKED_URL=http://localhost:3004
+
+Status legend: ☐ TODO · ◐ IN PROGRESS · ☑ DONE · ⚠ BLOCKED · ✗ FAILED
+
+## Phase A — Foundation
+
+- ☑ Health endpoint returns expected status envelope (200/503)
+- ☑ Workflow YAML parse validity fixed
+- ☑ P0 matrix file exists and wired in CI
+- ⚠ Full P0 matrix with all auth secrets still pending in CI proof run
+
+## Phase B — Auth baseline needed for entity testing
+
+- ☑ Unauthenticated protected-route redirect behavior validated
+- ☑ Invalid login behavior validated
+- ⚠ Valid login for orangecat env (managed-browser verification pending)
+- ⚠ Session persistence for orangecat env pending
+
+## Phase C — Entity create/edit/list/detail (core usability)
+
+- ☐ Project: create
+- ☐ Project: edit
+- ☐ Project: list/detail
+- ☐ Project: status lifecycle transitions
+- ☐ Service: create/edit/list/detail
+- ☐ Product: create/edit/list/detail
+- ☐ Cause: create/edit/list/detail
+- ☐ Asset: create/edit/list/detail
+- ☐ Loan: create/edit/list/detail
+- ☐ Event: create/edit/list/detail
+- ☐ Wishlist: create/edit/list/detail
+- ☐ Research: create/edit/list/detail
+- ☐ AI assistant: create/edit/list/detail
+- ☐ Group: create/edit/list/detail
+- ☐ Wallet: connect/create/list
+- ☐ Document: create/edit/list/detail
+
+## Phase D — Cross-entity flows
+
+- ☐ Timeline event generation after entity create/update
+- ☐ Public visibility routing per entity
+- ☐ Unauthorized cross-user access blocked
+- ☐ Deletion/archive behavior consistent per entity
+
+## Phase E — Release gate for usability
+
+- ☐ Entity smoke suite added (API/E2E) for top entities
+- ☐ CI executes entity smoke suite as blocking gate
+- ☐ Final verification report with pass/fail per entity
