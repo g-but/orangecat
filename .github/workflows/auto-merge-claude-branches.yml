@@ -29,20 +29,27 @@ jobs:
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
 
+          BODY=$(cat <<EOF
+          Automated merge from Claude agent branch \
+          \
+          \`$BRANCH_NAME\` to \`develop\`.
+
+          ## Changes
+          This PR was automatically created by the Claude agent workflow.
+
+          **Branch:** \`$BRANCH_NAME\`
+          **Commit:** ${{ github.sha }}
+          **Triggered by:** ${{ github.actor }}
+
+          ## Review
+          Please review the changes and merge when ready.
+          EOF
+          )
+
           # Create PR to develop
           gh pr create \
             --title "🤖 Auto-merge: $BRANCH_NAME" \
-            --body "Automated merge from Claude agent branch \`$BRANCH_NAME\` to \`develop\`.
-
-## Changes
-This PR was automatically created by the Claude agent workflow.
-
-**Branch:** \`$BRANCH_NAME\`
-**Commit:** ${{ github.sha }}
-**Triggered by:** ${{ github.actor }}
-
-## Review
-Please review the changes and merge when ready." \
+            --body "$BODY" \
             --base develop \
             --head "$BRANCH_NAME" \
             || echo "PR may already exist"

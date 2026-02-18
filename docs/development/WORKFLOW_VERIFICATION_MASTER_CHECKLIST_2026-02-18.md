@@ -121,6 +121,7 @@ Objective: verify **all critical workflows** in Orangecat one by one, capture ev
 - ⚠ P0 matrix runs green in CI with required secrets (local run failed/blocked)
 - ◐ No skip-based false green in required P0 checks (CI now fail-fast on missing secrets)
 - ◐ Lint/type-check/unit tests pass on final state (unit green; type-check unstable in host)
+- ☑ Workflow YAML validity check (all `.github/workflows/*.yml` parse successfully after fixes)
 
 ---
 
