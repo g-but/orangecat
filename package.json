@@ -109,7 +109,7 @@
     "@marsidev/react-turnstile": "^1.4.1",
     "@mdx-js/loader": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
-    "@modelcontextprotocol/sdk": "^1.25.2",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@next/mdx": "^15.5.7",
     "@octokit/rest": "^22.0.0",
     "@playwright/mcp": "^0.0.54",
@@ -226,5 +226,9 @@
     "*.{json,md,yml,yaml}": [
       "prettier --write"
     ]
+  },
+  "overrides": {
+    "@isaacs/brace-expansion": "^5.0.1",
+    "tar": "^7.5.8"
   }
 }
