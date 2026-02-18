@@ -25,12 +25,10 @@ interface NotificationBadgeProps {
  * <NotificationBadge count={5} />
  * <NotificationBadge count={15} maxDisplay={9} /> // Shows "9+"
  */
-export function NotificationBadge({
-  count,
-  maxDisplay = 9,
-  className,
-}: NotificationBadgeProps) {
-  if (count === 0) return null;
+export function NotificationBadge({ count, maxDisplay = 9, className }: NotificationBadgeProps) {
+  if (count === 0) {
+    return null;
+  }
 
   return (
     <span

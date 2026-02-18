@@ -62,13 +62,10 @@ export function useCommunityTimelineFeed({ sortBy, enabled = true }: UseCommunit
   return useInfiniteQuery({
     queryKey: timelineKeys.communityFeed(sortBy),
     queryFn: async ({ pageParam = 1 }): Promise<TimelineFeedResponse> => {
-      return timelineService.getCommunityFeed(
-        { sortBy },
-        { page: pageParam as number, limit: 20 }
-      );
+      return timelineService.getCommunityFeed({ sortBy }, { page: pageParam as number, limit: 20 });
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.pagination.hasNext) {
         return lastPage.pagination.page + 1;
       }
@@ -134,7 +131,9 @@ export function useOptimisticTimelineUpdate() {
       queryClient.setQueryData(
         timelineKeys.userFeed(userId),
         (oldData: TimelineFeedResponse | undefined) => {
-          if (!oldData) return oldData;
+          if (!oldData) {
+            return oldData;
+          }
           return {
             ...oldData,
             events: [newPost, ...oldData.events],
@@ -153,10 +152,12 @@ export function useOptimisticTimelineUpdate() {
       queryClient.setQueriesData(
         { queryKey: timelineKeys.all },
         (oldData: TimelineFeedResponse | undefined) => {
-          if (!oldData || !oldData.events) return oldData;
+          if (!oldData || !oldData.events) {
+            return oldData;
+          }
           return {
             ...oldData,
-            events: oldData.events.map((event) =>
+            events: oldData.events.map(event =>
               event.id === postId
                 ? { ...event, likesCount: (event.likesCount || 0) + increment }
                 : event
@@ -171,10 +172,12 @@ export function useOptimisticTimelineUpdate() {
       queryClient.setQueriesData(
         { queryKey: timelineKeys.all },
         (oldData: TimelineFeedResponse | undefined) => {
-          if (!oldData || !oldData.events) return oldData;
+          if (!oldData || !oldData.events) {
+            return oldData;
+          }
           return {
             ...oldData,
-            events: oldData.events.filter((event) => event.id !== postId),
+            events: oldData.events.filter(event => event.id !== postId),
             metadata: {
               ...oldData.metadata,
               totalEvents: Math.max(0, oldData.metadata.totalEvents - 1),
@@ -204,8 +207,7 @@ export function usePrefetchTimeline() {
     prefetchCommunityFeed: (sortBy: 'recent' | 'trending' | 'popular') => {
       queryClient.prefetchInfiniteQuery({
         queryKey: timelineKeys.communityFeed(sortBy),
-        queryFn: () =>
-          timelineService.getCommunityFeed({ sortBy }, { page: 1, limit: 20 }),
+        queryFn: () => timelineService.getCommunityFeed({ sortBy }, { page: 1, limit: 20 }),
         initialPageParam: 1,
         staleTime: 30 * 1000,
       });
