@@ -33,8 +33,8 @@ Pre-check completed:
 - ☑ Entity schema smoke suite added and passing (`__tests__/unit/api/entities.schema.smoke.test.ts`, 10/10)
 
 - ◐ Project: create (unit workflow test passing in `__tests__/unit/domain/entity-create-workflows.test.ts`)
-- ☐ Project: edit
-- ◐ Project: list/detail (list workflow test passing in `__tests__/unit/domain/projects-list-workflow.test.ts`)
+- ◐ Project: edit (PUT workflow test passing in `__tests__/unit/api/projects-id-api.test.ts`)
+- ◐ Project: list/detail (GET detail + list workflow tests passing in `__tests__/unit/api/projects-id-api.test.ts` and `__tests__/unit/domain/projects-list-workflow.test.ts`)
 - ☐ Project: status lifecycle transitions
 - ◐ Service: create/edit/list/detail (create + list workflow unit tests passing; edit/detail pending)
 - ◐ Product: create/edit/list/detail (create + list workflow unit tests passing; edit/detail pending)
