@@ -2,10 +2,14 @@
 
 import { logger } from '@/utils/logger';
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Profile } from '@/types/database';
-import { signIn as authSignIn, signUp as authSignUp, signOut as authSignOut } from '@/services/supabase/auth';
+import {
+  signIn as authSignIn,
+  signUp as authSignUp,
+  signOut as authSignOut,
+} from '@/services/supabase/auth';
 
 interface AuthState {
   // data
@@ -47,6 +51,43 @@ interface AuthState {
 }
 
 const STORAGE_KEY = 'orangecat-auth-storage';
+
+// Defensive storage wrapper: avoid runtime crashes when persisted JSON is malformed
+const safeSessionStateStorage: StateStorage = {
+  getItem: key => {
+    try {
+      const value = sessionStorage.getItem(key);
+      if (!value) {
+        return null;
+      }
+
+      // Validate JSON before Zustand parser runs
+      JSON.parse(value);
+      return value;
+    } catch {
+      try {
+        sessionStorage.removeItem(key);
+      } catch {
+        // ignore cleanup failure
+      }
+      return null;
+    }
+  },
+  setItem: (key, value) => {
+    try {
+      sessionStorage.setItem(key, value);
+    } catch {
+      // ignore storage write failures in restricted browser modes
+    }
+  },
+  removeItem: key => {
+    try {
+      sessionStorage.removeItem(key);
+    } catch {
+      // ignore storage cleanup failures
+    }
+  },
+};
 
 // Request deduplication: Track in-flight profile fetch
 let inFlightProfileFetch: Promise<{ error: string | null }> | null = null;
@@ -308,7 +349,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: STORAGE_KEY,
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => safeSessionStateStorage),
       partialize: state => ({
         // Only persist user and session - NOT profile to prevent stale data
         // Profile is always fetched fresh on login to ensure accuracy

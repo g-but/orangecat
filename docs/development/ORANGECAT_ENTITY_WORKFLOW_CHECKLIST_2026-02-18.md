@@ -19,8 +19,12 @@ Status legend: ☐ TODO · ◐ IN PROGRESS · ☑ DONE · ⚠ BLOCKED · ✗ FAI
 
 - ☑ Unauthenticated protected-route redirect behavior validated
 - ☑ Invalid login behavior validated
-- ⚠ Valid login for orangecat env (managed-browser verification pending)
-- ⚠ Session persistence for orangecat env pending
+- ☑ Valid login for orangecat env (credential pair confirmed: butaeff@gmail.com / Asdfgh11!)
+- ◐ Session persistence for orangecat env in progress (local host instability intermittently blocks full replay)
+
+## Active defect fixes
+
+- ☑ AUTH-001: Defensive persisted-auth storage handling to prevent `Unexpected end of JSON input` crashes on `/auth` when sessionStorage entry is malformed (fixed in `src/stores/auth.ts`)
 
 ## Phase C — Entity create/edit/list/detail (core usability)
 
