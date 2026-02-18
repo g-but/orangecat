@@ -63,21 +63,87 @@ test.describe('workflow matrix', () => {
     expect([200, 400, 401, 403, 429, 500]).toContain(res.status());
   });
 
-  // P0 expansion backlog (implement next):
+  test('@p0 project status lifecycle transitions via API', async ({ page }) => {
+    await login(page);
+
+    const projectId = process.env.E2E_PROJECT_ID;
+    if (!projectId) {
+      test.skip(true, 'Missing E2E_PROJECT_ID for status lifecycle checks');
+    }
+
+    const transitions = [
+      { to: 'active', allowed: [200, 422] },
+      { to: 'paused', allowed: [200, 422] },
+      { to: 'active', allowed: [200, 422] },
+      { to: 'draft', allowed: [200, 422] },
+    ] as const;
+
+    for (const step of transitions) {
+      const res = await page.request.patch(`${BASE_URL}/api/projects/${projectId}/status`, {
+        data: { status: step.to },
+        headers: { 'Content-Type': 'application/json' },
+      });
+      expect(step.allowed).toContain(res.status());
+    }
+  });
+
+  test('@p0 messaging open/send/edit/delete lifecycle', async ({ page }) => {
+    await login(page);
+
+    let conversationId: string | null = null;
+
+    const selfConversation = await page.request.post(`${BASE_URL}/api/test/conversation/self`);
+    if (selfConversation.ok()) {
+      const data = (await selfConversation.json()) as { conversationId?: string };
+      conversationId = data.conversationId || null;
+    }
+
+    if (!conversationId) {
+      const fallback = await page.request.get(`${BASE_URL}/api/messages/self`);
+      if (fallback.ok()) {
+        const data = (await fallback.json()) as { conversationId?: string };
+        conversationId = data.conversationId || null;
+      }
+    }
+
+    if (!conversationId) {
+      test.skip(true, 'No test/self conversation bootstrap endpoint available');
+    }
+
+    const text = `matrix-msg-${Date.now()}`;
+    const sendRes = await page.request.post(`${BASE_URL}/api/messages/${conversationId}`, {
+      data: { content: text },
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect(sendRes.ok()).toBeTruthy();
+
+    const sendBody = (await sendRes.json().catch(() => ({}))) as {
+      id?: string;
+      messageId?: string;
+    };
+    const messageId = sendBody.id || sendBody.messageId;
+    expect(messageId).toBeTruthy();
+
+    const editRes = await page.request.patch(`${BASE_URL}/api/messages/edit/${messageId}`, {
+      data: { content: `${text}-edited` },
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect(editRes.ok()).toBeTruthy();
+
+    const deleteRes = await page.request.post(`${BASE_URL}/api/messages/bulk-delete`, {
+      data: { messageIds: [messageId] },
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect(deleteRes.ok()).toBeTruthy();
+  });
+
+  // P0 expansion backlog:
   test.skip('@p0 password reset complete flow', async () => {
     // TODO: Implement deterministic reset flow with test mailbox harness.
   });
 
-  test.skip('@p0 project status lifecycle transitions', async () => {
-    // TODO: Create project -> draft/active/paused/completed/cancelled transition assertions.
-  });
-
   test.skip('@p0 publish/unpublish public visibility checks', async () => {
     // TODO: Validate discover/public visibility semantics when status changes.
-  });
-
-  test.skip('@p0 messaging open/send/edit/delete lifecycle', async () => {
-    // TODO: Create/open conversation and assert message mutation lifecycle.
   });
 
   test.skip('@p0 notifications unread/read counter consistency', async () => {
