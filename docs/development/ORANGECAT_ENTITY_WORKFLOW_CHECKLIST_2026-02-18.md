@@ -36,9 +36,9 @@ Pre-check completed:
 - ◐ Project: edit (PUT workflow test passing in `__tests__/unit/api/projects-id-api.test.ts`)
 - ◐ Project: list/detail (GET detail + list workflow tests passing in `__tests__/unit/api/projects-id-api.test.ts` and `__tests__/unit/domain/projects-list-workflow.test.ts`)
 - ☐ Project: status lifecycle transitions
-- ◐ Service: create/edit/list/detail (create + list workflow unit tests passing; edit/detail pending)
-- ◐ Product: create/edit/list/detail (create + list workflow unit tests passing; edit/detail pending)
-- ◐ Cause: create/edit/list/detail (create + list workflow unit tests passing; edit/detail pending)
+- ◐ Service: create/edit/list/detail (create + list + GET/PUT detail workflow unit tests passing)
+- ◐ Product: create/edit/list/detail (create + list + GET/PUT detail workflow unit tests passing)
+- ◐ Cause: create/edit/list/detail (create + list + GET/PUT detail workflow unit tests passing)
 - ☐ Asset: create/edit/list/detail
 - ☐ Loan: create/edit/list/detail
 - ☐ Event: create/edit/list/detail
