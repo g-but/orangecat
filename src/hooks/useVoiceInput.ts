@@ -17,7 +17,9 @@ export function useVoiceInput({ lang = 'en-US' }: UseVoiceInputArgs = {}): UseVo
 
   let supported = false;
   try {
-    supported = typeof window !== 'undefined' && (!!(window as any).webkitSpeechRecognition || !!(window as any).SpeechRecognition);
+    supported =
+      typeof window !== 'undefined' &&
+      (!!(window as any).webkitSpeechRecognition || !!(window as any).SpeechRecognition);
   } catch {
     supported = false;
   }
@@ -34,7 +36,9 @@ export function useVoiceInput({ lang = 'en-US' }: UseVoiceInputArgs = {}): UseVo
   };
 
   const start = () => {
-    if (!supported || recognitionRef.current) return;
+    if (!supported || recognitionRef.current) {
+      return;
+    }
     try {
       const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
       const recog = new SR();
@@ -55,4 +59,3 @@ export function useVoiceInput({ lang = 'en-US' }: UseVoiceInputArgs = {}): UseVo
 
   return { supported, listening, start, stop };
 }
-

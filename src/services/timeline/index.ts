@@ -118,7 +118,14 @@ class TimelineService {
     amountBtc: number,
     eventType: 'donation_received' | 'donation_sent' = 'donation_received'
   ): Promise<TimelineEventResponse> {
-    return createTransactionEvent(transactionId, projectId, donorId, amountSats, amountBtc, eventType);
+    return createTransactionEvent(
+      transactionId,
+      projectId,
+      donorId,
+      amountSats,
+      amountBtc,
+      eventType
+    );
   }
 
   /**
@@ -132,7 +139,14 @@ class TimelineService {
     quotedContent: string,
     visibility: TimelineVisibility = 'public'
   ): Promise<TimelineEventResponse> {
-    return createQuoteReply(parentPostId, actorId, content, quotedContent, visibility, getEventById);
+    return createQuoteReply(
+      parentPostId,
+      actorId,
+      content,
+      quotedContent,
+      visibility,
+      getEventById
+    );
   }
 
   // ==================== EVENT QUERYING ====================
@@ -214,7 +228,9 @@ class TimelineService {
   /**
    * Get a single event by ID with full enrichment
    */
-  async getEventById(eventId: string): Promise<{ success: boolean; event?: TimelineDisplayEvent; error?: string }> {
+  async getEventById(
+    eventId: string
+  ): Promise<{ success: boolean; event?: TimelineDisplayEvent; error?: string }> {
     return getEventById(eventId);
   }
 
@@ -336,7 +352,10 @@ class TimelineService {
   /**
    * Delete a comment (soft delete)
    */
-  async deleteComment(commentId: string, userId?: string): Promise<{ success: boolean; error?: string }> {
+  async deleteComment(
+    commentId: string,
+    userId?: string
+  ): Promise<{ success: boolean; error?: string }> {
     return deleteEventComment(commentId, userId);
   }
 
@@ -366,7 +385,7 @@ class TimelineService {
       title?: string;
       description?: string;
       visibility?: TimelineVisibility;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }
   ): Promise<{ success: boolean; error?: string }> {
     return updateEvent(eventId, updates);

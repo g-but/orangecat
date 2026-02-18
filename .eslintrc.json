@@ -91,8 +91,8 @@
         // Keep deps as warnings (they already appear as warnings)
         "react-hooks/exhaustive-deps": "warn",
 
-        // Type safety rules - warn for now, gradually fix
-        "@typescript-eslint/no-explicit-any": "warn",
+        // Type safety rules - temporarily disabled while legacy services are being migrated
+        "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/ban-ts-comment": [
           "error",
           {

@@ -62,7 +62,7 @@ export class SecurityHardening {
       validateInput?: z.ZodSchema;
       allowedMethods?: string[];
     } = {}
-  ): Promise<{ success: true; user?: any } | { success: false; response: NextResponse }> {
+  ): Promise<{ success: true; user?: unknown } | { success: false; response: NextResponse }> {
     try {
       const {
         requireAuth = true,
@@ -180,5 +180,3 @@ export class SecurityHardening {
     }
   }
 }
-
-

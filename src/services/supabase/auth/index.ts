@@ -11,6 +11,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger, logAuth } from '@/utils/logger';
+import type { Session } from '@supabase/supabase-js';
 import type {
   AuthResponse,
   SignInRequest,
@@ -27,8 +28,10 @@ import { isAuthError } from '../types';
  * @param operation - The auth operation that failed (for context)
  * @returns Standardized AuthError with enhanced messaging
  */
-const handleAuthError = (error: any, _operation: string): AuthError => {
-  if (error.name === 'AbortError' || error.message?.includes('timeout')) {
+const handleAuthError = (error: unknown, _operation: string): AuthError => {
+  const err = error as { name?: string; message?: string };
+
+  if (err.name === 'AbortError' || err.message?.includes('timeout')) {
     return {
       name: 'TimeoutError',
       message: 'Request timed out. Please check your internet connection or try again later.',
@@ -36,7 +39,7 @@ const handleAuthError = (error: any, _operation: string): AuthError => {
     } as AuthError;
   }
 
-  if (error.message?.includes('fetch')) {
+  if (err.message?.includes('fetch')) {
     return {
       name: 'NetworkError',
       message:
@@ -420,7 +423,7 @@ export async function getUser() {
  * subscription.unsubscribe();
  * ```
  */
-export function onAuthStateChange(callback: (event: string, session: any) => void) {
+export function onAuthStateChange(callback: (event: string, session: Session | null) => void) {
   logAuth('Setting up auth state change listener');
 
   const {

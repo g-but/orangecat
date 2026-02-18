@@ -81,7 +81,8 @@ export const MODEL_REGISTRY: Record<string, ModelMetadata> = {
     openRouterCompatible: true,
     ollamaCompatible: false,
 
-    description: 'Latest Llama 4 MoE model with 128 experts. Free tier: 50-1000 requests/day on OpenRouter.',
+    description:
+      'Latest Llama 4 MoE model with 128 experts. Free tier: 50-1000 requests/day on OpenRouter.',
   },
 
   'groq/mixtral-8x7b': {
@@ -112,7 +113,8 @@ export const MODEL_REGISTRY: Record<string, ModelMetadata> = {
     openRouterCompatible: false,
     ollamaCompatible: false,
 
-    description: 'Fast, high-quality open source model. Perfect for getting started with no setup required.',
+    description:
+      'Fast, high-quality open source model. Perfect for getting started with no setup required.',
   },
 
   'together/llama-3.1-8b': {
@@ -122,7 +124,7 @@ export const MODEL_REGISTRY: Record<string, ModelMetadata> = {
 
     tier: 'freemium',
     costPerMessage: 0,
-    costPer1MTokens: 0.20,
+    costPer1MTokens: 0.2,
 
     type: 'open',
     license: 'Llama 3.1 License',
@@ -173,7 +175,8 @@ export const MODEL_REGISTRY: Record<string, ModelMetadata> = {
     speed: 'instant',
     quality: 4,
 
-    apiEndpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    apiEndpoint:
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
     requiresApiKey: true,
     openRouterCompatible: true,
     ollamaCompatible: false,
@@ -192,7 +195,7 @@ export const MODEL_REGISTRY: Record<string, ModelMetadata> = {
 
     tier: 'paid',
     costPerMessage: 0.03,
-    costPer1MTokens: 5.00,
+    costPer1MTokens: 5.0,
 
     type: 'proprietary',
 
@@ -252,7 +255,7 @@ export const MODEL_REGISTRY: Record<string, ModelMetadata> = {
 
     tier: 'paid',
     costPerMessage: 0.03,
-    costPer1MTokens: 3.00,
+    costPer1MTokens: 3.0,
 
     type: 'proprietary',
 
@@ -282,7 +285,7 @@ export const MODEL_REGISTRY: Record<string, ModelMetadata> = {
 
     tier: 'paid',
     costPerMessage: 0.02,
-    costPer1MTokens: 5.00,
+    costPer1MTokens: 5.0,
 
     type: 'proprietary',
 
@@ -458,13 +461,23 @@ export function getModels(filters?: {
 }): ModelMetadata[] {
   const models = Object.values(MODEL_REGISTRY);
 
-  if (!filters) return models;
+  if (!filters) {
+    return models;
+  }
 
   return models.filter(model => {
-    if (filters.tier && model.tier !== filters.tier) return false;
-    if (filters.type && model.type !== filters.type) return false;
+    if (filters.tier && model.tier !== filters.tier) {
+      return false;
+    }
+    if (filters.type && model.type !== filters.type) {
+      return false;
+    }
     if (filters.availability) {
-      if (filters.availability !== 'both' && model.availability !== filters.availability && model.availability !== 'both') {
+      if (
+        filters.availability !== 'both' &&
+        model.availability !== filters.availability &&
+        model.availability !== 'both'
+      ) {
         return false;
       }
     }

@@ -17,7 +17,7 @@ export interface SecurityEvent {
   type: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   timestamp: number;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
 }
 
 /**
@@ -49,7 +49,7 @@ export class SecurityMonitor {
   static recordEvent(
     type: string,
     severity: SecurityEvent['severity'],
-    details: Record<string, any>
+    details: Record<string, unknown>
   ): void {
     const event: SecurityEvent = {
       id: AuthenticationSecurity.generateSecureToken(16),
@@ -133,5 +133,3 @@ export class SecurityMonitor {
     }
   }
 }
-
-
