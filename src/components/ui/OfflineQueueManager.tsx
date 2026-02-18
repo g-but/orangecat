@@ -6,6 +6,7 @@ import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import Button from '@/components/ui/Button';
 import { offlineQueueService, type QueuedPost } from '@/lib/offline-queue';
 import { timelineService } from '@/services/timeline';
+import type { CreateTimelineEventRequest } from '@/types/timeline';
 import { logger } from '@/utils/logger';
 
 interface OfflineQueueManagerProps {
@@ -31,7 +32,7 @@ export function OfflineQueueManager({ isOpen, onClose }: OfflineQueueManagerProp
   const handleRetry = useCallback(async (item: QueuedPost) => {
     try {
       setBusyId(item.id);
-      const res = await timelineService.createEvent(item.payload);
+      const res = await timelineService.createEvent(item.payload as CreateTimelineEventRequest);
       if (res?.success) {
         await offlineQueueService.removeFromQueue(item.id);
       } else {

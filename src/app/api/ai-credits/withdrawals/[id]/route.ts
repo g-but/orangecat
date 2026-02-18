@@ -34,6 +34,7 @@ export const GET = compose(
 )(async (_request: NextRequest, context: RouteContext) => {
   try {
     const supabase = await createServerClient();
+    const db = supabase as any;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -44,7 +45,7 @@ export const GET = compose(
 
     const { id } = await context.params;
 
-    const { data: withdrawal, error } = await supabase
+    const { data: withdrawal, error } = await db
       .from('ai_creator_withdrawals')
       .select('*')
       .eq('id', id)
@@ -72,6 +73,7 @@ export const DELETE = compose(
 )(async (_request: NextRequest, context: RouteContext) => {
   try {
     const supabase = await createServerClient();
+    const db = supabase as any;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -83,7 +85,7 @@ export const DELETE = compose(
     const { id } = await context.params;
 
     // Call cancel RPC
-    const { error } = await supabase.rpc('cancel_ai_withdrawal', {
+    const { error } = await db.rpc('cancel_ai_withdrawal', {
       p_withdrawal_id: id,
       p_user_id: user.id,
     });

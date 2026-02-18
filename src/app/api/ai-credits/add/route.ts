@@ -35,6 +35,7 @@ export const POST = compose(
 )(async (request: NextRequest) => {
   try {
     const supabase = await createServerClient();
+    const db = supabase as any;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -56,7 +57,7 @@ export const POST = compose(
     const { amount_sats, description } = result.data;
 
     // Call the add_ai_credits RPC function
-    const { data: newBalance, error: addError } = await supabase.rpc('add_ai_credits', {
+    const { data: newBalance, error: addError } = await db.rpc('add_ai_credits', {
       p_user_id: user.id,
       p_amount_sats: amount_sats,
       p_transaction_type: 'deposit',
@@ -69,7 +70,7 @@ export const POST = compose(
         logger.warn('add_ai_credits RPC not found, using direct insert');
 
         // Upsert the credits record
-        const { data: existingCredits } = await supabase
+        const { data: existingCredits } = await db
           .from('ai_user_credits')
           .select('balance_sats')
           .eq('user_id', user.id)
@@ -78,7 +79,7 @@ export const POST = compose(
         const currentBalance = existingCredits?.balance_sats || 0;
         const newBalanceValue = currentBalance + amount_sats;
 
-        const { error: upsertError } = await supabase.from('ai_user_credits').upsert(
+        const { error: upsertError } = await db.from('ai_user_credits').upsert(
           {
             user_id: user.id,
             balance_sats: newBalanceValue,
@@ -95,7 +96,7 @@ export const POST = compose(
         }
 
         // Log the transaction
-        await supabase.from('ai_credit_transactions').insert({
+        await db.from('ai_credit_transactions').insert({
           user_id: user.id,
           transaction_type: 'deposit',
           amount_sats,

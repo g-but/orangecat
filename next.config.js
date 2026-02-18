@@ -199,13 +199,13 @@ const nextConfig = {
 
   // TypeScript and ESLint validation enabled for code quality
   typescript: {
-    // Allow builds to proceed even with type errors while we harden types
-    ignoreBuildErrors: true,
+    // Block production builds on type errors
+    ignoreBuildErrors: false,
   },
 
   eslint: {
-    // Avoid blocking builds on lint while refactoring
-    ignoreDuringBuilds: true,
+    // Block production builds on lint errors
+    ignoreDuringBuilds: false,
   },
 
   // Remove X-Powered-By header
