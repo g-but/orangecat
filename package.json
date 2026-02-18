@@ -100,6 +100,7 @@
     "cleanup:repo": "node scripts/cleanup-repo.js",
     "test:smoke": "BASE_URL=http://localhost:3000 playwright test tests/e2e/smoke.spec.ts --reporter=list",
     "test:e2e:matrix": "playwright test tests/e2e/workflow-matrix.spec.ts --reporter=line",
+    "test:e2e:matrix:p0": "playwright test tests/e2e/workflow-matrix.spec.ts --grep @p0 --reporter=line",
     "db:audit": "node scripts/db-audit.mjs"
   },
   "dependencies": {
