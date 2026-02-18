@@ -50,8 +50,33 @@ jobs:
           npm start &
           npx wait-on http://localhost:3000
 
+      - name: Validate required P0 E2E env
+        env:
+          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+          E2E_PROJECT_ID: ${{ secrets.E2E_PROJECT_ID }}
+          E2E_RESET_ACCESS_TOKEN: ${{ secrets.E2E_RESET_ACCESS_TOKEN }}
+        run: |
+          missing=0
+          for key in E2E_USER_EMAIL E2E_USER_PASSWORD E2E_PROJECT_ID E2E_RESET_ACCESS_TOKEN; do
+            if [ -z "${!key}" ]; then
+              echo "❌ Missing required secret: $key"
+              missing=1
+            else
+              echo "✅ Found $key"
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "P0 matrix requires all secrets above; failing to avoid false-green partial runs."
+            exit 1
+          fi
+
       - name: Run P0 workflow matrix
         env:
           E2E_BASE_URL: http://localhost:3000
           BASE_URL: http://localhost:3000
+          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+          E2E_PROJECT_ID: ${{ secrets.E2E_PROJECT_ID }}
+          E2E_RESET_ACCESS_TOKEN: ${{ secrets.E2E_RESET_ACCESS_TOKEN }}
         run: npm run test:e2e:matrix:p0
