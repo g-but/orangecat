@@ -39,10 +39,10 @@ Pre-check completed:
 - ◐ Service: create/edit/list/detail (create + list + GET/PUT detail workflow unit tests passing)
 - ◐ Product: create/edit/list/detail (create + list + GET/PUT detail workflow unit tests passing)
 - ◐ Cause: create/edit/list/detail (create + list + GET/PUT detail workflow unit tests passing)
-- ☐ Asset: create/edit/list/detail
-- ☐ Loan: create/edit/list/detail
-- ☐ Event: create/edit/list/detail
-- ☐ Wishlist: create/edit/list/detail
+- ◐ Asset: create/edit/list/detail (GET/PUT detail workflow unit tests passing; create/list still pending)
+- ◐ Loan: create/edit/list/detail (GET/PUT detail workflow unit tests passing; create/list still pending)
+- ◐ Event: create/edit/list/detail (GET/PUT detail workflow unit tests passing; create/list still pending)
+- ◐ Wishlist: create/edit/list/detail (new [id] route added + GET/PUT detail workflow unit tests passing; create/list already present, broader E2E still pending)
 - ☐ Research: create/edit/list/detail
 - ☐ AI assistant: create/edit/list/detail
 - ☐ Group: create/edit/list/detail
