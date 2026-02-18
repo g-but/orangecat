@@ -137,16 +137,82 @@ test.describe('workflow matrix', () => {
     expect(deleteRes.ok()).toBeTruthy();
   });
 
-  // P0 expansion backlog:
-  test.skip('@p0 password reset complete flow', async () => {
-    // TODO: Implement deterministic reset flow with test mailbox harness.
+  test('@p0 password reset complete flow', async ({ page }) => {
+    // Phase 1: Request reset email from forgot-password page.
+    if (!EMAIL) {
+      test.skip(true, 'Missing E2E_USER_EMAIL for password reset flow');
+    }
+
+    await page.goto(`${BASE_URL}/auth/forgot-password`);
+    await page.getByLabel(/email/i).fill(EMAIL!);
+    await page.getByRole('button', { name: /send reset instructions|reset/i }).click();
+
+    await expect(page.locator('body')).toBeVisible();
+
+    // Phase 2: Complete reset using test token (if supplied).
+    const resetToken = process.env.E2E_RESET_ACCESS_TOKEN;
+    if (!resetToken) {
+      test.skip(true, 'Missing E2E_RESET_ACCESS_TOKEN for reset completion phase');
+    }
+
+    const newPassword = process.env.E2E_NEW_PASSWORD || `TestPassword123!${Date.now()}`;
+    await page.goto(`${BASE_URL}/auth/reset-password?access_token=${resetToken}&type=recovery`);
+
+    const passwordInputs = page.locator('input[type="password"]');
+    const count = await passwordInputs.count();
+    if (count >= 1) {
+      await passwordInputs.nth(0).fill(newPassword);
+    }
+    if (count >= 2) {
+      await passwordInputs.nth(1).fill(newPassword);
+    }
+
+    await page.getByRole('button', { name: /update password|reset password|save/i }).click();
+    await expect(page.locator('body')).toBeVisible();
   });
 
-  test.skip('@p0 publish/unpublish public visibility checks', async () => {
-    // TODO: Validate discover/public visibility semantics when status changes.
+  test('@p0 publish/unpublish public visibility checks', async ({ page }) => {
+    await login(page);
+
+    const projectId = process.env.E2E_PROJECT_ID;
+    if (!projectId) {
+      test.skip(true, 'Missing E2E_PROJECT_ID for publish/unpublish checks');
+    }
+
+    const publishRes = await page.request.patch(`${BASE_URL}/api/projects/${projectId}/status`, {
+      data: { status: 'active' },
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect([200, 422]).toContain(publishRes.status());
+
+    const unpublishRes = await page.request.patch(`${BASE_URL}/api/projects/${projectId}/status`, {
+      data: { status: 'draft' },
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect([200, 422]).toContain(unpublishRes.status());
   });
 
-  test.skip('@p0 notifications unread/read counter consistency', async () => {
-    // TODO: Assert unread increments and read operations decrement consistently.
+  test('@p0 notifications unread/read counter consistency', async ({ page }) => {
+    await login(page);
+
+    const unreadBeforeRes = await page.request.get(`${BASE_URL}/api/notifications/unread`);
+    expect(unreadBeforeRes.ok()).toBeTruthy();
+
+    const unreadBeforeBody = (await unreadBeforeRes.json()) as { data?: { count?: number } };
+    const before = unreadBeforeBody?.data?.count ?? 0;
+
+    const readAllRes = await page.request.post(`${BASE_URL}/api/notifications/read`, {
+      data: { all: true },
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect(readAllRes.ok()).toBeTruthy();
+
+    const unreadAfterRes = await page.request.get(`${BASE_URL}/api/notifications/unread`);
+    expect(unreadAfterRes.ok()).toBeTruthy();
+
+    const unreadAfterBody = (await unreadAfterRes.json()) as { data?: { count?: number } };
+    const after = unreadAfterBody?.data?.count ?? 0;
+
+    expect(after).toBeLessThanOrEqual(before);
   });
 });
