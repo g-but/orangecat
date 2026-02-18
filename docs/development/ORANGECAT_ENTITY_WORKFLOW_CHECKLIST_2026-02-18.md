@@ -36,9 +36,9 @@ Pre-check completed:
 - ☐ Project: edit
 - ◐ Project: list/detail (list workflow test passing in `__tests__/unit/domain/projects-list-workflow.test.ts`)
 - ☐ Project: status lifecycle transitions
-- ◐ Service: create/edit/list/detail (service create API/unit tests passing; edit/list still pending)
-- ◐ Product: create/edit/list/detail (create workflow + schema validation passing; edit/list pending)
-- ◐ Cause: create/edit/list/detail (create workflow + schema validation passing; edit/list pending)
+- ◐ Service: create/edit/list/detail (create + list workflow unit tests passing; edit/detail pending)
+- ◐ Product: create/edit/list/detail (create + list workflow unit tests passing; edit/detail pending)
+- ◐ Cause: create/edit/list/detail (create + list workflow unit tests passing; edit/detail pending)
 - ☐ Asset: create/edit/list/detail
 - ☐ Loan: create/edit/list/detail
 - ☐ Event: create/edit/list/detail
