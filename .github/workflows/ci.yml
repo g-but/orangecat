@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-and-smoke:
@@ -32,6 +32,12 @@ jobs:
 
       - name: Docs hygiene checks
         run: npm run ci:docs || echo "Docs checks reported issues. Review output above."
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Unit tests
+        run: npm run test:unit -- --watchAll=false
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
