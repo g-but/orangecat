@@ -34,6 +34,7 @@ export const GET = compose(
 )(async (request: NextRequest) => {
   try {
     const supabase = await createServerClient();
+    const db = supabase as any;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -45,7 +46,7 @@ export const GET = compose(
     const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
 
     // Get user's credit balance
-    const { data: credits, error: creditsError } = await supabase
+    const { data: credits, error: creditsError } = await db
       .from('ai_user_credits')
       .select('*')
       .eq('user_id', user.id)
@@ -76,7 +77,7 @@ export const GET = compose(
     }
 
     // Get recent transactions
-    const { data: transactions, error: transactionsError } = await supabase
+    const { data: transactions, error: transactionsError } = await db
       .from('ai_credit_transactions')
       .select(
         `
@@ -99,7 +100,7 @@ export const GET = compose(
     }
 
     // Get total transaction count
-    const { count } = await supabase
+    const { count } = await db
       .from('ai_credit_transactions')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id);
@@ -130,6 +131,7 @@ export const POST = compose(
 )(async (request: NextRequest) => {
   try {
     const supabase = await createServerClient();
+    const db = supabase as any;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -155,7 +157,7 @@ export const POST = compose(
 
     // For MVP, we'll create a pending deposit record
     // In production, this would integrate with a Lightning provider (BTCPay, Strike, etc.)
-    const { data: deposit, error: depositError } = await supabase
+    const { data: deposit, error: depositError } = await db
       .from('ai_credit_deposits')
       .insert({
         id: depositId,

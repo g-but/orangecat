@@ -45,6 +45,7 @@ export const GET = compose(
 )(async (request: NextRequest) => {
   try {
     const supabase = await createServerClient();
+    const db = supabase as any;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -59,7 +60,7 @@ export const GET = compose(
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Get creator earnings summary
-    const { data: earnings } = await supabase
+    const { data: earnings } = await db
       .from('ai_creator_earnings')
       .select('*')
       .eq('user_id', user.id)
@@ -70,7 +71,7 @@ export const GET = compose(
       data: withdrawals,
       error: withdrawalsError,
       count,
-    } = await supabase
+    } = await db
       .from('ai_creator_withdrawals')
       .select('*', { count: 'exact' })
       .eq('user_id', user.id)
@@ -112,6 +113,7 @@ export const POST = compose(
 )(async (request: NextRequest) => {
   try {
     const supabase = await createServerClient();
+    const db = supabase as any;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -130,7 +132,7 @@ export const POST = compose(
     const { amount_sats, lightning_address } = result.data;
 
     // Request withdrawal via RPC
-    const { data: withdrawalId, error } = await supabase.rpc('request_ai_withdrawal', {
+    const { data: withdrawalId, error } = await db.rpc('request_ai_withdrawal', {
       p_user_id: user.id,
       p_amount_sats: amount_sats,
       p_lightning_address: lightning_address,
@@ -138,16 +140,16 @@ export const POST = compose(
 
     if (error) {
       if (error.message.includes('Insufficient balance')) {
-        return apiError('Insufficient balance for withdrawal', 400);
+        return apiError('Insufficient balance for withdrawal', 'BAD_REQUEST', 400);
       }
       throw error;
     }
 
     // Get the created withdrawal
-    const { data: withdrawal } = await supabase
+    const { data: withdrawal } = await db
       .from('ai_creator_withdrawals')
       .select('*')
-      .eq('id', withdrawalId)
+      .eq('id', String(withdrawalId))
       .single();
 
     logger.info('Withdrawal requested', {

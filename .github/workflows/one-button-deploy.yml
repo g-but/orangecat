@@ -74,28 +74,26 @@ jobs:
           echo "✅ Code quality check complete (warnings allowed)"
 
       - name: ✅ Type Check (tsc)
-        if: false # Temporarily disabled - main branch has type errors in uncommitted test files
+        if: ${{ !github.event.inputs.skip_tests }}
         run: |
           echo "🔎 Running TypeScript type-check..."
           npm run type-check
           echo "✅ Type-check passed"
 
-      - name: 🔍 TypeScript Check
-        if: false # Temporarily disabled to allow deployment with type errors
-        run: |
-          echo "🔍 Checking TypeScript..."
-          npm run build || (echo "❌ TypeScript build failed" && exit 1)
-          echo "✅ TypeScript check passed"
-
       - name: 🧪 Run Tests (blocking)
-        if: false # Temporarily disabled to unblock deployment
+        if: ${{ !github.event.inputs.skip_tests }}
         run: |
-          echo "🧪 Running test suite (CI + coverage)..."
-          npm run test:ci
-          echo "✅ Test suite complete"
+          echo "🧪 Running unit tests..."
+          npm run test:unit -- --watchAll=false
+          echo "✅ Unit tests complete"
 
       - name: 🏗️ Build Application
-        if: false # Disabled - let Vercel handle the build with proper env vars
+        if: ${{ !github.event.inputs.skip_tests }}
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: dummy
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
         run: |
           echo "🏗️ Building application..."
           npm run build

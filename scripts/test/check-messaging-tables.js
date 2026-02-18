@@ -4,7 +4,7 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('❌ Missing Supabase environment variables');
@@ -21,7 +21,7 @@ async function checkTables() {
     'conversations',
     'conversation_participants',
     'messages',
-    'message_read_receipts'
+    'message_read_receipts',
   ];
 
   for (const table of tables) {
@@ -41,11 +41,7 @@ async function checkTables() {
 
   // Check functions
   console.log('\n🔍 Checking functions...\n');
-  const functions = [
-    'create_direct_conversation',
-    'send_message',
-    'mark_conversation_read'
-  ];
+  const functions = ['create_direct_conversation', 'send_message', 'mark_conversation_read'];
 
   for (const func of functions) {
     try {
@@ -64,10 +60,7 @@ async function checkTables() {
 
   // Check views
   console.log('\n🔍 Checking views...\n');
-  const views = [
-    'conversation_details',
-    'message_details'
-  ];
+  const views = ['conversation_details', 'message_details'];
 
   for (const view of views) {
     try {
@@ -89,28 +82,3 @@ checkTables().catch(error => {
   console.error('❌ Fatal error:', error);
   process.exit(1);
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

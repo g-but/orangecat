@@ -7,6 +7,7 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
+import { NextResponse } from 'next/server';
 import {
   apiSuccess,
   apiUnauthorized,
@@ -43,7 +44,11 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     // Rate limiting check
     const rateLimitResult = await rateLimit(request);
     if (!rateLimitResult.success) {
-      return createRateLimitResponse(rateLimitResult);
+      const rateLimited = createRateLimitResponse(rateLimitResult);
+      return NextResponse.json(await rateLimited.json(), {
+        status: rateLimited.status,
+        headers: rateLimited.headers,
+      });
     }
 
     const { user, supabase } = request;

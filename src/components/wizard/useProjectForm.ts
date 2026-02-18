@@ -28,7 +28,7 @@ interface UseProjectFormProps {
   onSave?: () => void;
   onProgressChange?: (progress: number) => void;
   onGoalAmountChange?: (amount: number | undefined) => void;
-  onGoalCurrencyChange?: (currency: string) => void;
+  onGoalCurrencyChange?: (currency: 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS') => void;
 }
 
 export function useProjectForm({

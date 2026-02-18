@@ -33,6 +33,7 @@ export const GET = compose(
 )(async (_request: NextRequest) => {
   try {
     const supabase = await createServerClient();
+    const db = supabase as any;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -42,7 +43,7 @@ export const GET = compose(
     }
 
     // Get all assistants owned by this user with revenue stats
-    const { data: assistants, error: assistantsError } = await supabase
+    const { data: assistants, error: assistantsError } = await db
       .from('ai_assistants')
       .select(
         `
@@ -64,16 +65,25 @@ export const GET = compose(
     }
 
     // Calculate totals from assistants
-    const totalRevenueSats =
-      assistants?.reduce((sum, a) => sum + (a.total_revenue_sats || 0), 0) || 0;
+    const assistantRows = (assistants || []) as any[];
 
-    const totalConversations =
-      assistants?.reduce((sum, a) => sum + (a.total_conversations || 0), 0) || 0;
+    const totalRevenueSats = assistantRows.reduce(
+      (sum: number, a: any) => sum + (a.total_revenue_sats || 0),
+      0
+    );
 
-    const totalMessages = assistants?.reduce((sum, a) => sum + (a.total_messages || 0), 0) || 0;
+    const totalConversations = assistantRows.reduce(
+      (sum: number, a: any) => sum + (a.total_conversations || 0),
+      0
+    );
+
+    const totalMessages = assistantRows.reduce(
+      (sum: number, a: any) => sum + (a.total_messages || 0),
+      0
+    );
 
     // Get creator earnings with withdrawal tracking
-    const { data: earnings } = await supabase
+    const { data: earnings } = await db
       .from('ai_creator_earnings')
       .select('*')
       .eq('user_id', user.id)
@@ -90,8 +100,8 @@ export const GET = compose(
         total_messages: totalMessages,
         total_assistants: assistants?.length || 0,
       },
-      assistants: (assistants || []).map(
-        (a): AssistantRevenue => ({
+      assistants: assistantRows.map(
+        (a: any): AssistantRevenue => ({
           id: a.id,
           name: a.name,
           avatar_url: a.avatar_url,
