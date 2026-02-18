@@ -3,7 +3,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { compose } from '@/lib/api/compose';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { withRateLimit } from '@/lib/api/withRateLimit';
-import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
+import { apiSuccess } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
@@ -55,6 +55,18 @@ export const GET = compose(
     );
   } catch (error) {
     logger.error('Health check failed', { error }, 'Health');
-    return handleApiError(error);
+    return apiSuccess(
+      {
+        status: 'unhealthy',
+        error: 'Health check exception',
+        timestamp: new Date().toISOString(),
+      },
+      {
+        status: 503,
+        headers: {
+          'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
+        },
+      }
+    );
   }
 });

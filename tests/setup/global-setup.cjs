@@ -8,8 +8,8 @@ const { chromium } = require('@playwright/test');
 
 module.exports = async () => {
   const baseURL = process.env.E2E_BASE_URL || 'http://localhost:3000';
-  const email = process.env.E2E_TEST_USER_EMAIL;
-  const password = process.env.E2E_TEST_USER_PASSWORD;
+  const email = process.env.E2E_TEST_USER_EMAIL || process.env.E2E_USER_EMAIL;
+  const password = process.env.E2E_TEST_USER_PASSWORD || process.env.E2E_USER_PASSWORD;
 
   const authDir = path.resolve(__dirname, '..', '.auth');
   const storagePath = path.join(authDir, 'user.json');
