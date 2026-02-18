@@ -28,6 +28,10 @@ Status legend: ☐ TODO · ◐ IN PROGRESS · ☑ DONE · ⚠ BLOCKED · ✗ FAI
 
 ## Phase C — Entity create/edit/list/detail (core usability)
 
+Pre-check completed:
+
+- ☑ Entity schema smoke suite added and passing (`__tests__/unit/api/entities.schema.smoke.test.ts`, 10/10)
+
 - ☐ Project: create
 - ☐ Project: edit
 - ☐ Project: list/detail
