@@ -34,7 +34,7 @@ Pre-check completed:
 
 - ◐ Project: create (unit workflow test passing in `__tests__/unit/domain/entity-create-workflows.test.ts`)
 - ☐ Project: edit
-- ☐ Project: list/detail
+- ◐ Project: list/detail (list workflow test passing in `__tests__/unit/domain/projects-list-workflow.test.ts`)
 - ☐ Project: status lifecycle transitions
 - ◐ Service: create/edit/list/detail (service create API/unit tests passing; edit/list still pending)
 - ◐ Product: create/edit/list/detail (create workflow + schema validation passing; edit/list pending)
