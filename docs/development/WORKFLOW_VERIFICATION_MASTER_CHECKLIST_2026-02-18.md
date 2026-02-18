@@ -28,13 +28,13 @@ Objective: verify **all critical workflows** in Orangecat one by one, capture ev
 
 ## Phase 1 — Authentication & Access Control (P0)
 
-- ◐ Login (valid credentials) — fallback env support added in global setup; needs rerun verification
-- ☐ Login (invalid credentials handling)
-- ☐ Logout
-- ☑ Protected route redirect for unauthenticated user (matrix p0 passed)
-- ⚠ Password reset request — pending rerun after fixture env alignment
+- ⚠ Login (valid credentials) — blocked: no fixture credentials available in current runtime (`E2E_USER_EMAIL/PASSWORD` empty)
+- ☑ Login (invalid credentials handling) — managed browser verified (`/auth/login` shows "Ungültige E-Mail-Adresse oder Passwort")
+- ⚠ Logout — blocked pending authenticated session
+- ☑ Protected route redirect for unauthenticated user (matrix p0 passed + managed browser `/dashboard` redirects to login)
+- ☑ Password reset request — managed browser verified (`/auth/forgot-password` shows "E-Mail gesendet!")
 - ⚠ Password reset completion — blocked without valid E2E_RESET_ACCESS_TOKEN in runtime
-- ☐ Session persistence across reload
+- ⚠ Session persistence across reload — blocked pending authenticated session
 
 ---
 
@@ -127,10 +127,11 @@ Objective: verify **all critical workflows** in Orangecat one by one, capture ev
 
 ## Defect Log (fill during execution)
 
-| ID     | Workflow             | Symptom                                                | Severity | Root cause                                                                                           | Fix commit | Status                 |
-| ------ | -------------------- | ------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------- | ---------- | ---------------------- |
-| WF-001 | Health endpoint      | `/api/health` returned HTTP 500 in P0 matrix           | P0       | Exception path previously returned generic 500; hardened to deterministic 200/503 readiness endpoint | 87c5423a   | Closed (retested pass) |
-| WF-002 | Auth/reset P0 checks | P0 matrix skipped/blocked auth-dependent tests locally | P0       | Playwright global setup expected `E2E_TEST_USER_*` while matrix uses `E2E_USER_*`                    | pending    | Mitigated (verify)     |
+| ID     | Workflow                | Symptom                                                              | Severity | Root cause                                                                                           | Fix commit | Status                 |
+| ------ | ----------------------- | -------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------- | ---------- | ---------------------- |
+| WF-001 | Health endpoint         | `/api/health` returned HTTP 500 in P0 matrix                         | P0       | Exception path previously returned generic 500; hardened to deterministic 200/503 readiness endpoint | 87c5423a   | Closed (retested pass) |
+| WF-002 | Auth/reset P0 checks    | P0 matrix skipped/blocked auth-dependent tests locally               | P0       | Playwright global setup expected `E2E_TEST_USER_*` while matrix uses `E2E_USER_*`                    | pending    | Mitigated (verify)     |
+| WF-003 | Auth-required workflows | Valid-login/logout/session-persistence checks cannot execute locally | P0       | Fixture credentials absent in runtime env (`E2E_USER_EMAIL/PASSWORD` empty)                          | pending    | Open (env required)    |
 
 ---
 
