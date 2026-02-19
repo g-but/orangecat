@@ -1,15 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Bitcoin,
   ArrowRight,
   CheckCircle2,
-  Shield,
   Loader2,
   AlertCircle,
-  Globe,
   Eye,
   EyeOff,
   RefreshCw,
@@ -18,322 +13,49 @@ import {
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Loading from '@/components/Loading';
-import { useAuth, useRedirectIfAuthenticated } from '@/hooks/useAuth';
-import { resetPassword, getMFAAssuranceLevel } from '@/services/supabase/auth';
-import { registrationEvents, trackEvent } from '@/lib/analytics';
 import { TurnstileCaptcha } from '@/components/auth/TurnstileCaptcha';
 import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 import { MFAVerify } from '@/components/auth/MFAVerify';
-
-// Normalize unknown error values to a user-friendly string
-function getReadableError(
-  error: unknown,
-  fallback: string = 'An unexpected error occurred'
-): string {
-  if (!error) {
-    return fallback;
-  }
-  if (typeof error === 'string') {
-    return error;
-  }
-  if (error instanceof Error) {
-    return error.message || fallback;
-  }
-  if (typeof error === 'object') {
-    const maybe = error as Record<string, unknown>;
-    const message = maybe.message ?? maybe.error;
-    if (typeof message === 'string' && message.length > 0) {
-      return message;
-    }
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return fallback;
-    }
-  }
-  return String(error);
-}
+import { AuthHeroPanel } from './AuthHeroPanel';
+import { useAuthForm } from './useAuthForm';
 
 export default function AuthPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { signIn, signUp, isLoading: authLoading, hydrated, session, profile, clear } = useAuth();
-  const { isLoading: redirectLoading } = useRedirectIfAuthenticated();
-
-  // Determine initial mode based on URL parameter
-  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
-
-  useEffect(() => {
-    const modeParam = searchParams?.get('mode');
-    if (modeParam === 'login' || modeParam === 'register') {
-      setMode(modeParam);
-    }
-  }, [searchParams]);
-
-  // Clear any stale auth state when visiting auth page
-  useEffect(() => {
-    if (hydrated && !session && !profile) {
-      clear();
-    }
-  }, [hydrated, session, profile, clear]);
-
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [localLoading, setLocalLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const [rememberMe, setRememberMe] = useState(true);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const [showMFAVerify, setShowMFAVerify] = useState(false);
-
-  // CAPTCHA state
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-  const captchaEnabled = !!turnstileSiteKey;
-
-  // CAPTCHA handlers
-  const handleCaptchaSuccess = useCallback((token: string) => {
-    setCaptchaToken(token);
-    setError(null);
-  }, []);
-
-  const handleCaptchaError = useCallback((err: string) => {
-    setCaptchaToken(null);
-    setError(err);
-  }, []);
-
-  const handleCaptchaExpire = useCallback(() => {
-    setCaptchaToken(null);
-  }, []);
-
-  // Combined loading state
-  const loading = localLoading || authLoading;
-
-  // Combined loading state for better UX
-  const _isCurrentlyLoading = loading || redirectLoading;
-
-  // Enhanced timeout handling with exponential backoff
-  useEffect(() => {
-    if (localLoading) {
-      const timeout = Math.min(15000 + retryCount * 5000, 45000); // 15s, 20s, 25s, max 45s
-      const timer = setTimeout(() => {
-        setLocalLoading(false);
-        setError(
-          'Authentication request timed out. This usually means environment variables are not configured properly.'
-        );
-      }, timeout);
-
-      return () => clearTimeout(timer);
-    }
-    return () => {}; // Return empty cleanup function when not loading
-  }, [localLoading, retryCount]);
-
-  // Check if we already have a valid session and redirect
-  useEffect(() => {
-    // If we have a session after hydration, redirect immediately
-    if (session?.user && hydrated) {
-      const redirectUrl = searchParams?.get('from') || '/dashboard';
-      router.replace(redirectUrl); // Use replace to avoid back button issues
-    }
-  }, [session, hydrated, router, searchParams]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLocalLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      // Basic client-side validation
-      if (!formData.email || !formData.password) {
-        throw new Error('Please fill in all required fields');
-      }
-
-      if (mode === 'register' && formData.password !== formData.confirmPassword) {
-        throw new Error('Passwords do not match');
-      }
-
-      // Use centralized password validation instead of hardcoded check
-      if (mode === 'register') {
-        const { validatePasswordStrength } = await import('@/lib/validation/password');
-        const passwordValidation = validatePasswordStrength(formData.password);
-        if (!passwordValidation.valid) {
-          throw new Error(passwordValidation.errors[0] || 'Password does not meet requirements');
-        }
-
-        // Verify CAPTCHA for registration
-        if (captchaEnabled && !captchaToken) {
-          throw new Error('Please complete the CAPTCHA verification');
-        }
-
-        // Verify CAPTCHA token server-side
-        if (captchaEnabled && captchaToken) {
-          const captchaResponse = await fetch('/api/auth/verify-captcha', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: captchaToken }),
-          });
-          const captchaResult = await captchaResponse.json();
-          if (!captchaResult.success) {
-            setCaptchaToken(null); // Reset CAPTCHA on failure
-            throw new Error(captchaResult.error || 'CAPTCHA verification failed');
-          }
-        }
-      }
-
-      const result =
-        mode === 'login'
-          ? await signIn(formData.email, formData.password, rememberMe)
-          : await signUp(formData.email, formData.password);
-
-      if (result.error) {
-        // Enhanced error handling
-        let errorMessage = getReadableError(result.error);
-
-        // Provide more user-friendly error messages
-        if (errorMessage.includes('Invalid login credentials')) {
-          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
-        } else if (errorMessage.includes('Email not confirmed')) {
-          errorMessage =
-            'Please check your email and click the confirmation link before signing in.';
-        } else if (errorMessage.includes('Too many requests')) {
-          errorMessage = 'Too many login attempts. Please wait a few minutes before trying again.';
-        } else if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
-          errorMessage = 'Connection timeout. Please check your internet connection and try again.';
-        }
-
-        throw new Error(errorMessage);
-      }
-
-      if (mode === 'register' && result.data && !result.data.session) {
-        registrationEvents.success({ email: formData.email });
-        registrationEvents.emailSent({ email: formData.email });
-        setSuccess(
-          'Registration successful! Please check your email to verify your account before signing in.'
-        );
-        setFormData({ email: '', password: '', confirmPassword: '' });
-        setCaptchaToken(null); // Reset CAPTCHA on successful registration
-        setMode('login');
-      } else if (result.data && result.data.user) {
-        // Check if MFA is required
-        if (mode === 'login') {
-          const mfaResult = await getMFAAssuranceLevel();
-
-          // If user needs to complete MFA (has aal2 factors but only aal1 authenticated)
-          if (
-            mfaResult.data &&
-            mfaResult.data.currentLevel === 'aal1' &&
-            mfaResult.data.nextLevel === 'aal2'
-          ) {
-            setShowMFAVerify(true);
-            setLocalLoading(false);
-            return; // Don't redirect yet, show MFA verification
-          }
-        }
-
-        // Successful login - redirect will happen automatically via useRedirectIfAuthenticated
-        trackEvent('login_success', { userId: result.data.user.id });
-        setSuccess('Login successful! Redirecting...');
-      }
-    } catch (error) {
-      const errorMessage = getReadableError(error, 'An unexpected error occurred');
-      setError(errorMessage);
-      setRetryCount(prev => prev + 1);
-    } finally {
-      setLocalLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLocalLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      if (!formData.email) {
-        throw new Error('Please enter your email address');
-      }
-
-      const result = await resetPassword({ email: formData.email });
-
-      if (result.error) {
-        throw new Error(getReadableError(result.error, 'Failed to send reset email'));
-      }
-
-      setSuccess('Password reset email sent! Check your inbox and follow the instructions.');
-    } catch (error) {
-      const errorMessage = getReadableError(error, 'Failed to send password reset email');
-      setError(errorMessage);
-    } finally {
-      setLocalLoading(false);
-    }
-  };
-
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
-    setError(null);
-    setSuccess(null);
-    // Create a synthetic form event for retry
-    const syntheticEvent = {
-      preventDefault: () => {},
-      stopPropagation: () => {},
-      currentTarget: document.createElement('form'),
-      target: document.createElement('form'),
-      nativeEvent: new Event('submit'),
-      bubbles: true,
-      cancelable: true,
-      defaultPrevented: false,
-      eventPhase: 0,
-      isTrusted: false,
-      timeStamp: Date.now(),
-      type: 'submit',
-      isDefaultPrevented: () => false,
-      isPropagationStopped: () => false,
-      persist: () => {},
-    } as unknown as React.FormEvent<HTMLFormElement>;
-
-    if (mode === 'forgot') {
-      handleForgotPassword(syntheticEvent);
-    } else {
-      handleSubmit(syntheticEvent);
-    }
-  };
-
-  const handleClearError = () => {
-    setError(null);
-    setSuccess(null);
-    setRetryCount(0);
-  };
+  const {
+    mode,
+    setMode,
+    formData,
+    setFormData,
+    showPassword,
+    setShowPassword,
+    showConfirmPassword,
+    setShowConfirmPassword,
+    loading,
+    error,
+    success,
+    rememberMe,
+    setRememberMe,
+    isPasswordFocused,
+    setIsPasswordFocused,
+    showMFAVerify,
+    session,
+    hydrated,
+    captchaEnabled,
+    turnstileSiteKey,
+    handleCaptchaSuccess,
+    handleCaptchaError,
+    handleCaptchaExpire,
+    handleSubmit,
+    handleForgotPassword,
+    handleRetry,
+    handleClearError,
+    handleMFAVerificationComplete,
+    handleMFACancelled,
+  } = useAuthForm();
 
   // Only show loading if we have a session and are already hydrated (redirecting to dashboard)
-  // For auth page: always show the form - users can log in even if auth state isn't hydrated yet
   if (session && hydrated) {
     return <Loading fullScreen message="Welcome back! Setting up your dashboard..." />;
   }
-
-  // Don't block the form - show it immediately
-  // The form will work even if hydration is still pending
-
-  // Handle MFA verification step
-  const handleMFAVerificationComplete = () => {
-    // MFA verification completed successfully
-    setSuccess('Login successful! Redirecting...');
-    setShowMFAVerify(false);
-    // Redirect will happen automatically via useRedirectIfAuthenticated
-  };
-
-  const handleMFACancelled = () => {
-    setShowMFAVerify(false);
-    // Sign out to clear partial authentication
-    clear();
-  };
 
   // Show MFA verification if needed
   if (showMFAVerify) {
@@ -350,48 +72,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
       {/* Left: Clean Hero Section */}
-      <div className="flex-1 flex flex-col justify-center items-center p-8 lg:p-12 bg-white border-r border-gray-200">
-        <div className="max-w-lg text-center lg:text-left">
-          {/* Logo */}
-          <div className="mb-8 flex justify-center lg:justify-start">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-4xl shadow-lg">
-              🐾
-            </div>
-          </div>
-
-          <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-900 leading-tight">
-            Fund Everything with
-            <span className="block text-orange-600">Bitcoin</span>
-          </h1>
-
-          <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            The decentralized platform for Bitcoin-powered crowdfunding. Beautiful, transparent, and
-            built for everyone.
-          </p>
-
-          {/* Feature highlights */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-center lg:justify-start space-x-4">
-              <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-                <Bitcoin className="w-5 h-5 text-orange-600" />
-              </div>
-              <span className="text-lg text-gray-700 font-medium">Bitcoin-First Platform</span>
-            </div>
-            <div className="flex items-center justify-center lg:justify-start space-x-4">
-              <div className="w-10 h-10 rounded-xl bg-tiffany-100 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-tiffany-600" />
-              </div>
-              <span className="text-lg text-gray-700 font-medium">Self-Custody & Secure</span>
-            </div>
-            <div className="flex items-center justify-center lg:justify-start space-x-4">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                <Globe className="w-5 h-5 text-blue-600" />
-              </div>
-              <span className="text-lg text-gray-700 font-medium">Global & Transparent</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AuthHeroPanel />
 
       {/* Right: Clean Form Section */}
       <div className="flex-1 flex flex-col justify-center items-center p-8 lg:p-12 bg-gray-50">
