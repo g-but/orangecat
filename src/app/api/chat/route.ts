@@ -5,8 +5,10 @@ import { compose } from '@/lib/api/compose';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withZodBody } from '@/lib/api/withZod';
+import { requireAuth } from '@/lib/api/withAuth';
 import {
   apiSuccess,
+  apiUnauthorized,
   apiValidationError,
   apiRateLimited,
   handleApiError,
@@ -21,17 +23,29 @@ const MODEL_NAME = 'gemini-2.0-flash-lite';
 
 // Validation schema
 const chatRequestSchema = z.object({
-  message: z.string().min(1, 'Message is required').max(10000, 'Message too long (max 10,000 characters)'),
+  message: z
+    .string()
+    .min(1, 'Message is required')
+    .max(10000, 'Message too long (max 10,000 characters)'),
   systemPrompt: z.string().max(5000).optional(),
 });
 
 // POST /api/chat - Send a message to the LLM and get response
 export const POST = compose(
   withRequestId(),
-  withRateLimit('read'), // LLM calls are expensive, use read rate limit
+  withRateLimit('write'), // LLM calls are expensive, use strict write rate limit
   withZodBody(chatRequestSchema)
 )(async (request: NextRequest, ctx) => {
   try {
+    // Auth guard: require authenticated user for AI API calls
+    let _user;
+    try {
+      const auth = await requireAuth(request);
+      _user = auth.user;
+    } catch {
+      return apiUnauthorized('Authentication required to use chat');
+    }
+
     const { message, systemPrompt } = ctx.body;
 
     // Get the model
@@ -108,4 +122,3 @@ export const GET = compose(
     timestamp: new Date().toISOString(),
   });
 });
-

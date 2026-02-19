@@ -21,7 +21,7 @@ export function BookingForm({
   serviceId,
   serviceName,
   priceSats,
-  currency = 'SATS',
+  currency: _currency = 'SATS',
   selectedSlot,
   onBack,
 }: BookingFormProps) {

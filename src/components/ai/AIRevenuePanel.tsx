@@ -13,6 +13,7 @@ import {
   XCircle,
   AlertCircle,
 } from 'lucide-react';
+import Image from 'next/image';
 import { logger } from '@/utils/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -317,10 +318,13 @@ export function AIRevenuePanel() {
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
                       {assistant.avatar_url ? (
-                        <img
+                        <Image
                           src={assistant.avatar_url}
                           alt={assistant.name}
+                          width={32}
+                          height={32}
                           className="h-8 w-8 rounded-full object-cover"
+                          unoptimized
                         />
                       ) : (
                         <Bot className="h-4 w-4 text-purple-600" />

@@ -50,7 +50,7 @@ export default function EditTaskPage() {
   const params = useParams();
   const taskId = params?.id as string;
 
-  const [task, setTask] = useState<Task | null>(null);
+  const [_task, setTask] = useState<Task | null>(null);
   const [formData, setFormData] = useState<TaskFormData | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [loading, setLoading] = useState(true);

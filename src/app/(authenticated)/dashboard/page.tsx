@@ -62,7 +62,7 @@ export default function DashboardPage() {
   const { user, profile, isLoading, hydrated } = useRequireAuth();
   const { projects, drafts, loadProjects, getStats } = useProjectStore();
   useTimelineEvents();
-  const router = useRouter();
+  const _router = useRouter();
   const searchParams = useSearchParams();
 
   // Local state

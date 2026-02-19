@@ -40,7 +40,7 @@ import { SocialLink } from '@/types/social';
  */
 export default function DashboardInfoPage() {
   const { user, profile: storeProfile, isLoading: authLoading } = useRequireAuth();
-  const router = useRouter();
+  const _router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showStickyEdit, setShowStickyEdit] = useState(false);

@@ -9,7 +9,7 @@ import { logger } from '@/utils/logger';
 
 export default function AIOnboardingPage() {
   const { user, hydrated, isLoading: authLoading } = useRequireAuth();
-  const router = useRouter();
+  const _router = useRouter();
 
   const {
     addKey,

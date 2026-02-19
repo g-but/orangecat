@@ -82,8 +82,8 @@ const RISK_ICONS = {
 };
 
 export default function CatPermissionsPage() {
-  const { user, isLoading: authLoading, hydrated } = useRequireAuth();
-  const router = useRouter();
+  const { user, isLoading: authLoading, hydrated: _hydrated } = useRequireAuth();
+  const _router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [data, setData] = useState<PermissionData | null>(null);

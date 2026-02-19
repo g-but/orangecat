@@ -56,12 +56,6 @@ export function useProfileWizard(
     },
   });
 
-  const calculateProgress = useCallback(() => {
-    const completedSteps = WIZARD_STEPS.slice(0, currentStep).length;
-    const currentStepProgress = getStepProgressInternal();
-    return Math.round(((completedSteps + currentStepProgress) / WIZARD_STEPS.length) * 100);
-  }, [currentStep, form]);
-
   const getStepProgressInternal = useCallback(() => {
     const step = WIZARD_STEPS[currentStep];
     const stepFields = step.fields;
@@ -71,6 +65,12 @@ export function useProfileWizard(
     });
     return filledFields.length / stepFields.length;
   }, [currentStep, form]);
+
+  const calculateProgress = useCallback(() => {
+    const completedSteps = WIZARD_STEPS.slice(0, currentStep).length;
+    const currentStepProgress = getStepProgressInternal();
+    return Math.round(((completedSteps + currentStepProgress) / WIZARD_STEPS.length) * 100);
+  }, [currentStep, getStepProgressInternal]);
 
   const getStepProgress = useCallback(() => {
     return getStepProgressInternal();

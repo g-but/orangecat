@@ -25,8 +25,8 @@ import { MessageSquare, FolderOpen, Settings, Cat } from 'lucide-react';
 type TabValue = 'chat' | 'context' | 'settings';
 
 export default function CatHubPage() {
-  const { user, isLoading, hydrated } = useRequireAuth();
-  const router = useRouter();
+  const { user, isLoading, hydrated: _hydrated } = useRequireAuth();
+  const _router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabValue>('chat');
 
