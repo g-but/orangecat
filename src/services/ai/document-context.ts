@@ -44,6 +44,8 @@ export interface EntitySummary {
   description?: string;
   status: string;
   price_sats?: number;
+  category?: string;
+  location?: string;
 }
 
 export interface WalletSummary {
@@ -254,7 +256,7 @@ export async function fetchEntitiesForCat(
     // Fetch products (include draft so user can ask about their drafts)
     const { data: products, error: productsError } = await supabase
       .from(ENTITY_REGISTRY.product.tableName)
-      .select('title, description, status, price_sats, category')
+      .select('title, description, status, price, currency, category')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
@@ -273,7 +275,7 @@ export async function fetchEntitiesForCat(
           title: p.title,
           description: p.description?.substring(0, 300),
           status: p.status,
-          price_sats: p.price_sats,
+          price_sats: p.price,
         });
       });
     }
@@ -281,7 +283,7 @@ export async function fetchEntitiesForCat(
     // Fetch services (include draft)
     const { data: services, error: servicesError } = await supabase
       .from(ENTITY_REGISTRY.service.tableName)
-      .select('title, description, status, price_sats, category')
+      .select('title, description, status, hourly_rate, fixed_price, currency, category')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
@@ -300,7 +302,7 @@ export async function fetchEntitiesForCat(
           title: s.title,
           description: s.description?.substring(0, 300),
           status: s.status,
-          price_sats: s.price_sats,
+          price_sats: s.fixed_price || s.hourly_rate,
         });
       });
     }
@@ -308,7 +310,7 @@ export async function fetchEntitiesForCat(
     // Fetch projects
     const { data: projects, error: projectsError } = await supabase
       .from(ENTITY_REGISTRY.project.tableName)
-      .select('title, description, status, goal_sats, current_sats, category')
+      .select('title, description, status, goal_amount, currency, category')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
@@ -327,7 +329,7 @@ export async function fetchEntitiesForCat(
           title: p.title,
           description: p.description?.substring(0, 300),
           status: p.status,
-          price_sats: p.goal_sats,
+          price_sats: p.goal_amount,
         });
       });
     }
@@ -335,7 +337,7 @@ export async function fetchEntitiesForCat(
     // Fetch causes
     const { data: causes, error: causesError } = await supabase
       .from(ENTITY_REGISTRY.cause.tableName)
-      .select('title, description, status, category')
+      .select('title, description, status, cause_category, goal_amount')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
@@ -354,6 +356,8 @@ export async function fetchEntitiesForCat(
           title: c.title,
           description: c.description?.substring(0, 300),
           status: c.status,
+          category: c.cause_category,
+          price_sats: c.goal_amount,
         });
       });
     }
@@ -361,7 +365,9 @@ export async function fetchEntitiesForCat(
     // Fetch events
     const { data: events, error: eventsError } = await supabase
       .from(ENTITY_REGISTRY.event.tableName)
-      .select('title, description, status, start_date, end_date, location')
+      .select(
+        'title, description, status, start_date, end_date, venue_name, venue_city, venue_country'
+      )
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
@@ -380,6 +386,7 @@ export async function fetchEntitiesForCat(
           title: e.title,
           description: e.description?.substring(0, 300),
           status: e.status,
+          location: [e.venue_name, e.venue_city, e.venue_country].filter(Boolean).join(', '),
         });
       });
     }
@@ -387,7 +394,9 @@ export async function fetchEntitiesForCat(
     // Fetch assets
     const { data: assets, error: assetsError } = await supabase
       .from(ENTITY_REGISTRY.asset.tableName)
-      .select('title, description, status, price_sats, asset_type, location')
+      .select(
+        'title, description, status, type, location, estimated_value, sale_price_sats, rental_price_sats'
+      )
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
@@ -406,7 +415,8 @@ export async function fetchEntitiesForCat(
           title: a.title,
           description: a.description?.substring(0, 300),
           status: a.status,
-          price_sats: a.price_sats,
+          price_sats: a.sale_price_sats || a.rental_price_sats || a.estimated_value,
+          location: a.location,
         });
       });
     }
@@ -567,7 +577,13 @@ export function buildFullContextString(context: FullUserContext): string {
         .map(item => {
           const parts = [`- **${item.title}**`];
           if (item.price_sats) {
-            parts.push(`(${item.price_sats.toLocaleString()} sats)`);
+            parts.push(` (${item.price_sats.toLocaleString()} sats)`);
+          }
+          if (item.category) {
+            parts.push(` [${item.category}]`);
+          }
+          if (item.location) {
+            parts.push(` @ ${item.location}`);
           }
           if (item.description) {
             parts.push(`: ${item.description}`);
