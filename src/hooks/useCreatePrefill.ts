@@ -16,12 +16,20 @@ import type { EntityType } from '@/config/entity-registry';
 
 /**
  * Base fields that can be prefilled from URL params.
- * The generic T can extend any form data type.
+ * Includes financial fields for entity-specific prefill from Cat actions.
  */
 interface BasePrefillFields {
   title?: string;
   description?: string;
   category?: string;
+  price_sats?: number;
+  goal_amount?: number;
+  hourly_rate?: number;
+  fixed_price?: number;
+  goal_deadline?: string;
+  location?: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 interface UseCreatePrefillOptions {
@@ -83,6 +91,26 @@ export function useCreatePrefill<T extends Record<string, unknown>>({
       if (category) {
         prefillData.category = category;
       }
+
+      // Parse additional fields from URL params
+      const numericFields = ['price_sats', 'goal_amount', 'hourly_rate', 'fixed_price'] as const;
+      for (const field of numericFields) {
+        const val = searchParams?.get(field);
+        if (val) {
+          const parsed = parseInt(val, 10);
+          if (!isNaN(parsed)) {
+            prefillData[field] = parsed;
+          }
+        }
+      }
+      const stringFields = ['goal_deadline', 'location', 'start_date', 'end_date'] as const;
+      for (const field of stringFields) {
+        const val = searchParams?.get(field);
+        if (val) {
+          prefillData[field] = val;
+        }
+      }
+
       // Cast to Partial<T> - the calling code knows T includes these base fields
       setInitialData(prefillData as Partial<T>);
       setIsLoaded(true);

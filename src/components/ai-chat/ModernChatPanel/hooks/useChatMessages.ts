@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { readEventStream } from '@/lib/sse';
-import type { Message, SuggestedAction } from '../types';
+import type { Message, CatAction } from '../types';
 
 interface UseChatMessagesOptions {
   selectedModel: string;
@@ -73,7 +73,7 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
         }
 
         let modelUsed = selectedModel;
-        let actions: SuggestedAction[] | undefined;
+        let actions: CatAction[] | undefined;
 
         await readEventStream(res.body, (json: unknown) => {
           const event = json as {
@@ -81,7 +81,7 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
             done?: boolean;
             usage?: unknown;
             model?: string;
-            actions?: SuggestedAction[];
+            actions?: CatAction[];
           };
           if (event?.content) {
             setMessages(prev =>

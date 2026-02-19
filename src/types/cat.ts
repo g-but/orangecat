@@ -2,14 +2,16 @@
  * Cat (AI Chat) Types
  *
  * Shared types for the My Cat AI assistant feature.
- * SuggestedAction is used by both the API route and the chat UI components.
+ * SuggestedAction and SuggestedWalletAction are used by both the API route
+ * and the chat UI components.
  *
  * Created: 2026-02-09
- * Last Modified: 2026-02-09
- * Last Modified Summary: Extracted from route.ts and ModernChatPanel/types.ts to create SSOT
+ * Last Modified: 2026-02-19
+ * Last Modified Summary: Added SuggestedWalletAction and CatAction union type
  */
 
 import type { EntityType } from '@/config/entity-registry';
+import type { WalletBehaviorType, WalletCategory, BudgetPeriod } from '@/types/wallet';
 
 /**
  * Entity types that Cat can suggest creating.
@@ -31,8 +33,7 @@ export const CAT_CREATABLE_ENTITY_TYPES: CatCreatableEntityType[] = [
 ];
 
 /**
- * An action suggested by Cat, embedded as ```action JSON blocks in AI responses.
- * Currently only supports entity creation.
+ * An action suggesting entity creation, embedded as ```action JSON blocks in AI responses.
  */
 export interface SuggestedAction {
   type: 'create_entity';
@@ -44,3 +45,24 @@ export interface SuggestedAction {
     [key: string]: unknown;
   };
 }
+
+/**
+ * An action suggesting wallet creation, embedded as ```action JSON blocks in AI responses.
+ */
+export interface SuggestedWalletAction {
+  type: 'suggest_wallet';
+  prefill: {
+    label: string;
+    description?: string;
+    category?: WalletCategory;
+    behavior_type?: WalletBehaviorType;
+    goal_amount?: number;
+    goal_currency?: string;
+    goal_deadline?: string;
+    budget_amount?: number;
+    budget_period?: BudgetPeriod;
+  };
+}
+
+/** Union of all action types Cat can suggest */
+export type CatAction = SuggestedAction | SuggestedWalletAction;

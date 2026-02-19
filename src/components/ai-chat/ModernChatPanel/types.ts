@@ -3,9 +3,9 @@
  * Shared types for the chat panel components
  */
 
-// SuggestedAction is the SSOT shared type from @/types/cat
-import type { SuggestedAction } from '@/types/cat';
-export type { SuggestedAction };
+// SSOT shared types from @/types/cat
+import type { SuggestedAction, SuggestedWalletAction, CatAction } from '@/types/cat';
+export type { SuggestedAction, SuggestedWalletAction, CatAction };
 
 export interface Message {
   id: string;
@@ -13,7 +13,7 @@ export interface Message {
   content: string;
   timestamp: Date;
   modelUsed?: string;
-  actions?: SuggestedAction[];
+  actions?: CatAction[];
 }
 
 export interface UserStatus {

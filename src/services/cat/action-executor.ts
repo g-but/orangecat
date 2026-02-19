@@ -82,13 +82,18 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   },
 
   create_service: async (supabase, _userId, actorId, params) => {
+    // DB uses hourly_rate_sats / fixed_price_sats, not price_sats
+    const priceField = params.hourly_rate_sats
+      ? { hourly_rate_sats: params.hourly_rate_sats }
+      : { fixed_price_sats: params.fixed_price_sats ?? params.price_sats ?? null };
+
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.service.tableName)
       .insert({
         actor_id: actorId,
         title: params.title,
         description: params.description || null,
-        price_sats: params.price_sats,
+        ...priceField,
         duration_minutes: params.duration_minutes || null,
         status: params.publish ? 'active' : 'draft',
       })

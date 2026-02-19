@@ -6,8 +6,8 @@
  * demonstrating action block formatting and intent mapping.
  *
  * Created: 2026-02-09
- * Last Modified: 2026-02-09
- * Last Modified Summary: Extracted from route.ts
+ * Last Modified: 2026-02-19
+ * Last Modified Summary: Added diverse examples (animal shelter, college savings, freelance)
  */
 
 import type { OpenRouterMessage } from '@/services/ai';
@@ -15,9 +15,12 @@ import type { OpenRouterMessage } from '@/services/ai';
 /**
  * Returns few-shot example messages demonstrating how Cat should respond
  * to user intents with action blocks.
+ *
+ * Covers: sovereignty project, animal shelter cause, college savings wallet, freelance service
  */
 export function getCatFewShotExamples(): OpenRouterMessage[] {
   return [
+    // Example 1: Sovereignty project (existing, proven good)
     {
       role: 'user',
       content: 'I want Catalonia to be independent',
@@ -49,31 +52,96 @@ I've prepared a Project to get you started:
 }
 \`\`\``,
     },
+
+    // Example 2: Animal shelter cause
     {
       role: 'user',
-      content: 'I wrote a book about escaping the system',
+      content: 'I want to help stray cats in my neighborhood',
     },
     {
       role: 'assistant',
-      content: `Fantastic! Books about sovereignty and exit are exactly what this community needs.
+      content: `That's a wonderful goal! Let's turn your compassion into something real.
 
-Let's get your book in front of people who are ready to act on these ideas. On OrangeCat, you can sell it directly for Bitcoin - no middlemen, no censorship risk, no platform taking 30%.
+On OrangeCat you can set up a **Cause** for ongoing support - people can contribute sats whenever they want, and you use the funds for food, vet visits, and shelter supplies. No fundraising deadline, just steady support.
 
-Quick questions:
-1. Is it digital (PDF/ebook) or physical (you ship copies)?
-2. What's the core message - practical exit strategies, philosophy, or personal journey?
-3. Do you have a price in mind? Books typically do well at 20,000-100,000 sats (\$10-50).
+A few things to think about:
+- Will you TNR (trap-neuter-return) or run a shelter?
+- Do you need supplies, vet funds, or a physical space?
+- Could you post updates showing the cats you've helped? Supporters love seeing impact.
+
+Here's a Cause to get started:
+
+\`\`\`action
+{
+  "type": "create_entity",
+  "entityType": "cause",
+  "prefill": {
+    "title": "Neighborhood Stray Cat Rescue",
+    "description": "Providing food, medical care, and shelter for stray cats in our neighborhood. Funds go directly to vet visits, spay/neuter programs, and supplies. Every sat helps a cat.",
+    "category": "animals"
+  }
+}
+\`\`\``,
+    },
+
+    // Example 3: College savings wallet
+    {
+      role: 'user',
+      content: 'I just had a baby and want to save for their college',
+    },
+    {
+      role: 'assistant',
+      content: `Congratulations on the new baby! Starting early is the smartest move you can make.
+
+OrangeCat has **savings wallets** built exactly for this - you can set a goal amount, a deadline (17-18 years from now), and track your progress over time. Since it's in Bitcoin, you're also saving in an asset that has historically outpaced inflation.
+
+Here's a wallet set up for a college fund:
+
+\`\`\`action
+{
+  "type": "suggest_wallet",
+  "prefill": {
+    "label": "College Fund",
+    "description": "Long-term Bitcoin savings for my child's college education. Starting from birth, saving steadily until 2043.",
+    "category": "education",
+    "behavior_type": "one_time_goal",
+    "goal_amount": 5000000,
+    "goal_currency": "SATS",
+    "goal_deadline": "2043-09-01"
+  }
+}
+\`\`\`
+
+5,000,000 sats is a starting goal - you can adjust it anytime. The key is starting now and stacking consistently.`,
+    },
+
+    // Example 4: Freelance service
+    {
+      role: 'user',
+      content: "I'm a freelance web designer",
+    },
+    {
+      role: 'assistant',
+      content: `Nice! Let's get your design skills listed on OrangeCat so people can hire you directly with Bitcoin.
+
+Setting up a **Service** lets potential clients see what you offer, your rates, and book you - all paid in sats with no platform fees eating into your earnings.
+
+Questions to think about:
+- Do you charge hourly or per-project?
+- What's your specialty? (UI/UX, branding, landing pages, full sites?)
+- What's your rate? Design services typically range from 50,000-200,000 sats/hour.
 
 Here's a starting point:
 
 \`\`\`action
 {
   "type": "create_entity",
-  "entityType": "product",
+  "entityType": "service",
   "prefill": {
-    "title": "Escaping the System",
-    "description": "A guide to building your life outside traditional institutions. Learn practical strategies for sovereignty, financial freedom, and creating alternatives.",
-    "category": "books"
+    "title": "Web Design Services",
+    "description": "Professional web design - from landing pages to full websites. Clean, modern designs focused on user experience. Available for hourly work or fixed-price projects.",
+    "category": "design",
+    "hourly_rate": 100000
   }
 }
 \`\`\``,
