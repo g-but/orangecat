@@ -5,16 +5,17 @@
 
 import { useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Square } from 'lucide-react';
 
 interface ChatInputProps {
   value: string;
   onChange: (value: string) => void;
   onSend: () => void;
   isLoading: boolean;
+  onStop?: () => void;
 }
 
-export function ChatInput({ value, onChange, onSend, isLoading }: ChatInputProps) {
+export function ChatInput({ value, onChange, onSend, isLoading, onStop }: ChatInputProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -42,29 +43,36 @@ export function ChatInput({ value, onChange, onSend, isLoading }: ChatInputProps
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Message your Cat..."
-            disabled={isLoading}
             rows={1}
             className={cn(
               'w-full resize-none rounded-2xl border border-gray-200 px-4 py-3 pr-12',
               'focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300',
               'text-sm leading-relaxed placeholder:text-gray-400',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
               'max-h-[200px]'
             )}
           />
         </div>
-        <button
-          onClick={onSend}
-          disabled={!value.trim() || isLoading}
-          className={cn(
-            'flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all',
-            value.trim() && !isLoading
-              ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-md'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          )}
-        >
-          {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-        </button>
+        {isLoading && onStop ? (
+          <button
+            onClick={onStop}
+            className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all bg-red-500 hover:bg-red-600 text-white shadow-md"
+          >
+            <Square className="h-4 w-4 fill-current" />
+          </button>
+        ) : (
+          <button
+            onClick={onSend}
+            disabled={!value.trim() || isLoading}
+            className={cn(
+              'flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all',
+              value.trim() && !isLoading
+                ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-md'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            )}
+          >
+            <Send className="h-5 w-5" />
+          </button>
+        )}
       </div>
       <p className="text-xs text-gray-400 text-center mt-2">
         Using free AI models • No API key required

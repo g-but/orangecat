@@ -3,9 +3,11 @@
  * Displays a single chat message with avatar and actions
  */
 
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Cat, User } from 'lucide-react';
+import { Cat, User, Copy, Check } from 'lucide-react';
 import { AI_MODEL_REGISTRY } from '@/config/ai-models';
+import { renderChatMarkdown } from '@/utils/markdown';
 import { ActionButton } from './ActionButton';
 import type { Message, CatAction } from '../types';
 
@@ -17,9 +19,16 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ message, isLast, onActionClick }: MessageBubbleProps) {
   const isUser = message.role === 'user';
+  const [copied, setCopied] = useState(false);
 
   // Clean the message content by removing action blocks for display
   const displayContent = message.content.replace(/```action[\s\S]*?```/g, '').trim();
+
+  const handleCopy = () => {
+    void navigator.clipboard.writeText(displayContent);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div
@@ -49,8 +58,10 @@ export function MessageBubble({ message, isLast, onActionClick }: MessageBubbleP
               : 'bg-gray-100 text-gray-900 rounded-tl-sm'
           )}
         >
-          <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-            {displayContent}
+          <div
+            className={cn('break-words text-sm leading-relaxed', isUser && 'whitespace-pre-wrap')}
+          >
+            {isUser ? displayContent : renderChatMarkdown(displayContent)}
             {isLast && !isUser && !displayContent && (
               <span className="inline-flex items-center gap-1">
                 <span
@@ -79,10 +90,21 @@ export function MessageBubble({ message, isLast, onActionClick }: MessageBubbleP
           </div>
         )}
 
-        {/* Model used indicator */}
+        {/* Model used indicator + copy button */}
         {!isUser && message.modelUsed && displayContent && (
-          <div className="text-xs text-gray-400 mt-1">
-            {AI_MODEL_REGISTRY[message.modelUsed]?.name || message.modelUsed}
+          <div className="flex items-center justify-between text-xs text-gray-400 mt-1">
+            <span>{AI_MODEL_REGISTRY[message.modelUsed]?.name || message.modelUsed}</span>
+            <button
+              onClick={handleCopy}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-0.5"
+              title="Copy response"
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-green-500" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+            </button>
           </div>
         )}
       </div>

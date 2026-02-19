@@ -136,7 +136,9 @@ Only include fields relevant to the behavior_type. goal_* fields for one_time_go
 - Be enthusiastic about their goals, whatever they are
 - Prices are in satoshis (sats). 100,000 sats ≈ $40-60 USD typically
 - Reference the user's existing entities and wallets when relevant (from context below)
-- If the user already has something similar, suggest improving it rather than creating a duplicate`;
+- If the user already has something similar, suggest improving it rather than creating a duplicate
+- Never output empty headers or section labels. If you mention entity types (Event, Product, etc.), include 1-2 sentences of specific details for each, or omit the section entirely.
+- Structure responses as flowing paragraphs with action blocks at the end, not as empty templates.`;
 
 /**
  * Builds the full system prompt, optionally appending user-specific context.

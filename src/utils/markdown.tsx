@@ -127,6 +127,151 @@ function tokenize(text: string): Token[] {
 }
 
 /**
+ * Renders chat markdown to React elements.
+ * Supports: ## headers, - bullets, 1. numbered lists, blank lines, plus inline formatting.
+ * Designed for AI chat responses that use lightweight markdown structure.
+ */
+export function renderChatMarkdown(text: string): React.ReactNode {
+  if (!text) {
+    return null;
+  }
+
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Blank line → spacer
+    if (!line.trim()) {
+      elements.push(<div key={`blank-${i}`} className="h-2" />);
+      i++;
+      continue;
+    }
+
+    // ## Header or ### Header
+    if (line.startsWith('### ')) {
+      elements.push(
+        <div key={`h3-${i}`} className="font-semibold text-sm mt-2 mb-0.5">
+          {renderInlineTokens(line.slice(4))}
+        </div>
+      );
+      i++;
+      continue;
+    }
+    if (line.startsWith('## ')) {
+      elements.push(
+        <div key={`h2-${i}`} className="font-semibold mt-2 mb-0.5">
+          {renderInlineTokens(line.slice(3))}
+        </div>
+      );
+      i++;
+      continue;
+    }
+
+    // Bullet list (- item)
+    if (/^[-*] /.test(line.trimStart())) {
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && /^[-*] /.test(lines[i].trimStart())) {
+        const content = lines[i].trimStart().replace(/^[-*] /, '');
+        items.push(<li key={`li-${i}`}>{renderInlineTokens(content)}</li>);
+        i++;
+      }
+      elements.push(
+        <ul key={`ul-${i}`} className="list-disc pl-4 space-y-0.5 my-1">
+          {items}
+        </ul>
+      );
+      continue;
+    }
+
+    // Numbered list (1. item)
+    if (/^\d+\.\s/.test(line.trimStart())) {
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && /^\d+\.\s/.test(lines[i].trimStart())) {
+        const content = lines[i].trimStart().replace(/^\d+\.\s/, '');
+        items.push(<li key={`oli-${i}`}>{renderInlineTokens(content)}</li>);
+        i++;
+      }
+      elements.push(
+        <ol key={`ol-${i}`} className="list-decimal pl-4 space-y-0.5 my-1">
+          {items}
+        </ol>
+      );
+      continue;
+    }
+
+    // Regular paragraph line
+    elements.push(<div key={`p-${i}`}>{renderInlineTokens(line)}</div>);
+    i++;
+  }
+
+  return <>{elements}</>;
+}
+
+/** Render inline tokens (bold, italic, links) for a single line */
+function renderInlineTokens(text: string): React.ReactNode[] {
+  const tokens = tokenize(text);
+  if (tokens.length === 0) {
+    return [text];
+  }
+  return tokens.map((token, index) => {
+    const key = `${token.type}-${index}`;
+    switch (token.type) {
+      case 'bold':
+        return <strong key={key}>{token.value}</strong>;
+      case 'italic':
+        return <em key={key}>{token.value}</em>;
+      case 'mention':
+        return (
+          <Link
+            key={key}
+            href={`/profiles/${token.username}`}
+            className="text-sky-600 hover:text-sky-700 hover:underline font-medium"
+            onClick={e => e.stopPropagation()}
+          >
+            {token.value}
+          </Link>
+        );
+      case 'mdlink':
+        return (
+          <a
+            key={key}
+            href={token.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sky-600 hover:text-sky-700 hover:underline font-medium"
+            onClick={e => e.stopPropagation()}
+          >
+            {token.linkText}
+          </a>
+        );
+      case 'url': {
+        const displayUrl =
+          token.url!.replace(/^https?:\/\//, '').slice(0, 40) +
+          (token.url!.length > 50 ? '...' : '');
+        return (
+          <a
+            key={key}
+            href={token.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sky-600 hover:text-sky-700 hover:underline"
+            onClick={e => e.stopPropagation()}
+          >
+            {displayUrl}
+          </a>
+        );
+      }
+      case 'text':
+      default:
+        return token.value;
+    }
+  });
+}
+
+/**
  * Renders markdown to React elements
  * Supports: **bold**, *italic*, @mentions, URLs
  * Returns an array of React nodes
