@@ -7,6 +7,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { readEventStream } from '@/lib/sse';
 import type { Message, CatAction } from '../types';
 
+const STREAM_TIMEOUT_MS = 60_000;
+
 interface UseChatMessagesOptions {
   selectedModel: string;
 }
@@ -16,11 +18,16 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const stopGeneration = useCallback(() => {
+    abortControllerRef.current?.abort();
+  }, []);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -52,6 +59,10 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
         },
       ]);
 
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+      const timeout = setTimeout(() => abortController.abort(), STREAM_TIMEOUT_MS);
+
       try {
         const res = await fetch('/api/cat/chat', {
           method: 'POST',
@@ -61,6 +72,7 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
             model: selectedModel !== 'auto' ? selectedModel : undefined,
             stream: true,
           }),
+          signal: abortController.signal,
         });
 
         if (!res.ok || !res.body) {
@@ -82,7 +94,11 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
             usage?: unknown;
             model?: string;
             actions?: CatAction[];
+            error?: string;
           };
+          if (event?.error) {
+            throw new Error(event.error);
+          }
           if (event?.content) {
             setMessages(prev =>
               prev.map(m =>
@@ -103,10 +119,28 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
           prev.map(m => (m.id === assistantId ? { ...m, modelUsed, actions } : m))
         );
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Something went wrong');
-        // Remove the empty assistant message on error
-        setMessages(prev => prev.filter(m => m.id !== assistantId));
+        const isAbort = e instanceof DOMException && e.name === 'AbortError';
+
+        // Check if partial content was streamed
+        let hasPartialContent = false;
+        setMessages(prev => {
+          const assistant = prev.find(m => m.id === assistantId);
+          hasPartialContent = !!assistant?.content?.trim();
+          return prev;
+        });
+
+        if (isAbort && hasPartialContent) {
+          // Keep partial content, no error shown
+        } else if (isAbort) {
+          setError('Response timed out. Try again or rephrase your question.');
+          setMessages(prev => prev.filter(m => m.id !== assistantId));
+        } else {
+          setError(e instanceof Error ? e.message : 'Something went wrong');
+          setMessages(prev => prev.filter(m => m.id !== assistantId));
+        }
       } finally {
+        clearTimeout(timeout);
+        abortControllerRef.current = null;
         setIsLoading(false);
       }
     },
@@ -116,6 +150,10 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
   const clearChat = useCallback(() => {
     setMessages([]);
     setError(null);
+  }, []);
+
+  const setErrorState = useCallback((err: string | null) => {
+    setError(err);
   }, []);
 
   const addSystemMessage = useCallback((content: string) => {
@@ -136,7 +174,9 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
     error,
     messagesEndRef,
     sendMessage,
+    stopGeneration,
     clearChat,
+    setError: setErrorState,
     addSystemMessage,
   };
 }

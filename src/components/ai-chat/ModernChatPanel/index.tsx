@@ -7,7 +7,7 @@
  * Split into smaller subcomponents and hooks for maintainability.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
@@ -20,10 +20,20 @@ export function ModernChatPanel() {
   const router = useRouter();
   const [input, setInput] = useState('');
   const [selectedModel, setSelectedModel] = useState('auto');
+  const lastUserMessageRef = useRef<string>('');
 
   // Chat messages hook
-  const { messages, isLoading, error, messagesEndRef, sendMessage, clearChat, addSystemMessage } =
-    useChatMessages({ selectedModel });
+  const {
+    messages,
+    isLoading,
+    error,
+    messagesEndRef,
+    sendMessage,
+    stopGeneration,
+    clearChat,
+    setError,
+    addSystemMessage,
+  } = useChatMessages({ selectedModel });
 
   // Suggestions hook
   const { suggestions, hasContext, isLoadingSuggestions } = useSuggestions();
@@ -39,10 +49,24 @@ export function ModernChatPanel() {
   const handleSend = useCallback(() => {
     const content = input.trim();
     if (content) {
+      lastUserMessageRef.current = content;
       setInput('');
       void sendMessage(content);
     }
   }, [input, sendMessage]);
+
+  // Handle retry last message
+  const handleRetry = useCallback(() => {
+    if (lastUserMessageRef.current) {
+      setError(null);
+      void sendMessage(lastUserMessageRef.current);
+    }
+  }, [sendMessage, setError]);
+
+  // Handle dismiss error
+  const handleDismissError = useCallback(() => {
+    setError(null);
+  }, [setError]);
 
   // Handle suggestion click - directly send the message
   const handleSuggestionClick = useCallback(
@@ -136,10 +160,16 @@ export function ModernChatPanel() {
       </div>
 
       {/* Error */}
-      {error && <ErrorDisplay error={error} />}
+      {error && <ErrorDisplay error={error} onRetry={handleRetry} onDismiss={handleDismissError} />}
 
       {/* Input */}
-      <ChatInput value={input} onChange={setInput} onSend={handleSend} isLoading={isLoading} />
+      <ChatInput
+        value={input}
+        onChange={setInput}
+        onSend={handleSend}
+        isLoading={isLoading}
+        onStop={stopGeneration}
+      />
     </div>
   );
 }
