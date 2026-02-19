@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import type { TypingUser } from '@/features/messaging/hooks/useTypingPresence';
 
 interface TypingIndicatorProps {
@@ -51,11 +52,14 @@ function TypingAvatar({ user, size = 'sm' }: { user: TypingUser; size?: 'sm' | '
 
   if (user.avatarUrl) {
     return (
-      <img
+      <Image
         src={user.avatarUrl}
         alt={user.username}
+        width={size === 'sm' ? 24 : 32}
+        height={size === 'sm' ? 24 : 32}
         className={`${sizeClasses} rounded-full object-cover border-2 border-white shadow-sm`}
         title={user.username}
+        unoptimized
       />
     );
   }

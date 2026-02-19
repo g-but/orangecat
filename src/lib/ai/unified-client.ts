@@ -100,12 +100,8 @@ export class UnifiedAIClient {
   /**
    * OpenRouter - Universal gateway to 200+ models
    */
-  private async chatOpenRouter(
-    options: ChatOptions,
-    _modelMeta: ModelMetadata
-  ): Promise<Response> {
-    const apiKey =
-      this.config.apiKeys?.openrouter || process.env.OPENROUTER_API_KEY;
+  private async chatOpenRouter(options: ChatOptions, _modelMeta: ModelMetadata): Promise<Response> {
+    const apiKey = this.config.apiKeys?.openrouter || process.env.OPENROUTER_API_KEY;
 
     if (!apiKey) {
       throw new Error('OpenRouter API key required');
@@ -132,20 +128,14 @@ export class UnifiedAIClient {
   /**
    * Ollama - Local models
    */
-  private async chatOllama(
-    options: ChatOptions,
-    _modelMeta: ModelMetadata
-  ): Promise<Response> {
-    const endpoint =
-      this.config.localConfig?.endpoint || 'http://localhost:11434';
+  private async chatOllama(options: ChatOptions, _modelMeta: ModelMetadata): Promise<Response> {
+    const endpoint = this.config.localConfig?.endpoint || 'http://localhost:11434';
 
     // Check if Ollama is running
     try {
       await fetch(`${endpoint}/api/tags`, { method: 'GET' });
-    } catch (_error) {
-      throw new Error(
-        'Ollama not detected. Please install and start Ollama first.'
-      );
+    } catch {
+      throw new Error('Ollama not detected. Please install and start Ollama first.');
     }
 
     return fetch(`${endpoint}/api/chat`, {
@@ -166,10 +156,7 @@ export class UnifiedAIClient {
   /**
    * OpenAI - GPT models
    */
-  private async chatOpenAI(
-    options: ChatOptions,
-    _modelMeta: ModelMetadata
-  ): Promise<Response> {
+  private async chatOpenAI(options: ChatOptions, _modelMeta: ModelMetadata): Promise<Response> {
     const apiKey = this.config.apiKeys?.openai;
 
     if (!apiKey) {
@@ -195,10 +182,7 @@ export class UnifiedAIClient {
   /**
    * Anthropic - Claude models
    */
-  private async chatAnthropic(
-    options: ChatOptions,
-    _modelMeta: ModelMetadata
-  ): Promise<Response> {
+  private async chatAnthropic(options: ChatOptions, _modelMeta: ModelMetadata): Promise<Response> {
     const apiKey = this.config.apiKeys?.anthropic;
 
     if (!apiKey) {
@@ -207,9 +191,7 @@ export class UnifiedAIClient {
 
     // Anthropic has different API format
     const systemMessage = options.messages.find(m => m.role === 'system');
-    const conversationMessages = options.messages.filter(
-      m => m.role !== 'system'
-    );
+    const conversationMessages = options.messages.filter(m => m.role !== 'system');
 
     return fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -232,10 +214,7 @@ export class UnifiedAIClient {
   /**
    * Groq - Fast inference
    */
-  private async chatGroq(
-    options: ChatOptions,
-    _modelMeta: ModelMetadata
-  ): Promise<Response> {
+  private async chatGroq(options: ChatOptions, _modelMeta: ModelMetadata): Promise<Response> {
     const apiKey = this.config.apiKeys?.groq || process.env.GROQ_API_KEY;
 
     if (!apiKey) {
@@ -261,10 +240,7 @@ export class UnifiedAIClient {
   /**
    * Google Gemini
    */
-  private async chatGemini(
-    options: ChatOptions,
-    _modelMeta: ModelMetadata
-  ): Promise<Response> {
+  private async chatGemini(options: ChatOptions, _modelMeta: ModelMetadata): Promise<Response> {
     const apiKey = this.config.apiKeys?.google;
 
     if (!apiKey) {
@@ -298,10 +274,7 @@ export class UnifiedAIClient {
   /**
    * X.AI Grok
    */
-  private async chatXAI(
-    options: ChatOptions,
-    _modelMeta: ModelMetadata
-  ): Promise<Response> {
+  private async chatXAI(options: ChatOptions, _modelMeta: ModelMetadata): Promise<Response> {
     const apiKey = this.config.apiKeys?.xai;
 
     if (!apiKey) {
@@ -327,10 +300,7 @@ export class UnifiedAIClient {
   /**
    * Together AI
    */
-  private async chatTogether(
-    options: ChatOptions,
-    _modelMeta: ModelMetadata
-  ): Promise<Response> {
+  private async chatTogether(options: ChatOptions, _modelMeta: ModelMetadata): Promise<Response> {
     const apiKey = process.env.TOGETHER_API_KEY;
 
     if (!apiKey) {

@@ -35,7 +35,7 @@ import loansService from '@/services/loans';
  */
 export default function LoansPage() {
   const { user, isLoading, hydrated } = useRequireAuth();
-  const router = useRouter();
+  const _router = useRouter();
   const { selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelection();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showSelection, setShowSelection] = useState(false);

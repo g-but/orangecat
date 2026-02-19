@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSearchSuggestions } from '@/hooks/useSearch';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,30 +41,36 @@ export function useEnhancedSearch({ showQuickActions = true }: UseEnhancedSearch
   const inputRef = useRef<HTMLInputElement>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  const quickActions: QuickAction[] = [
-    {
-      icon: null, // Icons will be set by the component
-      label: 'Find People',
-      action: () => router.push('/discover?type=profiles'),
-    },
-    {
-      icon: null,
-      label: 'Browse Projects',
-      action: () => router.push('/discover?type=projects'),
-    },
-    {
-      icon: null,
-      label: 'Trending',
-      action: () => router.push('/discover?trending=true'),
-    },
-  ];
+  const quickActions: QuickAction[] = useMemo(
+    () => [
+      {
+        icon: null, // Icons will be set by the component
+        label: 'Find People',
+        action: () => router.push('/discover?type=profiles'),
+      },
+      {
+        icon: null,
+        label: 'Browse Projects',
+        action: () => router.push('/discover?type=projects'),
+      },
+      {
+        icon: null,
+        label: 'Trending',
+        action: () => router.push('/discover?trending=true'),
+      },
+    ],
+    [router]
+  );
 
-  const trendingSearches = [
-    'Bitcoin Lightning Network',
-    'Open Source Projects',
-    'Education Initiatives',
-    'Environmental Projects',
-  ];
+  const trendingSearches = useMemo(
+    () => [
+      'Bitcoin Lightning Network',
+      'Open Source Projects',
+      'Education Initiatives',
+      'Environmental Projects',
+    ],
+    []
+  );
 
   // Load search history from localStorage
   useEffect(() => {

@@ -283,7 +283,7 @@ export function getGeneratableFields(entityType: EntityType): string[] {
   }
 
   // Most fields can be AI-generated except for sensitive ones
-  const excludedFields = [
+  const _excludedFields = [
     'bitcoin_address',
     'lightning_address',
     'api_key',

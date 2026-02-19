@@ -29,7 +29,7 @@ interface DocumentFileUploadProps {
   className?: string;
 }
 
-const ACCEPTED_TYPES = [
+const _ACCEPTED_TYPES = [
   'text/plain',
   'text/markdown',
   'application/pdf',

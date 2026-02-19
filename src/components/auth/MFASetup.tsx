@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { Shield, Smartphone, Copy, Check, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import {
@@ -175,10 +176,13 @@ export function MFASetup({ onSetupComplete, onCancel }: MFASetupProps) {
             {enrollmentData?.qrCode && (
               <div className="flex justify-center">
                 <div className="p-4 bg-white border-2 border-gray-200 rounded-lg">
-                  <img
+                  <Image
                     src={enrollmentData.qrCode}
                     alt="QR Code for authenticator app"
+                    width={192}
+                    height={192}
                     className="w-48 h-48"
+                    unoptimized
                   />
                 </div>
               </div>

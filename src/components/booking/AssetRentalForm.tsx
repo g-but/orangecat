@@ -28,7 +28,7 @@ export function AssetRentalForm({
   periodType,
   requiresDeposit = false,
   depositAmountSats = 0,
-  currency = 'SATS',
+  currency: _currency = 'SATS',
   selectedStartDate,
   selectedEndDate,
   onBack,

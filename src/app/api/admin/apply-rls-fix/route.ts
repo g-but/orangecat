@@ -27,7 +27,7 @@ export async function POST(_req: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
-    const isAdmin = user.email?.endsWith('@orangecat.ch') || user.app_metadata?.role === 'admin';
+    const isAdmin = user.email?.endsWith('@orangecat.ch') && user.app_metadata?.role === 'admin';
     if (!isAdmin) {
       return NextResponse.json(
         { success: false, error: 'Forbidden: admin access required' },

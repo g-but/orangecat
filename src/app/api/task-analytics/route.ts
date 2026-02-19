@@ -18,7 +18,7 @@ import { logger } from '@/utils/logger';
  *
  * Get dashboard statistics
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const {

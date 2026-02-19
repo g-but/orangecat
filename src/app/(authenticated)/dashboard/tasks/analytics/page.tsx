@@ -351,7 +351,7 @@ function StatCard({
 // Fairness Indicator Component
 function FairnessIndicator({
   level,
-  score,
+  score: _score,
 }: {
   level: 'good' | 'moderate' | 'needs_attention';
   score: number;

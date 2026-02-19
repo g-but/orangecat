@@ -15,7 +15,7 @@ interface DraftPromptProps {
 
 export default function DraftPrompt({ className }: DraftPromptProps) {
   const { drafts, isLoading } = useProjectStore();
-  const { formatAmount } = useDisplayCurrency();
+  const { formatAmount: _formatAmount } = useDisplayCurrency();
   const [dismissed, setDismissed] = useState(false);
 
   const hasAnyDraft = drafts.length > 0;

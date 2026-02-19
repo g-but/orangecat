@@ -26,7 +26,7 @@ import { logger } from '@/utils/logger';
  */
 export default function EventsDashboardPage() {
   const { user, isLoading, hydrated } = useRequireAuth();
-  const router = useRouter();
+  const _router = useRouter();
   const { selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelection();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showSelection, setShowSelection] = useState(false);

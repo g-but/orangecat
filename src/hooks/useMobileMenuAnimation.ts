@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface UseMobileMenuAnimationProps {
   /** Whether menu is open */
@@ -64,10 +64,10 @@ export function useMobileMenuAnimation({
   }, [isOpen, isClosing, animationDuration]);
 
   // Handle closing with animation
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true);
     onClose();
-  };
+  }, [onClose]);
 
   // Close menu when clicking outside or pressing Escape
   useEffect(() => {
@@ -97,7 +97,7 @@ export function useMobileMenuAnimation({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   return {
     /** Ref for menu element */

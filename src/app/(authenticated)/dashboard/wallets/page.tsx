@@ -31,7 +31,7 @@ import { WalletsMobileGuidance } from './components/WalletsMobileGuidance';
  */
 export default function DashboardWalletsPage() {
   const { user, profile, isLoading: authLoading } = useRequireAuth();
-  const router = useRouter();
+  const _router = useRouter();
   const [focusedField, setFocusedField] = useState<WalletFieldType>(null);
   const [showMobileGuidance, setShowMobileGuidance] = useState(false);
 

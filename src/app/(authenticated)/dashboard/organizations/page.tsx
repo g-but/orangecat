@@ -30,7 +30,7 @@ import { Trash2 } from 'lucide-react';
  */
 export default function OrganizationsDashboardPage() {
   const { user, isLoading, hydrated } = useRequireAuth();
-  const router = useRouter();
+  const _router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [orgToDelete, setOrgToDelete] = useState<OrganizationEntity | null>(null);
