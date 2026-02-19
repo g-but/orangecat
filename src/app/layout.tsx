@@ -35,12 +35,34 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Toaster } from '@/components/ui/sonner';
 import { Suspense } from 'react';
 
-export const metadata = {
-  title: 'OrangeCat - The Bitcoin Super-App',
+import type { Metadata } from 'next';
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://orangecat.ch';
+
+export const metadata: Metadata = {
+  title: {
+    default: 'OrangeCat - The Bitcoin Super-App',
+    template: '%s | OrangeCat',
+  },
   description:
     'Commerce, finance, community, and AI—all powered by Bitcoin. Sell products, offer services, fund projects, build communities, and deploy AI in one unified platform.',
   keywords:
     'bitcoin, super-app, commerce, finance, community, AI, products, services, crowdfunding, cryptocurrency, blockchain, lightning network, peer-to-peer',
+  metadataBase: new URL(SITE_URL),
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: SITE_URL,
+    siteName: 'OrangeCat',
+    title: 'OrangeCat - The Bitcoin Super-App',
+    description:
+      'Commerce, finance, community, and AI—all powered by Bitcoin. Sell products, offer services, fund projects, build communities, and deploy AI in one unified platform.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'OrangeCat - The Bitcoin Super-App',
+    description: 'Commerce, finance, community, and AI—all powered by Bitcoin.',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -49,6 +71,38 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`}>
       <body className="antialiased">
+        {/* Structured data: Organization + WebSite */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'Organization',
+                  name: 'OrangeCat',
+                  url: SITE_URL,
+                  logo: `${SITE_URL}/images/orange-cat-logo.svg`,
+                  description: 'Commerce, finance, community, and AI—all powered by Bitcoin.',
+                  sameAs: [],
+                },
+                {
+                  '@type': 'WebSite',
+                  name: 'OrangeCat',
+                  url: SITE_URL,
+                  potentialAction: {
+                    '@type': 'SearchAction',
+                    target: {
+                      '@type': 'EntryPoint',
+                      urlTemplate: `${SITE_URL}/discover?q={search_term_string}`,
+                    },
+                    'query-input': 'required name=search_term_string',
+                  },
+                },
+              ],
+            }),
+          }}
+        />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-tiffany focus:text-white focus:rounded-lg focus:outline-none"
