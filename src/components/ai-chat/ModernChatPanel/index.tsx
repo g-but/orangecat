@@ -14,7 +14,7 @@ import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { useChatMessages, useSuggestions, usePendingActionsManager } from './hooks';
 import { ChatHeader, ChatInput, EmptyState, ErrorDisplay, MessageBubble } from './components';
 import { PendingActionsCard } from '../PendingActionsCard';
-import type { SuggestedAction } from './types';
+import type { CatAction } from './types';
 
 export function ModernChatPanel() {
   const router = useRouter();
@@ -52,26 +52,16 @@ export function ModernChatPanel() {
     [sendMessage]
   );
 
-  // Handle action button clicks - navigate to prefilled entity creation
+  // Handle action button clicks - navigate to prefilled entity or wallet creation
   const handleActionClick = useCallback(
-    (action: SuggestedAction) => {
+    (action: CatAction) => {
       if (action.type === 'create_entity') {
         const entityMeta = ENTITY_REGISTRY[action.entityType];
         if (entityMeta?.createPath) {
-          // Encode prefill data as URL params
           const prefillParams = new URLSearchParams();
-          if (action.prefill.title) {
-            prefillParams.set('title', action.prefill.title);
-          }
-          if (action.prefill.description) {
-            prefillParams.set('description', action.prefill.description);
-          }
-          if (action.prefill.category) {
-            prefillParams.set('category', action.prefill.category);
-          }
-          // Add any other prefill fields
+          // Forward all prefill fields as URL params
           Object.entries(action.prefill).forEach(([key, value]) => {
-            if (!['title', 'description', 'category'].includes(key) && value) {
+            if (value !== null && value !== undefined && value !== '') {
               prefillParams.set(key, String(value));
             }
           });
@@ -79,6 +69,17 @@ export function ModernChatPanel() {
           const url = `${entityMeta.createPath}?${prefillParams.toString()}`;
           router.push(url);
         }
+      } else if (action.type === 'suggest_wallet') {
+        const walletMeta = ENTITY_REGISTRY.wallet;
+        const prefillParams = new URLSearchParams();
+        Object.entries(action.prefill).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== '') {
+            prefillParams.set(key, String(value));
+          }
+        });
+
+        const url = `${walletMeta.basePath}?${prefillParams.toString()}`;
+        router.push(url);
       }
     },
     [router]

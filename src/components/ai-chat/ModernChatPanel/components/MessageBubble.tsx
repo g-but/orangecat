@@ -7,12 +7,12 @@ import { cn } from '@/lib/utils';
 import { Cat, User } from 'lucide-react';
 import { AI_MODEL_REGISTRY } from '@/config/ai-models';
 import { ActionButton } from './ActionButton';
-import type { Message, SuggestedAction } from '../types';
+import type { Message, CatAction } from '../types';
 
 interface MessageBubbleProps {
   message: Message;
   isLast: boolean;
-  onActionClick?: (action: SuggestedAction) => void;
+  onActionClick?: (action: CatAction) => void;
 }
 
 export function MessageBubble({ message, isLast, onActionClick }: MessageBubbleProps) {

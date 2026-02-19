@@ -46,10 +46,24 @@ export interface EntitySummary {
   price_sats?: number;
 }
 
+export interface WalletSummary {
+  label: string;
+  description: string | null;
+  category: string;
+  behavior_type: string;
+  goal_amount: number | null;
+  goal_currency: string | null;
+  goal_deadline: string | null;
+  budget_amount: number | null;
+  budget_period: string | null;
+  is_primary: boolean;
+}
+
 export interface FullUserContext {
   profile: ProfileContext | null;
   documents: DocumentContext[];
   entities: EntitySummary[];
+  wallets: WalletSummary[];
   stats: {
     totalProducts: number;
     totalServices: number;
@@ -57,6 +71,7 @@ export interface FullUserContext {
     totalCauses: number;
     totalEvents: number;
     totalAssets: number;
+    totalWallets: number;
   };
 }
 
@@ -212,6 +227,7 @@ export async function fetchEntitiesForCat(
     totalCauses: 0,
     totalEvents: 0,
     totalAssets: 0,
+    totalWallets: 0,
   };
   const entities: EntitySummary[] = [];
 
@@ -414,23 +430,68 @@ export async function fetchEntitiesForCat(
 }
 
 /**
+ * Fetch user's wallets for My Cat context
+ */
+export async function fetchWalletsForCat(
+  supabase: AnySupabaseClient,
+  userId: string
+): Promise<WalletSummary[]> {
+  try {
+    // Wallets use profile_id, which maps from auth user via profiles table
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!profile) {
+      return [];
+    }
+
+    const { data: wallets, error } = await supabase
+      .from('wallets')
+      .select(
+        'label, description, category, behavior_type, goal_amount, goal_currency, goal_deadline, budget_amount, budget_period, is_primary'
+      )
+      .eq('profile_id', profile.id)
+      .eq('is_active', true)
+      .limit(20);
+
+    if (error) {
+      logger.warn('Failed to fetch wallets for cat', { error: error.message }, 'DocumentContext');
+      return [];
+    }
+
+    return (wallets || []) as WalletSummary[];
+  } catch (error) {
+    logger.error('Exception fetching wallets for cat', error, 'DocumentContext');
+    return [];
+  }
+}
+
+/**
  * Fetch all context for My Cat
  */
 export async function fetchFullContextForCat(
   supabase: AnySupabaseClient,
   userId: string
 ): Promise<FullUserContext> {
-  const [profile, documents, { entities, stats }] = await Promise.all([
+  const [profile, documents, { entities, stats }, wallets] = await Promise.all([
     fetchProfileForCat(supabase, userId),
     fetchDocumentsForCat(supabase, userId),
     fetchEntitiesForCat(supabase, userId),
+    fetchWalletsForCat(supabase, userId),
   ]);
 
   return {
     profile,
     documents,
     entities,
-    stats,
+    wallets,
+    stats: {
+      ...stats,
+      totalWallets: wallets.length,
+    },
   };
 }
 
@@ -524,6 +585,35 @@ export function buildFullContextString(context: FullUserContext): string {
     }
   }
 
+  // Wallets section
+  if (context.wallets.length > 0) {
+    const walletLines = context.wallets.map(w => {
+      const parts = [`- **${w.label}**`];
+      parts.push(`(${w.category}`);
+      if (w.behavior_type === 'one_time_goal' && w.goal_amount) {
+        parts.push(`, goal: ${w.goal_amount.toLocaleString()} ${w.goal_currency || 'SATS'}`);
+        if (w.goal_deadline) {
+          parts.push(` by ${w.goal_deadline}`);
+        }
+      }
+      if (w.behavior_type === 'recurring_budget' && w.budget_amount) {
+        parts.push(
+          `, budget: ${w.budget_amount.toLocaleString()} sats/${w.budget_period || 'month'}`
+        );
+      }
+      parts.push(')');
+      if (w.behavior_type !== 'general') {
+        parts.push(` - ${w.behavior_type}`);
+      }
+      if (w.is_primary) {
+        parts.push(' - primary wallet');
+      }
+      return parts.join('');
+    });
+
+    sections.push(`## User's Wallets\n${walletLines.join('\n')}`);
+  }
+
   // Stats summary
   const { stats } = context;
   const hasAnyEntities =
@@ -554,6 +644,9 @@ export function buildFullContextString(context: FullUserContext): string {
     }
     if (stats.totalAssets > 0) {
       statParts.push(`${stats.totalAssets} asset${stats.totalAssets > 1 ? 's' : ''}`);
+    }
+    if (stats.totalWallets > 0) {
+      statParts.push(`${stats.totalWallets} wallet${stats.totalWallets > 1 ? 's' : ''}`);
     }
 
     sections.push(`## Activity Summary\nThe user has: ${statParts.join(', ')}.`);
