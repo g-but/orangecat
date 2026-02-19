@@ -20,7 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FormField } from '../FormField';
 import { GuidancePanel } from '../GuidancePanel';
 import { TemplatePicker } from '../templates/TemplatePicker';
-import { AIPrefillButton } from '../AIPrefillButton';
+import { AIPrefillBar } from '../AIPrefillBar';
 import type { EntityConfig, EntityTemplate } from '../types';
 import { logger } from '@/utils/logger';
 
@@ -282,19 +282,7 @@ export function EntityForm<T extends Record<string, unknown>>({
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>
-                  {mode === 'create' ? config.formTitle : `Edit ${config.name}`}
-                </CardTitle>
-                {mode === 'create' && !wizardMode && (
-                  <AIPrefillButton
-                    entityType={config.type}
-                    onPrefill={handleAIPrefill}
-                    disabled={formState.isSubmitting}
-                    existingData={formState.data}
-                  />
-                )}
-              </div>
+              <CardTitle>{mode === 'create' ? config.formTitle : `Edit ${config.name}`}</CardTitle>
               <CardDescription>
                 {mode === 'create'
                   ? config.formDescription
@@ -303,6 +291,15 @@ export function EntityForm<T extends Record<string, unknown>>({
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-8">
+                {mode === 'create' && !wizardMode && (
+                  <AIPrefillBar
+                    entityType={config.type}
+                    onPrefill={handleAIPrefill}
+                    disabled={formState.isSubmitting}
+                    existingData={formState.data}
+                  />
+                )}
+
                 {visibleFieldGroups.map(group => {
                   if (!isGroupVisible(group)) {
                     return null;
