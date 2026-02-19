@@ -388,9 +388,9 @@ export interface AIGeneratedFields {
 }
 
 /**
- * Props for the AI prefill button component
+ * Props for the AI prefill bar component
  */
-export interface AIPrefillButtonProps {
+export interface AIPrefillBarProps {
   /** Entity type being created */
   entityType: string;
   /** Callback when AI generates field values */
