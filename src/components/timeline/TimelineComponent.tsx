@@ -7,8 +7,9 @@ import { useToast } from '@/hooks/useToast';
 import { PostCard } from './PostCard';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Trash2, CheckSquare, Loader2 } from 'lucide-react';
+import { Trash2, CheckSquare, Loader2, Newspaper } from 'lucide-react';
 import { usePostSelection } from '@/hooks/usePostSelection';
+import EmptyState from '@/components/ui/EmptyState';
 import { BulkActionsToolbar } from './BulkActionsToolbar';
 
 interface TimelineComponentProps {
@@ -50,7 +51,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
     }
 
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         const [entry] = entries;
         if (entry.isIntersecting && feed.pagination.hasNext && !isLoadingMore) {
           onLoadMore();
@@ -85,17 +86,17 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
     selectedCount,
     canPerformBulkAction: _canPerformBulkAction,
   } = usePostSelection({
-    onPostsDeleted: (deletedIds) => {
+    onPostsDeleted: deletedIds => {
       // Remove deleted events from local state
       setEvents(prev => prev.filter(e => !deletedIds.includes(e.id)));
-      showSuccess(`Successfully deleted ${deletedIds.length} ${deletedIds.length === 1 ? 'post' : 'posts'}`);
+      showSuccess(
+        `Successfully deleted ${deletedIds.length} ${deletedIds.length === 1 ? 'post' : 'posts'}`
+      );
     },
     onVisibilityChanged: (eventIds, newVisibility) => {
       // Update visibility in local state
       setEvents(prev =>
-        prev.map(e =>
-          eventIds.includes(e.id) ? { ...e, visibility: newVisibility } : e
-        )
+        prev.map(e => (eventIds.includes(e.id) ? { ...e, visibility: newVisibility } : e))
       );
       showSuccess(
         `Changed visibility of ${eventIds.length} ${eventIds.length === 1 ? 'post' : 'posts'} to ${newVisibility}`
@@ -110,9 +111,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
         if (updates.isDeleted) {
           return prevEvents.filter(event => event.id !== eventId);
         }
-        return prevEvents.map(event =>
-          event.id === eventId ? { ...event, ...updates } : event
-        );
+        return prevEvents.map(event => (event.id === eventId ? { ...event, ...updates } : event));
       });
       onEventUpdate?.(eventId, updates);
     },
@@ -141,9 +140,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
       if (result.successCount === 0) {
         showError('Failed to delete posts. Please try again.');
       } else {
-        showError(
-          `Deleted ${result.successCount} posts, but ${result.failureCount} failed.`
-        );
+        showError(`Deleted ${result.successCount} posts, but ${result.failureCount} failed.`);
       }
     }
   }, [bulkDelete, visibleEvents, showError]);
@@ -157,18 +154,21 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
         if (result.successCount === 0) {
           showError('Failed to change visibility. Please try again.');
         } else {
-          showError(
-            `Changed ${result.successCount} posts, but ${result.failureCount} failed.`
-          );
+          showError(`Changed ${result.successCount} posts, but ${result.failureCount} failed.`);
         }
       }
     },
     [bulkSetVisibility, visibleEvents, showError]
   );
 
-  // Don't render anything if empty - let parent handle empty state
   if (visibleEvents.length === 0) {
-    return null;
+    return (
+      <EmptyState
+        icon={Newspaper}
+        title="No posts yet"
+        description="Your timeline is empty. Create your first post to get started."
+      />
+    );
   }
 
   return (
@@ -262,10 +262,8 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
               </div>
 
               <p className="text-gray-700 mb-6">
-                Are you sure you want to delete{' '}
-                {selectedCount === 1 ? 'this post' : 'these posts'}?
-                {selectedCount > 1 && ' They will be'} permanently removed from your
-                timeline.
+                Are you sure you want to delete {selectedCount === 1 ? 'this post' : 'these posts'}?
+                {selectedCount > 1 && ' They will be'} permanently removed from your timeline.
               </p>
 
               <div className="flex gap-2 justify-end">
@@ -276,11 +274,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
                 >
                   Cancel
                 </Button>
-                <Button
-                  variant="danger"
-                  onClick={handleBulkDeleteConfirm}
-                  disabled={isProcessing}
-                >
+                <Button variant="danger" onClick={handleBulkDeleteConfirm} disabled={isProcessing}>
                   {isProcessing ? 'Deleting...' : 'Delete'}
                 </Button>
               </div>

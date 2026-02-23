@@ -39,10 +39,6 @@ interface ActorRecord {
   id: string;
 }
 
-interface WishlistRecord {
-  id: string;
-}
-
 interface ProjectRecord {
   updated_at: string;
 }
@@ -66,43 +62,38 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
 
-    // Get profile
-    const { data: profileData, error: profileError } = await (
-      supabase.from(DATABASE_TABLES.PROFILES) as UntypedTable
-    )
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    const profile = profileData as ProfileRecord | null;
+    // Step 1: Fetch profile and actor in parallel (both only need user.id)
+    const [profileResult, actorResult] = await Promise.all([
+      (supabase.from(DATABASE_TABLES.PROFILES) as UntypedTable)
+        .select('*')
+        .eq('id', user.id)
+        .single(),
+      (supabase.from('actors') as UntypedTable)
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('actor_type', 'user')
+        .single(),
+    ]);
 
-    if (profileError || !profile) {
+    const profile = profileResult.data as ProfileRecord | null;
+    if (profileResult.error || !profile) {
       return apiUnauthorized('Profile not found');
     }
 
-    // Get actor ID for entity queries
-    const { data: actorData } = await (supabase.from('actors') as UntypedTable)
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('actor_type', 'user')
-      .single();
-    const actor = actorData as ActorRecord | null;
+    const actorId = (actorResult.data as ActorRecord | null)?.id;
 
-    const actorId = actor?.id;
-
-    // Fetch entity counts in parallel
-    const entityCountPromises = ENTITY_TYPES.filter(type => type !== 'wallet') // Wallet handled separately
-      .map(async entityType => {
+    // Step 2: Run ALL remaining queries in parallel
+    const entityCountPromises = ENTITY_TYPES.filter(type => type !== 'wallet').map(
+      async entityType => {
         const meta = ENTITY_REGISTRY[entityType];
         const userIdField = meta.userIdField;
 
         try {
-          // Build query based on user ID field type
           let query = (supabase.from(meta.tableName) as UntypedTable).select('id', {
             count: 'exact',
             head: true,
           });
 
-          // Different entities use different ID fields
           if (userIdField === 'actor_id' && actorId) {
             query = query.eq('actor_id', actorId);
           } else if (userIdField === 'user_id') {
@@ -114,65 +105,69 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
           }
 
           const { count, error } = await query;
-
           if (error) {
-            // Table might not exist, return 0
             return { entityType, count: 0 };
           }
-
           return { entityType, count: count || 0 };
         } catch {
           return { entityType, count: 0 };
         }
-      });
+      }
+    );
 
-    const entityCountResults = await Promise.all(entityCountPromises);
-    const entityCounts: Partial<Record<EntityType, number>> = {};
-
-    for (const { entityType, count } of entityCountResults) {
-      entityCounts[entityType] = count;
-    }
-
-    // Check wallet status
-    const { count: walletCount } = await (supabase.from('wallets') as UntypedTable)
+    const walletCountPromise = (supabase.from('wallets') as UntypedTable)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
-    const hasWallet =
-      (walletCount ?? 0) > 0 || !!profile.bitcoin_address || !!profile.lightning_address;
+    // Fetch wishlist items via join instead of two sequential queries
+    const wishlistItemsPromise = actorId
+      ? (supabase.from('wishlist_items') as UntypedTable)
+          .select('id, wishlists!inner(actor_id)', { count: 'exact', head: true })
+          .eq('wishlists.actor_id', actorId)
+      : Promise.resolve({ count: 0 });
 
-    // Get wishlist item count (separate from wishlist count)
-    let wishlistItemCount = 0;
-    if (actorId && (entityCounts.wishlist ?? 0) > 0) {
-      const { data: wishlistsData } = await (supabase.from('wishlists') as UntypedTable)
-        .select('id')
-        .eq('actor_id', actorId);
-      const wishlists = wishlistsData as WishlistRecord[] | null;
-
-      if (wishlists && wishlists.length > 0) {
-        const wishlistIds = wishlists.map(w => w.id);
-        const { count: itemCount } = await (supabase.from('wishlist_items') as UntypedTable)
-          .select('id', { count: 'exact', head: true })
-          .in('wishlist_id', wishlistIds);
-
-        wishlistItemCount = itemCount || 0;
-      }
-    }
-
-    // Check for recent activity (posts, entity creation in last 7 days)
-    let daysSinceLastActivity: number | null = null;
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    // Check most recent project update
-    const { data: recentProjectData } = await (supabase.from('projects') as UntypedTable)
+    const recentProjectPromise = (supabase.from('projects') as UntypedTable)
       .select('updated_at')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .limit(1)
       .single();
-    const recentProject = recentProjectData as ProjectRecord | null;
 
+    const publishedCountPromise = (supabase.from('projects') as UntypedTable)
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'active');
+
+    const [
+      entityCountResults,
+      walletResult,
+      wishlistItemsResult,
+      recentProjectResult,
+      publishedResult,
+    ] = await Promise.all([
+      Promise.all(entityCountPromises),
+      walletCountPromise,
+      wishlistItemsPromise,
+      recentProjectPromise,
+      publishedCountPromise,
+    ]);
+
+    // Process entity counts
+    const entityCounts: Partial<Record<EntityType, number>> = {};
+    for (const { entityType, count } of entityCountResults) {
+      entityCounts[entityType] = count;
+    }
+
+    // Process wallet status
+    const hasWallet =
+      (walletResult.count ?? 0) > 0 || !!profile.bitcoin_address || !!profile.lightning_address;
+
+    // Process wishlist items
+    const wishlistItemCount = wishlistItemsResult.count || 0;
+
+    // Process recent activity
+    let daysSinceLastActivity: number | null = null;
+    const recentProject = recentProjectResult.data as ProjectRecord | null;
     if (recentProject?.updated_at) {
       const lastUpdate = new Date(recentProject.updated_at);
       const now = new Date();
@@ -181,14 +176,8 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
       );
     }
 
-    // Check for published entities
-    let hasPublishedEntities = false;
-    const { count: publishedCount } = await (supabase.from('projects') as UntypedTable)
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('status', 'active');
-
-    hasPublishedEntities = (publishedCount ?? 0) > 0;
+    // Process published entities
+    const hasPublishedEntities = (publishedResult.count ?? 0) > 0;
 
     // Build user context for recommendations
     const userContext = buildUserContext(
