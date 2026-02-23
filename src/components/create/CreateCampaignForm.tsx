@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import supabase from '@/lib/supabase/browser';
 import { toast } from 'sonner';
 import { CampaignStorageService } from '@/services/projects/projectStorageService';
 import { isValidBitcoinAddress } from '@/utils/validation';
@@ -226,9 +225,8 @@ export default function CreateCampaignForm({
         .map(tag => tag.trim())
         .filter(tag => tag !== '');
 
-      // Create the funding page in the database
-      const fundingPageData = {
-        user_id: user.id,
+      // Create the project via API (auth handled server-side)
+      const projectData = {
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         bitcoin_address: formData.bitcoin_address.trim() || null,
@@ -253,14 +251,19 @@ export default function CreateCampaignForm({
         currency: 'BTC',
       };
 
-      const { data, error: insertError } = await (supabase.from('projects') as any)
-        .insert([fundingPageData])
-        .select()
-        .single();
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(projectData),
+      });
 
-      if (insertError) {
-        throw new Error(`Failed to create project: ${insertError.message}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create project');
       }
+
+      const data = result.data ?? result;
 
       // Clear the draft from localStorage
       localStorage.removeItem(`project-draft-${user.id}`);
