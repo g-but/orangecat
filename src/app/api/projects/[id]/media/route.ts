@@ -1,10 +1,12 @@
 /**
  * Project Media API
  *
- * POST /api/projects/[id]/media - Upload media to project
+ * GET    /api/projects/[id]/media - List media for a project (with public URLs)
+ * POST   /api/projects/[id]/media - Save media metadata after upload
+ * DELETE /api/projects/[id]/media?mediaId=... - Delete a media item
  *
- * Last Modified: 2026-01-28
- * Last Modified Summary: Refactored to use withAuth middleware
+ * Last Modified: 2026-02-20
+ * Last Modified Summary: Added GET and DELETE handlers; moved DB ops out of component
  */
 
 import {
@@ -19,10 +21,110 @@ import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
+import { createServerClient } from '@/lib/supabase/server';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
+
+/**
+ * GET /api/projects/[id]/media
+ * Returns media items with public storage URLs for a project.
+ * No auth required — media is public.
+ */
+export async function GET(_request: Request, context: RouteContext) {
+  try {
+    const { id: projectId } = await context.params;
+
+    const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
+    if (idValidation) {
+      return idValidation;
+    }
+
+    const supabase = await createServerClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.from('project_media') as any)
+      .select('id, storage_path, position, alt_text')
+      .eq('project_id', projectId)
+      .order('position', { ascending: true });
+
+    if (error) {
+      logger.error('Failed to load project media', { projectId, error: error.message });
+      return apiInternalError('Failed to load media');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const media = (data || []).map((m: any) => {
+      const { data: urlData } = supabase.storage.from('project-media').getPublicUrl(m.storage_path);
+      return { ...m, url: urlData.publicUrl };
+    });
+
+    return apiSuccess({ media });
+  } catch (error) {
+    logger.error('Unexpected error loading media', { error });
+    return apiInternalError('Failed to load media');
+  }
+}
+
+/**
+ * DELETE /api/projects/[id]/media?mediaId=<uuid>
+ * Deletes a media item. Requires auth and project ownership.
+ */
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  try {
+    const { id: projectId } = await context.params;
+
+    const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
+    if (idValidation) {
+      return idValidation;
+    }
+
+    const url = new URL(request.url);
+    const mediaId = url.searchParams.get('mediaId');
+    if (!mediaId) {
+      return apiBadRequest('mediaId query parameter is required');
+    }
+
+    const mediaIdValidation = getValidationError(validateUUID(mediaId, 'media ID'));
+    if (mediaIdValidation) {
+      return mediaIdValidation;
+    }
+
+    const { user, supabase } = request;
+
+    // Verify project ownership
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: project } = await (supabase.from(getTableName('project')) as any)
+      .select('user_id')
+      .eq('id', projectId)
+      .single();
+
+    if (!project) {
+      return apiNotFound('Project not found');
+    }
+    if (user.id !== project.user_id) {
+      return apiForbidden('You can only delete media from your own projects');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('project_media') as any)
+      .delete()
+      .eq('id', mediaId)
+      .eq('project_id', projectId);
+
+    if (error) {
+      logger.error('Failed to delete media', { projectId, mediaId, error: error.message });
+      return apiInternalError('Failed to delete media');
+    }
+
+    logger.info('Media deleted', { projectId, mediaId, userId: user.id });
+    return apiSuccess({ deleted: true });
+  } catch (error) {
+    logger.error('Unexpected error deleting media', { error });
+    return apiInternalError('Failed to delete media');
+  }
+});
 
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {

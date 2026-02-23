@@ -17,7 +17,6 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { logger } from '@/utils/logger';
 import { Upload, X, Loader2, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import supabaseBrowser from '@/lib/supabase/browser';
 
 interface MediaItem {
   id: string;
@@ -53,31 +52,12 @@ export default function ProjectMediaUpload({
   const loadMedia = useCallback(async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabaseBrowser
-        .from('project_media')
-        .select('id, storage_path, position, alt_text')
-        .eq('project_id', projectId)
-        .order('position', { ascending: true });
-
-      if (error) {
-        throw error;
+      const response = await fetch(`/api/projects/${projectId}/media`);
+      if (!response.ok) {
+        throw new Error('Failed to load media');
       }
-
-      // Derive public URLs
-      type MediaRow = {
-        id: string;
-        storage_path: string;
-        position: number;
-        alt_text?: string | null;
-      };
-      const mediaWithUrls = ((data || []) as MediaRow[]).map(m => {
-        const { data: urlData } = supabaseBrowser.storage
-          .from('project-media')
-          .getPublicUrl(m.storage_path);
-        return { ...m, url: urlData.publicUrl };
-      });
-
-      setMedia(mediaWithUrls);
+      const result = await response.json();
+      setMedia(result.data?.media || []);
     } catch (err) {
       logger.error('Failed to load media:', err);
       toast.error('Failed to load images');
@@ -272,19 +252,21 @@ export default function ProjectMediaUpload({
     }
 
     try {
-      const { error } = await supabaseBrowser.from('project_media').delete().eq('id', mediaId);
+      const response = await fetch(`/api/projects/${projectId}/media?mediaId=${mediaId}`, {
+        method: 'DELETE',
+      });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Failed to delete image');
       }
 
       toast.success('Image deleted');
-      // Reload media immediately to update state
       await loadMedia();
       onUploadComplete?.();
     } catch (err) {
       logger.error('Delete failed:', err);
-      toast.error('Failed to delete image');
+      toast.error(err instanceof Error ? err.message : 'Failed to delete image');
     }
   };
 

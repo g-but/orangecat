@@ -20,6 +20,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
+import EmptyState from '@/components/ui/EmptyState';
 
 export interface WalletAddress {
   id: string;
@@ -289,9 +290,11 @@ export default function WalletVault() {
                           {formatAddress(address.address)}
                         </code>
                         <Button
+                          type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => handleCopyAddress(address.address)}
+                          aria-label="Copy address"
                           className="flex-shrink-0"
                         >
                           {copiedAddress === address.address ? (
@@ -339,9 +342,13 @@ export default function WalletVault() {
                       </div>
                       <div className="flex gap-1">
                         <Button
+                          type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => toggleFavorite(address.id)}
+                          aria-label={
+                            address.isFavorite ? 'Remove from favorites' : 'Add to favorites'
+                          }
                           className="p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
                         >
                           <Heart
@@ -349,15 +356,19 @@ export default function WalletVault() {
                           />
                         </Button>
                         <Button
+                          type="button"
                           variant="outline"
                           size="sm"
+                          aria-label="Edit address"
                           className="p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
                         >
                           <Edit className="w-3 h-3" />
                         </Button>
                         <Button
+                          type="button"
                           variant="outline"
                           size="sm"
+                          aria-label="Delete address"
                           className="p-1 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-600"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -373,30 +384,29 @@ export default function WalletVault() {
 
         {/* Empty State */}
         {filteredAddresses.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12"
-          >
-            <Bitcoin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {searchTerm || selectedCategory !== 'all' || selectedType !== 'all'
+          <EmptyState
+            icon={Bitcoin}
+            title={
+              searchTerm || selectedCategory !== 'all' || selectedType !== 'all'
                 ? 'No addresses match your filters'
-                : 'Your wallet vault is empty'}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {searchTerm || selectedCategory !== 'all' || selectedType !== 'all'
+                : 'Your wallet vault is empty'
+            }
+            description={
+              searchTerm || selectedCategory !== 'all' || selectedType !== 'all'
                 ? 'Try adjusting your search or filters'
-                : 'Start by adding your first Bitcoin address'}
-            </p>
-            <Button
-              onClick={() => setShowAddModal(true)}
-              className="bg-bitcoinOrange hover:bg-bitcoinOrange/90 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Address
-            </Button>
-          </motion.div>
+                : 'Start by adding your first Bitcoin address'
+            }
+            action={
+              <Button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="bg-bitcoinOrange hover:bg-bitcoinOrange/90 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your First Address
+              </Button>
+            }
+          />
         )}
 
         {/* Add Address Modal */}

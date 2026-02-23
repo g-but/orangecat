@@ -1,71 +1,44 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { getTableName } from '@/config/entity-registry';
-import { DATABASE_TABLES } from '@/config/database-tables';
 
 export async function listProjectsPage(limit: number, offset: number, userId?: string) {
   const supabase = await createServerClient();
-  
-  // Build base query
-  let query = supabase
-    .from(getTableName('project'))
-    .select('*', { count: 'exact' });
+  const tableName = getTableName('project');
 
-  // If filtering by user_id, return all statuses (including drafts)
-  // Otherwise, only return active projects
-  if (userId) {
-    query = query.eq('user_id', userId);
-  } else {
-    query = query.eq('status', 'active');
-  }
+  // Build filter condition (shared between data and count queries)
+  const applyFilter = (query: ReturnType<typeof supabase.from>) => {
+    if (userId) {
+      return query.eq('user_id', userId);
+    }
+    return query.eq('status', 'active');
+  };
 
-  const { data, error } = await query
+  // Run data query (with profile join) and count query in parallel
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dataQuery = applyFilter(
+    (supabase.from(tableName) as any).select(
+      '*, profiles:user_id(id, username, name, avatar_url, email)'
+    )
+  )
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const countQuery = applyFilter(
+    (supabase.from(tableName) as any).select('*', { count: 'exact', head: true })
+  );
+
+  const [{ data, error }, { count }] = await Promise.all([dataQuery, countQuery]);
+
   if (error) {
     throw error;
-  }
-
-  // Fetch profiles separately for better error handling
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const userIds = [...new Set((data || []).map((p: any) => p.user_id).filter(Boolean))];
-  const profilesMap = new Map();
-  
-  if (userIds.length > 0) {
-    const { data: profiles, error: profilesError } = await supabase
-      .from(DATABASE_TABLES.PROFILES)
-      .select('id, username, name, avatar_url, email')
-      .in('id', userIds);
-    
-    if (!profilesError && profiles) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      profiles.forEach((profile: any) => {
-        profilesMap.set(profile.id, profile);
-      });
-    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const items = (data || []).map((project: any) => ({
     ...project,
     raised_amount: project.raised_amount ?? 0,
-    profiles: project.user_id ? profilesMap.get(project.user_id) || null : null,
   }));
-
-  // Supabase count is returned in header when using the select count:'exact'
-  // However, the JS client returns it as part of the response if head is true; we issue range so count may be omitted
-  // To ensure total, run a lightweight count query
-  let countQuery = supabase
-    .from(getTableName('project'))
-    .select('*', { count: 'exact', head: true });
-
-  if (userId) {
-    countQuery = countQuery.eq('user_id', userId);
-  } else {
-    countQuery = countQuery.eq('status', 'active');
-  }
-
-  const { count } = await countQuery;
 
   return { items, total: count || 0 };
 }
@@ -89,8 +62,7 @@ export async function createProject(userId: string, payload: any) {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase
-    .from(getTableName('project')) as any)
+  const { data, error } = await (supabase.from(getTableName('project')) as any)
     .insert(insertPayload)
     .select('*')
     .single();

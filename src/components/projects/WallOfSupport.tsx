@@ -13,7 +13,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Heart, MessageSquare, PenTool, Coins, Trash2 } from 'lucide-react';
+import { Heart, MessageSquare, PenTool, Coins, Trash2, Users } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
 import type { ProjectSupportWithUser } from '@/services/projects/support/types';
 import projectSupportService from '@/services/projects/support';
 import { getSupportTypeLabel } from '@/services/projects/support/helpers';
@@ -105,10 +106,11 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
           <CardTitle>Wall of Support</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-gray-500">
-            <Heart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>No support yet. Be the first to show your support!</p>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="No support yet"
+            description="Be the first to show your support!"
+          />
         </CardContent>
       </Card>
     );
@@ -179,10 +181,12 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
                 {/* Delete button (if user owns this support) */}
                 {user?.id === support.user_id && (
                   <Button
+                    type="button"
                     size="sm"
                     variant="ghost"
                     onClick={() => handleDelete(support.id)}
                     disabled={deletingId === support.id}
+                    aria-label="Remove support"
                     className="flex-shrink-0"
                   >
                     <Trash2 className="h-4 w-4" />
