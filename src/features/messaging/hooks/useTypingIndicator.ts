@@ -18,10 +18,11 @@ import type { Database } from '@/types/database';
 // Type for typing_indicators table row
 type TypingIndicatorRow = Database['public']['Tables']['typing_indicators']['Row'];
 
-interface TypingUser {
+export interface TypingUser {
   userId: string;
   username: string;
   name: string;
+  avatarUrl?: string;
   startedAt: Date;
 }
 
@@ -227,9 +228,7 @@ export function useTypingIndicator(
                 const existing = prev.find(u => u.userId === typingUserId);
                 if (existing) {
                   return prev.map(u =>
-                    u.userId === typingUserId
-                      ? { ...u, startedAt: new Date(newRow.started_at) }
-                      : u
+                    u.userId === typingUserId ? { ...u, startedAt: new Date(newRow.started_at) } : u
                   );
                 }
                 return [

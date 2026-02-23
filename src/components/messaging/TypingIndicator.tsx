@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import type { TypingUser } from '@/features/messaging/hooks/useTypingPresence';
+import type { TypingUser } from '@/features/messaging/hooks/useTypingIndicator';
 
 interface TypingIndicatorProps {
   /** List of users currently typing */

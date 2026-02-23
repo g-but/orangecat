@@ -9,6 +9,7 @@ import Input from '@/components/ui/Input';
 import { toast } from 'sonner';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import type { PaymentStatus } from '@/services/bitcoin/types';
 
 interface LightningPaymentProps {
   recipientAddress: string;
@@ -43,9 +44,7 @@ export default function LightningPayment({
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [_isGenerating, setIsGenerating] = useState(false);
   const [_isChecking, _setIsChecking] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<
-    'pending' | 'checking' | 'paid' | 'expired' | 'failed'
-  >('pending');
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | 'checking'>('pending');
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 

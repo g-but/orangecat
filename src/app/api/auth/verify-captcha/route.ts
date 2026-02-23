@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { verifyCaptchaToken } from '@/lib/captcha';
 import { logger } from '@/utils/logger';
+import { apiSuccess, apiBadRequest, apiInternalError } from '@/lib/api/standardResponse';
 
 /**
  * POST /api/auth/verify-captcha
@@ -14,10 +15,7 @@ export async function POST(request: NextRequest) {
     const { token } = body;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: 'CAPTCHA token is required' },
-        { status: 400 }
-      );
+      return apiBadRequest('CAPTCHA token is required');
     }
 
     // Get client IP for additional validation
@@ -27,15 +25,12 @@ export async function POST(request: NextRequest) {
     const result = await verifyCaptchaToken(token, remoteIp);
 
     if (result.success) {
-      return NextResponse.json({
-        success: true,
-        timestamp: result.timestamp,
-      });
+      return apiSuccess({ timestamp: result.timestamp });
     }
 
-    return NextResponse.json({ success: false, error: result.error }, { status: 400 });
+    return apiBadRequest(result.error || 'CAPTCHA verification failed');
   } catch (error) {
     logger.error('CAPTCHA verification error', error, 'CaptchaAPI');
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 }

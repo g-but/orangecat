@@ -9,6 +9,7 @@
  */
 
 import type { ProjectFieldType } from '@/lib/project-guidance';
+import type { EntityStatus } from '@/config/status-config';
 
 export interface ProjectFormData {
   title: string;
@@ -40,7 +41,8 @@ export interface ProjectWizardProps {
   onGoalCurrencyChange?: (currency: 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS') => void;
 }
 
-export type ProjectStatus = 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
+/** Project statuses — derived from EntityStatus, excluding 'archived' */
+export type ProjectStatus = Exclude<EntityStatus, 'archived'>;
 
 export interface StatusAction {
   label: string;
@@ -48,5 +50,3 @@ export interface StatusAction {
   icon: React.ComponentType<{ className?: string }>;
   variant?: 'primary' | 'secondary' | 'danger';
 }
-
-

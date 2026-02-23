@@ -2,6 +2,12 @@
 
 import { useState } from 'react';
 import { Wallet } from '@/types/wallet';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+
+/** Convert a wallet's balance_btc to sats (integer) */
+function btcToSats(btc: number): number {
+  return Math.round(btc * 100_000_000);
+}
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -24,8 +30,7 @@ export function TransferModal({
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-
-  const BTC_PRICE_USD = 62000;
+  const { formatAmount } = useDisplayCurrency();
 
   const fromWallet = wallets.find(w => w.id === fromWalletId);
   const toWallet = wallets.find(w => w.id === toWalletId);
@@ -44,13 +49,13 @@ export function TransferModal({
       return;
     }
 
-    const amountBtc = parseFloat(amount);
-    if (isNaN(amountBtc) || amountBtc <= 0) {
-      setError('Please enter a valid amount');
+    const amountSats = parseInt(amount, 10);
+    if (isNaN(amountSats) || amountSats <= 0) {
+      setError('Please enter a valid amount in sats');
       return;
     }
 
-    if (fromWallet && amountBtc > fromWallet.balance_btc) {
+    if (fromWallet && amountSats > btcToSats(fromWallet.balance_btc)) {
       setError('Insufficient balance');
       return;
     }
@@ -66,7 +71,7 @@ export function TransferModal({
         body: JSON.stringify({
           from_wallet_id: fromWalletId,
           to_wallet_id: toWalletId,
-          amount_btc: amountBtc,
+          amount_sats: amountSats,
           note: note || undefined,
         }),
       });
@@ -95,6 +100,8 @@ export function TransferModal({
   if (!isOpen) {
     return null;
   }
+
+  const walletBalanceSats = (wallet: Wallet) => btcToSats(wallet.balance_btc);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -131,14 +138,13 @@ export function TransferModal({
               <option value="">Select wallet</option>
               {wallets.map(wallet => (
                 <option key={wallet.id} value={wallet.id}>
-                  {wallet.category_icon} {wallet.label} ({wallet.balance_btc.toFixed(8)} BTC)
+                  {wallet.category_icon} {wallet.label} ({formatAmount(walletBalanceSats(wallet))})
                 </option>
               ))}
             </select>
             {fromWallet && (
               <p className="mt-1 text-sm text-gray-600">
-                Available: {fromWallet.balance_btc.toFixed(8)} BTC (~$
-                {(fromWallet.balance_btc * BTC_PRICE_USD).toFixed(2)})
+                Available: {formatAmount(walletBalanceSats(fromWallet))}
               </p>
             )}
           </div>
@@ -158,42 +164,40 @@ export function TransferModal({
                 .filter(w => w.id !== fromWalletId)
                 .map(wallet => (
                   <option key={wallet.id} value={wallet.id}>
-                    {wallet.category_icon} {wallet.label} ({wallet.balance_btc.toFixed(8)} BTC)
+                    {wallet.category_icon} {wallet.label} ({formatAmount(walletBalanceSats(wallet))}
+                    )
                   </option>
                 ))}
             </select>
             {toWallet && (
               <p className="mt-1 text-sm text-gray-600">
-                Current: {toWallet.balance_btc.toFixed(8)} BTC (~$
-                {(toWallet.balance_btc * BTC_PRICE_USD).toFixed(2)})
+                Current: {formatAmount(walletBalanceSats(toWallet))}
               </p>
             )}
           </div>
 
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">Amount (BTC)</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Amount (sats)</label>
             <input
               type="number"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              step="0.00000001"
-              min="0"
-              max={fromWallet?.balance_btc || undefined}
-              placeholder="0.00000000"
+              step="1"
+              min="1"
+              max={fromWallet ? walletBalanceSats(fromWallet) : undefined}
+              placeholder="0"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isSubmitting}
               required
             />
-            {amount && !isNaN(parseFloat(amount)) && (
-              <p className="mt-1 text-sm text-gray-600">
-                ≈ ${(parseFloat(amount) * BTC_PRICE_USD).toFixed(2)} USD
-              </p>
+            {amount && !isNaN(parseInt(amount, 10)) && parseInt(amount, 10) > 0 && (
+              <p className="mt-1 text-sm text-gray-600">≈ {formatAmount(parseInt(amount, 10))}</p>
             )}
             {fromWallet && (
               <button
                 type="button"
-                onClick={() => setAmount(fromWallet.balance_btc.toFixed(8))}
+                onClick={() => setAmount(String(walletBalanceSats(fromWallet)))}
                 className="mt-1 text-sm text-blue-600 hover:text-blue-700"
                 disabled={isSubmitting}
               >
@@ -225,27 +229,31 @@ export function TransferModal({
           )}
 
           {/* Preview */}
-          {fromWallet && toWallet && amount && !isNaN(parseFloat(amount)) && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-900 font-medium mb-2">Transfer Preview:</p>
-              <div className="space-y-1 text-sm text-blue-800">
-                <div className="flex justify-between">
-                  <span>{fromWallet.label}:</span>
-                  <span>
-                    {fromWallet.balance_btc.toFixed(8)} →{' '}
-                    {(fromWallet.balance_btc - parseFloat(amount)).toFixed(8)} BTC
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{toWallet.label}:</span>
-                  <span>
-                    {toWallet.balance_btc.toFixed(8)} →{' '}
-                    {(toWallet.balance_btc + parseFloat(amount)).toFixed(8)} BTC
-                  </span>
+          {fromWallet &&
+            toWallet &&
+            amount &&
+            !isNaN(parseInt(amount, 10)) &&
+            parseInt(amount, 10) > 0 && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-900 font-medium mb-2">Transfer Preview:</p>
+                <div className="space-y-1 text-sm text-blue-800">
+                  <div className="flex justify-between">
+                    <span>{fromWallet.label}:</span>
+                    <span>
+                      {formatAmount(walletBalanceSats(fromWallet))} →{' '}
+                      {formatAmount(walletBalanceSats(fromWallet) - parseInt(amount, 10))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{toWallet.label}:</span>
+                    <span>
+                      {formatAmount(walletBalanceSats(toWallet))} →{' '}
+                      {formatAmount(walletBalanceSats(toWallet) + parseInt(amount, 10))}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Actions */}
           <div className="flex space-x-3 pt-2">
