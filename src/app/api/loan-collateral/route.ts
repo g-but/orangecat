@@ -13,6 +13,7 @@ import { apiSuccess, apiForbidden, apiValidationError, apiError } from '@/lib/ap
 import { logger } from '@/utils/logger';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 const CollateralSchema = z.object({
   loan_id: z.string().min(1),
@@ -68,7 +69,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     // Insert collateral link
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: created, error } = await (supabase.from('loan_collateral') as any)
+    const { data: created, error } = await (supabase.from(DATABASE_TABLES.LOAN_COLLATERAL) as any)
       .insert({
         loan_id: data.loan_id,
         asset_id: data.asset_id,

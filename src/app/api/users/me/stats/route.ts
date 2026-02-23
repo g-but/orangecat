@@ -126,7 +126,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
 
     // Fetch wishlist items via join instead of two sequential queries
     const wishlistItemsPromise = actorId
-      ? (supabase.from('wishlist_items') as UntypedTable)
+      ? (supabase.from(DATABASE_TABLES.WISHLIST_ITEMS) as UntypedTable)
           .select('id, wishlists!inner(actor_id)', { count: 'exact', head: true })
           .eq('wishlists.actor_id', actorId)
       : Promise.resolve({ count: 0 });

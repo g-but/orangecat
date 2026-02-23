@@ -11,15 +11,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface RouteParams {
   params: Promise<{ userId: string }>;
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { userId } = await params;
     const supabase = await createServerClient();
@@ -27,14 +25,16 @@ export async function GET(
     // Fetch active wishlists for this user
     // We filter items that are not fully funded and not fulfilled
     const { data: items, error } = await supabase
-      .from('wishlist_items')
-      .select(`
+      .from(DATABASE_TABLES.WISHLIST_ITEMS)
+      .select(
+        `
         id,
         title,
         target_amount_sats,
         funded_amount_sats,
         wishlists!inner(actor_id)
-      `)
+      `
+      )
       .eq('wishlists.actor_id', userId)
       .eq('is_fulfilled', false)
       .order('priority', { ascending: false })

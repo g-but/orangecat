@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type { Message, Conversation, Pagination } from '../types';
 import { API_ROUTES, TIMING, MESSAGE_STATUS, debugLog } from '../lib/constants';
 import type { MessageStatus } from '../lib/constants';
@@ -203,7 +204,7 @@ export function useMessages(
     }
 
     try {
-      const { data: conv } = await (supabase.from('conversation_details') as any)
+      const { data: conv } = await (supabase.from(DATABASE_TABLES.CONVERSATION_DETAILS) as any)
         .select('*')
         .eq('id', conversationId)
         .maybeSingle();
@@ -228,7 +229,7 @@ export function useMessages(
       };
       setConversation(mappedConversation);
 
-      const { data: msgs } = await (supabase.from('message_details') as any)
+      const { data: msgs } = await (supabase.from(DATABASE_TABLES.MESSAGE_DETAILS) as any)
         .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });

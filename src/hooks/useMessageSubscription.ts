@@ -171,7 +171,7 @@ export function useMessageSubscription(
             let newMessage: Message | null = null;
 
             const { data: messageDetails, error: viewError } = await supabase
-              .from('message_details')
+              .from(DATABASE_TABLES.MESSAGE_DETAILS)
               .select('*')
               .eq('id', payload.new.id)
               .single();
@@ -318,7 +318,7 @@ export function useMessageSubscription(
           if (onNewMessage && payload.new) {
             try {
               const { data: messageDetails } = await supabase
-                .from('message_details')
+                .from(DATABASE_TABLES.MESSAGE_DETAILS)
                 .select('*')
                 .eq('id', payload.new.id)
                 .single();

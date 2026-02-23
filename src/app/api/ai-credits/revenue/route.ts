@@ -11,6 +11,7 @@ import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface AssistantRevenue {
   id: string;
@@ -84,7 +85,7 @@ export const GET = compose(
 
     // Get creator earnings with withdrawal tracking
     const { data: earnings } = await db
-      .from('ai_creator_earnings')
+      .from(DATABASE_TABLES.AI_CREATOR_EARNINGS)
       .select('*')
       .eq('user_id', user.id)
       .single();

@@ -152,7 +152,7 @@ export function useTypingIndicator(
     const fetchTypingUsers = async () => {
       try {
         const { data } = await supabase
-          .from('typing_indicators')
+          .from(DATABASE_TABLES.TYPING_INDICATORS)
           .select(
             `
             user_id,

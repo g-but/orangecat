@@ -14,6 +14,7 @@ import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { wishlistFulfillmentProofSchema } from '@/lib/validation';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // POST /api/wishlists/proofs - Create proof of purchase/wishlist fulfillment
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
@@ -35,7 +36,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const { data: wishlistItem, error: itemError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wishlist_items') as any
+        .from(DATABASE_TABLES.WISHLIST_ITEMS) as any
     )
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', validationResult.data.wishlist_item_id)
@@ -60,7 +61,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const { data: proof, error: proofError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wishlist_fulfillment_proofs') as any
+        .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS) as any
     )
       .insert({
         wishlist_item_id: validationResult.data.wishlist_item_id,

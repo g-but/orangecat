@@ -11,6 +11,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type { GroupActivitiesResponse, GroupActivitiesQuery } from '../types';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TABLES } from '../constants';
 import { checkGroupPermission } from '../permissions';
@@ -36,8 +37,7 @@ export async function getGroupActivities(
     } else {
       // Check if group is public
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: group } = await (supabase
-        .from(TABLES.groups) as any)
+      const { data: group } = await (supabase.from(TABLES.groups) as any)
         .select('is_public')
         .eq('id', groupId)
         .single();
@@ -53,8 +53,7 @@ export async function getGroupActivities(
     // Note: group_activities table may not exist - check if it does
     // For now, return empty result if table doesn't exist
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let dbQuery = (supabase
-      .from('group_activities') as any)
+    let dbQuery = (supabase.from(DATABASE_TABLES.GROUP_ACTIVITIES) as any)
       .select('*', { count: 'exact' })
       .eq('group_id', groupId);
 
@@ -97,4 +96,3 @@ export async function getGroupActivities(
     return { success: false, error: 'Failed to get group activities' };
   }
 }
-

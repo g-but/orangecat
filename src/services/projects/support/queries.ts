@@ -10,6 +10,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type {
   ProjectSupportWithUser,
   ProjectSupportStats,
@@ -27,7 +28,7 @@ export async function getProjectSupportStats(
 ): Promise<{ success: boolean; stats?: ProjectSupportStats; error?: string }> {
   try {
     const { data, error } = await supabase
-      .from('project_support_stats')
+      .from(DATABASE_TABLES.PROJECT_SUPPORT_STATS)
       .select('*')
       .eq('project_id', projectId)
       .single();
@@ -73,7 +74,7 @@ export async function getProjectSupport(
     const offset = pagination?.offset || (pagination?.page ? (pagination.page - 1) * limit : 0);
 
     let query = supabase
-      .from('project_support')
+      .from(DATABASE_TABLES.PROJECT_SUPPORT)
       .select(
         `
         *,
@@ -186,7 +187,7 @@ export async function hasUserSupported(
 ): Promise<boolean> {
   try {
     let query = supabase
-      .from('project_support')
+      .from(DATABASE_TABLES.PROJECT_SUPPORT)
       .select('id')
       .eq('project_id', projectId)
       .eq('user_id', userId)

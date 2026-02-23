@@ -19,6 +19,7 @@ import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -46,7 +47,7 @@ export const GET = compose(
     const { id } = await context.params;
 
     const { data: withdrawal, error } = await db
-      .from('ai_creator_withdrawals')
+      .from(DATABASE_TABLES.AI_CREATOR_WITHDRAWALS)
       .select('*')
       .eq('id', id)
       .eq('user_id', user.id) // RLS also enforces this

@@ -19,6 +19,7 @@ import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Minimum withdrawal amount (1000 sats)
 const MIN_WITHDRAWAL_SATS = 1000;
@@ -61,7 +62,7 @@ export const GET = compose(
 
     // Get creator earnings summary
     const { data: earnings } = await db
-      .from('ai_creator_earnings')
+      .from(DATABASE_TABLES.AI_CREATOR_EARNINGS)
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -72,7 +73,7 @@ export const GET = compose(
       error: withdrawalsError,
       count,
     } = await db
-      .from('ai_creator_withdrawals')
+      .from(DATABASE_TABLES.AI_CREATOR_WITHDRAWALS)
       .select('*', { count: 'exact' })
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
@@ -147,7 +148,7 @@ export const POST = compose(
 
     // Get the created withdrawal
     const { data: withdrawal } = await db
-      .from('ai_creator_withdrawals')
+      .from(DATABASE_TABLES.AI_CREATOR_WITHDRAWALS)
       .select('*')
       .eq('id', String(withdrawalId))
       .single();
