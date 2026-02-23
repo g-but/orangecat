@@ -10,6 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import type { AssetOption } from '../types';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 export function useAssets(enabled: boolean = true) {
   const [assets, setAssets] = useState<AssetOption[]>([]);
@@ -27,7 +28,7 @@ export function useAssets(enabled: boolean = true) {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch('/api/assets', { credentials: 'include' });
+        const res = await fetch(ENTITY_REGISTRY.asset.apiEndpoint, { credentials: 'include' });
         if (!res.ok) {
           throw new Error('Failed to load assets');
         }
@@ -64,7 +65,7 @@ export function useAssets(enabled: boolean = true) {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/assets', { credentials: 'include' });
+      const res = await fetch(ENTITY_REGISTRY.asset.apiEndpoint, { credentials: 'include' });
       if (res.ok) {
         const json = await res.json();
         const items = (json.data || []).map((a: any) => ({

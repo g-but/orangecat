@@ -10,6 +10,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { STATUS } from '@/config/database-constants';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
 import { canPerformAction } from '../permissions/resolver';
@@ -270,14 +271,13 @@ export async function acceptInvitationByToken(
 
     // Find invitation by token
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: invitationData, error: findError } = await (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      supabase.from('group_invitations') as any
-    )
-      .select('id, group_id, status, expires_at')
-      .eq('token', token)
-      .eq('status', 'pending')
-      .maybeSingle();
+    const { data: invitationData, error: findError } =
+      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.from('group_invitations') as any)
+        .select('id, group_id, status, expires_at')
+        .eq('token', token)
+        .eq('status', 'pending')
+        .maybeSingle();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const invitation = invitationData as any;
 
@@ -325,13 +325,12 @@ export async function revokeInvitation(
 
     // Get invitation to check group
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: invitationData2, error: findError } = await (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      supabase.from('group_invitations') as any
-    )
-      .select('group_id, status')
-      .eq('id', invitationId)
-      .single();
+    const { data: invitationData2, error: findError } =
+      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.from('group_invitations') as any)
+        .select('group_id, status')
+        .eq('id', invitationId)
+        .single();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const invitation = invitationData2 as any;
 
@@ -339,7 +338,7 @@ export async function revokeInvitation(
       return { success: false, error: 'Invitation not found' };
     }
 
-    if (invitation.status !== 'pending') {
+    if (invitation.status !== STATUS.GROUP_INVITATIONS.PENDING) {
       return { success: false, error: 'Can only revoke pending invitations' };
     }
 

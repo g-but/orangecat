@@ -19,6 +19,7 @@ import { ROUTES } from '@/lib/routes';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { satoshisToBitcoin, bitcoinToSatoshis } from '@/services/currency';
 import type { ProjectFormData, FormErrors, ProjectStatus } from './types';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { getCompletionPercentage } from './constants';
 import { validateField, validateForm as validateFormUtil } from './validation';
 
@@ -243,7 +244,9 @@ export function useProjectForm({
     setIsSubmitting(true);
     try {
       const apiUrl =
-        isEditMode && editProjectId ? `/api/projects/${editProjectId}` : '/api/projects';
+        isEditMode && editProjectId
+          ? `${ENTITY_REGISTRY.project.apiEndpoint}/${editProjectId}`
+          : ENTITY_REGISTRY.project.apiEndpoint;
       const method = isEditMode ? 'PUT' : 'POST';
 
       let goalAmount = null;

@@ -1,5 +1,6 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { STATUS } from '@/config/database-constants';
 import { TABLES } from '../constants';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
 import { getProposal, getProposalVotes } from '../queries/proposals';
@@ -13,7 +14,9 @@ export interface CastVoteInput {
 export async function castVote(input: CastVoteInput) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) {return { success: false, error: 'Authentication required' };}
+    if (!userId) {
+      return { success: false, error: 'Authentication required' };
+    }
 
     const proposalResult = await getProposal(input.proposal_id);
     if (!proposalResult.success || !proposalResult.proposal) {
@@ -22,9 +25,11 @@ export async function castVote(input: CastVoteInput) {
     const proposal = proposalResult.proposal;
 
     const isMember = await isGroupMember(proposal.group_id, userId);
-    if (!isMember) {return { success: false, error: 'Only group members can vote' };}
+    if (!isMember) {
+      return { success: false, error: 'Only group members can vote' };
+    }
 
-    if (proposal.status !== 'active') {
+    if (proposal.status !== STATUS.PROPOSALS.ACTIVE) {
       return { success: false, error: `Cannot vote on proposal with status: ${proposal.status}` };
     }
 
@@ -37,9 +42,11 @@ export async function castVote(input: CastVoteInput) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_votes) as any)
+    const { data, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_votes) as any
+    )
       .upsert(
         {
           proposal_id: input.proposal_id,
@@ -70,13 +77,19 @@ export async function castVote(input: CastVoteInput) {
 export async function checkAndResolveProposal(proposalId: string): Promise<void> {
   try {
     const proposalResult = await getProposal(proposalId);
-    if (!proposalResult.success || !proposalResult.proposal) {return;}
+    if (!proposalResult.success || !proposalResult.proposal) {
+      return;
+    }
     const proposal = proposalResult.proposal;
 
-    if (proposal.status !== 'active') {return;}
+    if (proposal.status !== STATUS.PROPOSALS.ACTIVE) {
+      return;
+    }
 
     const votesResult = await getProposalVotes(proposalId);
-    if (!votesResult.success || !votesResult.votes) {return;}
+    if (!votesResult.success || !votesResult.votes) {
+      return;
+    }
     const votes = votesResult.votes;
 
     const yesVotes = votes
@@ -102,9 +115,11 @@ export async function checkAndResolveProposal(proposalId: string): Promise<void>
 
       // Single update; accept idempotency (if already updated, harmless)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(TABLES.group_proposals) as any)
+      await (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(TABLES.group_proposals) as any
+      )
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', proposalId);
 
@@ -116,4 +131,3 @@ export async function checkAndResolveProposal(proposalId: string): Promise<void>
     logger.error('Exception checking proposal resolution', error, 'Groups');
   }
 }
-

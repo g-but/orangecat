@@ -27,6 +27,7 @@ import { Loader2 } from 'lucide-react';
 import { assetSchema } from '@/lib/validation';
 import { AssetTemplates } from '@/components/create/templates';
 import { currencySelectOptions, DEFAULT_CURRENCY } from '@/config/currencies';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 const quickAssetSchema = assetSchema.pick({
   title: true,
@@ -76,7 +77,7 @@ export function CreateAssetDialog({
     try {
       setLoading(true);
 
-      const response = await fetch('/api/assets', {
+      const response = await fetch(ENTITY_REGISTRY.asset.apiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

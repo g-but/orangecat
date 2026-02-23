@@ -1,5 +1,6 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { STATUS } from '@/config/database-constants';
 import { TABLES } from '../constants';
 import { canPerformAction } from '../permissions/resolver';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
@@ -85,7 +86,7 @@ export async function activateProposal(proposalId: string) {
     }
     const proposal = proposalResult.proposal;
 
-    if (proposal.status !== 'draft') {
+    if (proposal.status !== STATUS.PROPOSALS.DRAFT) {
       return { success: false, error: `Cannot activate proposal with status: ${proposal.status}` };
     }
 
@@ -156,7 +157,7 @@ export async function updateProposal(
     }
     const proposal = proposalResult.proposal;
 
-    if (proposal.status !== 'draft') {
+    if (proposal.status !== STATUS.PROPOSALS.DRAFT) {
       return { success: false, error: 'Only draft proposals can be updated' };
     }
 
@@ -222,7 +223,7 @@ export async function deleteProposal(proposalId: string) {
     }
     const proposal = proposalResult.proposal;
 
-    if (proposal.status !== 'draft') {
+    if (proposal.status !== STATUS.PROPOSALS.DRAFT) {
       return { success: false, error: 'Only draft proposals can be deleted' };
     }
 
