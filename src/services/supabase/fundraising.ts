@@ -267,7 +267,7 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
 
     // Get all confirmed transactions
     const { data: transactions2, error: transactionsError } = await supabase
-      .from('transactions')
+      .from(DATABASE_TABLES.TRANSACTIONS)
       .select('user_id, amount')
       .eq('status', 'confirmed');
 
@@ -330,7 +330,7 @@ export async function getRecentDonationsCount(userId: string): Promise<number> {
 
     // Count transactions this month
     const { count, error: transactionsError } = await supabase
-      .from('transactions')
+      .from(DATABASE_TABLES.TRANSACTIONS)
       .select('*', { count: 'exact', head: true })
       .in('funding_page_id', pageIds)
       .eq('status', 'confirmed')

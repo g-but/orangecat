@@ -61,6 +61,7 @@ export const DATABASE_TABLES = {
   TIMELINE_DISLIKES: 'timeline_dislikes',
   ENRICHED_TIMELINE_EVENTS: 'enriched_timeline_events',
   COMMUNITY_TIMELINE: 'community_timeline_no_duplicates',
+  TIMELINE_POSTS: 'timeline_posts',
 
   // Documents
   USER_DOCUMENTS: 'user_documents',
@@ -84,6 +85,8 @@ export const DATABASE_TABLES = {
   AI_CREATOR_EARNINGS: 'ai_creator_earnings',
   AI_CREATOR_WITHDRAWALS: 'ai_creator_withdrawals',
   AI_CREDIT_DEPOSITS: 'ai_credit_deposits',
+  USER_API_KEYS: 'user_api_keys',
+  USER_AI_PREFERENCES: 'user_ai_preferences',
 
   // Bookings
   BOOKINGS: 'bookings',
@@ -108,6 +111,7 @@ export const DATABASE_TABLES = {
   WISHLIST_ITEMS: 'wishlist_items',
   WISHLIST_FULFILLMENT_PROOFS: 'wishlist_fulfillment_proofs',
   WISHLIST_FEEDBACK: 'wishlist_feedback',
+  WISHLIST_WITH_STATS: 'wishlist_with_stats',
 
   // Loans
   LOAN_OFFERS: 'loan_offers',

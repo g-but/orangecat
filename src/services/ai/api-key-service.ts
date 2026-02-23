@@ -15,6 +15,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // Type alias for any SupabaseClient (accepts any database schema)
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
 // ==================== TYPES ====================
@@ -152,7 +153,7 @@ export class ApiKeyService {
 
     // Store in database
     const { data, error } = await this.supabase
-      .from('user_api_keys')
+      .from(DATABASE_TABLES.USER_API_KEYS)
       .insert({
         user_id: userId,
         provider,
@@ -183,7 +184,7 @@ export class ApiKeyService {
    */
   async getKeys(userId: string): Promise<UserApiKey[]> {
     const { data, error } = await this.supabase
-      .from('user_api_keys')
+      .from(DATABASE_TABLES.USER_API_KEYS)
       .select(
         'id, user_id, provider, key_name, key_hint, is_valid, is_primary, last_validated_at, last_used_at, total_requests, total_tokens_used, created_at, updated_at'
       )
@@ -204,7 +205,7 @@ export class ApiKeyService {
    */
   async getDecryptedKey(userId: string, provider: string = 'openrouter'): Promise<string | null> {
     const { data, error } = await this.supabase
-      .from('user_api_keys')
+      .from(DATABASE_TABLES.USER_API_KEYS)
       .select('encrypted_key')
       .eq('user_id', userId)
       .eq('provider', provider)
@@ -229,7 +230,7 @@ export class ApiKeyService {
    */
   async setPrimary(userId: string, keyId: string): Promise<boolean> {
     const { error } = await this.supabase
-      .from('user_api_keys')
+      .from(DATABASE_TABLES.USER_API_KEYS)
       .update({ is_primary: true })
       .eq('id', keyId)
       .eq('user_id', userId);
@@ -242,7 +243,7 @@ export class ApiKeyService {
    */
   async deleteKey(userId: string, keyId: string): Promise<boolean> {
     const { error } = await this.supabase
-      .from('user_api_keys')
+      .from(DATABASE_TABLES.USER_API_KEYS)
       .delete()
       .eq('id', keyId)
       .eq('user_id', userId);
@@ -265,7 +266,7 @@ export class ApiKeyService {
    */
   async hasValidKey(userId: string, provider: string = 'openrouter'): Promise<boolean> {
     const { data, error } = await this.supabase
-      .from('user_api_keys')
+      .from(DATABASE_TABLES.USER_API_KEYS)
       .select('id')
       .eq('user_id', userId)
       .eq('provider', provider)

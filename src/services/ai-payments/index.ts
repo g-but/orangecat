@@ -111,7 +111,7 @@ export class AIPaymentService {
     // For MVP, we'll assume users have credits or use free tier
     // This will be enhanced with actual Lightning deposits later
     const { data } = await this.supabase
-      .from('ai_user_credits')
+      .from(DATABASE_TABLES.AI_USER_CREDITS)
       .select('balance_sats')
       .eq('user_id', userId)
       .single();

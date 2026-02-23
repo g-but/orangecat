@@ -20,6 +20,7 @@ import {
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 const API_TIMEOUT_MS = 10_000; // 10 seconds
@@ -120,7 +121,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const { data: wallet, error: fetchError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wallets') as any
+        .from(DATABASE_TABLES.WALLETS) as any
     )
       .select('*')
       .eq('id', id)
@@ -216,7 +217,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const { data: updatedWallet, error: updateError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wallets') as any
+        .from(DATABASE_TABLES.WALLETS) as any
     )
       .update({
         balance_btc: totalBalanceBtc,

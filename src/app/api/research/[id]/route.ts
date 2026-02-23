@@ -6,22 +6,24 @@ import {
   apiUnauthorized,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 
 // GET /api/research/[id] - Get specific research entity
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const tableName = getTableName('research');
-    const { data: entity, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(tableName) as any)
+    const { data: entity, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(tableName) as any
+    )
       .select('*')
       .eq('id', params.id)
       .single();
@@ -39,29 +41,33 @@ export async function GET(
     }
 
     // Get additional data
-    const [
-      { data: progressUpdates },
-      { data: votes },
-      { data: contributions }
-    ] = await Promise.all([
-      (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('research_progress_updates') as any)
-        .select('*')
-        .eq('research_entity_id', params.id)
-        .order('created_at', { ascending: false }),
-      (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('research_votes') as any)
-        .select('*')
-        .eq('research_entity_id', params.id),
-      (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('research_contributions') as any)
-        .select('*')
-        .eq('research_entity_id', params.id)
-        .order('created_at', { ascending: false })
-    ]);
+    const [{ data: progressUpdates }, { data: votes }, { data: contributions }] = await Promise.all(
+      [
+        (
+          supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES) as any
+        )
+          .select('*')
+          .eq('research_entity_id', params.id)
+          .order('created_at', { ascending: false }),
+        (
+          supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .from(DATABASE_TABLES.RESEARCH_VOTES) as any
+        )
+          .select('*')
+          .eq('research_entity_id', params.id),
+        (
+          supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS) as any
+        )
+          .select('*')
+          .eq('research_entity_id', params.id)
+          .order('created_at', { ascending: false }),
+      ]
+    );
 
     const enrichedEntity = {
       ...entity,
@@ -77,13 +83,13 @@ export async function GET(
 }
 
 // PUT /api/research/[id] - Update research entity
-export async function PUT(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return apiUnauthorized();
@@ -93,9 +99,11 @@ export async function PUT(
 
     // Check ownership
     const tableName = getTableName('research');
-    const { data: existing, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(tableName) as any)
+    const { data: existing, error: fetchError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(tableName) as any
+    )
       .select('user_id')
       .eq('id', params.id)
       .single();
@@ -112,9 +120,11 @@ export async function PUT(
     }
 
     // Update the entity
-    const { data: entity, error: updateError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(tableName) as any)
+    const { data: entity, error: updateError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(tableName) as any
+    )
       .update({
         ...updates,
         updated_at: new Date().toISOString(),
@@ -123,11 +133,13 @@ export async function PUT(
       .select()
       .single();
 
-    if (updateError) {throw updateError;}
+    if (updateError) {
+      throw updateError;
+    }
 
     logger.info('Research entity updated', {
       researchEntityId: params.id,
-      userId: user.id
+      userId: user.id,
     });
 
     return apiSuccess(entity);
@@ -137,13 +149,13 @@ export async function PUT(
 }
 
 // DELETE /api/research/[id] - Delete research entity
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return apiUnauthorized();
@@ -151,9 +163,11 @@ export async function DELETE(
 
     // Check ownership
     const tableName = getTableName('research');
-    const { data: existing, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(tableName) as any)
+    const { data: existing, error: fetchError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(tableName) as any
+    )
       .select('user_id, funding_raised_sats')
       .eq('id', params.id)
       .single();
@@ -175,17 +189,21 @@ export async function DELETE(
     }
 
     // Delete the entity (cascading deletes will handle related records)
-    const { error: deleteError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(tableName) as any)
+    const { error: deleteError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(tableName) as any
+    )
       .delete()
       .eq('id', params.id);
 
-    if (deleteError) {throw deleteError;}
+    if (deleteError) {
+      throw deleteError;
+    }
 
     logger.info('Research entity deleted', {
       researchEntityId: params.id,
-      userId: user.id
+      userId: user.id,
     });
 
     return apiSuccess({ deleted: true });

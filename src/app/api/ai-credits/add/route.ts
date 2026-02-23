@@ -15,6 +15,7 @@ import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Schema for adding credits
 const addCreditsSchema = z.object({
@@ -71,7 +72,7 @@ export const POST = compose(
 
         // Upsert the credits record
         const { data: existingCredits } = await db
-          .from('ai_user_credits')
+          .from(DATABASE_TABLES.AI_USER_CREDITS)
           .select('balance_sats')
           .eq('user_id', user.id)
           .single();
@@ -79,7 +80,7 @@ export const POST = compose(
         const currentBalance = existingCredits?.balance_sats || 0;
         const newBalanceValue = currentBalance + amount_sats;
 
-        const { error: upsertError } = await db.from('ai_user_credits').upsert(
+        const { error: upsertError } = await db.from(DATABASE_TABLES.AI_USER_CREDITS).upsert(
           {
             user_id: user.id,
             balance_sats: newBalanceValue,
@@ -96,7 +97,7 @@ export const POST = compose(
         }
 
         // Log the transaction
-        await db.from('ai_credit_transactions').insert({
+        await db.from(DATABASE_TABLES.AI_CREDIT_TRANSACTIONS).insert({
           user_id: user.id,
           transaction_type: 'deposit',
           amount_sats,

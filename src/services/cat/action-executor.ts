@@ -170,7 +170,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
   post_to_timeline: async (supabase, _userId, actorId, params) => {
     const { data, error } = await supabase
-      .from('timeline_posts')
+      .from(DATABASE_TABLES.TIMELINE_POSTS)
       .insert({
         actor_id: actorId,
         content: params.content,
@@ -192,7 +192,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
     // Check for existing conversation
     const { data: existingConv } = await supabase
-      .from('conversations')
+      .from(DATABASE_TABLES.CONVERSATIONS)
       .select('id')
       .or(
         `and(participant_1_id.eq.${userId},participant_2_id.eq.${recipientId}),and(participant_1_id.eq.${recipientId},participant_2_id.eq.${userId})`
@@ -206,7 +206,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     } else {
       // Create new conversation
       const { data: newConv, error: convError } = await supabase
-        .from('conversations')
+        .from(DATABASE_TABLES.CONVERSATIONS)
         .insert({
           participant_1_id: userId,
           participant_2_id: recipientId,
@@ -222,7 +222,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
     // Send message
     const { data, error } = await supabase
-      .from('messages')
+      .from(DATABASE_TABLES.MESSAGES)
       .insert({
         conversation_id: conversationId,
         sender_id: userId,

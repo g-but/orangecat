@@ -10,6 +10,7 @@ import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 /**
  * Toggle favorite status for a project
@@ -33,9 +34,11 @@ async function handleToggleFavorite(
     const user = request.user;
 
     // Verify project exists
-    const { data: project, error: projectError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('project')) as any)
+    const { data: project, error: projectError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('project')) as any
+    )
       .select('id, user_id, title')
       .eq('id', projectId)
       .single();
@@ -46,9 +49,11 @@ async function handleToggleFavorite(
     }
 
     // Check if already favorited
-    const { data: existingFavorite, error: favoriteCheckError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('project_favorites') as any)
+    const { data: existingFavorite, error: favoriteCheckError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.PROJECT_FAVORITES) as any
+    )
       .select('id')
       .eq('user_id', user.id)
       .eq('project_id', projectId)
@@ -73,7 +78,9 @@ async function handleToggleFavorite(
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: insertError } = await (supabase.from('project_favorites') as any).insert({
+      const { error: insertError } = await (
+        supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any
+      ).insert({
         user_id: user.id,
         project_id: projectId,
       });
@@ -107,9 +114,11 @@ async function handleToggleFavorite(
         });
       }
 
-      const { error: deleteError } = await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('project_favorites') as any)
+      const { error: deleteError } = await (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(DATABASE_TABLES.PROJECT_FAVORITES) as any
+      )
         .delete()
         .eq('user_id', user.id)
         .eq('project_id', projectId);
@@ -167,9 +176,11 @@ async function handleGetFavoriteStatus(
     const supabase = await createServerClient();
     const user = request.user;
 
-    const { data: favorite, error: favoriteError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('project_favorites') as any)
+    const { data: favorite, error: favoriteError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.PROJECT_FAVORITES) as any
+    )
       .select('id')
       .eq('user_id', user.id)
       .eq('project_id', projectId)

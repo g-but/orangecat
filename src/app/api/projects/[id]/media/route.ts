@@ -21,6 +21,7 @@ import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { createServerClient } from '@/lib/supabase/server';
 
 interface RouteContext {
@@ -44,7 +45,7 @@ export async function GET(_request: Request, context: RouteContext) {
     const supabase = await createServerClient();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from('project_media') as any)
+    const { data, error } = await (supabase.from(DATABASE_TABLES.PROJECT_MEDIA) as any)
       .select('id, storage_path, position, alt_text')
       .eq('project_id', projectId)
       .order('position', { ascending: true });
@@ -108,7 +109,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('project_media') as any)
+    const { error } = await (supabase.from(DATABASE_TABLES.PROJECT_MEDIA) as any)
       .delete()
       .eq('id', mediaId)
       .eq('project_id', projectId);
@@ -171,7 +172,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const { count, error: countError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('project_media') as any
+        .from(DATABASE_TABLES.PROJECT_MEDIA) as any
     )
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId);
@@ -196,7 +197,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const { data: existing } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('project_media') as any
+        .from(DATABASE_TABLES.PROJECT_MEDIA) as any
     )
       .select('position')
       .eq('project_id', projectId);
@@ -223,7 +224,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const { data: media, error } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('project_media') as any
+        .from(DATABASE_TABLES.PROJECT_MEDIA) as any
     )
       .insert({ project_id: projectId, storage_path: path, position: nextPosition, alt_text })
       .select()

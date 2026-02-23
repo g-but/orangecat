@@ -15,13 +15,12 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
     const user = request.user;
 
     // Get favorited project IDs
-    const { data: favorites, error: favoritesError } = await (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      supabase.from('project_favorites') as any
-    )
-      .select('project_id, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+    const { data: favorites, error: favoritesError } =
+      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
+        .select('project_id, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
     if (favoritesError) {
       logger.error('Failed to fetch favorites', {
@@ -38,12 +37,11 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
     // Get full project data for favorited projects
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const projectIds = favorites.map((f: any) => f.project_id);
-    const { data: projects, error: projectsError } = await (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      supabase.from(getTableName('project')) as any
-    )
-      .select(
-        `
+    const { data: projects, error: projectsError } =
+      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.from(getTableName('project')) as any)
+        .select(
+          `
         id,
         title,
         description,
@@ -61,9 +59,9 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
         updated_at,
         user_id
       `
-      )
-      .in('id', projectIds)
-      .order('created_at', { ascending: false });
+        )
+        .in('id', projectIds)
+        .order('created_at', { ascending: false });
 
     if (projectsError) {
       logger.error('Failed to fetch favorited projects', {
@@ -81,12 +79,11 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
     const profilesMap = new Map<string, any>();
 
     if (userIds.length > 0) {
-      const { data: profiles, error: profilesError } = await (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        supabase.from(DATABASE_TABLES.PROFILES) as any
-      )
-        .select('id, username, name, avatar_url')
-        .in('id', userIds);
+      const { data: profiles, error: profilesError } =
+        await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from(DATABASE_TABLES.PROFILES) as any)
+          .select('id, username, name, avatar_url')
+          .in('id', userIds);
 
       if (!profilesError && profiles) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

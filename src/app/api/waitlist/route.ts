@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiValidationError, handleApiError } from '@/lib/api/standardResponse';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
 export async function POST(request: NextRequest) {
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('channel_waitlist') as any).insert({
+    const { error } = await (supabase.from(DATABASE_TABLES.CHANNEL_WAITLIST) as any).insert({
       email,
       user_id: user?.id || null,
       source,
@@ -37,4 +38,3 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
-

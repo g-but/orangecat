@@ -16,6 +16,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { PROJECT_STATUS } from '@/config/project-statuses';
 
 interface RouteParams {
@@ -64,7 +65,7 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
     const { data: updates, error: updatesError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('project_updates') as any
+        .from(DATABASE_TABLES.PROJECT_UPDATES) as any
     )
       .select('id, project_id, type, title, content, amount_btc, created_at')
       .eq('project_id', projectId)

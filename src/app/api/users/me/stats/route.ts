@@ -120,7 +120,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
       }
     );
 
-    const walletCountPromise = (supabase.from('wallets') as UntypedTable)
+    const walletCountPromise = (supabase.from(DATABASE_TABLES.WALLETS) as UntypedTable)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
