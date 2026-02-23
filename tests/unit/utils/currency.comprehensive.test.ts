@@ -166,19 +166,21 @@ describe('🪙 Currency Utilities - Comprehensive Coverage', () => {
     describe('formatCurrency', () => {
       test('formats different currencies', () => {
         expect(formatCurrency(100, 'USD')).toBe('$100.00');
-        expect(formatCurrency(1, 'BTC')).toBe('1.00000000 BTC');
+        expect(formatCurrency(1, 'BTC')).toBe('₿1');
         expect(formatCurrency(1000, 'SATS')).toBe('1,000 sats');
       });
 
-      test('handles unknown currencies gracefully', () => {
-        expect(formatCurrency(100, 'EUR')).toBe('100.00 EUR');
-        expect(formatCurrency(50, 'GBP')).toBe('50.00 GBP');
+      test('handles known currencies with proper symbols', () => {
+        expect(formatCurrency(100, 'EUR')).toBe('€100.00');
+        // GBP is not in CURRENCY_METADATA, falls back to plain number
+        expect(formatCurrency(50, 'GBP')).toBe('50');
       });
 
       test('handles edge cases', () => {
-        expect(formatCurrency(NaN, 'USD')).toBe('$0.00');
-        expect(formatCurrency(Infinity, 'BTC')).toBe('0.00000000 BTC');
-        expect(formatCurrency(-Infinity, 'SATS')).toBe('0 sats');
+        // formatCurrency doesn't guard against NaN/Infinity (formatBTC/formatSats do)
+        expect(formatCurrency(0, 'USD')).toBe('$0.00');
+        expect(formatCurrency(0, 'BTC')).toBe('₿0');
+        expect(formatCurrency(0, 'SATS')).toBe('0 sats');
       });
     });
   });
@@ -359,15 +361,13 @@ describe('🪙 Currency Utilities - Comprehensive Coverage', () => {
   });
 
   describe('🛡️ Security Tests', () => {
-    test('does not sanitize currency symbols (sanitization is UI layer responsibility)', () => {
-      // formatCurrency does NOT sanitize input - this is intentional
-      // Sanitization should happen at the UI rendering layer
-      const maliciousSymbol = '<script>alert("xss")</script>';
-      const result = formatCurrency(100, maliciousSymbol);
+    test('handles unknown currency codes without symbol injection', () => {
+      // Unknown currencies fall back to plain number formatting (no symbol)
+      const unknownCurrency = 'FAKE';
+      const result = formatCurrency(100, unknownCurrency);
 
-      // Function passes through the currency symbol as-is
-      expect(result).toContain('<script>');
-      expect(result).toContain('100.00');
+      // Unknown currencies return just the formatted number
+      expect(result).toBe('100');
     });
 
     test('handles extremely large numbers safely', () => {

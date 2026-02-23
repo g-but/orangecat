@@ -658,6 +658,89 @@ export function useBitcoinPrice() {
   };
 }
 
+// ==================== BTC-SPECIFIC HELPERS ====================
+
+/**
+ * Parse a BTC amount string to number.
+ * Returns 0 for invalid inputs (unlike parseAmount which returns null).
+ */
+export function parseBTCAmount(input: string | null | undefined): number {
+  if (!input || typeof input !== 'string') {
+    return 0;
+  }
+
+  const cleaned = input
+    .trim()
+    .replace(/\s*BTC\s*/i, '')
+    .trim();
+  if (!cleaned) {
+    return 0;
+  }
+
+  const parsed = parseFloat(cleaned);
+  if (!isFinite(parsed)) {
+    return 0;
+  }
+
+  return parsed;
+}
+
+/**
+ * Validate that a number is a valid BTC amount.
+ * Must be a finite non-negative number not exceeding 21M BTC.
+ */
+export function validateBTCAmount(amount: unknown): boolean {
+  if (typeof amount !== 'number') {
+    return false;
+  }
+  if (!isFinite(amount)) {
+    return false;
+  }
+  if (amount < 0) {
+    return false;
+  }
+  if (amount > 21_000_000) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Synchronous currency conversion.
+ * Handles BTC↔SATS natively. Uses exchange rates for fiat pairs.
+ * Returns 0 when conversion isn't possible.
+ */
+export function convertCurrency(
+  amount: number,
+  from: string,
+  to: string,
+  exchangeRates?: Record<string, number>
+): number {
+  if (!isFinite(amount) || amount === 0) {
+    return 0;
+  }
+  if (from === to) {
+    return amount;
+  }
+
+  // BTC <-> SATS conversions (built-in)
+  if (from === 'BTC' && to === 'SATS') {
+    return bitcoinToSats(amount);
+  }
+  if (from === 'SATS' && to === 'BTC') {
+    return satsToBitcoin(amount);
+  }
+
+  // Use provided exchange rates
+  const rateKey = `${from}/${to}`;
+  const rate = exchangeRates?.[rateKey];
+  if (rate) {
+    return amount * rate;
+  }
+
+  return 0;
+}
+
 // Export default service
 export const currencyService = {
   convertBtcTo,

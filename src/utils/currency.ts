@@ -42,6 +42,9 @@ export {
   // Input helpers
   parseAmount,
   validateAmount,
+  parseBTCAmount,
+  validateBTCAmount,
+  convertCurrency,
   // Regional utilities
   getRegionName,
   getRegionEmoji,
