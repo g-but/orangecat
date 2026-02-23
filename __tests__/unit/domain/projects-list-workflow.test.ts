@@ -8,13 +8,28 @@ import { createServerClient } from '@/lib/supabase/server';
 
 describe('Project list workflow', () => {
   const dataRows = [
-    { id: 'p1', user_id: 'u1', title: 'A', status: 'active', raised_amount: null },
-    { id: 'p2', user_id: 'u2', title: 'B', status: 'active', raised_amount: 1200 },
-  ];
-
-  const profiles = [
-    { id: 'u1', username: 'alice', name: 'Alice', avatar_url: null, email: 'a@test.dev' },
-    { id: 'u2', username: 'bob', name: 'Bob', avatar_url: null, email: 'b@test.dev' },
+    {
+      id: 'p1',
+      user_id: 'u1',
+      title: 'A',
+      status: 'active',
+      raised_amount: null,
+      profiles: {
+        id: 'u1',
+        username: 'alice',
+        name: 'Alice',
+        avatar_url: null,
+        email: 'a@test.dev',
+      },
+    },
+    {
+      id: 'p2',
+      user_id: 'u2',
+      title: 'B',
+      status: 'active',
+      raised_amount: 1200,
+      profiles: { id: 'u2', username: 'bob', name: 'Bob', avatar_url: null, email: 'b@test.dev' },
+    },
   ];
 
   function makeQuery(result: any) {
@@ -23,7 +38,13 @@ describe('Project list workflow', () => {
       eq: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
       range: jest.fn().mockResolvedValue(result),
-      in: jest.fn().mockResolvedValue({ data: profiles, error: null }),
+    } as any;
+  }
+
+  function makeCountQuery(count: number) {
+    return {
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockResolvedValue({ count }),
     } as any;
   }
 
@@ -32,21 +53,13 @@ describe('Project list workflow', () => {
   });
 
   it('lists active projects and maps profile info', async () => {
-    const projectsQuery = makeQuery({ data: dataRows, error: null });
-    const profilesQuery = {
-      select: jest.fn().mockReturnThis(),
-      in: jest.fn().mockResolvedValue({ data: profiles, error: null }),
-    } as any;
-    const countQuery = {
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ count: 2 }),
-    } as any;
+    const dataQuery = makeQuery({ data: dataRows, error: null });
+    const countQuery = makeCountQuery(2);
 
     const from = jest
       .fn()
-      .mockReturnValueOnce(projectsQuery) // projects list
-      .mockReturnValueOnce(profilesQuery) // profiles
-      .mockReturnValueOnce(countQuery); // projects count
+      .mockReturnValueOnce(dataQuery) // data query with profile join
+      .mockReturnValueOnce(countQuery); // count query
 
     (createServerClient as jest.Mock).mockResolvedValue({ from });
 
@@ -60,22 +73,10 @@ describe('Project list workflow', () => {
   });
 
   it('applies user filter when userId is provided', async () => {
-    const projectsQuery = makeQuery({ data: [dataRows[0]], error: null });
-    const profilesQuery = {
-      select: jest.fn().mockReturnThis(),
-      in: jest.fn().mockResolvedValue({ data: [profiles[0]], error: null }),
-    } as any;
-    const countQuery = {
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-    } as any;
-    countQuery.eq.mockResolvedValue({ count: 1 });
+    const dataQuery = makeQuery({ data: [dataRows[0]], error: null });
+    const countQuery = makeCountQuery(1);
 
-    const from = jest
-      .fn()
-      .mockReturnValueOnce(projectsQuery)
-      .mockReturnValueOnce(profilesQuery)
-      .mockReturnValueOnce(countQuery);
+    const from = jest.fn().mockReturnValueOnce(dataQuery).mockReturnValueOnce(countQuery);
 
     (createServerClient as jest.Mock).mockResolvedValue({ from });
 
