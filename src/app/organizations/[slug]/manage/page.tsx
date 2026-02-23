@@ -16,6 +16,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import Loading from '@/components/Loading';
+import { STATUS } from '@/config/database-constants';
 import { useOrganizationData } from '../useOrganizationData';
 import { MemberTable } from '../MemberTable';
 
@@ -43,8 +44,8 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
     );
   }
 
-  const activeMembers = members.filter(m => m.status === 'active');
-  const activeProposals = proposals.filter(p => p.status === 'active');
+  const activeMembers = members.filter(m => m.status === STATUS.GROUP_MEMBER_STATUS.ACTIVE);
+  const activeProposals = proposals.filter(p => p.status === STATUS.PROPOSALS.ACTIVE);
 
   return (
     <div className="space-y-6">
@@ -244,35 +245,35 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
 
 function ProposalStatusBadge({ status }: { status: string }) {
   switch (status) {
-    case 'passed':
+    case STATUS.PROPOSALS.PASSED:
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
           <CheckCircle className="w-3 h-3 mr-1" />
           Passed
         </span>
       );
-    case 'active':
+    case STATUS.PROPOSALS.ACTIVE:
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
           <Clock className="w-3 h-3 mr-1" />
           Active
         </span>
       );
-    case 'failed':
+    case STATUS.PROPOSALS.FAILED:
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
           <AlertTriangle className="w-3 h-3 mr-1" />
           Failed
         </span>
       );
-    case 'executed':
+    case STATUS.PROPOSALS.EXECUTED:
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
           <CheckCircle className="w-3 h-3 mr-1" />
           Executed
         </span>
       );
-    case 'draft':
+    case STATUS.PROPOSALS.DRAFT:
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
           Draft

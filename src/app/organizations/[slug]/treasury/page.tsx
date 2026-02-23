@@ -3,6 +3,7 @@
 import React, { use } from 'react';
 import { Wallet, Shield, Clock, Download, Send, Plus, Users, AlertCircle } from 'lucide-react';
 import Loading from '@/components/Loading';
+import { STATUS } from '@/config/database-constants';
 import { useOrganizationData } from '../useOrganizationData';
 import { MemberTable } from '../MemberTable';
 
@@ -28,7 +29,7 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
     );
   }
 
-  const activeMembers = members.filter(m => m.status === 'active');
+  const activeMembers = members.filter(m => m.status === STATUS.GROUP_MEMBER_STATUS.ACTIVE);
 
   return (
     <div className="space-y-6">

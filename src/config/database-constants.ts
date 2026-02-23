@@ -97,6 +97,10 @@ export const STATUS = {
     ADMIN: 'admin',
     MEMBER: 'member',
   },
+  GROUP_MEMBER_STATUS: {
+    ACTIVE: 'active',
+    INACTIVE: 'inactive',
+  },
   GROUP_EVENTS: {
     GENERAL: 'general',
     MEETING: 'meeting',
@@ -154,6 +158,8 @@ export type ServiceStatus = (typeof STATUS.SERVICES)[keyof typeof STATUS.SERVICE
 export type CauseStatus = (typeof STATUS.CAUSES)[keyof typeof STATUS.CAUSES];
 export type MessageStatus = (typeof STATUS.MESSAGES)[keyof typeof STATUS.MESSAGES];
 export type GroupMemberRole = (typeof STATUS.GROUP_MEMBERS)[keyof typeof STATUS.GROUP_MEMBERS];
+export type GroupMemberStatus =
+  (typeof STATUS.GROUP_MEMBER_STATUS)[keyof typeof STATUS.GROUP_MEMBER_STATUS];
 export type GroupEventType = (typeof STATUS.GROUP_EVENTS)[keyof typeof STATUS.GROUP_EVENTS];
 export type GroupEventRsvpStatus =
   (typeof STATUS.GROUP_EVENT_RSVPS)[keyof typeof STATUS.GROUP_EVENT_RSVPS];

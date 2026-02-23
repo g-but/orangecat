@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { Users } from 'lucide-react';
+import { STATUS } from '@/config/database-constants';
 import type { OrganizationMember } from './types';
 
 interface MemberTableProps {
@@ -110,7 +111,7 @@ export function MemberTable({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      member.status === 'active'
+                      member.status === STATUS.GROUP_MEMBER_STATUS.ACTIVE
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                     }`}
