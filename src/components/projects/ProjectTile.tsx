@@ -18,6 +18,7 @@ import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { CheckSquare, Square, Trash2 } from 'lucide-react';
 import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { PROJECT_STATUS } from '@/config/project-statuses';
 
 interface ProjectTileProps {
   project: Project;
@@ -80,9 +81,9 @@ export function ProjectTile({
                   ? 'bg-yellow-100 text-yellow-700'
                   : project.isActive
                     ? 'bg-green-100 text-green-700'
-                    : project.status === 'completed'
+                    : project.status === PROJECT_STATUS.COMPLETED
                       ? 'bg-blue-100 text-blue-700'
-                      : project.status === 'cancelled'
+                      : project.status === PROJECT_STATUS.CANCELLED
                         ? 'bg-red-100 text-red-700'
                         : 'bg-gray-100 text-gray-700'
             }`}
@@ -93,9 +94,9 @@ export function ProjectTile({
                 ? 'Paused'
                 : project.isActive
                   ? 'Active'
-                  : project.status === 'completed'
+                  : project.status === PROJECT_STATUS.COMPLETED
                     ? 'Completed'
-                    : project.status === 'cancelled'
+                    : project.status === PROJECT_STATUS.CANCELLED
                       ? 'Cancelled'
                       : 'Unknown'}
           </span>

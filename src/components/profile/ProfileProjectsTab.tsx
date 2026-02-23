@@ -11,6 +11,7 @@ import { ROUTES } from '@/lib/routes';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getStatusInfo } from '@/config/status-config';
+import { PROJECT_STATUS } from '@/config/project-statuses';
 
 // Extended project list item for profile display
 interface ProfileProjectItem {
@@ -75,7 +76,9 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
   }
 
   // Filter out drafts for public display
-  const publicProjects = projects.filter(project => project.status?.toLowerCase() !== 'draft');
+  const publicProjects = projects.filter(
+    project => project.status?.toLowerCase() !== PROJECT_STATUS.DRAFT
+  );
 
   if (publicProjects.length === 0) {
     return (
@@ -138,14 +141,17 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
       {/* Projects Grid */}
       <div className="space-y-4">
         {publicProjects.map(project => {
-          const statusInfo = getStatusInfo(project.status || 'active');
+          const statusInfo = getStatusInfo(project.status || PROJECT_STATUS.ACTIVE);
           const balanceBTC = project.bitcoin_balance_btc || 0;
           const goalAmount = project.goal_amount || 0;
           const raisedAmount = project.raised_amount || 0;
           const currentAmount = balanceBTC > 0 ? balanceBTC * 100_000_000 : raisedAmount;
           const progress = goalAmount > 0 ? Math.min((currentAmount / goalAmount) * 100, 100) : 0;
           const showStatusBadge =
-            project.status && !['active', 'draft'].includes(project.status.toLowerCase());
+            project.status &&
+            !([PROJECT_STATUS.ACTIVE, PROJECT_STATUS.DRAFT] as string[]).includes(
+              project.status.toLowerCase()
+            );
 
           return (
             <Link

@@ -20,10 +20,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { rateLimit, createRateLimitResponse, applyRateLimitHeaders } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
-
-// Valid status values
-const VALID_STATUSES = ['draft', 'active', 'paused', 'completed', 'cancelled'] as const;
-type ProjectStatus = (typeof VALID_STATUSES)[number];
+import { VALID_PROJECT_STATUSES, type ProjectStatus } from '@/config/project-statuses';
 
 // Valid status transitions
 const VALID_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> = {
@@ -63,8 +60,10 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     }
 
     const normalizedStatus = status.toLowerCase() as ProjectStatus;
-    if (!VALID_STATUSES.includes(normalizedStatus)) {
-      return apiValidationError(`Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`);
+    if (!VALID_PROJECT_STATUSES.includes(normalizedStatus)) {
+      return apiValidationError(
+        `Invalid status. Must be one of: ${VALID_PROJECT_STATUSES.join(', ')}`
+      );
     }
 
     // Fetch current project

@@ -9,6 +9,15 @@
  * Last Modified Summary: Consolidated from lib/projectStatus.ts and database-constants.ts
  */
 
+/** String constants for project status comparisons (follows STATUS.* pattern) */
+export const PROJECT_STATUS = {
+  DRAFT: 'draft',
+  ACTIVE: 'active',
+  PAUSED: 'paused',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+} as const;
+
 export const PROJECT_STATUSES = {
   draft: {
     label: 'Draft',

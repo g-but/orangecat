@@ -11,7 +11,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
-import { PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
+import { PROJECT_STATUS, PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import type {
@@ -234,13 +234,15 @@ export async function searchFundingPages(
           );
         } else if (filters.isActive !== undefined) {
           if (filters.isActive) {
-            results = results.filter(p => p.status === 'active');
+            results = results.filter(p => p.status === PROJECT_STATUS.ACTIVE);
           } else {
-            results = results.filter(p => p.status !== 'active');
+            results = results.filter(p => p.status !== PROJECT_STATUS.ACTIVE);
           }
         } else {
           // Default: Show active and paused projects
-          results = results.filter(p => ['active', 'paused'].includes(p.status));
+          results = results.filter(p =>
+            ([PROJECT_STATUS.ACTIVE, PROJECT_STATUS.PAUSED] as string[]).includes(p.status)
+          );
         }
 
         if (filters.categories && filters.categories.length > 0) {
@@ -318,9 +320,9 @@ export async function searchFundingPages(
             );
           } else if (filters.isActive !== undefined) {
             if (filters.isActive) {
-              results = results.filter(p => p.status === 'active');
+              results = results.filter(p => p.status === PROJECT_STATUS.ACTIVE);
             } else {
-              results = results.filter(p => p.status !== 'active');
+              results = results.filter(p => p.status !== PROJECT_STATUS.ACTIVE);
             }
           } else {
             // Default: Show active and paused projects (public search statuses)
@@ -402,9 +404,9 @@ export async function searchFundingPages(
     } else if (filters.isActive !== undefined) {
       // Deprecated: backward compatibility
       if (filters.isActive) {
-        projectQuery = projectQuery.eq('status', 'active');
+        projectQuery = projectQuery.eq('status', PROJECT_STATUS.ACTIVE);
       } else {
-        projectQuery = projectQuery.neq('status', 'active');
+        projectQuery = projectQuery.neq('status', PROJECT_STATUS.ACTIVE);
       }
     } else {
       // Default: Show active and paused projects (public search statuses)
