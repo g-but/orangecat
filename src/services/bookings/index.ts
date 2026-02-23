@@ -10,6 +10,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // Type alias for any SupabaseClient (accepts any database schema)
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 
 // Types
@@ -133,7 +134,7 @@ export class BookingService {
       .select('starts_at, ends_at')
       .eq('bookable_type', 'service')
       .eq('bookable_id', serviceId)
-      .in('status', ['confirmed', 'in_progress'])
+      .in('status', [STATUS.BOOKINGS.CONFIRMED, STATUS.BOOKINGS.IN_PROGRESS])
       .gte('starts_at', startOfDay.toISOString())
       .lte('starts_at', endOfDay.toISOString());
 
@@ -197,7 +198,7 @@ export class BookingService {
       .select('starts_at, ends_at')
       .eq('bookable_type', 'asset')
       .eq('bookable_id', assetId)
-      .in('status', ['confirmed', 'in_progress'])
+      .in('status', [STATUS.BOOKINGS.CONFIRMED, STATUS.BOOKINGS.IN_PROGRESS])
       .gte('starts_at', startDate.toISOString())
       .lte('ends_at', endDate.toISOString());
 
@@ -289,7 +290,7 @@ export class BookingService {
         deposit_sats: depositSats,
         customer_notes: customerNotes,
         metadata,
-        status: 'pending',
+        status: STATUS.BOOKINGS.PENDING,
       })
       .select()
       .single();
@@ -315,12 +316,12 @@ export class BookingService {
     const { data: booking, error } = await this.supabase
       .from(DATABASE_TABLES.BOOKINGS)
       .update({
-        status: 'confirmed',
+        status: STATUS.BOOKINGS.CONFIRMED,
         confirmed_at: new Date().toISOString(),
       })
       .eq('id', bookingId)
       .eq('provider_actor_id', providerActorId)
-      .eq('status', 'pending')
+      .eq('status', STATUS.BOOKINGS.PENDING)
       .select()
       .single();
 
@@ -348,13 +349,13 @@ export class BookingService {
     const { data: booking, error } = await this.supabase
       .from(DATABASE_TABLES.BOOKINGS)
       .update({
-        status: 'rejected',
+        status: STATUS.BOOKINGS.REJECTED,
         cancellation_reason: reason,
         cancelled_at: new Date().toISOString(),
       })
       .eq('id', bookingId)
       .eq('provider_actor_id', providerActorId)
-      .eq('status', 'pending')
+      .eq('status', STATUS.BOOKINGS.PENDING)
       .select()
       .single();
 
@@ -382,13 +383,13 @@ export class BookingService {
     const { data: booking, error } = await this.supabase
       .from(DATABASE_TABLES.BOOKINGS)
       .update({
-        status: 'cancelled',
+        status: STATUS.BOOKINGS.CANCELLED,
         cancellation_reason: reason,
         cancelled_at: new Date().toISOString(),
       })
       .eq('id', bookingId)
       .eq('customer_user_id', customerUserId)
-      .in('status', ['pending', 'confirmed'])
+      .in('status', [STATUS.BOOKINGS.PENDING, STATUS.BOOKINGS.CONFIRMED])
       .select()
       .single();
 
@@ -412,12 +413,12 @@ export class BookingService {
     const { data: booking, error } = await this.supabase
       .from(DATABASE_TABLES.BOOKINGS)
       .update({
-        status: 'completed',
+        status: STATUS.BOOKINGS.COMPLETED,
         completed_at: new Date().toISOString(),
       })
       .eq('id', bookingId)
       .eq('provider_actor_id', providerActorId)
-      .in('status', ['confirmed', 'in_progress'])
+      .in('status', [STATUS.BOOKINGS.CONFIRMED, STATUS.BOOKINGS.IN_PROGRESS])
       .select()
       .single();
 

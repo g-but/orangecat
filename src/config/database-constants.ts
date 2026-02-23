@@ -45,6 +45,17 @@ export const STATUS = {
     ACTIVE: 'active',
     COMPLETED: 'completed',
     DEFAULTED: 'defaulted',
+    PAID_OFF: 'paid_off',
+    REFINANCED: 'refinanced',
+    CANCELLED: 'cancelled',
+  },
+  BOOKINGS: {
+    PENDING: 'pending',
+    CONFIRMED: 'confirmed',
+    REJECTED: 'rejected',
+    CANCELLED: 'cancelled',
+    COMPLETED: 'completed',
+    IN_PROGRESS: 'in_progress',
   },
   LOAN_OFFERS: {
     PENDING: 'pending',
@@ -135,6 +146,7 @@ export const STATUS = {
 // ProjectStatus is defined in config/project-statuses.ts (SSOT)
 export type ProposalStatus = (typeof STATUS.PROPOSALS)[keyof typeof STATUS.PROPOSALS];
 export type LoanStatus = (typeof STATUS.LOANS)[keyof typeof STATUS.LOANS];
+export type BookingStatus = (typeof STATUS.BOOKINGS)[keyof typeof STATUS.BOOKINGS];
 export type LoanOfferStatus = (typeof STATUS.LOAN_OFFERS)[keyof typeof STATUS.LOAN_OFFERS];
 export type TransactionStatus = (typeof STATUS.TRANSACTIONS)[keyof typeof STATUS.TRANSACTIONS];
 export type ProductStatus = (typeof STATUS.PRODUCTS)[keyof typeof STATUS.PRODUCTS];

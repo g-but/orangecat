@@ -4,15 +4,8 @@ import { LoanOffer } from '@/types/loans';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/Button';
-import {
-  Target,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Edit,
-  MessageSquare
-} from 'lucide-react';
+import { Target, TrendingUp, Clock, CheckCircle, XCircle, Edit, MessageSquare } from 'lucide-react';
+import { STATUS } from '@/config/database-constants';
 import { formatDistanceToNow } from 'date-fns';
 
 interface LoanOffersListProps {
@@ -23,20 +16,29 @@ interface LoanOffersListProps {
 export function LoanOffersList({ offers, onOfferUpdated: _onOfferUpdated }: LoanOffersListProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'accepted': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'expired': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case STATUS.LOAN_OFFERS.PENDING:
+        return 'bg-yellow-100 text-yellow-800';
+      case STATUS.LOAN_OFFERS.ACCEPTED:
+        return 'bg-green-100 text-green-800';
+      case STATUS.LOAN_OFFERS.REJECTED:
+        return 'bg-red-100 text-red-800';
+      case STATUS.LOAN_OFFERS.EXPIRED:
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending': return <Clock className="h-4 w-4" />;
-      case 'accepted': return <CheckCircle className="h-4 w-4" />;
-      case 'rejected': return <XCircle className="h-4 w-4" />;
-      default: return <Clock className="h-4 w-4" />;
+      case STATUS.LOAN_OFFERS.PENDING:
+        return <Clock className="h-4 w-4" />;
+      case STATUS.LOAN_OFFERS.ACCEPTED:
+        return <CheckCircle className="h-4 w-4" />;
+      case STATUS.LOAN_OFFERS.REJECTED:
+        return <XCircle className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
     }
   };
 
@@ -59,7 +61,7 @@ export function LoanOffersList({ offers, onOfferUpdated: _onOfferUpdated }: Loan
 
   return (
     <div className="space-y-4">
-      {offers.map((offer) => (
+      {offers.map(offer => (
         <Card key={offer.id} className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
@@ -78,7 +80,7 @@ export function LoanOffersList({ offers, onOfferUpdated: _onOfferUpdated }: Loan
                 </CardDescription>
               </div>
               <div className="flex gap-1">
-                {offer.status === 'pending' && (
+                {offer.status === STATUS.LOAN_OFFERS.PENDING && (
                   <Button variant="ghost" size="sm">
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -100,27 +102,21 @@ export function LoanOffersList({ offers, onOfferUpdated: _onOfferUpdated }: Loan
               {offer.interest_rate && (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Interest Rate</p>
-                  <p className="text-lg font-semibold">
-                    {offer.interest_rate}%
-                  </p>
+                  <p className="text-lg font-semibold">{offer.interest_rate}%</p>
                 </div>
               )}
 
               {offer.term_months && (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Term</p>
-                  <p className="text-lg font-semibold">
-                    {offer.term_months} months
-                  </p>
+                  <p className="text-lg font-semibold">{offer.term_months} months</p>
                 </div>
               )}
 
               {offer.monthly_payment && (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Monthly Payment</p>
-                  <p className="text-lg font-semibold">
-                    {formatCurrency(offer.monthly_payment)}
-                  </p>
+                  <p className="text-lg font-semibold">{formatCurrency(offer.monthly_payment)}</p>
                 </div>
               )}
             </div>
@@ -138,19 +134,25 @@ export function LoanOffersList({ offers, onOfferUpdated: _onOfferUpdated }: Loan
             {/* Status-specific info */}
             <div className="flex items-center justify-between pt-2 border-t">
               <div className="text-sm text-muted-foreground">
-                {offer.status === 'pending' && offer.expires_at && (
-                  <span>Expires {formatDistanceToNow(new Date(offer.expires_at), { addSuffix: true })}</span>
+                {offer.status === STATUS.LOAN_OFFERS.PENDING && offer.expires_at && (
+                  <span>
+                    Expires {formatDistanceToNow(new Date(offer.expires_at), { addSuffix: true })}
+                  </span>
                 )}
-                {offer.status === 'accepted' && offer.accepted_at && (
-                  <span>Accepted {formatDistanceToNow(new Date(offer.accepted_at), { addSuffix: true })}</span>
+                {offer.status === STATUS.LOAN_OFFERS.ACCEPTED && offer.accepted_at && (
+                  <span>
+                    Accepted {formatDistanceToNow(new Date(offer.accepted_at), { addSuffix: true })}
+                  </span>
                 )}
-                {offer.status === 'rejected' && offer.rejected_at && (
-                  <span>Rejected {formatDistanceToNow(new Date(offer.rejected_at), { addSuffix: true })}</span>
+                {offer.status === STATUS.LOAN_OFFERS.REJECTED && offer.rejected_at && (
+                  <span>
+                    Rejected {formatDistanceToNow(new Date(offer.rejected_at), { addSuffix: true })}
+                  </span>
                 )}
               </div>
 
               <div className="flex gap-2">
-                {offer.status === 'pending' && (
+                {offer.status === STATUS.LOAN_OFFERS.PENDING && (
                   <>
                     <Button variant="outline" size="sm" className="gap-1">
                       <MessageSquare className="h-3 w-3" />
@@ -161,7 +163,7 @@ export function LoanOffersList({ offers, onOfferUpdated: _onOfferUpdated }: Loan
                     </Button>
                   </>
                 )}
-                {offer.status === 'accepted' && (
+                {offer.status === STATUS.LOAN_OFFERS.ACCEPTED && (
                   <Button variant="outline" size="sm" className="gap-1">
                     <TrendingUp className="h-3 w-3" />
                     View Agreement

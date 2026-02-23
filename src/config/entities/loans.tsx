@@ -11,6 +11,7 @@ import { Loan } from '@/types/loans';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { STATUS } from '@/config/database-constants';
 
 export const loanEntityConfig: EntityConfig<Loan> = {
   name: 'Loan',
@@ -53,27 +54,27 @@ export const loanEntityConfig: EntityConfig<Loan> = {
     return {
       priceLabel: balanceLabel,
       badge:
-        loan.status === 'active'
+        loan.status === STATUS.LOANS.ACTIVE
           ? 'Active'
-          : loan.status === 'paid_off'
+          : loan.status === STATUS.LOANS.PAID_OFF
             ? 'Paid Off'
-            : loan.status === 'refinanced'
+            : loan.status === STATUS.LOANS.REFINANCED
               ? 'Refinanced'
-              : loan.status === 'defaulted'
+              : loan.status === STATUS.LOANS.DEFAULTED
                 ? 'Defaulted'
-                : loan.status === 'cancelled'
+                : loan.status === STATUS.LOANS.CANCELLED
                   ? 'Cancelled'
                   : undefined,
       badgeVariant:
-        loan.status === 'active'
+        loan.status === STATUS.LOANS.ACTIVE
           ? 'success'
-          : loan.status === 'paid_off'
+          : loan.status === STATUS.LOANS.PAID_OFF
             ? 'success'
-            : loan.status === 'refinanced'
+            : loan.status === STATUS.LOANS.REFINANCED
               ? 'default'
-              : loan.status === 'defaulted'
+              : loan.status === STATUS.LOANS.DEFAULTED
                 ? 'destructive'
-                : loan.status === 'cancelled'
+                : loan.status === STATUS.LOANS.CANCELLED
                   ? 'warning'
                   : 'default',
       metadata:

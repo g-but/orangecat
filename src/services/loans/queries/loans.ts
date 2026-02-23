@@ -16,6 +16,7 @@ import type {
   Pagination,
   LoanCategory,
 } from '@/types/loans';
+import { STATUS } from '@/config/database-constants';
 import { getCurrentUserId } from '../utils/auth';
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -30,7 +31,8 @@ export async function getLoan(loanId: string): Promise<LoanResponse> {
 
     let query = supabase
       .from(getTableName('loan'))
-      .select(`
+      .select(
+        `
         *,
         loan_categories (
           id,
@@ -38,7 +40,8 @@ export async function getLoan(loanId: string): Promise<LoanResponse> {
           description,
           icon
         )
-      `)
+      `
+      )
       .eq('id', loanId);
 
     // If user is authenticated, they can see their own loans or public loans
@@ -159,9 +162,11 @@ export async function getAvailableLoans(
       logger.warn('Database function not available, using fallback', error, 'Loans');
 
       // Fallback query
-      let dbQuery = (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(getTableName('loan')) as any)
+      let dbQuery = (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(getTableName('loan')) as any
+      )
         .select(
           `
           *,
@@ -180,7 +185,7 @@ export async function getAvailableLoans(
           { count: 'exact' }
         )
         .eq('is_public', true)
-        .eq('status', 'active');
+        .eq('status', STATUS.LOANS.ACTIVE);
 
       if (userId) {
         dbQuery = dbQuery.neq('user_id', userId);

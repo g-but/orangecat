@@ -10,12 +10,8 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { isSupportedCurrency, DEFAULT_CURRENCY } from '@/config/currencies';
 import { getTableName } from '@/config/entity-registry';
-import type {
-  CreateLoanRequest,
-  UpdateLoanRequest,
-  LoanResponse,
-  Loan,
-} from '@/types/loans';
+import type { CreateLoanRequest, UpdateLoanRequest, LoanResponse, Loan } from '@/types/loans';
+import { STATUS } from '@/config/database-constants';
 import { getCurrentUserId } from '../utils/auth';
 import { validateCreateLoanRequest } from '../utils/validation';
 
@@ -37,9 +33,11 @@ export async function createLoan(request: CreateLoanRequest): Promise<LoanRespon
       return { success: false, error: validation.errors[0]?.message || 'Invalid request' };
     }
 
-    const { data, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('loan')) as any)
+    const { data, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('loan')) as any
+    )
       .insert({
         ...request,
         currency: isSupportedCurrency(request.currency) ? request.currency : DEFAULT_CURRENCY,
@@ -64,16 +62,21 @@ export async function createLoan(request: CreateLoanRequest): Promise<LoanRespon
 /**
  * Update an existing loan
  */
-export async function updateLoan(loanId: string, request: UpdateLoanRequest): Promise<LoanResponse> {
+export async function updateLoan(
+  loanId: string,
+  request: UpdateLoanRequest
+): Promise<LoanResponse> {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
-    const { data, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('loan')) as any)
+    const { data, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('loan')) as any
+    )
       .update(request)
       .eq('id', loanId)
       .eq('user_id', userId)
@@ -103,9 +106,11 @@ export async function deleteLoan(loanId: string): Promise<{ success: boolean; er
       return { success: false, error: 'Authentication required' };
     }
 
-    const { error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('loan')) as any)
+    const { error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('loan')) as any
+    )
       .delete()
       .eq('id', loanId)
       .eq('user_id', userId);
@@ -159,13 +164,15 @@ export async function createObligationLoan(params: {
       contact_method: 'platform',
     };
 
-    const { data, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('loan')) as any)
+    const { data, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('loan')) as any
+    )
       .insert({
         ...newLoan,
         user_id: borrowerId,
-        status: 'active',
+        status: STATUS.LOANS.ACTIVE,
       })
       .select()
       .single();
