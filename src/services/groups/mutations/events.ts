@@ -12,6 +12,7 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { getCurrentUserId, isGroupMember, getUserRole } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
+import { STATUS } from '@/config/database-constants';
 import { TABLES } from '../constants';
 import type {
   CreateEventInput,
@@ -24,9 +25,7 @@ import type {
 /**
  * Create a new event for a group
  */
-export async function createEvent(
-  input: CreateEventInput
-): Promise<EventResponse> {
+export async function createEvent(input: CreateEventInput): Promise<EventResponse> {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -46,9 +45,11 @@ export async function createEvent(
 
     // Create event
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_events) as any)
+    const { data: eventData, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_events) as any
+    )
       .insert({
         ...input,
         creator_id: userId,
@@ -102,9 +103,11 @@ export async function updateEvent(
 
     // Get event to check permissions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_events) as any)
+    const { data: eventData, error: fetchError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_events) as any
+    )
       .select('id, group_id, creator_id')
       .eq('id', eventId)
       .single();
@@ -118,7 +121,7 @@ export async function updateEvent(
     // Check if user is creator or admin
     const role = await getUserRole(event.group_id, userId);
     const isCreator = event.creator_id === userId;
-    const isAdmin = role === 'admin' || role === 'founder';
+    const isAdmin = role === STATUS.GROUP_MEMBERS.ADMIN || role === STATUS.GROUP_MEMBERS.FOUNDER;
 
     if (!isCreator && !isAdmin) {
       return {
@@ -129,9 +132,11 @@ export async function updateEvent(
 
     // Update event
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: updatedData, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_events) as any)
+    const { data: updatedData, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_events) as any
+    )
       .update(input)
       .eq('id', eventId)
       .select()
@@ -166,9 +171,7 @@ export async function updateEvent(
 /**
  * Delete an event
  */
-export async function deleteEvent(
-  eventId: string
-): Promise<{ success: boolean; error?: string }> {
+export async function deleteEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -177,9 +180,11 @@ export async function deleteEvent(
 
     // Get event to check permissions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData2, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_events) as any)
+    const { data: eventData2, error: fetchError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_events) as any
+    )
       .select('id, group_id, creator_id, title')
       .eq('id', eventId)
       .single();
@@ -193,7 +198,7 @@ export async function deleteEvent(
     // Check if user is creator or admin
     const role = await getUserRole(event.group_id, userId);
     const isCreator = event.creator_id === userId;
-    const isAdmin = role === 'admin' || role === 'founder';
+    const isAdmin = role === STATUS.GROUP_MEMBERS.ADMIN || role === STATUS.GROUP_MEMBERS.FOUNDER;
 
     if (!isCreator && !isAdmin) {
       return {
@@ -204,9 +209,11 @@ export async function deleteEvent(
 
     // Delete event (RSVPs will be cascade deleted)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_events) as any)
+    const { error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_events) as any
+    )
       .delete()
       .eq('id', eventId);
 
@@ -237,10 +244,7 @@ export async function deleteEvent(
 /**
  * RSVP to an event
  */
-export async function rsvpToEvent(
-  eventId: string,
-  status: RsvpStatus
-): Promise<RsvpResponse> {
+export async function rsvpToEvent(eventId: string, status: RsvpStatus): Promise<RsvpResponse> {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -249,9 +253,11 @@ export async function rsvpToEvent(
 
     // Get event to verify it exists and is accessible
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData3, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_events) as any)
+    const { data: eventData3, error: fetchError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_events) as any
+    )
       .select('id, group_id, is_public, requires_rsvp')
       .eq('id', eventId)
       .single();
@@ -270,9 +276,11 @@ export async function rsvpToEvent(
 
     // Upsert RSVP
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: rsvpData, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_event_rsvps) as any)
+    const { data: rsvpData, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_event_rsvps) as any
+    )
       .upsert(
         {
           event_id: eventId,
@@ -294,16 +302,10 @@ export async function rsvpToEvent(
     }
 
     // Log activity
-    await logGroupActivity(
-      event.group_id,
-      userId,
-      'rsvp_to_event',
-      `RSVP to event: ${status}`,
-      {
-        event_id: eventId,
-        rsvp_status: status,
-      }
-    );
+    await logGroupActivity(event.group_id, userId, 'rsvp_to_event', `RSVP to event: ${status}`, {
+      event_id: eventId,
+      rsvp_status: status,
+    });
 
     return { success: true, rsvp: data };
   } catch (error) {
@@ -311,4 +313,3 @@ export async function rsvpToEvent(
     return { success: false, error: 'Failed to RSVP to event' };
   }
 }
-

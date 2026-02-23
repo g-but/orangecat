@@ -11,6 +11,7 @@ import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { convertToBtc } from '@/services/currency';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { PROJECT_STATUS } from '@/config/project-statuses';
 
 interface ResearchEntity {
   id: string;
@@ -154,7 +155,7 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
       return apiUnauthorized('Cannot contribute to private research entities');
     }
 
-    if (entity.status === 'completed' || entity.status === 'cancelled') {
+    if (entity.status === PROJECT_STATUS.COMPLETED || entity.status === PROJECT_STATUS.CANCELLED) {
       return apiUnauthorized('This research entity is no longer accepting contributions');
     }
 

@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ENTITY_REGISTRY, type EntityType } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 const BASE_URL = 'https://orangecat.ch';
 
@@ -98,7 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Public profile pages
     const { data: profiles } = (await supabase
-      .from('profiles' as const)
+      .from(DATABASE_TABLES.PROFILES)
       .select('username, updated_at')
       .not('username', 'is', null)) as { data: SitemapProfile[] | null };
 

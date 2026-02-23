@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { STATUS } from '@/config/database-constants';
 
 interface Conversation {
   id: string;
@@ -127,7 +128,7 @@ export default function AIAssistantChatPage() {
       {/* New Conversation Button */}
       <Button
         onClick={handleNewConversation}
-        disabled={isCreating || assistant?.status !== 'active'}
+        disabled={isCreating || assistant?.status !== STATUS.AI_ASSISTANTS.ACTIVE}
         className="w-full mb-8"
         size="lg"
       >
@@ -144,7 +145,7 @@ export default function AIAssistantChatPage() {
         )}
       </Button>
 
-      {assistant?.status !== 'active' && (
+      {assistant?.status !== STATUS.AI_ASSISTANTS.ACTIVE && (
         <p className="text-amber-600 text-sm mb-4 text-center">
           This assistant is not currently active.
         </p>

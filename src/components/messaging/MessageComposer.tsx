@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type { Message } from '@/features/messaging/types';
 import { queueIfOffline, handleNetworkError } from '@/features/messaging/lib/offline-queue';
 import { MESSAGE_TYPES, debugLog, API_ROUTES } from '@/features/messaging/lib/constants';
@@ -169,7 +170,7 @@ export default function MessageComposer({
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const { data: fullMessage } = (await supabase
-                .from('message_details' as any)
+                .from(DATABASE_TABLES.MESSAGE_DETAILS as any)
                 .select('*')
                 .eq('id', data.id)
                 .single()) as { data: Message | null };

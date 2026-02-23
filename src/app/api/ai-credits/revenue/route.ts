@@ -45,7 +45,7 @@ export const GET = compose(
 
     // Get all assistants owned by this user with revenue stats
     const { data: assistants, error: assistantsError } = await db
-      .from('ai_assistants')
+      .from(DATABASE_TABLES.AI_ASSISTANTS)
       .select(
         `
         id,

@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { Calendar, MapPin, Users, Clock } from 'lucide-react';
 import Link from 'next/link';
 import type { GroupEvent } from '@/services/groups/types';
+import { STATUS } from '@/config/database-constants';
 
 interface EventCardProps {
   event: GroupEvent & {
@@ -35,7 +36,8 @@ export function EventCard({ event, groupSlug, onUpdate: _onUpdate }: EventCardPr
   const startDate = new Date(event.starts_at);
   const endDate = event.ends_at ? new Date(event.ends_at) : null;
   const isPast = startDate < new Date();
-  const rsvpCount = event.rsvps?.filter(r => r.status === 'going').length || 0;
+  const rsvpCount =
+    event.rsvps?.filter(r => r.status === STATUS.GROUP_EVENT_RSVPS.GOING).length || 0;
 
   return (
     <Card className="hover:shadow-md transition-shadow">

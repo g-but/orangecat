@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { Users, UserPlus, Crown, Shield, User } from 'lucide-react';
+import { STATUS } from '@/config/database-constants';
 import type { GroupMember, GroupRole } from '@/types/group';
 import groupsService from '@/services/groups';
 import { toast } from 'sonner';
@@ -56,13 +57,13 @@ export function GroupMembers({ groupId, members, onUpdate }: GroupMembersProps) 
     }
   };
 
-  const isMember = members.some((m) => m.user_id === user?.id);
+  const isMember = members.some(m => m.user_id === user?.id);
 
   const getRoleIcon = (role: GroupRole) => {
     switch (role) {
-      case 'founder':
+      case STATUS.GROUP_MEMBERS.FOUNDER:
         return <Crown className="h-4 w-4 text-yellow-600" />;
-      case 'admin':
+      case STATUS.GROUP_MEMBERS.ADMIN:
         return <Shield className="h-4 w-4 text-blue-600" />;
       default:
         return <User className="h-4 w-4 text-gray-600" />;
@@ -71,9 +72,9 @@ export function GroupMembers({ groupId, members, onUpdate }: GroupMembersProps) 
 
   const getRoleBadge = (role: GroupRole) => {
     switch (role) {
-      case 'founder':
+      case STATUS.GROUP_MEMBERS.FOUNDER:
         return <Badge variant="default">Founder</Badge>;
-      case 'admin':
+      case STATUS.GROUP_MEMBERS.ADMIN:
         return <Badge variant="secondary">Admin</Badge>;
       default:
         return <Badge variant="outline">Member</Badge>;
@@ -108,7 +109,7 @@ export function GroupMembers({ groupId, members, onUpdate }: GroupMembersProps) 
             <div className="text-center py-8 text-gray-500">No members yet</div>
           ) : (
             <div className="space-y-3">
-              {members.map((member) => (
+              {members.map(member => (
                 <div
                   key={member.id}
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -124,9 +125,7 @@ export function GroupMembers({ groupId, members, onUpdate }: GroupMembersProps) 
                         </p>
                         {getRoleIcon(member.role)}
                       </div>
-                      <p className="text-sm text-gray-500 truncate">
-                        @{member.username || 'user'}
-                      </p>
+                      <p className="text-sm text-gray-500 truncate">@{member.username || 'user'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">{getRoleBadge(member.role)}</div>
