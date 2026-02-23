@@ -58,7 +58,11 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
       .maybeSingle();
 
     if (personalError) {
-      logger.error('Error fetching personal actor', { error: personalError, userId: user.id }, 'MessagingActors');
+      logger.error(
+        'Error fetching personal actor',
+        { error: personalError, userId: user.id },
+        'MessagingActors'
+      );
     }
 
     const personalActor = personalActorData as ActorRow | null;
@@ -75,7 +79,8 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
     // 2. Get group actors where user is admin/moderator
     const { data: groupMemberships, error: groupError } = await admin
       .from(DATABASE_TABLES.GROUP_MEMBERS)
-      .select(`
+      .select(
+        `
         group_id,
         role,
         groups:group_id (
@@ -84,35 +89,45 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
           avatar_url,
           actor_id
         )
-      `)
+      `
+      )
       .eq('user_id', user.id)
       .in('role', ['founder', 'admin', 'moderator']);
 
     if (groupError) {
-      logger.error('Error fetching group memberships', { error: groupError, userId: user.id }, 'MessagingActors');
+      logger.error(
+        'Error fetching group memberships',
+        { error: groupError, userId: user.id },
+        'MessagingActors'
+      );
     }
 
     const memberships = (groupMemberships || []) as GroupMembershipRow[];
     if (memberships.length > 0) {
-      for (const membership of memberships) {
-        const group = membership.groups;
-        if (group && group.actor_id) {
-          // Get the actor details
-          const { data: groupActorData } = await admin
-            .from(DATABASE_TABLES.ACTORS)
-            .select('id, actor_type, display_name, avatar_url')
-            .eq('id', group.actor_id)
-            .single();
+      // Batch query: collect all actor IDs, fetch in one query
+      const actorIds = memberships.map(m => m.groups?.actor_id).filter((id): id is string => !!id);
 
-          const groupActor = groupActorData as ActorRow | null;
-          if (groupActor) {
-            actors.push({
-              actor_id: groupActor.id,
-              actor_type: 'group',
-              display_name: groupActor.display_name || group.name || 'Group',
-              avatar_url: groupActor.avatar_url || group.avatar_url,
-              is_personal: false,
-            });
+      if (actorIds.length > 0) {
+        const { data: groupActors } = await admin
+          .from(DATABASE_TABLES.ACTORS)
+          .select('id, actor_type, display_name, avatar_url')
+          .in('id', actorIds);
+
+        const actorMap = new Map((groupActors as ActorRow[] | null)?.map(a => [a.id, a]) ?? []);
+
+        for (const membership of memberships) {
+          const group = membership.groups;
+          if (group?.actor_id) {
+            const groupActor = actorMap.get(group.actor_id);
+            if (groupActor) {
+              actors.push({
+                actor_id: groupActor.id,
+                actor_type: 'group',
+                display_name: groupActor.display_name || group.name || 'Group',
+                avatar_url: groupActor.avatar_url || group.avatar_url,
+                is_personal: false,
+              });
+            }
           }
         }
       }

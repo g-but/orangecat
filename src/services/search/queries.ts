@@ -11,7 +11,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
-import { PUBLIC_SEARCH_STATUSES } from '@/lib/projectStatus';
+import { PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import type {
@@ -22,7 +22,7 @@ import type {
   RawSearchProfile,
   RawSearchProject,
   RawSearchLoan,
-  ProfileReference
+  ProfileReference,
 } from './types';
 
 /**
@@ -57,21 +57,19 @@ export async function searchProfiles(
         // Apply additional location filters if needed
         let results = data as RawSearchProfile[];
         if (filters.country) {
-          results = results.filter(
-            (p) => p.location_country === filters.country!.toUpperCase()
-          );
+          results = results.filter(p => p.location_country === filters.country!.toUpperCase());
         }
         if (filters.city) {
           const sanitizedCity = filters.city.replace(/[%_]/g, '\\$&');
-          results = results.filter((p) =>
+          results = results.filter(p =>
             p.location_city?.toLowerCase().includes(sanitizedCity.toLowerCase())
           );
         }
         if (filters.postal_code) {
-          results = results.filter((p) => p.location_zip === filters.postal_code);
+          results = results.filter(p => p.location_zip === filters.postal_code);
         }
 
-        return results.map((p) => ({
+        return results.map(p => ({
           ...p,
           name: p.name,
         }));
@@ -96,22 +94,20 @@ export async function searchProfiles(
         let results = data as RawSearchProfile[];
         if (filters) {
           if (filters.country) {
-            results = results.filter(
-              (p) => p.location_country === filters.country!.toUpperCase()
-            );
+            results = results.filter(p => p.location_country === filters.country!.toUpperCase());
           }
           if (filters.city) {
             const sanitizedCity = filters.city.replace(/[%_]/g, '\\$&');
-            results = results.filter((p) =>
+            results = results.filter(p =>
               p.location_city?.toLowerCase().includes(sanitizedCity.toLowerCase())
             );
           }
           if (filters.postal_code) {
-            results = results.filter((p) => p.location_zip === filters.postal_code);
+            results = results.filter(p => p.location_zip === filters.postal_code);
           }
         }
 
-        return results.map((p) => ({
+        return results.map(p => ({
           ...p,
           name: p.name,
         }));
@@ -165,7 +161,7 @@ export async function searchProfiles(
     throw error;
   }
 
-  let results = (profiles as RawSearchProfile[] || []).map((p) => ({
+  let results = ((profiles as RawSearchProfile[]) || []).map(p => ({
     ...p,
     name: p.name,
   }));
@@ -233,47 +229,48 @@ export async function searchFundingPages(
         // Apply additional filters to RPC results
         let results = data as RawSearchProject[];
         if (filters.statuses && filters.statuses.length > 0) {
-          results = results.filter((p) => filters.statuses!.includes(p.status as 'active' | 'paused' | 'completed' | 'cancelled'));
+          results = results.filter(p =>
+            filters.statuses!.includes(p.status as 'active' | 'paused' | 'completed' | 'cancelled')
+          );
         } else if (filters.isActive !== undefined) {
           if (filters.isActive) {
-            results = results.filter((p) => p.status === 'active');
+            results = results.filter(p => p.status === 'active');
           } else {
-            results = results.filter((p) => p.status !== 'active');
+            results = results.filter(p => p.status !== 'active');
           }
         } else {
           // Default: Show active and paused projects
-          results = results.filter((p) => ['active', 'paused'].includes(p.status));
+          results = results.filter(p => ['active', 'paused'].includes(p.status));
         }
 
         if (filters.categories && filters.categories.length > 0) {
-          results = results.filter((p) => filters.categories!.includes(p.category || ''));
+          results = results.filter(p => filters.categories!.includes(p.category || ''));
         }
         if (filters.hasGoal) {
-          results = results.filter((p) => p.goal_amount !== null);
+          results = results.filter(p => p.goal_amount !== null);
         }
         if (filters.minFunding !== undefined) {
-          results = results.filter((p) => (p.raised_amount || 0) >= filters.minFunding!);
+          results = results.filter(p => (p.raised_amount || 0) >= filters.minFunding!);
         }
         if (filters.maxFunding !== undefined) {
-          results = results.filter((p) => (p.raised_amount || 0) <= filters.maxFunding!);
+          results = results.filter(p => (p.raised_amount || 0) <= filters.maxFunding!);
         }
         if (filters.dateRange) {
           results = results.filter(
-            (p) =>
-              p.created_at >= filters.dateRange!.start && p.created_at <= filters.dateRange!.end
+            p => p.created_at >= filters.dateRange!.start && p.created_at <= filters.dateRange!.end
           );
         }
         // Location filters removed - projects table doesn't have location columns
 
         // Fetch profiles for projects
-        const userIds = [...new Set(results.map((p) => p.user_id))];
+        const userIds = [...new Set(results.map(p => p.user_id))];
         const { data: profiles } = await supabase
           .from(DATABASE_TABLES.PROFILES)
           .select('id, username, name, avatar_url')
           .in('id', userIds);
 
         const profileMap = new Map(
-          (profiles as ProfileReference[] | null)?.map((p) => [
+          (profiles as ProfileReference[] | null)?.map(p => [
             p.id,
             {
               ...p,
@@ -282,7 +279,7 @@ export async function searchFundingPages(
           ]) || []
         );
 
-        return results.map((project) => {
+        return results.map(project => {
           const coverImageUrl = project.cover_image_url;
           return {
             ...project,
@@ -314,35 +311,39 @@ export async function searchFundingPages(
         let results = data as RawSearchProject[];
         if (filters) {
           if (filters.statuses && filters.statuses.length > 0) {
-            results = results.filter((p) => filters.statuses!.includes(p.status as 'active' | 'paused' | 'completed' | 'cancelled'));
+            results = results.filter(p =>
+              filters.statuses!.includes(
+                p.status as 'active' | 'paused' | 'completed' | 'cancelled'
+              )
+            );
           } else if (filters.isActive !== undefined) {
             if (filters.isActive) {
-              results = results.filter((p) => p.status === 'active');
+              results = results.filter(p => p.status === 'active');
             } else {
-              results = results.filter((p) => p.status !== 'active');
+              results = results.filter(p => p.status !== 'active');
             }
           } else {
             // Default: Show active and paused projects (public search statuses)
-            results = results.filter((p) =>
+            results = results.filter(p =>
               PUBLIC_SEARCH_STATUSES.includes(p.status as (typeof PUBLIC_SEARCH_STATUSES)[number])
             );
           }
 
           if (filters.categories && filters.categories.length > 0) {
-            results = results.filter((p) => filters.categories!.includes(p.category || ''));
+            results = results.filter(p => filters.categories!.includes(p.category || ''));
           }
           if (filters.hasGoal) {
-            results = results.filter((p) => p.goal_amount !== null);
+            results = results.filter(p => p.goal_amount !== null);
           }
           if (filters.minFunding !== undefined) {
-            results = results.filter((p) => (p.raised_amount || 0) >= filters.minFunding!);
+            results = results.filter(p => (p.raised_amount || 0) >= filters.minFunding!);
           }
           if (filters.maxFunding !== undefined) {
-            results = results.filter((p) => (p.raised_amount || 0) <= filters.maxFunding!);
+            results = results.filter(p => (p.raised_amount || 0) <= filters.maxFunding!);
           }
           if (filters.dateRange) {
             results = results.filter(
-              (p) =>
+              p =>
                 p.created_at >= filters.dateRange!.start && p.created_at <= filters.dateRange!.end
             );
           }
@@ -350,14 +351,14 @@ export async function searchFundingPages(
         }
 
         // Fetch profiles for projects
-        const userIds = [...new Set(results.map((p) => p.user_id))];
+        const userIds = [...new Set(results.map(p => p.user_id))];
         const { data: profiles } = await supabase
           .from(DATABASE_TABLES.PROFILES)
           .select('id, username, name, avatar_url')
           .in('id', userIds);
 
         const profileMap = new Map(
-          (profiles as ProfileReference[] | null)?.map((p) => [
+          (profiles as ProfileReference[] | null)?.map(p => [
             p.id,
             {
               ...p,
@@ -367,7 +368,7 @@ export async function searchFundingPages(
         );
 
         // Transform and return
-        return results.map((project) => {
+        return results.map(project => {
           const coverImageUrl = project.cover_image_url;
           return {
             ...project,
@@ -453,7 +454,7 @@ export async function searchFundingPages(
   const filteredProjects = rawProjects;
 
   // Fetch profiles for all projects in parallel
-  const userIds = [...new Set((filteredProjects as RawSearchProject[]).map((p) => p.user_id))];
+  const userIds = [...new Set((filteredProjects as RawSearchProject[]).map(p => p.user_id))];
   const { data: profiles } = await supabase
     .from(DATABASE_TABLES.PROFILES)
     .select('id, username, name, avatar_url')
@@ -461,7 +462,7 @@ export async function searchFundingPages(
 
   // Create a map of user_id to profile for quick lookup
   const profileMap = new Map(
-    (profiles as ProfileReference[] | null)?.map((p) => [
+    (profiles as ProfileReference[] | null)?.map(p => [
       p.id,
       {
         ...p,
@@ -471,7 +472,7 @@ export async function searchFundingPages(
   );
 
   // Transform projects with profile data
-  const projects: SearchFundingPage[] = (filteredProjects as RawSearchProject[]).map((project) => {
+  const projects: SearchFundingPage[] = (filteredProjects as RawSearchProject[]).map(project => {
     // Get first project_media image as fallback if cover_image_url is not set
     const coverImageUrl = project.cover_image_url;
     // project_media table doesn't exist - removed media processing
@@ -522,7 +523,7 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
 
     // Add profile suggestions
     if (!profileSuggestions.error && profileSuggestions.data) {
-      (profileSuggestions.data as Array<{ username?: string; name?: string }>).forEach((profile) => {
+      (profileSuggestions.data as Array<{ username?: string; name?: string }>).forEach(profile => {
         if (profile.username) {
           suggestions.add(profile.username);
         }
@@ -534,7 +535,7 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
 
     // Add project suggestions
     if (!projectSuggestions.error && projectSuggestions.data) {
-      (projectSuggestions.data as Array<{ title?: string; category?: string }>).forEach((project) => {
+      (projectSuggestions.data as Array<{ title?: string; category?: string }>).forEach(project => {
         if (project.title) {
           suggestions.add(project.title);
         }
@@ -584,20 +585,18 @@ export async function getTrending(): Promise<{
     let projects: SearchFundingPage[] = [];
     if (!projectsData.error && projectsData.data) {
       const projectResults = projectsData.data as RawSearchProject[];
-      const userIds = [...new Set(projectResults.map((p) => p.user_id))];
+      const userIds = [...new Set(projectResults.map(p => p.user_id))];
       const { data: projectProfiles } = await supabase
         .from(DATABASE_TABLES.PROFILES)
         .select('id, username, name, avatar_url')
         .in('id', userIds);
 
       const profileMap = new Map(
-        (projectProfiles as ProfileReference[] | null)?.map((p) => [
-          p.id,
-          { ...p, name: p.name },
-        ]) || []
+        (projectProfiles as ProfileReference[] | null)?.map(p => [p.id, { ...p, name: p.name }]) ||
+          []
       );
 
-      projects = projectResults.map((project) => {
+      projects = projectResults.map(project => {
         const coverImageUrl = project.cover_image_url;
         return {
           ...project,
@@ -613,7 +612,7 @@ export async function getTrending(): Promise<{
     // Process profiles
     const profiles: SearchProfile[] = [];
     if (!profilesData.error && profilesData.data) {
-      (profilesData.data as RawSearchProfile[]).forEach((profile) => {
+      (profilesData.data as RawSearchProfile[]).forEach(profile => {
         profiles.push({
           ...profile,
           name: profile.name,
@@ -682,7 +681,7 @@ export async function searchLoans(
 
   // Fetch profiles for all loans in parallel
   const loanResults = rawLoans as RawSearchLoan[];
-  const userIds = [...new Set(loanResults.map((l) => l.user_id))];
+  const userIds = [...new Set(loanResults.map(l => l.user_id))];
   const { data: profiles } = await supabase
     .from(DATABASE_TABLES.PROFILES)
     .select('id, username, name, avatar_url')
@@ -690,14 +689,11 @@ export async function searchLoans(
 
   // Create a map of user_id to profile for quick lookup
   const profileMap = new Map(
-    (profiles as ProfileReference[] | null)?.map((p) => [
-      p.id,
-      { ...p, name: p.name },
-    ]) || []
+    (profiles as ProfileReference[] | null)?.map(p => [p.id, { ...p, name: p.name }]) || []
   );
 
   // Transform loans with profile data
-  const loans: SearchLoan[] = loanResults.map((loan) => ({
+  const loans: SearchLoan[] = loanResults.map(loan => ({
     ...loan,
     profiles: profileMap.get(loan.user_id),
   }));

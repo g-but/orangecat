@@ -10,10 +10,17 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
-import { PUBLIC_SEARCH_STATUSES } from '@/lib/projectStatus';
+import { PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
-import type { SearchResult, SearchProfile, SearchFundingPage, SearchLoan, SortOption, SearchResponse } from './types';
+import type {
+  SearchResult,
+  SearchProfile,
+  SearchFundingPage,
+  SearchLoan,
+  SortOption,
+  SearchResponse,
+} from './types';
 
 // ==================== RELEVANCE SCORING ====================
 
@@ -117,7 +124,11 @@ export function calculateRelevanceScore(result: SearchResult, query: string): nu
 /**
  * Sort results based on sort option
  */
-export function sortResults(results: SearchResult[], sortBy: SortOption, query?: string): SearchResult[] {
+export function sortResults(
+  results: SearchResult[],
+  sortBy: SortOption,
+  query?: string
+): SearchResult[] {
   // OPTIMIZATION: Avoid array copying when possible
   if (results.length <= 1) {
     return results;
@@ -210,5 +221,3 @@ export async function getSearchFacets(): Promise<SearchResponse['facets']> {
 export function clearFacetsCache(): void {
   facetsCache = null;
 }
-
-
