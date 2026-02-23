@@ -18,26 +18,20 @@
 
 /**
  * Status values for all entities
- * 
+ *
  * Usage:
  * ```typescript
  * import { STATUS } from '@/config/database-constants';
- * 
+ *
  * // ✅ GOOD - Type-safe, autocomplete works
  * if (project.status === STATUS.PROJECTS.ACTIVE) { ... }
- * 
+ *
  * // ❌ BAD - Hardcoded, no type safety
  * if (project.status === 'active') { ... }
  * ```
  */
 export const STATUS = {
-  PROJECTS: {
-    DRAFT: 'draft',
-    ACTIVE: 'active',
-    PAUSED: 'paused',
-    COMPLETED: 'completed',
-    CANCELLED: 'cancelled',
-  },
+  // ProjectStatus lives in config/project-statuses.ts (SSOT)
   PROPOSALS: {
     DRAFT: 'draft',
     ACTIVE: 'active',
@@ -138,22 +132,24 @@ export const STATUS = {
 /**
  * Type helpers for status values
  */
-export type ProjectStatus = typeof STATUS.PROJECTS[keyof typeof STATUS.PROJECTS];
-export type ProposalStatus = typeof STATUS.PROPOSALS[keyof typeof STATUS.PROPOSALS];
-export type LoanStatus = typeof STATUS.LOANS[keyof typeof STATUS.LOANS];
-export type LoanOfferStatus = typeof STATUS.LOAN_OFFERS[keyof typeof STATUS.LOAN_OFFERS];
-export type TransactionStatus = typeof STATUS.TRANSACTIONS[keyof typeof STATUS.TRANSACTIONS];
-export type ProductStatus = typeof STATUS.PRODUCTS[keyof typeof STATUS.PRODUCTS];
-export type ServiceStatus = typeof STATUS.SERVICES[keyof typeof STATUS.SERVICES];
-export type CauseStatus = typeof STATUS.CAUSES[keyof typeof STATUS.CAUSES];
-export type MessageStatus = typeof STATUS.MESSAGES[keyof typeof STATUS.MESSAGES];
-export type GroupMemberRole = typeof STATUS.GROUP_MEMBERS[keyof typeof STATUS.GROUP_MEMBERS];
-export type GroupEventType = typeof STATUS.GROUP_EVENTS[keyof typeof STATUS.GROUP_EVENTS];
-export type GroupEventRsvpStatus = typeof STATUS.GROUP_EVENT_RSVPS[keyof typeof STATUS.GROUP_EVENT_RSVPS];
-export type GroupInvitationStatus = typeof STATUS.GROUP_INVITATIONS[keyof typeof STATUS.GROUP_INVITATIONS];
-export type ContractStatus = typeof STATUS.CONTRACTS[keyof typeof STATUS.CONTRACTS];
-export type AiAssistantStatus = typeof STATUS.AI_ASSISTANTS[keyof typeof STATUS.AI_ASSISTANTS];
-export type EventStatus = typeof STATUS.EVENTS[keyof typeof STATUS.EVENTS];
+// ProjectStatus is defined in config/project-statuses.ts (SSOT)
+export type ProposalStatus = (typeof STATUS.PROPOSALS)[keyof typeof STATUS.PROPOSALS];
+export type LoanStatus = (typeof STATUS.LOANS)[keyof typeof STATUS.LOANS];
+export type LoanOfferStatus = (typeof STATUS.LOAN_OFFERS)[keyof typeof STATUS.LOAN_OFFERS];
+export type TransactionStatus = (typeof STATUS.TRANSACTIONS)[keyof typeof STATUS.TRANSACTIONS];
+export type ProductStatus = (typeof STATUS.PRODUCTS)[keyof typeof STATUS.PRODUCTS];
+export type ServiceStatus = (typeof STATUS.SERVICES)[keyof typeof STATUS.SERVICES];
+export type CauseStatus = (typeof STATUS.CAUSES)[keyof typeof STATUS.CAUSES];
+export type MessageStatus = (typeof STATUS.MESSAGES)[keyof typeof STATUS.MESSAGES];
+export type GroupMemberRole = (typeof STATUS.GROUP_MEMBERS)[keyof typeof STATUS.GROUP_MEMBERS];
+export type GroupEventType = (typeof STATUS.GROUP_EVENTS)[keyof typeof STATUS.GROUP_EVENTS];
+export type GroupEventRsvpStatus =
+  (typeof STATUS.GROUP_EVENT_RSVPS)[keyof typeof STATUS.GROUP_EVENT_RSVPS];
+export type GroupInvitationStatus =
+  (typeof STATUS.GROUP_INVITATIONS)[keyof typeof STATUS.GROUP_INVITATIONS];
+export type ContractStatus = (typeof STATUS.CONTRACTS)[keyof typeof STATUS.CONTRACTS];
+export type AiAssistantStatus = (typeof STATUS.AI_ASSISTANTS)[keyof typeof STATUS.AI_ASSISTANTS];
+export type EventStatus = (typeof STATUS.EVENTS)[keyof typeof STATUS.EVENTS];
 
 /**
  * Currency constants
@@ -164,7 +160,7 @@ export const CURRENCY = {
   USD: 'USD',
 } as const;
 
-export type Currency = typeof CURRENCY[keyof typeof CURRENCY];
+export type Currency = (typeof CURRENCY)[keyof typeof CURRENCY];
 
 /**
  * Actor types
@@ -174,7 +170,7 @@ export const ACTOR_TYPES = {
   GROUP: 'group',
 } as const;
 
-export type ActorType = typeof ACTOR_TYPES[keyof typeof ACTOR_TYPES];
+export type ActorType = (typeof ACTOR_TYPES)[keyof typeof ACTOR_TYPES];
 
 /**
  * Proposal types
@@ -187,7 +183,7 @@ export const PROPOSAL_TYPES = {
   EMPLOYMENT: 'employment',
 } as const;
 
-export type ProposalType = typeof PROPOSAL_TYPES[keyof typeof PROPOSAL_TYPES];
+export type ProposalType = (typeof PROPOSAL_TYPES)[keyof typeof PROPOSAL_TYPES];
 
 /**
  * Contract types
@@ -200,7 +196,7 @@ export const CONTRACT_TYPES = {
   MEMBERSHIP: 'membership',
 } as const;
 
-export type ContractType = typeof CONTRACT_TYPES[keyof typeof CONTRACT_TYPES];
+export type ContractType = (typeof CONTRACT_TYPES)[keyof typeof CONTRACT_TYPES];
 
 /**
  * Message types
@@ -211,7 +207,7 @@ export const MESSAGE_TYPES = {
   FILE: 'file',
 } as const;
 
-export type MessageType = typeof MESSAGE_TYPES[keyof typeof MESSAGE_TYPES];
+export type MessageType = (typeof MESSAGE_TYPES)[keyof typeof MESSAGE_TYPES];
 
 /**
  * Conversation types
@@ -221,7 +217,7 @@ export const CONVERSATION_TYPES = {
   GROUP: 'group',
 } as const;
 
-export type ConversationType = typeof CONVERSATION_TYPES[keyof typeof CONVERSATION_TYPES];
+export type ConversationType = (typeof CONVERSATION_TYPES)[keyof typeof CONVERSATION_TYPES];
 
 /**
  * Visibility levels
@@ -232,7 +228,7 @@ export const VISIBILITY = {
   PRIVATE: 'private',
 } as const;
 
-export type Visibility = typeof VISIBILITY[keyof typeof VISIBILITY];
+export type Visibility = (typeof VISIBILITY)[keyof typeof VISIBILITY];
 
 /**
  * Vote values
@@ -243,7 +239,7 @@ export const VOTES = {
   ABSTAIN: 'abstain',
 } as const;
 
-export type Vote = typeof VOTES[keyof typeof VOTES];
+export type Vote = (typeof VOTES)[keyof typeof VOTES];
 
 /**
  * Support types for projects
@@ -255,14 +251,11 @@ export const SUPPORT_TYPES = {
   REACTION: 'reaction',
 } as const;
 
-export type SupportType = typeof SUPPORT_TYPES[keyof typeof SUPPORT_TYPES];
+export type SupportType = (typeof SUPPORT_TYPES)[keyof typeof SUPPORT_TYPES];
 
 /**
  * Helper function to check if a status is valid
  */
-export function isValidStatus<T extends keyof typeof STATUS>(
-  entity: T,
-  status: string
-): boolean {
+export function isValidStatus<T extends keyof typeof STATUS>(entity: T, status: string): boolean {
   return Object.values(STATUS[entity]).includes(status as never);
 }

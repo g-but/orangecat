@@ -1,12 +1,12 @@
 /**
  * Project Status Configuration - Single Source of Truth
  *
- * Centralized status definitions for projects.
- * Used by all components that display project status.
+ * Centralized status definitions, labels, colors, and validation for projects.
+ * All project status constants and helpers live here — import from this file only.
  *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
- * Last Modified Summary: Created project statuses config
+ * Last Modified: 2026-02-23
+ * Last Modified Summary: Consolidated from lib/projectStatus.ts and database-constants.ts
  */
 
 export const PROJECT_STATUSES = {
@@ -44,12 +44,27 @@ export const PROJECT_STATUSES = {
 
 export type ProjectStatus = keyof typeof PROJECT_STATUSES;
 
-/**
- * Get status configuration
- */
-export function getProjectStatus(status: string): typeof PROJECT_STATUSES[keyof typeof PROJECT_STATUSES] {
+/** All valid project status values */
+export const VALID_PROJECT_STATUSES: readonly ProjectStatus[] = [
+  'draft',
+  'active',
+  'paused',
+  'completed',
+  'cancelled',
+] as const;
+
+/** Statuses visible in public search/discover */
+export const PUBLIC_SEARCH_STATUSES: readonly ProjectStatus[] = ['active', 'paused'] as const;
+
+/** Get status display configuration (label, colors, badge variant) */
+export function getProjectStatus(
+  status: string
+): (typeof PROJECT_STATUSES)[keyof typeof PROJECT_STATUSES] {
   const normalized = status?.toLowerCase() as ProjectStatus;
   return PROJECT_STATUSES[normalized] || PROJECT_STATUSES.draft;
 }
 
-
+/** Type guard: check if a string is a valid ProjectStatus */
+export function isValidProjectStatus(status: string): status is ProjectStatus {
+  return VALID_PROJECT_STATUSES.includes(status as ProjectStatus);
+}

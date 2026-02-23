@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { ENTITY_REGISTRY, type EntityType } from '@/config/entity-registry';
 
 const BASE_URL = 'https://orangecat.ch';
 
@@ -114,12 +115,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     // Public entity pages (active projects, products, services, etc.)
-    const entityTables = [
-      { table: 'user_projects', pathPrefix: 'project' },
-      { table: 'user_products', pathPrefix: 'product' },
-      { table: 'user_services', pathPrefix: 'service' },
-      { table: 'user_causes', pathPrefix: 'cause' },
-    ] as const;
+    const SITEMAP_ENTITY_TYPES: EntityType[] = ['project', 'product', 'service', 'cause'];
+    const entityTables = SITEMAP_ENTITY_TYPES.map(type => ({
+      table: ENTITY_REGISTRY[type].tableName,
+      pathPrefix: type,
+    }));
 
     for (const { table, pathPrefix } of entityTables) {
       const { data: entities } = (await supabase

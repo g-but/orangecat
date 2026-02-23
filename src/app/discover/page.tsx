@@ -9,7 +9,7 @@ import Button from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearch } from '@/hooks/useSearch';
 import { SearchFundingPage, SearchProfile, SearchType, SortOption } from '@/services/search';
-import { PUBLIC_SEARCH_STATUSES } from '@/lib/projectStatus';
+import { PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import supabase from '@/lib/supabase/browser';
 import DiscoverTabs, { DiscoverTabType } from '@/components/discover/DiscoverTabs';
 import DiscoverFilters from '@/components/discover/DiscoverFilters';
