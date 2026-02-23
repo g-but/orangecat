@@ -11,13 +11,12 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 export async function listWishlistsPage(limit: number, offset: number, userId?: string) {
   const supabase = await createServerClient();
-  
-  let query = supabase
-    .from('wishlist_with_stats')
-    .select('*', { count: 'exact' });
+
+  let query = supabase.from('wishlist_with_stats').select('*', { count: 'exact' });
 
   if (userId) {
     query = query.eq('actor_id', userId);
@@ -45,7 +44,7 @@ export async function listWishlistsPage(limit: number, offset: number, userId?: 
   // Transform data to include items_count from item_count view field
   const items = ((data || []) as WishlistWithStats[]).map(w => ({
     ...w,
-    items_count: w.item_count || 0
+    items_count: w.item_count || 0,
   }));
 
   return { items, total: count || 0 };
@@ -61,7 +60,7 @@ async function getOrCreateUserActor(userId: string): Promise<{ id: string }> {
 
   // First try to find existing actor
   const { data: existingActor, error: findError } = await supabase
-    .from('actors')
+    .from(DATABASE_TABLES.ACTORS)
     .select('id')
     .eq('user_id', userId)
     .eq('actor_type', 'user')
@@ -78,10 +77,14 @@ async function getOrCreateUserActor(userId: string): Promise<{ id: string }> {
 
   // Actor doesn't exist - create one
   // First get user profile for display name
-  interface ProfileData { username: string | null; name: string | null; avatar_url: string | null }
+  interface ProfileData {
+    username: string | null;
+    name: string | null;
+    avatar_url: string | null;
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const profileResult: any = await supabase
-    .from('profiles')
+    .from(DATABASE_TABLES.PROFILES)
     .select('username, name, avatar_url')
     .eq('id', userId)
     .maybeSingle();
@@ -90,7 +93,10 @@ async function getOrCreateUserActor(userId: string): Promise<{ id: string }> {
   const profileError = profileResult.error;
 
   if (profileError) {
-    logger.error('Failed to get profile for actor creation', { error: profileError?.message, userId });
+    logger.error('Failed to get profile for actor creation', {
+      error: profileError?.message,
+      userId,
+    });
     throw profileError;
   }
 
@@ -99,8 +105,9 @@ async function getOrCreateUserActor(userId: string): Promise<{ id: string }> {
 
   // Create actor using admin client (bypasses RLS)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: newActor, error: createError } = await (adminClient
-    .from('actors') as any)
+  const { data: newActor, error: createError } = await (
+    adminClient.from(DATABASE_TABLES.ACTORS) as any
+  )
     .insert({
       actor_type: 'user',
       user_id: userId,
@@ -128,8 +135,7 @@ export async function createWishlist(userId: string, data: any) {
   const actor = await getOrCreateUserActor(userId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: wishlist, error } = await (supabase
-    .from('wishlists') as any)
+  const { data: wishlist, error } = await (supabase.from('wishlists') as any)
     .insert({
       actor_id: actor.id,
       title: data.title,
@@ -144,13 +150,13 @@ export async function createWishlist(userId: string, data: any) {
     .single();
 
   if (error) {
-    logger.error('Failed to create wishlist', { 
-      error, 
+    logger.error('Failed to create wishlist', {
+      error,
       errorMessage: error.message,
       errorCode: error.code,
-      userId, 
+      userId,
       actorId: actor.id,
-      data 
+      data,
     });
     throw error;
   }

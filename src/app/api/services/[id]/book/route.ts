@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import { createBookingService } from '@/services/bookings';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 
@@ -65,7 +66,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const { data: customerActor } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('actors') as any
+        .from(DATABASE_TABLES.ACTORS) as any
     )
       .select('id')
       .eq('user_id', user.id)

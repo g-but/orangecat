@@ -69,7 +69,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Get customer's actor
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: customerActorData } = await (supabase.from('actors') as any)
+    const { data: customerActorData } = await (supabase.from(DATABASE_TABLES.ACTORS) as any)
       .select('id')
       .eq('user_id', user.id)
       .single();

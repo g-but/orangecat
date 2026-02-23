@@ -9,6 +9,7 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Notification types supported by the system
 export type NotificationType =
@@ -117,7 +118,7 @@ export class NotificationService {
     try {
       // Get all user IDs except the excluded one
       // Note: In production, filter by team membership or staff status
-      let query = this.supabase.from('profiles').select('id');
+      let query = this.supabase.from(DATABASE_TABLES.PROFILES).select('id');
 
       if (options.excludeUserId) {
         query = query.neq('id', options.excludeUserId);

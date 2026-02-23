@@ -11,6 +11,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type { Actor } from './types/actor';
 
 /**
@@ -19,7 +20,7 @@ import type { Actor } from './types/actor';
 export async function getActor(actorId: string): Promise<Actor | null> {
   try {
     const { data, error } = await supabase
-      .from('actors')
+      .from(DATABASE_TABLES.ACTORS)
       .select('*')
       .eq('id', actorId)
       .maybeSingle();
@@ -42,7 +43,7 @@ export async function getActor(actorId: string): Promise<Actor | null> {
 export async function getActorByUser(userId: string): Promise<Actor | null> {
   try {
     const { data, error } = await supabase
-      .from('actors')
+      .from(DATABASE_TABLES.ACTORS)
       .select('*')
       .eq('actor_type', 'user')
       .eq('user_id', userId)
@@ -66,7 +67,7 @@ export async function getActorByUser(userId: string): Promise<Actor | null> {
 export async function getActorByGroup(groupId: string): Promise<Actor | null> {
   try {
     const { data, error } = await supabase
-      .from('actors')
+      .from(DATABASE_TABLES.ACTORS)
       .select('*')
       .eq('actor_type', 'group')
       .eq('group_id', groupId)

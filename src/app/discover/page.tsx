@@ -11,6 +11,8 @@ import { useSearch } from '@/hooks/useSearch';
 import { SearchFundingPage, SearchProfile, SearchType, SortOption } from '@/services/search';
 import { PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
+import { getTableName } from '@/config/entity-registry';
 import DiscoverTabs, { DiscoverTabType } from '@/components/discover/DiscoverTabs';
 import DiscoverFilters from '@/components/discover/DiscoverFilters';
 import DiscoverHero from '@/components/discover/DiscoverHero';
@@ -121,10 +123,10 @@ export default function DiscoverPage() {
         // Fetch fresh data
         const [projectsResult, profilesResult, loansResult] = await Promise.all([
           supabase
-            .from('projects')
+            .from(getTableName('project'))
             .select('*', { count: 'exact', head: true })
             .eq('status', 'active'),
-          supabase.from('profiles').select('*', { count: 'exact', head: true }),
+          supabase.from(DATABASE_TABLES.PROFILES).select('*', { count: 'exact', head: true }),
           supabase
             .from('loans')
             .select('*', { count: 'exact', head: true })

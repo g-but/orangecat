@@ -12,6 +12,7 @@
 import { NextResponse } from 'next/server';
 import { createBookingService } from '@/services/bookings';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 
@@ -39,7 +40,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
 
     // Verify user has access (is customer or provider)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: actors } = await (supabase.from('actors') as any)
+    const { data: actors } = await (supabase.from(DATABASE_TABLES.ACTORS) as any)
       .select('id')
       .eq('user_id', user.id);
 
@@ -86,7 +87,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
 
     // Get user's actor IDs
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: actors } = await (supabase.from('actors') as any)
+    const { data: actors } = await (supabase.from(DATABASE_TABLES.ACTORS) as any)
       .select('id')
       .eq('user_id', user.id);
 

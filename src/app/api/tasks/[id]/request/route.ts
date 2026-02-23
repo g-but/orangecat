@@ -81,7 +81,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // If specific user requested, verify they exist
     if (requestData.requested_user_id) {
       const { data: requestedUser, error: userError } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('id')
         .eq('id', requestData.requested_user_id)
         .single();
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Get requester's name
     const { data: profileData } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('username, display_name')
       .eq('id', user.id)
       .single();

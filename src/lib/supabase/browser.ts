@@ -1,55 +1,63 @@
-'use client'
+'use client';
 
-import { createBrowserClient } from '@supabase/ssr'
-import { Database } from '@/types/database'
-import { logger } from '@/utils/logger'
+import { createBrowserClient } from '@supabase/ssr';
+import { Database } from '@/types/database';
+import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Environment variables (must be present; no client-side fallbacks)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   // Fail fast to avoid leaking placeholder keys or silently using wrong project
-  const message = 'Supabase client misconfigured: set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY).'
+  const message =
+    'Supabase client misconfigured: set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY).';
   if (process.env.NODE_ENV === 'development') {
-    throw new Error(message)
+    throw new Error(message);
   }
   // In production, throw to prevent shipping a broken auth client
-  throw new Error(message)
+  throw new Error(message);
 }
 
 // Validate URL format early
 if (!supabaseUrl.startsWith('https://') || !supabaseUrl.includes('.supabase.co')) {
-  throw new Error('Supabase URL format looks incorrect. Expected https://<project>.supabase.co')
+  throw new Error('Supabase URL format looks incorrect. Expected https://<project>.supabase.co');
 }
 
 // Safe storage with localStorage/sessionStorage fallback
 const safeStorage = {
   getItem: (key: string) => {
     try {
-      return localStorage.getItem(key) || sessionStorage.getItem(key)
+      return localStorage.getItem(key) || sessionStorage.getItem(key);
     } catch {
-      return null
+      return null;
     }
   },
   setItem: (key: string, value: string) => {
     try {
-      localStorage.setItem(key, value)
+      localStorage.setItem(key, value);
     } catch {
-      try { sessionStorage.setItem(key, value) } catch {}
+      try {
+        sessionStorage.setItem(key, value);
+      } catch {}
     }
   },
   removeItem: (key: string) => {
-    try { localStorage.removeItem(key) } catch {}
-    try { sessionStorage.removeItem(key) } catch {}
-  }
-}
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+    try {
+      sessionStorage.removeItem(key);
+    } catch {}
+  },
+};
 
 // Create the browser client with optimized configuration for authentication
 // Control debug logging via environment variable (default: only in development)
-const enableAuthDebug = process.env.NEXT_PUBLIC_SUPABASE_DEBUG === 'true' || 
+const enableAuthDebug =
+  process.env.NEXT_PUBLIC_SUPABASE_DEBUG === 'true' ||
   (process.env.NEXT_PUBLIC_SUPABASE_DEBUG !== 'false' && process.env.NODE_ENV === 'development');
 
 const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -97,13 +105,13 @@ const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
       eventsPerSecond: 2,
     },
   },
-})
+});
 
 // Add connection test in development (non-blocking)
 if (process.env.NODE_ENV === 'development') {
   const testConnection = async () => {
     try {
-      const { error } = await supabase.from('profiles').select('count').limit(1);
+      const { error } = await supabase.from(DATABASE_TABLES.PROFILES).select('count').limit(1);
       if (error) {
         logger.warn('Supabase connection test failed', { errorMessage: error.message }, 'Supabase');
       } else {
@@ -118,10 +126,10 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Export the client instance directly - createBrowserClient handles internal caching
-export default supabase
+export default supabase;
 
 // Provide a factory function for testing/mocking purposes
-export const createSupabaseClient = () => 
+export const createSupabaseClient = () =>
   createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
@@ -162,6 +170,6 @@ export const createSupabaseClient = () =>
         eventsPerSecond: 2,
       },
     },
-  })
+  });
 
-export { supabase } // Legacy named export for backward compatibility 
+export { supabase }; // Legacy named export for backward compatibility

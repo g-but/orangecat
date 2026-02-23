@@ -12,6 +12,7 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type { DocumentFormData, DocumentVisibility, DocumentType } from '@/lib/validation';
 
 export interface Document {
@@ -40,7 +41,7 @@ async function getOrCreateUserActor(userId: string): Promise<{ id: string }> {
 
   // First try to find existing actor
   const { data: existingActor, error: findError } = await supabase
-    .from('actors')
+    .from(DATABASE_TABLES.ACTORS)
     .select('id')
     .eq('user_id', userId)
     .eq('actor_type', 'user')
@@ -64,7 +65,7 @@ async function getOrCreateUserActor(userId: string): Promise<{ id: string }> {
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const profileResult: any = await supabase
-    .from('profiles')
+    .from(DATABASE_TABLES.PROFILES)
     .select('username, name, avatar_url')
     .eq('id', userId)
     .maybeSingle();
@@ -85,7 +86,9 @@ async function getOrCreateUserActor(userId: string): Promise<{ id: string }> {
 
   // Create actor using admin client (bypasses RLS)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: newActor, error: createError } = await (adminClient.from('actors') as any)
+  const { data: newActor, error: createError } = await (
+    adminClient.from(DATABASE_TABLES.ACTORS) as any
+  )
     .insert({
       actor_type: 'user',
       user_id: userId,

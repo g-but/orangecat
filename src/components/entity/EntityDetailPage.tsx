@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/Button';
 import { getTableName } from '@/config/entity-registry';
 import type { EntityConfig, BaseEntity } from '@/types/entity';
 import { PLATFORM_DEFAULT_CURRENCY, isSupportedCurrency } from '@/config/currencies';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type { Currency } from '@/types/settings';
 import { COLUMNS } from '@/config/database-columns';
 import type { ReactNode } from 'react';
@@ -207,8 +208,7 @@ export default async function EntityDetailPage<T extends BaseEntity>({
   // Get user's currency preference from profile
   let userCurrency: Currency = PLATFORM_DEFAULT_CURRENCY;
   if (user) {
-    const { data: profile } = await (supabase
-      .from('profiles') as any)
+    const { data: profile } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
       .select(COLUMNS.profiles.CURRENCY)
       .eq(COLUMNS.profiles.ID, user.id)
       .single();

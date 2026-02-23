@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createActionExecutor } from '@/services/cat';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
 interface RouteParams {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Get user's actor ID
     const { data: actor, error: actorError } = (await supabase
-      .from('actors')
+      .from(DATABASE_TABLES.ACTORS)
       .select('id')
       .eq('user_id', user.id)
       .single()) as { data: { id: string } | null; error: unknown };
