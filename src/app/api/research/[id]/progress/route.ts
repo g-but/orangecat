@@ -11,6 +11,7 @@ import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 
 // Helper to extract ID from URL
@@ -21,17 +22,17 @@ function extractIdFromUrl(url: string): string {
 }
 
 // GET /api/research/[id]/progress - Get progress updates
-export const GET = compose(
-  withRateLimit('read')
-)(async (request: NextRequest) => {
+export const GET = compose(withRateLimit('read'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
 
     // Check if research entity exists and is accessible
-    const { data: entity, error: entityError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('research_entities') as any)
+    const { data: entity, error: entityError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.RESEARCH_ENTITIES) as any
+    )
       .select('id, user_id, is_public')
       .eq('id', id)
       .single();
@@ -43,7 +44,9 @@ export const GET = compose(
       throw entityError;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     // Check access permissions
     if (!entity.is_public && (!user || user.id !== entity.user_id)) {
@@ -51,14 +54,18 @@ export const GET = compose(
     }
 
     // Get progress updates
-    const { data: updates, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('research_progress_updates') as any)
+    const { data: updates, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES) as any
+    )
       .select('*')
       .eq('research_entity_id', id)
       .order('created_at', { ascending: false });
 
-    if (error) {throw error;}
+    if (error) {
+      throw error;
+    }
 
     return apiSuccess(updates || []);
   } catch (error) {
@@ -67,22 +74,25 @@ export const GET = compose(
 });
 
 // POST /api/research/[id]/progress - Create progress update
-export const POST = compose(
-  withRateLimit('write')
-)(async (request: NextRequest) => {
+export const POST = compose(withRateLimit('write'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return apiUnauthorized();
     }
 
     // Check if user owns this research entity
-    const { data: entity, error: entityError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('research_entities') as any)
+    const { data: entity, error: entityError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.RESEARCH_ENTITIES) as any
+    )
       .select('id, user_id, transparency_level')
       .eq('id', id)
       .single();
@@ -110,16 +120,19 @@ export const POST = compose(
       throw e;
     }
 
-    const { title, description, milestone_achieved, funding_released, attachments } = await request.json();
+    const { title, description, milestone_achieved, funding_released, attachments } =
+      await request.json();
 
     if (!title || !description) {
       return apiUnauthorized('Title and description are required');
     }
 
     // Create progress update
-    const { data: update, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('research_progress_updates') as any)
+    const { data: update, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES) as any
+    )
       .insert({
         research_entity_id: id,
         user_id: user.id,
@@ -132,14 +145,16 @@ export const POST = compose(
       .select()
       .single();
 
-    if (error) {throw error;}
+    if (error) {
+      throw error;
+    }
 
     // Update research entity metrics if milestone achieved
     if (milestone_achieved) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.rpc as any)('increment_research_completion', {
         research_entity_id: id,
-        percentage_increase: 10 // Assume 10% progress per milestone
+        percentage_increase: 10, // Assume 10% progress per milestone
       });
     }
 
@@ -147,7 +162,7 @@ export const POST = compose(
       researchEntityId: id,
       updateId: update.id,
       userId: user.id,
-      milestoneAchieved: milestone_achieved
+      milestoneAchieved: milestone_achieved,
     });
 
     return applyRateLimitHeaders(apiSuccess(update, { status: 201 }), rl);

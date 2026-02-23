@@ -9,6 +9,7 @@
  */
 
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { STATUS } from '@/config/database-constants';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
@@ -94,7 +95,7 @@ export async function createInvitation(input: CreateInvitationInput): Promise<In
 
       // Check for existing pending invitation
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: existing } = await (supabase.from('group_invitations') as any)
+      const { data: existing } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
         .select('id')
         .eq('group_id', input.group_id)
         .eq('user_id', input.user_id)
@@ -138,7 +139,7 @@ export async function createInvitation(input: CreateInvitationInput): Promise<In
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: invData, error } = await (supabase.from('group_invitations') as any)
+    const { data: invData, error } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
       .insert(invitationData)
       .select()
       .single();
@@ -273,7 +274,7 @@ export async function acceptInvitationByToken(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: invitationData, error: findError } =
       await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from('group_invitations') as any)
+      (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
         .select('id, group_id, status, expires_at')
         .eq('token', token)
         .eq('status', 'pending')
@@ -327,7 +328,7 @@ export async function revokeInvitation(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: invitationData2, error: findError } =
       await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from('group_invitations') as any)
+      (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
         .select('group_id, status')
         .eq('id', invitationId)
         .single();
@@ -350,7 +351,7 @@ export async function revokeInvitation(
 
     // Revoke
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('group_invitations') as any)
+    const { error } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
       .update({ status: 'revoked' })
       .eq('id', invitationId);
 

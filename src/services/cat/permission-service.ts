@@ -11,6 +11,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { CAT_ACTIONS, ACTION_CATEGORIES, type ActionCategory } from '@/config/cat-actions';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any>;
@@ -82,7 +83,7 @@ export class CatPermissionService {
 
     // Check for specific action permission first
     const { data: specificPerm } = await this.supabase
-      .from('cat_permissions')
+      .from(DATABASE_TABLES.CAT_PERMISSIONS)
       .select('*')
       .eq('user_id', userId)
       .eq('action_id', actionId)
@@ -123,7 +124,7 @@ export class CatPermissionService {
 
     // Check category-wide permission
     const { data: categoryPerm } = await this.supabase
-      .from('cat_permissions')
+      .from(DATABASE_TABLES.CAT_PERMISSIONS)
       .select('*')
       .eq('user_id', userId)
       .eq('action_id', '*')
@@ -162,7 +163,7 @@ export class CatPermissionService {
     today.setHours(0, 0, 0, 0);
 
     const { count } = await this.supabase
-      .from('cat_action_log')
+      .from(DATABASE_TABLES.CAT_ACTION_LOG)
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('action_id', actionId)
@@ -185,7 +186,7 @@ export class CatPermissionService {
     } = {}
   ): Promise<CatPermission> {
     const { data, error } = await this.supabase
-      .from('cat_permissions')
+      .from(DATABASE_TABLES.CAT_PERMISSIONS)
       .upsert(
         {
           user_id: userId,
@@ -219,7 +220,7 @@ export class CatPermissionService {
     actionId: string,
     category: ActionCategory
   ): Promise<void> {
-    const { error } = await this.supabase.from('cat_permissions').upsert(
+    const { error } = await this.supabase.from(DATABASE_TABLES.CAT_PERMISSIONS).upsert(
       {
         user_id: userId,
         action_id: actionId,
@@ -257,7 +258,7 @@ export class CatPermissionService {
 
     // Also revoke all specific actions in this category
     const { error } = await this.supabase
-      .from('cat_permissions')
+      .from(DATABASE_TABLES.CAT_PERMISSIONS)
       .update({ granted: false, updated_at: new Date().toISOString() })
       .eq('user_id', userId)
       .eq('category', category);
@@ -272,7 +273,7 @@ export class CatPermissionService {
    */
   async getUserPermissions(userId: string): Promise<CatPermission[]> {
     const { data, error } = await this.supabase
-      .from('cat_permissions')
+      .from(DATABASE_TABLES.CAT_PERMISSIONS)
       .select('*')
       .eq('user_id', userId)
       .order('category');

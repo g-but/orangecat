@@ -16,6 +16,7 @@ import {
   apiValidationError,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
@@ -79,7 +80,7 @@ export const POST = withAuth(
 
       // Get invitation
       const { data: invitationData, error: inviteError } = await (
-        supabase.from('group_invitations') as UntypedTable
+        supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable
       )
         .select('*, groups(slug)')
         .eq('id', invitationId)
@@ -102,7 +103,7 @@ export const POST = withAuth(
 
       // Check if expired
       if (new Date(invitation.expires_at) < new Date()) {
-        await (supabase.from('group_invitations') as UntypedTable)
+        await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable)
           .update({ status: 'expired' })
           .eq('id', invitationId);
         return apiValidationError('Invitation has expired');
@@ -110,7 +111,9 @@ export const POST = withAuth(
 
       if (action === 'accept') {
         // Check if already a member
-        const { data: existingMemberData } = await (supabase.from('group_members') as UntypedTable)
+        const { data: existingMemberData } = await (
+          supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as UntypedTable
+        )
           .select('id')
           .eq('group_id', invitation.group_id)
           .eq('user_id', user.id)
@@ -119,7 +122,7 @@ export const POST = withAuth(
 
         if (existingMember) {
           // Already a member, just update invitation status
-          await (supabase.from('group_invitations') as UntypedTable)
+          await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable)
             .update({ status: 'accepted', responded_at: new Date().toISOString() })
             .eq('id', invitationId);
 
@@ -131,7 +134,7 @@ export const POST = withAuth(
 
         // Add as member
         const { error: memberError } = await (
-          supabase.from('group_members') as UntypedTable
+          supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as UntypedTable
         ).insert({
           group_id: invitation.group_id,
           user_id: user.id,
@@ -145,7 +148,7 @@ export const POST = withAuth(
         }
 
         // Update invitation status
-        await (supabase.from('group_invitations') as UntypedTable)
+        await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable)
           .update({ status: 'accepted', responded_at: new Date().toISOString() })
           .eq('id', invitationId);
 
@@ -155,7 +158,7 @@ export const POST = withAuth(
         });
       } else {
         // Decline
-        await (supabase.from('group_invitations') as UntypedTable)
+        await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable)
           .update({ status: 'declined', responded_at: new Date().toISOString() })
           .eq('id', invitationId);
 
@@ -181,7 +184,7 @@ export const DELETE = withAuth(
 
       // Get invitation
       const { data: invitationData2, error: inviteError } = await (
-        supabase.from('group_invitations') as UntypedTable
+        supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable
       )
         .select('group_id, status')
         .eq('id', invitationId)
@@ -193,7 +196,9 @@ export const DELETE = withAuth(
       }
 
       // Check if user is admin/founder
-      const { data: membershipData } = await (supabase.from('group_members') as UntypedTable)
+      const { data: membershipData } = await (
+        supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as UntypedTable
+      )
         .select('role')
         .eq('group_id', invitation.group_id)
         .eq('user_id', user.id)
@@ -209,7 +214,7 @@ export const DELETE = withAuth(
       }
 
       // Revoke
-      const { error } = await (supabase.from('group_invitations') as UntypedTable)
+      const { error } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable)
         .update({ status: 'revoked' })
         .eq('id', invitationId);
 

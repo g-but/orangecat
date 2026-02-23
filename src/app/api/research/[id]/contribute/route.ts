@@ -10,6 +10,7 @@ import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { convertToBtc } from '@/services/currency';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface ResearchEntity {
   id: string;
@@ -42,16 +43,14 @@ function extractIdFromUrl(url: string): string {
 }
 
 // GET /api/research/[id]/contribute - Get contribution history
-export const GET = compose(
-  withRateLimit('read')
-)(async (request: NextRequest) => {
+export const GET = compose(withRateLimit('read'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
 
     // Check if research entity exists
     const { data: entityData, error: entityError } = await supabase
-      .from('research_entities')
+      .from(DATABASE_TABLES.RESEARCH_ENTITIES)
       .select('id, is_public, user_id')
       .eq('id', id)
       .single();
@@ -75,7 +74,7 @@ export const GET = compose(
         canSeeDetails = true;
       } else {
         const { data: userContributions } = await supabase
-          .from('research_contributions')
+          .from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS)
           .select('id')
           .eq('research_entity_id', id)
           .eq('user_id', user.id)
@@ -85,7 +84,7 @@ export const GET = compose(
     }
 
     let query = supabase
-      .from('research_contributions')
+      .from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS)
       .select(canSeeDetails ? '*' : 'id, amount_btc, funding_model, anonymous, status, created_at')
       .eq('research_entity_id', id)
       .order('created_at', { ascending: false });
@@ -128,9 +127,7 @@ export const GET = compose(
 });
 
 // POST /api/research/[id]/contribute - Make a contribution
-export const POST = compose(
-  withRateLimit('write')
-)(async (request: NextRequest) => {
+export const POST = compose(withRateLimit('write'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
@@ -140,7 +137,7 @@ export const POST = compose(
 
     // Check if research entity exists and accepts contributions
     const { data: entityData2, error: entityError } = await supabase
-      .from('research_entities')
+      .from(DATABASE_TABLES.RESEARCH_ENTITIES)
       .select('id, is_public, funding_goal, funding_goal_currency, funding_raised_btc, status')
       .eq('id', id)
       .single();
@@ -196,8 +193,9 @@ export const POST = compose(
       status: 'pending',
     };
 
-    const { data: contribution, error } = await (supabase
-      .from('research_contributions') as ReturnType<typeof supabase.from>)
+    const { data: contribution, error } = await (
+      supabase.from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS) as ReturnType<typeof supabase.from>
+    )
       .insert(contributionData)
       .select()
       .single();
@@ -209,7 +207,9 @@ export const POST = compose(
     const contributionResult = contribution as Contribution | null;
 
     // Update research entity funding total
-    await (supabase.rpc as unknown as (name: string, params: Record<string, unknown>) => Promise<unknown>)('update_research_funding', {
+    await (
+      supabase.rpc as unknown as (name: string, params: Record<string, unknown>) => Promise<unknown>
+    )('update_research_funding', {
       research_entity_id: id,
       amount_btc: amountBtc,
     });

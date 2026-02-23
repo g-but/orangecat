@@ -7,12 +7,9 @@
  */
 
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
-import type {
-  LoanOffersListResponse,
-  LoanOffersQuery,
-  Pagination,
-} from '@/types/loans';
+import type { LoanOffersListResponse, LoanOffersQuery, Pagination } from '@/types/loans';
 import { getCurrentUserId } from '../utils/auth';
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -30,7 +27,7 @@ export async function getLoanOffers(
     const _userId = await getCurrentUserId();
 
     let dbQuery = supabase
-      .from('loan_offers')
+      .from(DATABASE_TABLES.LOAN_OFFERS)
       .select(
         `
         *,
@@ -92,7 +89,7 @@ export async function getUserOffers(
     }
 
     let dbQuery = supabase
-      .from('loan_offers')
+      .from(DATABASE_TABLES.LOAN_OFFERS)
       .select(
         `
         *,

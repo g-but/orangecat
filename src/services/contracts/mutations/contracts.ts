@@ -1,4 +1,5 @@
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { CONTRACT_TYPES } from '@/config/contract-types';
 import { getCurrentUserId } from '@/services/groups/utils/helpers';
@@ -16,11 +17,15 @@ export interface CreateContractInput {
 export async function createContract(input: CreateContractInput) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) {return { success: false, error: 'Authentication required' };}
+    if (!userId) {
+      return { success: false, error: 'Authentication required' };
+    }
 
     const partyA = await getActor(input.party_a_actor_id);
     const partyB = await getActor(input.party_b_actor_id);
-    if (!partyA || !partyB) {return { success: false, error: 'Invalid party actor' };}
+    if (!partyA || !partyB) {
+      return { success: false, error: 'Invalid party actor' };
+    }
 
     if (partyB.actor_type === 'group') {
       const { createProposal } = await import('@/services/groups/mutations/proposals');
@@ -43,10 +48,14 @@ export async function createContract(input: CreateContractInput) {
         return { success: false, error: proposalResult.error || 'Failed to create proposal' };
       }
 
-      return { success: true, contract: null, proposalId: proposalResult.proposal?.id, method: 'proposal' };
+      return {
+        success: true,
+        contract: null,
+        proposalId: proposalResult.proposal?.id,
+        method: 'proposal',
+      };
     } else {
-      const { data, error } = await (supabase
-        .from('contracts') as any)
+      const { data, error } = await (supabase.from(DATABASE_TABLES.CONTRACTS) as any)
         .insert({
           party_a_actor_id: input.party_a_actor_id,
           party_b_actor_id: input.party_b_actor_id,
@@ -75,7 +84,9 @@ export async function createContract(input: CreateContractInput) {
 export async function activateContract(contractId: string) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) {return { success: false, error: 'Authentication required' };}
+    if (!userId) {
+      return { success: false, error: 'Authentication required' };
+    }
 
     const contract = await getContract(contractId);
     if (!contract.success || !contract.contract) {
@@ -83,11 +94,13 @@ export async function activateContract(contractId: string) {
     }
 
     if (contract.contract.status !== 'proposed') {
-      return { success: false, error: `Cannot activate contract with status: ${contract.contract.status}` };
+      return {
+        success: false,
+        error: `Cannot activate contract with status: ${contract.contract.status}`,
+      };
     }
 
-    const { data, error } = await (supabase
-      .from('contracts') as any)
+    const { data, error } = await (supabase.from(DATABASE_TABLES.CONTRACTS) as any)
       .update({
         status: 'active',
         activated_at: new Date().toISOString(),
@@ -108,4 +121,3 @@ export async function activateContract(contractId: string) {
     return { success: false, error: 'Failed to activate contract' };
   }
 }
-

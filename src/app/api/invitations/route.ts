@@ -9,6 +9,7 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
 /**
@@ -22,7 +23,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
 
     // Get pending invitations with group details
     const { data, error } = await supabase
-      .from('group_invitations')
+      .from(DATABASE_TABLES.GROUP_INVITATIONS)
       .select(
         `
         id,

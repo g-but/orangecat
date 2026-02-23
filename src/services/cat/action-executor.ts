@@ -13,6 +13,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { CAT_ACTIONS, type CatAction, type ActionCategory } from '@/config/cat-actions';
 import { CatPermissionService } from './permission-service';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -277,7 +278,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     }
 
     // Add creator as admin member
-    const { error: memberError } = await supabase.from('group_members').insert({
+    const { error: memberError } = await supabase.from(DATABASE_TABLES.GROUP_MEMBERS).insert({
       group_id: group.id,
       user_id: userId,
       role: 'admin',
@@ -378,7 +379,7 @@ export class CatActionExecutor {
   ): Promise<ActionResult> {
     // Get pending action
     const { data: pending, error: fetchError } = await this.supabase
-      .from('cat_pending_actions')
+      .from(DATABASE_TABLES.CAT_PENDING_ACTIONS)
       .select('*')
       .eq('id', pendingActionId)
       .eq('user_id', userId)
@@ -397,7 +398,7 @@ export class CatActionExecutor {
     // Check if expired
     if (new Date(pending.expires_at) < new Date()) {
       await this.supabase
-        .from('cat_pending_actions')
+        .from(DATABASE_TABLES.CAT_PENDING_ACTIONS)
         .update({ status: 'expired' })
         .eq('id', pendingActionId);
 
@@ -411,7 +412,7 @@ export class CatActionExecutor {
 
     // Mark as confirmed
     await this.supabase
-      .from('cat_pending_actions')
+      .from(DATABASE_TABLES.CAT_PENDING_ACTIONS)
       .update({ status: 'confirmed', confirmed_at: new Date().toISOString() })
       .eq('id', pendingActionId);
 
@@ -446,7 +447,7 @@ export class CatActionExecutor {
     reason?: string
   ): Promise<void> {
     await this.supabase
-      .from('cat_pending_actions')
+      .from(DATABASE_TABLES.CAT_PENDING_ACTIONS)
       .update({
         status: 'rejected',
         rejected_at: new Date().toISOString(),
@@ -461,7 +462,7 @@ export class CatActionExecutor {
    */
   async getPendingActions(userId: string): Promise<PendingAction[]> {
     const { data } = await this.supabase
-      .from('cat_pending_actions')
+      .from(DATABASE_TABLES.CAT_PENDING_ACTIONS)
       .select('*')
       .eq('user_id', userId)
       .eq('status', 'pending')
@@ -487,7 +488,7 @@ export class CatActionExecutor {
     options: { limit?: number; actionId?: string; status?: string } = {}
   ) {
     let query = this.supabase
-      .from('cat_action_log')
+      .from(DATABASE_TABLES.CAT_ACTION_LOG)
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
@@ -517,7 +518,7 @@ export class CatActionExecutor {
   ): Promise<ActionResult> {
     // Create log entry
     const { data: logEntry, error: logError } = await this.supabase
-      .from('cat_action_log')
+      .from(DATABASE_TABLES.CAT_ACTION_LOG)
       .insert({
         user_id: userId,
         action_id: action.id,
@@ -609,7 +610,7 @@ export class CatActionExecutor {
     const description = this.generateActionDescription(action, parameters);
 
     const { data, error } = await this.supabase
-      .from('cat_pending_actions')
+      .from(DATABASE_TABLES.CAT_PENDING_ACTIONS)
       .insert({
         user_id: userId,
         action_id: action.id,
@@ -675,7 +676,7 @@ export class CatActionExecutor {
     errorMessage?: string
   ): Promise<void> {
     await this.supabase
-      .from('cat_action_log')
+      .from(DATABASE_TABLES.CAT_ACTION_LOG)
       .update({
         status,
         result: result || null,

@@ -110,7 +110,7 @@ export async function checkOwnership(
     // If actor is a group, check membership
     if (actor.actor_type === 'group') {
       const { data: membership } = await supabase
-        .from('group_members')
+        .from(DATABASE_TABLES.GROUP_MEMBERS)
         .select('role')
         .eq('group_id', actor.group_id!)
         .eq('user_id', userId)

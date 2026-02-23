@@ -17,6 +17,7 @@ import {
   apiValidationError,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
 
@@ -62,30 +63,35 @@ const updateEventSchema = z.object({
  * GET /api/groups/[slug]/events/[eventId]
  * Get event details
  */
-export const GET = withAuth(async (
-  req: AuthenticatedRequest,
-  { params }: { params: Promise<{ slug: string; eventId: string }> }
-) => {
-  try {
-    const { slug, eventId } = await params;
-    const { user } = req;
-    const supabase = await createServerClient();
+export const GET = withAuth(
+  async (
+    req: AuthenticatedRequest,
+    { params }: { params: Promise<{ slug: string; eventId: string }> }
+  ) => {
+    try {
+      const { slug, eventId } = await params;
+      const { user } = req;
+      const supabase = await createServerClient();
 
-    // Get group by slug
-    const { data: groupData, error: groupError } = await (supabase.from('groups') as UntypedTable)
-      .select('id')
-      .eq('slug', slug)
-      .single();
-    const group = groupData as GroupRecord | null;
+      // Get group by slug
+      const { data: groupData, error: groupError } = await (
+        supabase.from(DATABASE_TABLES.GROUPS) as UntypedTable
+      )
+        .select('id')
+        .eq('slug', slug)
+        .single();
+      const group = groupData as GroupRecord | null;
 
-    if (groupError || !group) {
-      return apiNotFound('Group not found');
-    }
+      if (groupError || !group) {
+        return apiNotFound('Group not found');
+      }
 
-    // Get event
-    const { data: eventData, error: eventError } = await (supabase.from('group_events') as UntypedTable)
-      .select(
-        `
+      // Get event
+      const { data: eventData, error: eventError } = await (
+        supabase.from(DATABASE_TABLES.GROUP_EVENTS) as UntypedTable
+      )
+        .select(
+          `
         *,
         creator:profiles!group_events_creator_id_fkey (
           id,
@@ -110,186 +116,207 @@ export const GET = withAuth(async (
           )
         )
       `
-      )
-      .eq('id', eventId)
-      .eq('group_id', group.id)
-      .single();
-    const event = eventData as EventRecord | null;
-
-    if (eventError || !event) {
-      return apiNotFound('Event not found');
-    }
-
-    // Check if user can view (public or member)
-    if (!event.is_public) {
-      const { data: membershipData } = await (supabase.from('group_members') as UntypedTable)
-        .select('id')
+        )
+        .eq('id', eventId)
         .eq('group_id', group.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      const membership = membershipData as MembershipRecord | null;
+        .single();
+      const event = eventData as EventRecord | null;
 
-      if (!membership) {
-        return apiForbidden('This event is private');
+      if (eventError || !event) {
+        return apiNotFound('Event not found');
       }
-    }
 
-    return apiSuccess({ event });
-  } catch (error) {
-    logger.error('Event GET error', { error }, 'Groups');
-    return handleApiError(error);
+      // Check if user can view (public or member)
+      if (!event.is_public) {
+        const { data: membershipData } = await (
+          supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as UntypedTable
+        )
+          .select('id')
+          .eq('group_id', group.id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        const membership = membershipData as MembershipRecord | null;
+
+        if (!membership) {
+          return apiForbidden('This event is private');
+        }
+      }
+
+      return apiSuccess({ event });
+    } catch (error) {
+      logger.error('Event GET error', { error }, 'Groups');
+      return handleApiError(error);
+    }
   }
-});
+);
 
 /**
  * PUT /api/groups/[slug]/events/[eventId]
  * Update event
  */
-export const PUT = withAuth(async (
-  req: AuthenticatedRequest,
-  { params }: { params: Promise<{ slug: string; eventId: string }> }
-) => {
-  try {
-    const { slug, eventId } = await params;
-    const { user } = req;
-    const supabase = await createServerClient();
+export const PUT = withAuth(
+  async (
+    req: AuthenticatedRequest,
+    { params }: { params: Promise<{ slug: string; eventId: string }> }
+  ) => {
+    try {
+      const { slug, eventId } = await params;
+      const { user } = req;
+      const supabase = await createServerClient();
 
-    // Get group by slug
-    const { data: groupData2, error: groupError } = await (supabase.from('groups') as UntypedTable)
-      .select('id')
-      .eq('slug', slug)
-      .single();
-    const group2 = groupData2 as GroupRecord | null;
+      // Get group by slug
+      const { data: groupData2, error: groupError } = await (
+        supabase.from(DATABASE_TABLES.GROUPS) as UntypedTable
+      )
+        .select('id')
+        .eq('slug', slug)
+        .single();
+      const group2 = groupData2 as GroupRecord | null;
 
-    if (groupError || !group2) {
-      return apiNotFound('Group not found');
+      if (groupError || !group2) {
+        return apiNotFound('Group not found');
+      }
+
+      // Get event
+      const { data: eventData2, error: eventError } = await (
+        supabase.from(DATABASE_TABLES.GROUP_EVENTS) as UntypedTable
+      )
+        .select('id, group_id, creator_id')
+        .eq('id', eventId)
+        .eq('group_id', group2.id)
+        .single();
+      const event2 = eventData2 as EventRecord | null;
+
+      if (eventError || !event2) {
+        return apiNotFound('Event not found');
+      }
+
+      // Check permissions (creator or admin)
+      const isCreator = event2.creator_id === user.id;
+      const { data: membershipData2 } = await (
+        supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as UntypedTable
+      )
+        .select('role')
+        .eq('group_id', group2.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      const membership2 = membershipData2 as MembershipRecord | null;
+
+      const isAdmin = membership2 && ['founder', 'admin'].includes(membership2.role);
+
+      if (!isCreator && !isAdmin) {
+        return apiForbidden('Only event creator or group admins can update events');
+      }
+
+      // Parse and validate request body
+      const body = await req.json();
+      const validation = updateEventSchema.safeParse(body);
+
+      if (!validation.success) {
+        return apiValidationError('Invalid request data', {
+          fields: validation.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      // Update event
+      const { data: updatedEvent, error: updateError } = await (
+        supabase.from(DATABASE_TABLES.GROUP_EVENTS) as UntypedTable
+      )
+        .update(validation.data)
+        .eq('id', eventId)
+        .select()
+        .single();
+
+      if (updateError) {
+        logger.error('Failed to update event', { error: updateError, eventId }, 'Groups');
+        return handleApiError(updateError);
+      }
+
+      return apiSuccess({ event: updatedEvent });
+    } catch (error) {
+      logger.error('Event PUT error', { error }, 'Groups');
+      return handleApiError(error);
     }
-
-    // Get event
-    const { data: eventData2, error: eventError } = await (supabase.from('group_events') as UntypedTable)
-      .select('id, group_id, creator_id')
-      .eq('id', eventId)
-      .eq('group_id', group2.id)
-      .single();
-    const event2 = eventData2 as EventRecord | null;
-
-    if (eventError || !event2) {
-      return apiNotFound('Event not found');
-    }
-
-    // Check permissions (creator or admin)
-    const isCreator = event2.creator_id === user.id;
-    const { data: membershipData2 } = await (supabase.from('group_members') as UntypedTable)
-      .select('role')
-      .eq('group_id', group2.id)
-      .eq('user_id', user.id)
-      .maybeSingle();
-    const membership2 = membershipData2 as MembershipRecord | null;
-
-    const isAdmin = membership2 && ['founder', 'admin'].includes(membership2.role);
-
-    if (!isCreator && !isAdmin) {
-      return apiForbidden('Only event creator or group admins can update events');
-    }
-
-    // Parse and validate request body
-    const body = await req.json();
-    const validation = updateEventSchema.safeParse(body);
-
-    if (!validation.success) {
-      return apiValidationError('Invalid request data', {
-        fields: validation.error.issues.map((issue) => ({
-          field: issue.path.join('.'),
-          message: issue.message,
-        })),
-      });
-    }
-
-    // Update event
-    const { data: updatedEvent, error: updateError } = await (supabase.from('group_events') as UntypedTable)
-      .update(validation.data)
-      .eq('id', eventId)
-      .select()
-      .single();
-
-    if (updateError) {
-      logger.error('Failed to update event', { error: updateError, eventId }, 'Groups');
-      return handleApiError(updateError);
-    }
-
-    return apiSuccess({ event: updatedEvent });
-  } catch (error) {
-    logger.error('Event PUT error', { error }, 'Groups');
-    return handleApiError(error);
   }
-});
+);
 
 /**
  * DELETE /api/groups/[slug]/events/[eventId]
  * Delete event
  */
-export const DELETE = withAuth(async (
-  req: AuthenticatedRequest,
-  { params }: { params: Promise<{ slug: string; eventId: string }> }
-) => {
-  try {
-    const { slug, eventId } = await params;
-    const { user } = req;
-    const supabase = await createServerClient();
+export const DELETE = withAuth(
+  async (
+    req: AuthenticatedRequest,
+    { params }: { params: Promise<{ slug: string; eventId: string }> }
+  ) => {
+    try {
+      const { slug, eventId } = await params;
+      const { user } = req;
+      const supabase = await createServerClient();
 
-    // Get group by slug
-    const { data: groupData3, error: groupError } = await (supabase.from('groups') as UntypedTable)
-      .select('id')
-      .eq('slug', slug)
-      .single();
-    const group3 = groupData3 as GroupRecord | null;
+      // Get group by slug
+      const { data: groupData3, error: groupError } = await (
+        supabase.from(DATABASE_TABLES.GROUPS) as UntypedTable
+      )
+        .select('id')
+        .eq('slug', slug)
+        .single();
+      const group3 = groupData3 as GroupRecord | null;
 
-    if (groupError || !group3) {
-      return apiNotFound('Group not found');
+      if (groupError || !group3) {
+        return apiNotFound('Group not found');
+      }
+
+      // Get event
+      const { data: eventData3, error: eventError } = await (
+        supabase.from(DATABASE_TABLES.GROUP_EVENTS) as UntypedTable
+      )
+        .select('id, group_id, creator_id, title')
+        .eq('id', eventId)
+        .eq('group_id', group3.id)
+        .single();
+      const event3 = eventData3 as EventRecord | null;
+
+      if (eventError || !event3) {
+        return apiNotFound('Event not found');
+      }
+
+      // Check permissions (creator or admin)
+      const isCreator3 = event3.creator_id === user.id;
+      const { data: membershipData3 } = await (
+        supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as UntypedTable
+      )
+        .select('role')
+        .eq('group_id', group3.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      const membership3 = membershipData3 as MembershipRecord | null;
+
+      const isAdmin3 = membership3 && ['founder', 'admin'].includes(membership3.role);
+
+      if (!isCreator3 && !isAdmin3) {
+        return apiForbidden('Only event creator or group admins can delete events');
+      }
+
+      // Delete event (RSVPs will be cascade deleted)
+      const { error: deleteError } = await (
+        supabase.from(DATABASE_TABLES.GROUP_EVENTS) as UntypedTable
+      )
+        .delete()
+        .eq('id', eventId);
+
+      if (deleteError) {
+        logger.error('Failed to delete event', { error: deleteError, eventId }, 'Groups');
+        return handleApiError(deleteError);
+      }
+
+      return apiSuccess({ message: 'Event deleted successfully' });
+    } catch (error) {
+      logger.error('Event DELETE error', { error }, 'Groups');
+      return handleApiError(error);
     }
-
-    // Get event
-    const { data: eventData3, error: eventError } = await (supabase.from('group_events') as UntypedTable)
-      .select('id, group_id, creator_id, title')
-      .eq('id', eventId)
-      .eq('group_id', group3.id)
-      .single();
-    const event3 = eventData3 as EventRecord | null;
-
-    if (eventError || !event3) {
-      return apiNotFound('Event not found');
-    }
-
-    // Check permissions (creator or admin)
-    const isCreator3 = event3.creator_id === user.id;
-    const { data: membershipData3 } = await (supabase.from('group_members') as UntypedTable)
-      .select('role')
-      .eq('group_id', group3.id)
-      .eq('user_id', user.id)
-      .maybeSingle();
-    const membership3 = membershipData3 as MembershipRecord | null;
-
-    const isAdmin3 = membership3 && ['founder', 'admin'].includes(membership3.role);
-
-    if (!isCreator3 && !isAdmin3) {
-      return apiForbidden('Only event creator or group admins can delete events');
-    }
-
-    // Delete event (RSVPs will be cascade deleted)
-    const { error: deleteError } = await (supabase.from('group_events') as UntypedTable)
-      .delete()
-      .eq('id', eventId);
-
-    if (deleteError) {
-      logger.error('Failed to delete event', { error: deleteError, eventId }, 'Groups');
-      return handleApiError(deleteError);
-    }
-
-    return apiSuccess({ message: 'Event deleted successfully' });
-  } catch (error) {
-    logger.error('Event DELETE error', { error }, 'Groups');
-    return handleApiError(error);
   }
-});
-
-
+);

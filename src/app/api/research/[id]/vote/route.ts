@@ -9,6 +9,7 @@ import {
 import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface ResearchEntity {
   id: string;
@@ -41,7 +42,7 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
 
     // Check if research entity exists and allows voting
     const { data: entityData, error: entityError } = await supabase
-      .from('research_entities')
+      .from(DATABASE_TABLES.RESEARCH_ENTITIES)
       .select('id, is_public, voting_enabled')
       .eq('id', id)
       .single();
@@ -69,7 +70,7 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
 
     // Get all votes for this entity
     const { data: votesData, error } = await supabase
-      .from('research_votes')
+      .from(DATABASE_TABLES.RESEARCH_VOTES)
       .select('*')
       .eq('research_entity_id', id);
     const votes = (votesData ?? []) as Vote[];
@@ -128,7 +129,7 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
 
     // Check if research entity exists and allows voting
     const { data: entityData2, error: entityError } = await supabase
-      .from('research_entities')
+      .from(DATABASE_TABLES.RESEARCH_ENTITIES)
       .select('id, is_public, voting_enabled, contributions')
       .eq('id', id)
       .single();
@@ -167,15 +168,16 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
     // Increase weight for contributors (simplified - could be more sophisticated)
     const contributions = entity.contributions;
     if (contributions && contributions.length > 0) {
-      const userContributions = contributions.filter((c) => c.user_id === user.id);
+      const userContributions = contributions.filter(c => c.user_id === user.id);
       if (userContributions.length > 0) {
         weight = 2.0; // Double weight for contributors
       }
     }
 
     // Insert or update vote (UPSERT)
-    const { data: voteData, error } = await (supabase
-      .from('research_votes') as ReturnType<typeof supabase.from>)
+    const { data: voteData, error } = await (
+      supabase.from(DATABASE_TABLES.RESEARCH_VOTES) as ReturnType<typeof supabase.from>
+    )
       .upsert(
         {
           research_entity_id: id,

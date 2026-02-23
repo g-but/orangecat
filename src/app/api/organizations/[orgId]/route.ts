@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import groupsService from '@/services/groups';
 import { getUserRole } from '@/services/groups/utils/helpers';
 import { logger } from '@/utils/logger';
@@ -25,7 +26,7 @@ async function getOrgSlugById(id: string): Promise<string | null> {
   const { data: org } = await (
     supabase
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('groups') as any
+      .from(DATABASE_TABLES.GROUPS) as any
   )
     .select('slug')
     .eq('id', id)
