@@ -356,7 +356,11 @@ export const ProfileQueries = {
     return dbOptimizer.optimizedQuery(
       `profile:username:${username}`,
       async () => {
-        return await supabase.from(DATABASE_TABLES.PROFILES).select('*').eq('username', username).single();
+        return await supabase
+          .from(DATABASE_TABLES.PROFILES)
+          .select('*')
+          .eq('username', username)
+          .single();
       },
       { ttl: 10 * 60 * 1000 } // 10 minutes
     );
@@ -404,7 +408,11 @@ export const FundingQueries = {
       profile: async () => await ProfileQueries.getProfile(userId),
       fundingPages: async () => await FundingQueries.getUserFundingPages(userId),
       stats: async () => {
-        return await supabase.from('user_stats').select('*').eq('user_id', userId).single();
+        return await supabase
+          .from(DATABASE_TABLES.USER_STATS)
+          .select('*')
+          .eq('user_id', userId)
+          .single();
       },
     });
   },

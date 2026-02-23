@@ -128,7 +128,7 @@ export default function DiscoverPage() {
             .eq('status', 'active'),
           supabase.from(DATABASE_TABLES.PROFILES).select('*', { count: 'exact', head: true }),
           supabase
-            .from('loans')
+            .from(getTableName('loan'))
             .select('*', { count: 'exact', head: true })
             .eq('is_public', true)
             .eq('status', 'active'),
@@ -185,7 +185,7 @@ export default function DiscoverPage() {
       setLoansLoading(true);
       try {
         let query = supabase
-          .from('loans')
+          .from(getTableName('loan'))
           .select('*')
           .eq('is_public', true)
           .eq('status', 'active')

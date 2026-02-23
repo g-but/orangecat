@@ -459,7 +459,7 @@ export class DraftEngine {
 
     // Persist to database for audit trail
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (this.supabase.from('draft_events') as any).insert({
+    await (this.supabase.from(DATABASE_TABLES.DRAFT_EVENTS) as any).insert({
       id: event.id,
       draft_id: event.draftId,
       type: event.type,

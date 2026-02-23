@@ -13,7 +13,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
-import { TIMELINE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, TIMELINE_TABLES } from '@/config/database-tables';
 import type {
   TimelineFeedResponse,
   TimelineDisplayEvent,
@@ -23,8 +23,20 @@ import type {
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from './constants';
 import { getCurrentUserId, transformEnrichedEventToDisplay } from './helpers';
 import { getDateRangeFilter, buildDefaultFilters } from '@/services/timeline/formatters/filters';
-import { enrichEventsForDisplay, getActorInfo, getSubjectInfo } from '@/services/timeline/processors/enrichment';
-import { mapDbEventToTimelineEvent, getEventIcon, getEventColor, getEventDisplayType, formatAmount, getTimeAgo, isEventRecent } from '@/services/timeline/formatters';
+import {
+  enrichEventsForDisplay,
+  getActorInfo,
+  getSubjectInfo,
+} from '@/services/timeline/processors/enrichment';
+import {
+  mapDbEventToTimelineEvent,
+  getEventIcon,
+  getEventColor,
+  getEventDisplayType,
+  formatAmount,
+  getTimeAgo,
+  isEventRecent,
+} from '@/services/timeline/formatters';
 
 /**
  * Get user's personalized timeline feed
@@ -54,9 +66,7 @@ export async function getUserFeed(
 
     if (filters?.dateRange && filters.dateRange !== 'all') {
       const dateFilter = getDateRangeFilter(filters.dateRange);
-      query = query
-        .gte('event_timestamp', dateFilter.start)
-        .lte('event_timestamp', dateFilter.end);
+      query = query.gte('event_timestamp', dateFilter.start).lte('event_timestamp', dateFilter.end);
     }
 
     if (filters?.visibility?.length) {
@@ -153,9 +163,11 @@ export async function getFollowedUsersFeed(
     const offset = (page - 1) * limit;
 
     // Get list of followed user IDs
-    const { data: follows, error: followsError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('user_follows') as any)
+    const { data: follows, error: followsError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.USER_FOLLOWS) as any
+    )
       .select('followed_user_id')
       .eq('follower_id', currentUserId)
       .eq('is_active', true);
@@ -203,9 +215,7 @@ export async function getFollowedUsersFeed(
 
     if (filters?.dateRange && filters.dateRange !== 'all') {
       const dateFilter = getDateRangeFilter(filters.dateRange);
-      query = query
-        .gte('event_timestamp', dateFilter.start)
-        .lte('event_timestamp', dateFilter.end);
+      query = query.gte('event_timestamp', dateFilter.start).lte('event_timestamp', dateFilter.end);
     }
 
     if (filters?.visibility?.length) {
@@ -339,11 +349,7 @@ export async function getEnrichedUserFeed(
         totalEvents = count || 0;
       }
     } catch (dbError) {
-      logger.warn(
-        'Database functions not available, returning demo timeline',
-        dbError,
-        'Timeline'
-      );
+      logger.warn('Database functions not available, returning demo timeline', dbError, 'Timeline');
       // Return demo data so the UI works even without database
       if (getDemoTimelineEvents) {
         events = getDemoTimelineEvents(userId);
@@ -370,7 +376,11 @@ export async function getEnrichedUserFeed(
           : undefined;
 
         // Omit eventType and eventSubtype as TimelineDisplayEvent extends Omit<TimelineEvent, 'eventType' | 'eventSubtype'>
-        const { eventType: _eventType, eventSubtype: _eventSubtype, ...eventWithoutTypes } = timelineEvent;
+        const {
+          eventType: _eventType,
+          eventSubtype: _eventSubtype,
+          ...eventWithoutTypes
+        } = timelineEvent;
 
         return {
           ...eventWithoutTypes,
@@ -432,4 +442,3 @@ export async function getEnrichedUserFeed(
     };
   }
 }
-

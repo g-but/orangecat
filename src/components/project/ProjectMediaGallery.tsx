@@ -19,6 +19,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import supabaseBrowser from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import Image from 'next/image';
 
 interface MediaItem {
@@ -49,7 +50,7 @@ export default function ProjectMediaGallery({
       try {
         setLoading(true);
         const { data, error } = await supabaseBrowser
-          .from('project_media')
+          .from(DATABASE_TABLES.PROJECT_MEDIA)
           .select('id, storage_path, position, alt_text')
           .eq('project_id', projectId)
           .order('position', { ascending: true });

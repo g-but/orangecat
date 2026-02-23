@@ -14,6 +14,7 @@ import { logger } from '@/utils/logger';
 import { PROJECT_STATUS, PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
+import { STATUS } from '@/config/database-constants';
 import type {
   SearchProfile,
   SearchFundingPage,
@@ -650,7 +651,7 @@ export async function searchLoans(
     `
     )
     .eq('is_public', true)
-    .eq('status', 'active');
+    .eq('status', STATUS.LOANS.ACTIVE);
 
   // Apply text search if query provided
   if (query) {

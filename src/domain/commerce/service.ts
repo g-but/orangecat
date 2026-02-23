@@ -4,6 +4,7 @@ import type { UserProduct, UserService, UserCause } from '@/types/database';
 import { logger } from '@/utils/logger';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getTableName } from '@/config/entity-registry';
+import { STATUS } from '@/config/database-constants';
 
 // Table type - using entity registry table names
 // These are the actual table names from the database
@@ -25,7 +26,8 @@ export async function listEntities(table: Table, params: ListParams) {
   const { limit = 20, offset = 0, category, userId, includeOwnDrafts } = params;
 
   // Using dynamic table access - type assertion needed for entity registry pattern
-  let query = supabase.from(table)
+  let query = supabase
+    .from(table)
     .select('*')
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -34,7 +36,7 @@ export async function listEntities(table: Table, params: ListParams) {
     query = query.eq('user_id', userId);
   } else {
     // public list: status = active
-    query = query.eq('status', 'active');
+    query = query.eq('status', STATUS.PRODUCTS.ACTIVE);
     if (userId) {
       query = query.eq('user_id', userId);
     }
@@ -58,7 +60,8 @@ export async function listEntitiesPage(
   const { limit, offset, category, userId, includeOwnDrafts } = params;
 
   // base query for items - dynamic table access for entity registry pattern
-  let itemsQuery = supabase.from(table)
+  let itemsQuery = supabase
+    .from(table)
     .select('*')
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -86,8 +89,8 @@ export async function listEntitiesPage(
     }
   } else {
     // For commerce tables (user_products, user_services, user_causes)
-    itemsQuery = itemsQuery.eq('status', 'active');
-    countQuery = countQuery.eq('status', 'active');
+    itemsQuery = itemsQuery.eq('status', STATUS.PRODUCTS.ACTIVE);
+    countQuery = countQuery.eq('status', STATUS.PRODUCTS.ACTIVE);
 
     if (userId) {
       itemsQuery = itemsQuery.eq('user_id', userId);
@@ -99,10 +102,8 @@ export async function listEntitiesPage(
     }
   }
 
-  const [{ data: items, error: itemsError }, { count: _count, error: countError }] = await Promise.all([
-    itemsQuery,
-    countQuery,
-  ]);
+  const [{ data: items, error: itemsError }, { count: _count, error: countError }] =
+    await Promise.all([itemsQuery, countQuery]);
   if (itemsError) {
     throw itemsError;
   }
@@ -174,7 +175,7 @@ export async function createProduct(
   const adminClient = createAdminClient();
   const payload = {
     user_id: userId,
-    status: 'draft' as const,
+    status: STATUS.PRODUCTS.DRAFT as typeof STATUS.PRODUCTS.DRAFT,
     currency: input.currency ?? 'SATS',
     product_type: input.product_type ?? 'physical',
     images: input.images ?? [],
@@ -223,7 +224,7 @@ export async function createService(
     service_area: input.service_area ?? null,
     images: input.images ?? [],
     portfolio_links: input.portfolio_links ?? [],
-    status: 'draft' as const,
+    status: STATUS.SERVICES.DRAFT as typeof STATUS.SERVICES.DRAFT,
   };
 
   // Using dynamic table access for entity registry pattern - type assertion required
@@ -266,10 +267,7 @@ interface CreateCauseInput {
   beneficiaries?: Beneficiary[];
 }
 
-export async function createCause(
-  userId: string,
-  input: CreateCauseInput
-): Promise<UserCause> {
+export async function createCause(userId: string, input: CreateCauseInput): Promise<UserCause> {
   // Use admin client for write operations - auth is already verified by the API route
   const adminClient = createAdminClient();
 
@@ -284,7 +282,7 @@ export async function createCause(
     lightning_address: input.lightning_address ?? null,
     distribution_rules: input.distribution_rules,
     beneficiaries: input.beneficiaries ?? [],
-    status: 'draft' as const,
+    status: STATUS.CAUSES.DRAFT as typeof STATUS.CAUSES.DRAFT,
     total_raised: 0,
   };
 
@@ -341,10 +339,7 @@ interface CreateOrganizationInput {
   contact_info?: Record<string, unknown>;
 }
 
-export async function createOrganization(
-  userId: string,
-  input: CreateOrganizationInput
-) {
+export async function createOrganization(userId: string, input: CreateOrganizationInput) {
   // Use admin client for write operations - auth is already verified by the API route
   const adminClient = createAdminClient();
   const payload = {

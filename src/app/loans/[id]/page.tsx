@@ -20,6 +20,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { createServerClient } from '@/lib/supabase/server';
+import { getTableName } from '@/config/entity-registry';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -57,7 +58,7 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
 
   // Fetch public loan with owner profile
   const { data: loanData, error } = await supabase
-    .from('loans')
+    .from(getTableName('loan'))
     .select(
       `
       *,

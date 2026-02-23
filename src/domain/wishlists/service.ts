@@ -16,7 +16,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 export async function listWishlistsPage(limit: number, offset: number, userId?: string) {
   const supabase = await createServerClient();
 
-  let query = supabase.from('wishlist_with_stats').select('*', { count: 'exact' });
+  let query = supabase.from(DATABASE_TABLES.WISHLIST_WITH_STATS).select('*', { count: 'exact' });
 
   if (userId) {
     query = query.eq('actor_id', userId);

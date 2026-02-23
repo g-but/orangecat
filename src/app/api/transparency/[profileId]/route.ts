@@ -21,7 +21,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
     const { data: transparencyScore, error } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('transparency_scores') as any
+        .from(DATABASE_TABLES.TRANSPARENCY_SCORES) as any
     )
       .select('*')
       .eq('entity_type', 'profile')
@@ -63,7 +63,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
       const { data: newScore, error: fetchError } = await (
         supabase
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from('transparency_scores') as any
+          .from(DATABASE_TABLES.TRANSPARENCY_SCORES) as any
       )
         .select('*')
         .eq('entity_type', 'profile')

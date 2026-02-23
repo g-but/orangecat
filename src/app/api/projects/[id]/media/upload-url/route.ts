@@ -18,6 +18,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -62,7 +63,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const { count, error: countError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('project_media') as any
+        .from(DATABASE_TABLES.PROJECT_MEDIA) as any
     )
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId);

@@ -92,7 +92,7 @@ export function useMessages(
     setReadReceiptsLoading(true);
     try {
       const { data: participants, error } = await (
-        supabase.from('conversation_participants') as any
+        supabase.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
       )
         .select('user_id, last_read_at')
         .eq('conversation_id', conversationId)

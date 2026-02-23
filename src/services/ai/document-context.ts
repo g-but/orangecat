@@ -460,7 +460,7 @@ export async function fetchWalletsForCat(
     }
 
     const { data: wallets, error } = await supabase
-      .from('wallets')
+      .from(DATABASE_TABLES.WALLETS)
       .select(
         'label, description, category, behavior_type, goal_amount, goal_currency, goal_deadline, budget_amount, budget_period, is_primary'
       )

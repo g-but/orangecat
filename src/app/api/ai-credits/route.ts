@@ -48,7 +48,7 @@ export const GET = compose(
 
     // Get user's credit balance
     const { data: credits, error: creditsError } = await db
-      .from('ai_user_credits')
+      .from(DATABASE_TABLES.AI_USER_CREDITS)
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -79,7 +79,7 @@ export const GET = compose(
 
     // Get recent transactions
     const { data: transactions, error: transactionsError } = await db
-      .from('ai_credit_transactions')
+      .from(DATABASE_TABLES.AI_CREDIT_TRANSACTIONS)
       .select(
         `
         id,
@@ -102,7 +102,7 @@ export const GET = compose(
 
     // Get total transaction count
     const { count } = await db
-      .from('ai_credit_transactions')
+      .from(DATABASE_TABLES.AI_CREDIT_TRANSACTIONS)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id);
 

@@ -18,6 +18,7 @@ import {
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface TransferRequest {
   from_wallet_id: string;
@@ -70,7 +71,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const { data: walletsData, error: walletsError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wallets') as any
+        .from(DATABASE_TABLES.WALLETS) as any
     )
       .select('id, user_id, label, balance_btc, profile_id, project_id')
       .in('id', [body.from_wallet_id, body.to_wallet_id])
@@ -146,7 +147,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const { data: transactionData, error: txError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('transactions') as any
+        .from(DATABASE_TABLES.TRANSACTIONS) as any
     )
       .insert({
         amount_sats,
@@ -203,7 +204,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const { data: updatedWalletsData } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wallets') as any
+        .from(DATABASE_TABLES.WALLETS) as any
     )
       .select('*')
       .in('id', [body.from_wallet_id, body.to_wallet_id]);

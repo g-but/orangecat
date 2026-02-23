@@ -11,6 +11,7 @@ import {
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -35,7 +36,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     const { data: walletData, error: fetchError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wallets') as any
+        .from(DATABASE_TABLES.WALLETS) as any
     )
       .select('*, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)')
       .eq('id', id)
@@ -125,7 +126,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
         await (
           supabase
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .from('wallets') as any
+            .from(DATABASE_TABLES.WALLETS) as any
         )
           .update({ is_primary: false })
           .eq('is_active', true)
@@ -140,7 +141,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     const { data: updatedWallet, error: updateError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wallets') as any
+        .from(DATABASE_TABLES.WALLETS) as any
     )
       .update(updates)
       .eq('id', id)
@@ -184,7 +185,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { data: walletData2, error: fetchError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wallets') as any
+        .from(DATABASE_TABLES.WALLETS) as any
     )
       .select('*, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)')
       .eq('id', id)
@@ -222,7 +223,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { error: deleteError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wallets') as any
+        .from(DATABASE_TABLES.WALLETS) as any
     )
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', id);

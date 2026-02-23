@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import type { ModelTier } from '@/config/ai-models';
 import type { UserApiKey } from '@/components/ai/AIKeyManager';
@@ -76,14 +77,14 @@ export function useAISettings() {
 
       // Fetch preferences
       const { data: prefsData } = await supabase
-        .from('user_ai_preferences')
+        .from(DATABASE_TABLES.USER_AI_PREFERENCES)
         .select('*')
         .eq('user_id', user.id)
         .single();
 
       // Fetch API keys
       const { data: keysData } = await supabase
-        .from('user_api_keys')
+        .from(DATABASE_TABLES.USER_API_KEYS)
         .select('*')
         .eq('user_id', user.id)
         .order('is_primary', { ascending: false })
@@ -141,7 +142,7 @@ export function useAISettings() {
       // If no preferences exist, create them
       if (!state.preferences) {
         const { data, error } = await supabase
-          .from('user_ai_preferences')
+          .from(DATABASE_TABLES.USER_AI_PREFERENCES)
           .insert({
             user_id: user.id,
             ...updates,
@@ -159,7 +160,7 @@ export function useAISettings() {
 
       // Update existing preferences
       const { data, error } = await supabase
-        .from('user_ai_preferences')
+        .from(DATABASE_TABLES.USER_AI_PREFERENCES)
         .update(updates)
         .eq('user_id', user.id)
         .select()
