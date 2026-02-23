@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMessages } from '@/features/messaging/hooks/useMessages';
 import { useMessageSubscription } from '@/hooks/useMessageSubscription';
 import { TIMING } from '@/features/messaging/lib/constants';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import supabase from '@/lib/supabase/browser';
 import MessageHeader from './MessageHeader';
 import MessageList from './MessageList';
@@ -71,7 +72,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
       // Fetch the confirmed message
       try {
         const { data: newMessage } = await supabase
-          .from('message_details')
+          .from(DATABASE_TABLES.MESSAGE_DETAILS)
           .select('*')
           .eq('id', messageId)
           .single();
@@ -189,7 +190,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
       } else {
         // Fetch updated message and apply
         const { data: full } = await supabase
-          .from('message_details')
+          .from(DATABASE_TABLES.MESSAGE_DETAILS)
           .select('*')
           .eq('id', msg.id)
           .single();

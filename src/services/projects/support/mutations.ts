@@ -10,6 +10,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type { ProjectSupport, SupportProjectRequest, SupportProjectResponse } from './types';
 import { supportProjectSchema } from './validation';
 import { getCurrentUserId } from './helpers';
@@ -27,7 +28,7 @@ export async function createProjectSupport(
     if (!validationResult.success) {
       return {
         success: false,
-        error: `Validation failed: ${validationResult.error.errors.map((e) => e.message).join(', ')}`,
+        error: `Validation failed: ${validationResult.error.errors.map(e => e.message).join(', ')}`,
       };
     }
 
@@ -63,7 +64,7 @@ export async function createProjectSupport(
 
     // Insert support
     const { data, error } = await supabase
-      .from('project_support')
+      .from(DATABASE_TABLES.PROJECT_SUPPORT)
       .insert(supportData)
       .select()
       .single();
@@ -104,8 +105,9 @@ export async function deleteProjectSupport(
     }
 
     // Check if user owns this support
-    const { data: support, error: fetchError } = await (supabase
-      .from('project_support') as any)
+    const { data: support, error: fetchError } = await (
+      supabase.from(DATABASE_TABLES.PROJECT_SUPPORT) as any
+    )
       .select('user_id')
       .eq('id', supportId)
       .single();
@@ -120,7 +122,7 @@ export async function deleteProjectSupport(
 
     // Delete support
     const { error: deleteError } = await supabase
-      .from('project_support')
+      .from(DATABASE_TABLES.PROJECT_SUPPORT)
       .delete()
       .eq('id', supportId);
 
@@ -137,5 +139,3 @@ export async function deleteProjectSupport(
     return { success: false, error: 'Internal error' };
   }
 }
-
-

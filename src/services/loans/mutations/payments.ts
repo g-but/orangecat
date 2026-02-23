@@ -10,6 +10,7 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import type { CreateLoanPaymentRequest, LoanPaymentResponse } from '@/types/loans';
 import { STATUS } from '@/config/database-constants';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { getCurrentUserId } from '../utils/auth';
 
 /**
@@ -27,7 +28,7 @@ export async function createPayment(
     const { data, error } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('loan_payments') as any
+        .from(DATABASE_TABLES.LOAN_PAYMENTS) as any
     )
       .insert({
         ...request,
@@ -61,7 +62,7 @@ export async function completePayment(paymentId: string): Promise<LoanPaymentRes
     const { data, error } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('loan_payments') as any
+        .from(DATABASE_TABLES.LOAN_PAYMENTS) as any
     )
       .update({
         status: STATUS.LOANS.COMPLETED,

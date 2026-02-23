@@ -18,6 +18,7 @@
 
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 /**
  * Audit action types - add more as needed
@@ -106,7 +107,7 @@ export async function auditLog(entry: AuditLogEntry): Promise<void> {
 
     // Create audit log entry in database
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('audit_logs') as any).insert({
+    const { error } = await (supabase.from(DATABASE_TABLES.AUDIT_LOGS) as any).insert({
       action: entry.action,
       user_id: entry.userId,
       entity_type: entry.entityType,
@@ -214,7 +215,10 @@ export async function queryAuditLogs(filters: {
   try {
     const supabase = await createServerClient();
 
-    let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false });
+    let query = supabase
+      .from(DATABASE_TABLES.AUDIT_LOGS)
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (filters.userId) {
       query = query.eq('user_id', filters.userId);

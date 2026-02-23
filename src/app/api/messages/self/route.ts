@@ -2,11 +2,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { Database } from '@/types/database';
-import {
-  apiSuccess,
-  apiInternalError,
-  handleApiError,
-} from '@/lib/api/standardResponse';
+import { apiSuccess, apiInternalError, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
@@ -26,7 +22,7 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
         created_at: string;
       };
       const { data: convs } = await supabase
-        .from('conversation_details')
+        .from(DATABASE_TABLES.CONVERSATION_DETAILS)
         .select('*')
         .order('created_at', { ascending: false });
       if (Array.isArray(convs)) {
@@ -48,14 +44,18 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
       // Ensure profile exists to satisfy FK on conversations.created_by
       const { ProfileServerService } = await import('@/services/profile/server');
       const profileResult = await ProfileServerService.ensureProfile(
-        supabase, 
-        user.id, 
-        user.email || '', 
+        supabase,
+        user.id,
+        user.email || '',
         user.user_metadata || {}
       );
 
       if (profileResult.error || !profileResult.data) {
-        logger.error('Failed to ensure user profile', { error: profileResult.error, userId: user.id }, 'Messages');
+        logger.error(
+          'Failed to ensure user profile',
+          { error: profileResult.error, userId: user.id },
+          'Messages'
+        );
         return apiInternalError('Failed to create user profile');
       }
 
@@ -64,9 +64,11 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
           created_by: user.id,
           is_group: false,
         };
-        const { data: convIns, error: convErr } = await (supabase
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from(DATABASE_TABLES.CONVERSATIONS) as any)
+        const { data: convIns, error: convErr } = await (
+          supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .from(DATABASE_TABLES.CONVERSATIONS) as any
+        )
           .insert(conversationInsert)
           .select('id')
           .single();
@@ -80,10 +82,11 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
             user_id: user.id,
             role: 'member',
           };
-        const { error: partErr } = await (supabase
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
-          .insert(participantInsert);
+        const { error: partErr } = await (
+          supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
+        ).insert(participantInsert);
         if (partErr) {
           // Roll back conversation if participant insert fails
           // Use admin client for deletion to bypass RLS
@@ -113,16 +116,21 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               .single() as any);
             if (convErr || !convIns || !convIns.id) {
-              logger.error('Failed to create conversation (admin)', { error: convErr, userId: user.id }, 'Messages');
+              logger.error(
+                'Failed to create conversation (admin)',
+                { error: convErr, userId: user.id },
+                'Messages'
+              );
               return apiInternalError('Failed to create conversation');
             }
             const newConversationId = convIns.id as string;
             conversationId = newConversationId;
-            const participantInsert: Database['public']['Tables']['conversation_participants']['Insert'] = {
-              conversation_id: newConversationId,
-              user_id: user.id,
-              role: 'member',
-            };
+            const participantInsert: Database['public']['Tables']['conversation_participants']['Insert'] =
+              {
+                conversation_id: newConversationId,
+                user_id: user.id,
+                role: 'member',
+              };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { error: partErr } = await (admin
               .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
@@ -130,16 +138,31 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
               .insert(participantInsert as any) as any);
             if (partErr) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await (admin.from(DATABASE_TABLES.CONVERSATIONS).delete().eq('id', newConversationId) as any);
-              logger.error('Failed to add participant (admin)', { error: partErr, userId: user.id }, 'Messages');
+              await (admin
+                .from(DATABASE_TABLES.CONVERSATIONS)
+                .delete()
+                .eq('id', newConversationId) as any);
+              logger.error(
+                'Failed to add participant (admin)',
+                { error: partErr, userId: user.id },
+                'Messages'
+              );
               return apiInternalError('Failed to add participant');
             }
           } catch (e) {
-            logger.error('Self conversation creation failed (admin fallback)', { error: e, userId: user.id }, 'Messages');
+            logger.error(
+              'Self conversation creation failed (admin fallback)',
+              { error: e, userId: user.id },
+              'Messages'
+            );
             return apiInternalError('Self conversation creation failed');
           }
         } else {
-          logger.error('Failed to create conversation', { error: serverError, userId: user.id }, 'Messages');
+          logger.error(
+            'Failed to create conversation',
+            { error: serverError, userId: user.id },
+            'Messages'
+          );
           return apiInternalError('Failed to create conversation');
         }
       }

@@ -14,6 +14,7 @@ import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface RouteContext {
   params: Promise<{ proofId: string }>;
@@ -35,7 +36,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { data: proof, error: proofError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wishlist_fulfillment_proofs') as any
+        .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS) as any
     )
       .select('id, user_id, wishlist_item_id')
       .eq('id', proofId)
@@ -54,7 +55,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { error: deleteError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wishlist_fulfillment_proofs') as any
+        .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS) as any
     )
       .delete()
       .eq('id', proofId);
@@ -72,7 +73,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { error: feedbackDeleteError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wishlist_feedback') as any
+        .from(DATABASE_TABLES.WISHLIST_FEEDBACK) as any
     )
       .delete()
       .eq('fulfillment_proof_id', proofId);

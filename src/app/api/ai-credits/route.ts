@@ -17,6 +17,7 @@ import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination } from '@/lib/api/query';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Schema for deposit request
 const depositRequestSchema = z.object({
@@ -158,7 +159,7 @@ export const POST = compose(
     // For MVP, we'll create a pending deposit record
     // In production, this would integrate with a Lightning provider (BTCPay, Strike, etc.)
     const { data: deposit, error: depositError } = await db
-      .from('ai_credit_deposits')
+      .from(DATABASE_TABLES.AI_CREDIT_DEPOSITS)
       .insert({
         id: depositId,
         user_id: user.id,

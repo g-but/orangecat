@@ -30,6 +30,7 @@ interface RemoteDraftRecord {
 }
 import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 export class DraftEngine {
   private static instance: DraftEngine;
@@ -136,7 +137,9 @@ export class DraftEngine {
       metadata: {
         ...draft.metadata,
         wordCount:
-          field === 'description' ? this.calculateWordCount(String(value)) : draft.metadata.wordCount,
+          field === 'description'
+            ? this.calculateWordCount(String(value))
+            : draft.metadata.wordCount,
         completionPercentage: this.calculateCompletion({ ...draft.formData, [field]: value }),
       },
     };
@@ -174,10 +177,15 @@ export class DraftEngine {
       const supabaseClient = this.supabase;
       // Check for remote changes
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: remoteDraft, error } = await (supabaseClient.from('project_drafts') as any)
+      const { data: remoteDraft, error } = (await (
+        supabaseClient.from(DATABASE_TABLES.PROJECT_DRAFTS) as any
+      )
         .select('*')
         .eq('id', draftId)
-        .single() as { data: RemoteDraftRecord | null; error: { code?: string; message: string } | null };
+        .single()) as {
+        data: RemoteDraftRecord | null;
+        error: { code?: string; message: string } | null;
+      };
 
       if (error && error.code !== 'PGRST116') {
         throw error;
@@ -212,7 +220,9 @@ export class DraftEngine {
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: syncError } = await (supabase.from('project_drafts') as any).upsert(syncData);
+      const { error: syncError } = await (
+        supabase.from(DATABASE_TABLES.PROJECT_DRAFTS) as any
+      ).upsert(syncData);
 
       if (syncError) {
         throw syncError;

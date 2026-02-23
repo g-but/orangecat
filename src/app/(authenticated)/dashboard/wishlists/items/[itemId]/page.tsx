@@ -14,6 +14,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import { WishlistItemProofSection } from '@/components/wishlist/WishlistItemProofSection';
 import { FormattedAmount } from '@/components/ui/FormattedAmount';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface PageProps {
   params: Promise<{ itemId: string }>;
@@ -33,7 +34,9 @@ export default async function WishlistItemDetailPage({ params }: PageProps) {
   }
 
   // Fetch wishlist item
-  const { data: item, error: itemError } = await (supabase.from('wishlist_items') as any)
+  const { data: item, error: itemError } = await (
+    supabase.from(DATABASE_TABLES.WISHLIST_ITEMS) as any
+  )
     .select(
       `
       id,

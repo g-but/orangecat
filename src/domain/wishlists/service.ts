@@ -135,7 +135,7 @@ export async function createWishlist(userId: string, data: any) {
   const actor = await getOrCreateUserActor(userId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: wishlist, error } = await (supabase.from('wishlists') as any)
+  const { data: wishlist, error } = await (supabase.from(DATABASE_TABLES.WISHLISTS) as any)
     .insert({
       actor_id: actor.id,
       title: data.title,

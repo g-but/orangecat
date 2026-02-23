@@ -9,6 +9,7 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type {
   LoanResponse,
   LoansListResponse,
@@ -231,7 +232,7 @@ export async function getLoanCategories(): Promise<{
 }> {
   try {
     const { data, error } = await supabase
-      .from('loan_categories')
+      .from(DATABASE_TABLES.LOAN_CATEGORIES)
       .select('*')
       .eq('is_active', true)
       .order('name');

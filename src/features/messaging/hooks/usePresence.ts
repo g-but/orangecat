@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import supabase from '@/lib/supabase/browser';
 import { useAuth } from '@/hooks/useAuth';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { debugLog } from '../lib/constants';
 
 type PresenceStatus = 'online' | 'away' | 'offline';
@@ -182,7 +183,7 @@ export function usePresence(options: UsePresenceOptions = {}): UsePresenceReturn
 
     try {
       const { data } = await supabase
-        .from('user_presence')
+        .from(DATABASE_TABLES.USER_PRESENCE)
         .select('user_id, status, last_seen_at')
         .in('user_id', userIds);
 

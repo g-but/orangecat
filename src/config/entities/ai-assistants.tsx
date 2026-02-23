@@ -12,6 +12,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { STATUS } from '@/config/database-constants';
 import type { Currency } from '@/types/settings';
 
 export const aiAssistantEntityConfig: EntityConfig<AIAssistant> = {
@@ -70,23 +71,23 @@ export const aiAssistantEntityConfig: EntityConfig<AIAssistant> = {
     return {
       priceLabel: getPricingLabel(),
       badge:
-        assistant.status === 'active'
+        assistant.status === STATUS.AI_ASSISTANTS.ACTIVE
           ? 'Active'
-          : assistant.status === 'paused'
+          : assistant.status === STATUS.AI_ASSISTANTS.PAUSED
             ? 'Paused'
-            : assistant.status === 'draft'
+            : assistant.status === STATUS.AI_ASSISTANTS.DRAFT
               ? 'Draft'
-              : assistant.status === 'archived'
+              : assistant.status === STATUS.AI_ASSISTANTS.ARCHIVED
                 ? 'Archived'
                 : undefined,
       badgeVariant:
-        assistant.status === 'active'
+        assistant.status === STATUS.AI_ASSISTANTS.ACTIVE
           ? 'success'
-          : assistant.status === 'paused'
+          : assistant.status === STATUS.AI_ASSISTANTS.PAUSED
             ? 'warning'
-            : assistant.status === 'draft'
+            : assistant.status === STATUS.AI_ASSISTANTS.DRAFT
               ? 'default'
-              : assistant.status === 'archived'
+              : assistant.status === STATUS.AI_ASSISTANTS.ARCHIVED
                 ? 'default'
                 : 'default',
       metadata:

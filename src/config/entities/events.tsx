@@ -11,6 +11,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { STATUS } from '@/config/database-constants';
 import type { Currency } from '@/types/settings';
 
 // Event type from database - matches events table schema
@@ -65,30 +66,36 @@ export const eventEntityConfig: EntityConfig<Event> = {
   colorTheme: 'blue',
 
   listPath: '/dashboard/events',
-  detailPath: (id) => `/dashboard/events/${id}`,
+  detailPath: id => `/dashboard/events/${id}`,
   createPath: '/dashboard/events/create',
-  editPath: (id) => `/dashboard/events/create?edit=${id}`,
+  editPath: id => `/dashboard/events/create?edit=${id}`,
 
   apiEndpoint: '/api/events',
 
-  makeHref: (event) => `/dashboard/events/${event.id}`,
+  makeHref: event => `/dashboard/events/${event.id}`,
 
   makeCardProps: (event, userCurrency?: string) => {
     // Display price in user's preferred currency (or event's currency)
-    const displayCurrency = (userCurrency || event.currency || PLATFORM_DEFAULT_CURRENCY) as Currency;
+    const displayCurrency = (userCurrency ||
+      event.currency ||
+      PLATFORM_DEFAULT_CURRENCY) as Currency;
     const priceLabel = event.is_free
       ? 'Free'
       : event.ticket_price && event.currency
-      ? (() => {
-          // If event currency matches display currency, use directly
-          if (event.currency === displayCurrency) {
-            return formatCurrency(event.ticket_price, displayCurrency);
-          }
-          // Otherwise convert from event's currency to display currency
-          const converted = convert(event.ticket_price, event.currency as Currency, displayCurrency);
-          return formatCurrency(converted, displayCurrency);
-        })()
-      : undefined;
+        ? (() => {
+            // If event currency matches display currency, use directly
+            if (event.currency === displayCurrency) {
+              return formatCurrency(event.ticket_price, displayCurrency);
+            }
+            // Otherwise convert from event's currency to display currency
+            const converted = convert(
+              event.ticket_price,
+              event.currency as Currency,
+              displayCurrency
+            );
+            return formatCurrency(converted, displayCurrency);
+          })()
+        : undefined;
 
     // Build metadata (category, location, date)
     const metadataParts: string[] = [];
@@ -111,25 +118,42 @@ export const eventEntityConfig: EntityConfig<Event> = {
 
     return {
       priceLabel,
-      badge: event.status === 'published' ? 'Published' :
-             event.status === 'open' ? 'Open' :
-             event.status === 'full' ? 'Full' :
-             event.status === 'ongoing' ? 'Ongoing' :
-             event.status === 'completed' ? 'Completed' :
-             event.status === 'draft' ? 'Draft' : undefined,
-      badgeVariant: event.status === 'published' ? 'success' :
-                    event.status === 'open' ? 'success' :
-                    event.status === 'full' ? 'warning' :
-                    event.status === 'ongoing' ? 'success' :
-                    event.status === 'completed' ? 'default' :
-                    event.status === 'draft' ? 'default' : 'default',
-      metadata: metadataParts.length > 0 ? (
-        <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-          {metadataParts.map((part, idx) => (
-            <span key={idx}>{part}</span>
-          ))}
-        </div>
-      ) : undefined,
+      badge:
+        event.status === STATUS.EVENTS.PUBLISHED
+          ? 'Published'
+          : event.status === STATUS.EVENTS.OPEN
+            ? 'Open'
+            : event.status === STATUS.EVENTS.FULL
+              ? 'Full'
+              : event.status === STATUS.EVENTS.ONGOING
+                ? 'Ongoing'
+                : event.status === STATUS.EVENTS.COMPLETED
+                  ? 'Completed'
+                  : event.status === STATUS.EVENTS.DRAFT
+                    ? 'Draft'
+                    : undefined,
+      badgeVariant:
+        event.status === STATUS.EVENTS.PUBLISHED
+          ? 'success'
+          : event.status === STATUS.EVENTS.OPEN
+            ? 'success'
+            : event.status === STATUS.EVENTS.FULL
+              ? 'warning'
+              : event.status === STATUS.EVENTS.ONGOING
+                ? 'success'
+                : event.status === STATUS.EVENTS.COMPLETED
+                  ? 'default'
+                  : event.status === STATUS.EVENTS.DRAFT
+                    ? 'default'
+                    : 'default',
+      metadata:
+        metadataParts.length > 0 ? (
+          <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+            {metadataParts.map((part, idx) => (
+              <span key={idx}>{part}</span>
+            ))}
+          </div>
+        ) : undefined,
       showEditButton: true,
       editHref: `/dashboard/events/create?edit=${event.id}`,
       // Removed duplicate actions button - edit icon overlay is sufficient
@@ -138,12 +162,11 @@ export const eventEntityConfig: EntityConfig<Event> = {
 
   emptyState: {
     title: 'No events yet',
-    description: 'Organize your first in-person gathering or meetup with Bitcoin-powered ticketing.',
+    description:
+      'Organize your first in-person gathering or meetup with Bitcoin-powered ticketing.',
     action: (
       <Link href="/dashboard/events/create">
-        <Button className="bg-gradient-to-r from-blue-600 to-blue-700">
-          Create Event
-        </Button>
+        <Button className="bg-gradient-to-r from-blue-600 to-blue-700">Create Event</Button>
       </Link>
     ),
   },

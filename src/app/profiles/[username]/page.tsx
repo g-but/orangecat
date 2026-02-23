@@ -199,7 +199,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       const { count } = await (
         supabase
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from('wallet_ownerships') as any
+          .from(DATABASE_TABLES.WALLET_OWNERSHIPS) as any
       )
         .select('*', { count: 'exact', head: true })
         .eq('owner_type', 'profile')

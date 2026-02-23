@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface RouteParams {
   params: Promise<{ itemId: string }>;
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Verify the wishlist item exists
     const { data: wishlistItemData, error: itemError } = await supabase
-      .from('wishlist_items')
+      .from(DATABASE_TABLES.WISHLIST_ITEMS)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', itemId)
       .single();
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Get all proofs for this item
     const { data: proofsData, error: proofsError } = await supabase
-      .from('wishlist_fulfillment_proofs')
+      .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS)
       .select(
         `
         id,
@@ -114,7 +115,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (proofIds.length > 0) {
       const { data: feedbackData, error: feedbackError } = await supabase
-        .from('wishlist_feedback')
+        .from(DATABASE_TABLES.WISHLIST_FEEDBACK)
         .select(
           `
           id,

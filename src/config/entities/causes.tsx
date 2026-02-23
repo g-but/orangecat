@@ -12,6 +12,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { STATUS } from '@/config/database-constants';
 import type { Currency } from '@/types/settings';
 
 export const causeEntityConfig: EntityConfig<UserCause> = {
@@ -20,26 +21,30 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
   colorTheme: 'orange',
 
   listPath: '/dashboard/causes',
-  detailPath: (id) => `/dashboard/causes/${id}`,
+  detailPath: id => `/dashboard/causes/${id}`,
   createPath: '/dashboard/causes/create',
-  editPath: (id) => `/dashboard/causes/create?edit=${id}`,
+  editPath: id => `/dashboard/causes/create?edit=${id}`,
 
   apiEndpoint: '/api/causes',
 
-  makeHref: (cause) => `/dashboard/causes/${cause.id}`,
+  makeHref: cause => `/dashboard/causes/${cause.id}`,
 
   makeCardProps: (cause, userCurrency?: string) => {
     // Display goal in user's preferred currency (or cause's currency)
-    const displayCurrency = (userCurrency || cause.currency || PLATFORM_DEFAULT_CURRENCY) as Currency;
+    const displayCurrency = (userCurrency ||
+      cause.currency ||
+      PLATFORM_DEFAULT_CURRENCY) as Currency;
     // Build goal label - use target_amount (database field name)
-    const goalLabel = cause.target_amount && cause.currency
-      ? (() => {
-          const goalAmount = cause.currency === displayCurrency
-            ? cause.target_amount
-            : convert(cause.target_amount, cause.currency as Currency, displayCurrency);
-          return `Goal: ${formatCurrency(goalAmount, displayCurrency)}`;
-        })()
-      : undefined;
+    const goalLabel =
+      cause.target_amount && cause.currency
+        ? (() => {
+            const goalAmount =
+              cause.currency === displayCurrency
+                ? cause.target_amount
+                : convert(cause.target_amount, cause.currency as Currency, displayCurrency);
+            return `Goal: ${formatCurrency(goalAmount, displayCurrency)}`;
+          })()
+        : undefined;
 
     // Build progress info
     const progressParts: string[] = [];
@@ -49,31 +54,44 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
     // Use current_amount (database field name) instead of total_raised
     if (cause.current_amount !== undefined && cause.target_amount && cause.currency) {
       // Convert both to same currency for percentage calculation
-      const raisedInGoalCurrency = cause.currency === displayCurrency
-        ? cause.current_amount
-        : convert(cause.current_amount, cause.currency as Currency, displayCurrency);
-      const goalInGoalCurrency = cause.currency === displayCurrency
-        ? cause.target_amount
-        : convert(cause.target_amount, cause.currency as Currency, displayCurrency);
+      const raisedInGoalCurrency =
+        cause.currency === displayCurrency
+          ? cause.current_amount
+          : convert(cause.current_amount, cause.currency as Currency, displayCurrency);
+      const goalInGoalCurrency =
+        cause.currency === displayCurrency
+          ? cause.target_amount
+          : convert(cause.target_amount, cause.currency as Currency, displayCurrency);
       const percentage = Math.round((raisedInGoalCurrency / goalInGoalCurrency) * 100);
       progressParts.push(`${percentage}% funded`);
     }
 
     return {
       priceLabel: goalLabel,
-      badge: cause.status === 'active' ? 'Active' :
-             cause.status === 'completed' ? 'Completed' :
-             cause.status === 'draft' ? 'Draft' : undefined,
-      badgeVariant: cause.status === 'active' ? 'success' :
-                    cause.status === 'completed' ? 'default' :
-                    cause.status === 'draft' ? 'default' : 'default',
-      metadata: progressParts.length > 0 ? (
-        <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-          {progressParts.map((part, idx) => (
-            <span key={idx}>{part}</span>
-          ))}
-        </div>
-      ) : undefined,
+      badge:
+        cause.status === STATUS.CAUSES.ACTIVE
+          ? 'Active'
+          : cause.status === STATUS.CAUSES.COMPLETED
+            ? 'Completed'
+            : cause.status === STATUS.CAUSES.DRAFT
+              ? 'Draft'
+              : undefined,
+      badgeVariant:
+        cause.status === STATUS.CAUSES.ACTIVE
+          ? 'success'
+          : cause.status === STATUS.CAUSES.COMPLETED
+            ? 'default'
+            : cause.status === STATUS.CAUSES.DRAFT
+              ? 'default'
+              : 'default',
+      metadata:
+        progressParts.length > 0 ? (
+          <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+            {progressParts.map((part, idx) => (
+              <span key={idx}>{part}</span>
+            ))}
+          </div>
+        ) : undefined,
       showEditButton: true,
       editHref: `/dashboard/causes/create?edit=${cause.id}`,
       // Removed duplicate actions button - edit icon overlay is sufficient
@@ -85,9 +103,7 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
     description: 'Start making a difference by creating your first cause or fundraiser.',
     action: (
       <Link href="/dashboard/causes/create">
-        <Button className="bg-gradient-to-r from-orange-600 to-orange-700">
-          Create Cause
-        </Button>
+        <Button className="bg-gradient-to-r from-orange-600 to-orange-700">Create Cause</Button>
       </Link>
     ),
   },
