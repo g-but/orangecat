@@ -22,10 +22,8 @@ export const ROUTE_CONTEXTS = {
     '/settings',
     '/assets',
     '/organizations',
-    '/loans',
     '/messages',
     '/timeline',
-    '/groups',
     '/funding',
     '/post',
     '/project',
@@ -44,6 +42,12 @@ export const ROUTE_CONTEXTS = {
     '/categories',
     '/stories',
     '/events',
+    '/products',
+    '/services',
+    '/causes',
+    '/loans',
+    '/groups',
+    '/ai-assistants',
     '/technology',
     '/bitcoin-wallet-guide',
     '/study-bitcoin',
@@ -234,6 +238,26 @@ export const ROUTES = {
     CREATE: '/projects/create',
     VIEW: (id: string) => `/projects/${id}`,
     EDIT: (id: string) => `/projects/create?edit=${id}`, // Reuse create page with edit param
+  },
+
+  // Public entity routes
+  PRODUCTS: {
+    VIEW: (id: string) => `/products/${id}`,
+  },
+  SERVICES: {
+    VIEW: (id: string) => `/services/${id}`,
+  },
+  CAUSES: {
+    VIEW: (id: string) => `/causes/${id}`,
+  },
+  LOANS: {
+    VIEW: (id: string) => `/loans/${id}`,
+  },
+  EVENTS: {
+    VIEW: (id: string) => `/events/${id}`,
+  },
+  GROUPS: {
+    VIEW: (slug: string) => `/groups/${slug}`,
   },
 
   // Dashboard routes

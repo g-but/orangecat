@@ -167,8 +167,8 @@ export function useProjectCardData(project: ExtendedProject): ProjectCardDataRes
           const result = await response.json();
           setIsLiked(result.isFavorited || false);
         }
-      } catch {
-        // Silently fail - favorite status is optional
+      } catch (e) {
+        console.debug('[useProjectCardData] Failed to check favorite status:', e);
       }
     };
 
@@ -195,8 +195,8 @@ export function useProjectCardData(project: ExtendedProject): ProjectCardDataRes
 
         const result = await response.json();
         setIsLiked(result.isFavorited);
-      } catch {
-        // Silently fail - user can try again
+      } catch (e) {
+        console.warn('[useProjectCardData] Failed to toggle favorite:', e);
       } finally {
         setIsTogglingFavorite(false);
       }

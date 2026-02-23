@@ -161,7 +161,9 @@ export default function WalletVault() {
       await navigator.clipboard.writeText(address);
       setCopiedAddress(address);
       setTimeout(() => setCopiedAddress(null), 2000);
-    } catch {}
+    } catch (e) {
+      console.warn('[WalletVault] Clipboard copy failed:', e);
+    }
   };
 
   const toggleFavorite = (id: string) => {

@@ -88,7 +88,9 @@ export default function UserProfileDropdown({
         { userId: user?.id || session?.user?.id },
         'UserProfileDropdown'
       );
-      fetchProfile().catch(_error => {});
+      fetchProfile().catch(e => {
+        logger.warn('Failed to fetch profile', e, 'UserProfileDropdown');
+      });
     }
   }, [user, session, profile, fetchProfile]);
 

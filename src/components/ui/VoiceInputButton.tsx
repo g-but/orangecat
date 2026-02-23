@@ -113,7 +113,9 @@ export function VoiceInputButton({
   const stop = () => {
     try {
       recognitionRef.current?.stop?.();
-    } catch {}
+    } catch (e) {
+      console.warn('[VoiceInput] Failed to stop recognition:', e);
+    }
     setListening(false);
     recognitionRef.current = null;
   };

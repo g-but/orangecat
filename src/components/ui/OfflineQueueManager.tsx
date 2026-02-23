@@ -42,7 +42,9 @@ export function OfflineQueueManager({ isOpen, onClose }: OfflineQueueManagerProp
       logger.error('Retry failed', e, 'OfflineQueueManager');
       try {
         await offlineQueueService.incrementAttemptCount(item.id);
-      } catch {}
+      } catch (innerError) {
+        logger.warn('Failed to increment attempt count', innerError, 'OfflineQueueManager');
+      }
     } finally {
       setBusyId(current => (current === item.id ? null : current));
     }

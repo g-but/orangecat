@@ -16,6 +16,13 @@ const publicRoutes = [
   '/blog',
   '/profiles', // Public profile pages (shareable)
   '/projects', // Public project listing (redirects to discover)
+  '/products', // Public product pages (shareable)
+  '/services', // Public service pages (shareable)
+  '/causes', // Public cause pages (shareable)
+  '/events', // Public event pages (shareable)
+  '/loans', // Public loan pages (shareable)
+  '/groups', // Public group pages (shareable)
+  '/ai-assistants', // Public AI assistant pages (shareable)
   '/funding', // Public funding information
   '/onboarding', // Public onboarding flow
 ];
@@ -26,8 +33,6 @@ const protectedRoutes = [
   '/dashboard',
   '/profile/',
   '/settings',
-  '/loans',
-  '/groups',
   '/assets',
   '/timeline',
   '/messages',

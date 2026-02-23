@@ -180,7 +180,7 @@ export default function EventsPage() {
               ))}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Card className="p-6 text-center">
               <Bitcoin className="w-8 h-8 text-blue-500 mx-auto mb-3" />
               <div className="text-2xl font-bold text-gray-900">0%</div>

@@ -107,7 +107,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const profilePages: MetadataRoute.Sitemap = profiles
         .filter((p): p is SitemapProfile & { username: string } => p.username !== null)
         .map(profile => ({
-          url: `${BASE_URL}/profile/${profile.username}`,
+          url: `${BASE_URL}/profiles/${profile.username}`,
           lastModified: profile.updated_at ? new Date(profile.updated_at) : new Date(),
           changeFrequency: 'weekly' as const,
           priority: 0.6,
@@ -116,13 +116,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     // Public entity pages (active projects, products, services, etc.)
-    const SITEMAP_ENTITY_TYPES: EntityType[] = ['project', 'product', 'service', 'cause'];
+    const SITEMAP_ENTITY_TYPES: EntityType[] = [
+      'project',
+      'product',
+      'service',
+      'cause',
+      'loan',
+      'event',
+      'asset',
+    ];
     const entityTables = SITEMAP_ENTITY_TYPES.map(type => ({
       table: ENTITY_REGISTRY[type].tableName,
-      pathPrefix: type,
+      publicBasePath: ENTITY_REGISTRY[type].publicBasePath,
     }));
 
-    for (const { table, pathPrefix } of entityTables) {
+    for (const { table, publicBasePath } of entityTables) {
       const { data: entities } = (await supabase
         .from(table)
         .select('id, updated_at')
@@ -130,7 +138,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       if (entities) {
         const entityPages: MetadataRoute.Sitemap = entities.map(entity => ({
-          url: `${BASE_URL}/${pathPrefix}/${entity.id}`,
+          url: `${BASE_URL}${publicBasePath}/${entity.id}`,
           lastModified: entity.updated_at ? new Date(entity.updated_at) : new Date(),
           changeFrequency: 'weekly' as const,
           priority: 0.6,
