@@ -2,6 +2,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 /**
  * GET /api/notifications
@@ -26,7 +27,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
     const admin = createAdminClient();
 
     let query = admin
-      .from('notifications')
+      .from(DATABASE_TABLES.NOTIFICATIONS)
       .select(
         `
         id,
@@ -103,33 +104,39 @@ export const DELETE = withAuth(async (req: AuthenticatedRequest) => {
     if (notificationId) {
       // Delete specific notification
       const { error } = await admin
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .delete()
         .eq('id', notificationId)
         .eq('recipient_user_id', user.id);
 
-      if (error) {throw error;}
+      if (error) {
+        throw error;
+      }
 
       return apiSuccess({ deleted: 1 });
     } else if (clearType === 'read') {
       // Clear all read notifications
       const { error, count } = await admin
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .delete()
         .eq('recipient_user_id', user.id)
         .eq('read', true);
 
-      if (error) {throw error;}
+      if (error) {
+        throw error;
+      }
 
       return apiSuccess({ deleted: count || 0 });
     } else if (clearType === 'all') {
       // Clear all notifications
       const { error, count } = await admin
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .delete()
         .eq('recipient_user_id', user.id);
 
-      if (error) {throw error;}
+      if (error) {
+        throw error;
+      }
 
       return apiSuccess({ deleted: count || 0 });
     }

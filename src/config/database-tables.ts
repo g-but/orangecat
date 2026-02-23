@@ -52,6 +52,12 @@ export const DATABASE_TABLES = {
   ENRICHED_TIMELINE_EVENTS: 'enriched_timeline_events',
   COMMUNITY_TIMELINE: 'community_timeline_no_duplicates',
 
+  // Documents
+  USER_DOCUMENTS: 'user_documents',
+
+  // Notifications
+  NOTIFICATIONS: 'notifications',
+
   // System
   AUDIT_LOGS: 'audit_logs',
   CHANNEL_WAITLIST: 'channel_waitlist',

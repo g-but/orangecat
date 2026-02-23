@@ -1,6 +1,7 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { apiSuccess, handleApiError, apiValidationError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 /**
  * POST /api/notifications/read
@@ -31,7 +32,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     if (all) {
       const { error, count } = await supabase
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .update({ is_read: true, read_at: now })
         .eq('user_id', user.id)
         .eq('is_read', false);
@@ -44,7 +45,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     if (id) {
       const { error, count } = await supabase
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .update({ is_read: true, read_at: now })
         .eq('id', id)
         .eq('user_id', user.id)
@@ -58,7 +59,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     if (ids && Array.isArray(ids) && ids.length > 0) {
       const { error, count } = await supabase
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .update({ is_read: true, read_at: now })
         .in('id', ids)
         .eq('user_id', user.id)

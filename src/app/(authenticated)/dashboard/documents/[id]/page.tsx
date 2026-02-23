@@ -102,7 +102,7 @@ export default async function DocumentDetailPage({ params }: PageProps) {
 
   // Get the document
   const { data: document, error } = await supabase
-    .from('user_documents')
+    .from(DATABASE_TABLES.USER_DOCUMENTS)
     .select('*')
     .eq('id', id)
     .eq('actor_id', actor.id)

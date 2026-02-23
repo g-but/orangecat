@@ -74,7 +74,7 @@ export class NotificationService {
   async createNotification(options: CreateNotificationOptions): Promise<NotificationResult> {
     try {
       const { data, error } = await this.supabase
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .insert({
           recipient_user_id: options.recipientUserId,
           type: options.type,
@@ -153,7 +153,7 @@ export class NotificationService {
       }));
 
       const { error: insertError } = await this.supabase
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .insert(notifications);
 
       if (insertError) {
@@ -183,7 +183,7 @@ export class NotificationService {
   async getUnreadCount(userId: string): Promise<number> {
     try {
       const { count, error } = await this.supabase
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .select('*', { count: 'exact', head: true })
         .eq('recipient_user_id', userId)
         .eq('read', false);
@@ -206,7 +206,7 @@ export class NotificationService {
   async markAsRead(userId: string, notificationIds?: string[]): Promise<boolean> {
     try {
       let query = this.supabase
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .update({ read: true, read_at: new Date().toISOString() })
         .eq('recipient_user_id', userId);
 
@@ -258,7 +258,7 @@ export class NotificationService {
       const { limit = 20, offset = 0, unreadOnly = false } = options || {};
 
       let query = this.supabase
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .select(
           `
           *,
@@ -306,7 +306,7 @@ export class NotificationService {
   async deleteNotification(userId: string, notificationId: string): Promise<boolean> {
     try {
       const { error } = await this.supabase
-        .from('notifications')
+        .from(DATABASE_TABLES.NOTIFICATIONS)
         .delete()
         .eq('id', notificationId)
         .eq('recipient_user_id', userId);

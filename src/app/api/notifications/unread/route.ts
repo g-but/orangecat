@@ -1,6 +1,7 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { apiSuccess, apiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 /**
  * GET /api/notifications/unread
@@ -18,7 +19,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
     // Use user's authenticated session - RLS handles authorization
     // NOTE: Table uses 'user_id' and 'is_read' (not 'recipient_user_id' and 'read')
     const { count, error } = await supabase
-      .from('notifications')
+      .from(DATABASE_TABLES.NOTIFICATIONS)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('is_read', false);
