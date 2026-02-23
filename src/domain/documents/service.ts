@@ -123,7 +123,7 @@ export async function listDocumentsPage(
 ) {
   const supabase = await createServerClient();
 
-  let query = supabase.from('user_documents').select('*', { count: 'exact' });
+  let query = supabase.from(DATABASE_TABLES.USER_DOCUMENTS).select('*', { count: 'exact' });
 
   if (userId) {
     // Get actor for user
@@ -157,7 +157,11 @@ export async function listDocumentsPage(
 export async function getDocument(id: string): Promise<Document | null> {
   const supabase = await createServerClient();
 
-  const { data, error } = await supabase.from('user_documents').select('*').eq('id', id).single();
+  const { data, error } = await supabase
+    .from(DATABASE_TABLES.USER_DOCUMENTS)
+    .select('*')
+    .eq('id', id)
+    .single();
 
   if (error) {
     if (error.code === 'PGRST116') {
@@ -181,7 +185,7 @@ export async function createDocument(userId: string, data: DocumentFormData): Pr
   const actor = await getOrCreateUserActor(userId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: document, error } = await (supabase.from('user_documents') as any)
+  const { data: document, error } = await (supabase.from(DATABASE_TABLES.USER_DOCUMENTS) as any)
     .insert({
       actor_id: actor.id,
       title: data.title,
@@ -222,7 +226,7 @@ export async function updateDocument(
   const actor = await getOrCreateUserActor(userId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: document, error } = await (supabase.from('user_documents') as any)
+  const { data: document, error } = await (supabase.from(DATABASE_TABLES.USER_DOCUMENTS) as any)
     .update({
       ...(data.title !== undefined && { title: data.title }),
       ...(data.content !== undefined && { content: data.content }),
@@ -260,7 +264,7 @@ export async function deleteDocument(id: string, userId: string): Promise<void> 
   const actor = await getOrCreateUserActor(userId);
 
   const { error } = await supabase
-    .from('user_documents')
+    .from(DATABASE_TABLES.USER_DOCUMENTS)
     .delete()
     .eq('id', id)
     .eq('actor_id', actor.id);
@@ -288,7 +292,7 @@ export async function getDocumentsForCat(userId: string): Promise<Document[]> {
   const actor = await getOrCreateUserActor(userId);
 
   const { data, error } = await supabase
-    .from('user_documents')
+    .from(DATABASE_TABLES.USER_DOCUMENTS)
     .select('*')
     .eq('actor_id', actor.id)
     .in('visibility', ['cat_visible', 'public'])
@@ -311,7 +315,7 @@ export async function getPublicDocumentsForActor(actorId: string): Promise<Docum
   const supabase = await createServerClient();
 
   const { data, error } = await supabase
-    .from('user_documents')
+    .from(DATABASE_TABLES.USER_DOCUMENTS)
     .select('*')
     .eq('actor_id', actorId)
     .eq('visibility', 'public')

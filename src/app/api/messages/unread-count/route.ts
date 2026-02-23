@@ -33,7 +33,10 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
         p_user_id: user.id,
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: totalCount, error: rpcError } = await (admin.rpc('get_total_unread_count', rpcArgs as any) as any);
+      const { data: totalCount, error: rpcError } = await (admin.rpc(
+        'get_total_unread_count',
+        rpcArgs as any
+      ) as any);
 
       if (!rpcError && typeof totalCount === 'number') {
         totalUnread = totalCount;
@@ -86,30 +89,21 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
           totalUnread += unreadWithoutTime || 0;
         }
 
-        // Optimized batch query for conversations with read time
-        // Use a single aggregated query instead of fetching all messages
+        // Single batch query for all conversations with read time
+        // Uses .or() to combine per-conversation conditions into one query
         if (conversationsWithReadTime.length > 0) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const _conversationIds = conversationsWithReadTime.map(c => c.id);
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const _readTimeMap = new Map(conversationsWithReadTime.map(c => [c.id, c.lastReadAt]));
+          const orConditions = conversationsWithReadTime
+            .map(c => `and(conversation_id.eq.${c.id},created_at.gt.${c.lastReadAt})`)
+            .join(',');
 
-          // For each conversation, count unread messages in a single query
-          // This is still N queries but much faster than fetching all message data
-          const countPromises = conversationsWithReadTime.map(async conv => {
-            const { count } = await admin
-              .from(DATABASE_TABLES.MESSAGES)
-              .select('id', { count: 'exact', head: true })
-              .eq('conversation_id', conv.id)
-              .neq('sender_id', user.id)
-              .eq('is_deleted', false)
-              .gt('created_at', conv.lastReadAt);
-            return count || 0;
-          });
+          const { count: unreadWithReadTime } = await admin
+            .from(DATABASE_TABLES.MESSAGES)
+            .select('id', { count: 'exact', head: true })
+            .or(orConditions)
+            .neq('sender_id', user.id)
+            .eq('is_deleted', false);
 
-          // Execute all count queries in parallel
-          const counts = await Promise.all(countPromises);
-          totalUnread += counts.reduce((sum, count) => sum + count, 0);
+          totalUnread += unreadWithReadTime || 0;
         }
       }
     }
