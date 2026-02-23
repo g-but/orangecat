@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { PayoffDialog } from './PayoffDialog';
 import { formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY, CURRENCY_CODES, type CurrencyCode } from '@/config/currencies';
+import { STATUS } from '@/config/database-constants';
 
 interface LoanOffersDialogProps {
   loan: Loan;
@@ -102,13 +103,13 @@ export function LoanOffersDialog({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
+      case STATUS.LOAN_OFFERS.PENDING:
         return 'bg-yellow-100 text-yellow-800';
-      case 'accepted':
+      case STATUS.LOAN_OFFERS.ACCEPTED:
         return 'bg-green-100 text-green-800';
-      case 'rejected':
+      case STATUS.LOAN_OFFERS.REJECTED:
         return 'bg-red-100 text-red-800';
-      case 'expired':
+      case STATUS.LOAN_OFFERS.EXPIRED:
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -161,7 +162,7 @@ export function LoanOffersDialog({
                         <div className="text-sm text-muted-foreground">Terms: {offer.terms}</div>
                       )}
                     </div>
-                    {offer.status === 'pending' && (
+                    {offer.status === STATUS.LOAN_OFFERS.PENDING && (
                       <div className="flex gap-2">
                         <Button
                           size="sm"
@@ -190,7 +191,7 @@ export function LoanOffersDialog({
                         </Button>
                       </div>
                     )}
-                    {offer.status !== 'pending' && (
+                    {offer.status !== STATUS.LOAN_OFFERS.PENDING && (
                       <div className="text-sm text-muted-foreground flex items-center gap-1">
                         <Clock className="h-4 w-4" />
                         Updated {new Date(offer.updated_at).toLocaleDateString()}

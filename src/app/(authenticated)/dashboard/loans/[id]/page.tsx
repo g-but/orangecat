@@ -2,6 +2,7 @@ import EntityDetailPage from '@/components/entity/EntityDetailPage';
 import { loanEntityConfig } from '@/config/entities/loans';
 import { Badge } from '@/components/ui/badge';
 import type { Loan } from '@/types/loans';
+import { STATUS } from '@/config/database-constants';
 import { formatDistanceToNow } from 'date-fns';
 
 interface PageProps {
@@ -55,7 +56,7 @@ export default async function LoanDetailPage({ params }: PageProps) {
             label: 'Status',
             value: (
               <Badge
-                variant={loan.status === 'active' ? 'default' : 'secondary'}
+                variant={loan.status === STATUS.LOANS.ACTIVE ? 'default' : 'secondary'}
                 className="capitalize"
               >
                 {loan.status}

@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { formatDistanceToNow } from 'date-fns';
 import type { Loan } from '@/types/loans';
+import { STATUS } from '@/config/database-constants';
 
 interface LoanCardProps {
   loan: Loan;
@@ -98,7 +99,7 @@ export function LoanCard({ loan, viewMode = 'grid' }: LoanCardProps) {
               </div>
             </div>
             <Badge
-              variant={loan.status === 'active' ? 'default' : 'secondary'}
+              variant={loan.status === STATUS.LOANS.ACTIVE ? 'default' : 'secondary'}
               className="capitalize text-xs"
             >
               {loan.status}

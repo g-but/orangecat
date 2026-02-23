@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { STATUS } from '@/config/database-constants';
 
 interface Booking {
   id: string;
@@ -64,13 +65,13 @@ export default function BookingsDashboardPage() {
       let status = '';
       switch (activeTab) {
         case 'incoming':
-          status = 'pending';
+          status = STATUS.BOOKINGS.PENDING;
           break;
         case 'confirmed':
-          status = 'confirmed,in_progress';
+          status = `${STATUS.BOOKINGS.CONFIRMED},${STATUS.BOOKINGS.IN_PROGRESS}`;
           break;
         case 'history':
-          status = 'completed,cancelled,rejected';
+          status = `${STATUS.BOOKINGS.COMPLETED},${STATUS.BOOKINGS.CANCELLED},${STATUS.BOOKINGS.REJECTED}`;
           break;
       }
 
@@ -183,12 +184,14 @@ export default function BookingsDashboardPage() {
     {
       id: 'incoming',
       label: 'Incoming Requests',
-      count: bookings.filter(b => b.status === 'pending').length,
+      count: bookings.filter(b => b.status === STATUS.BOOKINGS.PENDING).length,
     },
     {
       id: 'confirmed',
       label: 'Confirmed',
-      count: bookings.filter(b => b.status === 'confirmed' || b.status === 'in_progress').length,
+      count: bookings.filter(
+        b => b.status === STATUS.BOOKINGS.CONFIRMED || b.status === STATUS.BOOKINGS.IN_PROGRESS
+      ).length,
     },
     { id: 'history', label: 'History' },
   ];
@@ -325,7 +328,7 @@ export default function BookingsDashboardPage() {
 
                 {/* Actions */}
                 <div className="ml-4 flex flex-col gap-2">
-                  {booking.status === 'pending' && (
+                  {booking.status === STATUS.BOOKINGS.PENDING && (
                     <>
                       <Button
                         size="sm"
@@ -356,7 +359,8 @@ export default function BookingsDashboardPage() {
                     </>
                   )}
 
-                  {(booking.status === 'confirmed' || booking.status === 'in_progress') && (
+                  {(booking.status === STATUS.BOOKINGS.CONFIRMED ||
+                    booking.status === STATUS.BOOKINGS.IN_PROGRESS) && (
                     <>
                       <Button
                         size="sm"
@@ -387,23 +391,23 @@ export default function BookingsDashboardPage() {
                     </>
                   )}
 
-                  {(booking.status === 'completed' ||
-                    booking.status === 'cancelled' ||
-                    booking.status === 'rejected') && (
+                  {(booking.status === STATUS.BOOKINGS.COMPLETED ||
+                    booking.status === STATUS.BOOKINGS.CANCELLED ||
+                    booking.status === STATUS.BOOKINGS.REJECTED) && (
                     <span className="text-sm text-gray-500">
-                      {booking.status === 'completed' && (
+                      {booking.status === STATUS.BOOKINGS.COMPLETED && (
                         <span className="flex items-center gap-1 text-green-600">
                           <CheckCircle className="h-4 w-4" />
                           Completed
                         </span>
                       )}
-                      {booking.status === 'cancelled' && (
+                      {booking.status === STATUS.BOOKINGS.CANCELLED && (
                         <span className="flex items-center gap-1 text-gray-500">
                           <AlertCircle className="h-4 w-4" />
                           Cancelled
                         </span>
                       )}
-                      {booking.status === 'rejected' && (
+                      {booking.status === STATUS.BOOKINGS.REJECTED && (
                         <span className="flex items-center gap-1 text-red-500">
                           <XCircle className="h-4 w-4" />
                           Rejected

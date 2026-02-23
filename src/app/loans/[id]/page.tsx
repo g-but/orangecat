@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import Button from '@/components/ui/Button';
+import { STATUS } from '@/config/database-constants';
 import { formatDistanceToNow, format } from 'date-fns';
 
 interface PageProps {
@@ -107,7 +108,7 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{loan.title}</h1>
                 <div className="flex items-center gap-3 mt-2">
                   <Badge
-                    variant={loan.status === 'active' ? 'default' : 'secondary'}
+                    variant={loan.status === STATUS.LOANS.ACTIVE ? 'default' : 'secondary'}
                     className="capitalize"
                   >
                     {loan.status}
