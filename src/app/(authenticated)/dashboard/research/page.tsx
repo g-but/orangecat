@@ -18,6 +18,7 @@ import { Plus, Search, TrendingUp, Users, DollarSign, Target } from 'lucide-reac
 import { ResearchEntity } from '@/types/research';
 import { logger } from '@/utils/logger';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { PROJECT_STATUS } from '@/config/project-statuses';
 
 export default function ResearchDashboard() {
   const router = useRouter();
@@ -58,15 +59,15 @@ export default function ResearchDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
+      case PROJECT_STATUS.ACTIVE:
         return 'bg-green-500';
-      case 'draft':
+      case PROJECT_STATUS.DRAFT:
         return 'bg-yellow-500';
-      case 'completed':
+      case PROJECT_STATUS.COMPLETED:
         return 'bg-blue-500';
       case 'paused':
         return 'bg-orange-500';
-      case 'cancelled':
+      case PROJECT_STATUS.CANCELLED:
         return 'bg-red-500';
       default:
         return 'bg-gray-500';
@@ -127,7 +128,7 @@ export default function ResearchDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {entities.filter(e => e.status === 'active').length}
+              {entities.filter(e => e.status === PROJECT_STATUS.ACTIVE).length}
             </div>
           </CardContent>
         </Card>

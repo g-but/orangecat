@@ -21,6 +21,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { STATUS } from '@/config/database-constants';
 import { createAIPaymentService } from '@/services/ai-payments';
 import { logger } from '@/utils/logger';
 import {
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
-    if (conversation.status !== 'active') {
+    if (conversation.status !== STATUS.AI_ASSISTANTS.ACTIVE) {
       return NextResponse.json({ error: 'Conversation is archived' }, { status: 400 });
     }
 

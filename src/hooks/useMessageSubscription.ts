@@ -7,6 +7,7 @@ import { logger } from '@/utils/logger';
 import type { Message } from '@/features/messaging/types';
 import { CHANNELS, debugLog, TIMING } from '@/features/messaging/lib/constants';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { STATUS } from '@/config/database-constants';
 
 interface UseMessageSubscriptionOptions {
   onNewMessage?: (message: Message) => void;
@@ -180,7 +181,9 @@ export function useMessageSubscription(
               newMessage = messageDetails as Message;
               // Ensure status is set
               if (!newMessage.status) {
-                newMessage.status = newMessage.is_read ? 'read' : 'delivered';
+                newMessage.status = newMessage.is_read
+                  ? STATUS.MESSAGES.READ
+                  : STATUS.MESSAGES.DELIVERED;
               }
             } else {
               // Fallback: fetch from messages table and join with profiles
@@ -235,7 +238,7 @@ export function useMessageSubscription(
                       },
                   is_read: false,
                   is_delivered: true,
-                  status: 'delivered' as const,
+                  status: STATUS.MESSAGES.DELIVERED as typeof STATUS.MESSAGES.DELIVERED,
                 } as Message;
               } else {
                 logger.error('Failed to fetch message', messageError || viewError, 'Messaging');
@@ -260,7 +263,7 @@ export function useMessageSubscription(
                     },
                     is_read: false,
                     is_delivered: true,
-                    status: 'delivered' as const,
+                    status: STATUS.MESSAGES.DELIVERED as typeof STATUS.MESSAGES.DELIVERED,
                   } as Message;
                 }
               }
@@ -280,7 +283,9 @@ export function useMessageSubscription(
                 // Ensure status fields are set
                 is_delivered: newMessage.is_delivered ?? true, // If it's in DB and we received it, it's delivered
                 is_read: newMessage.is_read ?? false,
-                status: newMessage.status || (newMessage.is_read ? 'read' : 'delivered'),
+                status:
+                  newMessage.status ||
+                  (newMessage.is_read ? STATUS.MESSAGES.READ : STATUS.MESSAGES.DELIVERED),
               };
 
               debugLog('[useMessageSubscription] ✅ Processed new message:', {

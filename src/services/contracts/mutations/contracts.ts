@@ -1,5 +1,6 @@
 import supabase from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 import { CONTRACT_TYPES } from '@/config/contract-types';
 import { getCurrentUserId } from '@/services/groups/utils/helpers';
@@ -93,7 +94,7 @@ export async function activateContract(contractId: string) {
       return { success: false, error: 'Contract not found' };
     }
 
-    if (contract.contract.status !== 'proposed') {
+    if (contract.contract.status !== STATUS.CONTRACTS.PROPOSED) {
       return {
         success: false,
         error: `Cannot activate contract with status: ${contract.contract.status}`,

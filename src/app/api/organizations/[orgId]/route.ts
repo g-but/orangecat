@@ -14,6 +14,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import groupsService from '@/services/groups';
 import { getUserRole } from '@/services/groups/utils/helpers';
+import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 
 interface RouteParams {
@@ -90,7 +91,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Authorization: only founders and admins can update
     const role = await getUserRole(groupResult.group.id, user.id);
-    if (role !== 'founder' && role !== 'admin') {
+    if (role !== STATUS.GROUP_MEMBERS.FOUNDER && role !== STATUS.GROUP_MEMBERS.ADMIN) {
       return NextResponse.json(
         { error: 'Forbidden: must be founder or admin to update organization' },
         { status: 403 }
@@ -149,7 +150,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     // Authorization: only founders can delete
     const role = await getUserRole(groupResult.group.id, user.id);
-    if (role !== 'founder') {
+    if (role !== STATUS.GROUP_MEMBERS.FOUNDER) {
       return NextResponse.json(
         { error: 'Forbidden: only the founder can delete an organization' },
         { status: 403 }

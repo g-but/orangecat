@@ -1,6 +1,7 @@
 import { withOptionalAuth } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { STATUS } from '@/config/database-constants';
 import { apiSuccess, apiForbidden, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 
@@ -89,10 +90,10 @@ export const GET = withOptionalAuth(
         })) || [];
 
       const groupedStakeholders = {
-        founders: stakeholders.filter(s => s.role === 'founder') || [],
-        employees: stakeholders.filter(s => s.role === 'admin') || [],
-        contractors: stakeholders.filter(s => s.role === 'admin') || [], // Map admin to contractors too
-        shareholders: stakeholders.filter(s => s.role === 'member') || [],
+        founders: stakeholders.filter(s => s.role === STATUS.GROUP_MEMBERS.FOUNDER) || [],
+        employees: stakeholders.filter(s => s.role === STATUS.GROUP_MEMBERS.ADMIN) || [],
+        contractors: stakeholders.filter(s => s.role === STATUS.GROUP_MEMBERS.ADMIN) || [], // Map admin to contractors too
+        shareholders: stakeholders.filter(s => s.role === STATUS.GROUP_MEMBERS.MEMBER) || [],
         lenders: [] as typeof stakeholders, // No lenders in new system
         donors: [] as typeof stakeholders, // No donors in new system
       };

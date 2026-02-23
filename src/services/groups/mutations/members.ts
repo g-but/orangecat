@@ -13,6 +13,7 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import type { GroupMember, AddMemberInput, UpdateMemberInput } from '@/types/group';
 import type { GroupMemberResponse } from '../types';
+import { STATUS } from '@/config/database-constants';
 import { TABLES } from '../constants';
 import { getCurrentUserId, isGroupMember, getUserRole } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
@@ -89,7 +90,7 @@ export async function leaveGroup(groupId: string): Promise<{ success: boolean; e
     // Check if user is founder (founders can't leave)
     const role = await getUserRole(groupId, userId);
 
-    if (role === 'founder') {
+    if (role === STATUS.GROUP_MEMBERS.FOUNDER) {
       return {
         success: false,
         error: 'Group founders cannot leave. Transfer ownership or delete the group.',
@@ -245,7 +246,7 @@ export async function removeMember(
 
     // Can't remove founder
     const memberRole = await getUserRole(groupId, memberId);
-    if (memberRole === 'founder') {
+    if (memberRole === STATUS.GROUP_MEMBERS.FOUNDER) {
       return { success: false, error: 'Cannot remove the group founder' };
     }
 

@@ -4,6 +4,7 @@ import { logger } from '@/utils/logger';
 import type { Conversation, Message, Pagination, Participant } from './types';
 import type { Database, Json } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { STATUS } from '@/config/database-constants';
 
 type MessagesInsert = Database['public']['Tables']['messages']['Insert'];
 type ConversationsInsert = Database['public']['Tables']['conversations']['Insert'];
@@ -12,8 +13,7 @@ type ConversationParticipantsInsert =
   Database['public']['Tables']['conversation_participants']['Insert'];
 type ConversationParticipantsUpdate =
   Database['public']['Tables']['conversation_participants']['Update'];
-type ConversationParticipantsRow =
-  Database['public']['Tables']['conversation_participants']['Row'];
+type ConversationParticipantsRow = Database['public']['Tables']['conversation_participants']['Row'];
 type ConversationsRow = Database['public']['Tables']['conversations']['Row'];
 type ProfilesRow = Database['public']['Tables']['profiles']['Row'];
 type ProfilesInsert = Database['public']['Tables']['profiles']['Insert'];
@@ -44,7 +44,9 @@ export async function ensureMessagingFunctions() {
         p_sender_id: '00000000-0000-0000-0000-000000000000',
         p_content: 'test',
       };
-      await (admin.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<unknown>)('send_message', testArgs);
+      await (
+        admin.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<unknown>
+      )('send_message', testArgs);
       logger.info('send_message function exists');
     } catch (testError: unknown) {
       if (testError instanceof Error && testError.message.includes('function send_message')) {
@@ -173,9 +175,7 @@ export async function fetchUserConversations(
         .from(DATABASE_TABLES.PROFILES)
         .select('id, username, name, avatar_url')
         .in('id', userIds);
-      profilesMap = new Map(
-        (profiles || []).map((p: ProfilesRow) => [p.id, p])
-      );
+      profilesMap = new Map((profiles || []).map((p: ProfilesRow) => [p.id, p]));
     }
 
     // Group participants by conversation
@@ -399,13 +399,13 @@ export async function fetchMessages(
     // For messages from others: calculate if current user has read them
     let isRead = false;
     let isDelivered = false;
-    let status: 'pending' | 'failed' | 'sent' | 'delivered' | 'read' = 'sent';
+    let status: 'pending' | 'failed' | 'sent' | 'delivered' | 'read' = STATUS.MESSAGES.SENT;
 
     if (m.sender_id === user.id) {
       // This is the sender's own message - check if recipient(s) have read it
       // Message is delivered if it exists in DB (which it does, since we fetched it)
       isDelivered = true;
-      status = 'delivered';
+      status = STATUS.MESSAGES.DELIVERED;
 
       // Check if any recipient has read it (for direct messages, check the other participant)
       // For group messages, we'd check all participants, but for now just check if any participant read it
@@ -421,13 +421,13 @@ export async function fetchMessages(
 
       isRead = recipientHasRead;
       if (isRead) {
-        status = 'read';
+        status = STATUS.MESSAGES.READ;
       }
     } else {
       // This is a message from someone else - check if current user has read it
       isDelivered = true; // If it's in the DB, it's delivered
       isRead = userLastReadAt ? messageCreatedAt <= userLastReadAt : false;
-      status = isRead ? 'read' : 'delivered';
+      status = isRead ? STATUS.MESSAGES.READ : STATUS.MESSAGES.DELIVERED;
     }
 
     return {
@@ -502,7 +502,9 @@ export async function sendMessage(
       // Group actor: user must be admin/moderator of the group
       if (actor.actor_type === 'group' && actor.group_id) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic table access for database config pattern
-        const { data: membership, error: memberError } = await (admin.from(DATABASE_TABLES.GROUP_MEMBERS) as any)
+        const { data: membership, error: memberError } = await (
+          admin.from(DATABASE_TABLES.GROUP_MEMBERS) as any
+        )
           .select('role')
           .eq('group_id', actor.group_id)
           .eq('user_id', user.id)
@@ -541,11 +543,14 @@ export async function sendMessage(
 
     // Add sender_actor_id if provided (column added by migration)
     if (senderActorId) {
-      (messageData as MessagesInsert & { sender_actor_id?: string }).sender_actor_id = senderActorId;
+      (messageData as MessagesInsert & { sender_actor_id?: string }).sender_actor_id =
+        senderActorId;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic table access for database config pattern
-    const { data: message, error: insertError } = await (admin.from(DATABASE_TABLES.MESSAGES) as any)
+    const { data: message, error: insertError } = await (
+      admin.from(DATABASE_TABLES.MESSAGES) as any
+    )
       .insert(messageData)
       .select('id')
       .single();
@@ -663,7 +668,9 @@ export async function openConversation(
       is_group: false,
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic table access for database config pattern
-    const { data: convIns, error: convErr } = await (admin.from(DATABASE_TABLES.CONVERSATIONS) as any)
+    const { data: convIns, error: convErr } = await (
+      admin.from(DATABASE_TABLES.CONVERSATIONS) as any
+    )
       .insert(convData)
       .select('id')
       .single();
@@ -678,8 +685,9 @@ export async function openConversation(
       is_active: true,
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic table access for database config pattern
-    const { error: partErr } = await (admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
-      .insert(participantData);
+    const { error: partErr } = await (
+      admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
+    ).insert(participantData);
     if (partErr) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic table access for database config pattern
       await (admin.from(DATABASE_TABLES.CONVERSATIONS) as any).delete().eq('id', convId);
@@ -714,7 +722,9 @@ export async function openConversation(
       { conversation_id: newId, user_id: otherId, role: 'member', is_active: true },
     ];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic table access for database config pattern
-    const insertParticipantsQuery = (admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any).insert(participantsData);
+    const insertParticipantsQuery = (
+      admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
+    ).insert(participantsData);
     const { error: pErr } = await insertParticipantsQuery;
     if (pErr) {
       throw Object.assign(new Error('Failed to add participants'), { status: 500 });
@@ -724,11 +734,14 @@ export async function openConversation(
 
   // Group conversation
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic RPC call for database function
-  const { data: groupId, error: groupErr } = await (supabase.rpc as any)('create_group_conversation', {
-    p_created_by: user.id,
-    p_participant_ids: participantIds,
-    p_title: title || null,
-  });
+  const { data: groupId, error: groupErr } = await (supabase.rpc as any)(
+    'create_group_conversation',
+    {
+      p_created_by: user.id,
+      p_participant_ids: participantIds,
+      p_title: title || null,
+    }
+  );
   if (!groupErr && groupId) {
     return groupId as unknown as string;
   }
@@ -759,7 +772,9 @@ export async function openConversation(
     is_active: true,
   }));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic table access for database config pattern
-  const { error: pErr } = await (admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any).insert(rows);
+  const { error: pErr } = await (
+    admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
+  ).insert(rows);
   if (pErr) {
     throw Object.assign(new Error('Failed to add participants'), { status: 500 });
   }
