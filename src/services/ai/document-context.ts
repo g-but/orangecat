@@ -15,6 +15,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/utils/logger';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Type alias for any SupabaseClient (accepts any database schema)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,7 +103,7 @@ export async function fetchDocumentsForCat(
   try {
     // First get the user's actor
     const { data: actor, error: actorError } = await supabase
-      .from('actors')
+      .from(DATABASE_TABLES.ACTORS)
       .select('id')
       .eq('actor_type', 'user')
       .eq('user_id', userId)
@@ -190,7 +191,7 @@ export async function fetchProfileForCat(
 ): Promise<ProfileContext | null> {
   try {
     const { data: actor, error: actorError } = await supabase
-      .from('actors')
+      .from(DATABASE_TABLES.ACTORS)
       .select('username, display_name, bio, location_city, location_country, background, website')
       .eq('actor_type', 'user')
       .eq('user_id', userId)
@@ -236,7 +237,7 @@ export async function fetchEntitiesForCat(
   try {
     // Get the user's actor
     const { data: actor, error: actorError } = await supabase
-      .from('actors')
+      .from(DATABASE_TABLES.ACTORS)
       .select('id')
       .eq('actor_type', 'user')
       .eq('user_id', userId)
@@ -449,7 +450,7 @@ export async function fetchWalletsForCat(
   try {
     // Wallets use profile_id, which maps from auth user via profiles table
     const { data: profile } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('id')
       .eq('user_id', userId)
       .maybeSingle();

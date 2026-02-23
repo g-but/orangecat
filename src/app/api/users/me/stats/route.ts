@@ -11,7 +11,12 @@
 
 import { apiSuccess, apiUnauthorized, handleApiError } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { ENTITY_REGISTRY, ENTITY_TYPES, type EntityType } from '@/config/entity-registry';
+import {
+  ENTITY_REGISTRY,
+  ENTITY_TYPES,
+  getTableName,
+  type EntityType,
+} from '@/config/entity-registry';
 import {
   buildUserContext,
   getRecommendedTasks,
@@ -68,7 +73,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
         .select('*')
         .eq('id', user.id)
         .single(),
-      (supabase.from('actors') as UntypedTable)
+      (supabase.from(DATABASE_TABLES.ACTORS) as UntypedTable)
         .select('id')
         .eq('user_id', user.id)
         .eq('actor_type', 'user')
@@ -126,14 +131,14 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
           .eq('wishlists.actor_id', actorId)
       : Promise.resolve({ count: 0 });
 
-    const recentProjectPromise = (supabase.from('projects') as UntypedTable)
+    const recentProjectPromise = (supabase.from(getTableName('project')) as UntypedTable)
       .select('updated_at')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .limit(1)
       .single();
 
-    const publishedCountPromise = (supabase.from('projects') as UntypedTable)
+    const publishedCountPromise = (supabase.from(getTableName('project')) as UntypedTable)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('status', 'active');

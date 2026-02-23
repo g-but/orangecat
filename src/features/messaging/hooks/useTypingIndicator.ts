@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import supabase from '@/lib/supabase/browser';
 import { useAuth } from '@/hooks/useAuth';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { debugLog } from '../lib/constants';
 import type { Database } from '@/types/database';
 
@@ -216,7 +217,7 @@ export function useTypingIndicator(
 
               // Fetch profile if needed
               const { data: profileData } = await supabase
-                .from('profiles')
+                .from(DATABASE_TABLES.PROFILES)
                 .select('username, name')
                 .eq('id', typingUserId)
                 .single();

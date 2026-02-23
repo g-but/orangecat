@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const { data: profileData } = await supabase
-    .from('profiles')
+    .from(DATABASE_TABLES.PROFILES)
     .select('name, bio, avatar_url, username')
     .eq('username', targetUsername)
     .single();
@@ -118,7 +118,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
     // Get username for current user
     const { data: userProfileData } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('username')
       .eq('id', user.id)
       .single();
@@ -130,7 +130,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   // Fetch profile data server-side
   const { data: profileData, error: profileError } = await supabase
-    .from('profiles')
+    .from(DATABASE_TABLES.PROFILES)
     .select('*')
     .eq('username', targetUsername)
     .single();
@@ -143,7 +143,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   // Fetch user's projects (exclude drafts, respect show_on_profile setting)
   const { data: projectsData } = await supabase
-    .from('projects')
+    .from(getTableName('project'))
     .select(
       `
       id,
@@ -190,15 +190,17 @@ export default async function PublicProfilePage({ params }: PageProps) {
       p_entity_id: profile.id,
     });
     walletCount = walletData
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ? (walletData as any[]).filter((w: { is_active: boolean }) => w.is_active).length
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (walletData as any[]).filter((w: { is_active: boolean }) => w.is_active).length
       : 0;
   } catch {
     // Fallback: try querying wallet_ownerships table directly
     try {
-      const { count } = await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wallet_ownerships') as any)
+      const { count } = await (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from('wallet_ownerships') as any
+      )
         .select('*', { count: 'exact', head: true })
         .eq('owner_type', 'profile')
         .eq('owner_id', profile.id)

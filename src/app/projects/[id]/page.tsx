@@ -3,6 +3,8 @@ import { createServerClient } from '@/lib/supabase/server';
 import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
 import { ROUTES } from '@/lib/routes';
+import { DATABASE_TABLES } from '@/config/database-tables';
+import { getTableName } from '@/config/entity-registry';
 
 const ProjectPageClient = dynamic(() => import('@/components/project/ProjectPageClient'), {
   loading: () => (
@@ -29,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const supabase = await createServerClient();
 
   const { data: projectData } = await supabase
-    .from('projects')
+    .from(getTableName('project'))
     .select('title, description, goal_amount, raised_amount, currency, category, status, user_id')
     .eq('id', id)
     .single();
@@ -48,7 +50,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   let creatorProfile: any = null;
   if (project.user_id) {
     const { data: profileData } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('username, name, avatar_url')
       .eq('id', project.user_id)
       .maybeSingle();
@@ -64,10 +66,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ? Math.round((Number(project.raised_amount || 0) / Number(project.goal_amount)) * 100)
     : 0;
 
-  const creatorName =
-    creatorProfile?.name ||
-    creatorProfile?.username ||
-    'Creator';
+  const creatorName = creatorProfile?.name || creatorProfile?.username || 'Creator';
   const title = `${project.title} | OrangeCat`;
   const description =
     project.description ||
@@ -113,7 +112,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
 
   // Fetch project data server-side
   const { data: projectData, error: projectError } = await supabase
-    .from('projects')
+    .from(getTableName('project'))
     .select('*')
     .eq('id', id)
     .single();
@@ -129,7 +128,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
   let profile: any = null;
   if (project.user_id) {
     const { data: profileData } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('id, username, name, avatar_url')
       .eq('id', project.user_id)
       .maybeSingle();
@@ -148,8 +147,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
   };
 
   // Generate JSON-LD structured data for SEO
-  const creatorName =
-    profile?.name || profile?.username || 'Creator';
+  const creatorName = profile?.name || profile?.username || 'Creator';
   const _progress = project.goal_amount
     ? Math.round((Number(project.raised_amount || 0) / Number(project.goal_amount)) * 100)
     : 0;

@@ -453,7 +453,10 @@ export class BookingService {
     const { role = 'both', status, limit = 20, offset = 0 } = options;
 
     // Get user's actor IDs
-    const { data: actors } = await this.supabase.from('actors').select('id').eq('user_id', userId);
+    const { data: actors } = await this.supabase
+      .from(DATABASE_TABLES.ACTORS)
+      .select('id')
+      .eq('user_id', userId);
 
     const actorIds = actors?.map(a => a.id) || [];
 

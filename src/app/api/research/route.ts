@@ -16,6 +16,7 @@ import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { ResearchEntityCreate } from '@/types/research';
 import { NextRequest } from 'next/server';
 
@@ -197,7 +198,7 @@ export const POST = compose(
 
     // First check if the user exists in profiles table (required for foreign key)
     const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('id')
       .eq('id', user.id)
       .single();

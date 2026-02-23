@@ -12,6 +12,7 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createServerClient } from '@/lib/supabase/server';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
@@ -87,7 +88,7 @@ export default async function DocumentDetailPage({ params }: PageProps) {
 
   // Get user's actor
   const { data: actorData } = await supabase
-    .from('actors')
+    .from(DATABASE_TABLES.ACTORS)
     .select('id')
     .eq('user_id', user.id)
     .eq('actor_type', 'user')

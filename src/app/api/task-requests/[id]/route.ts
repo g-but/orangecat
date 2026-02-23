@@ -143,7 +143,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     // Get responder's name
     const { data: profileData } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('username, display_name')
       .eq('id', user.id)
       .single();
