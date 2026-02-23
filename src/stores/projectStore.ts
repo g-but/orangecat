@@ -11,6 +11,7 @@ import { create } from 'zustand';
 import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
 import { getTableName } from '@/config/entity-registry';
+import { PROJECT_STATUS } from '@/config/project-statuses';
 
 // Use existing FundingPage type from funding.ts
 import type { FundingPage } from '@/types/funding';
@@ -88,12 +89,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         total_funding: project.raised_amount ?? project.total_funding ?? 0,
         current_amount: project.raised_amount ?? project.total_funding ?? 0,
         raised_amount: project.raised_amount ?? 0,
-        isDraft: project.status === 'draft',
-        isActive: project.status === 'active',
-        isPaused: project.status === 'paused',
+        isDraft: project.status === PROJECT_STATUS.DRAFT,
+        isActive: project.status === PROJECT_STATUS.ACTIVE,
+        isPaused: project.status === PROJECT_STATUS.PAUSED,
         // Ensure boolean fields exist
-        is_active: project.status === 'active',
-        is_public: project.status !== 'draft',
+        is_active: project.status === PROJECT_STATUS.ACTIVE,
+        is_public: project.status !== PROJECT_STATUS.DRAFT,
         contributor_count: project.contributor_count ?? 0,
       }));
 
@@ -167,11 +168,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                 ...p,
                 ...updatedProject,
                 status: updatedProject.status,
-                isDraft: updatedProject.status === 'draft',
-                isActive: updatedProject.status === 'active',
-                isPaused: updatedProject.status === 'paused',
-                is_active: updatedProject.status === 'active',
-                is_public: updatedProject.status !== 'draft',
+                isDraft: updatedProject.status === PROJECT_STATUS.DRAFT,
+                isActive: updatedProject.status === PROJECT_STATUS.ACTIVE,
+                isPaused: updatedProject.status === PROJECT_STATUS.PAUSED,
+                is_active: updatedProject.status === PROJECT_STATUS.ACTIVE,
+                is_public: updatedProject.status !== PROJECT_STATUS.DRAFT,
               }
             : p
         ),

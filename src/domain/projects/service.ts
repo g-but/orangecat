@@ -1,5 +1,6 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { getTableName } from '@/config/entity-registry';
+import { PROJECT_STATUS } from '@/config/project-statuses';
 
 export async function listProjectsPage(limit: number, offset: number, userId?: string) {
   const supabase = await createServerClient();
@@ -10,7 +11,7 @@ export async function listProjectsPage(limit: number, offset: number, userId?: s
     if (userId) {
       return query.eq('user_id', userId);
     }
-    return query.eq('status', 'active');
+    return query.eq('status', PROJECT_STATUS.ACTIVE);
   };
 
   // Run data query (with profile join) and count query in parallel

@@ -22,6 +22,7 @@ import BulkActionsBar from '@/components/entity/BulkActionsBar';
 import { useEntityList } from '@/hooks/useEntityList';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { projectEntityConfig, type ProjectListItem } from '@/config/entities/projects';
+import { PROJECT_STATUS } from '@/config/project-statuses';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Target, Heart, Search, X } from 'lucide-react';
 import Input from '@/components/ui/Input';
@@ -96,20 +97,20 @@ export default function ProjectsDashboardPage() {
         if (!p) {
           return false;
         }
-        if (statusFilter === 'draft') {
+        if (statusFilter === PROJECT_STATUS.DRAFT) {
           return p.isDraft;
         }
-        if (statusFilter === 'active') {
+        if (statusFilter === PROJECT_STATUS.ACTIVE) {
           return p.isActive;
         }
-        if (statusFilter === 'paused') {
+        if (statusFilter === PROJECT_STATUS.PAUSED) {
           return p.isPaused;
         }
-        if (statusFilter === 'completed') {
-          return p.status === 'completed';
+        if (statusFilter === PROJECT_STATUS.COMPLETED) {
+          return p.status === PROJECT_STATUS.COMPLETED;
         }
-        if (statusFilter === 'cancelled') {
-          return p.status === 'cancelled';
+        if (statusFilter === PROJECT_STATUS.CANCELLED) {
+          return p.status === PROJECT_STATUS.CANCELLED;
         }
         return true;
       });

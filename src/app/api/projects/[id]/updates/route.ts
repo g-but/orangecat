@@ -16,6 +16,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
+import { PROJECT_STATUS } from '@/config/project-statuses';
 
 interface RouteParams {
   params: Promise<{
@@ -40,9 +41,11 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
     const supabase = await createServerClient();
 
     // Fetch project to ensure it exists and is viewable
-    const { data: project, error: projectError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('project')) as any)
+    const { data: project, error: projectError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('project')) as any
+    )
       .select('id, status')
       .eq('id', projectId)
       .single();
@@ -53,14 +56,16 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
     }
 
     // Only show updates for active or completed projects (privacy)
-    if (!['active', 'completed'].includes(project.status)) {
+    if (![PROJECT_STATUS.ACTIVE, PROJECT_STATUS.COMPLETED].includes(project.status)) {
       return apiSuccess({ updates: [], count: 0 });
     }
 
     // Fetch recent updates (limit to 10 most recent)
-    const { data: updates, error: updatesError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('project_updates') as any)
+    const { data: updates, error: updatesError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('project_updates') as any
+    )
       .select('id, project_id, type, title, content, amount_btc, created_at')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false })
@@ -80,7 +85,11 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
       count: updates?.length || 0,
     });
   } catch (error) {
-    logger.error('Unexpected error in project updates API', { error, projectId: (await params).id }, 'ProjectUpdatesAPI');
+    logger.error(
+      'Unexpected error in project updates API',
+      { error, projectId: (await params).id },
+      'ProjectUpdatesAPI'
+    );
     return handleApiError(error);
   }
 });

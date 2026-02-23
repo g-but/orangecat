@@ -2,6 +2,7 @@ import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
+import { PROJECT_STATUS } from '@/config/project-statuses';
 
 // Raw database types
 interface RawProject {
@@ -93,7 +94,7 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
     }
 
     const totalProjects = uniqueProjects.length;
-    const activeProjects = uniqueProjects.filter(p => p.status === 'active').length;
+    const activeProjects = uniqueProjects.filter(p => p.status === PROJECT_STATUS.ACTIVE).length;
 
     return {
       totalProjects,

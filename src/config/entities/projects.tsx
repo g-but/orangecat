@@ -16,6 +16,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { PROJECT_STATUS } from '@/config/project-statuses';
 import type { Currency } from '@/types/settings';
 
 // Project type for EntityList usage
@@ -110,9 +111,9 @@ export const projectEntityConfig: EntityConfig<ProjectListItem> = {
           ? 'Active'
           : project.isPaused
             ? 'Paused'
-            : project.status === 'completed'
+            : project.status === PROJECT_STATUS.COMPLETED
               ? 'Completed'
-              : project.status === 'cancelled'
+              : project.status === PROJECT_STATUS.CANCELLED
                 ? 'Cancelled'
                 : undefined,
       badgeVariant: project.isDraft
@@ -121,9 +122,9 @@ export const projectEntityConfig: EntityConfig<ProjectListItem> = {
           ? 'success'
           : project.isPaused
             ? 'warning'
-            : project.status === 'completed'
+            : project.status === PROJECT_STATUS.COMPLETED
               ? 'success'
-              : project.status === 'cancelled'
+              : project.status === PROJECT_STATUS.CANCELLED
                 ? 'destructive'
                 : 'default',
       metadata:
