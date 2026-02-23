@@ -15,6 +15,7 @@ import {
   type RolePermissions,
 } from '@/config/governance-presets';
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
 /**
@@ -67,9 +68,11 @@ export async function canPerformAction(
   try {
     // Get group from groups table
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: group, error: _groupError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('groups') as any)
+    const { data: group, error: _groupError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.GROUPS) as any
+    )
       .select('governance_preset, voting_threshold')
       .eq('id', groupId)
       .maybeSingle();
@@ -86,9 +89,11 @@ export async function canPerformAction(
 
       // Get membership from group_members
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: member } = await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('group_members') as any)
+      const { data: member } = await (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(DATABASE_TABLES.GROUP_MEMBERS) as any
+      )
         .select('role, permission_overrides')
         .eq('group_id', groupId)
         .eq('user_id', userId)
@@ -111,9 +116,7 @@ export async function canPerformAction(
     }
 
     // Check permission override first
-    const override = memberInfo.permission_overrides?.[action] as
-      | ActionPermission
-      | undefined;
+    const override = memberInfo.permission_overrides?.[action] as ActionPermission | undefined;
     if (override) {
       return resolvePermission(override);
     }
@@ -121,11 +124,7 @@ export async function canPerformAction(
     // Fall back to governance preset role defaults
     const preset = GOVERNANCE_PRESETS[groupInfo.governance_preset];
     if (!preset) {
-      logger.warn(
-        'Unknown governance preset',
-        { preset: groupInfo.governance_preset },
-        'Groups'
-      );
+      logger.warn('Unknown governance preset', { preset: groupInfo.governance_preset }, 'Groups');
       return { allowed: false, requiresVote: false, reason: 'Unknown governance preset' };
     }
 
@@ -212,7 +211,7 @@ export async function getMemberPermissions(
   const results = await canPerformActions(userId, groupId, actions);
 
   // Check if user is a member at all
-  const anyAllowed = Array.from(results.values()).some((r) => r.allowed);
+  const anyAllowed = Array.from(results.values()).some(r => r.allowed);
   if (!anyAllowed) {
     // Check if all denied due to not being a member
     const firstResult = results.values().next().value;
@@ -221,10 +220,7 @@ export async function getMemberPermissions(
     }
   }
 
-  return Object.fromEntries(results) as Record<
-    keyof RolePermissions,
-    PermissionResult
-  >;
+  return Object.fromEntries(results) as Record<keyof RolePermissions, PermissionResult>;
 }
 
 // Re-export types for convenience

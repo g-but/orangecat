@@ -10,6 +10,7 @@
  */
 
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import type { Group, GroupsQuery, GroupsListResponse, GroupResponse } from '../types';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TABLES } from '../constants';
@@ -26,7 +27,10 @@ export async function getGroupBySlug(slug: string): Promise<GroupResponse> {
 /**
  * Get a specific group by ID or slug
  */
-export async function getGroup(identifier: string, bySlug: boolean = false): Promise<GroupResponse> {
+export async function getGroup(
+  identifier: string,
+  bySlug: boolean = false
+): Promise<GroupResponse> {
   try {
     const userId = await getCurrentUserId();
 
@@ -85,8 +89,7 @@ export async function getUserGroups(
 
     // Get user's group IDs from group_members
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: memberships } = await (supabase
-      .from('group_members') as any)
+    const { data: memberships } = await (supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as any)
       .select('group_id')
       .eq('user_id', userId);
 
@@ -97,8 +100,7 @@ export async function getUserGroups(
     const groupIds = memberships.map((m: { group_id: string }) => m.group_id);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let dbQuery = (supabase
-      .from(TABLES.groups) as any)
+    let dbQuery = (supabase.from(TABLES.groups) as any)
       .select('*', { count: 'exact' })
       .in('id', groupIds);
 
@@ -150,7 +152,9 @@ export async function getAvailableGroups(
     const _userId = await getCurrentUserId();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let dbQuery = (supabase.from(TABLES.groups) as any).select('*', { count: 'exact' }).eq('is_public', true);
+    let dbQuery = (supabase.from(TABLES.groups) as any)
+      .select('*', { count: 'exact' })
+      .eq('is_public', true);
 
     // Apply filters
     if (query?.type) {
@@ -242,8 +246,7 @@ export async function searchGroups(
     const _userId = await getCurrentUserId();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let dbQuery = (supabase
-      .from(TABLES.groups) as any)
+    let dbQuery = (supabase.from(TABLES.groups) as any)
       .select('*', { count: 'exact' })
       .or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
 
@@ -296,4 +299,3 @@ export async function searchGroups(
     return { success: false, error: 'Failed to search groups' };
   }
 }
-

@@ -17,6 +17,7 @@ import {
   apiValidationError,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
 
@@ -74,10 +75,12 @@ export const GET = withAuth(
 
       // Get group by slug
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: group, error: groupError } = await (supabase.from('groups') as any)
+      const { data: group, error: groupError } = (await (
+        supabase.from(DATABASE_TABLES.GROUPS) as any
+      )
         .select('id')
         .eq('slug', slug)
-        .single() as { data: GroupRow | null; error: Error | null };
+        .single()) as { data: GroupRow | null; error: Error | null };
 
       if (groupError || !group) {
         return apiNotFound('Group not found');
@@ -85,11 +88,11 @@ export const GET = withAuth(
 
       // Check if user is admin/founder
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: membership } = await (supabase.from('group_members') as any)
+      const { data: membership } = (await (supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as any)
         .select('role')
         .eq('group_id', group.id)
         .eq('user_id', user.id)
-        .maybeSingle() as { data: GroupMemberRow | null };
+        .maybeSingle()) as { data: GroupMemberRow | null };
 
       if (!membership || !['founder', 'admin'].includes(membership.role)) {
         return apiForbidden('Only admins can view invitations');
@@ -102,7 +105,7 @@ export const GET = withAuth(
 
       // Build query
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = (supabase.from('group_invitations') as any)
+      let query = (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
         .select(
           `
         *,
@@ -125,7 +128,11 @@ export const GET = withAuth(
         query = query.eq('status', status);
       }
 
-      const { data: invitations, count, error } = await query as {
+      const {
+        data: invitations,
+        count,
+        error,
+      } = (await query) as {
         data: GroupInvitationRow[] | null;
         count: number | null;
         error: Error | null;
@@ -161,10 +168,12 @@ export const POST = withAuth(
 
       // Get group by slug
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: group, error: groupError } = await (supabase.from('groups') as any)
+      const { data: group, error: groupError } = (await (
+        supabase.from(DATABASE_TABLES.GROUPS) as any
+      )
         .select('id, name')
         .eq('slug', slug)
-        .single() as { data: GroupRow | null; error: Error | null };
+        .single()) as { data: GroupRow | null; error: Error | null };
 
       if (groupError || !group) {
         return apiNotFound('Group not found');
@@ -172,11 +181,11 @@ export const POST = withAuth(
 
       // Check if user is admin/founder
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: membership } = await (supabase.from('group_members') as any)
+      const { data: membership } = (await (supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as any)
         .select('role')
         .eq('group_id', group.id)
         .eq('user_id', user.id)
-        .maybeSingle() as { data: GroupMemberRow | null };
+        .maybeSingle()) as { data: GroupMemberRow | null };
 
       if (!membership || !['founder', 'admin'].includes(membership.role)) {
         return apiForbidden('Only admins can create invitations');
@@ -200,11 +209,13 @@ export const POST = withAuth(
       // If inviting a specific user, check if already a member
       if (user_id) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: existingMember } = await (supabase.from('group_members') as any)
+        const { data: existingMember } = (await (
+          supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as any
+        )
           .select('id')
           .eq('group_id', group.id)
           .eq('user_id', user_id)
-          .maybeSingle() as { data: { id: string } | null };
+          .maybeSingle()) as { data: { id: string } | null };
 
         if (existingMember) {
           return apiValidationError('User is already a member of this group');
@@ -212,12 +223,14 @@ export const POST = withAuth(
 
         // Check for existing pending invitation
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: existingInvite } = await (supabase.from('group_invitations') as any)
+        const { data: existingInvite } = (await (
+          supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any
+        )
           .select('id')
           .eq('group_id', group.id)
           .eq('user_id', user_id)
           .eq('status', 'pending')
-          .maybeSingle() as { data: { id: string } | null };
+          .maybeSingle()) as { data: { id: string } | null };
 
         if (existingInvite) {
           return apiValidationError('User already has a pending invitation');
@@ -257,10 +270,12 @@ export const POST = withAuth(
 
       // Create invitation
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: invitation, error: insertError } = await (supabase.from('group_invitations') as any)
+      const { data: invitation, error: insertError } = (await (
+        supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any
+      )
         .insert(invitationData)
         .select()
-        .single() as { data: GroupInvitationRow | null; error: Error | null };
+        .single()) as { data: GroupInvitationRow | null; error: Error | null };
 
       if (insertError || !invitation) {
         logger.error(

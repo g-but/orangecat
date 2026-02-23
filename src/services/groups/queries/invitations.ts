@@ -9,6 +9,7 @@
  */
 
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { getCurrentUserId } from '../utils/helpers';
 import { canPerformAction } from '../permissions/resolver';
@@ -118,8 +119,7 @@ export async function getUserInvitationCount(): Promise<number> {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { count, error } = await (supabase
-      .from('group_invitations') as any)
+    const { count, error } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 'pending')
@@ -168,8 +168,7 @@ export async function getGroupInvitations(
 
     // Build query
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query = (supabase
-      .from('group_invitations') as any)
+    let query = (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
       .select(
         `
         *,
@@ -237,9 +236,7 @@ export async function getGroupInvitations(
 /**
  * Get invitation details by token (public, for join links)
  */
-export async function getInvitationByToken(
-  token: string
-): Promise<{
+export async function getInvitationByToken(token: string): Promise<{
   success: boolean;
   invitation?: {
     id: string;
@@ -258,8 +255,7 @@ export async function getInvitationByToken(
 }> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase
-      .from('group_invitations') as any)
+    const { data, error } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
       .select(
         `
         id,
@@ -296,8 +292,7 @@ export async function getInvitationByToken(
 
     // Get member count
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { count: memberCount } = await (supabase
-      .from('group_members') as any)
+    const { count: memberCount } = await (supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as any)
       .select('*', { count: 'exact', head: true })
       .eq('group_id', group.id);
 

@@ -7,6 +7,7 @@
  */
 
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import type {
   CreateLoanOfferRequest,
@@ -18,9 +19,7 @@ import { getCurrentUserId } from '../utils/auth';
 /**
  * Create a loan offer
  */
-export async function createLoanOffer(
-  request: CreateLoanOfferRequest
-): Promise<LoanOfferResponse> {
+export async function createLoanOffer(request: CreateLoanOfferRequest): Promise<LoanOfferResponse> {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -50,9 +49,11 @@ export async function createLoanOffer(
       }
 
       // Get the created offer
-      const { data: offer, error: fetchError } = await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('loan_offers') as any)
+      const { data: offer, error: fetchError } = await (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(DATABASE_TABLES.LOAN_OFFERS) as any
+      )
         .select()
         .eq('id', data.offer_id)
         .single();
@@ -67,9 +68,11 @@ export async function createLoanOffer(
       logger.warn('Using fallback offer creation', dbError, 'Loans');
 
       // Fallback: direct insert
-      const { data, error } = await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('loan_offers') as any)
+      const { data, error } = await (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(DATABASE_TABLES.LOAN_OFFERS) as any
+      )
         .insert({
           ...request,
           offerer_id: userId,
@@ -103,9 +106,11 @@ export async function updateLoanOffer(
       return { success: false, error: 'Authentication required' };
     }
 
-    const { data, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('loan_offers') as any)
+    const { data, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.LOAN_OFFERS) as any
+    )
       .update(request)
       .eq('id', offerId)
       .eq('offerer_id', userId)
@@ -139,13 +144,17 @@ export async function respondToOffer(
     }
 
     // Verify user owns the loan
-    const { data: offer, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('loan_offers') as any)
-      .select(`
+    const { data: offer, error: fetchError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.LOAN_OFFERS) as any
+    )
+      .select(
+        `
         *,
         loans!inner(user_id)
-      `)
+      `
+      )
       .eq('id', offerId)
       .single();
 
@@ -169,9 +178,11 @@ export async function respondToOffer(
       updateData.rejected_at = new Date().toISOString();
     }
 
-    const { data, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('loan_offers') as any)
+    const { data, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.LOAN_OFFERS) as any
+    )
       .update(updateData)
       .eq('id', offerId)
       .select()
