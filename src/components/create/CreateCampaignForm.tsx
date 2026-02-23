@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { CampaignStorageService } from '@/services/projects/projectStorageService';
 import { isValidBitcoinAddress } from '@/utils/validation';
 import { z } from 'zod';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 const projectFormSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
@@ -251,7 +252,7 @@ export default function CreateCampaignForm({
         currency: 'BTC',
       };
 
-      const response = await fetch('/api/projects', {
+      const response = await fetch(ENTITY_REGISTRY.project.apiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(projectData),

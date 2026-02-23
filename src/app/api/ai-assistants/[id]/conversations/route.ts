@@ -13,6 +13,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 
 interface RouteContext {
@@ -75,7 +76,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       return NextResponse.json({ error: 'Assistant not found' }, { status: 404 });
     }
 
-    if (assistant.status !== 'active') {
+    if (assistant.status !== STATUS.AI_ASSISTANTS.ACTIVE) {
       return NextResponse.json({ error: 'Assistant is not active' }, { status: 400 });
     }
 

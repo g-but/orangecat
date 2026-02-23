@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { DEFAULT_CURRENCY } from '@/config/currencies';
 import { convertBtcTo } from '@/services/currency';
 import { useAuth } from '@/hooks/useAuth';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 export interface CollateralItem {
   id: string;
@@ -72,7 +73,7 @@ export function CollateralSelector({
       try {
         setLoading(true);
         const [assetsRes, walletsRes] = await Promise.all([
-          fetch('/api/assets', { credentials: 'include' }),
+          fetch(ENTITY_REGISTRY.asset.apiEndpoint, { credentials: 'include' }),
           fetch(`/api/wallets?profile_id=${profile.id}`, { credentials: 'include' }),
         ]);
 
