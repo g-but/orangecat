@@ -14,8 +14,9 @@
 
 'use client';
 
-import { Bitcoin, ExternalLink, Heart, Copy, ShieldCheck } from 'lucide-react';
+import { Bitcoin, Heart, Copy, ShieldCheck, Zap } from 'lucide-react';
 import BitcoinPaymentButton from '@/components/bitcoin/BitcoinPaymentButton';
+import LightningPayment from '@/components/lightning/LightningPayment';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -324,17 +325,23 @@ export function ProjectDonationSection({
         </section>
       )}
 
-      {/* Lightning Address */}
+      {/* Lightning Payment */}
       {lightningAddress && (
         <section className="mt-6" aria-labelledby="lightning-heading">
           <h3 id="lightning-heading" className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <ExternalLink className="w-5 h-5 text-yellow-500" aria-hidden="true" />
+            <Zap className="w-5 h-5 text-bitcoin-orange" aria-hidden="true" />
             Lightning Payment
           </h3>
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <LightningPayment
+            recipientAddress={lightningAddress}
+            projectTitle={projectTitle}
+            projectId={projectId}
+          />
+          {/* Fallback: show raw address for manual copy */}
+          <div className="mt-3 bg-gray-50 rounded-lg p-3 border border-gray-200">
             <div className="flex items-center justify-between gap-4">
               <code
-                className="text-sm font-mono text-gray-900 break-all"
+                className="text-xs font-mono text-gray-600 break-all"
                 aria-label={`Lightning address: ${lightningAddress}`}
               >
                 {lightningAddress}
@@ -345,7 +352,7 @@ export function ProjectDonationSection({
                 onClick={() => copyToClipboard(lightningAddress, 'Lightning address')}
                 aria-label="Copy Lightning address to clipboard"
               >
-                Copy
+                <Copy className="w-3 h-3" />
               </Button>
             </div>
           </div>

@@ -175,6 +175,10 @@ export function getPaymentProvider(): PaymentProvider {
       const { BTCPayProvider } = require('./btcpayProvider');
       return new BTCPayProvider();
     }
+    case 'nwc':
+      throw new Error(
+        "NWC is per-user — use getNWCPaymentProvider(uri) with the user's NWC connection URI instead."
+      );
     case 'mock':
     default:
       return new MockPaymentProvider();

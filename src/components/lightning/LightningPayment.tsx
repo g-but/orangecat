@@ -15,8 +15,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Zap, Copy, Check, ExternalLink, Wifi, WifiOff } from 'lucide-react';
+import { Zap, Copy, Check, ExternalLink, Wifi, WifiOff, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Alert, AlertDescription } from '@/components/ui/Alert';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { toast } from 'sonner';
@@ -295,13 +296,16 @@ export default function LightningPayment({
         </CardTitle>
 
         {!nwcConnected && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Connect your wallet via NWC in{' '}
-            <a href="/dashboard/wallets" className="text-tiffany hover:underline">
-              Wallet Settings
-            </a>{' '}
-            to enable real Lightning payments.
-          </p>
+          <Alert className="mt-2 border-yellow-300 bg-yellow-50">
+            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-800 text-sm">
+              <strong>Demo Mode</strong> — Invoices are simulated.{' '}
+              <a href="/settings" className="text-yellow-900 underline font-medium">
+                Connect your wallet
+              </a>{' '}
+              via NWC to make real Lightning payments.
+            </AlertDescription>
+          </Alert>
         )}
       </CardHeader>
       <CardContent className="space-y-4">
