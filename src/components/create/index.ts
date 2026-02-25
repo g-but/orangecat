@@ -11,6 +11,7 @@
 // Main form component
 export { EntityForm } from './EntityForm';
 export { EntityCreationWizard } from './EntityCreationWizard';
+export { EntityFormDialog } from './EntityFormDialog';
 
 // Sub-components
 export { FormField } from './FormField';

@@ -14,6 +14,7 @@ import { eventGuidanceContent, eventDefaultGuidance } from '@/lib/entity-guidanc
 import type { FieldGroup } from '@/components/create/types';
 import { EVENT_TEMPLATES, type EventTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { WalletSelectorField } from '@/components/create/wallet-selector';
 
 // ==================== CONSTANTS ====================
 
@@ -270,25 +271,19 @@ const fieldGroups: FieldGroup[] = [
         type: 'currency',
         placeholder: '10000.00',
         min: 1,
-        hint: 'Optional: Set a funding goal to cover event costs. System monitors your Bitcoin address and notifies you when goal is reached. Note: Fiat goals (USD/CHF/EUR) can be reached via funding OR Bitcoin price appreciation. BTC/SATS goals can only be reached via funding.',
+        hint: 'Optional: Set a funding goal to cover event costs.',
         colSpan: 2,
       },
-      {
-        name: 'bitcoin_address',
-        label: 'Bitcoin Address',
-        type: 'bitcoin_address',
-        placeholder: 'bc1q...',
-        hint: 'Where ticket payments and funding should be sent',
-        colSpan: 2,
-      },
-      {
-        name: 'lightning_address',
-        label: 'Lightning Address',
-        type: 'text',
-        placeholder: 'you@getalby.com',
-        hint: 'For instant, low-fee payments',
-        colSpan: 2,
-      },
+    ],
+  },
+  {
+    id: 'bitcoin',
+    title: 'Bitcoin & Payments',
+    description: 'Select a wallet or enter an address',
+    customComponent: WalletSelectorField,
+    fields: [
+      { name: 'bitcoin_address', label: 'Bitcoin Address', type: 'bitcoin_address' },
+      { name: 'lightning_address', label: 'Lightning Address', type: 'text' },
     ],
   },
   {

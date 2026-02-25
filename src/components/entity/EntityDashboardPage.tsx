@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, ReactNode } from 'react';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import Button from '@/components/ui/Button';
@@ -42,6 +42,8 @@ interface EntityDashboardPageProps<T extends BaseEntity> {
   createButtonLabel?: string;
   /** Items per page */
   limit?: number;
+  /** Optional content to render above the list (e.g., info banners) */
+  headerContent?: ReactNode;
 }
 
 export default function EntityDashboardPage<T extends BaseEntity>({
@@ -51,6 +53,7 @@ export default function EntityDashboardPage<T extends BaseEntity>({
   loadingMessage,
   createButtonLabel,
   limit = 12,
+  headerContent,
 }: EntityDashboardPageProps<T>) {
   const { user, isLoading: authLoading, hydrated } = useRequireAuth();
   const userCurrency = useUserCurrency();
@@ -182,6 +185,7 @@ export default function EntityDashboardPage<T extends BaseEntity>({
         description={description}
         headerActions={headerActions}
       >
+        {headerContent}
         {error ? (
           <div className="rounded-xl border bg-white p-6 text-red-600">{error}</div>
         ) : (

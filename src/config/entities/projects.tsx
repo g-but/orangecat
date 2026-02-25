@@ -46,7 +46,7 @@ export const projectEntityConfig: EntityConfig<ProjectListItem> = {
   listPath: '/dashboard/projects',
   detailPath: id => `/projects/${id}`,
   createPath: '/dashboard/projects/create',
-  editPath: id => `/projects/${id}/edit`,
+  editPath: id => `/dashboard/projects/create?edit=${id}`,
 
   apiEndpoint: '/api/projects',
 
@@ -141,7 +141,7 @@ export const projectEntityConfig: EntityConfig<ProjectListItem> = {
           </div>
         ) : undefined,
       showEditButton: true,
-      editHref: `/projects/${project.id}/edit`,
+      editHref: `/dashboard/projects/create?edit=${project.id}`,
     };
   },
 

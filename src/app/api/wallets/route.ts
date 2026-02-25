@@ -105,6 +105,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       profile_id?: string;
       project_id?: string;
       force_duplicate?: boolean;
+      lightning_address?: string;
     };
 
     // Validate entity ownership
@@ -253,6 +254,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
           goal_amount: sanitized.goal_amount || null,
           goal_currency: sanitized.goal_currency || null,
           goal_deadline: sanitized.goal_deadline || null,
+          lightning_address: body.lightning_address?.trim() || null,
           is_primary: body.is_primary !== undefined ? body.is_primary : isFirstWallet,
           balance_btc: 0,
         })

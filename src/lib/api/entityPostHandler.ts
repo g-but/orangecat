@@ -32,6 +32,7 @@ import { withRequestId } from '@/lib/api/withRequestId';
 import { rateLimitWriteAsync, applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { type EntityType, getEntityMetadata } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Type for the awaited Supabase client
 type SupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
@@ -116,7 +117,10 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
       if (createEntity) {
         const entity = await createEntity(user.id, ctx.body, supabase);
         logger.info(`${meta.name} created successfully`, { [`${entityType}Id`]: entity.id });
-        return applyRateLimitHeaders(apiSuccess(entity, { status: 201 }), rateLimit as RateLimitResult);
+        return applyRateLimitHeaders(
+          apiSuccess(entity, { status: 201 }),
+          rateLimit as RateLimitResult
+        );
       }
 
       // Default creation: transform data and insert
@@ -137,6 +141,10 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
       }
 
       const entityData = { ...transformedData, ...defaultFields };
+
+      // Extract _wallet_id before DB insert (not a real column)
+      const walletIdForLink = entityData._wallet_id as string | undefined;
+      delete entityData._wallet_id;
 
       // Log the data being inserted for debugging
       logger.info(`Inserting ${entityType}`, {
@@ -213,7 +221,36 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
 
       const createdEntity = entity as { id: string } & Record<string, unknown>;
       logger.info(`${meta.name} created successfully`, { [`${entityType}Id`]: createdEntity.id });
-      return applyRateLimitHeaders(apiSuccess(createdEntity, { status: 201 }), rateLimit as RateLimitResult);
+
+      // Link wallet to entity if _wallet_id was provided (non-fatal)
+      if (walletIdForLink && createdEntity.id) {
+        try {
+          // entity_wallets table may not be in generated Supabase types yet
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from(DATABASE_TABLES.ENTITY_WALLETS) as any).insert({
+            wallet_id: walletIdForLink,
+            entity_type: entityType,
+            entity_id: createdEntity.id,
+            is_primary: true,
+            created_by: user.id,
+          });
+          logger.info(`Wallet linked to ${entityType}`, {
+            walletId: walletIdForLink,
+            entityId: createdEntity.id,
+          });
+        } catch (linkError) {
+          logger.warn(`Failed to link wallet to ${entityType} (non-fatal)`, {
+            walletId: walletIdForLink,
+            entityId: createdEntity.id,
+            error: linkError,
+          });
+        }
+      }
+
+      return applyRateLimitHeaders(
+        apiSuccess(createdEntity, { status: 201 }),
+        rateLimit as RateLimitResult
+      );
     } catch (error) {
       return handleApiError(error);
     }

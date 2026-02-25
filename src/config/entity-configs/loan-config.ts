@@ -10,14 +10,12 @@
 
 import { DollarSign } from 'lucide-react';
 import { loanSchema, type LoanFormData } from '@/lib/validation';
-import {
-  loanGuidanceContent,
-  loanDefaultGuidance,
-} from '@/lib/entity-guidance/loan-guidance';
+import { loanGuidanceContent, loanDefaultGuidance } from '@/lib/entity-guidance/loan-guidance';
 import type { FieldGroup } from '@/components/create/types';
 import { LOAN_TEMPLATES, type LoanTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
 import { LoanCollateralField } from '@/components/create/collateral/LoanCollateralField';
+import { WalletSelectorField } from '@/components/create/wallet-selector';
 
 // ==================== FIELD GROUPS ====================
 
@@ -25,7 +23,7 @@ const fieldGroups: FieldGroup[] = [
   {
     id: 'loan_type',
     title: 'What type of loan?',
-    description: 'Choose whether you\'re requesting a new loan or refinancing an existing one',
+    description: "Choose whether you're requesting a new loan or refinancing an existing one",
     fields: [
       {
         name: 'loan_type',
@@ -33,8 +31,16 @@ const fieldGroups: FieldGroup[] = [
         type: 'select',
         required: true,
         options: [
-          { value: 'new_request', label: 'Request New Loan', description: 'I need funding and want to find lenders' },
-          { value: 'existing_refinance', label: 'Refinance Existing Loan', description: 'I have an existing loan and want better terms' },
+          {
+            value: 'new_request',
+            label: 'Request New Loan',
+            description: 'I need funding and want to find lenders',
+          },
+          {
+            value: 'existing_refinance',
+            label: 'Refinance Existing Loan',
+            description: 'I have an existing loan and want better terms',
+          },
         ],
         hint: 'Select the type of loan listing you want to create',
         colSpan: 2,
@@ -104,7 +110,7 @@ const fieldGroups: FieldGroup[] = [
         min: 0,
         max: 100,
         step: 0.1,
-        hint: 'The interest rate you\'d like to refinance to',
+        hint: "The interest rate you'd like to refinance to",
       },
     ],
   },
@@ -137,29 +143,18 @@ const fieldGroups: FieldGroup[] = [
         min: 0,
         max: 100,
         step: 0.1,
-        hint: 'Annual interest rate you\'re willing to pay',
+        hint: "Annual interest rate you're willing to pay",
       },
     ],
   },
   {
     id: 'bitcoin',
     title: 'Bitcoin & Payments',
-    description: 'Bitcoin addresses for loan payments',
+    description: 'Select a wallet or enter an address',
+    customComponent: WalletSelectorField,
     fields: [
-      {
-        name: 'bitcoin_address',
-        label: 'Bitcoin Address',
-        type: 'bitcoin_address',
-        placeholder: 'bc1q... or 1...',
-        hint: 'Your Bitcoin address for loan payments',
-      },
-      {
-        name: 'lightning_address',
-        label: 'Lightning Address',
-        type: 'text',
-        placeholder: 'you@lightning.address',
-        hint: 'Optional: Lightning Network address for instant payments',
-      },
+      { name: 'bitcoin_address', label: 'Bitcoin Address', type: 'bitcoin_address' },
+      { name: 'lightning_address', label: 'Lightning Address', type: 'text' },
     ],
   },
   {

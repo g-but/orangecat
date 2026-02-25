@@ -17,6 +17,7 @@ import { GROUP_TEMPLATES } from '@/components/create/templates/group-templates';
 import { createEntityConfig } from './base-config-factory';
 import { getGroupLabelsArray } from '@/config/group-labels';
 import { GOVERNANCE_PRESETS } from '@/config/governance-presets';
+import { WalletSelectorField } from '@/components/create/wallet-selector';
 
 // ==================== FIELD GROUPS ====================
 
@@ -95,22 +96,16 @@ const fieldGroups: FieldGroup[] = [
         hint: 'Show this group in public group listings',
         colSpan: 2,
       },
-      {
-        name: 'bitcoin_address',
-        label: 'Bitcoin Address (Optional)',
-        type: 'text',
-        placeholder: 'bc1...',
-        hint: 'Group treasury address for receiving Bitcoin',
-        colSpan: 2,
-      },
-      {
-        name: 'lightning_address',
-        label: 'Lightning Address (Optional)',
-        type: 'text',
-        placeholder: 'group@lightning.address',
-        hint: 'Lightning Network address for instant payments',
-        colSpan: 2,
-      },
+    ],
+  },
+  {
+    id: 'bitcoin',
+    title: 'Bitcoin & Treasury',
+    description: 'Select a wallet or enter an address for group treasury',
+    customComponent: WalletSelectorField,
+    fields: [
+      { name: 'bitcoin_address', label: 'Bitcoin Address', type: 'bitcoin_address' },
+      { name: 'lightning_address', label: 'Lightning Address', type: 'text' },
     ],
   },
 ];

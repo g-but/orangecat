@@ -122,7 +122,7 @@ export const researchConfig: EntityConfig<ResearchEntity> = {
   listPath: '/dashboard/research',
   detailPath: (id: string) => `/research/${id}`,
   createPath: '/dashboard/research/create',
-  editPath: (id: string) => `/dashboard/research/${id}/edit`,
+  editPath: (id: string) => `/dashboard/research/create?edit=${id}`,
   apiEndpoint: '/api/research',
 
   // Card rendering
@@ -131,7 +131,7 @@ export const researchConfig: EntityConfig<ResearchEntity> = {
     badge: entity.status === 'active' ? 'Active' : entity.status === 'draft' ? 'Draft' : undefined,
     badgeVariant: entity.status === 'active' ? 'success' : 'default',
     showEditButton: true,
-    editHref: `/dashboard/research/${entity.id}/edit`,
+    editHref: `/dashboard/research/create?edit=${entity.id}`,
   }),
 
   // Basic fields

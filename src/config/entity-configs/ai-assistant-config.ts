@@ -11,12 +11,10 @@
 import { Bot } from 'lucide-react';
 import { aiAssistantSchema, type AIAssistantFormData } from '@/lib/validation';
 import type { FieldGroup } from '@/components/create/types';
-import {
-  aiAssistantGuidanceContent,
-  aiAssistantDefaultGuidance,
-} from '@/lib/entity-guidance';
+import { aiAssistantGuidanceContent, aiAssistantDefaultGuidance } from '@/lib/entity-guidance';
 import { AI_ASSISTANT_TEMPLATES, type AIAssistantTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { WalletSelectorField } from '@/components/create/wallet-selector';
 
 // ==================== CONSTANTS ====================
 
@@ -80,7 +78,7 @@ const fieldGroups: FieldGroup[] = [
         name: 'description',
         label: 'Description',
         type: 'textarea',
-        placeholder: 'Describe what your AI assistant does, who it\'s for, and how it can help...',
+        placeholder: "Describe what your AI assistant does, who it's for, and how it can help...",
         rows: 3,
         colSpan: 2,
       },
@@ -88,7 +86,7 @@ const fieldGroups: FieldGroup[] = [
         name: 'category',
         label: 'Category',
         type: 'select',
-        options: AI_CATEGORIES.map((cat) => ({ value: cat, label: cat })),
+        options: AI_CATEGORIES.map(cat => ({ value: cat, label: cat })),
         colSpan: 1,
       },
     ],
@@ -102,17 +100,19 @@ const fieldGroups: FieldGroup[] = [
         name: 'system_prompt',
         label: 'System Prompt',
         type: 'textarea',
-        placeholder: 'You are a helpful Bitcoin tax advisor. You help users understand tax implications of their Bitcoin transactions. Be concise, professional, and always recommend consulting a qualified tax professional for specific advice...',
+        placeholder:
+          'You are a helpful Bitcoin tax advisor. You help users understand tax implications of their Bitcoin transactions. Be concise, professional, and always recommend consulting a qualified tax professional for specific advice...',
         rows: 8,
         required: true,
         colSpan: 2,
-        hint: 'This is the core instruction that defines your AI\'s behavior. Think of it as your AI\'s "brain" - this is the software you\'re creating.',
+        hint: "This is the core instruction that defines your AI's behavior. Think of it as your AI's \"brain\" - this is the software you're creating.",
       },
       {
         name: 'welcome_message',
         label: 'Welcome Message',
         type: 'textarea',
-        placeholder: 'Hello! I\'m your Bitcoin Tax Advisor. I can help you understand the tax implications of your Bitcoin transactions. What would you like to know?',
+        placeholder:
+          "Hello! I'm your Bitcoin Tax Advisor. I can help you understand the tax implications of your Bitcoin transactions. What would you like to know?",
         rows: 2,
         colSpan: 2,
         hint: 'The first message users see when starting a conversation',
@@ -216,25 +216,12 @@ const fieldGroups: FieldGroup[] = [
   },
   {
     id: 'payment',
-    title: 'Payment Addresses',
-    description: 'Where you receive payments from AI usage',
+    title: 'Bitcoin & Payments',
+    description: 'Select a wallet or enter an address',
+    customComponent: WalletSelectorField,
     fields: [
-      {
-        name: 'lightning_address',
-        label: 'Lightning Address',
-        type: 'text',
-        placeholder: 'you@getalby.com',
-        hint: 'For instant micropayments (recommended)',
-        colSpan: 2,
-      },
-      {
-        name: 'bitcoin_address',
-        label: 'Bitcoin Address',
-        type: 'bitcoin_address',
-        placeholder: 'bc1q...',
-        hint: 'Fallback for larger payments',
-        colSpan: 2,
-      },
+      { name: 'bitcoin_address', label: 'Bitcoin Address', type: 'bitcoin_address' },
+      { name: 'lightning_address', label: 'Lightning Address', type: 'text' },
     ],
   },
 ];
@@ -282,7 +269,8 @@ export const aiAssistantConfig = createEntityConfig<AIAssistantFormData>({
   pageTitle: 'Create AI Assistant',
   pageDescription: 'Build an autonomous AI service that earns Bitcoin',
   formTitle: 'AI Assistant Details',
-  formDescription: 'Define your AI assistant\'s personality, capabilities, and pricing. Your system prompt is the "software" that makes your AI unique.',
+  formDescription:
+    'Define your AI assistant\'s personality, capabilities, and pricing. Your system prompt is the "software" that makes your AI unique.',
   fieldGroups,
   validationSchema: aiAssistantSchema,
   defaultValues,
@@ -291,7 +279,8 @@ export const aiAssistantConfig = createEntityConfig<AIAssistantFormData>({
   templates: AI_ASSISTANT_TEMPLATES as unknown as AIAssistantTemplate[],
   infoBanner: {
     title: 'Portable AI Software',
-    content: 'Your AI assistant is portable software - the system prompt you create here can work with any AI provider. Focus on crafting valuable instructions, and your AI can earn Bitcoin 24/7.',
+    content:
+      'Your AI assistant is portable software - the system prompt you create here can work with any AI provider. Focus on crafting valuable instructions, and your AI can earn Bitcoin 24/7.',
     variant: 'info',
   },
 });

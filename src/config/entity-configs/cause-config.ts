@@ -13,6 +13,7 @@ import { causeGuidanceContent, causeDefaultGuidance } from '@/lib/entity-guidanc
 import type { FieldGroup } from '@/components/create/types';
 import { CAUSE_TEMPLATES, type CauseTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { WalletSelectorField } from '@/components/create/wallet-selector';
 
 // ==================== CONSTANTS ====================
 
@@ -87,24 +88,12 @@ const fieldGroups: FieldGroup[] = [
   },
   {
     id: 'payment',
-    title: 'Payment Addresses',
-    description: 'Add Bitcoin addresses where funding should be sent',
+    title: 'Bitcoin & Payments',
+    description: 'Select a wallet or enter an address',
+    customComponent: WalletSelectorField,
     fields: [
-      {
-        name: 'bitcoin_address',
-        label: 'Bitcoin Address',
-        type: 'bitcoin_address',
-        placeholder: 'bc1q...',
-        colSpan: 2,
-      },
-      {
-        name: 'lightning_address',
-        label: 'Lightning Address',
-        type: 'text',
-        placeholder: 'you@getalby.com',
-        hint: 'For instant, low-fee funding',
-        colSpan: 2,
-      },
+      { name: 'bitcoin_address', label: 'Bitcoin Address', type: 'bitcoin_address' },
+      { name: 'lightning_address', label: 'Lightning Address', type: 'text' },
     ],
   },
   {

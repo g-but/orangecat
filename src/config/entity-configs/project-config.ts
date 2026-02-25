@@ -17,6 +17,7 @@ import {
 import type { FieldGroup, WizardConfig } from '@/components/create/types';
 import { PROJECT_TEMPLATES, type ProjectTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { WalletSelectorField } from '@/components/create/wallet-selector';
 
 // ==================== FIELD GROUPS ====================
 
@@ -71,22 +72,11 @@ const fieldGroups: FieldGroup[] = [
   {
     id: 'bitcoin',
     title: 'Bitcoin & Payments',
-    description: 'Bitcoin addresses for receiving funding',
+    description: 'Select a wallet or enter an address',
+    customComponent: WalletSelectorField,
     fields: [
-      {
-        name: 'bitcoin_address',
-        label: 'Bitcoin Address',
-        type: 'bitcoin_address',
-        placeholder: 'bc1q... or 1...',
-        hint: 'Your Bitcoin address for receiving funding',
-      },
-      {
-        name: 'lightning_address',
-        label: 'Lightning Address',
-        type: 'text',
-        placeholder: 'you@lightning.address',
-        hint: 'Optional: Lightning Network address for instant payments',
-      },
+      { name: 'bitcoin_address', label: 'Bitcoin Address', type: 'bitcoin_address' },
+      { name: 'lightning_address', label: 'Lightning Address', type: 'text' },
     ],
   },
   {

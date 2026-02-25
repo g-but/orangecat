@@ -21,6 +21,9 @@ export { aiAssistantConfig } from './ai-assistant-config';
 export { eventConfig } from './event-config';
 export { groupConfig } from './group-config';
 export { wishlistConfig } from './wishlist-config';
+export { researchWizardConfig } from './research-wizard-config';
+export type { ResearchWizardFormData } from './research-wizard-config';
+export { documentFormConfig } from './document-form-config';
 
 // Re-export types
 export type { EntityConfig, FieldGroup, FieldConfig } from '@/components/create/types';

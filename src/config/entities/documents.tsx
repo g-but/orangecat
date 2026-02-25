@@ -1,14 +1,15 @@
 /**
- * DOCUMENT ENTITY CONFIGURATION (LIST)
+ * DOCUMENT ENTITY CONFIGURATION
  *
- * Configuration for displaying documents in list views.
+ * Configuration for displaying documents in list views and dashboard.
  * Documents provide personal context for My Cat AI assistant.
  *
  * Created: 2026-01-20
- * Last Modified: 2026-01-20
- * Last Modified Summary: Initial document list configuration
+ * Last Modified: 2026-02-24
+ * Last Modified Summary: Fix meta→metadata bug, add EntityConfig compliance for EntityDashboardPage
  */
 
+import { EntityConfig } from '@/types/entity';
 import type { DocumentType, DocumentVisibility } from '@/lib/validation';
 
 export interface DocumentListItem {
@@ -21,6 +22,7 @@ export interface DocumentListItem {
   summary: string | null;
   created_at: string;
   updated_at: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -48,35 +50,43 @@ export const VISIBILITY_LABELS: Record<DocumentVisibility, string> = {
  * Icons/emojis for document types
  */
 export const DOCUMENT_TYPE_ICONS: Record<DocumentType, string> = {
-  goals: '🎯',
-  finances: '💰',
-  skills: '🔧',
-  notes: '📝',
-  business_plan: '📊',
-  other: '📄',
+  goals: '\u{1F3AF}',
+  finances: '\u{1F4B0}',
+  skills: '\u{1F527}',
+  notes: '\u{1F4DD}',
+  business_plan: '\u{1F4CA}',
+  other: '\u{1F4C4}',
 };
 
-export const documentEntityConfig = {
-  entityType: 'document' as const,
-  apiEndpoint: '/api/documents',
-  createPath: '/dashboard/documents/create',
-  makeHref: (item: DocumentListItem) => `/dashboard/documents/${item.id}`,
+export const documentEntityConfig: EntityConfig<DocumentListItem> = {
+  name: 'Document',
+  namePlural: 'Documents',
+  colorTheme: 'purple',
 
-  makeCardProps: (item: DocumentListItem) => ({
-    title: item.title,
-    description: item.content?.slice(0, 150) || '',
+  listPath: '/dashboard/documents',
+  detailPath: id => `/dashboard/documents/${id}`,
+  createPath: '/dashboard/documents/create',
+  editPath: id => `/dashboard/documents/create?edit=${id}`,
+
+  apiEndpoint: '/api/documents',
+
+  makeHref: item => `/dashboard/documents/${item.id}`,
+
+  makeCardProps: item => ({
     badge: DOCUMENT_TYPE_LABELS[item.document_type] || item.document_type,
     status: item.visibility === 'private' ? 'private' : 'active',
-    meta: [
-      {
-        label: 'Type',
-        value: `${DOCUMENT_TYPE_ICONS[item.document_type] || ''} ${DOCUMENT_TYPE_LABELS[item.document_type] || item.document_type}`,
-      },
-      { label: 'Visibility', value: VISIBILITY_LABELS[item.visibility] || item.visibility },
-      ...(item.tags && item.tags.length > 0
-        ? [{ label: 'Tags', value: item.tags.slice(0, 3).join(', ') }]
-        : []),
-    ],
+    showEditButton: true,
+    editHref: `/dashboard/documents/create?edit=${item.id}`,
+    metadata: (
+      <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+        <span>
+          {DOCUMENT_TYPE_ICONS[item.document_type] || ''}{' '}
+          {DOCUMENT_TYPE_LABELS[item.document_type] || item.document_type}
+        </span>
+        <span>{VISIBILITY_LABELS[item.visibility] || item.visibility}</span>
+        {item.tags?.length > 0 && <span>{item.tags.slice(0, 3).join(', ')}</span>}
+      </div>
+    ),
   }),
 
   emptyState: {

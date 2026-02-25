@@ -26,6 +26,7 @@ export function WalletForm({
     label: initialData?.label || '',
     description: initialData?.description || '',
     address_or_xpub: initialData?.address_or_xpub || '',
+    lightning_address: initialData?.lightning_address || '',
     category: initialData?.category || 'general',
     category_icon: initialData?.category_icon,
     behavior_type: initialData?.behavior_type || 'general',
@@ -158,6 +159,20 @@ export function WalletForm({
         <p className="text-xs text-gray-500 mt-1">
           Extended public keys (xpub/ypub/zpub) automatically track all addresses and transactions.
           Single addresses work but only track that one address.
+        </p>
+      </div>
+
+      {/* Lightning Address */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-2">Lightning Address (optional)</label>
+        <Input
+          value={formData.lightning_address || ''}
+          onChange={e => setFormData({ ...formData, lightning_address: e.target.value })}
+          onFocus={() => onFieldFocus?.('label')}
+          placeholder="you@getalby.com"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Lightning address for instant, low-fee payments (e.g., you@getalby.com)
         </p>
       </div>
 

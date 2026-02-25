@@ -88,6 +88,8 @@ interface EntityFormProps<T extends Record<string, unknown>> {
   mode?: 'create' | 'edit';
   entityId?: string;
   wizardMode?: WizardMode;
+  /** When true, removes page-level wrapper (min-h-screen, FormHeader) for embedding in dialogs */
+  embedded?: boolean;
 }
 
 export function EntityForm<T extends Record<string, unknown>>({
@@ -98,6 +100,7 @@ export function EntityForm<T extends Record<string, unknown>>({
   mode = 'create',
   entityId,
   wizardMode,
+  embedded,
 }: EntityFormProps<T>) {
   const { user, isLoading: authLoading, hydrated } = useAuth();
   const router = useRouter();
@@ -261,12 +264,12 @@ export function EntityForm<T extends Record<string, unknown>>({
   return (
     <div
       className={
-        wizardMode
+        wizardMode || embedded
           ? ''
           : `min-h-screen bg-gradient-to-br ${theme.bg} via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8`
       }
     >
-      {!wizardMode && (
+      {!wizardMode && !embedded && (
         <FormHeader
           icon={Icon}
           colorTheme={config.colorTheme}

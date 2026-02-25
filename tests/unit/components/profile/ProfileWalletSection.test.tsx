@@ -46,6 +46,7 @@ describe.skip('ProfileWalletSection', () => {
     description: 'Support this profile',
     address_or_xpub: 'bc1qexampleaddress',
     wallet_type: 'address',
+    lightning_address: null,
     category: 'general',
     category_icon: '💰',
     behavior_type: 'general',

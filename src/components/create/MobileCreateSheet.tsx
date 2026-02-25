@@ -35,20 +35,18 @@ function generateCreateOptions(): CreateOption[] {
     category: 'content',
   };
 
-  const entityOptions: CreateOption[] = getEntitiesForCreateMenu().map(
-    (entity: EntityMetadata) => {
-      const colors = COLOR_CLASSES[entity.colorTheme];
-      return {
-        name: entity.name,
-        description: entity.createActionLabel,
-        href: entity.createPath,
-        icon: entity.icon,
-        color: colors.text,
-        bgColor: colors.bg,
-        category: entity.category,
-      };
-    }
-  );
+  const entityOptions: CreateOption[] = getEntitiesForCreateMenu().map((entity: EntityMetadata) => {
+    const colors = COLOR_CLASSES[entity.colorTheme];
+    return {
+      name: entity.name,
+      description: entity.createActionLabel,
+      href: entity.createPath,
+      icon: entity.icon,
+      color: colors.text,
+      bgColor: colors.bg,
+      category: entity.category,
+    };
+  });
 
   return [postOption, ...entityOptions];
 }
@@ -73,7 +71,9 @@ interface MobileCreateSheetProps {
  * Reusable component extracted from SmartCreateButton's MobileCreateButton.
  */
 export function MobileCreateSheet({ isOpen, onClose, onSelect }: MobileCreateSheetProps) {
-  if (!isOpen) {return null;}
+  if (!isOpen) {
+    return null;
+  }
 
   const handleSelect = (option: CreateOption) => {
     onSelect?.(option);
@@ -88,7 +88,7 @@ export function MobileCreateSheet({ isOpen, onClose, onSelect }: MobileCreateShe
       {/* Sheet */}
       <div
         className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-4 pb-8 animate-in slide-in-from-bottom duration-300 max-h-[85vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
         style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}
       >
         {/* Handle indicator */}
@@ -98,8 +98,8 @@ export function MobileCreateSheet({ isOpen, onClose, onSelect }: MobileCreateShe
         <h3 className="text-lg font-semibold text-gray-900 mb-4 px-2">Create New</h3>
 
         {/* Options Grid */}
-        <div className="grid grid-cols-3 gap-2">
-          {CREATE_OPTIONS.map((option) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {CREATE_OPTIONS.map(option => (
             <Link
               key={option.name}
               href={option.href}
@@ -109,9 +109,7 @@ export function MobileCreateSheet({ isOpen, onClose, onSelect }: MobileCreateShe
               <div className={cn('p-2.5 rounded-xl', option.bgColor)}>
                 <option.icon className={cn('w-5 h-5', option.color)} />
               </div>
-              <span className="text-xs font-medium text-gray-900 text-center">
-                {option.name}
-              </span>
+              <span className="text-xs font-medium text-gray-900 text-center">{option.name}</span>
             </Link>
           ))}
         </div>

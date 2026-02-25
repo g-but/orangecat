@@ -129,6 +129,7 @@ export interface Wallet {
 
   address_or_xpub: string;
   wallet_type: WalletType;
+  lightning_address: string | null;
 
   category: WalletCategory;
   category_icon: string;
@@ -250,6 +251,7 @@ export interface WalletFormData {
   label: string;
   description?: string;
   address_or_xpub: string;
+  lightning_address?: string;
   category: WalletCategory;
   category_icon?: string;
   behavior_type: WalletBehaviorType;
