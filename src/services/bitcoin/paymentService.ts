@@ -160,6 +160,9 @@ class MockPaymentProvider implements PaymentProvider {
  * Factory function for payment providers.
  * Reads PAYMENT_PROVIDER env var to determine which provider to use.
  * Currently defaults to MockPaymentProvider.
+ *
+ * For NWC (Nostr Wallet Connect), use getNWCPaymentProvider() instead,
+ * since NWC requires a per-user connection URI.
  */
 export function getPaymentProvider(): PaymentProvider {
   const provider = process.env.PAYMENT_PROVIDER || 'mock';
@@ -176,6 +179,16 @@ export function getPaymentProvider(): PaymentProvider {
     default:
       return new MockPaymentProvider();
   }
+}
+
+/**
+ * Get an NWC-backed payment provider for a specific user's wallet connection.
+ * NWC is per-user (each user connects their own wallet), so this requires
+ * the user's NWC connection URI.
+ */
+export async function getNWCPaymentProvider(connectionUri: string): Promise<PaymentProvider> {
+  const { NWCPaymentProvider } = await import('./nwcProvider');
+  return new NWCPaymentProvider(connectionUri);
 }
 
 // Export singleton instance (backward compatible)

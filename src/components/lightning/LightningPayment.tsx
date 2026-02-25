@@ -1,14 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+/**
+ * Lightning Payment Component
+ *
+ * Generates Lightning invoices and displays QR codes for payment.
+ * Supports two modes:
+ * - NWC mode: Uses Nostr Wallet Connect for real invoice generation
+ * - Demo mode: Generates mock invoices for preview (when no NWC connected)
+ *
+ * Created: 2025-01-08
+ * Last Modified: 2026-02-25
+ * Last Modified Summary: Integrated NWC for real Lightning invoice generation
+ */
+
+import { useState, useEffect, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Zap, Copy, Check, ExternalLink } from 'lucide-react';
+import { Zap, Copy, Check, ExternalLink, Wifi, WifiOff } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { toast } from 'sonner';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { useNostr } from '@/hooks/useNostr';
+import { NWCClient } from '@/lib/nostr/nwc';
 import type { PaymentStatus } from '@/services/bitcoin/types';
 
 interface LightningPaymentProps {
@@ -34,19 +49,21 @@ export default function LightningPayment({
   projectTitle,
   projectId: _projectId,
   presetAmount,
-  onPaymentComplete: _onPaymentComplete,
-  onPaymentFailed: _onPaymentFailed,
+  onPaymentComplete,
+  onPaymentFailed,
   className = '',
 }: LightningPaymentProps) {
   const { displayCurrency } = useDisplayCurrency();
+  const { nwcConnected, getNWCUri } = useNostr();
+
   const [amount, setAmount] = useState(presetAmount?.toString() || '');
   const [message, setMessage] = useState('');
   const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [_isGenerating, setIsGenerating] = useState(false);
-  const [_isChecking, _setIsChecking] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | 'checking'>('pending');
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [pollInterval, setPollInterval] = useState<ReturnType<typeof setInterval> | null>(null);
 
   // Timer for invoice expiry
   useEffect(() => {
@@ -73,6 +90,114 @@ export default function LightningPayment({
     return () => clearInterval(timer);
   }, [invoice]);
 
+  // Cleanup poll on unmount
+  useEffect(() => {
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [pollInterval]);
+
+  /** Poll for payment status via NWC lookup */
+  const startPaymentPolling = useCallback(
+    (paymentHash: string) => {
+      const nwcUri = getNWCUri();
+      if (!nwcUri) {
+        return;
+      }
+
+      const client = new NWCClient(nwcUri);
+
+      const interval = setInterval(async () => {
+        try {
+          const result = await client.lookupInvoice(paymentHash);
+          if (result.settled_at) {
+            setPaymentStatus('paid');
+            clearInterval(interval);
+            client.disconnect();
+            onPaymentComplete?.(paymentHash);
+            toast.success('Payment received!');
+          }
+        } catch {
+          // Silently retry - polling is best-effort
+        }
+      }, 3000); // Check every 3 seconds
+
+      setPollInterval(interval);
+
+      // Stop polling after invoice expiry
+      setTimeout(
+        () => {
+          clearInterval(interval);
+          client.disconnect();
+        },
+        60 * 60 * 1000
+      ); // Max 1 hour
+    },
+    [getNWCUri, onPaymentComplete]
+  );
+
+  /** Generate invoice via NWC */
+  const generateNWCInvoice = async () => {
+    const nwcUri = getNWCUri();
+    if (!nwcUri) {
+      return;
+    }
+
+    const amountSats = parseInt(amount);
+    const description = `${projectTitle} - ${message || 'Lightning payment'}`;
+
+    const client = new NWCClient(nwcUri);
+
+    try {
+      await client.connect();
+      const nwcInvoice = await client.makeInvoice(amountSats, description, 3600);
+
+      const inv: Invoice = {
+        bolt11: nwcInvoice.invoice,
+        paymentHash: nwcInvoice.payment_hash,
+        expiresAt: new Date(Date.now() + 3600 * 1000),
+        amount: amountSats,
+        description,
+      };
+
+      setInvoice(inv);
+      setPaymentStatus('pending');
+      toast.success('Lightning invoice created!');
+
+      // Start polling for payment
+      startPaymentPolling(nwcInvoice.payment_hash);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Failed to create invoice';
+      toast.error(msg);
+      onPaymentFailed?.(msg);
+    } finally {
+      client.disconnect();
+    }
+  };
+
+  /** Generate demo invoice (no NWC) */
+  const generateDemoInvoice = async () => {
+    // Simulate delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const amountSats = parseInt(amount);
+    const description = `${projectTitle} - ${message || 'Lightning payment'}`;
+
+    const demoInvoice: Invoice = {
+      bolt11: `lnbc${amountSats}u1p${Math.random().toString(36).substring(2, 60)}`,
+      paymentHash: `demo_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      amount: amountSats,
+      description,
+    };
+
+    setInvoice(demoInvoice);
+    setPaymentStatus('pending');
+    toast.info('Demo invoice generated (connect NWC for real payments)');
+  };
+
   const generateInvoice = async () => {
     if (!amount || parseInt(amount) <= 0) {
       toast.error('Please enter a valid amount');
@@ -82,32 +207,13 @@ export default function LightningPayment({
     setIsGenerating(true);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      const amountSats = parseInt(amount);
-      const description = `${projectTitle} - ${message || 'Lightning payment'}`;
-
-      // Development/Demo Implementation
-      // In production, this would integrate with a Lightning service provider like:
-      // - LND (Lightning Network Daemon)
-      // - CLN (Core Lightning)
-      // - LDK (Lightning Development Kit)
-      // - Third-party services like Strike, OpenNode, or BTCPay Server
-
-      const demoInvoice: Invoice = {
-        bolt11: `lnbc${amountSats}u1p${Math.random().toString(36).substr(2, 58)}`, // Demo format
-        paymentHash: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
-        amount: amountSats,
-        description,
-      };
-
-      setInvoice(demoInvoice);
-      setPaymentStatus('pending');
-      toast.success('Demo Lightning invoice generated!');
+      if (nwcConnected) {
+        await generateNWCInvoice();
+      } else {
+        await generateDemoInvoice();
+      }
     } catch {
-      toast.error('Failed to generate Lightning invoice');
+      toast.error('Failed to generate invoice');
     } finally {
       setIsGenerating(false);
     }
@@ -121,18 +227,21 @@ export default function LightningPayment({
     try {
       await navigator.clipboard.writeText(invoice.bolt11);
       setCopied(true);
-      toast.success('Invoice copied to clipboard!');
+      toast.success('Invoice copied!');
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('Failed to copy invoice');
+      toast.error('Failed to copy');
     }
   };
 
   const resetPayment = () => {
+    if (pollInterval) {
+      clearInterval(pollInterval);
+    }
     setInvoice(null);
     setPaymentStatus('pending');
-    _setIsChecking(false);
     setTimeLeft(null);
+    setPollInterval(null);
   };
 
   const formatTime = (seconds: number) => {
@@ -141,6 +250,7 @@ export default function LightningPayment({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Payment success state
   if (paymentStatus === 'paid') {
     return (
       <Card className={`text-center ${className}`}>
@@ -169,57 +279,30 @@ export default function LightningPayment({
     <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-yellow-500" />
+          <Zap className="w-5 h-5 text-bitcoin-orange" />
           Lightning Payment
-          <span className="ml-auto px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
-            Experimental
-          </span>
+          {nwcConnected ? (
+            <span className="ml-auto flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+              <Wifi className="w-3 h-3" />
+              NWC
+            </span>
+          ) : (
+            <span className="ml-auto flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+              <WifiOff className="w-3 h-3" />
+              Demo
+            </span>
+          )}
         </CardTitle>
 
-        {/* Development Notice - Enhanced */}
-        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 rounded-lg p-4 mt-2">
-          <div className="flex items-start gap-3">
-            <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Zap className="w-3 h-3 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center">
-                <p className="text-sm font-semibold text-yellow-800 mb-1">
-                  ⚡ Lightning Network - Coming Soon
-                </p>
-                <a
-                  href="/faq"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-2 text-yellow-800 hover:text-yellow-600"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.897-1.355 3.52-3.228 3.894v.001c-.61.126-1.022.686-1.022 1.314v.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-.747-.604-1.35-1.35-1.35h-.002c-.747 0-1.35.603-1.35 1.35v-.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-2.12-1.78-3.87-4-3.87-1.933 0-3.5 1.567-3.5 3.5 0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-.747-.604-1.35-1.35-1.35h-.002c-.747 0-1.35.603-1.35 1.35v.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228a1.35 1.35 0 0 0-1.35-1.35h-.002zM12 18h.01"
-                    ></path>
-                  </svg>
-                </a>
-              </div>
-              <p className="text-xs text-yellow-700 leading-relaxed mb-2">
-                Lightning payments are currently in development. This is a preview of the upcoming
-                instant Bitcoin payment feature.
-              </p>
-              <p className="text-xs text-yellow-600">
-                <strong>For now, please use the Bitcoin address for funding.</strong> Lightning
-                integration will be available in a future update.
-              </p>
-            </div>
-          </div>
-        </div>
+        {!nwcConnected && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Connect your wallet via NWC in{' '}
+            <a href="/dashboard/wallets" className="text-tiffany hover:underline">
+              Wallet Settings
+            </a>{' '}
+            to enable real Lightning payments.
+          </p>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {!invoice ? (
@@ -233,10 +316,9 @@ export default function LightningPayment({
                 type="number"
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
-                placeholder="Enter amount"
+                placeholder="Enter amount in sats"
                 min="1"
                 className="font-mono"
-                disabled={true}
               />
             </div>
 
@@ -250,7 +332,6 @@ export default function LightningPayment({
                 onChange={e => setMessage(e.target.value)}
                 placeholder="Add a message with your payment"
                 maxLength={100}
-                disabled={true}
               />
             </div>
 
@@ -260,16 +341,23 @@ export default function LightningPayment({
                 <div>
                   <h4 className="font-medium text-blue-900 mb-1">Lightning Benefits</h4>
                   <ul className="text-sm text-blue-700 space-y-1">
-                    <li>• Instant payments (usually under 3 seconds)</li>
-                    <li>• Extremely low fees (typically &lt; 1 sat)</li>
-                    <li>• Perfect for small amounts and tips</li>
+                    <li>Instant payments (usually under 3 seconds)</li>
+                    <li>Extremely low fees (typically &lt; 1 sat)</li>
+                    <li>Perfect for small amounts and tips</li>
                   </ul>
                 </div>
               </div>
             </div>
 
-            <Button onClick={generateInvoice} disabled={true} className="w-full">
-              {'Generate Lightning Invoice'}
+            <Button onClick={generateInvoice} disabled={isGenerating || !amount} className="w-full">
+              {isGenerating ? (
+                'Generating...'
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Generate Lightning Invoice
+                </>
+              )}
             </Button>
           </div>
         ) : (
@@ -340,20 +428,18 @@ export default function LightningPayment({
               </Button>
             )}
 
-            {/* Instructions */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <h4 className="font-medium text-yellow-900 mb-2">How to Pay:</h4>
-              <ol className="text-sm text-yellow-800 space-y-1">
-                <li>1. Open your Lightning wallet app</li>
-                <li>2. Scan the QR code or paste the invoice</li>
-                <li>3. Confirm the payment in your wallet</li>
-                <li>4. Payment will be confirmed instantly</li>
-              </ol>
-            </div>
-
+            {/* Timer */}
             {timeLeft !== null && timeLeft > 0 && (
               <div className="text-center text-sm text-gray-500">
                 Invoice expires in {formatTime(timeLeft)}
+              </div>
+            )}
+
+            {/* Payment polling indicator */}
+            {paymentStatus === 'pending' && nwcConnected && (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                Waiting for payment...
               </div>
             )}
           </div>
