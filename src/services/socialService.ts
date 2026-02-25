@@ -8,8 +8,14 @@
  * Last Modified Summary: Fixed missing modules by providing stub implementations
  */
 
-import { logger } from '@/utils/logger'
-import type { SearchResult, SearchFilters, EmptyStateContent, Organization, SocialAnalytics } from '@/types/social'
+import { logger } from '@/utils/logger';
+import type {
+  SearchResult,
+  SearchFilters,
+  EmptyStateContent,
+  Organization,
+  SocialAnalytics,
+} from '@/types/social';
 
 // =====================================================================
 // STUB SERVICES - Replacing missing module imports
@@ -17,51 +23,55 @@ import type { SearchResult, SearchFilters, EmptyStateContent, Organization, Soci
 
 // Stub types for services
 interface PersonStub {
-  id: string
-  username?: string
-  name?: string
-  bio?: string
-  avatar_url?: string
-  verification_status?: string
-  location?: string
-  created_at?: string
+  id: string;
+  username?: string;
+  name?: string;
+  bio?: string;
+  avatar_url?: string;
+  verification_status?: string;
+  location?: string;
+  created_at?: string;
 }
 
 interface OrganizationStub {
-  id: string
-  name: string
-  description?: string
-  logo_url?: string
-  member_count?: number
-  location?: string
-  created_at?: string
+  id: string;
+  name: string;
+  description?: string;
+  logo_url?: string;
+  member_count?: number;
+  location?: string;
+  created_at?: string;
 }
 
 interface CollaborationStub {
-  id: string
-  name?: string
-  [key: string]: unknown
+  id: string;
+  name?: string;
+  [key: string]: unknown;
 }
 
 interface CreateOrganizationInput {
-  name: string
-  description?: string
-  [key: string]: unknown
+  name: string;
+  description?: string;
+  [key: string]: unknown;
 }
 
 interface CreateCollaborationInput {
-  name: string
-  [key: string]: unknown
+  name: string;
+  [key: string]: unknown;
 }
 
 // Stub PeopleService
 export const PeopleService = {
-  async searchPeople(filters: { query?: string; limit?: number; offset?: number }): Promise<PersonStub[]> {
-    logger.warn('PeopleService.searchPeople is a stub', filters, 'Social')
-    return []
+  async searchPeople(filters: {
+    query?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<PersonStub[]> {
+    logger.warn('PeopleService.searchPeople is a stub', filters, 'Social');
+    return [];
   },
   async getUserAnalytics(userId: string): Promise<SocialAnalytics> {
-    logger.warn('PeopleService.getUserAnalytics is a stub', { userId }, 'Social')
+    logger.warn('PeopleService.getUserAnalytics is a stub', { userId }, 'Social');
     return {
       total_connections: 0,
       pending_requests: 0,
@@ -76,58 +86,74 @@ export const PeopleService = {
       total_contributed: 0,
       average_contribution: 0,
       collaboration_score: 0,
-      reputation_score: 0
-    }
+      reputation_score: 0,
+    };
   },
   async sendConnectionRequest(targetUserId: string): Promise<{ success: boolean }> {
-    logger.warn('PeopleService.sendConnectionRequest is a stub', { targetUserId }, 'Social')
-    return { success: false }
+    logger.warn('PeopleService.sendConnectionRequest is a stub', { targetUserId }, 'Social');
+    return { success: false };
   },
   async getConnections(userId: string): Promise<PersonStub[]> {
-    logger.warn('PeopleService.getConnections is a stub', { userId }, 'Social')
-    return []
+    logger.warn('PeopleService.getConnections is a stub', { userId }, 'Social');
+    return [];
   },
   async respondToConnection(requestId: string, accept: boolean): Promise<{ success: boolean }> {
-    logger.warn('PeopleService.respondToConnection is a stub', { requestId, accept }, 'Social')
-    return { success: false }
-  }
-}
+    logger.warn('PeopleService.respondToConnection is a stub', { requestId, accept }, 'Social');
+    return { success: false };
+  },
+};
 
 // Stub OrganizationService
 export const OrganizationService = {
-  async searchOrganizations(filters: { query?: string; limit?: number; offset?: number }): Promise<OrganizationStub[]> {
-    logger.warn('OrganizationService.searchOrganizations is a stub', filters, 'Social')
-    return []
+  async searchOrganizations(filters: {
+    query?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<OrganizationStub[]> {
+    logger.warn('OrganizationService.searchOrganizations is a stub', filters, 'Social');
+    return [];
   },
-  async createOrganization(data: CreateOrganizationInput): Promise<{ success: boolean; data?: OrganizationStub }> {
-    logger.warn('OrganizationService.createOrganization is a stub', data, 'Social')
-    return { success: false }
+  async createOrganization(
+    data: CreateOrganizationInput
+  ): Promise<{ success: boolean; data?: OrganizationStub }> {
+    logger.warn('OrganizationService.createOrganization is a stub', data, 'Social');
+    return { success: false };
   },
   async getUserOrganizations(userId: string): Promise<OrganizationStub[]> {
-    logger.warn('OrganizationService.getUserOrganizations is a stub', { userId }, 'Social')
-    return []
+    logger.warn('OrganizationService.getUserOrganizations is a stub', { userId }, 'Social');
+    return [];
   },
   async joinOrganization(organizationId: string): Promise<{ success: boolean }> {
-    logger.warn('OrganizationService.joinOrganization is a stub', { organizationId }, 'Social')
-    return { success: false }
-  }
-}
+    logger.warn('OrganizationService.joinOrganization is a stub', { organizationId }, 'Social');
+    return { success: false };
+  },
+};
 
 // Stub BitcoinCollaborationService
 export const BitcoinCollaborationService = {
-  async createCollaboration(data: CreateCollaborationInput): Promise<{ success: boolean; data?: CollaborationStub }> {
-    logger.warn('BitcoinCollaborationService.createCollaboration is a stub', data, 'Social')
-    return { success: false }
+  async createCollaboration(
+    data: CreateCollaborationInput
+  ): Promise<{ success: boolean; data?: CollaborationStub }> {
+    logger.warn('BitcoinCollaborationService.createCollaboration is a stub', data, 'Social');
+    return { success: false };
   },
   async getUserCollaborations(userId: string): Promise<CollaborationStub[]> {
-    logger.warn('BitcoinCollaborationService.getUserCollaborations is a stub', { userId }, 'Social')
-    return []
+    logger.warn(
+      'BitcoinCollaborationService.getUserCollaborations is a stub',
+      { userId },
+      'Social'
+    );
+    return [];
   },
   async recordPayment(collaborationId: string, amount: number): Promise<{ success: boolean }> {
-    logger.warn('BitcoinCollaborationService.recordPayment is a stub', { collaborationId, amount }, 'Social')
-    return { success: false }
-  }
-}
+    logger.warn(
+      'BitcoinCollaborationService.recordPayment is a stub',
+      { collaborationId, amount },
+      'Social'
+    );
+    return { success: false };
+  },
+};
 
 // Re-export types that exist
 export type {
@@ -136,7 +162,7 @@ export type {
   SocialAnalytics,
   EmptyStateContent,
   Organization,
-} from '@/types/social'
+} from '@/types/social';
 
 // =====================================================================
 // 🔍 SEARCH SERVICE - UPDATED FOR DATABASE QUERIES
@@ -145,18 +171,18 @@ export type {
 export class SearchService {
   static async universalSearch(filters: SearchFilters): Promise<SearchResult[]> {
     try {
-      const { query, type, limit = 20, offset = 0 } = filters
-      const results: SearchResult[] = []
+      const { query, type, limit = 20, offset = 0 } = filters;
+      const results: SearchResult[] = [];
 
       // Search people using proper database service
       if (!type || type === 'people') {
         const people = await PeopleService.searchPeople({
           query,
           limit: Math.ceil(limit / 3),
-          offset
-        })
+          offset,
+        });
 
-        people.forEach((person) => {
+        people.forEach(person => {
           const result: SearchResult = {
             type: 'person',
             id: person.id,
@@ -168,9 +194,9 @@ export class SearchService {
             created_at: person.created_at || new Date().toISOString(),
             // PersonStub is a simplified type for stub services - cast to expected type
             data: person as unknown as SearchResult['data'],
-          }
-          results.push(result)
-        })
+          };
+          results.push(result);
+        });
       }
 
       // Search organizations using proper database service
@@ -178,10 +204,10 @@ export class SearchService {
         const organizations = await OrganizationService.searchOrganizations({
           query,
           limit: Math.ceil(limit / 3),
-          offset
-        })
+          offset,
+        });
 
-        organizations.forEach((org) => {
+        organizations.forEach(org => {
           const result: SearchResult = {
             type: 'organization',
             id: org.id,
@@ -192,15 +218,15 @@ export class SearchService {
             location: org.location || undefined,
             created_at: org.created_at || new Date().toISOString(),
             data: org as Organization,
-          }
-          results.push(result)
-        })
+          };
+          results.push(result);
+        });
       }
 
-      return results.slice(0, limit)
+      return results.slice(0, limit);
     } catch (error) {
-      logger.error('Error in universal search', { error }, 'Social')
-      return []
+      logger.error('Error in universal search', { error }, 'Social');
+      return [];
     }
   }
 }
@@ -212,9 +238,9 @@ export class SearchService {
 export class SocialAnalyticsService {
   static async getUserAnalytics(userId: string): Promise<SocialAnalytics> {
     try {
-      return await PeopleService.getUserAnalytics(userId)
+      return await PeopleService.getUserAnalytics(userId);
     } catch (error) {
-      logger.error('Error getting user analytics', { error, userId }, 'Social')
+      logger.error('Error getting user analytics', { error, userId }, 'Social');
       return {
         total_connections: 0,
         pending_requests: 0,
@@ -229,8 +255,8 @@ export class SocialAnalyticsService {
         total_contributed: 0,
         average_contribution: 0,
         collaboration_score: 0,
-        reputation_score: 0
-      }
+        reputation_score: 0,
+      };
     }
   }
 }
@@ -247,79 +273,81 @@ export class EmptyStateService {
         description: "You haven't connected with anyone yet. Start building your network!",
         primaryAction: {
           label: 'Search People',
-          action: '/people/search'
+          action: '/people/search',
         },
         secondaryAction: {
           label: 'Complete Profile',
-          action: '/profile/edit'
+          action: '/dashboard/info/edit',
         },
         benefits: [
           'Collaborate on projects',
           'Join organizations and communities',
           'Share knowledge and resources',
           'Find mentors and mentees',
-          'Build professional network'
+          'Build professional network',
         ],
         examples: [
           'Connect with like-minded creators',
           'Find co-founders for projects',
           'Join local community groups',
           'Collaborate on initiatives',
-          'Share educational content'
-        ]
+          'Share educational content',
+        ],
       },
       organizations: {
         title: 'No Organizations Yet',
-        description: "You haven't joined any organizations. Discover communities that align with your interests!",
+        description:
+          "You haven't joined any organizations. Discover communities that align with your interests!",
         primaryAction: {
           label: 'Browse Organizations',
-          action: '/organizations/discover'
+          action: '/organizations/discover',
         },
         secondaryAction: {
           label: 'Create Organization',
-          action: '/organizations/create'
+          action: '/organizations/create',
         },
         benefits: [
           'Shared treasury management',
           'Collaborative decision making',
           'Resource pooling and sharing',
           'Community governance',
-          'Collective project funding'
+          'Collective project funding',
         ],
         examples: [
           'Local community groups',
           'Arts and culture collectives',
           'Educational organizations',
           'Environmental initiatives',
-          'Creative communities'
-        ]
+          'Creative communities',
+        ],
       },
       projects: {
         title: 'No Projects Yet',
-        description: "You haven't created or joined any projects yet. Start building something amazing!",
+        description:
+          "You haven't created or joined any projects yet. Start building something amazing!",
         primaryAction: {
           label: 'Create Project',
-          action: '/projects/create'
+          action: '/projects/create',
         },
         secondaryAction: {
           label: 'Browse Projects',
-          action: '/projects'
+          action: '/projects',
         },
         benefits: [
           'Crowdfund your ideas',
           'Collaborate with others',
           'Track progress and milestones',
           'Receive Bitcoin payments',
-          'Build your portfolio'
+          'Build your portfolio',
         ],
         examples: [
           'Creative projects',
           'Community initiatives',
           'Open source software',
           'Educational content',
-          'Social impact campaigns'
-        ]
-      }
+          'Social impact campaigns',
+        ],
+      },
     };
 
     return baseContent[section];
@@ -356,5 +384,5 @@ export const socialService = {
   getUserAnalytics: SocialAnalyticsService.getUserAnalytics,
 
   // Search
-  universalSearch: SearchService.universalSearch
-}
+  universalSearch: SearchService.universalSearch,
+};
