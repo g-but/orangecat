@@ -210,6 +210,48 @@ export async function updateProposal(
   }
 }
 
+export async function cancelProposal(proposalId: string) {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    const proposalResult = await getProposal(proposalId);
+    if (!proposalResult.success || !proposalResult.proposal) {
+      return { success: false, error: 'Proposal not found' };
+    }
+    const proposal = proposalResult.proposal;
+
+    // Only active or draft proposals can be cancelled
+    if (proposal.status !== STATUS.PROPOSALS.DRAFT && proposal.status !== STATUS.PROPOSALS.ACTIVE) {
+      return { success: false, error: `Cannot cancel proposal with status: ${proposal.status}` };
+    }
+
+    // Only the proposer can cancel
+    if (proposal.proposer_id !== userId) {
+      return { success: false, error: 'Only the proposer can cancel the proposal' };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.from(TABLES.group_proposals) as any)
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('id', proposalId)
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('Failed to cancel proposal', error, 'Groups');
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, proposal: data };
+  } catch (error) {
+    logger.error('Exception cancelling proposal', error, 'Groups');
+    return { success: false, error: 'Failed to cancel proposal' };
+  }
+}
+
 export async function deleteProposal(proposalId: string) {
   try {
     const userId = await getCurrentUserId();

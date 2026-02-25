@@ -18,7 +18,7 @@
 
 import { X, PanelLeftClose, PanelLeft } from 'lucide-react';
 import FocusLock from 'react-focus-lock';
-import { SidebarUserProfile } from './SidebarUserProfile';
+import { ContextSwitcher } from './ContextSwitcher';
 import { SidebarNavigation } from './SidebarNavigation';
 import type { NavSection, NavItem } from '@/hooks/useNavigation';
 import type { Profile } from '@/types/database';
@@ -112,14 +112,8 @@ export function Sidebar({
         >
           {/* Wrapper to ensure tooltips can overflow */}
           <div className="flex flex-col h-full min-w-0 overflow-visible">
-            {/* User Profile Section */}
-            {user && profile && (
-              <SidebarUserProfile
-                profile={profile}
-                isExpanded={isExpanded}
-                onNavigate={handleNavigate}
-              />
-            )}
+            {/* Context Switcher (replaces static user profile) */}
+            {user && profile && <ContextSwitcher profile={profile} isExpanded={isExpanded} />}
 
             {/* Navigation Sections */}
             <SidebarNavigation

@@ -30,6 +30,8 @@ export * from './mutations/members';
 export * from './mutations/wallets';
 export * from './mutations/invitations';
 export * from './mutations/events';
+export * from './mutations/proposals';
+export * from './mutations/votes';
 
 // Re-export permissions
 export * from './permissions';
@@ -50,36 +52,36 @@ export * from './utils/activity';
 class GroupsService {
   // Group management
   async createGroup(input: Parameters<typeof import('./mutations/groups').createGroup>[0]) {
-    return import('./mutations/groups').then((m) => m.createGroup(input));
+    return import('./mutations/groups').then(m => m.createGroup(input));
   }
 
   async getGroup(identifier: string, bySlug: boolean = false) {
-    return import('./queries/groups').then((m) => m.getGroup(identifier, bySlug));
+    return import('./queries/groups').then(m => m.getGroup(identifier, bySlug));
   }
 
   async updateGroup(
     groupId: string,
     input: Parameters<typeof import('./mutations/groups').updateGroup>[1]
   ) {
-    return import('./mutations/groups').then((m) => m.updateGroup(groupId, input));
+    return import('./mutations/groups').then(m => m.updateGroup(groupId, input));
   }
 
   async deleteGroup(groupId: string) {
-    return import('./mutations/groups').then((m) => m.deleteGroup(groupId));
+    return import('./mutations/groups').then(m => m.deleteGroup(groupId));
   }
 
   async getUserGroups(
     query?: Parameters<typeof import('./queries/groups').getUserGroups>[0],
     pagination?: Parameters<typeof import('./queries/groups').getUserGroups>[1]
   ) {
-    return import('./queries/groups').then((m) => m.getUserGroups(query, pagination));
+    return import('./queries/groups').then(m => m.getUserGroups(query, pagination));
   }
 
   async getAvailableGroups(
     query?: Parameters<typeof import('./queries/groups').getAvailableGroups>[0],
     pagination?: Parameters<typeof import('./queries/groups').getAvailableGroups>[1]
   ) {
-    return import('./queries/groups').then((m) => m.getAvailableGroups(query, pagination));
+    return import('./queries/groups').then(m => m.getAvailableGroups(query, pagination));
   }
 
   async searchGroups(
@@ -87,27 +89,27 @@ class GroupsService {
     filters?: Parameters<typeof import('./queries/groups').searchGroups>[1],
     pagination?: Parameters<typeof import('./queries/groups').searchGroups>[2]
   ) {
-    return import('./queries/groups').then((m) => m.searchGroups(searchQuery, filters, pagination));
+    return import('./queries/groups').then(m => m.searchGroups(searchQuery, filters, pagination));
   }
 
   // Member management
   async joinGroup(groupId: string) {
-    return import('./mutations/members').then((m) => m.joinGroup(groupId));
+    return import('./mutations/members').then(m => m.joinGroup(groupId));
   }
 
   async leaveGroup(groupId: string) {
-    return import('./mutations/members').then((m) => m.leaveGroup(groupId));
+    return import('./mutations/members').then(m => m.leaveGroup(groupId));
   }
 
   async getGroupMembers(groupId: string, pagination?: { page?: number; pageSize?: number }) {
-    return import('./queries/members').then((m) => m.getGroupMembers(groupId, pagination));
+    return import('./queries/members').then(m => m.getGroupMembers(groupId, pagination));
   }
 
   async addMember(
     groupId: string,
     input: Parameters<typeof import('./mutations/members').addMember>[1]
   ) {
-    return import('./mutations/members').then((m) => m.addMember(groupId, input));
+    return import('./mutations/members').then(m => m.addMember(groupId, input));
   }
 
   async updateMember(
@@ -115,29 +117,29 @@ class GroupsService {
     memberId: string,
     input: Parameters<typeof import('./mutations/members').updateMember>[2]
   ) {
-    return import('./mutations/members').then((m) => m.updateMember(groupId, memberId, input));
+    return import('./mutations/members').then(m => m.updateMember(groupId, memberId, input));
   }
 
   async removeMember(groupId: string, memberId: string) {
-    return import('./mutations/members').then((m) => m.removeMember(groupId, memberId));
+    return import('./mutations/members').then(m => m.removeMember(groupId, memberId));
   }
 
   // Wallet management
   async getGroupWallets(groupId: string) {
-    return import('./queries/wallets').then((m) => m.getGroupWallets(groupId));
+    return import('./queries/wallets').then(m => m.getGroupWallets(groupId));
   }
 
   async createGroupWallet(
     request: Parameters<typeof import('./mutations/wallets').createGroupWallet>[0]
   ) {
-    return import('./mutations/wallets').then((m) => m.createGroupWallet(request));
+    return import('./mutations/wallets').then(m => m.createGroupWallet(request));
   }
 
   async updateGroupWallet(
     walletId: string,
     request: Parameters<typeof import('./mutations/wallets').updateGroupWallet>[1]
   ) {
-    return import('./mutations/wallets').then((m) => m.updateGroupWallet(walletId, request));
+    return import('./mutations/wallets').then(m => m.updateGroupWallet(walletId, request));
   }
 
   // Activity tracking
@@ -146,7 +148,7 @@ class GroupsService {
     query?: Parameters<typeof import('./queries/activities').getGroupActivities>[1],
     pagination?: Parameters<typeof import('./queries/activities').getGroupActivities>[2]
   ) {
-    return import('./queries/activities').then((m) =>
+    return import('./queries/activities').then(m =>
       m.getGroupActivities(groupId, query, pagination)
     );
   }
@@ -155,90 +157,134 @@ class GroupsService {
   async createInvitation(
     input: Parameters<typeof import('./mutations/invitations').createInvitation>[0]
   ) {
-    return import('./mutations/invitations').then((m) => m.createInvitation(input));
+    return import('./mutations/invitations').then(m => m.createInvitation(input));
   }
 
   async acceptInvitation(invitationId: string) {
-    return import('./mutations/invitations').then((m) => m.acceptInvitation(invitationId));
+    return import('./mutations/invitations').then(m => m.acceptInvitation(invitationId));
   }
 
   async declineInvitation(invitationId: string) {
-    return import('./mutations/invitations').then((m) => m.declineInvitation(invitationId));
+    return import('./mutations/invitations').then(m => m.declineInvitation(invitationId));
   }
 
   async acceptInvitationByToken(token: string) {
-    return import('./mutations/invitations').then((m) => m.acceptInvitationByToken(token));
+    return import('./mutations/invitations').then(m => m.acceptInvitationByToken(token));
   }
 
   async revokeInvitation(invitationId: string) {
-    return import('./mutations/invitations').then((m) => m.revokeInvitation(invitationId));
+    return import('./mutations/invitations').then(m => m.revokeInvitation(invitationId));
   }
 
   async getUserPendingInvitations() {
-    return import('./queries/invitations').then((m) => m.getUserPendingInvitations());
+    return import('./queries/invitations').then(m => m.getUserPendingInvitations());
   }
 
   async getUserInvitationCount() {
-    return import('./queries/invitations').then((m) => m.getUserInvitationCount());
+    return import('./queries/invitations').then(m => m.getUserInvitationCount());
   }
 
   async getGroupInvitations(
     groupId: string,
     options?: Parameters<typeof import('./queries/invitations').getGroupInvitations>[1]
   ) {
-    return import('./queries/invitations').then((m) => m.getGroupInvitations(groupId, options));
+    return import('./queries/invitations').then(m => m.getGroupInvitations(groupId, options));
   }
 
   async getInvitationByToken(token: string) {
-    return import('./queries/invitations').then((m) => m.getInvitationByToken(token));
+    return import('./queries/invitations').then(m => m.getInvitationByToken(token));
   }
 
   // Event management
-  async createEvent(
-    input: Parameters<typeof import('./mutations/events').createEvent>[0]
-  ) {
-    return import('./mutations/events').then((m) => m.createEvent(input));
+  async createEvent(input: Parameters<typeof import('./mutations/events').createEvent>[0]) {
+    return import('./mutations/events').then(m => m.createEvent(input));
   }
 
   async updateEvent(
     eventId: string,
     input: Parameters<typeof import('./mutations/events').updateEvent>[1]
   ) {
-    return import('./mutations/events').then((m) => m.updateEvent(eventId, input));
+    return import('./mutations/events').then(m => m.updateEvent(eventId, input));
   }
 
   async deleteEvent(eventId: string) {
-    return import('./mutations/events').then((m) => m.deleteEvent(eventId));
+    return import('./mutations/events').then(m => m.deleteEvent(eventId));
   }
 
   async rsvpToEvent(
     eventId: string,
     status: Parameters<typeof import('./mutations/events').rsvpToEvent>[1]
   ) {
-    return import('./mutations/events').then((m) => m.rsvpToEvent(eventId, status));
+    return import('./mutations/events').then(m => m.rsvpToEvent(eventId, status));
   }
 
   async getGroupEvents(
     groupId: string,
     options?: Parameters<typeof import('./queries/events').getGroupEvents>[1]
   ) {
-    return import('./queries/events').then((m) => m.getGroupEvents(groupId, options));
+    return import('./queries/events').then(m => m.getGroupEvents(groupId, options));
   }
 
   async getEvent(eventId: string) {
-    return import('./queries/events').then((m) => m.getEvent(eventId));
+    return import('./queries/events').then(m => m.getEvent(eventId));
   }
 
   async getEventRsvps(eventId: string) {
-    return import('./queries/events').then((m) => m.getEventRsvps(eventId));
+    return import('./queries/events').then(m => m.getEventRsvps(eventId));
   }
 
   async getUpcomingEvents(groupId: string, limit?: number) {
-    return import('./queries/events').then((m) => m.getUpcomingEvents(groupId, limit));
+    return import('./queries/events').then(m => m.getUpcomingEvents(groupId, limit));
   }
 
   async getUserRsvpStatus(eventId: string) {
-    return import('./queries/events').then((m) => m.getUserRsvpStatus(eventId));
+    return import('./queries/events').then(m => m.getUserRsvpStatus(eventId));
+  }
+
+  // Proposal management
+  async createProposal(
+    input: Parameters<typeof import('./mutations/proposals').createProposal>[0]
+  ) {
+    return import('./mutations/proposals').then(m => m.createProposal(input));
+  }
+
+  async getGroupProposals(
+    groupId: string,
+    options?: Parameters<typeof import('./queries/proposals').getGroupProposals>[1]
+  ) {
+    return import('./queries/proposals').then(m => m.getGroupProposals(groupId, options));
+  }
+
+  async getProposal(proposalId: string) {
+    return import('./queries/proposals').then(m => m.getProposal(proposalId));
+  }
+
+  async updateProposal(
+    proposalId: string,
+    updates: Parameters<typeof import('./mutations/proposals').updateProposal>[1]
+  ) {
+    return import('./mutations/proposals').then(m => m.updateProposal(proposalId, updates));
+  }
+
+  async activateProposal(proposalId: string) {
+    return import('./mutations/proposals').then(m => m.activateProposal(proposalId));
+  }
+
+  async cancelProposal(proposalId: string) {
+    return import('./mutations/proposals').then(m => m.cancelProposal(proposalId));
+  }
+
+  async deleteProposal(proposalId: string) {
+    return import('./mutations/proposals').then(m => m.deleteProposal(proposalId));
+  }
+
+  // Vote management
+  async castVote(input: Parameters<typeof import('./mutations/votes').castVote>[0]) {
+    return import('./mutations/votes').then(m => m.castVote(input));
+  }
+
+  async getProposalVotes(proposalId: string) {
+    return import('./queries/proposals').then(m => m.getProposalVotes(proposalId));
   }
 
   // Permissions
@@ -247,13 +293,11 @@ class GroupsService {
     userId: string,
     permission: Parameters<typeof import('./permissions').checkGroupPermission>[2]
   ) {
-    return import('./permissions').then((m) =>
-      m.checkGroupPermission(groupId, userId, permission)
-    );
+    return import('./permissions').then(m => m.checkGroupPermission(groupId, userId, permission));
   }
 
   async getGroupPermissions(groupId: string, userId: string) {
-    return import('./permissions').then((m) => m.getGroupPermissions(groupId, userId));
+    return import('./permissions').then(m => m.getGroupPermissions(groupId, userId));
   }
 }
 
