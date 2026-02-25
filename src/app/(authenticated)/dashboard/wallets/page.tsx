@@ -10,6 +10,7 @@ import type { WalletFieldType } from '@/lib/wallet-guidance';
 import { useWallets } from './hooks/useWallets';
 import { useWalletOperations } from './hooks/useWalletOperations';
 import { useResponsiveLayout } from './hooks/useResponsiveLayout';
+import { NostrConnectionCard } from '@/components/nostr/NostrConnectionCard';
 import { WalletsPageHeader } from './components/WalletsPageHeader';
 import { WalletsHelpSection } from './components/WalletsHelpSection';
 import { WalletsErrorState } from './components/WalletsErrorState';
@@ -110,6 +111,11 @@ export default function DashboardWalletsPage() {
                 isOwner={!!user?.id && !!profile?.id}
                 onFieldFocus={setFocusedField}
               />
+            </div>
+
+            {/* Nostr Wallet Connect */}
+            <div className="mt-6">
+              <NostrConnectionCard />
             </div>
 
             {/* Help Section */}
