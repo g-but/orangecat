@@ -9,9 +9,20 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Trash2, AlertTriangle, Mail, Lock, ArrowLeft, Shield } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  Trash2,
+  AlertTriangle,
+  Mail,
+  Lock,
+  ArrowLeft,
+  Shield,
+  Link2,
+} from 'lucide-react';
 import { MFASetup, MFAStatus } from '@/components/auth/MFASetup';
 import { RecoveryCodes } from '@/components/auth/RecoveryCodes';
+import { NostrConnectionCard } from '@/components/nostr/NostrConnectionCard';
 
 interface SettingsFormData {
   email: string;
@@ -310,6 +321,20 @@ export default function SettingsPage() {
                     Backup codes for when you lose access to your authenticator
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Connected Accounts */}
+            <div className="border-t border-gray-100 pt-10">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Link2 className="w-6 h-6 mr-2 text-purple-600" />
+                Connected Accounts
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Connect external services for enhanced features like Lightning payments.
+              </p>
+              <div className="max-w-md">
+                <NostrConnectionCard />
               </div>
             </div>
 

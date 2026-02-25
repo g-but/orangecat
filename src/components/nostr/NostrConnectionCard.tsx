@@ -12,14 +12,17 @@
  * Created: 2026-02-25
  */
 
-import { useState } from 'react';
-import { Zap, Key, Unplug, ExternalLink, Copy, Check, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Zap, Key, Unplug, ExternalLink, Copy, Check, AlertCircle, Wallet } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import { Alert, AlertDescription } from '@/components/ui/Alert';
+import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { useNostr } from '@/hooks/useNostr';
+import { NWCClient } from '@/lib/nostr/nwc';
 import { shortenNpub, isValidNWCUri } from '@/lib/nostr';
+import { logger } from '@/utils/logger';
 
 export function NostrConnectionCard() {
   const {
@@ -34,6 +37,7 @@ export function NostrConnectionCard() {
     connectWithNpub,
     disconnect,
     saveNWCUri,
+    getNWCUri,
     removeNWC,
   } = useNostr();
 
@@ -43,6 +47,37 @@ export function NostrConnectionCard() {
   const [nwcInput, setNwcInput] = useState('');
   const [nwcError, setNwcError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [balanceSats, setBalanceSats] = useState<number | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+
+  // Fetch wallet balance when NWC is connected
+  const fetchBalance = useCallback(async () => {
+    const nwcUri = getNWCUri();
+    if (!nwcUri || !nwcConnected) {
+      return;
+    }
+
+    setBalanceLoading(true);
+    const client = new NWCClient(nwcUri);
+    try {
+      await client.connect();
+      const sats = await client.getBalance();
+      setBalanceSats(sats);
+    } catch (err) {
+      logger.warn('Failed to fetch NWC balance', { error: err });
+    } finally {
+      client.disconnect();
+      setBalanceLoading(false);
+    }
+  }, [getNWCUri, nwcConnected]);
+
+  useEffect(() => {
+    if (nwcConnected) {
+      fetchBalance();
+    } else {
+      setBalanceSats(null);
+    }
+  }, [nwcConnected, fetchBalance]);
 
   const handleNpubConnect = () => {
     if (npubInput.trim()) {
@@ -154,9 +189,25 @@ export function NostrConnectionCard() {
               </div>
 
               {nwcConnected ? (
-                <p className="text-xs text-muted-foreground">
-                  Your wallet is connected via NWC. You can send and receive Lightning payments.
-                </p>
+                <div className="space-y-2">
+                  {balanceSats !== null && (
+                    <div className="flex items-center gap-2 p-2 rounded-md bg-green-50 border border-green-200">
+                      <Wallet className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-800">Balance:</span>
+                      <CurrencyDisplay
+                        amount={balanceSats}
+                        currency="SATS"
+                        className="text-sm font-semibold text-green-900"
+                      />
+                    </div>
+                  )}
+                  {balanceLoading && (
+                    <p className="text-xs text-muted-foreground">Loading balance...</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Your wallet is connected via NWC. You can send and receive Lightning payments.
+                  </p>
+                </div>
               ) : showNwcInput ? (
                 <div className="space-y-2">
                   <Input

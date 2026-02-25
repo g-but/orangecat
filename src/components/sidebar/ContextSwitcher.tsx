@@ -19,6 +19,7 @@ import Image from 'next/image';
 import { ChevronDown, User, Users, Plus } from 'lucide-react';
 import { useNavigationContext } from '@/hooks/useNavigationContext';
 import type { GroupContextInfo } from '@/hooks/useNavigationContext';
+import { NWCStatusBadge } from '@/components/nostr/NWCStatusBadge';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import type { Profile } from '@/types/database';
 import { cn } from '@/lib/utils';
@@ -131,7 +132,10 @@ export function ContextSwitcher({ profile, isExpanded, className }: ContextSwitc
           />
         </div>
         <div className="flex-1 min-w-0 text-left">
-          <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+            <NWCStatusBadge />
+          </div>
           <p className="text-xs text-gray-500 truncate">
             {isGroupContext ? 'Group' : `@${profile.username || 'user'}`}
           </p>
