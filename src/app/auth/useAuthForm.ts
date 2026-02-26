@@ -4,6 +4,9 @@ import { useAuth, useRedirectIfAuthenticated } from '@/hooks/useAuth';
 import { resetPassword, getMFAAssuranceLevel } from '@/services/supabase/auth';
 import { registrationEvents, trackEvent } from '@/lib/analytics';
 import { getReadableError } from '@/utils/getReadableError';
+import supabase from '@/lib/supabase/browser';
+
+export type OAuthProvider = 'google' | 'github' | 'apple' | 'twitter';
 
 export type AuthMode = 'login' | 'register' | 'forgot';
 
@@ -284,6 +287,26 @@ export function useAuthForm() {
     clear();
   };
 
+  const handleOAuthSignIn = async (provider: OAuthProvider) => {
+    setLocalLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) {
+        throw error;
+      }
+      // Browser will redirect to provider's OAuth page
+    } catch (err) {
+      setError(getReadableError(err, `Failed to sign in with ${provider}`));
+      setLocalLoading(false);
+    }
+  };
+
   return {
     // State
     mode,
@@ -320,6 +343,7 @@ export function useAuthForm() {
     handleClearError,
     handleMFAVerificationComplete,
     handleMFACancelled,
+    handleOAuthSignIn,
 
     // Unused but preserved to avoid breaking references
     _isCurrentlyLoading,
