@@ -31,7 +31,10 @@ export * from './mutations/wallets';
 export * from './mutations/invitations';
 export * from './mutations/events';
 export * from './mutations/proposals';
-export * from './mutations/votes';
+// NOTE: mutations/votes is intentionally NOT re-exported here.
+// It imports execution/ which pulls in domain/projects/service (server-only, uses next/headers).
+// Re-exporting it would break client components that import from this barrel.
+// Import directly from '@/services/groups/mutations/votes' where needed (server-side only).
 
 // Re-export permissions
 export * from './permissions';
@@ -278,9 +281,12 @@ class GroupsService {
     return import('./mutations/proposals').then(m => m.deleteProposal(proposalId));
   }
 
-  // Vote management
-  async castVote(input: Parameters<typeof import('./mutations/votes').castVote>[0]) {
-    return import('./mutations/votes').then(m => m.castVote(input));
+  // Vote management — uses indirect import to prevent webpack from pulling
+  // server-only code (execution/ -> domain/projects/service -> next/headers)
+  // into the client bundle
+  async castVote(input: { proposal_id: string; vote: 'yes' | 'no' | 'abstain' }) {
+    const mod = './mutations/votes';
+    return import(/* webpackIgnore: true */ mod).then(m => m.castVote(input));
   }
 
   async getProposalVotes(proposalId: string) {

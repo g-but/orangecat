@@ -5,26 +5,31 @@ import { TABLES } from '../constants';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
 import { getProposal, getProposalVotes } from '../queries/proposals';
 import { executeProposalAction } from '../execution';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 export interface CastVoteInput {
   proposal_id: string;
   vote: 'yes' | 'no' | 'abstain';
 }
 
-export async function castVote(input: CastVoteInput) {
+export async function castVote(input: CastVoteInput, client?: AnySupabaseClient) {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
-    const proposalResult = await getProposal(input.proposal_id);
+    const proposalResult = await getProposal(input.proposal_id, sb);
     if (!proposalResult.success || !proposalResult.proposal) {
       return { success: false, error: 'Proposal not found' };
     }
     const proposal = proposalResult.proposal;
 
-    const isMember = await isGroupMember(proposal.group_id, userId);
+    const isMember = await isGroupMember(proposal.group_id, userId, sb);
     if (!isMember) {
       return { success: false, error: 'Only group members can vote' };
     }
@@ -43,7 +48,7 @@ export async function castVote(input: CastVoteInput) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (
-      supabase
+      sb
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(TABLES.group_votes) as any
     )
@@ -65,7 +70,7 @@ export async function castVote(input: CastVoteInput) {
       return { success: false, error: error.message };
     }
 
-    await checkAndResolveProposal(input.proposal_id);
+    await checkAndResolveProposal(input.proposal_id, sb);
 
     return { success: true, vote: data };
   } catch (error) {
@@ -74,9 +79,13 @@ export async function castVote(input: CastVoteInput) {
   }
 }
 
-export async function checkAndResolveProposal(proposalId: string): Promise<void> {
+export async function checkAndResolveProposal(
+  proposalId: string,
+  client?: AnySupabaseClient
+): Promise<void> {
   try {
-    const proposalResult = await getProposal(proposalId);
+    const sb = client || supabase;
+    const proposalResult = await getProposal(proposalId, sb);
     if (!proposalResult.success || !proposalResult.proposal) {
       return;
     }
@@ -86,7 +95,7 @@ export async function checkAndResolveProposal(proposalId: string): Promise<void>
       return;
     }
 
-    const votesResult = await getProposalVotes(proposalId);
+    const votesResult = await getProposalVotes(proposalId, sb);
     if (!votesResult.success || !votesResult.votes) {
       return;
     }
@@ -116,7 +125,7 @@ export async function checkAndResolveProposal(proposalId: string): Promise<void>
       // Single update; accept idempotency (if already updated, harmless)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (
-        supabase
+        sb
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .from(TABLES.group_proposals) as any
       )
@@ -124,7 +133,7 @@ export async function checkAndResolveProposal(proposalId: string): Promise<void>
         .eq('id', proposalId);
 
       if (newStatus === 'passed' && proposal.action_type) {
-        await executeProposalAction(proposalId, proposal);
+        await executeProposalAction(proposalId, proposal, sb);
       }
     }
   } catch (error) {
