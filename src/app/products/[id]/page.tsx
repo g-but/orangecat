@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Package, ArrowLeft, Tag, MessageSquare } from 'lucide-react';
+import { Package, ArrowLeft, Tag } from 'lucide-react';
 import { createServerClient } from '@/lib/supabase/server';
 import { getTableName } from '@/config/entity-registry';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -11,7 +11,7 @@ import { generateEntityJsonLd, JsonLdScript } from '@/lib/seo/structured-data';
 import EntityShare from '@/components/sharing/EntityShare';
 import PublicEntityOwnerCard from '@/components/public/PublicEntityOwnerCard';
 import PublicEntityTimestamps from '@/components/public/PublicEntityTimestamps';
-import PublicEntityCTA from '@/components/public/PublicEntityCTA';
+import { PublicEntityPaymentSection } from '@/components/payment';
 import { fetchEntityOwner } from '@/lib/entities/fetchEntityOwner';
 import { ROUTES } from '@/config/routes';
 
@@ -157,11 +157,14 @@ export default async function PublicProductPage({ params }: PageProps) {
                 description={product.description}
               />
 
-              <PublicEntityCTA
-                href={`${ROUTES.AUTH}?mode=login&from=${ROUTES.PRODUCTS.VIEW(id)}`}
-                icon={MessageSquare}
-                label="Contact Seller"
-                description="Sign in to contact the seller or make a purchase"
+              <PublicEntityPaymentSection
+                entityType="product"
+                entityId={id}
+                entityTitle={product.title}
+                priceSats={product.price_sats ? Number(product.price_sats) : undefined}
+                sellerProfileId={seller?.id ?? null}
+                sellerUserId={seller?.user_id ?? null}
+                signInRedirect={ROUTES.PRODUCTS.VIEW(id)}
               />
 
               <PublicEntityTimestamps

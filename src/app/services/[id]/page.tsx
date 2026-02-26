@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Briefcase, ArrowLeft, Tag, MessageSquare } from 'lucide-react';
+import { Briefcase, ArrowLeft, Tag } from 'lucide-react';
 import { createServerClient } from '@/lib/supabase/server';
 import { getTableName } from '@/config/entity-registry';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -11,7 +11,7 @@ import { generateEntityJsonLd, JsonLdScript } from '@/lib/seo/structured-data';
 import EntityShare from '@/components/sharing/EntityShare';
 import PublicEntityOwnerCard from '@/components/public/PublicEntityOwnerCard';
 import PublicEntityTimestamps from '@/components/public/PublicEntityTimestamps';
-import PublicEntityCTA from '@/components/public/PublicEntityCTA';
+import { PublicEntityPaymentSection } from '@/components/payment';
 import { fetchEntityOwner } from '@/lib/entities/fetchEntityOwner';
 import { ROUTES } from '@/config/routes';
 
@@ -169,11 +169,14 @@ export default async function PublicServicePage({ params }: PageProps) {
                 description={service.description}
               />
 
-              <PublicEntityCTA
-                href={`${ROUTES.AUTH}?mode=login&from=${ROUTES.SERVICES.VIEW(id)}`}
-                icon={MessageSquare}
-                label="Contact Provider"
-                description="Sign in to contact the provider or book this service"
+              <PublicEntityPaymentSection
+                entityType="service"
+                entityId={id}
+                entityTitle={service.title}
+                priceSats={service.price_sats ? Number(service.price_sats) : undefined}
+                sellerProfileId={provider?.id ?? null}
+                sellerUserId={provider?.user_id ?? null}
+                signInRedirect={ROUTES.SERVICES.VIEW(id)}
               />
 
               <PublicEntityTimestamps

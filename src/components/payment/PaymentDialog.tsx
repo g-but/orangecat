@@ -147,18 +147,13 @@ export function PaymentDialog({
                 qrData={state.data.qr_data}
                 methodLabel={state.data.method_label}
                 amountSats={state.data.payment_intent.amount_sats}
+                expiresInSeconds={state.data.expires_in_seconds ?? undefined}
               />
 
               <PaymentStatusIndicator status="invoice_ready" />
 
-              {state.data.expires_in_seconds && (
-                <p className="text-xs text-gray-400">
-                  Expires in {Math.ceil(state.data.expires_in_seconds / 60)} minutes
-                </p>
-              )}
-
-              {/* "I've paid" fallback for Lightning Address */}
-              {state.data.payment_intent.payment_method === 'lightning_address' && (
+              {/* "I've paid" fallback for all non-NWC methods (no auto-detect) */}
+              {state.data.payment_intent.payment_method !== 'nwc' && (
                 <Button variant="outline" size="sm" onClick={confirmPaid} className="min-h-11">
                   I&apos;ve paid
                 </Button>

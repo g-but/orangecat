@@ -1,6 +1,8 @@
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 export interface EntityOwner {
+  id: string; // actor or profile ID (for wallet lookup)
+  user_id: string; // auth.users ID (for self-purchase detection)
   username: string | null;
   name: string | null;
   avatar_url: string | null;
@@ -19,14 +21,17 @@ export async function fetchEntityOwner(
   if (entity.actor_id) {
     const { data: actorData } = await supabase
       .from(DATABASE_TABLES.ACTORS)
-      .select('username, display_name, avatar_url')
+      .select('id, user_id, username, display_name, avatar_url')
       .eq('id', entity.actor_id)
       .maybeSingle();
     if (actorData) {
+      const actor = actorData as Record<string, string | null>;
       return {
-        username: (actorData as Record<string, string | null>).username,
-        name: (actorData as Record<string, string | null>).display_name,
-        avatar_url: (actorData as Record<string, string | null>).avatar_url,
+        id: actor.id!,
+        user_id: actor.user_id!,
+        username: actor.username,
+        name: actor.display_name,
+        avatar_url: actor.avatar_url,
       };
     }
   }
@@ -41,7 +46,13 @@ export async function fetchEntityOwner(
       .maybeSingle();
     if (profileData) {
       const profile = profileData as Record<string, string | null>;
-      return { username: profile.username, name: profile.name, avatar_url: profile.avatar_url };
+      return {
+        id: profileId,
+        user_id: profileId,
+        username: profile.username,
+        name: profile.name,
+        avatar_url: profile.avatar_url,
+      };
     }
   }
 

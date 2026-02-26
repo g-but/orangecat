@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar as CalendarIcon, ArrowLeft, MapPin, Users, Ticket } from 'lucide-react';
+import { Calendar as CalendarIcon, ArrowLeft, MapPin, Users } from 'lucide-react';
 import { createServerClient } from '@/lib/supabase/server';
 import { getTableName } from '@/config/entity-registry';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -11,7 +11,7 @@ import { generateEntityJsonLd, JsonLdScript } from '@/lib/seo/structured-data';
 import EntityShare from '@/components/sharing/EntityShare';
 import PublicEntityOwnerCard from '@/components/public/PublicEntityOwnerCard';
 import PublicEntityTimestamps from '@/components/public/PublicEntityTimestamps';
-import PublicEntityCTA from '@/components/public/PublicEntityCTA';
+import { PublicEntityPaymentSection } from '@/components/payment';
 import { fetchEntityOwner } from '@/lib/entities/fetchEntityOwner';
 import { ROUTES } from '@/config/routes';
 import { format } from 'date-fns';
@@ -205,11 +205,14 @@ export default async function PublicEventPage({ params }: PageProps) {
                 description={event.description}
               />
 
-              <PublicEntityCTA
-                href={`${ROUTES.AUTH}?mode=login&from=${ROUTES.EVENTS.VIEW(id)}`}
-                icon={Ticket}
-                label="Register for Event"
-                description="Sign in to register for this event"
+              <PublicEntityPaymentSection
+                entityType="event"
+                entityId={id}
+                entityTitle={event.title}
+                priceSats={event.price_sats ? Number(event.price_sats) : undefined}
+                sellerProfileId={organizer?.id ?? null}
+                sellerUserId={organizer?.user_id ?? null}
+                signInRedirect={ROUTES.EVENTS.VIEW(id)}
               />
 
               <PublicEntityTimestamps createdAt={event.created_at} updatedAt={event.updated_at} />

@@ -10,3 +10,4 @@ export { ContributionAmountInput } from './ContributionAmountInput';
 export { ShippingAddressForm } from './ShippingAddressForm';
 export { OrderCard } from './OrderCard';
 export { SellerWalletBanner } from './SellerWalletBanner';
+export { PublicEntityPaymentSection } from './PublicEntityPaymentSection';

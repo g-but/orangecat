@@ -9,6 +9,7 @@ import { ROUTES } from '@/lib/routes';
 import { useState, useEffect } from 'react';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getStatusInfo } from '@/config/status-config';
+import { PublicEntityPaymentSection } from '@/components/payment';
 
 const MissingWalletBanner = dynamic(() => import('@/components/project/MissingWalletBanner'));
 const CampaignShare = dynamic(() => import('@/components/sharing/CampaignShare'));
@@ -162,7 +163,16 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
               />
             </div>
           </div>
-          <div>
+          <div className="space-y-6">
+            <PublicEntityPaymentSection
+              entityType="project"
+              entityId={project.id}
+              entityTitle={project.title}
+              sellerProfileId={project.user_id}
+              sellerUserId={project.user_id}
+              signInRedirect={ROUTES.PROJECTS.VIEW(project.id)}
+            />
+
             <ProjectSummaryRail
               project={{
                 id: project.id,

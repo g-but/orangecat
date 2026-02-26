@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Heart, ArrowLeft, HandHeart } from 'lucide-react';
+import { Heart, ArrowLeft } from 'lucide-react';
 import { createServerClient } from '@/lib/supabase/server';
 import { getTableName } from '@/config/entity-registry';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -12,7 +12,7 @@ import { generateEntityJsonLd, JsonLdScript } from '@/lib/seo/structured-data';
 import EntityShare from '@/components/sharing/EntityShare';
 import PublicEntityOwnerCard from '@/components/public/PublicEntityOwnerCard';
 import PublicEntityTimestamps from '@/components/public/PublicEntityTimestamps';
-import PublicEntityCTA from '@/components/public/PublicEntityCTA';
+import { PublicEntityPaymentSection } from '@/components/payment';
 import { fetchEntityOwner } from '@/lib/entities/fetchEntityOwner';
 import { ROUTES } from '@/config/routes';
 
@@ -167,11 +167,13 @@ export default async function PublicCausePage({ params }: PageProps) {
                 description={cause.description}
               />
 
-              <PublicEntityCTA
-                href={`${ROUTES.AUTH}?mode=login&from=${ROUTES.CAUSES.VIEW(id)}`}
-                icon={HandHeart}
-                label="Back this Cause"
-                description="Sign in to support this cause with Bitcoin"
+              <PublicEntityPaymentSection
+                entityType="cause"
+                entityId={id}
+                entityTitle={cause.title}
+                sellerProfileId={owner?.id ?? null}
+                sellerUserId={owner?.user_id ?? null}
+                signInRedirect={ROUTES.CAUSES.VIEW(id)}
               />
 
               <PublicEntityTimestamps createdAt={cause.created_at} updatedAt={cause.updated_at} />

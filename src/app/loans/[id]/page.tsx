@@ -108,12 +108,13 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
   }
 
   const progress = calculateProgress(loan.original_amount, loan.remaining_balance);
-  const ownerProfile = loan.profiles as {
+  const rawProfile = loan.profiles as {
     id: string;
     username: string | null;
     name: string | null;
     avatar_url: string | null;
   } | null;
+  const ownerProfile = rawProfile ? { ...rawProfile, user_id: rawProfile.id } : null;
 
   const jsonLd = generateEntityJsonLd({
     type: 'loan',
