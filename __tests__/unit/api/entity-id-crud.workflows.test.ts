@@ -37,6 +37,14 @@ jest.mock('@/lib/api/standardResponse', () => ({
   })),
 }));
 
+jest.mock('@/services/actors', () => ({
+  checkOwnership: jest.fn(),
+}));
+
+jest.mock('@/services/actors/getOrCreateUserActor', () => ({
+  getOrCreateUserActor: jest.fn().mockResolvedValue({ id: 'a1' }),
+}));
+
 jest.mock('@/lib/rate-limit', () => ({
   rateLimit: jest.fn(),
   rateLimitWriteAsync: jest.fn(),
@@ -45,6 +53,7 @@ jest.mock('@/lib/rate-limit', () => ({
 }));
 
 import { createServerClient } from '@/lib/supabase/server';
+import { checkOwnership } from '@/services/actors';
 import { rateLimit, rateLimitWriteAsync } from '@/lib/rate-limit';
 
 type Case = {
@@ -100,11 +109,12 @@ describe('Entity [id] CRUD workflows (service/product/cause)', () => {
       success: true,
       resetTime: Date.now() + 60000,
     });
+    (checkOwnership as jest.Mock).mockResolvedValue(true);
   });
 
   describe.each(cases)('$name id routes', ({ table, getHandler, putHandler, validUpdate }) => {
     it('GET returns active entity detail', async () => {
-      const entity = { id: 'e1', user_id: 'u1', title: 'Entity', status: 'active' };
+      const entity = { id: 'e1', user_id: 'u1', actor_id: 'a1', title: 'Entity', status: 'active' };
 
       const fetchQuery = {
         select: jest.fn().mockReturnThis(),
@@ -131,7 +141,7 @@ describe('Entity [id] CRUD workflows (service/product/cause)', () => {
     });
 
     it('PUT updates own entity', async () => {
-      const existing = { id: 'e1', user_id: 'u1', title: 'Old Title' };
+      const existing = { id: 'e1', user_id: 'u1', actor_id: 'a1', title: 'Old Title' };
       const updated = { ...existing, title: String(validUpdate.title) };
 
       const fetchQuery = {
@@ -169,7 +179,13 @@ describe('Entity [id] CRUD workflows (service/product/cause)', () => {
     });
 
     it('PUT rejects update from non-owner', async () => {
-      const existing = { id: 'e1', user_id: 'someone-else', title: 'Locked' };
+      (checkOwnership as jest.Mock).mockResolvedValueOnce(false);
+      const existing = {
+        id: 'e1',
+        user_id: 'someone-else',
+        actor_id: 'other-actor',
+        title: 'Locked',
+      };
 
       const fetchQuery = {
         select: jest.fn().mockReturnThis(),

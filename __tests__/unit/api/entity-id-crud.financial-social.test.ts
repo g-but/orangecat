@@ -11,6 +11,10 @@ jest.mock('@/services/actors', () => ({
   checkOwnership: jest.fn(),
 }));
 
+jest.mock('@/services/actors/getOrCreateUserActor', () => ({
+  getOrCreateUserActor: jest.fn().mockResolvedValue({ id: 'a1' }),
+}));
+
 jest.mock('@/lib/api/standardResponse', () => ({
   apiSuccess: jest.fn((data: unknown) => ({
     status: 200,
@@ -67,15 +71,16 @@ const cases: Case[] = [
   {
     name: 'asset',
     table: 'assets',
-    ownerField: 'owner_id',
+    ownerField: 'actor_id',
     getHandler: getAsset as any,
     putHandler: putAsset as any,
     validUpdate: { title: 'Updated Asset', type: 'real_estate', estimated_value: 1000 },
+    usesActorOwnership: true,
   },
   {
     name: 'loan',
     table: 'loans',
-    ownerField: 'user_id',
+    ownerField: 'actor_id',
     getHandler: getLoan as any,
     putHandler: putLoan as any,
     validUpdate: {
@@ -86,11 +91,12 @@ const cases: Case[] = [
       remaining_balance: 900,
       lightning_address: '',
     },
+    usesActorOwnership: true,
   },
   {
     name: 'event',
     table: 'events',
-    ownerField: 'user_id',
+    ownerField: 'actor_id',
     getHandler: getEvent as any,
     putHandler: putEvent as any,
     validUpdate: {
@@ -100,6 +106,7 @@ const cases: Case[] = [
       online_url: 'https://example.com/meet',
       ticket_price: 100,
     },
+    usesActorOwnership: true,
   },
   {
     name: 'wishlist',

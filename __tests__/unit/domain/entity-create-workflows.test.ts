@@ -9,6 +9,10 @@ jest.mock('@/lib/supabase/admin', () => ({
   createAdminClient: jest.fn(),
 }));
 
+jest.mock('@/services/actors/getOrCreateUserActor', () => ({
+  getOrCreateUserActor: jest.fn().mockResolvedValue({ id: 'a1' }),
+}));
+
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -52,7 +56,7 @@ describe('Entity create workflows (project/product/cause)', () => {
     expect(mockServerClient.from).toHaveBeenCalledWith('projects');
     expect(mockServerChain.insert).toHaveBeenCalledWith(
       expect.objectContaining({
-        user_id: 'user-1',
+        actor_id: 'a1',
         title: 'P',
         status: 'draft',
         currency: 'SATS',
@@ -73,7 +77,7 @@ describe('Entity create workflows (project/product/cause)', () => {
     expect(mockAdminClient.from).toHaveBeenCalledWith('user_products');
     expect(mockAdminChain.insert).toHaveBeenCalledWith(
       expect.objectContaining({
-        user_id: 'user-2',
+        actor_id: 'a1',
         title: 'Prod',
         price: 1000,
         status: 'draft',
@@ -97,7 +101,7 @@ describe('Entity create workflows (project/product/cause)', () => {
     expect(mockAdminClient.from).toHaveBeenCalledWith('user_causes');
     expect(mockAdminChain.insert).toHaveBeenCalledWith(
       expect.objectContaining({
-        user_id: 'user-3',
+        actor_id: 'a1',
         title: 'Cause',
         cause_category: 'charity',
         status: 'draft',

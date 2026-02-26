@@ -42,6 +42,14 @@ jest.mock('@/lib/rate-limit', () => ({
   applyRateLimitHeaders: jest.fn((response: Response) => response),
 }));
 
+jest.mock('@/services/actors', () => ({
+  checkOwnership: jest.fn(),
+}));
+
+jest.mock('@/services/actors/getOrCreateUserActor', () => ({
+  getOrCreateUserActor: jest.fn().mockResolvedValue({ id: 'a1' }),
+}));
+
 jest.mock('@/lib/api/auditLog', () => ({
   auditSuccess: jest.fn().mockResolvedValue(undefined),
   AUDIT_ACTIONS: {
@@ -50,6 +58,7 @@ jest.mock('@/lib/api/auditLog', () => ({
 }));
 
 import { createServerClient } from '@/lib/supabase/server';
+import { checkOwnership } from '@/services/actors';
 import { rateLimit, rateLimitWriteAsync } from '@/lib/rate-limit';
 
 describe('Project [id] API workflow', () => {
@@ -60,6 +69,7 @@ describe('Project [id] API workflow', () => {
       success: true,
       resetTime: Date.now() + 60000,
     });
+    (checkOwnership as jest.Mock).mockResolvedValue(true);
   });
 
   it('GET returns project detail with profile mapping', async () => {
@@ -117,6 +127,7 @@ describe('Project [id] API workflow', () => {
     const existing = {
       id: 'p1',
       user_id: 'u1',
+      actor_id: 'a1',
       title: 'Old Title',
     };
 
@@ -166,9 +177,11 @@ describe('Project [id] API workflow', () => {
   });
 
   it('PUT rejects updates to project owned by another user', async () => {
+    (checkOwnership as jest.Mock).mockResolvedValueOnce(false);
     const existing = {
       id: 'p1',
       user_id: 'someone-else',
+      actor_id: 'other-actor',
       title: 'Locked Project',
     };
 

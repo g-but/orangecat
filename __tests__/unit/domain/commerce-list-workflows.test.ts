@@ -4,6 +4,10 @@ jest.mock('@/lib/supabase/server', () => ({
   createServerClient: jest.fn(),
 }));
 
+jest.mock('@/services/actors/getOrCreateUserActor', () => ({
+  getOrCreateUserActor: jest.fn().mockResolvedValue({ id: 'a1' }),
+}));
+
 import { createServerClient } from '@/lib/supabase/server';
 
 describe('Commerce list workflows (services/products/causes)', () => {
@@ -62,8 +66,8 @@ describe('Commerce list workflows (services/products/causes)', () => {
       includeOwnDrafts: true,
     });
 
-    expect(itemsQuery.eq).toHaveBeenCalledWith('user_id', 'u1');
-    expect(countQuery.eq).toHaveBeenCalledWith('user_id', 'u1');
+    expect(itemsQuery.eq).toHaveBeenCalledWith('actor_id', 'a1');
+    expect(countQuery.eq).toHaveBeenCalledWith('actor_id', 'a1');
     expect(result.items).toHaveLength(1);
     expect(result.total).toBe(1);
   });

@@ -7,6 +7,10 @@ jest.mock('@/lib/supabase/admin', () => ({
   createAdminClient: jest.fn(),
 }));
 
+jest.mock('@/services/actors/getOrCreateUserActor', () => ({
+  getOrCreateUserActor: jest.fn().mockResolvedValue({ id: 'a1' }),
+}));
+
 import { createAdminClient } from '@/lib/supabase/admin';
 
 const mockSupabase = {
@@ -138,7 +142,7 @@ describe('Service Creation', () => {
       expect(createAdminClient).toHaveBeenCalled();
       expect(mockSupabase.from).toHaveBeenCalled();
       expect(mockSupabase.insert).toHaveBeenCalledWith({
-        user_id: mockUserId,
+        actor_id: 'a1',
         title: 'Test Car Repair Service',
         description: 'Professional automotive repair services',
         category: 'Automotive',
@@ -176,7 +180,7 @@ describe('Service Creation', () => {
       const result = await createService(mockUserId, hourlyServiceData);
 
       expect(mockSupabase.insert).toHaveBeenCalledWith({
-        user_id: mockUserId,
+        actor_id: 'a1',
         title: 'Hourly Consulting',
         description: null,
         category: 'Consulting',
@@ -218,7 +222,7 @@ describe('Service Creation', () => {
       const result = await createService(mockUserId, minimalServiceData);
 
       expect(mockSupabase.insert).toHaveBeenCalledWith({
-        user_id: mockUserId,
+        actor_id: 'a1',
         title: 'Minimal Service',
         description: null,
         category: 'Other',

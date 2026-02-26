@@ -4,6 +4,10 @@ jest.mock('@/lib/supabase/server', () => ({
   createServerClient: jest.fn(),
 }));
 
+jest.mock('@/services/actors/getOrCreateUserActor', () => ({
+  getOrCreateUserActor: jest.fn().mockResolvedValue({ id: 'a1' }),
+}));
+
 import { createServerClient } from '@/lib/supabase/server';
 
 describe('Project list workflow', () => {
