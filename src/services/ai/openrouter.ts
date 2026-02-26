@@ -128,7 +128,7 @@ export class OpenRouterService {
   ) {
     this.apiKey = apiKey;
     this.btcPriceUsd = options.btcPriceUsd || DEFAULT_BTC_PRICE_USD;
-    this.siteUrl = options.siteUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.app';
+    this.siteUrl = options.siteUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.ch';
     this.siteName = options.siteName || 'OrangeCat';
     this.isByok = options.isByok || false;
   }

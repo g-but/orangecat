@@ -113,7 +113,7 @@ export async function generateFormPrefill(
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.app',
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.ch',
         'X-Title': 'OrangeCat Form Prefill',
         'Content-Type': 'application/json',
       },

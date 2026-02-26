@@ -6,7 +6,7 @@ import { registrationEvents, trackEvent } from '@/lib/analytics';
 import { getReadableError } from '@/utils/getReadableError';
 import supabase from '@/lib/supabase/browser';
 
-export type OAuthProvider = 'google' | 'github' | 'apple' | 'twitter';
+export type OAuthProvider = 'google' | 'github' | 'apple' | 'x' | 'facebook';
 
 export type AuthMode = 'login' | 'register' | 'forgot';
 
