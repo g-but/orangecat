@@ -244,7 +244,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     supabase
       .from(getTableName('event'))
       .select('*', { count: 'exact', head: true })
-      .eq('organizer_id', profile.id)
+      .eq('user_id', profile.id)
       .neq('status', 'draft')
       .neq('show_on_profile', false),
     supabase

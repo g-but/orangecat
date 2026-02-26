@@ -8,12 +8,12 @@ export interface EntityOwner {
 
 /**
  * Fetch the owner/creator profile for a public entity.
- * Handles both actor_id (actors table) and user_id/organizer_id (profiles table).
+ * Handles both actor_id (actors table) and user_id/created_by (profiles table).
  */
 export async function fetchEntityOwner(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
-  entity: { actor_id?: string | null; user_id?: string | null; organizer_id?: string | null }
+  entity: { actor_id?: string | null; user_id?: string | null; created_by?: string | null }
 ): Promise<EntityOwner | null> {
   // Try actors table if actor_id is present
   if (entity.actor_id) {
@@ -32,7 +32,7 @@ export async function fetchEntityOwner(
   }
 
   // Fallback to profiles table
-  const profileId = entity.organizer_id || entity.user_id;
+  const profileId = entity.user_id || entity.created_by;
   if (profileId) {
     const { data: profileData } = await supabase
       .from(DATABASE_TABLES.PROFILES)

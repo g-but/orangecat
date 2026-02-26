@@ -101,12 +101,9 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
 
           if (userIdField === 'actor_id' && actorId) {
             query = query.eq('actor_id', actorId);
-          } else if (userIdField === 'user_id') {
-            query = query.eq('user_id', user.id);
-          } else if (userIdField === 'owner_id') {
-            query = query.eq('owner_id', user.id);
-          } else if (userIdField === 'organizer_id') {
-            query = query.eq('organizer_id', user.id);
+          } else if (userIdField !== 'actor_id') {
+            // For user_id, owner_id, created_by, profile_id, etc. — use user.id
+            query = query.eq(userIdField, user.id);
           }
 
           const { count, error } = await query;
