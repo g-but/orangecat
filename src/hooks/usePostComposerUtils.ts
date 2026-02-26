@@ -2,6 +2,7 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { TimelineVisibility } from '@/types/timeline';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 const PROFILE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const profileCheckCache = new Map<string, { exists: boolean; timestamp: number }>();
@@ -207,6 +208,18 @@ export function buildTimelineContexts(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function fetchUserProjects(userId: string): Promise<any[]> {
   try {
+    // Resolve user to actor for ownership filtering
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: actor } = (await (supabase.from(DATABASE_TABLES.ACTORS) as any)
+      .select('id')
+      .eq('user_id', userId)
+      .eq('actor_type', 'user')
+      .maybeSingle()) as { data: { id: string } | null };
+
+    if (!actor) {
+      return [];
+    }
+
     const { data, error } = await supabase
       .from(getTableName('project'))
       .select(
@@ -219,7 +232,7 @@ export async function fetchUserProjects(userId: string): Promise<any[]> {
         project_media(id, storage_path, position)
       `
       )
-      .eq('user_id', userId)
+      .eq('actor_id', actor.id)
       .neq('status', 'draft')
       .order('updated_at', { ascending: false })
       .limit(50);

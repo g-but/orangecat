@@ -11,7 +11,11 @@
 
 import { aiAssistantSchema } from '@/lib/validation';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
+import {
+  createUpdatePayloadBuilder,
+  commonFieldMappings,
+  entityTransforms,
+} from '@/lib/api/buildUpdatePayload';
 
 // Build update payload from validated AI assistant data
 const buildAIAssistantUpdatePayload = createUpdatePayloadBuilder([
@@ -54,8 +58,9 @@ const { GET, PUT, DELETE } = createEntityCrudHandlers({
   entityType: 'ai_assistant',
   schema: aiAssistantSchema,
   buildUpdatePayload: buildAIAssistantUpdatePayload,
+  ownershipField: 'actor_id',
+  useActorOwnership: true,
   requireActiveStatus: false, // Allow viewing draft assistants by owner
 });
 
 export { GET, PUT, DELETE };
-

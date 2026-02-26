@@ -6,6 +6,7 @@ import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 // GET /api/services - Get all active services
 export const GET = createEntityListHandler({
   entityType: 'service',
+  userIdField: 'actor_id',
   useListHelper: true, // Uses listEntitiesPage for commerce entities
 });
 
@@ -13,7 +14,11 @@ export const GET = createEntityListHandler({
 export const POST = createEntityPostHandler({
   entityType: 'service',
   schema: userServiceSchema,
+  useActorOwnership: true,
   createEntity: async (userId, data) => {
-    return await createService(userId, data as { title: string; category: string; [key: string]: unknown });
+    return await createService(
+      userId,
+      data as { title: string; category: string; [key: string]: unknown }
+    );
   },
 });

@@ -9,7 +9,11 @@
 
 import { userCauseSchema } from '@/lib/validation';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
+import {
+  createUpdatePayloadBuilder,
+  commonFieldMappings,
+  entityTransforms,
+} from '@/lib/api/buildUpdatePayload';
 
 // Build update payload from validated cause data
 const buildCauseUpdatePayload = createUpdatePayloadBuilder([
@@ -32,6 +36,8 @@ const { GET, PUT, DELETE } = createEntityCrudHandlers({
   entityType: 'cause',
   schema: userCauseSchema,
   buildUpdatePayload: buildCauseUpdatePayload,
+  ownershipField: 'actor_id',
+  useActorOwnership: true,
 });
 
 export { GET, PUT, DELETE };

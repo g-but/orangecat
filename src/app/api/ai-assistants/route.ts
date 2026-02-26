@@ -24,6 +24,7 @@ import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 // GET /api/ai-assistants - List AI assistants
 export const GET = compose(
@@ -39,15 +40,20 @@ export const GET = compose(
     const sortBy = getString(request.url, 'sort') || 'popular';
 
     // Check auth for showing drafts
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const includeOwnDrafts = Boolean(userId && user && userId === user.id);
 
     // Build query with user info for discovery page
     const tableName = getTableName('ai_assistant');
-    let itemsQuery = (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(tableName) as any)
-      .select(`
+    let itemsQuery = (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(tableName) as any
+    )
+      .select(
+        `
         *,
         user:profiles!ai_assistants_user_id_fkey(
           id,
@@ -55,25 +61,34 @@ export const GET = compose(
           name,
           avatar_url
         )
-      `)
+      `
+      )
       .range(offset, offset + limit - 1);
 
-    let countQuery = (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(tableName) as any)
-      .select('*', { count: 'exact', head: true });
+    let countQuery = (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(tableName) as any
+    ).select('*', { count: 'exact', head: true });
 
-    if (userId && includeOwnDrafts) {
+    // Resolve user_id to actor_id for filtering
+    let actorId: string | null = null;
+    if (userId) {
+      const actor = await getOrCreateUserActor(userId);
+      actorId = actor.id;
+    }
+
+    if (userId && includeOwnDrafts && actorId) {
       // Show all user's assistants including drafts
-      itemsQuery = itemsQuery.eq('user_id', userId);
-      countQuery = countQuery.eq('user_id', userId);
+      itemsQuery = itemsQuery.eq('actor_id', actorId);
+      countQuery = countQuery.eq('actor_id', actorId);
     } else {
       // Public listing: only active, public assistants
       itemsQuery = itemsQuery.eq('status', 'active').eq('is_public', true);
       countQuery = countQuery.eq('status', 'active').eq('is_public', true);
-      if (userId) {
-        itemsQuery = itemsQuery.eq('user_id', userId);
-        countQuery = countQuery.eq('user_id', userId);
+      if (actorId) {
+        itemsQuery = itemsQuery.eq('actor_id', actorId);
+        countQuery = countQuery.eq('actor_id', actorId);
       }
       if (category) {
         itemsQuery = itemsQuery.eq('category', category);
@@ -104,7 +119,10 @@ export const GET = compose(
         break;
       case 'popular':
       default:
-        itemsQuery = itemsQuery.order('total_conversations', { ascending: false, nullsFirst: false });
+        itemsQuery = itemsQuery.order('total_conversations', {
+          ascending: false,
+          nullsFirst: false,
+        });
         break;
     }
 
@@ -113,8 +131,12 @@ export const GET = compose(
       countQuery,
     ]);
 
-    if (itemsError) {throw itemsError;}
-    if (countError) {throw countError;}
+    if (itemsError) {
+      throw itemsError;
+    }
+    if (countError) {
+      throw countError;
+    }
 
     // Cache control based on query type
     const cacheControl = getCacheControl(Boolean(userId));
@@ -137,7 +159,10 @@ export const POST = compose(
 )(async (request: NextRequest, ctx) => {
   try {
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return apiUnauthorized();
@@ -158,13 +183,18 @@ export const POST = compose(
 
     const validatedData = ctx.body;
 
+    // Resolve user to actor for ownership
+    const actor = await getOrCreateUserActor(user.id);
+
     // Create the AI assistant
     const tableName = getTableName('ai_assistant');
-    const { data: assistant, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(tableName) as any)
+    const { data: assistant, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(tableName) as any
+    )
       .insert({
-        user_id: user.id,
+        actor_id: actor.id,
         title: validatedData.title,
         description: validatedData.description,
         category: validatedData.category,
@@ -199,7 +229,10 @@ export const POST = compose(
       throw error;
     }
 
-    logger.info('AI Assistant created successfully', { assistantId: assistant.id, userId: user.id });
+    logger.info('AI Assistant created successfully', {
+      assistantId: assistant.id,
+      userId: user.id,
+    });
     return applyRateLimitHeaders(apiSuccess(assistant, { status: 201 }), rl);
   } catch (error) {
     return handleApiError(error);

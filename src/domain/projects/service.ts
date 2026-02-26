@@ -1,15 +1,23 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { getTableName } from '@/config/entity-registry';
 import { PROJECT_STATUS } from '@/config/project-statuses';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 export async function listProjectsPage(limit: number, offset: number, userId?: string) {
   const supabase = await createServerClient();
   const tableName = getTableName('project');
 
+  // Resolve user_id to actor_id for ownership filtering
+  let actorId: string | null = null;
+  if (userId) {
+    const actor = await getOrCreateUserActor(userId);
+    actorId = actor.id;
+  }
+
   // Build filter condition (shared between data and count queries)
   const applyFilter = (query: ReturnType<typeof supabase.from>) => {
-    if (userId) {
-      return query.eq('user_id', userId);
+    if (actorId) {
+      return query.eq('actor_id', actorId);
     }
     return query.eq('status', PROJECT_STATUS.ACTIVE);
   };
@@ -46,9 +54,12 @@ export async function listProjectsPage(limit: number, offset: number, userId?: s
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProject(userId: string, payload: any) {
+  // Resolve user to actor for ownership
+  const actor = await getOrCreateUserActor(userId);
+
   const supabase = await createServerClient();
   const insertPayload = {
-    user_id: userId,
+    actor_id: actor.id,
     title: payload.title,
     description: payload.description,
     goal_amount: payload.goal_amount ?? null,

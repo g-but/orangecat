@@ -17,13 +17,32 @@ async function postProcessProjectGet(
   supabase: SupabaseClient
 ): Promise<Record<string, unknown>> {
   let profile = null;
+  const projectActorId = project.actor_id as string | undefined;
   const projectUserId = project.user_id as string | undefined;
 
-  if (projectUserId) {
+  // Try to resolve profile via actor_id first, fall back to legacy user_id
+  let profileUserId: string | undefined;
+  if (projectActorId) {
+    // Look up the actor's user_id to find the profile
+    const { data: actorData } = await supabase
+      .from(DATABASE_TABLES.ACTORS)
+      .select('user_id')
+      .eq('id', projectActorId)
+      .maybeSingle();
+    if (actorData?.user_id) {
+      profileUserId = actorData.user_id as string;
+    }
+  }
+  // Fall back to legacy user_id if actor lookup didn't yield a result
+  if (!profileUserId && projectUserId) {
+    profileUserId = projectUserId;
+  }
+
+  if (profileUserId) {
     const { data: profileData, error: profileError } = await supabase
       .from(DATABASE_TABLES.PROFILES)
       .select('id, username, name, avatar_url, email')
-      .eq('id', projectUserId)
+      .eq('id', profileUserId)
       .maybeSingle();
 
     if (profileError) {
@@ -31,7 +50,7 @@ async function postProcessProjectGet(
         'Error fetching profile for project',
         {
           projectId: project.id,
-          userId: projectUserId,
+          userId: profileUserId,
           error: profileError,
         },
         'GET /api/projects/[id]'
@@ -43,7 +62,7 @@ async function postProcessProjectGet(
         'Profile not found for project creator',
         {
           projectId: project.id,
-          userId: projectUserId,
+          userId: profileUserId,
         },
         'GET /api/projects/[id]'
       );
@@ -106,6 +125,8 @@ const { GET, PUT, DELETE } = createEntityCrudHandlers({
   entityType: 'project',
   schema: projectSchema,
   buildUpdatePayload: buildProjectUpdatePayload,
+  ownershipField: 'actor_id',
+  useActorOwnership: true,
   requireActiveStatus: false, // Projects don't have status field
   postProcessGet: postProcessProjectGet,
   postProcessPut: postProcessProjectPut,

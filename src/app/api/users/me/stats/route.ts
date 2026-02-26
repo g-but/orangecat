@@ -128,17 +128,21 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
           .eq('wishlists.actor_id', actorId)
       : Promise.resolve({ count: 0 });
 
-    const recentProjectPromise = (supabase.from(getTableName('project')) as UntypedTable)
-      .select('updated_at')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .single();
+    const recentProjectPromise = actorId
+      ? (supabase.from(getTableName('project')) as UntypedTable)
+          .select('updated_at')
+          .eq('actor_id', actorId)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .single()
+      : Promise.resolve({ data: null });
 
-    const publishedCountPromise = (supabase.from(getTableName('project')) as UntypedTable)
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('status', 'active');
+    const publishedCountPromise = actorId
+      ? (supabase.from(getTableName('project')) as UntypedTable)
+          .select('id', { count: 'exact', head: true })
+          .eq('actor_id', actorId)
+          .eq('status', 'active')
+      : Promise.resolve({ count: 0 });
 
     const [
       entityCountResults,

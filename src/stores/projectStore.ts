@@ -12,6 +12,7 @@ import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
 import { getTableName } from '@/config/entity-registry';
 import { PROJECT_STATUS } from '@/config/project-statuses';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Use existing FundingPage type from funding.ts
 import type { FundingPage } from '@/types/funding';
@@ -72,10 +73,24 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
+      // Resolve user_id to actor_id for ownership filtering
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: actor } = (await (supabase.from(DATABASE_TABLES.ACTORS) as any)
+        .select('id')
+        .eq('user_id', userId)
+        .eq('actor_type', 'user')
+        .maybeSingle()) as { data: { id: string } | null };
+
+      if (!actor) {
+        // No actor yet — no projects to load
+        set({ projects: [], isLoading: false });
+        return;
+      }
+
       const { data, error } = await supabase
         .from(getTableName('project'))
         .select('*')
-        .eq('user_id', userId)
+        .eq('actor_id', actor.id)
         .order('created_at', { ascending: false });
 
       if (error) {

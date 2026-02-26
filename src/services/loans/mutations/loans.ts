@@ -14,6 +14,21 @@ import type { CreateLoanRequest, UpdateLoanRequest, LoanResponse, Loan } from '@
 import { STATUS } from '@/config/database-constants';
 import { getCurrentUserId } from '../utils/auth';
 import { validateCreateLoanRequest } from '../utils/validation';
+import { DATABASE_TABLES } from '@/config/database-tables';
+
+/**
+ * Resolve a user_id to an actor_id via the browser Supabase client.
+ * Returns null if no actor exists.
+ */
+async function resolveActorId(userId: string): Promise<string | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = (await (supabase.from(DATABASE_TABLES.ACTORS) as any)
+    .select('id')
+    .eq('user_id', userId)
+    .eq('actor_type', 'user')
+    .maybeSingle()) as { data: { id: string } | null };
+  return data?.id ?? null;
+}
 
 /**
  * Create a new loan listing
@@ -33,6 +48,11 @@ export async function createLoan(request: CreateLoanRequest): Promise<LoanRespon
       return { success: false, error: validation.errors[0]?.message || 'Invalid request' };
     }
 
+    const actorId = await resolveActorId(user.id);
+    if (!actorId) {
+      return { success: false, error: 'User actor not found' };
+    }
+
     const { data, error } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,7 +61,7 @@ export async function createLoan(request: CreateLoanRequest): Promise<LoanRespon
       .insert({
         ...request,
         currency: isSupportedCurrency(request.currency) ? request.currency : DEFAULT_CURRENCY,
-        user_id: user.id,
+        actor_id: actorId,
       })
       .select()
       .single();
@@ -72,6 +92,11 @@ export async function updateLoan(
       return { success: false, error: 'Authentication required' };
     }
 
+    const actorId = await resolveActorId(userId);
+    if (!actorId) {
+      return { success: false, error: 'User actor not found' };
+    }
+
     const { data, error } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -79,7 +104,7 @@ export async function updateLoan(
     )
       .update(request)
       .eq('id', loanId)
-      .eq('user_id', userId)
+      .eq('actor_id', actorId)
       .select()
       .single();
 
@@ -106,6 +131,11 @@ export async function deleteLoan(loanId: string): Promise<{ success: boolean; er
       return { success: false, error: 'Authentication required' };
     }
 
+    const actorId = await resolveActorId(userId);
+    if (!actorId) {
+      return { success: false, error: 'User actor not found' };
+    }
+
     const { error } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -113,7 +143,7 @@ export async function deleteLoan(loanId: string): Promise<{ success: boolean; er
     )
       .delete()
       .eq('id', loanId)
-      .eq('user_id', userId);
+      .eq('actor_id', actorId);
 
     if (error) {
       logger.error('Failed to delete loan', error, 'Loans');
@@ -164,6 +194,11 @@ export async function createObligationLoan(params: {
       contact_method: 'platform',
     };
 
+    const borrowerActorId = await resolveActorId(borrowerId);
+    if (!borrowerActorId) {
+      return { success: false, error: 'Borrower actor not found' };
+    }
+
     const { data, error } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -171,7 +206,7 @@ export async function createObligationLoan(params: {
     )
       .insert({
         ...newLoan,
-        user_id: borrowerId,
+        actor_id: borrowerActorId,
         status: STATUS.LOANS.ACTIVE,
       })
       .select()

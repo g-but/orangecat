@@ -46,12 +46,24 @@ export interface FundraisingActivity {
  */
 export async function getUserFundraisingStats(userId: string): Promise<FundraisingStats> {
   try {
+    // Resolve user to actor for ownership filtering
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: actor } = (await (supabase.from(DATABASE_TABLES.ACTORS) as any)
+      .select('id')
+      .eq('user_id', userId)
+      .eq('actor_type', 'user')
+      .maybeSingle()) as { data: { id: string } | null };
+
+    if (!actor) {
+      return { totalProjects: 0, totalRaised: 0, totalSupporters: 0, activeProjects: 0 };
+    }
+
     // Use centralized supabase client
-    // Get user's projects (both as creator and through organizations)
+    // Get user's projects via actor_id
     const { data: ownedProjects, error: ownedError } = await supabase
       .from(getTableName('project'))
       .select('*')
-      .eq('user_id', userId);
+      .eq('actor_id', actor.id);
 
     if (ownedError) {
       throw ownedError;
@@ -124,11 +136,23 @@ export async function getUserFundraisingActivity(
     // Use centralized supabase client
     const activities: FundraisingActivity[] = [];
 
-    // Get user's funding pages
+    // Resolve user to actor for ownership filtering
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: actor } = (await (supabase.from(DATABASE_TABLES.ACTORS) as any)
+      .select('id')
+      .eq('user_id', userId)
+      .eq('actor_type', 'user')
+      .maybeSingle()) as { data: { id: string } | null };
+
+    if (!actor) {
+      return [];
+    }
+
+    // Get user's funding pages via actor_id
     const { data: pages, error: pagesError } = await supabase
       .from(getTableName('project'))
       .select('*')
-      .eq('user_id', userId)
+      .eq('actor_id', actor.id)
       .order('created_at', { ascending: false });
 
     if (pagesError) {

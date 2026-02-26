@@ -10,7 +10,11 @@
 
 import { userProductSchema } from '@/lib/validation';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
+import {
+  createUpdatePayloadBuilder,
+  commonFieldMappings,
+  entityTransforms,
+} from '@/lib/api/buildUpdatePayload';
 
 // Build update payload from validated product data
 const buildProductUpdatePayload = createUpdatePayloadBuilder([
@@ -36,6 +40,8 @@ const { GET, PUT, DELETE } = createEntityCrudHandlers({
   entityType: 'product',
   schema: userProductSchema,
   buildUpdatePayload: buildProductUpdatePayload,
+  ownershipField: 'actor_id',
+  useActorOwnership: true,
 });
 
 export { GET, PUT, DELETE };

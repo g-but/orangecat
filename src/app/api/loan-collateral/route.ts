@@ -14,6 +14,7 @@ import { logger } from '@/utils/logger';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 const CollateralSchema = z.object({
   loan_id: z.string().min(1),
@@ -45,25 +46,28 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     const data = validation.data;
 
+    // Resolve user to actor for ownership checks
+    const actor = await getOrCreateUserActor(user.id);
+
     // Verify ownership of loan
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: loan, error: loanErr } = await (supabase.from(getTableName('loan')) as any)
-      .select('id, user_id')
+      .select('id, actor_id')
       .eq('id', data.loan_id)
       .single();
 
-    if (loanErr || !loan || loan.user_id !== user.id) {
+    if (loanErr || !loan || loan.actor_id !== actor.id) {
       return apiForbidden('Loan not found or not owned');
     }
 
     // Verify ownership of asset
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: asset, error: assetErr } = await (supabase.from(getTableName('asset')) as any)
-      .select('id, owner_id')
+      .select('id, actor_id')
       .eq('id', data.asset_id)
       .single();
 
-    if (assetErr || !asset || asset.owner_id !== user.id) {
+    if (assetErr || !asset || asset.actor_id !== actor.id) {
       return apiForbidden('Asset not found or not owned');
     }
 

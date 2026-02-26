@@ -3,6 +3,7 @@ import { logger } from '@/utils/logger';
 import { isTableNotFound } from '@/lib/db/errors';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getTableName } from '@/config/entity-registry';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 interface CreateLoanInput {
   loan_type?: 'new_request' | 'existing_refinance';
@@ -71,8 +72,11 @@ export async function createLoan(
     return value;
   };
 
+  // Resolve user to actor for ownership
+  const actor = await getOrCreateUserActor(userId);
+
   const payload: Record<string, unknown> = {
-    user_id: userId,
+    actor_id: actor.id,
     title: loanInput.title,
     description: loanInput.description || '',
     loan_type: loanInput.loan_type || 'new_request',
@@ -96,7 +100,10 @@ export async function createLoan(
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (client.from(getTableName('loan')) as any).insert(payload).select().single();
+  const { data, error } = await (client.from(getTableName('loan')) as any)
+    .insert(payload)
+    .select()
+    .single();
   if (error) {
     logger.error('Failed to create loan', {
       error,

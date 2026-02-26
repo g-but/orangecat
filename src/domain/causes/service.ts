@@ -1,6 +1,7 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 export interface CreateCauseInput {
   title: string;
@@ -19,10 +20,11 @@ export interface UpdateCauseInput extends Partial<CreateCauseInput> {
 }
 
 export async function createCause(userId: string, input: CreateCauseInput) {
+  const actor = await getOrCreateUserActor(userId);
   const supabase = await createServerClient();
 
   const payload = {
-    user_id: userId,
+    actor_id: actor.id,
     title: input.title,
     description: input.description ?? null,
     cause_category: input.cause_category,
@@ -35,8 +37,7 @@ export async function createCause(userId: string, input: CreateCauseInput) {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase
-    .from(getTableName('cause')) as any)
+  const { data, error } = await (supabase.from(getTableName('cause')) as any)
     .insert(payload)
     .select()
     .single();
@@ -50,14 +51,14 @@ export async function createCause(userId: string, input: CreateCauseInput) {
 }
 
 export async function updateCause(id: string, userId: string, input: UpdateCauseInput) {
+  const actor = await getOrCreateUserActor(userId);
   const supabase = await createServerClient();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase
-    .from(getTableName('cause')) as any)
+  const { data, error } = await (supabase.from(getTableName('cause')) as any)
     .update(input)
     .eq('id', id)
-    .eq('user_id', userId)
+    .eq('actor_id', actor.id)
     .select()
     .single();
 
@@ -70,13 +71,14 @@ export async function updateCause(id: string, userId: string, input: UpdateCause
 }
 
 export async function deleteCause(id: string, userId: string) {
+  const actor = await getOrCreateUserActor(userId);
   const supabase = await createServerClient();
 
   const { error } = await supabase
     .from(getTableName('cause'))
     .delete()
     .eq('id', id)
-    .eq('user_id', userId);
+    .eq('actor_id', actor.id);
 
   if (error) {
     logger.error('Failed to delete cause', { error, id, userId });

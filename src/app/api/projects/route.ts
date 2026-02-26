@@ -34,6 +34,7 @@ export const GET = compose(
 export const POST = createEntityPostHandler({
   entityType: 'project',
   schema: projectSchema,
+  useActorOwnership: true,
   createEntity: async (userId, data, _supabase) => {
     return await createProject(userId, data);
   },

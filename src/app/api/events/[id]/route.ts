@@ -11,7 +11,11 @@
 
 import { eventSchema } from '@/lib/validation';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
+import {
+  createUpdatePayloadBuilder,
+  commonFieldMappings,
+  entityTransforms,
+} from '@/lib/api/buildUpdatePayload';
 
 // Build update payload from validated event data
 const buildEventUpdatePayload = createUpdatePayloadBuilder([
@@ -59,10 +63,9 @@ const { GET, PUT, DELETE } = createEntityCrudHandlers({
   entityType: 'event',
   schema: eventSchema,
   buildUpdatePayload: buildEventUpdatePayload,
+  ownershipField: 'actor_id',
+  useActorOwnership: true,
   requireActiveStatus: false, // Events have different status values
 });
 
 export { GET, PUT, DELETE };
-
-
-

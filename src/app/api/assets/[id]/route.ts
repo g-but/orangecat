@@ -4,8 +4,7 @@
  * Uses generic entity handler from lib/api/entityCrudHandler.ts
  * Entity metadata comes from entity-registry (Single Source of Truth)
  *
- * Note: Assets use 'owner_id' instead of 'user_id' for ownership
- * and table name 'assets' instead of 'user_assets'
+ * Note: Assets use actor_id for ownership via useActorOwnership pattern
  *
  * Before refactoring: 214 lines
  * After refactoring: ~45 lines (79% reduction)
@@ -13,7 +12,11 @@
 
 import { assetSchema } from '@/lib/validation';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
+import {
+  createUpdatePayloadBuilder,
+  commonFieldMappings,
+  entityTransforms,
+} from '@/lib/api/buildUpdatePayload';
 
 // Build update payload from validated asset data
 const buildAssetUpdatePayload = createUpdatePayloadBuilder([
@@ -33,8 +36,8 @@ const { GET, PUT, DELETE } = createEntityCrudHandlers({
   entityType: 'asset',
   schema: assetSchema,
   buildUpdatePayload: buildAssetUpdatePayload,
-  ownershipField: 'owner_id', // Assets use owner_id instead of user_id
-  tableName: 'assets', // Override registry's 'user_assets' with actual table name
+  ownershipField: 'actor_id',
+  useActorOwnership: true,
   requireAuthForGet: true, // Assets require auth to view
   requireActiveStatus: false, // Assets don't filter by status='active'
 });

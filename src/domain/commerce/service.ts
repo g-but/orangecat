@@ -5,6 +5,7 @@ import { logger } from '@/utils/logger';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getTableName } from '@/config/entity-registry';
 import { STATUS } from '@/config/database-constants';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 // Table type - using entity registry table names
 // These are the actual table names from the database
@@ -33,12 +34,15 @@ export async function listEntities(table: Table, params: ListParams) {
     .range(offset, offset + limit - 1);
 
   if (userId && includeOwnDrafts) {
-    query = query.eq('user_id', userId);
+    // Resolve user_id to actor_id for ownership filtering
+    const actor = await getOrCreateUserActor(userId);
+    query = query.eq('actor_id', actor.id);
   } else {
     // public list: status = active
     query = query.eq('status', STATUS.PRODUCTS.ACTIVE);
     if (userId) {
-      query = query.eq('user_id', userId);
+      const actor = await getOrCreateUserActor(userId);
+      query = query.eq('actor_id', actor.id);
     }
     if (category) {
       query = query.eq('category', category);
@@ -72,9 +76,16 @@ export async function listEntitiesPage(
   // Circles table doesn't have a 'status' column like commerce tables
   const isCirclesTable = table === 'circles';
 
-  if (userId && includeOwnDrafts) {
-    itemsQuery = itemsQuery.eq('user_id', userId);
-    countQuery = countQuery.eq('user_id', userId);
+  // Resolve user_id to actor_id for ownership filtering (if userId provided)
+  let actorId: string | null = null;
+  if (userId) {
+    const actor = await getOrCreateUserActor(userId);
+    actorId = actor.id;
+  }
+
+  if (userId && includeOwnDrafts && actorId) {
+    itemsQuery = itemsQuery.eq('actor_id', actorId);
+    countQuery = countQuery.eq('actor_id', actorId);
   } else if (isCirclesTable) {
     // For circles, filter by visibility and created_by for user filtering
     itemsQuery = itemsQuery.eq('visibility', 'public');
@@ -92,9 +103,9 @@ export async function listEntitiesPage(
     itemsQuery = itemsQuery.eq('status', STATUS.PRODUCTS.ACTIVE);
     countQuery = countQuery.eq('status', STATUS.PRODUCTS.ACTIVE);
 
-    if (userId) {
-      itemsQuery = itemsQuery.eq('user_id', userId);
-      countQuery = countQuery.eq('user_id', userId);
+    if (actorId) {
+      itemsQuery = itemsQuery.eq('actor_id', actorId);
+      countQuery = countQuery.eq('actor_id', actorId);
     }
     if (category) {
       itemsQuery = itemsQuery.eq('category', category);
@@ -171,10 +182,13 @@ export async function createProduct(
     throw new Error('Mock mode is disabled by policy. Set PRODUCTS_WRITE_MODE=db');
   }
 
+  // Resolve user to actor for ownership
+  const actor = await getOrCreateUserActor(userId);
+
   // Use admin client for write operations - auth is already verified by the API route
   const adminClient = createAdminClient();
   const payload = {
-    user_id: userId,
+    actor_id: actor.id,
     status: STATUS.PRODUCTS.DRAFT as typeof STATUS.PRODUCTS.DRAFT,
     currency: input.currency ?? 'SATS',
     product_type: input.product_type ?? 'physical',
@@ -207,11 +221,14 @@ export async function createService(
   userId: string,
   input: CreateServiceInput
 ): Promise<UserService> {
+  // Resolve user to actor for ownership
+  const actor = await getOrCreateUserActor(userId);
+
   // Use admin client for write operations - auth is already verified by the API route
   const adminClient = createAdminClient();
 
   const payload = {
-    user_id: userId,
+    actor_id: actor.id,
     title: input.title,
     description: input.description ?? null,
     category: input.category,
@@ -268,11 +285,14 @@ interface CreateCauseInput {
 }
 
 export async function createCause(userId: string, input: CreateCauseInput): Promise<UserCause> {
+  // Resolve user to actor for ownership
+  const actor = await getOrCreateUserActor(userId);
+
   // Use admin client for write operations - auth is already verified by the API route
   const adminClient = createAdminClient();
 
   const payload = {
-    user_id: userId,
+    actor_id: actor.id,
     title: input.title,
     description: input.description ?? null,
     cause_category: input.cause_category,

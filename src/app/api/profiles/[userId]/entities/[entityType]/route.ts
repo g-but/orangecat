@@ -18,6 +18,7 @@ import {
   EntityType,
   getEntityMetadata,
 } from '@/config/entity-registry';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 // Entity-specific column selections for optimal queries
 const ENTITY_COLUMNS: Record<EntityType, string> = {
@@ -42,16 +43,16 @@ const ENTITY_COLUMNS: Record<EntityType, string> = {
   document: 'id, title, content, document_type, visibility, tags, created_at',
 };
 
-// Entities that should filter by user_id
+// Entities that should filter by actor_id or user_id
 const USER_ID_FIELD: Record<EntityType, string> = {
-  project: 'user_id',
-  product: 'user_id',
-  service: 'user_id',
-  cause: 'user_id',
-  ai_assistant: 'user_id',
-  asset: 'owner_id',
-  loan: 'user_id',
-  event: 'user_id',
+  project: 'actor_id',
+  product: 'actor_id',
+  service: 'actor_id',
+  cause: 'actor_id',
+  ai_assistant: 'actor_id',
+  asset: 'actor_id',
+  loan: 'actor_id',
+  event: 'actor_id',
   wallet: 'profile_id',
   group: 'created_by',
   research: 'user_id',
@@ -90,11 +91,18 @@ export async function GET(
     const columns = ENTITY_COLUMNS[entityType as EntityType];
     const userIdField = USER_ID_FIELD[entityType as EntityType];
 
+    // Resolve user_id to actor_id for entities that use actor-based ownership
+    let filterValue = userId;
+    if (userIdField === 'actor_id') {
+      const actor = await getOrCreateUserActor(userId);
+      filterValue = actor.id;
+    }
+
     // Build query
     let query = supabase
       .from(tableName)
       .select(columns)
-      .eq(userIdField, userId)
+      .eq(userIdField, filterValue)
       .neq('status', 'draft') // Exclude drafts from public profile
       .order('created_at', { ascending: false });
 

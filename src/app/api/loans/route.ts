@@ -14,6 +14,7 @@ import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 // Uses generic entity list handler with status filter support
 export const GET = createEntityListHandler({
   entityType: 'loan',
+  userIdField: 'actor_id',
   publicStatuses: ['active'],
   additionalFilters: { status: 'status' }, // Allow status filter from URL params
 });
@@ -22,6 +23,7 @@ export const GET = createEntityListHandler({
 export const POST = createEntityPostHandler({
   entityType: 'loan',
   schema: loanSchema,
+  useActorOwnership: true,
   createEntity: async (userId, data, supabase) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return await createLoan(userId, data as any, supabase);

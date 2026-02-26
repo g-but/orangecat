@@ -10,7 +10,11 @@
 
 import { userServiceSchema } from '@/lib/validation';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
+import {
+  createUpdatePayloadBuilder,
+  commonFieldMappings,
+  entityTransforms,
+} from '@/lib/api/buildUpdatePayload';
 
 // Build update payload from validated service data
 const buildServiceUpdatePayload = createUpdatePayloadBuilder([
@@ -36,6 +40,8 @@ const { GET, PUT, DELETE } = createEntityCrudHandlers({
   entityType: 'service',
   schema: userServiceSchema,
   buildUpdatePayload: buildServiceUpdatePayload,
+  ownershipField: 'actor_id',
+  useActorOwnership: true,
 });
 
 export { GET, PUT, DELETE };

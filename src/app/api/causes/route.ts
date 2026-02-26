@@ -16,6 +16,7 @@ import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 // GET /api/causes - Get all active causes
 export const GET = createEntityListHandler({
   entityType: 'cause',
+  userIdField: 'actor_id',
   useListHelper: true, // Uses listEntitiesPage for commerce entities
 });
 
@@ -23,7 +24,11 @@ export const GET = createEntityListHandler({
 export const POST = createEntityPostHandler({
   entityType: 'cause',
   schema: userCauseSchema,
+  useActorOwnership: true,
   createEntity: async (userId, data) => {
-    return await createCause(userId, data as { title: string; cause_category: string; [key: string]: unknown });
+    return await createCause(
+      userId,
+      data as { title: string; cause_category: string; [key: string]: unknown }
+    );
   },
 });

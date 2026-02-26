@@ -10,7 +10,11 @@
 
 import { loanSchema } from '@/lib/validation';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
+import {
+  createUpdatePayloadBuilder,
+  commonFieldMappings,
+  entityTransforms,
+} from '@/lib/api/buildUpdatePayload';
 
 // Build update payload from validated loan data
 const buildLoanUpdatePayload = createUpdatePayloadBuilder([
@@ -44,9 +48,10 @@ const { GET, PUT, DELETE } = createEntityCrudHandlers({
   entityType: 'loan',
   schema: loanSchema,
   buildUpdatePayload: buildLoanUpdatePayload,
+  ownershipField: 'actor_id',
+  useActorOwnership: true,
   requireAuthForGet: true, // Loans require auth to view
   requireActiveStatus: false, // Loans don't have an 'active' status filter
 });
 
 export { GET, PUT, DELETE };
-

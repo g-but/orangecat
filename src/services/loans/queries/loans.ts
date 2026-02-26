@@ -79,6 +79,18 @@ export async function getUserLoans(
       return { success: false, error: 'Authentication required' };
     }
 
+    // Resolve user to actor for ownership filtering
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: actor } = (await (supabase.from(DATABASE_TABLES.ACTORS) as any)
+      .select('id')
+      .eq('user_id', userId)
+      .eq('actor_type', 'user')
+      .maybeSingle()) as { data: { id: string } | null };
+
+    if (!actor) {
+      return { success: true, loans: [], total: 0 };
+    }
+
     let dbQuery = supabase
       .from(getTableName('loan'))
       .select(
@@ -93,7 +105,7 @@ export async function getUserLoans(
       `,
         { count: 'exact' }
       )
-      .eq('user_id', userId);
+      .eq('actor_id', actor.id);
 
     // Apply filters
     if (query?.status) {
