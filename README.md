@@ -90,11 +90,11 @@ One ownership model. One permission check. Works for individuals and organizatio
 
 ### Bitcoin-Native Engineering
 
-Bitcoin is not a payment plugin — it is the unit of account.
+Bitcoin is not a payment plugin — it is the foundation.
 
-- All prices stored as integers in satoshis (BigInt) — floating-point precision errors are structurally impossible
+- BTC as the primary unit of account, CHF as the default fiat display currency
+- `useDisplayCurrency` hook lets users choose their preferred display (BTC, CHF, satoshis, EUR, etc.)
 - Lightning Network as native payment format, not an adapter over fiat rails
-- `useDisplayCurrency` hook converts sats to the user's preferred display currency (default: CHF)
 - LNURL payment integration with QR code generation
 - Bitcoin orange (#F7931A) reserved exclusively for Bitcoin-specific UI elements — not decoration
 
@@ -162,7 +162,7 @@ src/
       responses.ts        -- Standardized API responses
     auth/                  -- Authentication and session management
     domain/                -- Business logic (no HTTP, no UI)
-    bitcoin/               -- Satoshi math, Lightning, LNURL
+    bitcoin/               -- BTC/currency conversion, Lightning, LNURL
   app/
     api/                   -- API routes (thin, composed from middleware)
     (dashboard)/           -- Actor-aware dashboard views
