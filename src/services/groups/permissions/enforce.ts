@@ -11,6 +11,10 @@
 
 import { canPerformAction, type PermissionResult } from './resolver';
 import { logger } from '@/utils/logger';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 export interface EnforcePermissionResult {
   allowed: boolean;
@@ -25,16 +29,18 @@ export interface EnforcePermissionResult {
  * @param userId - User attempting the action
  * @param groupId - Group ID (null = user acting as self)
  * @param action - Action to check
+ * @param client - Optional Supabase client (for server-side usage)
  * @returns EnforcePermissionResult with allowed, requiresVote, and error
  */
 export async function enforcePermission(
   userId: string,
   groupId: string | null,
-  action: string
+  action: string,
+  client?: AnySupabaseClient
 ): Promise<EnforcePermissionResult> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result: PermissionResult = await canPerformAction(userId, groupId, action as any);
+    const result: PermissionResult = await canPerformAction(userId, groupId, action as any, client);
 
     if (result.allowed) {
       return {
@@ -75,10 +81,11 @@ export async function enforcePermission(
 export async function requirePermission(
   userId: string,
   groupId: string | null,
-  action: string
+  action: string,
+  client?: AnySupabaseClient
 ): Promise<void> {
-  const result = await enforcePermission(userId, groupId, action);
-  
+  const result = await enforcePermission(userId, groupId, action, client);
+
   if (!result.allowed) {
     if (result.requiresVote) {
       throw new Error('ACTION_REQUIRES_VOTE: This action requires a proposal and vote');
@@ -86,4 +93,3 @@ export async function requirePermission(
     throw new Error(result.error || 'Permission denied');
   }
 }
-

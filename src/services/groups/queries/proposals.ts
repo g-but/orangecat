@@ -1,6 +1,10 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { TABLES, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../constants';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 export type ProposalStatus = 'draft' | 'active' | 'passed' | 'failed' | 'executed' | 'cancelled';
 
@@ -53,12 +57,16 @@ export interface VoteData {
   voting_power: number | string;
 }
 
-export async function getProposal(proposalId: string): Promise<ProposalResponse> {
+export async function getProposal(
+  proposalId: string,
+  client?: AnySupabaseClient
+): Promise<ProposalResponse> {
   try {
+    const sb = client || supabase;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase
-      .from(TABLES.group_proposals) as any)
-      .select(`
+    const { data, error } = await (sb.from(TABLES.group_proposals) as any)
+      .select(
+        `
         *,
         proposer:profiles!group_proposals_proposer_id_fkey (
           name,
@@ -69,7 +77,8 @@ export async function getProposal(proposalId: string): Promise<ProposalResponse>
           voting_power,
           voter_id
         )
-      `)
+      `
+      )
       .eq('id', proposalId)
       .single();
 
@@ -80,10 +89,10 @@ export async function getProposal(proposalId: string): Promise<ProposalResponse>
 
     const votes = ((data as { group_votes?: VoteData[] })?.group_votes || []) as VoteData[];
     const yesVotes = votes
-      .filter((v) => v.vote === 'yes')
+      .filter(v => v.vote === 'yes')
       .reduce((sum: number, v) => sum + Number(v.voting_power || 1), 0);
     const noVotes = votes
-      .filter((v) => v.vote === 'no')
+      .filter(v => v.vote === 'no')
       .reduce((sum: number, v) => sum + Number(v.voting_power || 1), 0);
     const totalVotingPower = yesVotes + noVotes;
 
@@ -98,7 +107,9 @@ export async function getProposal(proposalId: string): Promise<ProposalResponse>
           no_votes: noVotes,
           total_voting_power: totalVotingPower,
           yes_percentage: Math.round(yesPercentage * 100) / 100,
-          has_passed: yesPercentage >= (Number((data as { voting_threshold?: number })?.voting_threshold) || 50),
+          has_passed:
+            yesPercentage >=
+            (Number((data as { voting_threshold?: number })?.voting_threshold) || 50),
         },
       },
     };
@@ -118,12 +129,13 @@ export interface ProposalVote {
 }
 
 export async function getProposalVotes(
-  proposalId: string
+  proposalId: string,
+  client?: AnySupabaseClient
 ): Promise<{ success: boolean; votes?: ProposalVote[]; error?: string }> {
   try {
+    const sb = client || supabase;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase
-      .from(TABLES.group_votes) as any)
+    const { data, error } = await (sb.from(TABLES.group_votes) as any)
       .select('*')
       .eq('proposal_id', proposalId);
 
@@ -146,16 +158,17 @@ export async function getGroupProposals(
     proposal_type?: string;
     limit?: number;
     offset?: number;
-  }
+  },
+  client?: AnySupabaseClient
 ): Promise<ProposalsListResponse> {
   try {
+    const sb = client || supabase;
     const limit = Math.min(options?.limit || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = options?.offset || 0;
     const status = options?.status || 'all';
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query = (supabase
-      .from(TABLES.group_proposals) as any)
+    let query = (sb.from(TABLES.group_proposals) as any)
       .select(
         `
         *,
@@ -196,10 +209,10 @@ export async function getGroupProposals(
     const proposalsWithResults = (data || []).map((proposal: ProposalWithVotes) => {
       const votes = proposal.group_votes || [];
       const yesVotes = votes
-        .filter((v) => v.vote === 'yes')
+        .filter(v => v.vote === 'yes')
         .reduce((sum: number, v) => sum + Number(v.voting_power || 1), 0);
       const noVotes = votes
-        .filter((v) => v.vote === 'no')
+        .filter(v => v.vote === 'no')
         .reduce((sum: number, v) => sum + Number(v.voting_power || 1), 0);
       const totalVotingPower = yesVotes + noVotes;
       const yesPercentage = totalVotingPower > 0 ? (yesVotes / totalVotingPower) * 100 : 0;
@@ -231,19 +244,22 @@ export async function getGroupProposals(
  * Get public job postings (for browse/marketplace)
  * Follows Network State Development Guide - Job Postings feature
  */
-export async function getPublicJobPostings(options?: {
-  limit?: number;
-  offset?: number;
-  location?: string;
-  job_type?: string;
-}): Promise<ProposalsListResponse> {
+export async function getPublicJobPostings(
+  options?: {
+    limit?: number;
+    offset?: number;
+    location?: string;
+    job_type?: string;
+  },
+  client?: AnySupabaseClient
+): Promise<ProposalsListResponse> {
   try {
+    const sb = client || supabase;
     const limit = Math.min(options?.limit || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = options?.offset || 0;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const query = (supabase
-      .from(TABLES.group_proposals) as any)
+    const query = (sb.from(TABLES.group_proposals) as any)
       .select(
         `
         *,
@@ -271,7 +287,8 @@ export async function getPublicJobPostings(options?: {
     if (error) {
       logger.error('Failed to get job postings', error, 'Groups');
       return { success: false, error: error.message };
-    }    return {
+    }
+    return {
       success: true,
       proposals: data || [],
       total: count || 0,

@@ -15,13 +15,20 @@ import { logger } from '@/utils/logger';
 import type { Group, GroupsQuery, GroupsListResponse, GroupResponse } from '../types';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TABLES } from '../constants';
 import { getCurrentUserId, getUserGroupIds } from '../utils/helpers';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Get a specific group by slug
  * Convenience wrapper around getGroup
  */
-export async function getGroupBySlug(slug: string): Promise<GroupResponse> {
-  return getGroup(slug, true);
+export async function getGroupBySlug(
+  slug: string,
+  client?: AnySupabaseClient
+): Promise<GroupResponse> {
+  return getGroup(slug, true, client);
 }
 
 /**
@@ -29,13 +36,15 @@ export async function getGroupBySlug(slug: string): Promise<GroupResponse> {
  */
 export async function getGroup(
   identifier: string,
-  bySlug: boolean = false
+  bySlug: boolean = false,
+  client?: AnySupabaseClient
 ): Promise<GroupResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query = (supabase.from(TABLES.groups) as any).select('*');
+    let query = (sb.from(TABLES.groups) as any).select('*');
 
     if (bySlug) {
       query = query.eq('slug', identifier);
@@ -48,7 +57,7 @@ export async function getGroup(
       query = query.eq('is_public', true);
     } else {
       // Show public groups or groups the user is a member of
-      const userGroupIds = await getUserGroupIds(userId);
+      const userGroupIds = await getUserGroupIds(userId, sb);
       if (userGroupIds.length > 0) {
         query = query.or(`is_public.eq.true,id.in.(${userGroupIds.join(',')})`);
       } else {
@@ -79,17 +88,19 @@ export async function getGroup(
  */
 export async function getUserGroups(
   query?: GroupsQuery,
-  pagination?: { page?: number; pageSize?: number }
+  pagination?: { page?: number; pageSize?: number },
+  client?: AnySupabaseClient
 ): Promise<GroupsListResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Get user's group IDs from group_members
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: memberships } = await (supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as any)
+    const { data: memberships } = await (sb.from(DATABASE_TABLES.GROUP_MEMBERS) as any)
       .select('group_id')
       .eq('user_id', userId);
 
@@ -100,7 +111,7 @@ export async function getUserGroups(
     const groupIds = memberships.map((m: { group_id: string }) => m.group_id);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let dbQuery = (supabase.from(TABLES.groups) as any)
+    let dbQuery = (sb.from(TABLES.groups) as any)
       .select('*', { count: 'exact' })
       .in('id', groupIds);
 
@@ -146,13 +157,15 @@ export async function getUserGroups(
  */
 export async function getAvailableGroups(
   query?: GroupsQuery,
-  pagination?: { page?: number; pageSize?: number }
+  pagination?: { page?: number; pageSize?: number },
+  client?: AnySupabaseClient
 ): Promise<GroupsListResponse> {
   try {
-    const _userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const _userId = await getCurrentUserId(sb);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let dbQuery = (supabase.from(TABLES.groups) as any)
+    let dbQuery = (sb.from(TABLES.groups) as any)
       .select('*', { count: 'exact' })
       .eq('is_public', true);
 
@@ -240,13 +253,15 @@ export async function getAvailableGroups(
 export async function searchGroups(
   searchQuery: string,
   filters?: GroupsQuery,
-  pagination?: { page?: number; pageSize?: number }
+  pagination?: { page?: number; pageSize?: number },
+  client?: AnySupabaseClient
 ): Promise<GroupsListResponse> {
   try {
-    const _userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const _userId = await getCurrentUserId(sb);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let dbQuery = (supabase.from(TABLES.groups) as any)
+    let dbQuery = (sb.from(TABLES.groups) as any)
       .select('*', { count: 'exact' })
       .or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
 

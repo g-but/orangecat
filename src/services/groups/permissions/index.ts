@@ -22,6 +22,10 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { TABLES } from '../constants';
 import { GOVERNANCE_PRESETS } from '@/config/governance-presets';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 // Permission keys that map to governance preset actions
 export type GroupPermissionKey =
@@ -69,18 +73,22 @@ const PERMISSION_TO_ACTION: Record<GroupPermissionKey, string> = {
 export async function checkGroupPermission(
   groupId: string,
   userId: string,
-  permission: GroupPermissionKey
+  permission: GroupPermissionKey,
+  client?: AnySupabaseClient
 ): Promise<boolean> {
   if (!userId) {
     return false;
   }
 
   try {
+    const sb = client || supabase;
     // Get group and membership
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: group } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.groups) as any)
+    const { data: group } = await (
+      sb
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.groups) as any
+    )
       .select('is_public, governance_preset')
       .eq('id', groupId)
       .single();
@@ -91,9 +99,11 @@ export async function checkGroupPermission(
 
     // Get membership
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: membership } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_members) as any)
+    const { data: membership } = await (
+      sb
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_members) as any
+    )
       .select('role, permission_overrides')
       .eq('group_id', groupId)
       .eq('user_id', userId)
@@ -119,8 +129,12 @@ export async function checkGroupPermission(
     if (membership.permission_overrides) {
       const actionKey = PERMISSION_TO_ACTION[permission];
       const override = membership.permission_overrides[actionKey];
-      if (override === 'allow') {return true;}
-      if (override === 'deny') {return false;}
+      if (override === 'allow') {
+        return true;
+      }
+      if (override === 'deny') {
+        return false;
+      }
     }
 
     // Fall back to governance preset role defaults
@@ -151,18 +165,22 @@ export async function checkGroupPermission(
  */
 export async function getGroupPermissions(
   groupId: string,
-  userId: string
+  userId: string,
+  client?: AnySupabaseClient
 ): Promise<GroupPermissions | null> {
   if (!userId) {
     return null;
   }
 
   try {
+    const sb = client || supabase;
     // Get group and membership
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: group2 } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.groups) as any)
+    const { data: group2 } = await (
+      sb
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.groups) as any
+    )
       .select('is_public, governance_preset')
       .eq('id', groupId)
       .single();
@@ -173,9 +191,11 @@ export async function getGroupPermissions(
 
     // Get membership
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: membership2 } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_members) as any)
+    const { data: membership2 } = await (
+      sb
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_members) as any
+    )
       .select('role, permission_overrides')
       .eq('group_id', groupId)
       .eq('user_id', userId)
@@ -230,7 +250,9 @@ export async function getGroupPermissions(
     if (membership2.permission_overrides) {
       for (const [key, value] of Object.entries(membership2.permission_overrides)) {
         // Find the permission key for this action
-        const permKey = Object.entries(PERMISSION_TO_ACTION).find(([_k, v]) => v === key)?.[0] as GroupPermissionKey | undefined;
+        const permKey = Object.entries(PERMISSION_TO_ACTION).find(([_k, v]) => v === key)?.[0] as
+          | GroupPermissionKey
+          | undefined;
         if (permKey && permKey in permissions) {
           permissions[permKey] = value === 'allow';
         }
@@ -243,4 +265,3 @@ export async function getGroupPermissions(
     return null;
   }
 }
-

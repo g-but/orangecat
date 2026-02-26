@@ -15,24 +15,32 @@ import type { GroupWalletsResponse, GroupWalletSummary } from '../types';
 import { checkGroupPermission } from '../permissions';
 import { getCurrentUserId } from '../utils/helpers';
 import { TABLES } from '../constants';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Get group wallets
  */
-export async function getGroupWallets(groupId: string): Promise<GroupWalletsResponse> {
+export async function getGroupWallets(
+  groupId: string,
+  client?: AnySupabaseClient
+): Promise<GroupWalletsResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
 
     // Check permissions
     if (userId) {
-      const canView = await checkGroupPermission(groupId, userId, 'canView');
+      const canView = await checkGroupPermission(groupId, userId, 'canView', sb);
       if (!canView) {
         return { success: false, error: 'Cannot view group wallets' };
       }
     }
 
     // Query group_wallets table
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from(TABLES.group_wallets)
       .select('*')
       .eq('group_id', groupId)
@@ -67,5 +75,3 @@ export async function getGroupWallets(groupId: string): Promise<GroupWalletsResp
     return { success: false, error: 'Failed to get group wallets' };
   }
 }
-
-

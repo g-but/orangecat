@@ -17,6 +17,10 @@ import {
 import supabase from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Result of a permission check
@@ -54,7 +58,8 @@ interface MemberInfo {
 export async function canPerformAction(
   userId: string,
   groupId: string | null,
-  action: keyof RolePermissions
+  action: keyof RolePermissions,
+  client?: AnySupabaseClient
 ): Promise<PermissionResult> {
   // No group = user acting as self = always allowed
   if (!groupId) {
@@ -66,10 +71,11 @@ export async function canPerformAction(
   }
 
   try {
+    const sb = client || supabase;
     // Get group from groups table
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: group, error: _groupError } = await (
-      supabase
+      sb
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(DATABASE_TABLES.GROUPS) as any
     )
@@ -90,7 +96,7 @@ export async function canPerformAction(
       // Get membership from group_members
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: member } = await (
-        supabase
+        sb
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .from(DATABASE_TABLES.GROUP_MEMBERS) as any
       )
@@ -168,7 +174,8 @@ export function resolvePermission(permission: ActionPermission): PermissionResul
 export async function canPerformActions(
   userId: string,
   groupId: string | null,
-  actions: (keyof RolePermissions)[]
+  actions: (keyof RolePermissions)[],
+  client?: AnySupabaseClient
 ): Promise<Map<keyof RolePermissions, PermissionResult>> {
   const results = new Map<keyof RolePermissions, PermissionResult>();
 
@@ -182,7 +189,7 @@ export async function canPerformActions(
 
   // Check each action
   for (const action of actions) {
-    const result = await canPerformAction(userId, groupId, action);
+    const result = await canPerformAction(userId, groupId, action, client);
     results.set(action, result);
   }
 
@@ -194,7 +201,8 @@ export async function canPerformActions(
  */
 export async function getMemberPermissions(
   userId: string,
-  groupId: string
+  groupId: string,
+  client?: AnySupabaseClient
 ): Promise<Record<keyof RolePermissions, PermissionResult> | null> {
   const actions: (keyof RolePermissions)[] = [
     'manage_settings',
@@ -208,7 +216,7 @@ export async function getMemberPermissions(
     'delete_group',
   ];
 
-  const results = await canPerformActions(userId, groupId, actions);
+  const results = await canPerformActions(userId, groupId, actions, client);
 
   // Check if user is a member at all
   const anyAllowed = Array.from(results.values()).some(r => r.allowed);

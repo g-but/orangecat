@@ -127,17 +127,19 @@ export async function createGroup(
  */
 export async function updateGroup(
   groupId: string,
-  input: UpdateGroupInput
+  input: UpdateGroupInput,
+  client?: AnySupabaseClient
 ): Promise<GroupResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const supabaseClient = client || supabase;
+    const userId = await getCurrentUserId(supabaseClient);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Check permissions using the new resolver
     const { canPerformAction } = await import('../permissions/resolver');
-    const permResult = await canPerformAction(userId, groupId, 'manage_settings');
+    const permResult = await canPerformAction(userId, groupId, 'manage_settings', supabaseClient);
     if (!permResult.allowed) {
       return { success: false, error: permResult.reason || 'Insufficient permissions' };
     }
@@ -149,7 +151,7 @@ export async function updateGroup(
       payload.name = input.name;
     }
     if (input.slug !== undefined) {
-      payload.slug = await ensureUniqueSlug(input.slug, groupId);
+      payload.slug = await ensureUniqueSlug(input.slug, groupId, supabaseClient);
     }
     if (input.description !== undefined) {
       payload.description = input.description;
@@ -186,7 +188,7 @@ export async function updateGroup(
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from(TABLES.groups) as any)
+    const { data, error } = await (supabaseClient.from(TABLES.groups) as any)
       .update(payload)
       .eq('id', groupId)
       .select()
@@ -207,16 +209,20 @@ export async function updateGroup(
 /**
  * Delete a group (only founders can delete)
  */
-export async function deleteGroup(groupId: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteGroup(
+  groupId: string,
+  client?: AnySupabaseClient
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    const supabaseClient = client || supabase;
+    const userId = await getCurrentUserId(supabaseClient);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Check permissions using new resolver
     const { canPerformAction } = await import('../permissions/resolver');
-    const permResult = await canPerformAction(userId, groupId, 'delete_group');
+    const permResult = await canPerformAction(userId, groupId, 'delete_group', supabaseClient);
     if (!permResult.allowed) {
       return {
         success: false,
@@ -225,7 +231,7 @@ export async function deleteGroup(groupId: string): Promise<{ success: boolean; 
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from(TABLES.groups) as any).delete().eq('id', groupId);
+    const { error } = await (supabaseClient.from(TABLES.groups) as any).delete().eq('id', groupId);
 
     if (error) {
       logger.error('Failed to delete group', error, 'Groups');

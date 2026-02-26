@@ -15,28 +15,33 @@ import type { GroupMembersResponse, GroupMemberDetail } from '../types';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TABLES } from '../constants';
 import { checkGroupPermission } from '../permissions';
 import { getCurrentUserId } from '../utils/helpers';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Get group members/stakeholders
  */
 export async function getGroupMembers(
   groupId: string,
-  pagination?: { page?: number; pageSize?: number }
+  pagination?: { page?: number; pageSize?: number },
+  client?: AnySupabaseClient
 ): Promise<GroupMembersResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
 
     // Check if user can view members
     if (userId) {
-      const canView = await checkGroupPermission(groupId, userId, 'canView');
+      const canView = await checkGroupPermission(groupId, userId, 'canView', sb);
       if (!canView) {
         return { success: false, error: 'Cannot view group members' };
       }
     } else {
       // Check if group is public
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: groupData } = await (supabase
-        .from(TABLES.groups) as any)
+      const { data: groupData } = await (sb.from(TABLES.groups) as any)
         .select('is_public')
         .eq('id', groupId)
         .single();
@@ -50,8 +55,7 @@ export async function getGroupMembers(
 
     // Build query
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query = (supabase
-      .from(TABLES.group_members) as any)
+    let query = (sb.from(TABLES.group_members) as any)
       .select(
         `
         *,
@@ -114,22 +118,23 @@ export async function getGroupMembers(
  */
 export async function getGroupMember(
   groupId: string,
-  memberId: string
+  memberId: string,
+  client?: AnySupabaseClient
 ): Promise<{ success: boolean; member?: GroupMemberDetail; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
 
     // Check permissions
     if (userId) {
-      const canView = await checkGroupPermission(groupId, userId, 'canView');
+      const canView = await checkGroupPermission(groupId, userId, 'canView', sb);
       if (!canView) {
         return { success: false, error: 'Cannot view group members' };
       }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase
-      .from(TABLES.group_members) as any)
+    const { data, error } = await (sb.from(TABLES.group_members) as any)
       .select(
         `
         *,
@@ -179,4 +184,3 @@ export async function getGroupMember(
     return { success: false, error: 'Failed to get group member' };
   }
 }
-

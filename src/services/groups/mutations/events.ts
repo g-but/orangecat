@@ -21,19 +21,27 @@ import type {
   EventResponse,
   RsvpResponse,
 } from '../types';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Create a new event for a group
  */
-export async function createEvent(input: CreateEventInput): Promise<EventResponse> {
+export async function createEvent(
+  input: CreateEventInput,
+  client?: AnySupabaseClient
+): Promise<EventResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Unauthorized' };
     }
 
     // Check membership
-    const isMember = await isGroupMember(input.group_id, userId);
+    const isMember = await isGroupMember(input.group_id, userId, sb);
     if (!isMember) {
       return { success: false, error: 'Only group members can create events' };
     }
@@ -46,7 +54,7 @@ export async function createEvent(input: CreateEventInput): Promise<EventRespons
     // Create event
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: eventData, error } = await (
-      supabase
+      sb
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(TABLES.group_events) as any
     )
@@ -78,7 +86,8 @@ export async function createEvent(input: CreateEventInput): Promise<EventRespons
       {
         event_id: data.id,
         event_title: data.title,
-      }
+      },
+      sb
     );
 
     return { success: true, event: data };
@@ -93,10 +102,12 @@ export async function createEvent(input: CreateEventInput): Promise<EventRespons
  */
 export async function updateEvent(
   eventId: string,
-  input: UpdateEventInput
+  input: UpdateEventInput,
+  client?: AnySupabaseClient
 ): Promise<EventResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Unauthorized' };
     }
@@ -104,7 +115,7 @@ export async function updateEvent(
     // Get event to check permissions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: eventData, error: fetchError } = await (
-      supabase
+      sb
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(TABLES.group_events) as any
     )
@@ -119,7 +130,7 @@ export async function updateEvent(
     }
 
     // Check if user is creator or admin
-    const role = await getUserRole(event.group_id, userId);
+    const role = await getUserRole(event.group_id, userId, sb);
     const isCreator = event.creator_id === userId;
     const isAdmin = role === STATUS.GROUP_MEMBERS.ADMIN || role === STATUS.GROUP_MEMBERS.FOUNDER;
 
@@ -133,7 +144,7 @@ export async function updateEvent(
     // Update event
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: updatedData, error } = await (
-      supabase
+      sb
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(TABLES.group_events) as any
     )
@@ -158,7 +169,8 @@ export async function updateEvent(
       {
         event_id: eventId,
         event_title: data.title,
-      }
+      },
+      sb
     );
 
     return { success: true, event: data };
@@ -171,9 +183,13 @@ export async function updateEvent(
 /**
  * Delete an event
  */
-export async function deleteEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteEvent(
+  eventId: string,
+  client?: AnySupabaseClient
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Unauthorized' };
     }
@@ -181,7 +197,7 @@ export async function deleteEvent(eventId: string): Promise<{ success: boolean; 
     // Get event to check permissions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: eventData2, error: fetchError } = await (
-      supabase
+      sb
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(TABLES.group_events) as any
     )
@@ -196,7 +212,7 @@ export async function deleteEvent(eventId: string): Promise<{ success: boolean; 
     }
 
     // Check if user is creator or admin
-    const role = await getUserRole(event.group_id, userId);
+    const role = await getUserRole(event.group_id, userId, sb);
     const isCreator = event.creator_id === userId;
     const isAdmin = role === STATUS.GROUP_MEMBERS.ADMIN || role === STATUS.GROUP_MEMBERS.FOUNDER;
 
@@ -210,7 +226,7 @@ export async function deleteEvent(eventId: string): Promise<{ success: boolean; 
     // Delete event (RSVPs will be cascade deleted)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (
-      supabase
+      sb
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(TABLES.group_events) as any
     )
@@ -231,7 +247,8 @@ export async function deleteEvent(eventId: string): Promise<{ success: boolean; 
       {
         event_id: eventId,
         event_title: event.title,
-      }
+      },
+      sb
     );
 
     return { success: true };
@@ -244,9 +261,14 @@ export async function deleteEvent(eventId: string): Promise<{ success: boolean; 
 /**
  * RSVP to an event
  */
-export async function rsvpToEvent(eventId: string, status: RsvpStatus): Promise<RsvpResponse> {
+export async function rsvpToEvent(
+  eventId: string,
+  status: RsvpStatus,
+  client?: AnySupabaseClient
+): Promise<RsvpResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Unauthorized' };
     }
@@ -254,7 +276,7 @@ export async function rsvpToEvent(eventId: string, status: RsvpStatus): Promise<
     // Get event to verify it exists and is accessible
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: eventData3, error: fetchError } = await (
-      supabase
+      sb
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(TABLES.group_events) as any
     )
@@ -269,7 +291,7 @@ export async function rsvpToEvent(eventId: string, status: RsvpStatus): Promise<
     }
 
     // Check if user can see the event (public or member)
-    const isMember = await isGroupMember(event.group_id, userId);
+    const isMember = await isGroupMember(event.group_id, userId, sb);
     if (!event.is_public && !isMember) {
       return { success: false, error: 'You do not have access to this event' };
     }
@@ -277,7 +299,7 @@ export async function rsvpToEvent(eventId: string, status: RsvpStatus): Promise<
     // Upsert RSVP
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: rsvpData, error } = await (
-      supabase
+      sb
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(TABLES.group_event_rsvps) as any
     )
@@ -302,10 +324,17 @@ export async function rsvpToEvent(eventId: string, status: RsvpStatus): Promise<
     }
 
     // Log activity
-    await logGroupActivity(event.group_id, userId, 'rsvp_to_event', `RSVP to event: ${status}`, {
-      event_id: eventId,
-      rsvp_status: status,
-    });
+    await logGroupActivity(
+      event.group_id,
+      userId,
+      'rsvp_to_event',
+      `RSVP to event: ${status}`,
+      {
+        event_id: eventId,
+        rsvp_status: status,
+      },
+      sb
+    );
 
     return { success: true, rsvp: data };
   } catch (error) {

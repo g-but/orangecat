@@ -76,10 +76,14 @@ export async function ensureUniqueSlug(
 /**
  * Get user's group IDs for permission checks
  */
-export async function getUserGroupIds(userId: string): Promise<string[]> {
+export async function getUserGroupIds(
+  userId: string,
+  client?: AnySupabaseClient
+): Promise<string[]> {
   try {
+    const sb = client || supabase;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase.from(TABLES.group_members) as any)
+    const { data } = await (sb.from(TABLES.group_members) as any)
       .select('group_id')
       .eq('user_id', userId);
 
@@ -93,10 +97,15 @@ export async function getUserGroupIds(userId: string): Promise<string[]> {
 /**
  * Check if a user is a member of a group
  */
-export async function isGroupMember(groupId: string, userId: string): Promise<boolean> {
+export async function isGroupMember(
+  groupId: string,
+  userId: string,
+  client?: AnySupabaseClient
+): Promise<boolean> {
   try {
+    const sb = client || supabase;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase.from(TABLES.group_members) as any)
+    const { data } = await (sb.from(TABLES.group_members) as any)
       .select('id')
       .eq('group_id', groupId)
       .eq('user_id', userId)
@@ -114,11 +123,13 @@ export async function isGroupMember(groupId: string, userId: string): Promise<bo
  */
 export async function getUserRole(
   groupId: string,
-  userId: string
+  userId: string,
+  client?: AnySupabaseClient
 ): Promise<'founder' | 'admin' | 'member' | null> {
   try {
+    const sb = client || supabase;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase.from(TABLES.group_members) as any)
+    const { data } = await (sb.from(TABLES.group_members) as any)
       .select('role')
       .eq('group_id', groupId)
       .eq('user_id', userId)

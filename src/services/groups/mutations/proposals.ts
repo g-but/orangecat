@@ -5,6 +5,10 @@ import { TABLES } from '../constants';
 import { canPerformAction } from '../permissions/resolver';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
 import { getProposal } from '../queries/proposals';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 export interface CreateProposalInput {
   group_id: string;
@@ -20,14 +24,15 @@ export interface CreateProposalInput {
   is_public?: boolean;
 }
 
-export async function createProposal(input: CreateProposalInput) {
+export async function createProposal(input: CreateProposalInput, client?: AnySupabaseClient) {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
-    const permResult = await canPerformAction(userId, input.group_id, 'create_proposal');
+    const permResult = await canPerformAction(userId, input.group_id, 'create_proposal', sb);
     if (!permResult.allowed) {
       return { success: false, error: permResult.reason || 'Insufficient permissions' };
     }
@@ -43,7 +48,7 @@ export async function createProposal(input: CreateProposalInput) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from(TABLES.group_proposals) as any)
+    const { data, error } = await (sb.from(TABLES.group_proposals) as any)
       .insert({
         group_id: input.group_id,
         proposer_id: userId,
@@ -73,14 +78,15 @@ export async function createProposal(input: CreateProposalInput) {
   }
 }
 
-export async function activateProposal(proposalId: string) {
+export async function activateProposal(proposalId: string, client?: AnySupabaseClient) {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
-    const proposalResult = await getProposal(proposalId);
+    const proposalResult = await getProposal(proposalId, sb);
     if (!proposalResult.success || !proposalResult.proposal) {
       return { success: false, error: 'Proposal not found' };
     }
@@ -90,7 +96,7 @@ export async function activateProposal(proposalId: string) {
       return { success: false, error: `Cannot activate proposal with status: ${proposal.status}` };
     }
 
-    const isMember = await isGroupMember(proposal.group_id, userId);
+    const isMember = await isGroupMember(proposal.group_id, userId, sb);
     const isProposer = proposal.proposer_id === userId;
     if (!isMember && !isProposer) {
       return { success: false, error: 'Only proposer or member can activate proposal' };
@@ -106,7 +112,7 @@ export async function activateProposal(proposalId: string) {
     const threshold = proposal.voting_threshold || 50;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from(TABLES.group_proposals) as any)
+    const { data, error } = await (sb.from(TABLES.group_proposals) as any)
       .update({
         status: 'active',
         voting_starts_at: votingStartsAt.toISOString(),
@@ -143,15 +149,17 @@ export async function updateProposal(
     voting_starts_at: string;
     voting_ends_at: string;
     is_public: boolean;
-  }>
+  }>,
+  client?: AnySupabaseClient
 ) {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
-    const proposalResult = await getProposal(proposalId);
+    const proposalResult = await getProposal(proposalId, sb);
     if (!proposalResult.success || !proposalResult.proposal) {
       return { success: false, error: 'Proposal not found' };
     }
@@ -192,7 +200,7 @@ export async function updateProposal(
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from(TABLES.group_proposals) as any)
+    const { data, error } = await (sb.from(TABLES.group_proposals) as any)
       .update({ ...payload, updated_at: new Date().toISOString() })
       .eq('id', proposalId)
       .select()
@@ -210,14 +218,15 @@ export async function updateProposal(
   }
 }
 
-export async function cancelProposal(proposalId: string) {
+export async function cancelProposal(proposalId: string, client?: AnySupabaseClient) {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
-    const proposalResult = await getProposal(proposalId);
+    const proposalResult = await getProposal(proposalId, sb);
     if (!proposalResult.success || !proposalResult.proposal) {
       return { success: false, error: 'Proposal not found' };
     }
@@ -234,7 +243,7 @@ export async function cancelProposal(proposalId: string) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from(TABLES.group_proposals) as any)
+    const { data, error } = await (sb.from(TABLES.group_proposals) as any)
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
       .eq('id', proposalId)
       .select()
@@ -252,14 +261,15 @@ export async function cancelProposal(proposalId: string) {
   }
 }
 
-export async function deleteProposal(proposalId: string) {
+export async function deleteProposal(proposalId: string, client?: AnySupabaseClient) {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
-    const proposalResult = await getProposal(proposalId);
+    const proposalResult = await getProposal(proposalId, sb);
     if (!proposalResult.success || !proposalResult.proposal) {
       return { success: false, error: 'Proposal not found' };
     }
@@ -274,9 +284,7 @@ export async function deleteProposal(proposalId: string) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from(TABLES.group_proposals) as any)
-      .delete()
-      .eq('id', proposalId);
+    const { error } = await (sb.from(TABLES.group_proposals) as any).delete().eq('id', proposalId);
     if (error) {
       logger.error('Failed to delete proposal', error, 'Groups');
       return { success: false, error: error.message };

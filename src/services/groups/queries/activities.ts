@@ -16,6 +16,10 @@ import type { GroupActivitiesResponse, GroupActivitiesQuery } from '../types';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TABLES } from '../constants';
 import { checkGroupPermission } from '../permissions';
 import { getCurrentUserId } from '../utils/helpers';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Get group activities
@@ -23,21 +27,23 @@ import { getCurrentUserId } from '../utils/helpers';
 export async function getGroupActivities(
   groupId: string,
   query?: GroupActivitiesQuery,
-  pagination?: { page?: number; pageSize?: number }
+  pagination?: { page?: number; pageSize?: number },
+  client?: AnySupabaseClient
 ): Promise<GroupActivitiesResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
 
     // Check permissions
     if (userId) {
-      const canView = await checkGroupPermission(groupId, userId, 'canView');
+      const canView = await checkGroupPermission(groupId, userId, 'canView', sb);
       if (!canView) {
         return { success: false, error: 'Cannot view group activities' };
       }
     } else {
       // Check if group is public
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: group } = await (supabase.from(TABLES.groups) as any)
+      const { data: group } = await (sb.from(TABLES.groups) as any)
         .select('is_public')
         .eq('id', groupId)
         .single();
@@ -53,7 +59,7 @@ export async function getGroupActivities(
     // Note: group_activities table may not exist - check if it does
     // For now, return empty result if table doesn't exist
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let dbQuery = (supabase.from(DATABASE_TABLES.GROUP_ACTIVITIES) as any)
+    let dbQuery = (sb.from(DATABASE_TABLES.GROUP_ACTIVITIES) as any)
       .select('*', { count: 'exact' })
       .eq('group_id', groupId);
 

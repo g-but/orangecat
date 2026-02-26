@@ -12,32 +12,41 @@
 import { logger } from '@/utils/logger';
 import { TABLES } from '../constants';
 import supabase from '@/lib/supabase/browser';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Fetch Bitcoin balance from mempool.space API
- * 
+ *
  * @param bitcoinAddress - Bitcoin address to check
  * @returns Balance in sats, or null if error
  */
 export async function fetchBitcoinBalance(bitcoinAddress: string): Promise<number | null> {
   try {
     const response = await fetch(`https://mempool.space/api/address/${bitcoinAddress}`);
-    
+
     if (!response.ok) {
-      logger.warn('Failed to fetch balance from mempool.space', { 
-        address: bitcoinAddress,
-        status: response.status 
-      }, 'Groups');
+      logger.warn(
+        'Failed to fetch balance from mempool.space',
+        {
+          address: bitcoinAddress,
+          status: response.status,
+        },
+        'Groups'
+      );
       return null;
     }
 
     const data = await response.json();
-    
+
     // mempool.space returns balance in sats
     const _balanceSats = data.chain_stats?.funded_txo_sum || 0;
-    const unspentSats = data.chain_stats?.tx_count ? 
-      (data.chain_stats.funded_txo_sum - (data.chain_stats.spent_txo_sum || 0)) : 0;
-    
+    const unspentSats = data.chain_stats?.tx_count
+      ? data.chain_stats.funded_txo_sum - (data.chain_stats.spent_txo_sum || 0)
+      : 0;
+
     // Return unspent balance (actual available balance)
     return Math.max(0, unspentSats);
   } catch (error) {
@@ -48,19 +57,24 @@ export async function fetchBitcoinBalance(bitcoinAddress: string): Promise<numbe
 
 /**
  * Update treasury balance for a group wallet
- * 
+ *
  * @param walletId - Wallet ID to update
  * @param balanceSats - New balance in sats
+ * @param client - Optional Supabase client override
  */
 export async function updateWalletBalance(
   walletId: string,
-  balanceSats: number
+  balanceSats: number,
+  client?: AnySupabaseClient
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const sb = client || supabase;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_wallets) as any)
+    const { error } = await (
+      sb
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_wallets) as any
+    )
       .update({
         current_balance_sats: balanceSats,
         last_balance_update: new Date().toISOString(),
@@ -81,18 +95,23 @@ export async function updateWalletBalance(
 
 /**
  * Update treasury balance for a group wallet by fetching from blockchain
- * 
+ *
  * @param walletId - Wallet ID to update
+ * @param client - Optional Supabase client override
  */
 export async function refreshWalletBalance(
-  walletId: string
+  walletId: string,
+  client?: AnySupabaseClient
 ): Promise<{ success: boolean; balance?: number; error?: string }> {
   try {
+    const sb = client || supabase;
     // Get wallet with Bitcoin address
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: wallet, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_wallets) as any)
+    const { data: wallet, error: fetchError } = await (
+      sb
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_wallets) as any
+    )
       .select('bitcoin_address')
       .eq('id', walletId)
       .single();
@@ -107,14 +126,14 @@ export async function refreshWalletBalance(
 
     // Fetch balance from mempool.space
     const balanceSats = await fetchBitcoinBalance(wallet.bitcoin_address);
-    
+
     if (balanceSats === null) {
       return { success: false, error: 'Failed to fetch balance from blockchain' };
     }
 
     // Update wallet balance
-    const updateResult = await updateWalletBalance(walletId, balanceSats);
-    
+    const updateResult = await updateWalletBalance(walletId, balanceSats, sb);
+
     if (!updateResult.success) {
       return updateResult;
     }
@@ -128,18 +147,23 @@ export async function refreshWalletBalance(
 
 /**
  * Update all wallet balances for a group
- * 
+ *
  * @param groupId - Group ID
+ * @param client - Optional Supabase client override
  */
 export async function refreshGroupTreasuryBalances(
-  groupId: string
+  groupId: string,
+  client?: AnySupabaseClient
 ): Promise<{ success: boolean; updated: number; error?: string }> {
   try {
+    const sb = client || supabase;
     // Get all wallets for the group
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: wallets, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(TABLES.group_wallets) as any)
+    const { data: wallets, error: fetchError } = await (
+      sb
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(TABLES.group_wallets) as any
+    )
       .select('id, bitcoin_address')
       .eq('group_id', groupId)
       .eq('is_active', true)
@@ -158,7 +182,7 @@ export async function refreshGroupTreasuryBalances(
     let updated = 0;
     for (const wallet of wallets) {
       if (wallet.bitcoin_address) {
-        const result = await refreshWalletBalance(wallet.id);
+        const result = await refreshWalletBalance(wallet.id, sb);
         if (result.success) {
           updated++;
         }
@@ -171,4 +195,3 @@ export async function refreshGroupTreasuryBalances(
     return { success: false, updated: 0, error: 'Failed to refresh balances' };
   }
 }
-

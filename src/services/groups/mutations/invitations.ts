@@ -15,6 +15,10 @@ import { STATUS } from '@/config/database-constants';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
 import { canPerformAction } from '../permissions/resolver';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 // ==================== TYPES ====================
 
@@ -68,15 +72,19 @@ export interface InvitationsListResponse {
 /**
  * Create an invitation to join a group
  */
-export async function createInvitation(input: CreateInvitationInput): Promise<InvitationResponse> {
+export async function createInvitation(
+  input: CreateInvitationInput,
+  client?: AnySupabaseClient
+): Promise<InvitationResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Check permissions
-    const permResult = await canPerformAction(userId, input.group_id, 'invite_members');
+    const permResult = await canPerformAction(userId, input.group_id, 'invite_members', sb);
     if (!permResult.allowed) {
       return { success: false, error: permResult.reason || 'Insufficient permissions' };
     }
@@ -88,14 +96,14 @@ export async function createInvitation(input: CreateInvitationInput): Promise<In
 
     // If inviting a specific user, check if already a member
     if (input.user_id) {
-      const alreadyMember = await isGroupMember(input.group_id, input.user_id);
+      const alreadyMember = await isGroupMember(input.group_id, input.user_id, sb);
       if (alreadyMember) {
         return { success: false, error: 'User is already a member of this group' };
       }
 
       // Check for existing pending invitation
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: existing } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+      const { data: existing } = await (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
         .select('id')
         .eq('group_id', input.group_id)
         .eq('user_id', input.user_id)
@@ -139,7 +147,7 @@ export async function createInvitation(input: CreateInvitationInput): Promise<In
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: invData, error } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+    const { data: invData, error } = await (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
       .insert(invitationData)
       .select()
       .single();
@@ -157,7 +165,9 @@ export async function createInvitation(input: CreateInvitationInput): Promise<In
       input.group_id,
       userId,
       'member_added', // Reusing activity type
-      `Created invitation for ${targetDesc}`
+      `Created invitation for ${targetDesc}`,
+      undefined,
+      sb
     );
 
     return {
@@ -185,17 +195,19 @@ export async function createInvitation(input: CreateInvitationInput): Promise<In
  * Accept an invitation
  */
 export async function acceptInvitation(
-  invitationId: string
+  invitationId: string,
+  client?: AnySupabaseClient
 ): Promise<{ success: boolean; group_id?: string; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Use the database function for atomic operation
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.rpc as any)('accept_group_invitation', {
+    const { data, error } = await (sb.rpc as any)('accept_group_invitation', {
       invitation_id: invitationId,
     });
 
@@ -212,7 +224,14 @@ export async function acceptInvitation(
 
     // Log activity if we have group_id
     if (result.group_id) {
-      await logGroupActivity(result.group_id, userId, 'joined_group', 'Accepted invitation');
+      await logGroupActivity(
+        result.group_id,
+        userId,
+        'joined_group',
+        'Accepted invitation',
+        undefined,
+        sb
+      );
     }
 
     return { success: true, group_id: result.group_id };
@@ -226,17 +245,19 @@ export async function acceptInvitation(
  * Decline an invitation
  */
 export async function declineInvitation(
-  invitationId: string
+  invitationId: string,
+  client?: AnySupabaseClient
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Use the database function
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.rpc as any)('decline_group_invitation', {
+    const { data, error } = await (sb.rpc as any)('decline_group_invitation', {
       invitation_id: invitationId,
     });
 
@@ -262,10 +283,12 @@ export async function declineInvitation(
  * Accept invitation by token (for link invites)
  */
 export async function acceptInvitationByToken(
-  token: string
+  token: string,
+  client?: AnySupabaseClient
 ): Promise<{ success: boolean; group_id?: string; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
@@ -274,7 +297,7 @@ export async function acceptInvitationByToken(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: invitationData, error: findError } =
       await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+      (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
         .select('id, group_id, status, expires_at')
         .eq('token', token)
         .eq('status', 'pending')
@@ -297,13 +320,13 @@ export async function acceptInvitationByToken(
     }
 
     // Check if already a member
-    const alreadyMember = await isGroupMember(invitation.group_id, userId);
+    const alreadyMember = await isGroupMember(invitation.group_id, userId, sb);
     if (alreadyMember) {
       return { success: true, group_id: invitation.group_id };
     }
 
     // Accept using the ID
-    return acceptInvitation(invitation.id);
+    return acceptInvitation(invitation.id, sb);
   } catch (error) {
     logger.error('Exception accepting invitation by token', error, 'Groups');
     return { success: false, error: 'Failed to accept invitation' };
@@ -316,10 +339,12 @@ export async function acceptInvitationByToken(
  * Revoke a pending invitation
  */
 export async function revokeInvitation(
-  invitationId: string
+  invitationId: string,
+  client?: AnySupabaseClient
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
@@ -328,7 +353,7 @@ export async function revokeInvitation(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: invitationData2, error: findError } =
       await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+      (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
         .select('group_id, status')
         .eq('id', invitationId)
         .single();
@@ -344,14 +369,14 @@ export async function revokeInvitation(
     }
 
     // Check permissions
-    const permResult = await canPerformAction(userId, invitation.group_id, 'invite_members');
+    const permResult = await canPerformAction(userId, invitation.group_id, 'invite_members', sb);
     if (!permResult.allowed) {
       return { success: false, error: permResult.reason || 'Insufficient permissions' };
     }
 
     // Revoke
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+    const { error } = await (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
       .update({ status: 'revoked' })
       .eq('id', invitationId);
 

@@ -18,13 +18,21 @@ import { TABLES } from '../constants';
 import { getCurrentUserId, isGroupMember, getUserRole } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
 import { canPerformAction } from '../permissions/resolver';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Join a group
  */
-export async function joinGroup(groupId: string): Promise<{ success: boolean; error?: string }> {
+export async function joinGroup(
+  groupId: string,
+  client?: AnySupabaseClient
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
@@ -32,7 +40,7 @@ export async function joinGroup(groupId: string): Promise<{ success: boolean; er
     // Get group to check join policy
     // Cast to any to bypass Supabase type generation for tables not in generated types
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: group, error: groupError } = (await (supabase.from(TABLES.groups) as any)
+    const { data: group, error: groupError } = (await (sb.from(TABLES.groups) as any)
       .select('is_public, visibility')
       .eq('id', groupId)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,14 +56,14 @@ export async function joinGroup(groupId: string): Promise<{ success: boolean; er
     }
 
     // Check if already a member
-    const alreadyMember = await isGroupMember(groupId, userId);
+    const alreadyMember = await isGroupMember(groupId, userId, sb);
     if (alreadyMember) {
       return { success: false, error: 'Already a member of this group' };
     }
 
     // Create membership
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: insertError } = await (supabase.from(TABLES.group_members) as any).insert({
+    const { error: insertError } = await (sb.from(TABLES.group_members) as any).insert({
       group_id: groupId,
       user_id: userId,
       role: 'member',
@@ -68,7 +76,7 @@ export async function joinGroup(groupId: string): Promise<{ success: boolean; er
     }
 
     // Log activity
-    await logGroupActivity(groupId, userId, 'joined_group', 'Joined the group');
+    await logGroupActivity(groupId, userId, 'joined_group', 'Joined the group', undefined, sb);
 
     return { success: true };
   } catch (error) {
@@ -80,15 +88,19 @@ export async function joinGroup(groupId: string): Promise<{ success: boolean; er
 /**
  * Leave a group
  */
-export async function leaveGroup(groupId: string): Promise<{ success: boolean; error?: string }> {
+export async function leaveGroup(
+  groupId: string,
+  client?: AnySupabaseClient
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Check if user is founder (founders can't leave)
-    const role = await getUserRole(groupId, userId);
+    const role = await getUserRole(groupId, userId, sb);
 
     if (role === STATUS.GROUP_MEMBERS.FOUNDER) {
       return {
@@ -102,7 +114,7 @@ export async function leaveGroup(groupId: string): Promise<{ success: boolean; e
     }
 
     // Remove membership
-    const { error } = await supabase
+    const { error } = await sb
       .from(TABLES.group_members)
       .delete()
       .eq('group_id', groupId)
@@ -114,7 +126,7 @@ export async function leaveGroup(groupId: string): Promise<{ success: boolean; e
     }
 
     // Log activity
-    await logGroupActivity(groupId, userId, 'left_group', 'Left the group');
+    await logGroupActivity(groupId, userId, 'left_group', 'Left the group', undefined, sb);
 
     return { success: true };
   } catch (error) {
@@ -128,29 +140,31 @@ export async function leaveGroup(groupId: string): Promise<{ success: boolean; e
  */
 export async function addMember(
   groupId: string,
-  input: AddMemberInput
+  input: AddMemberInput,
+  client?: AnySupabaseClient
 ): Promise<GroupMemberResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Check permissions
-    const permResult = await canPerformAction(userId, groupId, 'invite_members');
+    const permResult = await canPerformAction(userId, groupId, 'invite_members', sb);
     if (!permResult.allowed) {
       return { success: false, error: permResult.reason || 'Insufficient permissions' };
     }
 
     // Check if target user is already a member
-    const alreadyMember = await isGroupMember(groupId, input.user_id);
+    const alreadyMember = await isGroupMember(groupId, input.user_id, sb);
     if (alreadyMember) {
       return { success: false, error: 'User is already a member' };
     }
 
     // Add member
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from(TABLES.group_members) as any)
+    const { data, error } = await (sb.from(TABLES.group_members) as any)
       .insert({
         group_id: groupId,
         user_id: input.user_id,
@@ -166,7 +180,7 @@ export async function addMember(
     }
 
     // Log activity
-    await logGroupActivity(groupId, userId, 'member_added', `Invited a new member`);
+    await logGroupActivity(groupId, userId, 'member_added', `Invited a new member`, undefined, sb);
 
     return { success: true, member: data as GroupMember };
   } catch (error) {
@@ -181,16 +195,18 @@ export async function addMember(
 export async function updateMember(
   groupId: string,
   memberId: string,
-  input: UpdateMemberInput
+  input: UpdateMemberInput,
+  client?: AnySupabaseClient
 ): Promise<GroupMemberResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Check permissions
-    const permResult = await canPerformAction(userId, groupId, 'manage_members');
+    const permResult = await canPerformAction(userId, groupId, 'manage_members', sb);
     if (!permResult.allowed) {
       return { success: false, error: permResult.reason || 'Insufficient permissions' };
     }
@@ -206,7 +222,7 @@ export async function updateMember(
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from(TABLES.group_members) as any)
+    const { data, error } = await (sb.from(TABLES.group_members) as any)
       .update(payload)
       .eq('group_id', groupId)
       .eq('user_id', memberId)
@@ -230,27 +246,29 @@ export async function updateMember(
  */
 export async function removeMember(
   groupId: string,
-  memberId: string
+  memberId: string,
+  client?: AnySupabaseClient
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Check permissions
-    const permResult = await canPerformAction(userId, groupId, 'remove_members');
+    const permResult = await canPerformAction(userId, groupId, 'remove_members', sb);
     if (!permResult.allowed) {
       return { success: false, error: permResult.reason || 'Insufficient permissions' };
     }
 
     // Can't remove founder
-    const memberRole = await getUserRole(groupId, memberId);
+    const memberRole = await getUserRole(groupId, memberId, sb);
     if (memberRole === STATUS.GROUP_MEMBERS.FOUNDER) {
       return { success: false, error: 'Cannot remove the group founder' };
     }
 
-    const { error } = await supabase
+    const { error } = await sb
       .from(TABLES.group_members)
       .delete()
       .eq('group_id', groupId)
@@ -262,7 +280,7 @@ export async function removeMember(
     }
 
     // Log activity
-    await logGroupActivity(groupId, userId, 'member_removed', 'Removed a member');
+    await logGroupActivity(groupId, userId, 'member_removed', 'Removed a member', undefined, sb);
 
     return { success: true };
   } catch (error) {

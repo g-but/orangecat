@@ -13,6 +13,10 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { getCurrentUserId } from '../utils/helpers';
 import { canPerformAction } from '../permissions/resolver';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 // ==================== TYPES ====================
 
@@ -68,16 +72,19 @@ export interface GroupInvitationsResponse {
 /**
  * Get pending invitations for the current user
  */
-export async function getUserPendingInvitations(): Promise<UserInvitationsResponse> {
+export async function getUserPendingInvitations(
+  client?: AnySupabaseClient
+): Promise<UserInvitationsResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Use the database function for optimized query
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.rpc as any)('get_user_pending_invitations', {
+    const { data, error } = await (sb.rpc as any)('get_user_pending_invitations', {
       user_uuid: userId,
     });
 
@@ -111,15 +118,16 @@ export async function getUserPendingInvitations(): Promise<UserInvitationsRespon
 /**
  * Get invitation count for notification badge
  */
-export async function getUserInvitationCount(): Promise<number> {
+export async function getUserInvitationCount(client?: AnySupabaseClient): Promise<number> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return 0;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { count, error } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+    const { count, error } = await (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 'pending')
@@ -148,16 +156,18 @@ export async function getGroupInvitations(
     status?: 'pending' | 'accepted' | 'declined' | 'expired' | 'revoked' | 'all';
     limit?: number;
     offset?: number;
-  }
+  },
+  client?: AnySupabaseClient
 ): Promise<GroupInvitationsResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // Check permissions
-    const permResult = await canPerformAction(userId, groupId, 'invite_members');
+    const permResult = await canPerformAction(userId, groupId, 'invite_members', sb);
     if (!permResult.allowed) {
       return { success: false, error: permResult.reason || 'Insufficient permissions' };
     }
@@ -168,7 +178,7 @@ export async function getGroupInvitations(
 
     // Build query
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query = (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+    let query = (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
       .select(
         `
         *,
@@ -236,7 +246,10 @@ export async function getGroupInvitations(
 /**
  * Get invitation details by token (public, for join links)
  */
-export async function getInvitationByToken(token: string): Promise<{
+export async function getInvitationByToken(
+  token: string,
+  client?: AnySupabaseClient
+): Promise<{
   success: boolean;
   invitation?: {
     id: string;
@@ -254,8 +267,9 @@ export async function getInvitationByToken(token: string): Promise<{
   error?: string;
 }> {
   try {
+    const sb = client || supabase;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+    const { data, error } = await (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
       .select(
         `
         id,
@@ -292,7 +306,7 @@ export async function getInvitationByToken(token: string): Promise<{
 
     // Get member count
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { count: memberCount } = await (supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as any)
+    const { count: memberCount } = await (sb.from(DATABASE_TABLES.GROUP_MEMBERS) as any)
       .select('*', { count: 'exact', head: true })
       .eq('group_id', group.id);
 

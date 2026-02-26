@@ -12,26 +12,26 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { getCurrentUserId } from '../utils/helpers';
 import { TABLES } from '../constants';
-import type {
-  EventsQuery,
-  EventsListResponse,
-  EventResponse,
-  RsvpsListResponse,
-} from '../types';
+import type { EventsQuery, EventsListResponse, EventResponse, RsvpsListResponse } from '../types';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Get events for a group
  */
 export async function getGroupEvents(
   groupId: string,
-  options?: EventsQuery
+  options?: EventsQuery,
+  client?: AnySupabaseClient
 ): Promise<EventsListResponse> {
   try {
-    const _userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const _userId = await getCurrentUserId(sb);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query = (supabase
-      .from(TABLES.group_events) as any)
+    let query = (sb.from(TABLES.group_events) as any)
       .select(
         `
         *,
@@ -92,13 +92,16 @@ export async function getGroupEvents(
 /**
  * Get a single event by ID
  */
-export async function getEvent(eventId: string): Promise<EventResponse> {
+export async function getEvent(
+  eventId: string,
+  client?: AnySupabaseClient
+): Promise<EventResponse> {
   try {
-    const _userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const _userId = await getCurrentUserId(sb);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase
-      .from(TABLES.group_events) as any)
+    const { data, error } = await (sb.from(TABLES.group_events) as any)
       .select(
         `
         *,
@@ -149,18 +152,19 @@ export async function getEvent(eventId: string): Promise<EventResponse> {
  * Get RSVPs for an event
  */
 export async function getEventRsvps(
-  eventId: string
+  eventId: string,
+  client?: AnySupabaseClient
 ): Promise<RsvpsListResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // First check if user can access the event
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: event } = await (supabase
-      .from(TABLES.group_events) as any)
+    const { data: event } = await (sb.from(TABLES.group_events) as any)
       .select('id, is_public, group_id')
       .eq('id', eventId)
       .single();
@@ -171,8 +175,7 @@ export async function getEventRsvps(
 
     // Get RSVPs
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error, count } = await (supabase
-      .from(TABLES.group_event_rsvps) as any)
+    const { data, error, count } = await (sb.from(TABLES.group_event_rsvps) as any)
       .select(
         `
         *,
@@ -204,14 +207,19 @@ export async function getEventRsvps(
  */
 export async function getUpcomingEvents(
   groupId: string,
-  limit: number = 5
+  limit: number = 5,
+  client?: AnySupabaseClient
 ): Promise<EventsListResponse> {
   try {
-    return await getGroupEvents(groupId, {
-      status: 'upcoming',
-      limit,
-      offset: 0,
-    });
+    return await getGroupEvents(
+      groupId,
+      {
+        status: 'upcoming',
+        limit,
+        offset: 0,
+      },
+      client
+    );
   } catch (error) {
     logger.error('Exception fetching upcoming events', error, 'Groups');
     return { success: false, error: 'Failed to fetch upcoming events' };
@@ -222,17 +230,18 @@ export async function getUpcomingEvents(
  * Get user's RSVP status for an event
  */
 export async function getUserRsvpStatus(
-  eventId: string
+  eventId: string,
+  client?: AnySupabaseClient
 ): Promise<{ success: boolean; status?: string; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    const sb = client || supabase;
+    const userId = await getCurrentUserId(sb);
     if (!userId) {
       return { success: false, error: 'Authentication required' };
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase
-      .from(TABLES.group_event_rsvps) as any)
+    const { data, error } = await (sb.from(TABLES.group_event_rsvps) as any)
       .select('status')
       .eq('event_id', eventId)
       .eq('user_id', userId)
@@ -249,4 +258,3 @@ export async function getUserRsvpStatus(
     return { success: false, error: 'Failed to fetch RSVP status' };
   }
 }
-
