@@ -53,6 +53,12 @@ export const DATABASE_TABLES = {
   ENTITY_WALLETS: 'entity_wallets',
   TRANSACTIONS: 'transactions',
 
+  // Payments & Orders
+  PAYMENT_INTENTS: 'payment_intents',
+  ORDERS: 'orders',
+  CONTRIBUTIONS: 'contributions',
+  SHIPPING_ADDRESSES: 'shipping_addresses',
+
   // Timeline
   TIMELINE_EVENTS: 'timeline_events',
   TIMELINE_EVENT_STATS: 'timeline_event_stats',

@@ -75,6 +75,9 @@ export const ENTITY_CATEGORY_ORDER: EntityCategory[] = [
 
 // ==================== ENTITY METADATA ====================
 
+/** Payment pattern for an entity type */
+export type PaymentPattern = 'fixed_price' | 'contribution' | 'none';
+
 export interface EntityMetadata {
   /** Entity type identifier */
   type: EntityType;
@@ -108,6 +111,8 @@ export interface EntityMetadata {
   category: EntityCategory;
   /** Priority within category (lower = higher priority) */
   createPriority: number;
+  /** How this entity is paid for: fixed_price (buy), contribution (support), none (no payment) */
+  paymentPattern: PaymentPattern;
 }
 
 /**
@@ -135,6 +140,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Connect a Bitcoin wallet',
     category: 'gateway',
     createPriority: 1,
+    paymentPattern: 'none',
   },
 
   // ==================== BUSINESS (Core value creation) ====================
@@ -155,6 +161,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Launch a crowdfunding campaign',
     category: 'business',
     createPriority: 1,
+    paymentPattern: 'contribution',
   },
   product: {
     type: 'product',
@@ -173,6 +180,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Sell goods in your store',
     category: 'business',
     createPriority: 2,
+    paymentPattern: 'fixed_price',
   },
   service: {
     type: 'service',
@@ -191,6 +199,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Offer your expertise',
     category: 'business',
     createPriority: 3,
+    paymentPattern: 'fixed_price',
   },
   cause: {
     type: 'cause',
@@ -209,6 +218,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Support a meaningful cause',
     category: 'business',
     createPriority: 4,
+    paymentPattern: 'contribution',
   },
   ai_assistant: {
     type: 'ai_assistant',
@@ -227,6 +237,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Build an AI assistant',
     category: 'business',
     createPriority: 5,
+    paymentPattern: 'fixed_price',
   },
 
   // ==================== COMMUNITY (Network building) ====================
@@ -247,6 +258,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Start a community group',
     category: 'community',
     createPriority: 1,
+    paymentPattern: 'none',
   },
 
   // ==================== FINANCE (P2P financial tools) ====================
@@ -267,6 +279,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'List an asset for collateral',
     category: 'finance',
     createPriority: 1,
+    paymentPattern: 'none',
   },
   loan: {
     type: 'loan',
@@ -285,6 +298,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Request or offer a loan',
     category: 'finance',
     createPriority: 2,
+    paymentPattern: 'none',
   },
   event: {
     type: 'event',
@@ -303,6 +317,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Organize an in-person event',
     category: 'community',
     createPriority: 3,
+    paymentPattern: 'fixed_price',
   },
 
   // ==================== RESEARCH (DeSci ecosystem) ====================
@@ -324,6 +339,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Fund a research topic',
     category: 'business',
     createPriority: 6,
+    paymentPattern: 'contribution',
   },
 
   // ==================== PERSONAL (Wishlists & Registries) ====================
@@ -344,6 +360,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Create a wishlist',
     category: 'business',
     createPriority: 7,
+    paymentPattern: 'contribution',
   },
 
   // ==================== PERSONAL (My Cat Context) ====================
@@ -364,6 +381,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Add context for My Cat',
     category: 'personal',
     createPriority: 1,
+    paymentPattern: 'none',
   },
 };
 
