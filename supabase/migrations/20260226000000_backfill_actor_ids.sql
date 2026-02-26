@@ -2,9 +2,15 @@
 -- Purpose: Create actors for users missing them, populate actor_id on existing entities
 -- This completes the actor_id migration so all entities use unified ownership
 
--- Step 1: Add actor_id to research_entities (missed in original migration)
+-- Step 1: Add actor_id to tables missing it
 ALTER TABLE research_entities ADD COLUMN IF NOT EXISTS actor_id uuid REFERENCES actors(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_research_entities_actor_id ON research_entities(actor_id);
+
+ALTER TABLE ai_assistants ADD COLUMN IF NOT EXISTS actor_id uuid REFERENCES actors(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_ai_assistants_actor_id ON ai_assistants(actor_id);
+
+ALTER TABLE events ADD COLUMN IF NOT EXISTS actor_id uuid REFERENCES actors(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_events_actor_id ON events(actor_id);
 
 -- Step 2: Create actors for all users who don't have one yet
 INSERT INTO actors (actor_type, user_id, display_name, avatar_url, slug)
