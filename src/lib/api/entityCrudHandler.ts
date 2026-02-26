@@ -30,10 +30,17 @@ import {
   handleSupabaseError,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { rateLimit, rateLimitWriteAsync, createRateLimitResponse, applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
+import {
+  rateLimit,
+  rateLimitWriteAsync,
+  createRateLimitResponse,
+  applyRateLimitHeaders,
+  type RateLimitResult,
+} from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { type EntityType, getEntityMetadata } from '@/config/entity-registry';
 import { checkOwnership } from '@/services/actors';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 // ==================== TYPES ====================
 
@@ -128,10 +135,7 @@ export function createGetHandler(config: EntityHandlerConfig) {
   const meta = getEntityMetadata(entityType);
   const table = tableName ?? meta.tableName;
 
-  return async function GET(
-    request: NextRequest,
-    { params }: EntityRouteParams
-  ) {
+  return async function GET(request: NextRequest, { params }: EntityRouteParams) {
     try {
       // Rate limiting check
       const rateLimitResult = await rateLimit(request);
@@ -143,8 +147,12 @@ export function createGetHandler(config: EntityHandlerConfig) {
 
       // Handle authentication (optional for GET)
       let userId: string | null = null;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {userId = user.id;}
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        userId = user.id;
+      }
 
       if (requireAuthForGet && !userId) {
         return apiUnauthorized();
@@ -153,17 +161,14 @@ export function createGetHandler(config: EntityHandlerConfig) {
       const entityId = params.id;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = (supabase.from(table) as any)
-        .select('*')
-        .eq('id', entityId);
+      let query = (supabase.from(table) as any).select('*').eq('id', entityId);
 
       // If auth required, filter by ownership
       if (requireAuthForGet && userId) {
         if (config.useActorOwnership) {
-          // For actor-based ownership, we need to get user's actor_id first
-          // For now, fall back to user_id check if actor_id not available
-          // This will be fully implemented once all entities have actor_id populated
-          query = query.eq(ownershipField, userId);
+          // Resolve user ID to actor ID for actor-based ownership filtering
+          const actor = await getOrCreateUserActor(userId);
+          query = query.eq(ownershipField, actor.id);
         } else {
           query = query.eq(ownershipField, userId);
         }
@@ -186,7 +191,9 @@ export function createGetHandler(config: EntityHandlerConfig) {
       if (checkGetAccess) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const authError = await checkGetAccess(entity, userId, supabase as any);
-        if (authError) {return authError;}
+        if (authError) {
+          return authError;
+        }
       }
 
       // Post-process entity (add computed fields, etc.)
@@ -197,9 +204,7 @@ export function createGetHandler(config: EntityHandlerConfig) {
       }
 
       // Custom cache control
-      const cacheControl = getCacheControl
-        ? getCacheControl(processedEntity, userId)
-        : undefined;
+      const cacheControl = getCacheControl ? getCacheControl(processedEntity, userId) : undefined;
 
       const success = apiSuccess(processedEntity, {
         headers: cacheControl ? { 'Cache-Control': cacheControl } : undefined,
@@ -244,10 +249,7 @@ export function createPutHandler(config: EntityHandlerConfig) {
     throw new Error(`PUT handler for ${entityType} requires buildUpdatePayload`);
   }
 
-  return async function PUT(
-    request: NextRequest,
-    { params }: EntityRouteParams
-  ) {
+  return async function PUT(request: NextRequest, { params }: EntityRouteParams) {
     try {
       const supabase = await createServerClient();
       const {
@@ -278,7 +280,9 @@ export function createPutHandler(config: EntityHandlerConfig) {
       if (checkPutAccess) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const authError = await checkPutAccess(existing, user.id, supabase as any);
-        if (authError) {return authError;}
+        if (authError) {
+          return authError;
+        }
       } else {
         // Default ownership check
         if (config.useActorOwnership && existing.actor_id) {
@@ -368,10 +372,7 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
   const meta = getEntityMetadata(entityType);
   const table = tableName ?? meta.tableName;
 
-  return async function DELETE(
-    _request: NextRequest,
-    { params }: EntityRouteParams
-  ) {
+  return async function DELETE(_request: NextRequest, { params }: EntityRouteParams) {
     try {
       const supabase = await createServerClient();
       const {
@@ -402,12 +403,23 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
       if (checkDeleteAccess) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const authError = await checkDeleteAccess(existing, user.id, supabase as any);
-        if (authError) {return authError;}
+        if (authError) {
+          return authError;
+        }
       } else {
         // Default ownership check
-        const ownerId = (existing as Record<string, unknown>)[ownershipField];
-        if (ownerId !== user.id) {
-          return apiUnauthorized(`You can only delete your own ${meta.namePlural.toLowerCase()}`);
+        if (config.useActorOwnership && existing.actor_id) {
+          // Use actor-based ownership check
+          const hasAccess = await checkOwnership(existing as { actor_id: string }, user.id);
+          if (!hasAccess) {
+            return apiUnauthorized(`You can only delete your own ${meta.namePlural.toLowerCase()}`);
+          }
+        } else {
+          // Use field-based ownership check
+          const ownerId = (existing as Record<string, unknown>)[ownershipField];
+          if (ownerId !== user.id) {
+            return apiUnauthorized(`You can only delete your own ${meta.namePlural.toLowerCase()}`);
+          }
         }
       }
 
@@ -418,9 +430,7 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.from(table) as any)
-        .delete()
-        .eq('id', entityId);
+      const { error } = await (supabase.from(table) as any).delete().eq('id', entityId);
 
       if (error) {
         logger.error(`${meta.name} deletion failed`, {

@@ -28,6 +28,7 @@ import { type EntityType, getEntityMetadata, ENTITY_REGISTRY } from '@/config/en
 import { listEntitiesPage } from '@/domain/commerce/service';
 import { getCacheControl, calculatePage } from './helpers';
 import { getAuthenticatedUserId, shouldIncludeDrafts } from './authHelpers';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 // ==================== TYPES ====================
 
@@ -150,14 +151,26 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
       // Apply filters in correct order for RLS compatibility
       // When filtering by user_id (or custom userIdField), apply it first
       if (userId) {
-        query = query.eq(userIdField, userId);
+        // When userIdField is 'actor_id', the query param is a user UUID
+        // that needs to be resolved to an actor UUID first
+        let filterValue = userId;
+        if (userIdField === 'actor_id') {
+          const actor = await getOrCreateUserActor(userId);
+          filterValue = actor.id;
+        }
+        query = query.eq(userIdField, filterValue);
         // For own items, only filter by status if includeOwnDrafts is false
         if (!includeOwnDrafts) {
           query = query.in('status', publicStatuses);
         }
       } else if (requireAuth && authenticatedUserId) {
         // For auth-required routes without user_id filter, show current user's items
-        query = query.eq(userIdField, authenticatedUserId);
+        let filterValue = authenticatedUserId;
+        if (userIdField === 'actor_id') {
+          const actor = await getOrCreateUserActor(authenticatedUserId);
+          filterValue = actor.id;
+        }
+        query = query.eq(userIdField, filterValue);
       } else {
         // Public list: filter by public statuses only
         query = query.in('status', publicStatuses);

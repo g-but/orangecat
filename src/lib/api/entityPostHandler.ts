@@ -33,6 +33,7 @@ import { rateLimitWriteAsync, applyRateLimitHeaders, type RateLimitResult } from
 import { logger } from '@/utils/logger';
 import { type EntityType, getEntityMetadata } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 // Type for the awaited Supabase client
 type SupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
@@ -58,6 +59,8 @@ export interface EntityPostHandlerConfig {
     data: Record<string, unknown>,
     supabase: SupabaseClient
   ) => Promise<Record<string, unknown>>;
+  /** Whether to use actor-based ownership (insert actor_id instead of user_id) */
+  useActorOwnership?: boolean;
   /** Additional fields to set on insert (e.g., current_attendees: 0) */
   defaultFields?: Record<string, unknown>;
 }
@@ -82,7 +85,15 @@ export interface EntityPostHandlerConfig {
  * ```
  */
 export function createEntityPostHandler(config: EntityPostHandlerConfig) {
-  const { entityType, schema, tableName, transformData, createEntity, defaultFields = {} } = config;
+  const {
+    entityType,
+    schema,
+    tableName,
+    transformData,
+    createEntity,
+    useActorOwnership = false,
+    defaultFields = {},
+  } = config;
 
   const meta = getEntityMetadata(entityType);
   const table = tableName ?? meta.tableName;
@@ -126,9 +137,15 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
       // Default creation: transform data and insert
       let transformedData;
       try {
-        transformedData = transformData
-          ? await Promise.resolve(transformData(ctx.body, user.id, supabase))
-          : { ...ctx.body, user_id: user.id };
+        if (transformData) {
+          transformedData = await Promise.resolve(transformData(ctx.body, user.id, supabase));
+        } else if (useActorOwnership) {
+          // Resolve user ID to actor ID for actor-based ownership
+          const actor = await getOrCreateUserActor(user.id);
+          transformedData = { ...ctx.body, actor_id: actor.id };
+        } else {
+          transformedData = { ...ctx.body, user_id: user.id };
+        }
       } catch (transformError) {
         logger.error(`Error transforming data for ${entityType}`, {
           error: transformError,
