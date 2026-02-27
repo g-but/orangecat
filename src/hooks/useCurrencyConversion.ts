@@ -18,9 +18,14 @@ export function useCurrencyConversion() {
 
   useEffect(() => {
     // Pre-fetch rates on mount
-    currencyConverter.getRates().then(() => {
-      setIsLoading(false);
-    });
+    currencyConverter
+      .getRates()
+      .then(() => {
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   /**

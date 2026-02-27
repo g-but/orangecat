@@ -143,10 +143,15 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       return;
     }
     setLoadingProjects(true);
-    fetchUserProjects(user.id).then(projects => {
-      setUserProjects(projects);
-      setLoadingProjects(false);
-    });
+    fetchUserProjects(user.id)
+      .then(projects => {
+        setUserProjects(projects);
+        setLoadingProjects(false);
+      })
+      .catch(err => {
+        setLoadingProjects(false);
+        logger.error('Failed to load user projects', err, 'usePostComposer');
+      });
   }, [allowProjectSelection, user?.id]);
 
   // Main posting logic

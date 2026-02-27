@@ -41,15 +41,12 @@ export function AssetRentalCalendar({
   onDateRangeSelect,
   selectedStartDate,
   selectedEndDate,
-  minPeriod: _minPeriod = 1,
-  maxPeriod: _maxPeriod,
-  periodType: _periodType = 'daily',
+  minPeriod = 1,
+  maxPeriod,
+  periodType = 'daily',
 }: AssetRentalCalendarProps) {
-  // TODO: Use minPeriod, maxPeriod, periodType for validation
-  void _minPeriod;
-  void _maxPeriod;
-  void _periodType;
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [selectingStart, setSelectingStart] = useState(true);
   const [availability, setAvailability] = useState<Map<string, boolean>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
@@ -130,6 +127,8 @@ export function AssetRentalCalendar({
       return;
     }
 
+    setValidationError(null);
+
     if (selectingStart) {
       // Selecting start date
       onDateRangeSelect(date, date);
@@ -137,9 +136,27 @@ export function AssetRentalCalendar({
     } else {
       // Selecting end date
       if (selectedStartDate && date >= selectedStartDate) {
+        // Validate period length
+        const diffDays =
+          Math.round((date.getTime() - selectedStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const unit = periodType === 'weekly' ? 'week' : periodType === 'monthly' ? 'month' : 'day';
+        const effectiveMin = minPeriod ?? 1;
+
+        if (diffDays < effectiveMin) {
+          setValidationError(
+            `Minimum rental period is ${effectiveMin} ${unit}${effectiveMin !== 1 ? 's' : ''}.`
+          );
+          return;
+        }
+        if (maxPeriod !== undefined && diffDays > maxPeriod) {
+          setValidationError(
+            `Maximum rental period is ${maxPeriod} ${unit}${maxPeriod !== 1 ? 's' : ''}.`
+          );
+          return;
+        }
         onDateRangeSelect(selectedStartDate, date);
       } else {
-        // If clicked before start, reset start date
+        // Clicked before start — restart selection
         onDateRangeSelect(date, date);
       }
       setSelectingStart(true);
@@ -265,6 +282,13 @@ export function AssetRentalCalendar({
           <span>Unavailable</span>
         </div>
       </div>
+
+      {/* Validation Error */}
+      {validationError && (
+        <div className="px-4 py-2 border-t border-red-100 bg-red-50">
+          <p className="text-sm text-red-600">{validationError}</p>
+        </div>
+      )}
 
       {/* Selected Range Summary */}
       {selectedStartDate && selectedEndDate && (
