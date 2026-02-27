@@ -13,7 +13,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Edit, Share2, MessageCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/config/routes';
 import { getUniqueCategories } from '@/utils/project';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
@@ -40,7 +40,12 @@ interface ProjectHeaderProps {
   getStatusInfo: (status: string) => { label: string; className: string };
 }
 
-export default function ProjectHeader({ project, isOwner, onShare, getStatusInfo }: ProjectHeaderProps) {
+export default function ProjectHeader({
+  project,
+  isOwner,
+  onShare,
+  getStatusInfo,
+}: ProjectHeaderProps) {
   const { user } = useAuth();
   const router = useRouter();
   const statusInfo = getStatusInfo(project.status);
@@ -106,35 +111,31 @@ export default function ProjectHeader({ project, isOwner, onShare, getStatusInfo
           {project.profiles ? (
             <div className="flex items-center gap-3 mb-3">
               <div className="flex items-center gap-2">
-                  <Link
-                    href={creatorProfileUrl}
-                    className="hover:opacity-80 transition-opacity"
-                    aria-label={`View ${project.profiles.name || project.profiles.username || 'creator'}'s profile`}
-                  >
-                    {project.profiles.avatar_url ? (
-                      <Image
-                        src={project.profiles.avatar_url}
-                        alt={
-                          project.profiles.name ||
-                          project.profiles.username ||
-                          'Creator'
-                        }
-                        width={32}
-                        height={32}
-                        className="rounded-full cursor-pointer"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-semibold text-sm cursor-pointer hover:opacity-80 transition-opacity">
-                        {(
-                          project.profiles.name ||
-                          project.profiles.username ||
-                          project.profiles.id?.substring(0, 1) ||
-                          'A'
-                        )
-                          .charAt(0)
-                          .toUpperCase()}
-                      </div>
-                    )}
+                <Link
+                  href={creatorProfileUrl}
+                  className="hover:opacity-80 transition-opacity"
+                  aria-label={`View ${project.profiles.name || project.profiles.username || 'creator'}'s profile`}
+                >
+                  {project.profiles.avatar_url ? (
+                    <Image
+                      src={project.profiles.avatar_url}
+                      alt={project.profiles.name || project.profiles.username || 'Creator'}
+                      width={32}
+                      height={32}
+                      className="rounded-full cursor-pointer"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-semibold text-sm cursor-pointer hover:opacity-80 transition-opacity">
+                      {(
+                        project.profiles.name ||
+                        project.profiles.username ||
+                        project.profiles.id?.substring(0, 1) ||
+                        'A'
+                      )
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+                  )}
                 </Link>
                 <div>
                   <p className="text-sm text-gray-500">Created by</p>
@@ -205,7 +206,12 @@ export default function ProjectHeader({ project, isOwner, onShare, getStatusInfo
           )}
           {/* Contact - only for non-owners */}
           {!isOwner && (
-            <Button variant="outline" size="sm" onClick={handleContact} aria-label="Contact project creator">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleContact}
+              aria-label="Contact project creator"
+            >
               <MessageCircle className="w-4 h-4 mr-2" aria-hidden="true" />
               Contact
             </Button>

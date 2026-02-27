@@ -149,9 +149,17 @@ export function usePaymentFlow() {
       if (res.ok && json.success) {
         stopPolling();
         setState({ phase: 'success', data: state.data });
+      } else {
+        setState({
+          phase: 'error',
+          message: json.error?.message || 'Failed to confirm payment. Please try again.',
+        });
       }
     } catch {
-      // Ignore — user can retry
+      setState({
+        phase: 'error',
+        message: 'Network error confirming payment. Please try again.',
+      });
     }
   }, [state, stopPolling]);
 

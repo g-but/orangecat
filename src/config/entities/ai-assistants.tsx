@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button';
 import { formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
+import { ROUTES } from '@/config/routes';
 import type { Currency } from '@/types/settings';
 
 export const aiAssistantEntityConfig: EntityConfig<AIAssistant> = {
@@ -108,7 +109,7 @@ export const aiAssistantEntityConfig: EntityConfig<AIAssistant> = {
     title: 'No AI assistants yet',
     description: 'Create your first AI assistant to start earning from your expertise.',
     action: (
-      <Link href="/dashboard/ai-assistants/create">
+      <Link href={ROUTES.DASHBOARD.AI_ASSISTANTS_CREATE}>
         <Button className="bg-gradient-to-r from-purple-600 to-purple-700">
           Create AI Assistant
         </Button>

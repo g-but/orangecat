@@ -16,6 +16,7 @@ import { Asset } from '@/types/asset';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { ROUTES } from '@/config/routes';
 
 export const assetEntityConfig: EntityConfig<Asset> = {
   name: 'Asset',
@@ -23,15 +24,15 @@ export const assetEntityConfig: EntityConfig<Asset> = {
   colorTheme: 'green',
 
   listPath: '/dashboard/assets',
-  detailPath: (id) => `/dashboard/assets/${id}`,
+  detailPath: id => `/dashboard/assets/${id}`,
   createPath: '/dashboard/assets/create',
-  editPath: (id) => `/dashboard/assets/create?edit=${id}`,
+  editPath: id => `/dashboard/assets/create?edit=${id}`,
 
   apiEndpoint: '/api/assets',
 
-  makeHref: (asset) => `/dashboard/assets/${asset.id}`,
+  makeHref: asset => `/dashboard/assets/${asset.id}`,
 
-  makeCardProps: (asset) => {
+  makeCardProps: asset => {
     // Build value label
     const valueLabel = asset.estimated_value
       ? `${asset.estimated_value.toLocaleString()} ${asset.currency || PLATFORM_DEFAULT_CURRENCY}`
@@ -83,13 +84,10 @@ export const assetEntityConfig: EntityConfig<Asset> = {
 
   emptyState: {
     title: 'No assets yet',
-    description:
-      'Add your assets to use as collateral for loans or to track your portfolio.',
+    description: 'Add your assets to use as collateral for loans or to track your portfolio.',
     action: (
-      <Link href="/dashboard/assets/create">
-        <Button className="bg-gradient-to-r from-green-600 to-green-700">
-          Add Asset
-        </Button>
+      <Link href={ROUTES.DASHBOARD.ASSETS_CREATE}>
+        <Button className="bg-gradient-to-r from-green-600 to-green-700">Add Asset</Button>
       </Link>
     ),
   },

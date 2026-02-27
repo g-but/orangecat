@@ -24,6 +24,7 @@ import { researchWizardConfig } from '@/config/entity-configs';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import type { ResearchWizardFormData } from '@/config/entity-configs';
 
 export default function CreateResearchPage() {
@@ -105,7 +106,7 @@ export default function CreateResearchPage() {
         <h3 className="text-lg font-semibold mb-2">{editError}</h3>
         <p className="text-gray-500 mb-4">Unable to load research for editing.</p>
         <button
-          onClick={() => router.push('/dashboard/research')}
+          onClick={() => router.push(ROUTES.DASHBOARD.RESEARCH)}
           className="text-sm text-purple-600 hover:text-purple-700 font-medium"
         >
           Back to research
@@ -131,7 +132,7 @@ export default function CreateResearchPage() {
     <EntityCreationWizard<ResearchWizardFormData>
       config={researchWizardConfig}
       initialData={initialData}
-      onCancel={() => router.push('/dashboard/research')}
+      onCancel={() => router.push(ROUTES.DASHBOARD.RESEARCH)}
     />
   );
 }

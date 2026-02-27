@@ -1,5 +1,6 @@
-import { redirect } from 'next/navigation'
+import { redirect } from 'next/navigation';
+import { ROUTES } from '@/config/routes';
 
 export default function PagesRedirectPage() {
-  redirect('/dashboard/projects')
+  redirect(ROUTES.DASHBOARD.PROJECTS);
 }

@@ -19,6 +19,7 @@ import {
 } from '@/lib/profile-guidance';
 import { Card } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import { ROUTES } from '@/config/routes';
 import Link from 'next/link';
 
 /**
@@ -243,7 +244,7 @@ export default function DashboardInfoEditPage() {
       });
 
       // Navigate back to view mode immediately
-      router.push('/dashboard/info');
+      router.push(ROUTES.DASHBOARD.INFO);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save profile');
       throw error; // Re-throw so ModernProfileEditor can handle it
@@ -252,7 +253,7 @@ export default function DashboardInfoEditPage() {
 
   // Handle cancel - navigate back to view mode
   const handleCancel = () => {
-    router.push('/dashboard/info');
+    router.push(ROUTES.DASHBOARD.INFO);
   };
 
   // Loading state
@@ -309,7 +310,7 @@ export default function DashboardInfoEditPage() {
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
-            <Link href="/dashboard/info">
+            <Link href={ROUTES.DASHBOARD.INFO}>
               <Button variant="ghost" size="sm" className="mr-2">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to View

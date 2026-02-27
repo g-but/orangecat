@@ -10,7 +10,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/config/routes';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Rocket, Loader2 } from 'lucide-react';

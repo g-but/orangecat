@@ -15,6 +15,7 @@ import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useProjectStore } from '@/stores/projectStore';
 import { formatDistanceToNow } from 'date-fns';
+import { ROUTES } from '@/config/routes';
 
 interface DraftContinueDialogProps {
   isOpen: boolean;
@@ -229,7 +230,7 @@ export default function DraftContinueDialog({
             {/* Additional Options */}
             {totalDrafts > 1 && (
               <div className="pt-4 border-t border-gray-200">
-                <Link href="/dashboard/projects">
+                <Link href={ROUTES.DASHBOARD.PROJECTS}>
                   <Button variant="ghost" className="w-full text-gray-600 hover:text-gray-800">
                     View All {totalDrafts} Draft Projects
                   </Button>

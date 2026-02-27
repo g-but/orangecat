@@ -36,7 +36,7 @@ export function PaymentQRCode({
 }: PaymentQRCodeProps) {
   const [copied, setCopied] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(expiresInSeconds ?? 0);
-  const { formatAmount, prefersFiat } = useDisplayCurrency();
+  const { formatAmount } = useDisplayCurrency();
 
   // Live countdown timer
   useEffect(() => {
@@ -91,19 +91,24 @@ export function PaymentQRCode({
         />
       </div>
 
-      {/* Amount display with fiat equivalent */}
+      {/* Amount display */}
       <div className="text-center">
-        <p className="text-lg font-semibold">{amountSats.toLocaleString()} sats</p>
-        {prefersFiat && <p className="text-sm text-gray-500">{formatAmount(amountSats)}</p>}
+        <p className="text-lg font-semibold">{formatAmount(amountSats)}</p>
       </div>
 
       {/* Countdown timer */}
-      {expiresInSeconds && secondsLeft > 0 && (
+      {expiresInSeconds !== undefined && expiresInSeconds > 0 && (
         <p
-          className={`flex items-center gap-1 text-xs ${secondsLeft < 60 ? 'text-red-500' : 'text-gray-400'}`}
+          className={`flex items-center gap-1 text-xs ${
+            secondsLeft <= 0
+              ? 'text-red-600 font-medium'
+              : secondsLeft < 60
+                ? 'text-red-500'
+                : 'text-gray-400'
+          }`}
         >
           <Timer className="h-3 w-3" />
-          Expires in {formatCountdown(secondsLeft)}
+          {secondsLeft <= 0 ? 'Invoice expired' : `Expires in ${formatCountdown(secondsLeft)}`}
         </p>
       )}
 

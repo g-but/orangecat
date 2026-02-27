@@ -1,6 +1,6 @@
 'use client';
 
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/config/routes';
 import ShareContent from './ShareContent';
 
 interface ProfileShareProps {
@@ -15,7 +15,7 @@ interface ProfileShareProps {
 
 /**
  * ProfileShare Component
- * 
+ *
  * Wrapper around ShareContent for profile-specific sharing.
  * DRY: Uses reusable ShareContent component.
  */

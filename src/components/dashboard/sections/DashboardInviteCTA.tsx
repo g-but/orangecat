@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import ProfileShare from '@/components/sharing/ProfileShare';
 import { Users, Share2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { ROUTES } from '@/config/routes';
 
 interface DashboardInviteCTAProps {
   profile: {
@@ -42,7 +43,7 @@ export function DashboardInviteCTA({ profile, userId }: DashboardInviteCTAProps)
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link href="/dashboard/people">
+          <Link href={ROUTES.DASHBOARD.PEOPLE}>
             <Button variant="outline" size="sm" className="min-h-[44px]">
               <Users className="w-4 h-4 mr-2" />
               Discover

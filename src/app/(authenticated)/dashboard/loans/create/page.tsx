@@ -24,6 +24,7 @@ import { loanConfig } from '@/config/entity-configs';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import type { LoanFormData } from '@/lib/validation';
 
 export default function CreateLoanPage() {
@@ -100,7 +101,7 @@ export default function CreateLoanPage() {
     <EntityCreationWizard<LoanFormData>
       config={loanConfig}
       initialData={initialData}
-      onCancel={() => router.push('/dashboard/loans')}
+      onCancel={() => router.push(ROUTES.DASHBOARD.LOANS)}
     />
   );
 }

@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ROUTES } from '@/config/routes';
 import { logger } from '@/utils/logger';
 
 interface DeleteDocumentButtonProps {
@@ -54,7 +55,7 @@ export function DeleteDocumentButton({ documentId, documentTitle }: DeleteDocume
         description: `"${documentTitle}" has been deleted.`,
       });
 
-      router.push('/dashboard/cat?tab=context');
+      router.push(`${ROUTES.DASHBOARD.CAT}?tab=context`);
       router.refresh();
     } catch (error) {
       logger.error('Delete error', error, 'Documents');

@@ -19,6 +19,7 @@ import { eventConfig } from '@/config/entity-configs';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import type { EventFormData } from '@/lib/validation';
 
 export default function CreateEventPage() {
@@ -95,7 +96,7 @@ export default function CreateEventPage() {
         <h3 className="text-lg font-semibold mb-2">{editError}</h3>
         <p className="text-gray-500 mb-4">Unable to load event for editing.</p>
         <button
-          onClick={() => router.push('/dashboard/events')}
+          onClick={() => router.push(ROUTES.DASHBOARD.EVENTS)}
           className="text-sm text-green-600 hover:text-green-700 font-medium"
         >
           Back to events
@@ -114,7 +115,7 @@ export default function CreateEventPage() {
     <EntityCreationWizard<EventFormData>
       config={eventConfig}
       initialData={initialData}
-      onCancel={() => router.push('/dashboard/events')}
+      onCancel={() => router.push(ROUTES.DASHBOARD.EVENTS)}
     />
   );
 }

@@ -20,6 +20,7 @@ import { useCreatePrefill } from '@/hooks/useCreatePrefill';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import type { UserServiceFormData } from '@/lib/validation';
 
 export default function CreateServicePage() {
@@ -77,7 +78,7 @@ export default function CreateServicePage() {
         <h3 className="text-lg font-semibold mb-2">{editError}</h3>
         <p className="text-gray-500 mb-4">Unable to load service for editing.</p>
         <button
-          onClick={() => router.push('/dashboard/services')}
+          onClick={() => router.push(ROUTES.DASHBOARD.SERVICES)}
           className="text-sm text-purple-600 hover:text-purple-700 font-medium"
         >
           Back to services
@@ -101,7 +102,7 @@ export default function CreateServicePage() {
     <EntityCreationWizard<UserServiceFormData>
       config={serviceConfig}
       initialData={initialData}
-      onCancel={() => router.push('/dashboard/services')}
+      onCancel={() => router.push(ROUTES.DASHBOARD.SERVICES)}
     />
   );
 }

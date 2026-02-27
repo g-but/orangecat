@@ -77,7 +77,7 @@ const fieldGroups: FieldGroup[] = [
         hint: 'Enable if you want to sell this asset',
         colSpan: 2,
       },
-      { name: 'sale_price_sats', label: 'Sale Price (sats)', type: 'number', min: 1, colSpan: 2 },
+      { name: 'sale_price_sats', label: 'Sale Price', type: 'number', min: 1, colSpan: 2 },
     ],
   },
   {
@@ -92,7 +92,7 @@ const fieldGroups: FieldGroup[] = [
         hint: 'Enable if you want to rent out this asset',
         colSpan: 2,
       },
-      { name: 'rental_price_sats', label: 'Rental Price (sats)', type: 'number', min: 1 },
+      { name: 'rental_price_sats', label: 'Rental Price', type: 'number', min: 1 },
       {
         name: 'rental_period_type',
         label: 'Rental Period',

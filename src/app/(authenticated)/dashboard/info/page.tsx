@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import { isLocationHidden, getLocationGroupLabel } from '@/lib/location-privacy';
+import { ROUTES } from '@/config/routes';
 import { Profile } from '@/types/database';
 import Image from 'next/image';
 import {
@@ -109,7 +110,7 @@ export default function DashboardInfoPage() {
             : 'opacity-0 -translate-y-2 pointer-events-none'
         }`}
       >
-        <Link href="/dashboard/info/edit">
+        <Link href={ROUTES.DASHBOARD.INFO_EDIT}>
           <Button
             size="sm"
             className="shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-0 px-4 py-2 h-auto"
@@ -136,7 +137,7 @@ export default function DashboardInfoPage() {
             </p>
             {/* Desktop Edit Button - Hidden on mobile since we have sticky button */}
             <div className="hidden sm:block">
-              <Link href="/dashboard/info/edit">
+              <Link href={ROUTES.DASHBOARD.INFO_EDIT}>
                 <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-0 shadow-md hover:shadow-lg px-6 py-2.5 h-auto">
                   <Edit className="w-4 h-4 mr-2" />
                   Edit Profile
@@ -412,7 +413,7 @@ export default function DashboardInfoPage() {
                       </Button>
                     </Link>
                   )}
-                  <Link href="/dashboard/wallets">
+                  <Link href={ROUTES.DASHBOARD.WALLETS}>
                     <Button variant="outline" className="w-full justify-start">
                       Manage Wallets
                     </Button>

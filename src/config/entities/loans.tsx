@@ -12,6 +12,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
+import { ROUTES } from '@/config/routes';
 
 export const loanEntityConfig: EntityConfig<Loan> = {
   name: 'Loan',
@@ -97,7 +98,7 @@ export const loanEntityConfig: EntityConfig<Loan> = {
     title: 'No loans yet',
     description: 'Add your first loan to start receiving refinancing offers from the community.',
     action: (
-      <Link href="/dashboard/loans/create">
+      <Link href={ROUTES.DASHBOARD.LOANS_CREATE}>
         <Button className="bg-gradient-to-r from-tiffany-600 to-tiffany-700">Add Loan</Button>
       </Link>
     ),

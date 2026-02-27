@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { ROUTES } from '@/config/routes';
 import {
   Bot,
   Star,
@@ -340,7 +341,7 @@ export default function AIAssistantsDiscoveryPage() {
                 ? 'Try adjusting your search or filters'
                 : 'Be the first to create an AI assistant!'}
             </p>
-            <Link href="/dashboard/ai-assistants/create">
+            <Link href={ROUTES.DASHBOARD.AI_ASSISTANTS_CREATE}>
               <Button>Create Assistant</Button>
             </Link>
           </div>

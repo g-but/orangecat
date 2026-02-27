@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { logger } from '@/utils/logger';
-import { isAuthenticatedRoute, getRouteContext } from '@/config/routes';
+import { isAuthenticatedRoute, getRouteContext, ROUTES } from '@/config/routes';
 
 // Throttle function to prevent excessive logging - increased delays
 function useThrottledLog(logFn: () => void, delay: number = 10000) {
@@ -119,7 +119,7 @@ export function useRedirectIfAuthenticated() {
       getRouteContext(pathname) !== 'public' &&
       getRouteContext(pathname) !== 'universal'
     ) {
-      router.push('/dashboard');
+      router.push(ROUTES.DASHBOARD.HOME);
     }
   }, [user, session, isLoading, hydrated, router, pathname, profile]);
 

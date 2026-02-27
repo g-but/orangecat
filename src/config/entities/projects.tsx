@@ -17,6 +17,7 @@ import Button from '@/components/ui/Button';
 import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { PROJECT_STATUS } from '@/config/project-statuses';
+import { ROUTES } from '@/config/routes';
 import type { Currency } from '@/types/settings';
 
 // Project type for EntityList usage
@@ -150,7 +151,7 @@ export const projectEntityConfig: EntityConfig<ProjectListItem> = {
     description:
       'Create your first project to start accepting Bitcoin funding and building support for your cause.',
     action: (
-      <Link href="/dashboard/projects/create">
+      <Link href={ROUTES.DASHBOARD.PROJECTS_CREATE}>
         <Button className="bg-gradient-to-r from-orange-600 to-orange-700">Create Project</Button>
       </Link>
     ),

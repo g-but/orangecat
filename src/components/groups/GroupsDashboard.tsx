@@ -26,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import EntityListShell from '@/components/entity/EntityListShell';
 import Loading from '@/components/Loading';
+import { ROUTES } from '@/config/routes';
 
 export function GroupsDashboard() {
   const router = useRouter();
@@ -75,18 +76,16 @@ export function GroupsDashboard() {
 
   // Calculate stats by label type
   const _countByLabel = (_groups: Group[], _label: GroupLabel) =>
-    _groups.filter((g) => g.label === _label).length;
+    _groups.filter(g => g.label === _label).length;
 
   // Informal groups (circles, families)
-  const informalCount = myGroups.filter((g) =>
-    ['circle', 'family'].includes(g.label)
-  ).length;
+  const informalCount = myGroups.filter(g => ['circle', 'family'].includes(g.label)).length;
 
   // Formal groups (everything else)
   const formalCount = myGroups.length - informalCount;
 
   const headerActions = (
-    <Link href="/dashboard/groups/create">
+    <Link href={ROUTES.DASHBOARD.GROUPS_CREATE}>
       <Button className="gap-2 bg-gradient-to-r from-purple-600 to-purple-700">
         <Plus className="h-4 w-4" />
         Create Group
@@ -118,7 +117,7 @@ export function GroupsDashboard() {
             <div className="text-center py-12 px-4 bg-white rounded-lg border">
               <h3 className="text-lg font-semibold mb-2">No groups yet</h3>
               <p className="text-muted-foreground mb-6">Create your first group to get started</p>
-              <Link href="/dashboard/groups/create">
+              <Link href={ROUTES.DASHBOARD.GROUPS_CREATE}>
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create Group
@@ -128,7 +127,7 @@ export function GroupsDashboard() {
           ) : (
             <GroupList
               groups={myGroups}
-              onGroupClick={(group) => router.push(`/dashboard/groups/${group.slug}`)}
+              onGroupClick={group => router.push(`/dashboard/groups/${group.slug}`)}
             />
           )}
         </TabsContent>
@@ -138,7 +137,7 @@ export function GroupsDashboard() {
             <div className="text-center py-12 px-4 bg-white rounded-lg border">
               <h3 className="text-lg font-semibold mb-2">No groups available</h3>
               <p className="text-muted-foreground mb-6">Be the first to create a group!</p>
-              <Link href="/dashboard/groups/create">
+              <Link href={ROUTES.DASHBOARD.GROUPS_CREATE}>
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create Group
@@ -148,7 +147,7 @@ export function GroupsDashboard() {
           ) : (
             <GroupList
               groups={availableGroups}
-              onGroupClick={(group) => router.push(`/dashboard/groups/${group.slug}`)}
+              onGroupClick={group => router.push(`/dashboard/groups/${group.slug}`)}
             />
           )}
         </TabsContent>
@@ -176,9 +175,10 @@ export function GroupsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {Object.keys(GROUP_LABELS).filter((label) =>
-                myGroups.some((g) => g.label === label)
-              ).length}
+              {
+                Object.keys(GROUP_LABELS).filter(label => myGroups.some(g => g.label === label))
+                  .length
+              }
             </div>
             <p className="text-xs text-muted-foreground">Different labels used</p>
           </CardContent>

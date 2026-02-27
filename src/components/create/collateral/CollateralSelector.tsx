@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { DEFAULT_CURRENCY } from '@/config/currencies';
 import { convertBtcTo } from '@/services/currency';
 import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/config/routes';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 export interface CollateralItem {
@@ -316,7 +317,7 @@ export function CollateralSelector({
               <div className="text-center py-4">
                 <p className="text-sm text-gray-500 mb-2">No assets available</p>
                 <a
-                  href="/dashboard/assets/create"
+                  href={ROUTES.DASHBOARD.ASSETS_CREATE}
                   className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Create an asset
@@ -361,7 +362,7 @@ export function CollateralSelector({
               <div className="text-center py-4">
                 <p className="text-sm text-gray-500 mb-2">No wallets available</p>
                 <a
-                  href="/dashboard/wallets/create"
+                  href={ROUTES.DASHBOARD.WALLETS_CREATE}
                   className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Create a wallet

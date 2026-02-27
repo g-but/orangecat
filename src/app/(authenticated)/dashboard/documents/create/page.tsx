@@ -22,6 +22,7 @@ import { documentFormConfig } from '@/config/entity-configs/document-form-config
 import { DocumentFileUpload } from '@/components/documents/DocumentFileUpload';
 import { ArrowLeft, Upload, PenLine, Cat, FileText, Sparkles } from 'lucide-react';
 import type { DocumentFormData } from '@/lib/validation';
+import { ROUTES } from '@/config/routes';
 import { logger } from '@/utils/logger';
 
 type CreateMode = 'choose' | 'upload' | 'form';
@@ -125,7 +126,7 @@ function DocumentPageContent() {
           <h2 className="text-lg font-semibold text-red-800 mb-2">Error</h2>
           <p className="text-red-600 mb-4">{loadError}</p>
           <button
-            onClick={() => router.push('/dashboard/cat?tab=context')}
+            onClick={() => router.push(`${ROUTES.DASHBOARD.CAT}?tab=context`)}
             className="text-sm text-red-700 hover:text-red-800 underline"
           >
             Back to My Context
@@ -156,7 +157,7 @@ function DocumentPageContent() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/dashboard/cat?tab=context"
+            href={`${ROUTES.DASHBOARD.CAT}?tab=context`}
             className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />

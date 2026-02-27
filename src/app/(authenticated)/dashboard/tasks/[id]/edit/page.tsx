@@ -23,6 +23,7 @@ import {
   TASK_TYPE_LABELS,
   PRIORITY_LABELS,
 } from '@/config/tasks';
+import { ROUTES } from '@/config/routes';
 import type { Task } from '@/lib/schemas/tasks';
 import { ArrowLeft, Save } from 'lucide-react';
 
@@ -95,7 +96,7 @@ export default function EditTaskPage() {
       const message = err instanceof Error ? err.message : 'Failed to load task';
       logger.error('Failed to load task', { error: err, taskId }, 'EditTaskPage');
       toast.error(message);
-      router.push('/dashboard/tasks');
+      router.push(ROUTES.DASHBOARD.TASKS);
     } finally {
       setLoading(false);
     }

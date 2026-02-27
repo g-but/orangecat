@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import { ArrowLeft, Bitcoin } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/config/routes';
 import { useState, useEffect } from 'react';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getStatusInfo } from '@/config/status-config';
@@ -18,17 +18,6 @@ const ProjectSummaryRail = dynamic(() => import('@/components/project/ProjectSum
 const ProjectHeader = dynamic(() => import('@/components/project/ProjectHeader'));
 const ProjectContent = dynamic(() => import('@/components/project/ProjectContent'));
 const ProjectTimeline = dynamic(() => import('@/components/project/ProjectTimeline'));
-const _ProjectSupportButton = dynamic(() =>
-  import('@/components/projects/ProjectSupportButton').then(m => ({
-    default: m.ProjectSupportButton,
-  }))
-);
-const _WallOfSupport = dynamic(() =>
-  import('@/components/projects/WallOfSupport').then(m => ({ default: m.WallOfSupport }))
-);
-const _SupportStats = dynamic(() =>
-  import('@/components/projects/SupportStats').then(m => ({ default: m.SupportStats }))
-);
 
 interface Project {
   id: string;

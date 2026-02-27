@@ -22,6 +22,7 @@ import { PaymentStatusIndicator } from './PaymentStatusIndicator';
 import { ContributionAmountInput } from './ContributionAmountInput';
 import { usePaymentFlow } from '@/hooks/usePaymentFlow';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 
 interface PaymentDialogProps {
@@ -47,6 +48,7 @@ export function PaymentDialog({
 }: PaymentDialogProps) {
   const meta = getEntityMetadata(entityType);
   const isContribution = meta.paymentPattern === 'contribution';
+  const { formatAmount } = useDisplayCurrency();
 
   const { state, initiate, confirmPaid, reset, isLoading } = usePaymentFlow();
 
@@ -83,8 +85,8 @@ export function PaymentDialog({
           </DialogTitle>
           <DialogDescription>
             {isContribution
-              ? 'Choose an amount to support this project'
-              : `Pay ${amountSats.toLocaleString()} sats`}
+              ? `Choose an amount to support this ${meta.name.toLowerCase()}`
+              : `Pay ${formatAmount(amountSats)}`}
           </DialogDescription>
         </DialogHeader>
 
@@ -126,8 +128,8 @@ export function PaymentDialog({
                 className="w-full min-h-11"
               >
                 {isContribution
-                  ? `Support with ${amountSats.toLocaleString()} sats`
-                  : `Pay ${amountSats.toLocaleString()} sats`}
+                  ? `Support with ${formatAmount(amountSats)}`
+                  : `Pay ${formatAmount(amountSats)}`}
               </Button>
             </>
           )}

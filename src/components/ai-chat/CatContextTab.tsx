@@ -26,6 +26,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { ROUTES } from '@/config/routes';
 
 const TYPE_ICONS: Record<string, React.ElementType> = {
   goals: Target,
@@ -154,7 +155,7 @@ export function CatContextTab() {
 
       {/* Add context button */}
       <Link
-        href="/dashboard/documents/create"
+        href={ROUTES.DASHBOARD.DOCUMENTS_CREATE}
         className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-sm"
       >
         <Plus className="h-5 w-5" />

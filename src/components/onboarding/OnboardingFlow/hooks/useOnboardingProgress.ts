@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ProfileService } from '@/services/profile';
 import { onboardingEvents } from '@/lib/analytics';
+import { ROUTES } from '@/config/routes';
 import { logger } from '@/utils/logger';
 import { ONBOARDING_STORAGE_KEY, PROGRESS_EXPIRATION_HOURS, ONBOARDING_METHOD } from '../constants';
 import type {
@@ -139,7 +140,7 @@ export function useOnboardingProgress(
       }
     }
 
-    router.push('/dashboard?welcome=true');
+    router.push(`${ROUTES.DASHBOARD.HOME}?welcome=true`);
   }, [currentStep, userId, router]);
 
   const handleAction = useCallback(
@@ -171,7 +172,7 @@ export function useOnboardingProgress(
     clearProgress();
 
     if (!userId) {
-      router.push('/dashboard?welcome=true');
+      router.push(`${ROUTES.DASHBOARD.HOME}?welcome=true`);
       return;
     }
 
@@ -183,13 +184,13 @@ export function useOnboardingProgress(
       });
       onboardingEvents.completed(userId);
       toast.success('Welcome to OrangeCat! Your journey begins now.');
-      router.push('/dashboard?welcome=true');
+      router.push(`${ROUTES.DASHBOARD.HOME}?welcome=true`);
     } catch (error) {
       logger.error('Failed to complete onboarding', error, 'Onboarding');
       // Still mark as completed in analytics - the user tried
       onboardingEvents.completed(userId);
       toast.error('Something went wrong, but you can continue to your dashboard.');
-      router.push('/dashboard?welcome=true');
+      router.push(`${ROUTES.DASHBOARD.HOME}?welcome=true`);
     } finally {
       setCompletingOnboarding(false);
     }

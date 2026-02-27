@@ -24,6 +24,7 @@ import { productConfig } from '@/config/entity-configs';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import type { UserProductFormData } from '@/lib/validation';
 
 export default function CreateProductPage() {
@@ -105,7 +106,7 @@ export default function CreateProductPage() {
         <h3 className="text-lg font-semibold mb-2">{editError}</h3>
         <p className="text-gray-500 mb-4">Unable to load product for editing.</p>
         <button
-          onClick={() => router.push('/dashboard/store')}
+          onClick={() => router.push(ROUTES.DASHBOARD.STORE)}
           className="text-sm text-orange-600 hover:text-orange-700 font-medium"
         >
           Back to store
@@ -131,7 +132,7 @@ export default function CreateProductPage() {
     <EntityCreationWizard<UserProductFormData>
       config={productConfig}
       initialData={initialData}
-      onCancel={() => router.push('/dashboard/store')}
+      onCancel={() => router.push(ROUTES.DASHBOARD.STORE)}
     />
   );
 }

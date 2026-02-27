@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button';
 import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
+import { ROUTES } from '@/config/routes';
 import type { Currency } from '@/types/settings';
 
 export const causeEntityConfig: EntityConfig<UserCause> = {
@@ -102,7 +103,7 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
     title: 'No causes yet',
     description: 'Start making a difference by creating your first cause or fundraiser.',
     action: (
-      <Link href="/dashboard/causes/create">
+      <Link href={ROUTES.DASHBOARD.CAUSES_CREATE}>
         <Button className="bg-gradient-to-r from-orange-600 to-orange-700">Create Cause</Button>
       </Link>
     ),

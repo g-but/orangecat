@@ -20,6 +20,7 @@ import {
   Shield,
   Link2,
 } from 'lucide-react';
+import { ROUTES } from '@/config/routes';
 import { MFASetup, MFAStatus } from '@/components/auth/MFASetup';
 import { RecoveryCodes } from '@/components/auth/RecoveryCodes';
 import { NostrConnectionCard } from '@/components/nostr/NostrConnectionCard';
@@ -178,7 +179,11 @@ export default function SettingsPage() {
       <div className="bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center">
-            <Button variant="ghost" onClick={() => router.push('/dashboard')} className="mr-4 p-2">
+            <Button
+              variant="ghost"
+              onClick={() => router.push(ROUTES.DASHBOARD.HOME)}
+              className="mr-4 p-2"
+            >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>

@@ -22,6 +22,7 @@ import type { GroupContextInfo } from '@/hooks/useNavigationContext';
 import { NWCStatusBadge } from '@/components/nostr/NWCStatusBadge';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import type { Profile } from '@/types/database';
+import { ROUTES } from '@/config/routes';
 import { cn } from '@/lib/utils';
 
 interface ContextSwitcherProps {
@@ -56,7 +57,7 @@ export function ContextSwitcher({ profile, isExpanded, className }: ContextSwitc
   const handleSwitchToIndividual = () => {
     switchToIndividual();
     setIsOpen(false);
-    router.push('/dashboard');
+    router.push(ROUTES.DASHBOARD.HOME);
   };
 
   const handleSwitchToGroup = (group: GroupContextInfo) => {
@@ -222,7 +223,7 @@ export function ContextSwitcher({ profile, isExpanded, className }: ContextSwitc
           <button
             onClick={() => {
               setIsOpen(false);
-              router.push('/dashboard/groups/create');
+              router.push(`${ROUTES.DASHBOARD.GROUPS}/create`);
             }}
             className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 transition-colors"
           >

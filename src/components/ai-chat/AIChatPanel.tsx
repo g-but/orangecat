@@ -6,6 +6,7 @@ import { AIChatInput } from './AIChatInput';
 import { ModelSelector, ModelBadge } from './ModelSelector';
 import { Loader2, Bot, ArrowLeft, Key, Gift, AlertCircle } from 'lucide-react';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import Button from '@/components/ui/Button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -285,7 +286,7 @@ export function AIChatPanel({
               {userStatus.freeMessagesRemaining !== 1 ? 's' : ''} remaining today.
             </span>
             <Link
-              href="/dashboard/settings"
+              href={ROUTES.DASHBOARD.SETTINGS}
               className="text-amber-800 underline hover:no-underline"
             >
               Add API key

@@ -19,6 +19,7 @@ import { wishlistConfig } from '@/config/entity-configs';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import type { WishlistFormData } from '@/lib/validation';
 
 export default function CreateWishlistPage() {
@@ -97,7 +98,7 @@ export default function CreateWishlistPage() {
         <h3 className="text-lg font-semibold mb-2">{editError}</h3>
         <p className="text-gray-500 mb-4">Unable to load wishlist for editing.</p>
         <button
-          onClick={() => router.push('/dashboard/wishlists')}
+          onClick={() => router.push(ROUTES.DASHBOARD.WISHLISTS)}
           className="text-sm text-orange-600 hover:text-orange-700 font-medium"
         >
           Back to wishlists
@@ -121,7 +122,7 @@ export default function CreateWishlistPage() {
     <EntityCreationWizard<WishlistFormData>
       config={wishlistConfig}
       initialData={initialData}
-      onCancel={() => router.push('/dashboard/wishlists')}
+      onCancel={() => router.push(ROUTES.DASHBOARD.WISHLISTS)}
     />
   );
 }

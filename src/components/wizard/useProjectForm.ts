@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projectStore';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/config/routes';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { satoshisToBitcoin, bitcoinToSatoshis } from '@/services/currency';
 import type { ProjectFormData, FormErrors, ProjectStatus } from './types';

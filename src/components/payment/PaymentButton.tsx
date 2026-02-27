@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Wallet } from 'lucide-react';
 import { PaymentDialog } from './PaymentDialog';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface PaymentButtonProps {
   entityType: EntityType;
@@ -38,6 +39,7 @@ export function PaymentButton({
 }: PaymentButtonProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const meta = getEntityMetadata(entityType);
+  const { formatAmount } = useDisplayCurrency();
 
   // Don't render for entities that aren't purchasable
   if (meta.paymentPattern === 'none') {
@@ -59,7 +61,7 @@ export function PaymentButton({
         <Wallet className="mr-2 h-4 w-4" />
         {disabled ? 'No wallet connected' : buttonText}
         {!isContribution && priceSats && !disabled && (
-          <span className="ml-1 opacity-75">({priceSats.toLocaleString()} sats)</span>
+          <span className="ml-1 opacity-75">({formatAmount(priceSats)})</span>
         )}
       </Button>
 

@@ -13,6 +13,7 @@ import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { ROUTES } from '@/config/routes';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
@@ -118,7 +119,7 @@ export default async function DocumentDetailPage({ params }: PageProps) {
     <div className="container max-w-4xl py-8 space-y-6">
       {/* Back link */}
       <Link
-        href="/dashboard/cat?tab=context"
+        href={`${ROUTES.DASHBOARD.CAT}?tab=context`}
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />

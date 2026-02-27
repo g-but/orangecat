@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Target, Bitcoin, ArrowRight } from 'lucide-react';
 import { ScalableProfile } from '@/types/database';
 import Button from '@/components/ui/Button';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/config/routes';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getStatusInfo } from '@/config/status-config';
@@ -129,7 +129,7 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
           {publicProjects.length} {publicProjects.length === 1 ? 'Project' : 'Projects'}
         </h3>
         {isOwnProfile && (
-          <Link href="/dashboard/projects">
+          <Link href={ROUTES.DASHBOARD.PROJECTS}>
             <Button variant="ghost" size="sm">
               Manage All
               <ArrowRight className="w-4 h-4 ml-1" />

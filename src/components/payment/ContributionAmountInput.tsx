@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 const QUICK_AMOUNTS = [1_000, 5_000, 10_000, 50_000, 100_000];
 
@@ -26,10 +27,21 @@ export function ContributionAmountInput({
   maxSats = 10_000_000,
 }: ContributionAmountInputProps) {
   const [customMode, setCustomMode] = useState(false);
+  const [customInput, setCustomInput] = useState('');
+  const { formatAmount } = useDisplayCurrency();
+
+  const handleCustomBlur = () => {
+    const val = parseInt(customInput, 10);
+    if (!isNaN(val)) {
+      const clamped = Math.max(minSats, Math.min(maxSats, val));
+      setCustomInput(String(clamped));
+      onChange(clamped);
+    }
+  };
 
   return (
     <div className="space-y-3">
-      <label className="text-sm font-medium text-gray-700">Amount (sats)</label>
+      <label className="text-sm font-medium text-gray-700">Amount</label>
 
       {/* Quick select buttons */}
       <div className="flex flex-wrap gap-2">
@@ -45,7 +57,7 @@ export function ContributionAmountInput({
               onChange(amount);
             }}
           >
-            {amount.toLocaleString()}
+            {formatAmount(amount)}
           </Button>
         ))}
         <Button
@@ -53,7 +65,10 @@ export function ContributionAmountInput({
           variant={customMode ? 'primary' : 'outline'}
           size="sm"
           className="min-h-11"
-          onClick={() => setCustomMode(true)}
+          onClick={() => {
+            setCustomMode(true);
+            setCustomInput(value > 0 ? String(value) : '');
+          }}
         >
           Custom
         </Button>
@@ -63,21 +78,23 @@ export function ContributionAmountInput({
       {customMode && (
         <Input
           type="number"
-          value={value || ''}
+          value={customInput}
           onChange={e => {
+            setCustomInput(e.target.value);
             const val = parseInt(e.target.value, 10);
             if (!isNaN(val) && val >= minSats && val <= maxSats) {
               onChange(val);
             }
           }}
-          placeholder={`Min ${minSats.toLocaleString()} sats`}
+          onBlur={handleCustomBlur}
+          placeholder={`Min ${formatAmount(minSats)}`}
           min={minSats}
           max={maxSats}
           className="w-full"
         />
       )}
 
-      {value > 0 && <p className="text-sm text-gray-500">{value.toLocaleString()} sats</p>}
+      {value > 0 && <p className="text-sm text-gray-500">{formatAmount(value)}</p>}
     </div>
   );
 }

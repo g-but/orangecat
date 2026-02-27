@@ -19,6 +19,7 @@ import { groupConfig } from '@/config/entity-configs';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import type { CreateGroupSchemaType } from '@/services/groups/validation';
 
 export default function CreateGroupPage() {
@@ -97,7 +98,7 @@ export default function CreateGroupPage() {
         <h3 className="text-lg font-semibold mb-2">{editError}</h3>
         <p className="text-gray-500 mb-4">Unable to load group for editing.</p>
         <button
-          onClick={() => router.push('/dashboard/groups')}
+          onClick={() => router.push(ROUTES.DASHBOARD.GROUPS)}
           className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
         >
           Back to groups
@@ -116,7 +117,7 @@ export default function CreateGroupPage() {
     <EntityCreationWizard<CreateGroupSchemaType>
       config={groupConfig}
       initialData={initialData}
-      onCancel={() => router.push('/dashboard/groups')}
+      onCancel={() => router.push(ROUTES.DASHBOARD.GROUPS)}
     />
   );
 }

@@ -421,7 +421,7 @@ export const researchConfig: EntityConfig<ResearchEntity> = {
       {
         field: 'funding_goal_sats',
         rule: (value: unknown) => typeof value === 'number' && value >= 1000,
-        message: 'Funding goal must be at least 1000 sats',
+        message: 'Funding goal must be at least 1,000',
       },
       {
         field: 'team_members',

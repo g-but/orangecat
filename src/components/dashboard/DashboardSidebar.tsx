@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { Star, BarChart3, Zap, ArrowRight, TrendingUp, Clock, Plus } from 'lucide-react';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { ROUTES } from '@/config/routes';
 
 interface DashboardSidebarProps {
   stats: {
@@ -83,7 +84,7 @@ export function DashboardSidebar({ stats, profileCompletion }: DashboardSidebarP
                       <div className="text-xs text-gray-600">{profileCompletion}% done</div>
                     </div>
                     <Button
-                      onClick={() => router.push('/dashboard/info')}
+                      onClick={() => router.push(ROUTES.DASHBOARD.INFO)}
                       size="sm"
                       className="bg-amber-600 hover:bg-amber-700"
                     >

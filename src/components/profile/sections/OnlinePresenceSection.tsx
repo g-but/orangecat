@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/Input';
 import { OnlinePresenceSectionProps } from '../types';
 import { SocialLinksEditor } from '../SocialLinksEditor';
 import { MAX_SOCIAL_LINKS, PROFILE_SECTIONS, PROFILE_SECTION_DESCRIPTIONS } from '../constants';
+import { ROUTES } from '@/config/routes';
 
 export function OnlinePresenceSection({
   control,
@@ -62,7 +63,7 @@ export function OnlinePresenceSection({
         <p className="text-xs text-gray-500 mt-3">
           💡 Want to add wallets? Manage them in{' '}
           <a
-            href="/dashboard/wallets"
+            href={ROUTES.DASHBOARD.WALLETS}
             className="text-orange-600 hover:underline"
             target="_blank"
             rel="noopener noreferrer"

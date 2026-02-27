@@ -51,7 +51,7 @@ export function TransferModal({
 
     const amountSats = parseInt(amount, 10);
     if (isNaN(amountSats) || amountSats <= 0) {
-      setError('Please enter a valid amount in sats');
+      setError('Please enter a valid amount');
       return;
     }
 

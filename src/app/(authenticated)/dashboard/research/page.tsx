@@ -18,6 +18,7 @@ import { Plus, Search, TrendingUp, Users, DollarSign, Target } from 'lucide-reac
 import { ResearchEntity } from '@/types/research';
 import { logger } from '@/utils/logger';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { ROUTES } from '@/config/routes';
 import { PROJECT_STATUS } from '@/config/project-statuses';
 
 export default function ResearchDashboard() {
@@ -103,7 +104,7 @@ export default function ResearchDashboard() {
           <h1 className="text-3xl font-bold">DeSci Research</h1>
           <p className="text-muted-foreground">Independent research with decentralized funding</p>
         </div>
-        <Button onClick={() => router.push('/dashboard/research/create')}>
+        <Button onClick={() => router.push(`${ROUTES.DASHBOARD.RESEARCH}/create`)}>
           <Plus className="w-4 h-4 mr-2" />
           Start Research
         </Button>
@@ -275,7 +276,7 @@ export default function ResearchDashboard() {
               ? 'Try adjusting your filters'
               : 'Start your first research project'}
           </p>
-          <Button onClick={() => router.push('/dashboard/research/create')}>
+          <Button onClick={() => router.push(`${ROUTES.DASHBOARD.RESEARCH}/create`)}>
             <Plus className="w-4 h-4 mr-2" />
             Create Research Entity
           </Button>

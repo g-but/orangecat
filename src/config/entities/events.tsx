@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button';
 import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
+import { ROUTES } from '@/config/routes';
 import type { Currency } from '@/types/settings';
 
 // Event type from database - matches events table schema
@@ -165,7 +166,7 @@ export const eventEntityConfig: EntityConfig<Event> = {
     description:
       'Organize your first in-person gathering or meetup with Bitcoin-powered ticketing.',
     action: (
-      <Link href="/dashboard/events/create">
+      <Link href={ROUTES.DASHBOARD.EVENTS_CREATE}>
         <Button className="bg-gradient-to-r from-blue-600 to-blue-700">Create Event</Button>
       </Link>
     ),

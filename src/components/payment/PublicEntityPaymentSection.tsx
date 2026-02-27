@@ -43,8 +43,19 @@ export function PublicEntityPaymentSection({
   sellerUserId,
   signInRedirect,
 }: PublicEntityPaymentSectionProps) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { hasWallet, loading: walletLoading } = useSellerPaymentMethods(sellerProfileId);
+
+  // Auth still hydrating — show skeleton to avoid flash
+  if (authLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6 flex justify-center">
+          <div className="h-11 w-full animate-pulse rounded-md bg-gray-100" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Not logged in — show sign-in CTA
   if (!isAuthenticated) {
@@ -65,13 +76,7 @@ export function PublicEntityPaymentSection({
     );
   }
 
-  // Logged in, IS the seller — show wallet banner
-  const isOwner = !!sellerUserId && user?.id === sellerUserId;
-  if (isOwner) {
-    return <SellerWalletBanner isOwner={true} hasWallet={hasWallet} />;
-  }
-
-  // Logged in, NOT the seller — show payment button
+  // Wait for wallet check before determining owner vs buyer UI
   if (walletLoading) {
     return (
       <Card>
@@ -82,6 +87,13 @@ export function PublicEntityPaymentSection({
     );
   }
 
+  // Logged in, IS the seller — show wallet banner
+  const isOwner = !!sellerUserId && user?.id === sellerUserId;
+  if (isOwner) {
+    return <SellerWalletBanner isOwner={true} hasWallet={hasWallet} />;
+  }
+
+  // Logged in, NOT the seller — show payment button
   return (
     <Card>
       <CardContent className="pt-6">

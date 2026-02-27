@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import { ROUTES } from '@/config/routes';
 
 interface WalletsErrorStateProps {
   error: string;
@@ -42,7 +43,7 @@ export function WalletsErrorState({ error, onRetry }: WalletsErrorStateProps) {
                   >
                     Retry
                   </Button>
-                  <Button onClick={() => router.push('/dashboard')} variant="outline">
+                  <Button onClick={() => router.push(ROUTES.DASHBOARD.HOME)} variant="outline">
                     Go to Dashboard
                   </Button>
                 </div>
@@ -54,5 +55,3 @@ export function WalletsErrorState({ error, onRetry }: WalletsErrorStateProps) {
     </div>
   );
 }
-
-

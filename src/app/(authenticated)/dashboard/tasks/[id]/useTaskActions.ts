@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { ROUTES } from '@/config/routes';
 
 interface UseTaskActionsOptions {
   taskId: string;
@@ -120,7 +121,7 @@ export function useTaskActions({ taskId, onSuccess }: UseTaskActionsOptions) {
       }
 
       toast.success('Task archived');
-      router.push('/dashboard/tasks');
+      router.push(ROUTES.DASHBOARD.TASKS);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to archive task';
       toast.error(message);

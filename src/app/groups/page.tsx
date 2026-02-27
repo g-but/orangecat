@@ -9,9 +9,8 @@
  */
 
 import { redirect } from 'next/navigation';
+import { ROUTES } from '@/config/routes';
 
 export default function GroupsPage() {
-  redirect('/dashboard/groups');
+  redirect(ROUTES.DASHBOARD.GROUPS);
 }
-
-

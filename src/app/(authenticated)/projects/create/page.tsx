@@ -9,7 +9,8 @@
  */
 
 import { redirect } from 'next/navigation';
+import { ROUTES } from '@/config/routes';
 
 export default function LegacyCreateProjectPage() {
-  redirect('/dashboard/projects/create');
+  redirect(ROUTES.DASHBOARD.PROJECTS_CREATE);
 }

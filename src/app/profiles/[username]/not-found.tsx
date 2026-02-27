@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { ArrowLeft, UserX } from 'lucide-react';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/config/routes';
 
 export default function ProfileNotFound() {
   return (

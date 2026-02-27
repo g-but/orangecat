@@ -7,17 +7,7 @@ import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { Bitcoin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import dynamic from 'next/dynamic';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
-
-const ProjectSupportButton = dynamic(() =>
-  import('@/components/projects/ProjectSupportButton').then(m => ({
-    default: m.ProjectSupportButton,
-  }))
-);
-const SupportStats = dynamic(() =>
-  import('@/components/projects/SupportStats').then(m => ({ default: m.SupportStats }))
-);
 
 interface Props {
   project: {
@@ -158,18 +148,6 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
           {refreshing ? 'Refreshing…' : 'Refresh Balance'}
         </Button>
       )}
-
-      {/* Support Button */}
-      <ProjectSupportButton
-        projectId={project.id}
-        variant="primary"
-        size="md"
-        showStats={false}
-        className="w-full"
-      />
-
-      {/* Support Stats */}
-      <SupportStats projectId={project.id} />
     </aside>
   );
 }

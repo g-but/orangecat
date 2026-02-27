@@ -2,20 +2,25 @@
 
 import { useState } from 'react';
 import { convertBitcoinToAll, formatBitcoinDisplay, formatSwissFrancs } from '@/services/currency';
+import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 
 interface BitcoinDisplayProps {
   usdAmount: number;
   className?: string;
 }
 
-// Mock exchange rate - in production this would come from an API
-const BTC_USD_RATE = 105000; // 1 BTC = $105,000 USD
-
 export default function BitcoinDisplay({ usdAmount, className = '' }: BitcoinDisplayProps) {
   const [showTooltip, setShowTooltip] = useState(false);
-  // Convert USD to Bitcoin, then get all conversions
-  const bitcoinAmount = usdAmount / BTC_USD_RATE;
+  const { convertToBTC, isLoading } = useCurrencyConversion();
+
+  const bitcoinAmount = convertToBTC(usdAmount, 'USD');
   const conversion = convertBitcoinToAll(bitcoinAmount);
+
+  if (isLoading) {
+    return (
+      <span className={`inline-block h-5 w-20 animate-pulse rounded bg-gray-100 ${className}`} />
+    );
+  }
 
   return (
     <div

@@ -5,6 +5,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { User, Globe, Calendar, Mail, Phone } from 'lucide-react';
 import { SocialLinksDisplay } from './SocialLinksDisplay';
 import { SocialLink } from '@/types/social';
+import { ROUTES } from '@/config/routes';
 
 interface ProfileOverviewTabProps {
   profile: ScalableProfile;
@@ -57,7 +58,7 @@ export default function ProfileOverviewTab({
             </p>
           ) : isOwnProfile && isDashboardView ? (
             <a
-              href="/dashboard/info/edit#bio"
+              href={`${ROUTES.DASHBOARD.INFO_EDIT}#bio`}
               className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:underline group text-sm sm:text-base"
             >
               <span className="text-gray-400 italic group-hover:text-orange-600">
@@ -122,7 +123,7 @@ export default function ProfileOverviewTab({
                 </a>
               ) : isOwnProfile && isDashboardView ? (
                 <a
-                  href="/dashboard/info/edit#website"
+                  href={`${ROUTES.DASHBOARD.INFO_EDIT}#website`}
                   className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:underline text-sm sm:text-base"
                 >
                   <span className="text-gray-400 italic">Add a website</span>
@@ -150,7 +151,7 @@ export default function ProfileOverviewTab({
               />
             ) : isOwnProfile && isDashboardView ? (
               <a
-                href="/dashboard/info/edit#socialLinks"
+                href={`${ROUTES.DASHBOARD.INFO_EDIT}#socialLinks`}
                 className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:underline text-sm sm:text-base"
               >
                 <span className="text-gray-400 italic">Add social links or profiles</span>
@@ -183,7 +184,7 @@ export default function ProfileOverviewTab({
                 </a>
               ) : isOwnProfile && isDashboardView ? (
                 <a
-                  href="/dashboard/info/edit#contactEmail"
+                  href={`${ROUTES.DASHBOARD.INFO_EDIT}#contactEmail`}
                   className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:underline text-sm sm:text-base"
                 >
                   <span className="text-gray-400 italic">Add a public contact email</span>
@@ -211,7 +212,7 @@ export default function ProfileOverviewTab({
                 </a>
               ) : isOwnProfile && isDashboardView ? (
                 <a
-                  href="/dashboard/info/edit#phone"
+                  href={`${ROUTES.DASHBOARD.INFO_EDIT}#phone`}
                   className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:underline text-sm sm:text-base"
                 >
                   <span className="text-gray-400 italic">Add a phone number</span>

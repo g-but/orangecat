@@ -15,7 +15,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Wallet, AlertCircle, X, ExternalLink } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/config/routes';
 
 interface MissingWalletBannerProps {
   projectId: string;

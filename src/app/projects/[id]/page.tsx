@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
 import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/config/routes';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 

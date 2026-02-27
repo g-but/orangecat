@@ -10,7 +10,7 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { getUniqueCategories } from '@/utils/project';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/config/routes';
 import { SearchFundingPage } from '@/services/search';
 
 // Extended project type that includes all possible fields

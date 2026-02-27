@@ -6,6 +6,7 @@ import { Calendar, Clock, CreditCard, MessageSquare, Loader2, CheckCircle } from
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface BookingFormProps {
@@ -122,7 +123,7 @@ export function BookingForm({
         </div>
 
         <div className="flex gap-3 justify-center">
-          <Button variant="outline" onClick={() => router.push('/dashboard/bookings')}>
+          <Button variant="outline" onClick={() => router.push(ROUTES.DASHBOARD.BOOKINGS)}>
             View My Bookings
           </Button>
           <Button onClick={() => router.push('/services')}>Browse More Services</Button>

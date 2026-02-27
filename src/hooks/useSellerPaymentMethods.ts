@@ -39,7 +39,7 @@ export function useSellerPaymentMethods(sellerProfileId: string | null): SellerP
     async function check() {
       const { data: wallets } = await supabase
         .from(DATABASE_TABLES.WALLETS)
-        .select('id, nwc_connection_uri, lightning_address, address_or_xpub, wallet_type')
+        .select('id, wallet_type, lightning_address, address_or_xpub')
         .eq('profile_id', sellerProfileId)
         .eq('is_active', true);
 
@@ -57,7 +57,7 @@ export function useSellerPaymentMethods(sellerProfileId: string | null): SellerP
       setInfo({
         hasWallet: true,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase dynamic table query
-        hasNWC: wallets.some((w: any) => !!w.nwc_connection_uri),
+        hasNWC: wallets.some((w: any) => w.wallet_type === 'nwc'),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         hasLightningAddress: wallets.some((w: any) => !!w.lightning_address),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

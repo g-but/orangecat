@@ -7,6 +7,7 @@
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Package, Truck, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import type { Order } from '@/domain/payments/types';
 
 interface OrderCardProps {
@@ -27,6 +28,7 @@ const STATUS_CONFIG: Record<string, { label: string; variant: string; icon: Reac
 export function OrderCard({ order, role }: OrderCardProps) {
   const statusConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending_payment;
   const StatusIcon = statusConfig.icon;
+  const { formatAmount } = useDisplayCurrency();
 
   return (
     <Card className="p-4">
@@ -35,7 +37,7 @@ export function OrderCard({ order, role }: OrderCardProps) {
           <Package className="mt-0.5 h-5 w-5 text-gray-400" />
           <div>
             <h4 className="font-medium">{order.entity_title}</h4>
-            <p className="text-sm text-gray-500">{order.amount_sats.toLocaleString()} sats</p>
+            <p className="text-sm text-gray-500">{formatAmount(order.amount_sats)}</p>
             <p className="text-xs text-gray-400">
               {new Date(order.created_at).toLocaleDateString()}
             </p>

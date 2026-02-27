@@ -19,6 +19,7 @@ import { aiAssistantConfig } from '@/config/entity-configs';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import type { AIAssistantFormData } from '@/lib/validation';
 
 export default function CreateAIAssistantPage() {
@@ -101,7 +102,7 @@ export default function CreateAIAssistantPage() {
         <h3 className="text-lg font-semibold mb-2">{editError}</h3>
         <p className="text-gray-500 mb-4">Unable to load AI assistant for editing.</p>
         <button
-          onClick={() => router.push('/dashboard/ai-assistants')}
+          onClick={() => router.push(ROUTES.DASHBOARD.AI_ASSISTANTS)}
           className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
         >
           Back to AI assistants
@@ -125,7 +126,7 @@ export default function CreateAIAssistantPage() {
     <EntityCreationWizard<AIAssistantFormData>
       config={aiAssistantConfig}
       initialData={initialData}
-      onCancel={() => router.push('/dashboard/ai-assistants')}
+      onCancel={() => router.push(ROUTES.DASHBOARD.AI_ASSISTANTS)}
     />
   );
 }

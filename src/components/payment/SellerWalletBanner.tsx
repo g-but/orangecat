@@ -10,6 +10,7 @@
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Wallet, AlertCircle } from 'lucide-react';
+import { ROUTES } from '@/config/routes';
 
 interface SellerWalletBannerProps {
   /** Whether the current user owns this entity */
@@ -34,7 +35,7 @@ export function SellerWalletBanner({ isOwner, hasWallet }: SellerWalletBannerPro
             Buyers can&apos;t pay you until you connect a Bitcoin wallet.
           </p>
         </div>
-        <Button size="sm" href="/dashboard/wallets" className="min-h-11 shrink-0">
+        <Button size="sm" href={ROUTES.DASHBOARD.WALLETS} className="min-h-11 shrink-0">
           <Wallet className="mr-2 h-4 w-4" />
           Connect Wallet
         </Button>

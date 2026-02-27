@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button';
 import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
+import { ROUTES } from '@/config/routes';
 import type { Currency } from '@/types/settings';
 
 export const productEntityConfig: EntityConfig<UserProduct> = {
@@ -79,7 +80,7 @@ export const productEntityConfig: EntityConfig<UserProduct> = {
     title: 'No products yet',
     description: 'Start building your marketplace by adding your first product.',
     action: (
-      <Link href="/dashboard/store/create">
+      <Link href={ROUTES.DASHBOARD.STORE_CREATE}>
         <Button className="bg-gradient-to-r from-orange-600 to-orange-700">Add Product</Button>
       </Link>
     ),

@@ -6,6 +6,7 @@ import { Calendar, CreditCard, Shield, MessageSquare, Loader2, CheckCircle } fro
 import { logger } from '@/utils/logger';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
+import { ROUTES } from '@/config/routes';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface AssetRentalFormProps {
@@ -159,7 +160,7 @@ export function AssetRentalForm({
         </div>
 
         <div className="flex gap-3 justify-center">
-          <Button variant="outline" onClick={() => router.push('/dashboard/bookings')}>
+          <Button variant="outline" onClick={() => router.push(ROUTES.DASHBOARD.BOOKINGS)}>
             View My Rentals
           </Button>
           <Button onClick={() => router.push('/assets')}>Browse More Assets</Button>

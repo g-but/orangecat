@@ -24,6 +24,7 @@ import { causeConfig } from '@/config/entity-configs';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import type { UserCauseFormData } from '@/lib/validation';
 
 export default function CreateCausePage() {
@@ -101,7 +102,7 @@ export default function CreateCausePage() {
         <h3 className="text-lg font-semibold mb-2">{editError}</h3>
         <p className="text-gray-500 mb-4">Unable to load cause for editing.</p>
         <button
-          onClick={() => router.push('/dashboard/causes')}
+          onClick={() => router.push(ROUTES.DASHBOARD.CAUSES)}
           className="text-sm text-orange-600 hover:text-orange-700 font-medium"
         >
           Back to causes
@@ -122,7 +123,7 @@ export default function CreateCausePage() {
     <EntityCreationWizard<UserCauseFormData>
       config={causeConfig}
       initialData={initialData}
-      onCancel={() => router.push('/dashboard/causes')}
+      onCancel={() => router.push(ROUTES.DASHBOARD.CAUSES)}
     />
   );
 }

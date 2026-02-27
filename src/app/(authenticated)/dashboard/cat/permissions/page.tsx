@@ -13,6 +13,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/config/routes';
 import Link from 'next/link';
 import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
@@ -240,7 +241,7 @@ export default function CatPermissionsPage() {
           {/* Header */}
           <div className="mb-6">
             <Link
-              href="/dashboard/cat"
+              href={ROUTES.DASHBOARD.CAT}
               className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
             >
               <ArrowLeft className="h-4 w-4" />

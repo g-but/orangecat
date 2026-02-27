@@ -20,6 +20,7 @@ import { EntityForm } from '@/components/create/EntityForm';
 import { projectConfig } from '@/config/entity-configs/project-config';
 import Loading from '@/components/Loading';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import type { ProjectData } from '@/lib/validation';
 
 export default function CreateProjectPage() {
@@ -90,7 +91,7 @@ export default function CreateProjectPage() {
         <h3 className="text-lg font-semibold mb-2">{editError}</h3>
         <p className="text-gray-500 mb-4">Unable to load project for editing.</p>
         <button
-          onClick={() => router.push('/dashboard/projects')}
+          onClick={() => router.push(ROUTES.DASHBOARD.PROJECTS)}
           className="text-sm text-blue-600 hover:text-blue-700 font-medium"
         >
           Back to projects
@@ -114,7 +115,7 @@ export default function CreateProjectPage() {
     <EntityCreationWizard<ProjectData>
       config={projectConfig}
       initialData={initialData}
-      onCancel={() => router.push('/dashboard/projects')}
+      onCancel={() => router.push(ROUTES.DASHBOARD.PROJECTS)}
     />
   );
 }

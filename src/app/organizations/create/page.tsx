@@ -10,8 +10,8 @@
  */
 
 import { redirect } from 'next/navigation';
+import { ROUTES } from '@/config/routes';
 
 export default function CreateOrganizationPage() {
-  redirect('/dashboard/groups/create');
+  redirect(ROUTES.DASHBOARD.GROUPS_CREATE);
 }
-

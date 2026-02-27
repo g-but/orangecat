@@ -19,6 +19,7 @@ import { assetConfig } from '@/config/entity-configs';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 import type { AssetFormData } from '@/lib/validation';
 
 export default function CreateAssetPage() {
@@ -95,7 +96,7 @@ export default function CreateAssetPage() {
         <h3 className="text-lg font-semibold mb-2">{editError}</h3>
         <p className="text-gray-500 mb-4">Unable to load asset for editing.</p>
         <button
-          onClick={() => router.push('/dashboard/assets')}
+          onClick={() => router.push(ROUTES.DASHBOARD.ASSETS)}
           className="text-sm text-green-600 hover:text-green-700 font-medium"
         >
           Back to assets
@@ -114,7 +115,7 @@ export default function CreateAssetPage() {
     <EntityCreationWizard<AssetFormData>
       config={assetConfig}
       initialData={initialData}
-      onCancel={() => router.push('/dashboard/assets')}
+      onCancel={() => router.push(ROUTES.DASHBOARD.ASSETS)}
     />
   );
 }

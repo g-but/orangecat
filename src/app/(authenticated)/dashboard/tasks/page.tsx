@@ -18,6 +18,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
+import { ROUTES } from '@/config/routes';
 import EntityListShell from '@/components/entity/EntityListShell';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
@@ -193,7 +194,7 @@ export default function TasksPage() {
   const headerActions = (
     <div className="flex items-center gap-2">
       <Button
-        href="/dashboard/tasks/analytics"
+        href={ROUTES.DASHBOARD.TASKS_ANALYTICS}
         variant="outline"
         size="sm"
         className="flex items-center gap-2"
@@ -212,7 +213,7 @@ export default function TasksPage() {
         {showFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </Button>
       <Button
-        href="/dashboard/tasks/new"
+        href={ROUTES.DASHBOARD.TASKS_NEW}
         className="flex items-center gap-2 bg-gradient-to-r from-tiffany-600 to-tiffany-700"
       >
         <Plus className="h-4 w-4" />
@@ -330,7 +331,7 @@ export default function TasksPage() {
               ? 'Try different filter settings'
               : 'Create your first task'}
           </p>
-          <Button href="/dashboard/tasks/new" className="inline-flex">
+          <Button href={ROUTES.DASHBOARD.TASKS_NEW} className="inline-flex">
             <Plus className="h-4 w-4 mr-2" />
             New task
           </Button>

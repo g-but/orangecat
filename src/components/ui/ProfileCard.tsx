@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import { SearchProfile } from '@/services/search';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/config/routes';
 
 interface ProfileCardProps {
   profile: SearchProfile;

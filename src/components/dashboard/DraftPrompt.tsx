@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { useProjectStore, Campaign } from '@/stores/projectStore';
 import { formatDistanceToNow } from 'date-fns';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { ROUTES } from '@/config/routes';
 
 interface DraftPromptProps {
   className?: string;
@@ -130,7 +131,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
                 </Link>
 
                 {totalDrafts > 1 && (
-                  <Link href="/dashboard/projects">
+                  <Link href={ROUTES.DASHBOARD.PROJECTS}>
                     <Button variant="outline">View All Drafts ({totalDrafts})</Button>
                   </Link>
                 )}
@@ -194,7 +195,7 @@ export function DraftsList({ className }: { className?: string }) {
         ))}
 
         {drafts.length > 3 && (
-          <Link href="/dashboard/projects">
+          <Link href={ROUTES.DASHBOARD.PROJECTS}>
             <Button variant="ghost" className="w-full">
               View {drafts.length - 3} more drafts
             </Button>

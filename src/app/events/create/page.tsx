@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { ROUTES } from '@/config/routes';
 
 /**
  * CREATE EVENT PAGE (Redirect)
@@ -10,6 +11,5 @@ import { redirect } from 'next/navigation';
  * Last Modified Summary: Added redirect to /dashboard/events/create
  */
 export default function CreateEventPage() {
-  redirect('/dashboard/events/create');
+  redirect(ROUTES.DASHBOARD.EVENTS_CREATE);
 }
-

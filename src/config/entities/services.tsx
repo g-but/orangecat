@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button';
 import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
+import { ROUTES } from '@/config/routes';
 import type { Currency } from '@/types/settings';
 
 export const serviceEntityConfig: EntityConfig<UserService> = {
@@ -106,7 +107,7 @@ export const serviceEntityConfig: EntityConfig<UserService> = {
     title: 'No services yet',
     description: 'Start offering your expertise to the community by creating your first service.',
     action: (
-      <Link href="/dashboard/services/create">
+      <Link href={ROUTES.DASHBOARD.SERVICES_CREATE}>
         <Button className="bg-gradient-to-r from-orange-600 to-orange-700">Add Service</Button>
       </Link>
     ),

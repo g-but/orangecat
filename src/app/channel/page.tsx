@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/config/routes';
 import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -135,7 +136,7 @@ export default function ChannelComingSoonPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 relative">
-                <Link href="/dashboard/people">
+                <Link href={ROUTES.DASHBOARD.PEOPLE}>
                   <Button variant="outline">
                     <Users className="w-4 h-4 mr-2" /> Discover People
                   </Button>
