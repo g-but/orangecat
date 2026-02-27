@@ -14,6 +14,7 @@ import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
 import { ROUTES } from '@/config/routes';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import type { Currency } from '@/types/settings';
 
 export const causeEntityConfig: EntityConfig<UserCause> = {
@@ -21,14 +22,14 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
   namePlural: 'Causes',
   colorTheme: 'orange',
 
-  listPath: '/dashboard/causes',
-  detailPath: id => `/dashboard/causes/${id}`,
-  createPath: '/dashboard/causes/create',
-  editPath: id => `/dashboard/causes/create?edit=${id}`,
+  listPath: ENTITY_REGISTRY['cause'].basePath,
+  detailPath: id => `${ENTITY_REGISTRY['cause'].basePath}/${id}`,
+  createPath: ENTITY_REGISTRY['cause'].createPath,
+  editPath: id => `${ENTITY_REGISTRY['cause'].createPath}?edit=${id}`,
 
-  apiEndpoint: '/api/causes',
+  apiEndpoint: ENTITY_REGISTRY['cause'].apiEndpoint,
 
-  makeHref: cause => `/dashboard/causes/${cause.id}`,
+  makeHref: cause => `${ENTITY_REGISTRY['cause'].basePath}/${cause.id}`,
 
   makeCardProps: (cause, userCurrency?: string) => {
     // Display goal in user's preferred currency (or cause's currency)
@@ -94,7 +95,7 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
           </div>
         ) : undefined,
       showEditButton: true,
-      editHref: `/dashboard/causes/create?edit=${cause.id}`,
+      editHref: `${ENTITY_REGISTRY['cause'].createPath}?edit=${cause.id}`,
       // Removed duplicate actions button - edit icon overlay is sufficient
     };
   },

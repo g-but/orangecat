@@ -10,6 +10,7 @@
  */
 
 import { FileText } from 'lucide-react';
+import { ROUTES } from '@/config/routes';
 import { documentSchema, type DocumentFormData } from '@/lib/validation';
 import {
   documentGuidanceContent,
@@ -133,8 +134,8 @@ export const documentFormConfig = createEntityConfig<DocumentFormData>({
   namePlural: 'Documents',
   icon: FileText,
   colorTheme: 'indigo',
-  backUrl: '/dashboard/cat?tab=context',
-  successUrl: '/dashboard/cat?tab=context',
+  backUrl: `${ROUTES.DASHBOARD.CAT}?tab=context`,
+  successUrl: `${ROUTES.DASHBOARD.CAT}?tab=context`,
   pageTitle: 'Add Context',
   pageDescription: 'Add a document to help My Cat understand your goals, skills, and situation.',
   formTitle: 'Document Details',

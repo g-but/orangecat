@@ -13,6 +13,7 @@ import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
 import { ROUTES } from '@/config/routes';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import type { Currency } from '@/types/settings';
 
 // Event type from database - matches events table schema
@@ -66,14 +67,14 @@ export const eventEntityConfig: EntityConfig<Event> = {
   namePlural: 'Events',
   colorTheme: 'blue',
 
-  listPath: '/dashboard/events',
-  detailPath: id => `/dashboard/events/${id}`,
-  createPath: '/dashboard/events/create',
-  editPath: id => `/dashboard/events/create?edit=${id}`,
+  listPath: ENTITY_REGISTRY['event'].basePath,
+  detailPath: id => `${ENTITY_REGISTRY['event'].basePath}/${id}`,
+  createPath: ENTITY_REGISTRY['event'].createPath,
+  editPath: id => `${ENTITY_REGISTRY['event'].createPath}?edit=${id}`,
 
-  apiEndpoint: '/api/events',
+  apiEndpoint: ENTITY_REGISTRY['event'].apiEndpoint,
 
-  makeHref: event => `/dashboard/events/${event.id}`,
+  makeHref: event => `${ENTITY_REGISTRY['event'].basePath}/${event.id}`,
 
   makeCardProps: (event, userCurrency?: string) => {
     // Display price in user's preferred currency (or event's currency)
@@ -156,7 +157,7 @@ export const eventEntityConfig: EntityConfig<Event> = {
           </div>
         ) : undefined,
       showEditButton: true,
-      editHref: `/dashboard/events/create?edit=${event.id}`,
+      editHref: `${ENTITY_REGISTRY['event'].createPath}?edit=${event.id}`,
       // Removed duplicate actions button - edit icon overlay is sufficient
     };
   },

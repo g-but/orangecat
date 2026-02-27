@@ -12,6 +12,7 @@ import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import { logger } from '@/utils/logger';
 import { UserProfileDropdownPanel } from '@/components/ui/UserProfileDropdownPanel';
 import type { MenuItem } from '@/components/ui/UserProfileDropdownPanel';
+import { ROUTES } from '@/config/routes';
 
 export interface UserProfileDropdownProps {
   variant?: 'simple' | 'advanced';
@@ -45,13 +46,13 @@ export default function UserProfileDropdown({
     {
       label: 'My Projects',
       icon: Handshake,
-      href: '/dashboard/projects',
+      href: ROUTES.DASHBOARD.PROJECTS,
       description: 'Manage your projects',
     },
     {
       label: 'Edit Profile',
       icon: Settings,
-      href: '/dashboard/info/edit',
+      href: ROUTES.DASHBOARD.INFO_EDIT,
       description: 'Update your information',
     },
   ];

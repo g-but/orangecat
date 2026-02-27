@@ -13,20 +13,21 @@ import Button from '@/components/ui/Button';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
 import { ROUTES } from '@/config/routes';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 export const loanEntityConfig: EntityConfig<Loan> = {
   name: 'Loan',
   namePlural: 'Loans',
   colorTheme: 'tiffany',
 
-  listPath: '/dashboard/loans',
-  detailPath: id => `/dashboard/loans/${id}`,
-  createPath: '/dashboard/loans/create',
-  editPath: id => `/dashboard/loans/create?edit=${id}`,
+  listPath: ENTITY_REGISTRY['loan'].basePath,
+  detailPath: id => `${ENTITY_REGISTRY['loan'].basePath}/${id}`,
+  createPath: ENTITY_REGISTRY['loan'].createPath,
+  editPath: id => `${ENTITY_REGISTRY['loan'].createPath}?edit=${id}`,
 
-  apiEndpoint: '/api/loans',
+  apiEndpoint: ENTITY_REGISTRY['loan'].apiEndpoint,
 
-  makeHref: loan => `/dashboard/loans/${loan.id}`,
+  makeHref: loan => `${ENTITY_REGISTRY['loan'].basePath}/${loan.id}`,
 
   makeCardProps: loan => {
     // Build remaining balance label
@@ -90,7 +91,7 @@ export const loanEntityConfig: EntityConfig<Loan> = {
           </div>
         ) : undefined,
       showEditButton: true,
-      editHref: `/dashboard/loans/create?edit=${loan.id}`,
+      editHref: `${ENTITY_REGISTRY['loan'].createPath}?edit=${loan.id}`,
     };
   },
 

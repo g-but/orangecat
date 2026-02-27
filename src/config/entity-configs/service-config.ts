@@ -16,6 +16,7 @@ import {
 import type { FieldGroup } from '@/components/create/types';
 import { SERVICE_TEMPLATES, type ServiceTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 // ==================== CONSTANTS ====================
 
@@ -174,8 +175,8 @@ export const serviceConfig = createEntityConfig<UserServiceFormData>({
   namePlural: 'Services',
   icon: Briefcase,
   colorTheme: 'tiffany',
-  backUrl: '/dashboard/services',
-  successUrl: '/dashboard/services',
+  backUrl: ENTITY_REGISTRY['service'].basePath,
+  successUrl: ENTITY_REGISTRY['service'].basePath,
   pageTitle: 'Create Service',
   pageDescription: 'Offer your expertise to the community',
   formTitle: 'Service Details',

@@ -37,7 +37,7 @@ export const EXPLORE_OPTIONS = [
     icon: MessageCircle,
     title: 'My Cat',
     description: 'Your AI assistant for questions about OrangeCat',
-    href: '/dashboard/my-cat',
+    href: ROUTES.DASHBOARD.CAT,
     color: 'purple',
   },
   {

@@ -14,6 +14,7 @@ import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
 import { ROUTES } from '@/config/routes';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import type { Currency } from '@/types/settings';
 
 export const productEntityConfig: EntityConfig<UserProduct> = {
@@ -21,14 +22,14 @@ export const productEntityConfig: EntityConfig<UserProduct> = {
   namePlural: 'Products',
   colorTheme: 'orange',
 
-  listPath: '/dashboard/store',
-  detailPath: id => `/dashboard/store/${id}`,
-  createPath: '/dashboard/store/create',
-  editPath: id => `/dashboard/store/create?edit=${id}`,
+  listPath: ENTITY_REGISTRY['product'].basePath,
+  detailPath: id => `${ENTITY_REGISTRY['product'].basePath}/${id}`,
+  createPath: ENTITY_REGISTRY['product'].createPath,
+  editPath: id => `${ENTITY_REGISTRY['product'].createPath}?edit=${id}`,
 
-  apiEndpoint: '/api/products',
+  apiEndpoint: ENTITY_REGISTRY['product'].apiEndpoint,
 
-  makeHref: product => `/dashboard/store/${product.id}`,
+  makeHref: product => `${ENTITY_REGISTRY['product'].basePath}/${product.id}`,
 
   makeCardProps: (product, userCurrency?: string) => {
     // Display price in user's preferred currency (or product's currency)
@@ -71,7 +72,7 @@ export const productEntityConfig: EntityConfig<UserProduct> = {
                 ? 'destructive'
                 : 'default',
       showEditButton: true,
-      editHref: `/dashboard/store/create?edit=${product.id}`,
+      editHref: `${ENTITY_REGISTRY['product'].createPath}?edit=${product.id}`,
       // Removed duplicate actions button - edit icon overlay is sufficient
     };
   },

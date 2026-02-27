@@ -1,5 +1,6 @@
 import { EntityConfig } from '@/types/entity';
 import { ResearchEntity } from '@/types/research';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { z } from 'zod';
 
 // Research entity validation schema
@@ -119,19 +120,19 @@ export const researchConfig: EntityConfig<ResearchEntity> = {
   schema: researchEntitySchema,
 
   // Routing
-  listPath: '/dashboard/research',
-  detailPath: (id: string) => `/research/${id}`,
-  createPath: '/dashboard/research/create',
-  editPath: (id: string) => `/dashboard/research/create?edit=${id}`,
-  apiEndpoint: '/api/research',
+  listPath: ENTITY_REGISTRY['research'].basePath,
+  detailPath: (id: string) => `${ENTITY_REGISTRY['research'].publicBasePath}/${id}`,
+  createPath: ENTITY_REGISTRY['research'].createPath,
+  editPath: (id: string) => `${ENTITY_REGISTRY['research'].createPath}?edit=${id}`,
+  apiEndpoint: ENTITY_REGISTRY['research'].apiEndpoint,
 
   // Card rendering
-  makeHref: entity => `/research/${entity.id}`,
+  makeHref: entity => `${ENTITY_REGISTRY['research'].publicBasePath}/${entity.id}`,
   makeCardProps: entity => ({
     badge: entity.status === 'active' ? 'Active' : entity.status === 'draft' ? 'Draft' : undefined,
     badgeVariant: entity.status === 'active' ? 'success' : 'default',
     showEditButton: true,
-    editHref: `/dashboard/research/create?edit=${entity.id}`,
+    editHref: `${ENTITY_REGISTRY['research'].createPath}?edit=${entity.id}`,
   }),
 
   // Basic fields

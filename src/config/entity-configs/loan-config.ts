@@ -14,6 +14,7 @@ import { loanGuidanceContent, loanDefaultGuidance } from '@/lib/entity-guidance/
 import type { FieldGroup } from '@/components/create/types';
 import { LOAN_TEMPLATES, type LoanTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { LoanCollateralField } from '@/components/create/collateral/LoanCollateralField';
 import { WalletSelectorField } from '@/components/create/wallet-selector';
 
@@ -219,8 +220,8 @@ export const loanConfig = createEntityConfig<LoanFormData>({
   namePlural: 'Loans',
   icon: DollarSign,
   colorTheme: 'blue',
-  backUrl: '/dashboard/loans',
-  successUrl: '/dashboard/loans/[id]',
+  backUrl: ENTITY_REGISTRY['loan'].basePath,
+  successUrl: `${ENTITY_REGISTRY['loan'].basePath}/[id]`,
   pageTitle: 'Create Loan Listing',
   pageDescription: 'List your loan needs and connect with peer-to-peer lenders.',
   formTitle: 'Loan Details',

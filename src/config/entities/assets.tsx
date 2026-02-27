@@ -17,20 +17,21 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { ROUTES } from '@/config/routes';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 export const assetEntityConfig: EntityConfig<Asset> = {
   name: 'Asset',
   namePlural: 'Assets',
   colorTheme: 'green',
 
-  listPath: '/dashboard/assets',
-  detailPath: id => `/dashboard/assets/${id}`,
-  createPath: '/dashboard/assets/create',
-  editPath: id => `/dashboard/assets/create?edit=${id}`,
+  listPath: ENTITY_REGISTRY['asset'].basePath,
+  detailPath: id => `${ENTITY_REGISTRY['asset'].basePath}/${id}`,
+  createPath: ENTITY_REGISTRY['asset'].createPath,
+  editPath: id => `${ENTITY_REGISTRY['asset'].createPath}?edit=${id}`,
 
-  apiEndpoint: '/api/assets',
+  apiEndpoint: ENTITY_REGISTRY['asset'].apiEndpoint,
 
-  makeHref: asset => `/dashboard/assets/${asset.id}`,
+  makeHref: asset => `${ENTITY_REGISTRY['asset'].basePath}/${asset.id}`,
 
   makeCardProps: asset => {
     // Build value label
@@ -77,7 +78,7 @@ export const assetEntityConfig: EntityConfig<Asset> = {
           </div>
         ) : undefined,
       showEditButton: true,
-      editHref: `/dashboard/assets/create?edit=${asset.id}`,
+      editHref: `${ENTITY_REGISTRY['asset'].createPath}?edit=${asset.id}`,
       // Removed duplicate actions button - edit icon overlay is sufficient
     };
   },

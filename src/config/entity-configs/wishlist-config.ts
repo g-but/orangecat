@@ -19,6 +19,7 @@ import {
 import type { FieldGroup } from '@/components/create/types';
 import { WISHLIST_TEMPLATES, type WishlistTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 // ==================== FIELD GROUPS ====================
 
@@ -131,10 +132,11 @@ export const wishlistConfig = createEntityConfig<WishlistFormData>({
   namePlural: 'Wishlists',
   icon: Gift,
   colorTheme: 'rose',
-  backUrl: '/dashboard/wishlists',
-  successUrl: '/wishlists/[id]',
+  backUrl: ENTITY_REGISTRY['wishlist'].basePath,
+  successUrl: `${ENTITY_REGISTRY['wishlist'].publicBasePath}/[id]`,
   pageTitle: 'Create Wishlist',
-  pageDescription: 'Create a wishlist for any occasion. Add items from OrangeCat or anywhere on the web.',
+  pageDescription:
+    'Create a wishlist for any occasion. Add items from OrangeCat or anywhere on the web.',
   formTitle: 'Wishlist Details',
   formDescription: 'Set up your wishlist and start adding items',
   fieldGroups,

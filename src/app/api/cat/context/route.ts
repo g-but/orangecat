@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { fetchFullContextForCat, type FullUserContext } from '@/services/ai/document-context';
 import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
 
 interface ContextSummary {
   greeting: string;
@@ -179,7 +180,7 @@ function generateSuggestions(context: FullUserContext): ContextSummary['suggesti
     suggestions.push({
       text: 'You have products but no projects. Want to crowdfund something bigger?',
       action: 'Create a Project',
-      actionUrl: '/dashboard/projects/create',
+      actionUrl: ROUTES.DASHBOARD.PROJECTS_CREATE,
     });
   }
 
@@ -187,7 +188,7 @@ function generateSuggestions(context: FullUserContext): ContextSummary['suggesti
     suggestions.push({
       text: 'Add some context about yourself so I can give you personalized advice',
       action: 'Add Context',
-      actionUrl: '/dashboard/documents/create',
+      actionUrl: ROUTES.DASHBOARD.DOCUMENTS_CREATE,
     });
   }
 
@@ -195,7 +196,7 @@ function generateSuggestions(context: FullUserContext): ContextSummary['suggesti
     suggestions.push({
       text: 'Tell me about your goals and I can help you achieve them',
       action: 'Share Your Goals',
-      actionUrl: '/dashboard/documents/create',
+      actionUrl: ROUTES.DASHBOARD.DOCUMENTS_CREATE,
     });
   }
 

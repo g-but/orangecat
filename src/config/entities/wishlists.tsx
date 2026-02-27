@@ -9,6 +9,7 @@
  */
 
 import { EntityConfig } from '@/types/entity';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 export interface WishlistListItem {
   id: string;
@@ -28,21 +29,21 @@ export const wishlistEntityConfig: EntityConfig<WishlistListItem> = {
   namePlural: 'Wishlists',
   colorTheme: 'orange',
 
-  listPath: '/dashboard/wishlists',
-  detailPath: id => `/dashboard/wishlists/${id}`,
-  createPath: '/dashboard/wishlists/create',
-  editPath: id => `/dashboard/wishlists/create?edit=${id}`,
+  listPath: ENTITY_REGISTRY['wishlist'].basePath,
+  detailPath: id => `${ENTITY_REGISTRY['wishlist'].basePath}/${id}`,
+  createPath: ENTITY_REGISTRY['wishlist'].createPath,
+  editPath: id => `${ENTITY_REGISTRY['wishlist'].createPath}?edit=${id}`,
 
-  apiEndpoint: '/api/wishlists',
+  apiEndpoint: ENTITY_REGISTRY['wishlist'].apiEndpoint,
 
-  makeHref: item => `/dashboard/wishlists/${item.id}`,
+  makeHref: item => `${ENTITY_REGISTRY['wishlist'].basePath}/${item.id}`,
 
   makeCardProps: item => ({
     imageUrl: item.cover_image_url,
     badge: item.type,
     status: item.is_active ? 'active' : 'inactive',
     showEditButton: true,
-    editHref: `/dashboard/wishlists/create?edit=${item.id}`,
+    editHref: `${ENTITY_REGISTRY['wishlist'].createPath}?edit=${item.id}`,
     metadata: (
       <div className="flex flex-wrap gap-2 text-xs text-gray-500">
         <span>{item.visibility}</span>

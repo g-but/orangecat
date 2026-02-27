@@ -8,6 +8,7 @@
  */
 
 import { Microscope } from 'lucide-react';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { z } from 'zod';
 import {
   RESEARCH_FIELDS,
@@ -286,8 +287,8 @@ export const researchWizardConfig = createEntityConfig<ResearchWizardFormData>({
   namePlural: 'Research',
   icon: Microscope,
   colorTheme: 'purple',
-  backUrl: '/dashboard/research',
-  successUrl: '/dashboard/research/[id]',
+  backUrl: ENTITY_REGISTRY['research'].basePath,
+  successUrl: `${ENTITY_REGISTRY['research'].basePath}/[id]`,
   pageTitle: 'Create Research',
   pageDescription: 'Launch your independent research with decentralized funding',
   formTitle: 'Research Details',

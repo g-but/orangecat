@@ -18,6 +18,7 @@ import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { PROJECT_STATUS } from '@/config/project-statuses';
 import { ROUTES } from '@/config/routes';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import type { Currency } from '@/types/settings';
 
 // Project type for EntityList usage
@@ -44,14 +45,14 @@ export const projectEntityConfig: EntityConfig<ProjectListItem> = {
   namePlural: 'Projects',
   colorTheme: 'orange',
 
-  listPath: '/dashboard/projects',
-  detailPath: id => `/projects/${id}`,
-  createPath: '/dashboard/projects/create',
-  editPath: id => `/dashboard/projects/create?edit=${id}`,
+  listPath: ENTITY_REGISTRY['project'].basePath,
+  detailPath: id => `${ENTITY_REGISTRY['project'].publicBasePath}/${id}`,
+  createPath: ENTITY_REGISTRY['project'].createPath,
+  editPath: id => `${ENTITY_REGISTRY['project'].createPath}?edit=${id}`,
 
-  apiEndpoint: '/api/projects',
+  apiEndpoint: ENTITY_REGISTRY['project'].apiEndpoint,
 
-  makeHref: project => `/projects/${project.id}`,
+  makeHref: project => `${ENTITY_REGISTRY['project'].publicBasePath}/${project.id}`,
 
   makeCardProps: (project, userCurrency?: string) => {
     // Display amounts in user's preferred currency (or project's currency)
@@ -142,7 +143,7 @@ export const projectEntityConfig: EntityConfig<ProjectListItem> = {
           </div>
         ) : undefined,
       showEditButton: true,
-      editHref: `/dashboard/projects/create?edit=${project.id}`,
+      editHref: `${ENTITY_REGISTRY['project'].createPath}?edit=${project.id}`,
     };
   },
 

@@ -14,6 +14,7 @@ import { convert, formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
 import { ROUTES } from '@/config/routes';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import type { Currency } from '@/types/settings';
 
 export const serviceEntityConfig: EntityConfig<UserService> = {
@@ -21,14 +22,14 @@ export const serviceEntityConfig: EntityConfig<UserService> = {
   namePlural: 'Services',
   colorTheme: 'orange',
 
-  listPath: '/dashboard/services',
-  detailPath: id => `/dashboard/services/${id}`,
-  createPath: '/dashboard/services/create',
-  editPath: id => `/dashboard/services/create?edit=${id}`,
+  listPath: ENTITY_REGISTRY['service'].basePath,
+  detailPath: id => `${ENTITY_REGISTRY['service'].basePath}/${id}`,
+  createPath: ENTITY_REGISTRY['service'].createPath,
+  editPath: id => `${ENTITY_REGISTRY['service'].createPath}?edit=${id}`,
 
-  apiEndpoint: '/api/services',
+  apiEndpoint: ENTITY_REGISTRY['service'].apiEndpoint,
 
-  makeHref: service => `/dashboard/services/${service.id}`,
+  makeHref: service => `${ENTITY_REGISTRY['service'].basePath}/${service.id}`,
 
   makeCardProps: (service, userCurrency?: string) => {
     // Display prices in user's preferred currency (or service's currency)
@@ -98,7 +99,7 @@ export const serviceEntityConfig: EntityConfig<UserService> = {
           </div>
         ) : undefined,
       showEditButton: true,
-      editHref: `/dashboard/services/create?edit=${service.id}`,
+      editHref: `${ENTITY_REGISTRY['service'].createPath}?edit=${service.id}`,
       // Removed duplicate actions button - edit icon overlay is sufficient
     };
   },

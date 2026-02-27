@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { ROUTES } from '@/config/routes';
 import { z } from 'zod';
 import {
   createOpenRouterService,
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest) {
             message:
               'To use My Cat AI chat, you need to add your own API key in Settings → API Keys. Get a free Groq key at console.groq.com/keys',
             hasByok: false,
-            helpUrl: '/dashboard/settings?tab=api-keys',
+            helpUrl: `${ROUTES.DASHBOARD.SETTINGS}?tab=api-keys`,
           },
         },
         { status: 503 }

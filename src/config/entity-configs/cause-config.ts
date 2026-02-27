@@ -13,6 +13,7 @@ import { causeGuidanceContent, causeDefaultGuidance } from '@/lib/entity-guidanc
 import type { FieldGroup } from '@/components/create/types';
 import { CAUSE_TEMPLATES, type CauseTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { WalletSelectorField } from '@/components/create/wallet-selector';
 
 // ==================== CONSTANTS ====================
@@ -134,8 +135,8 @@ export const causeConfig = createEntityConfig<UserCauseFormData>({
   namePlural: 'Causes',
   icon: Heart,
   colorTheme: 'rose',
-  backUrl: '/dashboard/causes',
-  successUrl: '/dashboard/causes/[id]',
+  backUrl: ENTITY_REGISTRY['cause'].basePath,
+  successUrl: `${ENTITY_REGISTRY['cause'].basePath}/[id]`,
   pageTitle: 'Create Cause',
   pageDescription: 'Start a charitable fundraising campaign',
   formTitle: 'Cause Details',

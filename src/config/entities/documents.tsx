@@ -10,6 +10,7 @@
  */
 
 import { EntityConfig } from '@/types/entity';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import type { DocumentType, DocumentVisibility } from '@/lib/validation';
 
 export interface DocumentListItem {
@@ -63,20 +64,20 @@ export const documentEntityConfig: EntityConfig<DocumentListItem> = {
   namePlural: 'Documents',
   colorTheme: 'purple',
 
-  listPath: '/dashboard/documents',
-  detailPath: id => `/dashboard/documents/${id}`,
-  createPath: '/dashboard/documents/create',
-  editPath: id => `/dashboard/documents/create?edit=${id}`,
+  listPath: ENTITY_REGISTRY['document'].basePath,
+  detailPath: id => `${ENTITY_REGISTRY['document'].basePath}/${id}`,
+  createPath: ENTITY_REGISTRY['document'].createPath,
+  editPath: id => `${ENTITY_REGISTRY['document'].createPath}?edit=${id}`,
 
-  apiEndpoint: '/api/documents',
+  apiEndpoint: ENTITY_REGISTRY['document'].apiEndpoint,
 
-  makeHref: item => `/dashboard/documents/${item.id}`,
+  makeHref: item => `${ENTITY_REGISTRY['document'].basePath}/${item.id}`,
 
   makeCardProps: item => ({
     badge: DOCUMENT_TYPE_LABELS[item.document_type] || item.document_type,
     status: item.visibility === 'private' ? 'private' : 'active',
     showEditButton: true,
-    editHref: `/dashboard/documents/create?edit=${item.id}`,
+    editHref: `${ENTITY_REGISTRY['document'].createPath}?edit=${item.id}`,
     metadata: (
       <div className="flex flex-wrap gap-2 text-xs text-gray-500">
         <span>

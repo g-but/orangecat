@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { getRouteContext } from '@/config/routes';
+import { getRouteContext, ROUTES } from '@/config/routes';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import {
   Home,
   Users,
@@ -79,7 +80,7 @@ export function ContextualLoader({ className, pathname: propPathname }: Contextu
     }
 
     // Profile pages
-    if (pathname.startsWith('/profiles') || pathname.startsWith('/dashboard/info')) {
+    if (pathname.startsWith('/profiles') || pathname.startsWith(ROUTES.DASHBOARD.INFO)) {
       return {
         icon: UserIcon,
         title: 'Your Profile',
@@ -130,7 +131,10 @@ export function ContextualLoader({ className, pathname: propPathname }: Contextu
     }
 
     // Projects
-    if (pathname.startsWith('/dashboard/projects') || pathname.startsWith('/projects')) {
+    if (
+      pathname.startsWith(ENTITY_REGISTRY['project'].basePath) ||
+      pathname.startsWith(ENTITY_REGISTRY['project'].publicBasePath)
+    ) {
       return {
         icon: Rocket,
         title: 'Projects',
@@ -147,7 +151,7 @@ export function ContextualLoader({ className, pathname: propPathname }: Contextu
     }
 
     // Services
-    if (pathname.startsWith('/dashboard/services')) {
+    if (pathname.startsWith(ENTITY_REGISTRY['service'].basePath)) {
       return {
         icon: Briefcase,
         title: 'Services',
@@ -164,7 +168,7 @@ export function ContextualLoader({ className, pathname: propPathname }: Contextu
     }
 
     // Causes
-    if (pathname.startsWith('/dashboard/causes')) {
+    if (pathname.startsWith(ENTITY_REGISTRY['cause'].basePath)) {
       return {
         icon: Heart,
         title: 'Causes',
@@ -181,7 +185,7 @@ export function ContextualLoader({ className, pathname: propPathname }: Contextu
     }
 
     // Wallets
-    if (pathname.startsWith('/dashboard/wallets')) {
+    if (pathname.startsWith(ENTITY_REGISTRY['wallet'].basePath)) {
       return {
         icon: Wallet,
         title: 'Bitcoin Wallets',

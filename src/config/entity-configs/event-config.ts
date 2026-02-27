@@ -14,6 +14,7 @@ import { eventGuidanceContent, eventDefaultGuidance } from '@/lib/entity-guidanc
 import type { FieldGroup } from '@/components/create/types';
 import { EVENT_TEMPLATES, type EventTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { WalletSelectorField } from '@/components/create/wallet-selector';
 
 // ==================== CONSTANTS ====================
@@ -350,8 +351,8 @@ export const eventConfig = createEntityConfig<EventFormData>({
   namePlural: 'Events',
   icon: Calendar,
   colorTheme: 'blue',
-  backUrl: '/dashboard/events',
-  successUrl: '/dashboard/events/[id]',
+  backUrl: ENTITY_REGISTRY['event'].basePath,
+  successUrl: `${ENTITY_REGISTRY['event'].basePath}/[id]`,
   pageTitle: 'Create Event',
   pageDescription: 'Organize an in-person gathering or meetup',
   formTitle: 'Event Details',

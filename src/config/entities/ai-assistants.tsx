@@ -14,6 +14,7 @@ import { formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { STATUS } from '@/config/database-constants';
 import { ROUTES } from '@/config/routes';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import type { Currency } from '@/types/settings';
 
 export const aiAssistantEntityConfig: EntityConfig<AIAssistant> = {
@@ -21,14 +22,14 @@ export const aiAssistantEntityConfig: EntityConfig<AIAssistant> = {
   namePlural: 'AI Assistants',
   colorTheme: 'purple',
 
-  listPath: '/dashboard/ai-assistants',
-  detailPath: id => `/dashboard/ai-assistants/${id}`,
-  createPath: '/dashboard/ai-assistants/create',
-  editPath: id => `/dashboard/ai-assistants/create?edit=${id}`,
+  listPath: ENTITY_REGISTRY['ai_assistant'].basePath,
+  detailPath: id => `${ENTITY_REGISTRY['ai_assistant'].basePath}/${id}`,
+  createPath: ENTITY_REGISTRY['ai_assistant'].createPath,
+  editPath: id => `${ENTITY_REGISTRY['ai_assistant'].createPath}?edit=${id}`,
 
-  apiEndpoint: '/api/ai-assistants',
+  apiEndpoint: ENTITY_REGISTRY['ai_assistant'].apiEndpoint,
 
-  makeHref: assistant => `/dashboard/ai-assistants/${assistant.id}`,
+  makeHref: assistant => `${ENTITY_REGISTRY['ai_assistant'].basePath}/${assistant.id}`,
 
   makeCardProps: (assistant, userCurrency?: string) => {
     // Convert prices to user's preferred currency (or platform default)
@@ -100,7 +101,7 @@ export const aiAssistantEntityConfig: EntityConfig<AIAssistant> = {
           </div>
         ) : undefined,
       showEditButton: true,
-      editHref: `/dashboard/ai-assistants/create?edit=${assistant.id}`,
+      editHref: `${ENTITY_REGISTRY['ai_assistant'].createPath}?edit=${assistant.id}`,
       // Removed duplicate actions button - edit icon overlay is sufficient
     };
   },

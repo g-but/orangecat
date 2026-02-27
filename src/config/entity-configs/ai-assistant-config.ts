@@ -14,6 +14,7 @@ import type { FieldGroup } from '@/components/create/types';
 import { aiAssistantGuidanceContent, aiAssistantDefaultGuidance } from '@/lib/entity-guidance';
 import { AI_ASSISTANT_TEMPLATES, type AIAssistantTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { WalletSelectorField } from '@/components/create/wallet-selector';
 
 // ==================== CONSTANTS ====================
@@ -264,8 +265,8 @@ export const aiAssistantConfig = createEntityConfig<AIAssistantFormData>({
   namePlural: 'AI Assistants',
   icon: Bot,
   colorTheme: 'purple',
-  backUrl: '/dashboard/ai-assistants',
-  successUrl: '/dashboard/ai-assistants/[id]',
+  backUrl: ENTITY_REGISTRY['ai_assistant'].basePath,
+  successUrl: `${ENTITY_REGISTRY['ai_assistant'].basePath}/[id]`,
   pageTitle: 'Create AI Assistant',
   pageDescription: 'Build an autonomous AI service that earns Bitcoin',
   formTitle: 'AI Assistant Details',

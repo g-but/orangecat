@@ -17,6 +17,7 @@ import {
 import type { FieldGroup, WizardConfig } from '@/components/create/types';
 import { PROJECT_TEMPLATES, type ProjectTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { WalletSelectorField } from '@/components/create/wallet-selector';
 
 // ==================== FIELD GROUPS ====================
@@ -180,8 +181,8 @@ export const projectConfig = createEntityConfig<ProjectData>({
   namePlural: 'Projects',
   icon: Rocket,
   colorTheme: 'orange',
-  backUrl: '/dashboard/projects',
-  successUrl: '/projects/[id]',
+  backUrl: ENTITY_REGISTRY['project'].basePath,
+  successUrl: `${ENTITY_REGISTRY['project'].publicBasePath}/[id]`,
   pageTitle: 'Create Project',
   pageDescription: 'Start a crowdfunding campaign for your Bitcoin-powered project.',
   formTitle: 'Project Information',

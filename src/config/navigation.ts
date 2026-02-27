@@ -17,6 +17,7 @@
 import { ComponentType, SVGProps } from 'react';
 import { generateEntityNavigation } from './navigation-generator';
 import { ENTITY_REGISTRY, type EntityType } from './entity-registry';
+import { ROUTES } from './routes';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import {
   Home,
@@ -159,7 +160,7 @@ const simplifiedSections: NavSection[] = [
       },
       {
         name: 'My Cat',
-        href: '/dashboard/cat',
+        href: ROUTES.DASHBOARD.CAT,
         icon: Cat,
         description: 'AI assistant',
         requiresAuth: true,
@@ -186,7 +187,7 @@ const simplifiedSections: NavSection[] = [
       // Add People to creation options
       {
         name: 'People',
-        href: '/dashboard/people',
+        href: ROUTES.DASHBOARD.PEOPLE,
         icon: Users,
         description: 'Find connections',
         requiresAuth: true,
@@ -203,14 +204,14 @@ const simplifiedSections: NavSection[] = [
     items: [
       {
         name: 'Tasks',
-        href: '/dashboard/tasks',
+        href: ROUTES.DASHBOARD.TASKS,
         icon: ClipboardList,
         description: 'Manage team tasks',
         requiresAuth: true,
       },
       {
         name: 'Analytics',
-        href: '/dashboard/tasks/analytics',
+        href: ROUTES.DASHBOARD.TASKS_ANALYTICS,
         icon: BarChart3,
         description: 'Task analytics',
         requiresAuth: true,
@@ -227,7 +228,7 @@ const simplifiedSections: NavSection[] = [
     items: [
       {
         name: 'Profile',
-        href: '/dashboard/info',
+        href: ROUTES.DASHBOARD.INFO,
         icon: UserIcon,
         description: 'Your profile',
         requiresAuth: true,

@@ -16,6 +16,7 @@ import {
 import type { FieldGroup } from '@/components/create/types';
 import { PRODUCT_TEMPLATES, type ProductTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 // ==================== FIELD GROUPS ====================
 
@@ -156,8 +157,8 @@ export const productConfig = createEntityConfig<UserProductFormData>({
   namePlural: 'Products',
   icon: Package,
   colorTheme: 'orange',
-  backUrl: '/dashboard/store',
-  successUrl: '/dashboard/store',
+  backUrl: ENTITY_REGISTRY['product'].basePath,
+  successUrl: ENTITY_REGISTRY['product'].basePath,
   pageTitle: 'Create Product',
   pageDescription: 'Add a new product to your personal marketplace',
   formTitle: 'Product Details',
