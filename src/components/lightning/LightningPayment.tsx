@@ -1,31 +1,17 @@
 'use client';
 
-/**
- * Lightning Payment Component
- *
- * Generates Lightning invoices and displays QR codes for payment.
- * Supports two modes:
- * - NWC mode: Uses Nostr Wallet Connect for real invoice generation
- * - Demo mode: Generates mock invoices for preview (when no NWC connected)
- *
- * Created: 2025-01-08
- * Last Modified: 2026-02-25
- * Last Modified Summary: Integrated NWC for real Lightning invoice generation
- */
-
 import { useState, useEffect, useCallback } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
-import { Zap, Copy, Check, ExternalLink, Wifi, WifiOff, AlertTriangle } from 'lucide-react';
+import { Zap, Wifi, WifiOff, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Alert, AlertDescription } from '@/components/ui/Alert';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import { toast } from 'sonner';
-import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { useNostr } from '@/hooks/useNostr';
 import { NWCClient } from '@/lib/nostr/nwc';
 import type { PaymentStatus } from '@/services/bitcoin/types';
+import { LightningInvoiceForm } from './LightningInvoiceForm';
+import { LightningInvoiceDisplay } from './LightningInvoiceDisplay';
+import { LightningPaymentSuccess } from './LightningPaymentSuccess';
 
 interface LightningPaymentProps {
   recipientAddress: string;
@@ -37,7 +23,7 @@ interface LightningPaymentProps {
   className?: string;
 }
 
-interface Invoice {
+export interface Invoice {
   bolt11: string;
   paymentHash: string;
   expiresAt: Date;
@@ -245,34 +231,14 @@ export default function LightningPayment({
     setPollInterval(null);
   };
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
   // Payment success state
   if (paymentStatus === 'paid') {
     return (
-      <Card className={`text-center ${className}`}>
-        <CardContent className="p-6">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-green-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Payment Received!</h3>
-          <p className="text-gray-600 mb-4">
-            Thank you for supporting {projectTitle} with your Lightning payment.
-          </p>
-          <CurrencyDisplay
-            amount={invoice!.amount}
-            currency="SATS"
-            className="text-lg font-semibold text-green-600"
-          />
-          <Button onClick={resetPayment} variant="outline" className="mt-4">
-            Make Another Payment
-          </Button>
-        </CardContent>
-      </Card>
+      <LightningPaymentSuccess
+        projectTitle={projectTitle}
+        amountSats={invoice!.amount}
+        onReset={resetPayment}
+      />
     );
   }
 
@@ -310,143 +276,25 @@ export default function LightningPayment({
       </CardHeader>
       <CardContent className="space-y-4">
         {!invoice ? (
-          // Invoice Generation Form
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Amount ({displayCurrency})
-              </label>
-              <Input
-                type="number"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-                placeholder="Enter amount in sats"
-                min="1"
-                className="font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Message (optional)
-              </label>
-              <Input
-                type="text"
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-                placeholder="Add a message with your payment"
-                maxLength={100}
-              />
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <Zap className="w-5 h-5 text-blue-500 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-blue-900 mb-1">Lightning Benefits</h4>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    <li>Instant payments (usually under 3 seconds)</li>
-                    <li>Extremely low fees (typically &lt; 1 sat)</li>
-                    <li>Perfect for small amounts and tips</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <Button onClick={generateInvoice} disabled={isGenerating || !amount} className="w-full">
-              {isGenerating ? (
-                'Generating...'
-              ) : (
-                <>
-                  <Zap className="w-4 h-4 mr-2" />
-                  Generate Lightning Invoice
-                </>
-              )}
-            </Button>
-          </div>
+          <LightningInvoiceForm
+            amount={amount}
+            setAmount={setAmount}
+            message={message}
+            setMessage={setMessage}
+            displayCurrency={displayCurrency}
+            isGenerating={isGenerating}
+            onGenerate={generateInvoice}
+          />
         ) : (
-          // Invoice Display
-          <div className="space-y-4">
-            {/* Payment Amount */}
-            <div className="text-center">
-              <CurrencyDisplay
-                amount={invoice.amount}
-                currency="SATS"
-                className="text-xl font-semibold"
-              />
-              {invoice.description && (
-                <p className="text-sm text-gray-600 mt-1">{invoice.description}</p>
-              )}
-            </div>
-
-            {/* QR Code */}
-            {paymentStatus !== 'expired' && (
-              <div className="flex justify-center p-4 bg-white border border-gray-200 rounded-lg">
-                <QRCodeSVG
-                  value={invoice.bolt11.toUpperCase()}
-                  size={200}
-                  level="M"
-                  includeMargin={true}
-                />
-              </div>
-            )}
-
-            {/* Invoice String */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Lightning Invoice
-              </label>
-              <div className="flex gap-2">
-                <div className="flex-1 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <code className="text-xs text-gray-600 break-all font-mono">
-                    {invoice.bolt11}
-                  </code>
-                </div>
-                <Button
-                  onClick={copyInvoice}
-                  variant="outline"
-                  size="sm"
-                  className={copied ? 'bg-green-50 text-green-700 border-green-200' : ''}
-                >
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </Button>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-2">
-              <Button
-                onClick={() => window.open(`lightning:${invoice.bolt11}`, '_blank')}
-                className="flex-1"
-                disabled={paymentStatus === 'expired'}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open in Wallet
-              </Button>
-            </div>
-
-            {/* Reset Button */}
-            {(paymentStatus === 'expired' || paymentStatus === 'failed') && (
-              <Button onClick={resetPayment} variant="outline" className="w-full">
-                Generate New Invoice
-              </Button>
-            )}
-
-            {/* Timer */}
-            {timeLeft !== null && timeLeft > 0 && (
-              <div className="text-center text-sm text-gray-500">
-                Invoice expires in {formatTime(timeLeft)}
-              </div>
-            )}
-
-            {/* Payment polling indicator */}
-            {paymentStatus === 'pending' && nwcConnected && (
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                Waiting for payment...
-              </div>
-            )}
-          </div>
+          <LightningInvoiceDisplay
+            invoice={invoice}
+            paymentStatus={paymentStatus}
+            timeLeft={timeLeft}
+            copied={copied}
+            nwcConnected={nwcConnected}
+            onCopy={copyInvoice}
+            onReset={resetPayment}
+          />
         )}
       </CardContent>
     </Card>

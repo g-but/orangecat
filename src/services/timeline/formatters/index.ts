@@ -1,9 +1,9 @@
 /**
  * Timeline Formatters
- * 
+ *
  * Handles all display formatting and transformation logic for timeline events.
  * Single responsibility: Convert database events to display-ready format.
- * 
+ *
  * Created: 2025-01-28
  * Last Modified: 2025-01-28
  * Last Modified Summary: Extracted formatting logic from monolithic timeline service
@@ -56,10 +56,15 @@ export function mapDbEventToTimelineEvent(dbEvent: TimelineEventDb): TimelineEve
     eventType: dbEvent.event_type as TimelineEventType,
     eventSubtype: (dbEvent.event_subtype as TimelineEventSubtype) || undefined,
     actorId: getField<string>(dbEvent, 'actor_id', 'actorId') || '',
-    actorType: (getField<string>(dbEvent, 'actor_type', 'actorType') as TimelineActorType) || 'user',
-    subjectType: (getField<string>(dbEvent, 'subject_type', 'subjectType') as TimelineSubjectType) || 'profile',
+    actorType:
+      (getField<string>(dbEvent, 'actor_type', 'actorType') as TimelineActorType) || 'user',
+    subjectType:
+      (getField<string>(dbEvent, 'subject_type', 'subjectType') as TimelineSubjectType) ||
+      'profile',
     subjectId: getField<string>(dbEvent, 'subject_id', 'subjectId'),
-    targetType: getField<string>(dbEvent, 'target_type', 'targetType') as TimelineSubjectType | undefined,
+    targetType: getField<string>(dbEvent, 'target_type', 'targetType') as
+      | TimelineSubjectType
+      | undefined,
     targetId: getField<string>(dbEvent, 'target_id', 'targetId'),
     title: dbEvent.title,
     description: dbEvent.description || undefined,
@@ -173,7 +178,7 @@ export function formatAmount(event: TimelineEvent): string | undefined {
     return `₿${event.amountBtc.toFixed(6)}`;
   }
   if (event.amountSats) {
-    return `${event.amountSats.toLocaleString()} sats`;
+    return `${event.amountSats.toLocaleString()} sat`;
   }
   return undefined;
 }
@@ -213,4 +218,3 @@ export function isEventRecent(timestamp: string): boolean {
   const diffHours = (now.getTime() - eventTime.getTime()) / (1000 * 60 * 60);
   return diffHours < 24;
 }
-

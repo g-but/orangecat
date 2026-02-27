@@ -100,7 +100,7 @@ export const researchGuidanceContent: Record<string, GuidanceContent> = {
     description: 'How much funding do you need in satoshis to complete this research?',
     tips: [
       'Calculate actual costs (equipment, time, resources)',
-      'Minimum is 1,000 sats',
+      'Minimum is 1,000',
       'Break down costs for transparency',
     ],
   },

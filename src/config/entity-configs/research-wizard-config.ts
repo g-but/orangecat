@@ -52,7 +52,7 @@ const researchWizardSchema = z.object({
   methodology: z.string().min(1, 'Methodology is required'),
   expected_outcome: z.string().min(1, 'Expected outcome is required').max(1000),
   timeline: z.string().min(1, 'Timeline is required'),
-  funding_goal_sats: z.number().min(1000, 'Funding goal must be at least 1,000 sats'),
+  funding_goal_sats: z.number().min(1000, 'Funding goal must be at least 1,000'),
   funding_model: z.string().min(1, 'Funding model is required'),
   lead_researcher: z.string().min(1, 'Lead researcher is required'),
   open_collaboration: z.boolean().optional().default(true),
@@ -129,12 +129,12 @@ const fieldGroups: FieldGroup[] = [
     fields: [
       {
         name: 'funding_goal_sats',
-        label: 'Funding Goal (sats)',
+        label: 'Funding Goal',
         type: 'number',
         placeholder: '1000000',
         required: true,
         min: 1000,
-        hint: 'Minimum 1,000 sats. Enter the total funding needed.',
+        hint: 'Enter the total funding needed.',
         colSpan: 1,
       },
       {

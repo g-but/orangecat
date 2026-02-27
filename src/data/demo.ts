@@ -374,12 +374,12 @@ export const DEMO_STEPS: DemoStep[] = [
  */
 export function formatSats(amount: number): string {
   if (amount >= 1000000) {
-    return `${(amount / 1000000).toFixed(1)}M sats`;
+    return `${(amount / 1000000).toFixed(1)}M sat`;
   }
   if (amount >= 1000) {
-    return `${(amount / 1000).toFixed(0)}K sats`;
+    return `${(amount / 1000).toFixed(0)}K sat`;
   }
-  return `${amount} sats`;
+  return `${amount} sat`;
 }
 
 /**

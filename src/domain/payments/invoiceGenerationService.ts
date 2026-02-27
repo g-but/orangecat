@@ -118,7 +118,7 @@ async function generateLightningAddressInvoice(
   // Validate amount is within bounds
   if (amountMsats < meta.minSendable || amountMsats > meta.maxSendable) {
     throw new Error(
-      `Amount ${amountSats} sats is outside allowed range: ${meta.minSendable / 1000}-${meta.maxSendable / 1000} sats`
+      `Amount ${amountSats} sat is outside allowed range: ${meta.minSendable / 1000}-${meta.maxSendable / 1000} sat`
     );
   }
 

@@ -131,7 +131,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
         requestedSats: body.amount_sats,
       });
       return apiBadRequest(
-        `Insufficient balance. Available: ${availableSats} sats, Requested: ${body.amount_sats} sats`
+        `Insufficient balance. Available: ${availableSats} sat, Requested: ${body.amount_sats} sat`
       );
     }
 

@@ -191,7 +191,7 @@ class CurrencyConverterService {
     }
     if (amountBTC < 0.00001) {
       const sats = Math.round(amountBTC * 100_000_000);
-      return `${sats.toLocaleString()} sats`;
+      return `${sats.toLocaleString()} sat`;
     }
     if (showDecimals) {
       return `${amountBTC.toLocaleString(undefined, { maximumFractionDigits: 8 })} BTC`;
@@ -298,7 +298,7 @@ export function formatCurrency(
       compact && amount >= 1000000
         ? `${(amount / 1000000).toFixed(1)}M`
         : amount.toLocaleString(locale, { maximumFractionDigits: 0 });
-    return showSymbol ? `${formatted} sats` : formatted;
+    return showSymbol ? `${formatted} sat` : formatted;
   }
 
   if (currency === 'BTC') {
@@ -525,7 +525,7 @@ export const bitcoinToSatoshis = bitcoinToSats;
  */
 export function formatBitcoinDisplay(amount: number, unit: 'BTC' | 'sats' = 'BTC'): string {
   if (unit === 'sats') {
-    return `${amount.toLocaleString('en-US')} sats`;
+    return `${amount.toLocaleString('en-US')} sat`;
   }
 
   if (amount >= 1) {
@@ -533,9 +533,9 @@ export function formatBitcoinDisplay(amount: number, unit: 'BTC' | 'sats' = 'BTC
   } else if (amount >= 0.001) {
     return `${amount.toFixed(6)} BTC`;
   } else {
-    // For very small amounts, show in sats
+    // For very small amounts, show in satoshis
     const sats = bitcoinToSats(amount);
-    return `${sats.toLocaleString('en-US')} sats`;
+    return `${sats.toLocaleString('en-US')} sat`;
   }
 }
 
@@ -563,11 +563,11 @@ export function formatBTC(amount: number): string {
 }
 
 /**
- * Format amount in sats
+ * Format amount in satoshis
  */
 export function formatSats(amount: number): string {
   const value = typeof amount === 'number' && isFinite(amount) ? Math.round(amount) : 0;
-  return `${value.toLocaleString('en-US')} sats`;
+  return `${value.toLocaleString('en-US')} sat`;
 }
 
 /**

@@ -69,7 +69,7 @@ export function useDisplayCurrency(): UseDisplayCurrencyReturn {
       // Handle zero/invalid amounts
       if (!sats || sats === 0) {
         if (forceSats || displayCurrency === 'SATS') {
-          return '0 sats';
+          return '0 sat';
         }
         if (displayCurrency === 'BTC') {
           return showSymbol ? '₿0' : '0';

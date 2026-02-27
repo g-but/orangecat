@@ -664,7 +664,7 @@ export function formatCurrency(amount: number, currency: string): string {
   if (currency === 'BTC') {
     return `${formatBTC(amount)} BTC`;
   } else if (currency === 'SATS') {
-    return `${Math.round(amount).toLocaleString()} sats`;
+    return `${Math.round(amount).toLocaleString()} sat`;
   } else {
     // Fiat currencies
     return new Intl.NumberFormat('en-US', {

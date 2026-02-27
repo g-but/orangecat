@@ -53,7 +53,7 @@ export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
       case 'SATS':
         // SATS: no decimals, with thousand separators
         return showSymbol
-          ? `${Math.round(numAmount).toLocaleString('en-US')} sats`
+          ? `${Math.round(numAmount).toLocaleString('en-US')} sat`
           : Math.round(numAmount).toLocaleString('en-US');
       case 'USD':
         // Fiat currencies: 2 decimal places

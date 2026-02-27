@@ -29,7 +29,7 @@ const withdrawalRequestSchema = z.object({
     .number()
     .int()
     .positive()
-    .min(MIN_WITHDRAWAL_SATS, `Minimum withdrawal is ${MIN_WITHDRAWAL_SATS} sats`),
+    .min(MIN_WITHDRAWAL_SATS, `Minimum withdrawal is ${MIN_WITHDRAWAL_SATS} sat`),
   lightning_address: z
     .string()
     .min(1, 'Lightning address is required')
