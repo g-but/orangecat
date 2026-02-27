@@ -7,7 +7,7 @@
  * Split into smaller subcomponents for maintainability.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ZodError } from 'zod';
 import { toast } from 'sonner';
@@ -132,6 +132,30 @@ export function EntityForm<T extends Record<string, unknown>>({
     wizardMode,
   });
 
+  // Track existing entity_wallets link ID so edit mode can replace it
+  const existingWalletLinkIdRef = useRef<string | undefined>(undefined);
+
+  // Pre-populate wallet selector when editing an entity that has a wallet linked
+  useEffect(() => {
+    const hasWalletGroup = config.fieldGroups.some(g => g.customComponent);
+    if (mode !== 'edit' || !entityId || !hasWalletGroup) {
+      return;
+    }
+
+    fetch(`/api/entity-wallets?entity_type=${config.type}&entity_id=${entityId}`, {
+      credentials: 'include',
+    })
+      .then(r => r.json())
+      .then(data => {
+        const link = data.data?.[0];
+        if (link?.wallet_id) {
+          handleFieldChange('_wallet_id' as keyof T, link.wallet_id);
+          existingWalletLinkIdRef.current = link.id;
+        }
+      })
+      .catch(() => {}); // Non-blocking; missing wallet isn't a blocker
+  }, [mode, entityId, config.type, config.fieldGroups, handleFieldChange]);
+
   const theme = THEME_COLORS[config.colorTheme];
 
   // Template selection handler
@@ -191,6 +215,36 @@ export function EntityForm<T extends Record<string, unknown>>({
 
         if (mode === 'create') {
           clearDraft();
+        }
+
+        // Link wallet to entity (non-blocking fire-and-forget)
+        const walletId = (formState.data as Record<string, unknown>)._wallet_id as
+          | string
+          | undefined;
+        if (walletId && result.data?.id) {
+          (async () => {
+            try {
+              if (mode === 'edit' && existingWalletLinkIdRef.current) {
+                // Replace existing link: delete old, insert new
+                await fetch(`/api/entity-wallets/${existingWalletLinkIdRef.current}`, {
+                  method: 'DELETE',
+                  credentials: 'include',
+                });
+              }
+              await fetch('/api/entity-wallets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  entity_type: config.type,
+                  entity_id: result.data.id,
+                  wallet_id: walletId,
+                }),
+              });
+            } catch (err) {
+              logger.warn('Failed to link wallet to entity', { err }, 'EntityForm');
+            }
+          })();
         }
 
         toast.success(`${config.name} ${mode === 'create' ? 'created' : 'updated'} successfully!`, {

@@ -17,6 +17,7 @@ import type { FieldGroup } from '@/components/create/types';
 import { SERVICE_TEMPLATES, type ServiceTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { WALLET_FIELD_GROUP } from './wallet-field-group';
 
 // ==================== CONSTANTS ====================
 
@@ -148,6 +149,7 @@ const fieldGroups: FieldGroup[] = [
       },
     ],
   },
+  WALLET_FIELD_GROUP,
 ];
 
 // ==================== DEFAULT VALUES ====================
