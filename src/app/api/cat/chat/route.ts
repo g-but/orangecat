@@ -43,6 +43,7 @@ import {
   getMessagesForContext,
   saveMessages,
 } from '@/services/cat/conversation-history';
+import { searchPlatform, type SearchType } from '@/services/cat/platform-search';
 
 // Header for Groq API key (BYOK)
 const GROQ_KEY_HEADER = 'x-groq-api-key';
@@ -250,6 +251,114 @@ export async function POST(request: NextRequest) {
       ...(historyMessages as (OpenRouterMessage | GroqMessage)[]),
       { role: 'user', content: message },
     ];
+
+    // ─── Tool Use: platform search (Groq only) ────────────────────────────────
+    // Cat can call search_platform() to find users and entities.
+    // We do a quick non-streaming call with tools defined, execute any tool calls,
+    // then enrich the messages array before the streaming response.
+    // Only triggered when the message looks like a discovery query (saves API calls).
+    const SEARCH_KEYWORDS = [
+      'find',
+      'look',
+      'search',
+      'who ',
+      'anyone',
+      'connect',
+      'similar',
+      'recommend',
+      'discover',
+      'help me find',
+      'know of',
+      'looking for',
+      'does anyone',
+    ];
+    const mightNeedSearch = SEARCH_KEYWORDS.some(kw => message.toLowerCase().includes(kw));
+
+    if (provider === 'groq' && mightNeedSearch) {
+      const groqKey = userGroqKey ?? process.env.GROQ_API_KEY;
+      const platformTools = [
+        {
+          type: 'function',
+          function: {
+            name: 'search_platform',
+            description:
+              'Search OrangeCat for people, projects, products, services, events, or causes. Use when the user wants to find, connect with, or discover someone or something on the platform.',
+            parameters: {
+              type: 'object',
+              properties: {
+                query: { type: 'string', description: 'What to search for' },
+                type: {
+                  type: 'string',
+                  enum: ['all', 'people', 'projects', 'products', 'services', 'events', 'causes'],
+                  description: 'Type of content to search. Use "all" when unsure.',
+                },
+              },
+              required: ['query'],
+            },
+          },
+        },
+      ];
+
+      try {
+        const toolCheckRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${groqKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: modelToUse,
+            messages,
+            tools: platformTools,
+            tool_choice: 'auto',
+            stream: false,
+            max_tokens: 500, // Keep fast — we only care about tool_calls
+          }),
+        });
+
+        if (toolCheckRes.ok) {
+          const toolCheckData = await toolCheckRes.json();
+          const choice = toolCheckData.choices?.[0];
+
+          if (choice?.finish_reason === 'tool_calls' && choice.message?.tool_calls?.length) {
+            // Append the assistant tool-call message
+            (messages as any[]).push(choice.message);
+
+            // Execute each tool call
+            for (const toolCall of choice.message.tool_calls as any[]) {
+              if (toolCall.function?.name === 'search_platform') {
+                let toolResultContent: string;
+                try {
+                  const args = JSON.parse(toolCall.function.arguments ?? '{}');
+                  const searchResults = await searchPlatform(
+                    supabase,
+                    args.query ?? '',
+                    (args.type ?? 'all') as SearchType
+                  );
+                  toolResultContent =
+                    searchResults.length > 0
+                      ? JSON.stringify(searchResults, null, 2)
+                      : 'No results found for this search query.';
+                } catch {
+                  toolResultContent = 'Search failed. Please try a different query.';
+                }
+
+                (messages as any[]).push({
+                  role: 'tool',
+                  tool_call_id: toolCall.id,
+                  content: toolResultContent,
+                });
+              }
+            }
+            // messages now includes tool call + results — the streaming call below uses them
+          }
+          // If finish_reason === 'stop': no tool needed, proceed with original messages
+        }
+      } catch {
+        // Non-fatal — if tool detection fails, skip it and proceed without search
+      }
+    }
+    // ─── End tool use ─────────────────────────────────────────────────────────
 
     // Create the appropriate service based on provider
     let aiService: {
