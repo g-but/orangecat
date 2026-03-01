@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Lock, Globe, Zap, TrendingUp, Cat } from 'lucide-react';
+import { ArrowRight, Globe, Zap, TrendingUp, Cat } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 /**
@@ -47,7 +47,7 @@ export default function HeroSectionStatic() {
             {/* Supporting text */}
             <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8">
               OrangeCat gives every person and organization a full-spectrum AI agent for economic
-              activity. No gatekeepers. No documents required. Bitcoin-native, but not Bitcoin-only.
+              activity. No gatekeepers. Bitcoin-native, but not Bitcoin-only.
             </p>
 
             {/* CTA Buttons */}
@@ -77,9 +77,9 @@ export default function HeroSectionStatic() {
             {/* Key Benefits */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { icon: Lock, text: 'No verification required' },
+                { icon: Cat, text: 'Your AI agent' },
                 { icon: Globe, text: 'Any currency' },
-                { icon: Zap, text: 'Instant setup' },
+                { icon: Zap, text: 'Zero fees' },
               ].map(benefit => (
                 <div key={benefit.text} className="flex items-center gap-2 text-gray-600">
                   <benefit.icon className="w-4 h-4 text-tiffany-600 flex-shrink-0" />
@@ -151,7 +151,7 @@ export default function HeroSectionStatic() {
               </div>
 
               <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 px-2 py-1 sm:px-3 sm:py-1.5 bg-tiffany-500 text-white text-[10px] sm:text-xs font-semibold rounded-full shadow-lg">
-                🔒 No ID needed
+                🐱 AI-powered
               </div>
             </div>
 

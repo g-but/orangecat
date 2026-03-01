@@ -130,8 +130,7 @@ export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
     number: '1',
     icon: Lock,
     title: 'Choose Your Identity',
-    description:
-      'No documents, no verification required. Use any name or identity — it is entirely your choice.',
+    description: 'Use your real name, a handle, or anything in between. Your identity, your rules.',
     color: 'from-tiffany-500 to-tiffany-600',
     bgColor: 'bg-tiffany-50',
   },
@@ -179,9 +178,9 @@ export interface ComparisonRow {
 
 export const PLATFORM_COMPARISON: ComparisonRow[] = [
   {
-    feature: 'Identity required',
+    feature: 'Identity',
     traditional: 'Real name + documents',
-    orangecat: 'Any identity, no documents required',
+    orangecat: 'Your name, your rules',
     highlight: true,
   },
   {
@@ -235,7 +234,7 @@ export const PLATFORM_BENEFITS: PlatformBenefit[] = [
     icon: Lock,
     title: 'Any Identity',
     description:
-      'Any person or organization is a full economic participant. No documents required, no gatekeeping.',
+      'Any person or organization can participate fully. Use any name — your identity is yours to define.',
   },
 ];
 
@@ -301,7 +300,7 @@ export const EXAMPLE_USE_CASES: ExampleUseCase[] = [
  * Trust indicators shown at bottom of sections
  */
 export const TRUST_SIGNALS = [
-  'No verification required',
+  'Zero platform fees',
   'Any currency accepted',
   'No account freezing',
   'Open source',
