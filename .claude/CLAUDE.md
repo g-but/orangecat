@@ -131,19 +131,19 @@ const path = meta.basePath; // NOT '/dashboard/store'
 
 ## Critical: Bitcoin Rules
 
-### Bitcoin storage: integers only
+### Bitcoin amounts: BTC is the canonical unit
 
-When storing or calculating Bitcoin amounts internally, always use integer satoshis to avoid floating-point errors. Other payment methods (PayPal, Twint, Monero, etc.) use their own units.
+Store Bitcoin amounts as BTC using `NUMERIC`/`DECIMAL` in the database — not as integer satoshis. Satoshis are just one user-selectable display preference, with no special status.
 
 ```typescript
-// CORRECT - store as integer (avoids float precision errors)
-const price_sats = 100000; // 0.001 BTC internally
+// DB column: NUMERIC(18, 8)  — exact decimal, no float errors
+// e.g., 0.001 BTC stored as 0.00100000
 
-// WRONG - never store as BTC float
-const price_btc = 0.001; // NO! Precision errors!
+// WRONG — satoshis are not the canonical unit
+price_sats: BIGINT; // NO! BTC is the unit, not sats
 ```
 
-**Display**: Always show BTC or user's preferred fiat (CHF by default), never raw satoshis in user-facing UI. Use `useDisplayCurrency()` hook in components.
+**Display**: Show BTC by default, or the user's chosen currency (CHF default). If the user has selected satoshis as their display preference, format accordingly — but satoshis are just one option, not the default. Use `useDisplayCurrency()` hook in components.
 
 ### Payment Methods Are Universal
 
@@ -259,8 +259,8 @@ export async function POST(request: Request) {
 ## Don't
 
 - Hardcode entity names (use `ENTITY_REGISTRY`)
-- Store Bitcoin amounts as floats (use integer satoshis internally)
-- Display raw satoshis to users (use BTC or fiat via `useDisplayCurrency()`)
+- Use integer satoshis as the storage unit (use BTC via `NUMERIC`/`DECIMAL`)
+- Default display to satoshis (use BTC or user's chosen currency via `useDisplayCurrency()`)
 - Use Bitcoin Orange for non-Bitcoin UI
 - Query by `user_id` (use `actor_id`)
 - Run local Supabase (use remote)

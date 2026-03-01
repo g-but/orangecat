@@ -131,7 +131,7 @@ export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
     icon: Lock,
     title: 'Choose Your Identity',
     description:
-      'Pseudonymous by default — no documents, no verification. Use a pseudonym or your real name. You decide.',
+      'No documents, no verification required. Use any name or identity — it is entirely your choice.',
     color: 'from-tiffany-500 to-tiffany-600',
     bgColor: 'bg-tiffany-50',
   },
@@ -149,7 +149,7 @@ export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
     icon: Wallet,
     title: 'Pick Your Currency',
     description:
-      'Bitcoin and Lightning native — but Twint, PayPal, Venmo, Monero, and more are all first-class. Meet your counterparty where they are.',
+      'Bitcoin and Lightning native — but Twint, PayPal, Monero, and local payment methods worldwide are all first-class. Meet your counterparty where they are.',
     color: 'from-orange-500 to-orange-600',
     bgColor: 'bg-orange-50',
   },
@@ -181,7 +181,7 @@ export const PLATFORM_COMPARISON: ComparisonRow[] = [
   {
     feature: 'Identity required',
     traditional: 'Real name + documents',
-    orangecat: 'Pseudonymous by default',
+    orangecat: 'Any identity, no documents required',
     highlight: true,
   },
   {
@@ -214,18 +214,6 @@ export interface PlatformBenefit {
 
 export const PLATFORM_BENEFITS: PlatformBenefit[] = [
   {
-    icon: Lock,
-    title: 'Pseudonymous by Default',
-    description:
-      'Any identity — human, pseudonym, or AI — is a full economic participant. No documents, no gatekeepers.',
-  },
-  {
-    icon: Wallet,
-    title: 'Any Currency',
-    description:
-      'Bitcoin and Lightning are native, but Twint, PayPal, Venmo, Monero, and others are first-class. Meet users where they are.',
-  },
-  {
     icon: Cat,
     title: 'Your AI Cat',
     description:
@@ -236,6 +224,18 @@ export const PLATFORM_BENEFITS: PlatformBenefit[] = [
     title: 'No Gatekeepers',
     description:
       'No middlemen, no verification walls, no account freezing. Economic participation as open as speech.',
+  },
+  {
+    icon: Wallet,
+    title: 'Any Currency',
+    description:
+      'Bitcoin and Lightning are native, but Twint, PayPal, Monero, and local payment methods worldwide are first-class.',
+  },
+  {
+    icon: Lock,
+    title: 'Any Identity',
+    description:
+      'Any person or organization is a full economic participant. No documents required, no gatekeeping.',
   },
 ];
 
@@ -301,7 +301,7 @@ export const EXAMPLE_USE_CASES: ExampleUseCase[] = [
  * Trust indicators shown at bottom of sections
  */
 export const TRUST_SIGNALS = [
-  'Pseudonymous by default',
+  'No verification required',
   'Any currency accepted',
   'No account freezing',
   'Open source',

@@ -1,13 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { Building, Heart, Zap, TreePine } from 'lucide-react';
-import BitBaumLogo from '@/components/layout/BitBaumLogo';
+import { Heart, Zap, TreePine, Cat } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'About OrangeCat - A BitBaum Company',
+  title: 'About OrangeCat',
   description:
-    'OrangeCat is your AI economic agent — buy, sell, fund, lend, invest, and govern with any identity, in any currency, without gatekeepers. A BitBaum company.',
+    'OrangeCat is your AI economic agent — buy, sell, fund, lend, invest, and govern with any identity, in any currency, without gatekeepers.',
 };
 
 export default function AboutPage() {
@@ -21,81 +20,38 @@ export default function AboutPage() {
               About <span className="text-tiffany-600">OrangeCat</span>
             </h1>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              Your AI economic agent — and the platform where it operates. A BitBaum company.
+              Your AI economic agent — and the platform where it operates.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Corporate Structure */}
+      {/* What OrangeCat Is */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-16">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Our Corporate Structure</h2>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Like TikTok and ByteDance, OrangeCat is our consumer-facing product while BitBaum serves
-            as our corporate parent company.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          {/* BitBaum */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="flex justify-center mb-6">
-              <BitBaumLogo className="scale-150" />
+        <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 text-center max-w-3xl mx-auto">
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-tiffany-400 to-tiffany-600 rounded-2xl flex items-center justify-center">
+              <Cat className="w-10 h-10 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">BitBaum AG</h3>
-            <p className="text-gray-600 mb-6">
-              Our corporate parent company, focused on building the future of Bitcoin commerce
-              through innovative products and services.
-            </p>
-            <div className="flex justify-center space-x-4 mb-6">
-              <div className="flex items-center text-sm text-gray-500">
-                <Building className="w-4 h-4 mr-2" />
-                Corporate
-              </div>
-              <div className="flex items-center text-sm text-gray-500">
-                <TreePine className="w-4 h-4 mr-2" />
-                Tree Metaphor
-              </div>
-            </div>
-            <Link
-              href="https://bitbaum.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 transition-colors"
-            >
-              Visit BitBaum
-            </Link>
           </div>
-
-          {/* OrangeCat */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center">
-                <span className="text-2xl">🐱</span>
-              </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">OrangeCat</h2>
+          <p className="text-gray-600 mb-6 text-lg leading-relaxed">
+            Your AI economic agent — and the platform where it operates. Buy, sell, fund, lend,
+            invest, and govern with any identity, in any currency, without gatekeepers.
+          </p>
+          <div className="flex justify-center space-x-6">
+            <div className="flex items-center text-sm text-gray-500">
+              <Cat className="w-4 h-4 mr-2" />
+              AI-Native
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">OrangeCat</h3>
-            <p className="text-gray-600 mb-6">
-              Your AI economic agent — and the platform where it operates. Buy, sell, fund, lend,
-              invest, and govern with any identity, in any currency, without gatekeepers.
-            </p>
-            <div className="flex justify-center space-x-4 mb-6">
-              <div className="flex items-center text-sm text-gray-500">
-                <Heart className="w-4 h-4 mr-2" />
-                AI-Native Platform
-              </div>
-              <div className="flex items-center text-sm text-gray-500">
-                <Zap className="w-4 h-4 mr-2" />
-                Universal Payments
-              </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <Heart className="w-4 h-4 mr-2" />
+              Open Source
             </div>
-            <Link
-              href="/"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-orange-600 bg-orange-50 hover:bg-orange-100 transition-colors"
-            >
-              Use OrangeCat
-            </Link>
+            <div className="flex items-center text-sm text-gray-500">
+              <Zap className="w-4 h-4 mr-2" />
+              Universal Payments
+            </div>
           </div>
         </div>
       </div>
@@ -137,7 +93,7 @@ export default function AboutPage() {
 
             <div className="text-center">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Heart className="w-8 h-8 text-orange-600" />
+                <Cat className="w-8 h-8 text-orange-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">The Cat is the Interface</h3>
               <p className="text-gray-600">

@@ -15,15 +15,15 @@ export function getSystemPrompt(entityType: EntityType): string {
   const meta = ENTITY_REGISTRY[entityType];
   const entityName = meta?.name || entityType;
 
-  return `You are a helpful assistant for OrangeCat, a Bitcoin-powered marketplace and community platform.
+  return `You are a helpful assistant for OrangeCat, an AI-powered platform for economic activity.
 
 Your task is to extract structured data from a user's natural language description to help them create a ${entityName} listing.
 
 IMPORTANT CONTEXT:
-- OrangeCat uses Bitcoin/Lightning Network for payments
-- All prices should be expressed in satoshis (sats) unless another currency is specified
-- Common price conversions: 1 BTC = 100,000,000 sats, roughly 1 sat = $0.0005 at typical rates
-- Price examples: "50k sats" = 50000, "100,000 sats" = 100000, "$25" might be around 50000 sats
+- OrangeCat supports Bitcoin/Lightning and any payment method (Twint, PayPal, Monero, etc.)
+- Express Bitcoin prices in BTC (e.g., 0.001 BTC), not satoshis
+- Keep fiat prices in their original currency (CHF, USD, EUR, etc.)
+- Price examples: "0.001 BTC", "CHF 50", "$25", "€100"
 
 RULES:
 1. Only output valid JSON - no markdown, no explanations
@@ -31,8 +31,7 @@ RULES:
 3. Include a "confidence" object with scores (0-1) for each field
 4. Do not make up information not in the description
 5. For unclear values, omit them rather than guess
-6. Parse natural language amounts: "50k" = 50000, "100,000" = 100000
-7. If user mentions a price in dollars/fiat, convert to approximate sats
+6. Keep prices in the currency the user mentioned — do not convert
 
 OUTPUT FORMAT:
 {
@@ -144,39 +143,39 @@ export function getExampleDescriptions(entityType: EntityType): string[] {
   switch (entityType) {
     case 'product':
       return [
-        'I want to sell handmade ceramic mugs for 50,000 sats each',
-        'Digital download of my Bitcoin artwork collection, $15',
-        'Vintage Bitcoin hardware wallets, limited stock of 5 units',
+        'I want to sell handmade ceramic mugs for CHF 45 each',
+        'Digital download of my artwork collection, $15',
+        'Vintage hardware wallets, limited stock of 5 units, 0.005 BTC each',
       ];
     case 'service':
       return [
-        'Bitcoin consulting sessions, $100/hour',
-        'Web development services starting at 500k sats',
+        'Consulting sessions, CHF 150/hour',
+        'Web development services starting at 0.01 BTC',
         'Lightning Network integration help, 2 hour minimum',
       ];
     case 'event':
       return [
         'Bitcoin meetup next Saturday at the local cafe',
         'Online workshop about Lightning Network, January 15th at 7pm',
-        'Hackathon weekend event with 1M sats prize pool',
+        'Hackathon weekend event with 0.1 BTC prize pool',
       ];
     case 'project':
       return [
-        'Building an open-source Bitcoin wallet app, goal of 5M sats',
+        'Building an open-source Bitcoin wallet app, goal of 0.5 BTC',
         'Documentary about Bitcoin adoption in Africa',
         'Community education program for local merchants',
       ];
     case 'cause':
       return [
         'Supporting Bitcoin education in underserved communities',
-        'Funding for open-source Bitcoin development',
+        'Funding for open-source development',
         'Help me replace my hardware wallet that was stolen',
       ];
     case 'loan':
       return [
-        'Need 500k sats for 3 months to expand my business',
+        'Need CHF 5,000 for 3 months to expand my business',
         'Looking to refinance my existing loan at a better rate',
-        'Small business loan for Bitcoin mining equipment',
+        'Small business loan for mining equipment, 0.1 BTC',
       ];
     default:
       return ['Describe what you want to create...'];
