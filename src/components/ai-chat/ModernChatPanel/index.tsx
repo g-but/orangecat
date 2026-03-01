@@ -26,6 +26,7 @@ export function ModernChatPanel() {
   const {
     messages,
     isLoading,
+    isLoadingHistory,
     error,
     messagesEndRef,
     sendMessage,
@@ -122,7 +123,11 @@ export function ModernChatPanel() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto py-4">
-        {messages.length === 0 ? (
+        {isLoadingHistory ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-sm text-gray-400">Loading conversation...</div>
+          </div>
+        ) : messages.length === 0 ? (
           <EmptyState
             suggestions={suggestions}
             hasContext={hasContext}

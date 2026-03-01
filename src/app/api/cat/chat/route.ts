@@ -38,6 +38,11 @@ import { OPENROUTER_KEY_HEADER } from '@/config/http-headers';
 import { buildCatSystemPrompt } from '@/services/cat/system-prompt';
 import { getCatFewShotExamples } from '@/services/cat/few-shot-examples';
 import { parseActionsFromResponse } from '@/services/cat/response-parser';
+import {
+  getOrCreateDefaultConversation,
+  getMessagesForContext,
+  saveMessages,
+} from '@/services/cat/conversation-history';
 
 // Header for Groq API key (BYOK)
 const GROQ_KEY_HEADER = 'x-groq-api-key';
@@ -228,10 +233,21 @@ export async function POST(request: NextRequest) {
       userContext: contextString || undefined,
     });
 
-    // Build request with system prompt + few-shot examples for better compliance
+    // Fetch conversation history and get/create the conversation record (best-effort)
+    let conversationId: string | null = null;
+    let historyMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+    try {
+      conversationId = await getOrCreateDefaultConversation(supabase, user.id);
+      historyMessages = await getMessagesForContext(supabase, user.id);
+    } catch {
+      // Non-fatal — continue without history if DB call fails
+    }
+
+    // Build request: system + few-shots (format anchor) + history + current message
     const messages: (OpenRouterMessage | GroqMessage)[] = [
       { role: 'system', content: systemPromptWithContext },
       ...getCatFewShotExamples(),
+      ...(historyMessages as (OpenRouterMessage | GroqMessage)[]),
       { role: 'user', content: message },
     ];
 
@@ -333,6 +349,20 @@ export async function POST(request: NextRequest) {
               }
             }
 
+            // Persist conversation history (best-effort, non-blocking on errors)
+            if (conversationId && fullContent) {
+              saveMessages(supabase, conversationId, user.id, [
+                { role: 'user', content: message },
+                {
+                  role: 'assistant',
+                  content: fullContent,
+                  model_used: modelToUse,
+                  provider,
+                  token_count: usage?.totalTokens,
+                },
+              ]).catch(() => {});
+            }
+
             // Track platform usage (non-BYOK) best-effort with usage tokens
             if (!hasByok && usage?.totalTokens) {
               await keyService.incrementPlatformUsage(user.id, 1, usage.totalTokens);
@@ -417,6 +447,20 @@ export async function POST(request: NextRequest) {
 
     // Parse actions from AI response
     const { message: cleanedMessage, actions } = parseActionsFromResponse(aiResult.content);
+
+    // Persist conversation history (best-effort)
+    if (conversationId) {
+      saveMessages(supabase, conversationId, user.id, [
+        { role: 'user', content: message },
+        {
+          role: 'assistant',
+          content: cleanedMessage,
+          model_used: aiResult.model,
+          provider,
+          token_count: aiResult.totalTokens,
+        },
+      ]).catch(() => {});
+    }
 
     const responseJson = NextResponse.json({
       success: true,

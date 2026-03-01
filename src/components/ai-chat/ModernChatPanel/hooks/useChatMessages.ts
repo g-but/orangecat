@@ -1,6 +1,7 @@
 /**
  * USE CHAT MESSAGES HOOK
- * Manages chat messages, sending, and streaming
+ * Manages chat messages, sending, and streaming.
+ * Loads persistent history from the server on mount.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -16,9 +17,52 @@ interface UseChatMessagesOptions {
 export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Load persistent history on mount
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoadingHistory(true);
+
+    fetch('/api/cat/history')
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (cancelled || !data?.data?.length) {
+          return;
+        }
+        const historicMessages: Message[] = data.data.map(
+          (m: {
+            id: string;
+            role: 'user' | 'assistant';
+            content: string;
+            created_at: string;
+            model_used?: string;
+          }) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            timestamp: new Date(m.created_at),
+            modelUsed: m.model_used ?? undefined,
+          })
+        );
+        setMessages(historicMessages);
+      })
+      .catch(() => {
+        // Non-fatal — start fresh if history load fails
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingHistory(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -37,7 +81,7 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
 
       setError(null);
 
-      // Add user message
+      // Add user message (optimistic — server will persist it)
       const userMessage: Message = {
         id: `user-${Date.now()}`,
         role: 'user',
@@ -150,6 +194,8 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
   const clearChat = useCallback(() => {
     setMessages([]);
     setError(null);
+    // Delete server-side history (best-effort)
+    fetch('/api/cat/history', { method: 'DELETE' }).catch(() => {});
   }, []);
 
   const setErrorState = useCallback((err: string | null) => {
@@ -171,6 +217,7 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
   return {
     messages,
     isLoading,
+    isLoadingHistory,
     error,
     messagesEndRef,
     sendMessage,
