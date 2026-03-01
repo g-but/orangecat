@@ -91,24 +91,6 @@ export const SUPER_APP_CATEGORIES: SuperAppCategory[] = [
       },
     ],
   },
-  {
-    id: 'your-cat',
-    title: 'Your Cat',
-    description: 'AI that acts on your behalf',
-    icon: Cat,
-    color: 'from-tiffany-500 to-tiffany-600',
-    bgColor: 'bg-tiffany-50',
-    features: [
-      {
-        title: 'My Cat',
-        description: 'Your personal AI economic agent — it buys, sells, funds, and governs for you',
-      },
-      {
-        title: 'AI Assistants',
-        description: 'Deploy AI agents as independent economic actors and monetize them',
-      },
-    ],
-  },
 ];
 
 // ==================== HOW IT WORKS STEPS ====================
@@ -330,7 +312,7 @@ export const SECTION_HEADERS = {
   whatCanYouDo: {
     title: 'The Full Economic Spectrum',
     subtitle:
-      'Exchange, fund, lend, invest, and govern — with your AI agent, in any currency, under any identity.',
+      'Your Cat manages it all — exchange, funding, lending, investing, and governance — in any currency, for any identity.',
   },
   howItWorks: {
     title: 'Meet Your Cat',

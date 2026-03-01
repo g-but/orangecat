@@ -23,6 +23,7 @@
 #### Color Palette
 
 **Primary Colors**:
+
 - **Tiffany Blue**: `bg-tiffany` / `#0ABAB5`
   - Main CTAs, brand elements
   - Light variant: `bg-tiffany-light` / `#E6F7F7`
@@ -38,6 +39,7 @@
   - Never use for non-Bitcoin elements
 
 **Neutral Colors**:
+
 - Text: `text-gray-900` / `#1A1A1A`
 - Secondary text: `text-gray-600` / `#4A4A4A`
 - Tertiary text: `text-gray-400` / `#8A8A8A`
@@ -49,12 +51,14 @@
 ### Typography
 
 **Font Family**: Inter (system font stack)
+
 ```tsx
 // Already configured in Tailwind - just use
 <h1 className="font-sans">Title</h1>
 ```
 
 **Font Sizes** (use Tailwind classes):
+
 ```tsx
 <h1 className="text-3xl">48px heading</h1>
 <h2 className="text-2xl">36px heading</h2>
@@ -64,6 +68,7 @@
 ```
 
 **Never inline font sizes**:
+
 ```tsx
 // ❌ Wrong
 <p style={{ fontSize: '16px' }}>
@@ -77,6 +82,7 @@
 ### Spacing
 
 **Use Tailwind spacing scale (4px base)**:
+
 ```tsx
 // Padding
 <div className="p-1">  {/* 4px */}
@@ -93,6 +99,7 @@
 ```
 
 **Consistency Rule**: Same spacing for similar elements
+
 ```tsx
 // ✅ Consistent
 <Card className="p-6">  {/* All cards use p-6 */}
@@ -110,6 +117,7 @@
 ### Components
 
 #### Buttons
+
 ```tsx
 import { Button } from '@/components/ui/button';
 
@@ -132,6 +140,7 @@ import { Button } from '@/components/ui/button';
 ```
 
 #### Cards
+
 ```tsx
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 
@@ -139,18 +148,22 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
   <CardHeader>
     <CardTitle>Product Title</CardTitle>
   </CardHeader>
-  <CardContent>
-    {/* Main content */}
-  </CardContent>
-  <CardFooter>
-    {/* Actions */}
-  </CardFooter>
-</Card>
+  <CardContent>{/* Main content */}</CardContent>
+  <CardFooter>{/* Actions */}</CardFooter>
+</Card>;
 ```
 
 #### Forms
+
 ```tsx
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
 <Form {...form}>
@@ -163,11 +176,11 @@ import { Input } from '@/components/ui/input';
         <FormControl>
           <Input {...field} />
         </FormControl>
-        <FormMessage />  {/* Error message */}
+        <FormMessage /> {/* Error message */}
       </FormItem>
     )}
   />
-</Form>
+</Form>;
 ```
 
 ---
@@ -179,6 +192,7 @@ import { Input } from '@/components/ui/input';
 **Rule**: Show only what user needs NOW, hide complexity until needed.
 
 **Pattern**:
+
 ```
 Simple → Medium → Complex → Expert
   ↓        ↓         ↓        ↓
@@ -186,17 +200,18 @@ Template  Form    Advanced  Full Control
 ```
 
 **Implementation**:
+
 ```tsx
 // ✅ Good: Progressive disclosure
 <div>
   {/* Step 1: Simple */}
   <TemplateSelector />
-  
+
   {templateSelected && (
     /* Step 2: Medium */
     <BasicFields />
   )}
-  
+
   {basicComplete && (
     /* Step 3: Complex (collapsible) */
     <Collapsible>
@@ -215,6 +230,7 @@ Template  Form    Advanced  Full Control
 ```
 
 **Examples in OrangeCat**:
+
 - Entity creation: Templates → Form → Advanced options
 - Settings: Basic → Advanced → Expert
 - Filters: Common → All filters
@@ -229,31 +245,33 @@ Template  Form    Advanced  Full Control
 // ✅ Adaptive navigation
 const { context } = useNavigationContext();
 
-const navigation = context.type === 'individual' 
-  ? individualNavigation 
-  : groupNavigation;
+const navigation = context.type === 'individual' ? individualNavigation : groupNavigation;
 
 return <Sidebar items={navigation} />;
 ```
 
 **Visual Indicators**:
+
 - **Individual**: 👤 icon, Blue theme
 - **Group**: 🏢 icon, Purple theme
 - **Always show** current context in header/sidebar
 
 **Context Switcher** (always visible):
+
 ```tsx
 <ContextSwitcher>
   <ContextSwitcherTrigger>
     {context.type === 'individual' ? (
-      <><User /> You</>
+      <>
+        <User /> You
+      </>
     ) : (
-      <><Building2 /> {context.name}</>
+      <>
+        <Building2 /> {context.name}
+      </>
     )}
   </ContextSwitcherTrigger>
-  <ContextSwitcherContent>
-    {/* List of contexts */}
-  </ContextSwitcherContent>
+  <ContextSwitcherContent>{/* List of contexts */}</ContextSwitcherContent>
 </ContextSwitcher>
 ```
 
@@ -262,28 +280,28 @@ return <Sidebar items={navigation} />;
 ### 3. Visual Hierarchy
 
 **Rules**:
+
 1. **One primary CTA per page**
 2. **Size indicates importance**
 3. **Color draws attention** (use sparingly)
 4. **White space creates clarity**
 
 **Example**:
+
 ```tsx
 // ✅ Good hierarchy
 <div className="space-y-6">
   {/* Size: Largest → Most important */}
   <h1 className="text-3xl font-bold">Page Title</h1>
-  
+
   {/* Color: Muted → Less important */}
-  <p className="text-base text-muted-foreground">
-    Description text
-  </p>
-  
+  <p className="text-base text-muted-foreground">Description text</p>
+
   {/* Size + Color: Primary action */}
   <Button size="lg" variant="default">
     Primary Action
   </Button>
-  
+
   {/* Smaller, subtle: Secondary action */}
   <Button size="sm" variant="ghost">
     Secondary
@@ -296,6 +314,7 @@ return <Sidebar items={navigation} />;
 ### 4. Error States
 
 **Always provide**:
+
 - Clear error message
 - Suggested action
 - Recovery path
@@ -315,10 +334,11 @@ import { AlertCircle } from 'lucide-react';
       Retry
     </Button>
   </div>
-</Alert>
+</Alert>;
 ```
 
 **Form Validation Errors**:
+
 ```tsx
 // ✅ Inline errors below field
 <FormField
@@ -329,7 +349,7 @@ import { AlertCircle } from 'lucide-react';
       <FormControl>
         <Input {...field} />
       </FormControl>
-      <FormMessage />  {/* Error appears here */}
+      <FormMessage /> {/* Error appears here */}
     </FormItem>
   )}
 />
@@ -368,6 +388,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 ### 6. Empty States
 
 **Always provide**:
+
 - Explanatory icon
 - Friendly message
 - Primary action
@@ -375,12 +396,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 ```tsx
 <div className="flex flex-col items-center justify-center p-12 text-center">
   <Inbox className="h-12 w-12 text-muted-foreground mb-4" />
-  <h3 className="text-lg font-semibold mb-2">
-    No products yet
-  </h3>
-  <p className="text-muted-foreground mb-6">
-    Create your first product to get started
-  </p>
+  <h3 className="text-lg font-semibold mb-2">No products yet</h3>
+  <p className="text-muted-foreground mb-6">Create your first product to get started</p>
   <Button onClick={onCreate}>
     <Plus className="mr-2 h-4 w-4" />
     Create Product
@@ -429,6 +446,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 ### Mobile Navigation
 
 **Bottom tab bar on mobile**:
+
 ```tsx
 // Mobile: Fixed bottom navigation
 <nav className="md:hidden fixed bottom-0 left-0 right-0">
@@ -484,9 +502,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 ```tsx
 // ✅ Descriptive alt text
-<Image 
-  src="/product.jpg" 
-  alt="Organic coffee beans in burlap sack" 
+<Image
+  src="/product.jpg"
+  alt="Organic coffee beans in burlap sack"
   width={400}
   height={300}
 />
@@ -522,7 +540,7 @@ import dynamic from 'next/dynamic';
 
 const HeavyChart = dynamic(() => import('./HeavyChart'), {
   loading: () => <Skeleton className="h-64 w-full" />,
-  ssr: false,  // Client-side only if needed
+  ssr: false, // Client-side only if needed
 });
 ```
 
@@ -554,7 +572,7 @@ const ExpensiveComponent = React.memo(Component);
 
 // ✅ useMemo for expensive calculations
 const sortedProducts = useMemo(
-  () => products.sort((a, b) => a.price_sats - b.price_sats),
+  () => products.sort((a, b) => a.price_btc - b.price_btc),
   [products]
 );
 
@@ -603,14 +621,20 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground">{product.description}</p>
-        <p className="text-lg font-semibold mt-4">
-          {formatSats(product.price_sats)}
-        </p>
+        <p className="text-lg font-semibold mt-4">{formatAmount(product.price_btc)}</p>
       </CardContent>
       {(onEdit || onDelete) && (
         <CardFooter className="flex gap-2">
-          {onEdit && <Button variant="outline" onClick={onEdit}>Edit</Button>}
-          {onDelete && <Button variant="destructive" onClick={onDelete}>Delete</Button>}
+          {onEdit && (
+            <Button variant="outline" onClick={onEdit}>
+              Edit
+            </Button>
+          )}
+          {onDelete && (
+            <Button variant="destructive" onClick={onDelete}>
+              Delete
+            </Button>
+          )}
         </CardFooter>
       )}
     </Card>
@@ -632,7 +656,7 @@ const form = useForm<FormData>({
   resolver: zodResolver(schema),
   defaultValues: {
     title: '',
-    price_sats: 0,
+    price_btc: 0,
   },
 });
 
@@ -647,9 +671,7 @@ const form = useForm<FormData>({
           <FormControl>
             <Input {...field} />
           </FormControl>
-          <FormDescription>
-            Choose a clear, descriptive title
-          </FormDescription>
+          <FormDescription>Choose a clear, descriptive title</FormDescription>
           <FormMessage />
         </FormItem>
       )}
@@ -659,7 +681,7 @@ const form = useForm<FormData>({
       Submit
     </Button>
   </form>
-</Form>
+</Form>;
 ```
 
 ### Validation Feedback
@@ -670,18 +692,20 @@ const form = useForm<FormData>({
 
 ```tsx
 // ✅ Success feedback
-{submitSuccess && (
-  <Alert>
-    <CheckCircle className="h-4 w-4" />
-    <AlertTitle>Success!</AlertTitle>
-    <AlertDescription>
-      Product created successfully.
-      <Link href={productUrl} className="underline ml-2">
-        View product
-      </Link>
-    </AlertDescription>
-  </Alert>
-)}
+{
+  submitSuccess && (
+    <Alert>
+      <CheckCircle className="h-4 w-4" />
+      <AlertTitle>Success!</AlertTitle>
+      <AlertDescription>
+        Product created successfully.
+        <Link href={productUrl} className="underline ml-2">
+          View product
+        </Link>
+      </AlertDescription>
+    </Alert>
+  );
+}
 ```
 
 ---
@@ -692,32 +716,40 @@ const form = useForm<FormData>({
 
 ```javascript
 // 1. Navigate to page
-await mcp_cursor-ide-browser_browser_navigate({ 
-  url: 'http://localhost:3001/dashboard/store/create' 
-});
+(await mcp_cursor) -
+  ide -
+  browser_browser_navigate({
+    url: 'http://localhost:3001/dashboard/store/create',
+  });
 
 // 2. Snapshot to verify layout
-const snapshot = await mcp_cursor-ide-browser_browser_snapshot();
+const snapshot = (await mcp_cursor) - ide - browser_browser_snapshot();
 
 // 3. Test interaction
-await mcp_cursor-ide-browser_browser_type({ 
-  element: 'Title input', 
-  ref: 'input[name="title"]', 
-  text: 'Test Product' 
-});
+(await mcp_cursor) -
+  ide -
+  browser_browser_type({
+    element: 'Title input',
+    ref: 'input[name="title"]',
+    text: 'Test Product',
+  });
 
 // 4. Verify visual feedback
-await mcp_cursor-ide-browser_browser_snapshot();
+(await mcp_cursor) - ide - browser_browser_snapshot();
 
 // 5. Submit and verify
-await mcp_cursor-ide-browser_browser_click({ 
-  element: 'Submit button', 
-  ref: 'button[type="submit"]' 
-});
+(await mcp_cursor) -
+  ide -
+  browser_browser_click({
+    element: 'Submit button',
+    ref: 'button[type="submit"]',
+  });
 
-await mcp_cursor-ide-browser_browser_wait_for({ 
-  text: 'Product created successfully' 
-});
+(await mcp_cursor) -
+  ide -
+  browser_browser_wait_for({
+    text: 'Product created successfully',
+  });
 ```
 
 ---

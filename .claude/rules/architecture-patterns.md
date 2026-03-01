@@ -11,6 +11,7 @@
 ### The Problem
 
 Duplicated entity metadata across codebase leads to:
+
 - Inconsistencies between components
 - Maintenance burden (update in 20 places)
 - Bugs when definitions drift
@@ -31,12 +32,12 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     tableName: 'user_products',
     basePath: '/dashboard/store',
     createPath: '/dashboard/store/create',
-    editPath: (id) => `/dashboard/store/${id}/edit`,
+    editPath: id => `/dashboard/store/${id}/edit`,
     apiEndpoint: '/api/products',
     icon: Package,
     color: 'blue',
     description: 'Physical or digital goods for sale',
-    fields: ['title', 'description', 'price_sats', 'category', 'inventory'],
+    fields: ['title', 'description', 'price_btc', 'category', 'inventory'],
     searchable: true,
     taggable: true,
   },
@@ -47,12 +48,12 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     tableName: 'user_services',
     basePath: '/dashboard/services',
     createPath: '/dashboard/services/create',
-    editPath: (id) => `/dashboard/services/${id}/edit`,
+    editPath: id => `/dashboard/services/${id}/edit`,
     apiEndpoint: '/api/services',
     icon: Briefcase,
     color: 'purple',
     description: 'Professional services or consultations',
-    fields: ['title', 'description', 'price_sats', 'duration_minutes'],
+    fields: ['title', 'description', 'price_btc', 'duration_minutes'],
     searchable: true,
     taggable: true,
   },
@@ -63,6 +64,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
 ### Usage Patterns
 
 **In API Routes**:
+
 ```typescript
 // ✅ Dynamic from registry
 const meta = ENTITY_REGISTRY[entityType];
@@ -73,6 +75,7 @@ const { data } = await supabase.from('user_products').select('*');
 ```
 
 **In Components**:
+
 ```typescript
 // ✅ Dynamic rendering
 function EntityIcon({ entityType }: Props) {
@@ -91,6 +94,7 @@ function EntityIcon({ entityType }: Props) {
 ```
 
 **In Navigation**:
+
 ```typescript
 // ✅ Generated from registry
 const navItems = Object.values(ENTITY_REGISTRY).map(meta => ({
@@ -176,7 +180,7 @@ mcp_supabase_apply_migration({
 
 export function createEntityConfig(type: EntityType): EntityConfig {
   const meta = ENTITY_REGISTRY[type];
-  
+
   return {
     type,
     metadata: meta,
@@ -203,25 +207,25 @@ const serviceConfig = createEntityConfig('service');
 export function createEntityCrudHandlers(entityType: EntityType) {
   const meta = ENTITY_REGISTRY[entityType];
   const schema = getSchemaForEntity(entityType);
-  
+
   return {
     GET: compose(
       withAuth(),
-      withRateLimit('read'),
+      withRateLimit('read')
     )(async (request, context) => {
       const { data, error } = await context.supabase
         .from(meta.tableName)
         .select('*')
         .eq('actor_id', context.actorId);
-      
+
       if (error) return apiError(error.message);
       return apiSuccess({ data });
     }),
-    
+
     POST: compose(
       withAuth(),
       withRateLimit('write'),
-      withValidation(schema),
+      withValidation(schema)
     )(async (request, context) => {
       const { data, error } = await context.supabase
         .from(meta.tableName)
@@ -231,11 +235,11 @@ export function createEntityCrudHandlers(entityType: EntityType) {
         })
         .select()
         .single();
-      
+
       if (error) return apiError(error.message);
       return apiSuccess({ data }, 201);
     }),
-    
+
     PUT: createUpdateHandler(meta, schema),
     DELETE: createDeleteHandler(meta),
   };
@@ -248,6 +252,7 @@ export { GET, POST, PUT, DELETE };
 ```
 
 **Benefits**:
+
 - **DRY**: Write once, use for all entities
 - **Consistency**: All entities behave identically
 - **Maintainability**: Fix once, fixed everywhere
@@ -282,7 +287,7 @@ const productConfig = {
   entityType: 'product',
   fields: [
     { name: 'title', type: 'text', required: true },
-    { name: 'price_sats', type: 'number', required: true },
+    { name: 'price_btc', type: 'number', required: true },
     { name: 'category', type: 'select', options: categories },
   ],
   validation: productSchema,
@@ -293,7 +298,7 @@ const serviceConfig = {
   entityType: 'service',
   fields: [
     { name: 'title', type: 'text', required: true },
-    { name: 'price_sats', type: 'number', required: true },
+    { name: 'price_btc', type: 'number', required: true },
     { name: 'duration_minutes', type: 'number' },
   ],
   validation: serviceSchema,
@@ -309,12 +314,14 @@ const serviceConfig = {
 ### Benefits
 
 **For Developers**:
+
 - 37% less code
 - 75% faster development
 - Fix once, fix everywhere
 - Easier onboarding
 
 **For Users**:
+
 - Consistent patterns (learn once, apply everywhere)
 - Predictable behavior
 - Less cognitive load
@@ -335,56 +342,57 @@ const serviceConfig = {
 
 export class CommerceService {
   constructor(private supabase: SupabaseClient) {}
-  
+
   // Business logic methods
   async createProduct(input: CreateProductInput, actorId: string) {
     // 1. Validation
     const validated = createProductSchema.parse(input);
-    
+
     // 2. Business rules
     const slug = this.generateSlug(validated.title);
-    const price = this.calculatePrice(validated.price_sats, validated.quantity);
-    
+    const price = this.calculatePrice(validated.price_btc, validated.quantity);
+
     // 3. Data persistence
     const { data, error } = await this.supabase
       .from('user_products')
-      .insert({ ...validated, slug, price_sats: price, actor_id: actorId })
+      .insert({ ...validated, slug, price_btc: price, actor_id: actorId })
       .select()
       .single();
-    
+
     if (error) throw new BusinessError('Failed to create product', error);
-    
+
     // 4. Side effects
     await this.notifyProductCreated(data);
     await this.updateSearchIndex(data);
-    
+
     return data;
   }
-  
-  async calculatePrice(basePriceSats: number, quantity: number = 1): Promise<number> {
-    let price = basePriceSats * quantity;
-    
+
+  async calculatePrice(basePriceBtc: number, quantity: number = 1): Promise<number> {
+    let price = basePriceBtc * quantity;
+
     // Apply bulk discount
     if (quantity >= 10) {
-      price = Math.floor(price * 0.9);  // 10% off
+      price = Math.floor(price * 0.9); // 10% off
     }
-    
+
     return price;
   }
-  
+
   async applyPromoCode(productId: string, code: string): Promise<number> {
     // Complex promo logic
     const promo = await this.getPromoCode(code);
     if (!promo.active) throw new BusinessError('Invalid promo code');
-    
+
     const product = await this.getProduct(productId);
-    const discountedPrice = product.price_sats * (1 - promo.discount_percent / 100);
-    
-    return Math.floor(discountedPrice);
+    const discountedPrice = product.price_btc * (1 - promo.discount_percent / 100);
+
+    return discountedPrice;
   }
-  
+
   private generateSlug(title: string): string {
-    return title.toLowerCase()
+    return title
+      .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
   }
@@ -401,17 +409,19 @@ export class CommerceService {
 export async function POST(request: Request) {
   // 1. HTTP layer concerns
   const supabase = createServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return apiError('Unauthorized', 401);
-  
+
   const body = await request.json();
   const actorId = await getUserActorId(user.id);
-  
+
   // 2. Delegate to domain service
   try {
     const commerce = new CommerceService(supabase);
     const product = await commerce.createProduct(body, actorId);
-    
+
     // 3. HTTP response
     return apiSuccess({ data: product }, 201);
   } catch (error) {
@@ -421,6 +431,7 @@ export async function POST(request: Request) {
 ```
 
 **Benefits**:
+
 - **Testable**: Test business logic without HTTP mocking
 - **Reusable**: Use in API routes, CLI tools, background jobs
 - **Maintainable**: Clear separation of concerns
@@ -436,20 +447,20 @@ export async function POST(request: Request) {
 
 ```typescript
 // Small, focused middleware functions
-const withAuth = () => (handler) => async (req) => {
+const withAuth = () => handler => async req => {
   const user = await getUser(req);
   if (!user) return apiError('Unauthorized', 401);
   return handler(req, { user });
 };
 
-const withRateLimit = (type: 'read' | 'write') => (handler) => async (req) => {
+const withRateLimit = (type: 'read' | 'write') => handler => async req => {
   if (await isRateLimited(req, type)) {
     return apiError('Too many requests', 429);
   }
   return handler(req);
 };
 
-const withValidation = (schema) => (handler) => async (req) => {
+const withValidation = schema => handler => async req => {
   const body = await req.json();
   const result = schema.safeParse(body);
   if (!result.success) return apiValidationError(result.error);
@@ -461,7 +472,7 @@ export const POST = compose(
   withAuth(),
   withRateLimit('write'),
   withValidation(createProductSchema),
-  withLogging(),
+  withLogging()
 )(async (req, context) => {
   // Handler has access to: user, validData
   const product = await createProduct(context.validData, context.user.id);
@@ -480,18 +491,18 @@ export const POST = compose(
     <FormTitle />
     <FormDescription />
   </FormHeader>
-  
+
   <TemplateSelector templates={templates} />
-  
+
   <FormFields>
     <TextField name="title" />
     <TextArea name="description" />
-    <NumberField name="price_sats" />
+    <NumberField name="price_btc" />
     <SelectField name="category" options={categories} />
   </FormFields>
-  
+
   <GuidancePanel hints={hints} />
-  
+
   <FormActions>
     <Button variant="outline" onClick={onCancel}>Cancel</Button>
     <Button type="submit">Create</Button>
@@ -523,17 +534,17 @@ Level 4: Expert (Full control)
 <Workflow>
   {/* Level 1: Simple */}
   <Step id="template" title="Choose Template">
-    <TemplateGallery 
+    <TemplateGallery
       templates={templates}
       onSelect={selectTemplate}
     />
   </Step>
-  
+
   {/* Level 2: Basic */}
   <Step id="basic" title="Basic Info" requires="template">
     <BasicFields fields={basicFields} />
   </Step>
-  
+
   {/* Level 3: Advanced (collapsible) */}
   <Step id="advanced" title="Advanced" optional>
     <Collapsible>
@@ -545,7 +556,7 @@ Level 4: Expert (Full control)
       </CollapsibleContent>
     </Collapsible>
   </Step>
-  
+
   {/* Level 4: Expert (hidden by default) */}
   {expertMode && (
     <Step id="expert" title="Expert Mode">
@@ -582,14 +593,14 @@ export const baseEntitySchema = z.object({
 
 // Entity-specific extensions
 export const productSchema = baseEntitySchema.extend({
-  price_sats: z.number().positive().int(),
+  price_btc: z.number().positive(),
   category: z.string().optional(),
   inventory: z.number().int().min(0).optional(),
   sku: z.string().optional(),
 });
 
 export const serviceSchema = baseEntitySchema.extend({
-  price_sats: z.number().positive().int(),
+  price_btc: z.number().positive(),
   duration_minutes: z.number().int().positive().optional(),
   availability: z.string().optional(),
 });
@@ -620,19 +631,19 @@ export const eventSchema = baseEntitySchema.extend({
 
 ```typescript
 // Context types
-type NavigationContext = 
+type NavigationContext =
   | { type: 'individual'; userId: string }
   | { type: 'group'; groupId: string; role: string };
 
 // Adaptive sidebar
 function AdaptiveSidebar() {
   const { context } = useNavigationContext();
-  
+
   // Different navigation based on context
   const navigation = context.type === 'individual'
     ? individualNavigation
     : groupNavigation;
-  
+
   return (
     <Sidebar>
       <ContextSwitcher context={context} />

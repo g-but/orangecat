@@ -11,11 +11,13 @@
 ### .env.local Missing or Corrupted
 
 **Symptoms**:
+
 - MCP tools fail
 - Supabase connection errors
 - "Cannot find module" errors for env vars
 
 **Fix**:
+
 ```bash
 # 1. Check if file exists
 ls -la .env.local
@@ -28,6 +30,7 @@ node scripts/utils/env-manager.js restore
 ```
 
 **Prevention**:
+
 - **NEVER** delete .env.local (see `.claude/RULES.md`)
 - Always backup before changes: `node scripts/utils/env-manager.js backup`
 
@@ -36,11 +39,13 @@ node scripts/utils/env-manager.js restore
 ### Type Check Failing After Edit
 
 **Symptoms**:
+
 - Post-hook shows type errors
 - `npm run type-check` fails
 - Red squiggles in IDE
 
 **Fix**:
+
 ```bash
 # 1. Read error carefully (post-hook shows it)
 # Example: "Property 'warranty_period' does not exist on type 'Product'"
@@ -68,6 +73,7 @@ npm run type-check
 ```
 
 **Prevention**:
+
 - Always update type definitions when adding fields
 - Use Zod schemas (types auto-derive)
 
@@ -76,39 +82,42 @@ npm run type-check
 ### Migration Failed
 
 **Symptoms**:
+
 - `mcp_supabase_apply_migration()` returns error
 - Database operation fails
 - SQL syntax error
 
 **Fix**:
+
 ```bash
 # 1. Check error message
 # Example: "column 'warranty_period' already exists"
 
 # 2. Check current schema
-mcp_supabase_execute_sql({ 
-  query: "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_products'" 
+mcp_supabase_execute_sql({
+  query: "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_products'"
 })
 
 # 3. Fix migration
 # If column exists, use IF NOT EXISTS:
-ALTER TABLE user_products 
+ALTER TABLE user_products
 ADD COLUMN IF NOT EXISTS warranty_period INTEGER;
 
 # If constraint conflict, drop and recreate:
-ALTER TABLE user_products 
+ALTER TABLE user_products
 DROP CONSTRAINT IF EXISTS check_price_positive;
-ALTER TABLE user_products 
-ADD CONSTRAINT check_price_positive CHECK (price_sats > 0);
+ALTER TABLE user_products
+ADD CONSTRAINT check_price_positive CHECK (price_btc > 0);
 
 # 4. Apply corrected migration
-mcp_supabase_apply_migration({ 
-  name: 'fix_warranty_field', 
-  query: '...' 
+mcp_supabase_apply_migration({
+  name: 'fix_warranty_field',
+  query: '...'
 })
 ```
 
 **Prevention**:
+
 - Always check schema before migration
 - Use `IF NOT EXISTS` / `IF EXISTS` clauses
 - Test on development database first
@@ -120,10 +129,12 @@ mcp_supabase_apply_migration({
 ### Entity Registry Not Being Used
 
 **Symptoms**:
+
 - Post-hook detects hardcoded entity names
 - Error: "Hardcoded entity names found"
 
 **Fix**:
+
 ```typescript
 // ❌ Before
 const { data } = await supabase.from('user_products').select('*');
@@ -138,6 +149,7 @@ const endpoint = meta.apiEndpoint;
 ```
 
 **Prevention**:
+
 - Always import and use ENTITY_REGISTRY
 - Pre-hook will catch violations
 
@@ -146,21 +158,23 @@ const endpoint = meta.apiEndpoint;
 ### RLS Policy Blocking Query
 
 **Symptoms**:
+
 - Query returns empty (but data exists)
 - Error: "PGRST116 - Row not found"
 - User can't see their own data
 
 **Fix**:
+
 ```bash
 # 1. Check RLS policies
-mcp_supabase_execute_sql({ 
-  query: "SELECT * FROM pg_policies WHERE tablename = 'user_products'" 
+mcp_supabase_execute_sql({
+  query: "SELECT * FROM pg_policies WHERE tablename = 'user_products'"
 })
 
 # 2. Verify user context
 # Check if actor_id is correct
-mcp_supabase_execute_sql({ 
-  query: "SELECT id, user_id FROM actors WHERE user_id = '<user_uuid>'" 
+mcp_supabase_execute_sql({
+  query: "SELECT id, user_id FROM actors WHERE user_id = '<user_uuid>'"
 })
 
 # 3. Fix options:
@@ -176,6 +190,7 @@ const { data } = await supabase
 ```
 
 **Prevention**:
+
 - Always use actor_id (not user_id directly)
 - Test queries with different users
 
@@ -184,11 +199,13 @@ const { data } = await supabase
 ### Browser Automation Timeout
 
 **Symptoms**:
+
 - `mcp_cursor-ide-browser_*` times out
 - Element not found
 - Page doesn't load
 
 **Fix**:
+
 ```typescript
 // 1. Verify dev server running
 // Check: lsof -i :3001
@@ -197,23 +214,28 @@ const { data } = await supabase
 // npm run dev
 
 // 3. Increase timeouts
-await mcp_cursor-ide-browser_browser_wait_for({ 
-  text: 'Expected text',
-  timeout: 10000  // 10 seconds instead of default
-});
+(await mcp_cursor) -
+  ide -
+  browser_browser_wait_for({
+    text: 'Expected text',
+    timeout: 10000, // 10 seconds instead of default
+  });
 
 // 4. Try multiple selectors
-await mcp_cursor-ide-browser_browser_click({ 
-  element: 'Submit button', 
-  ref: 'button[type="submit"], button:has-text("Submit"), [data-testid="submit"]'
-});
+(await mcp_cursor) -
+  ide -
+  browser_browser_click({
+    element: 'Submit button',
+    ref: 'button[type="submit"], button:has-text("Submit"), [data-testid="submit"]',
+  });
 
 // 5. Take snapshot to see current state
-const snapshot = await mcp_cursor-ide-browser_browser_snapshot();
+const snapshot = (await mcp_cursor) - ide - browser_browser_snapshot();
 // Analyze snapshot to find correct selector
 ```
 
 **Prevention**:
+
 - Always verify dev server first
 - Use multiple selector strategies
 - Wait for elements before interacting
@@ -223,11 +245,13 @@ const snapshot = await mcp_cursor-ide-browser_browser_snapshot();
 ### Build Failing
 
 **Symptoms**:
+
 - `npm run build` fails
 - Type errors in production build
 - Module not found errors
 
 **Fix**:
+
 ```bash
 # 1. Clear cache
 rm -rf .next
@@ -250,6 +274,7 @@ npm run build
 ```
 
 **Prevention**:
+
 - Always run `npm run type-check` before committing
 - Use `/deploy-check` command before deployment
 - Keep dependencies updated
@@ -296,20 +321,20 @@ npm run dev
 mcp_supabase_list_migrations()
 
 # 2. If last migration is bad, create rollback migration
-mcp_supabase_apply_migration({ 
-  name: 'rollback_bad_change', 
-  query: 'ALTER TABLE ... DROP COLUMN ...' 
+mcp_supabase_apply_migration({
+  name: 'rollback_bad_change',
+  query: 'ALTER TABLE ... DROP COLUMN ...'
 })
 
 # 3. Verify schema
-mcp_supabase_execute_sql({ 
-  query: "\\d user_products" 
+mcp_supabase_execute_sql({
+  query: "\\d user_products"
 })
 
 # 4. Re-apply correct migration
-mcp_supabase_apply_migration({ 
-  name: 'correct_change', 
-  query: '...' 
+mcp_supabase_apply_migration({
+  name: 'correct_change',
+  query: '...'
 })
 ```
 
@@ -373,16 +398,16 @@ mcp_supabase_execute_sql({ query: 'SELECT NOW()' })
 
 ## 🎯 Quick Fixes by Error Message
 
-| Error Message | Likely Cause | Quick Fix |
-|---------------|--------------|-----------|
-| "Cannot find module '@/...'" | Missing dependency or tsconfig path issue | `npm install` or check tsconfig.json |
-| "PGRST116" | RLS policy blocking | Check RLS policies, verify actor_id |
-| "Type '...' is not assignable" | Type mismatch | Update schema or add type assertion |
-| "ECONNREFUSED" | Service not running | Start dev server or check Supabase connection |
-| "Module not found: Can't resolve 'fs'" | Server module imported in client | Add webpack fallback or move to server |
-| "Hydration failed" | Server/client mismatch | Check for date formatting or random values |
-| "Too many re-renders" | Infinite loop in useEffect | Add dependency array or condition |
-| "Invalid hook call" | Hooks used outside component | Move hooks inside component body |
+| Error Message                          | Likely Cause                              | Quick Fix                                     |
+| -------------------------------------- | ----------------------------------------- | --------------------------------------------- |
+| "Cannot find module '@/...'"           | Missing dependency or tsconfig path issue | `npm install` or check tsconfig.json          |
+| "PGRST116"                             | RLS policy blocking                       | Check RLS policies, verify actor_id           |
+| "Type '...' is not assignable"         | Type mismatch                             | Update schema or add type assertion           |
+| "ECONNREFUSED"                         | Service not running                       | Start dev server or check Supabase connection |
+| "Module not found: Can't resolve 'fs'" | Server module imported in client          | Add webpack fallback or move to server        |
+| "Hydration failed"                     | Server/client mismatch                    | Check for date formatting or random values    |
+| "Too many re-renders"                  | Infinite loop in useEffect                | Add dependency array or condition             |
+| "Invalid hook call"                    | Hooks used outside component              | Move hooks inside component body              |
 
 ---
 

@@ -28,7 +28,7 @@ export const ProductList = () => {};
 
 // Functions: camelCase
 export function formatPrice(amount: number) {}
-export const calculateTotal = (items) => {};
+export const calculateTotal = items => {};
 
 // Constants: UPPER_SNAKE_CASE
 export const ENTITY_REGISTRY = {};
@@ -74,6 +74,7 @@ fi
 ```
 
 **Limits**:
+
 - Components: Max 300 lines
 - API routes: Max 150 lines (should be thin)
 - Utilities: Max 200 lines
@@ -81,6 +82,7 @@ fi
 - Services: Max 500 lines
 
 **If exceeding**:
+
 1. Extract smaller modules
 2. Move logic to appropriate layer
 3. Use composition over complexity
@@ -119,6 +121,7 @@ import styles from './ProductCard.module.css';
 ```
 
 **Auto-organize**:
+
 ```bash
 # In post-hook
 npx organize-imports-cli "$CLAUDE_EDITED_FILE"
@@ -131,6 +134,7 @@ npx organize-imports-cli "$CLAUDE_EDITED_FILE"
 ### When to Comment
 
 **1. Complex Algorithms**:
+
 ```typescript
 // ✅ Explain WHY, not WHAT
 // Using Damerau-Levenshtein distance for fuzzy matching
@@ -147,6 +151,7 @@ function add(a: number, b: number) {
 ```
 
 **2. Non-Obvious Decisions**:
+
 ```typescript
 // ✅ Explain rationale
 // We cache for 5 minutes (not longer) because product prices
@@ -159,6 +164,7 @@ const CACHE_TTL = 300;
 ```
 
 **3. Workarounds**:
+
 ```typescript
 // ✅ Document temporary solutions
 // TODO: Remove after Supabase fixes JSONB indexing bug #12345
@@ -188,6 +194,7 @@ setTitle(newTitle);
 ```
 
 **Use type annotations instead**:
+
 ```typescript
 // ❌ Comment to explain type
 // userProducts is an array of Product objects
@@ -207,14 +214,14 @@ const userProducts: Product[] = await getUserProducts(userId);
 
 ```typescript
 // ✅ Good user messages
-"Failed to create product. Please check your internet connection and try again."
-"Product title must be between 1 and 100 characters."
-"This product name is already taken. Please choose a different name."
+'Failed to create product. Please check your internet connection and try again.';
+'Product title must be between 1 and 100 characters.';
+'This product name is already taken. Please choose a different name.';
 
 // ❌ Technical jargon
-"Error: PGRST116 - Row not found"
-"Validation failed: title.min(1)"
-"Network request failed with status 500"
+'Error: PGRST116 - Row not found';
+'Validation failed: title.min(1)';
+'Network request failed with status 500';
 ```
 
 ### Developer-Facing Messages
@@ -244,25 +251,27 @@ console.log(error);
 ### Unit Tests
 
 **Coverage targets**:
+
 - Utilities: 100% coverage
 - Hooks: 90% coverage (happy path + errors)
 - Components: 80% coverage (key interactions)
 - Services: 90% coverage (business logic critical)
 
 **Example**:
+
 ```typescript
 // formatPrice.test.ts
 describe('formatPrice', () => {
-  it('formats sats correctly', () => {
-    expect(formatPrice(100000)).toBe('100,000 sats');
-    expect(formatPrice(0)).toBe('0 sats');
-    expect(formatPrice(1)).toBe('1 sat');
-  });
-  
   it('formats BTC correctly', () => {
-    expect(formatPrice(100000000, 'BTC')).toBe('1.00000000 BTC');
+    expect(formatPrice(0.001)).toBe('0.00100000 BTC');
+    expect(formatPrice(0)).toBe('0.00000000 BTC');
+    expect(formatPrice(1)).toBe('1.00000000 BTC');
   });
-  
+
+  it('formats fiat correctly', () => {
+    expect(formatPrice(0.001, 'CHF')).toBe('CHF 86.00');
+  });
+
   it('handles negative values', () => {
     expect(() => formatPrice(-100)).toThrow('Price cannot be negative');
   });
@@ -272,19 +281,20 @@ describe('formatPrice', () => {
 ### Integration Tests
 
 **Test layer boundaries**:
+
 ```typescript
 // API endpoint integration test
 describe('POST /api/products', () => {
   it('creates product with valid data', async () => {
     const response = await fetch('/api/products', {
       method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${testToken}`,
+      headers: {
+        Authorization: `Bearer ${testToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(validProductData),
     });
-    
+
     expect(response.status).toBe(201);
     const data = await response.json();
     expect(data.success).toBe(true);
@@ -296,6 +306,7 @@ describe('POST /api/products', () => {
 ### E2E Tests
 
 **Critical user flows**:
+
 - Create product
 - Edit profile
 - Send message
@@ -303,15 +314,16 @@ describe('POST /api/products', () => {
 - Switch context (individual ↔ group)
 
 **With browser automation**:
+
 ```javascript
 // Test product creation flow
 test('user can create product', async () => {
   await navigate({ url: 'http://localhost:3001/dashboard/store' });
   await click({ element: 'Create button', ref: 'a[href*="/create"]' });
-  
+
   await type({ element: 'Title', ref: 'input[name="title"]', text: 'Test Product' });
-  await type({ element: 'Price', ref: 'input[name="price_sats"]', text: '100000' });
-  
+  await type({ element: 'Price', ref: 'input[name="price_btc"]', text: '0.001' });
+
   await click({ element: 'Submit', ref: 'button[type="submit"]' });
   await wait_for({ text: 'Product created successfully' });
 });
@@ -324,6 +336,7 @@ test('user can create product', async () => {
 ### Core Web Vitals
 
 **Targets**:
+
 - **First Contentful Paint (FCP)**: < 1.5s
 - **Largest Contentful Paint (LCP)**: < 2.5s
 - **Time to Interactive (TTI)**: < 3.0s
@@ -333,6 +346,7 @@ test('user can create product', async () => {
 ### Optimization Techniques
 
 **1. Code Splitting**:
+
 ```typescript
 // ✅ Lazy load heavy components
 import dynamic from 'next/dynamic';
@@ -344,23 +358,28 @@ const HeavyChart = dynamic(() => import('./HeavyChart'), {
 ```
 
 **2. Memoization**:
+
 ```typescript
 // ✅ Memo expensive renders
 const ExpensiveComponent = React.memo(Component);
 
 // ✅ useMemo for calculations
 const sortedProducts = useMemo(
-  () => products.sort((a, b) => a.price_sats - b.price_sats),
+  () => products.sort((a, b) => a.price_btc - b.price_btc),
   [products]
 );
 
 // ✅ useCallback for stable references
-const handleClick = useCallback((id: string) => {
-  performAction(id);
-}, [performAction]);
+const handleClick = useCallback(
+  (id: string) => {
+    performAction(id);
+  },
+  [performAction]
+);
 ```
 
 **3. Image Optimization**:
+
 ```tsx
 // ✅ Next.js Image
 <Image
@@ -374,6 +393,7 @@ const handleClick = useCallback((id: string) => {
 ```
 
 **4. Bundle Size**:
+
 ```bash
 # Check bundle size after changes
 npm run build
@@ -389,6 +409,7 @@ npx @next/bundle-analyzer
 **Format**: `<type>(<scope>): <description>`
 
 **Types**:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `refactor`: Code restructuring (no functional changes)
@@ -399,6 +420,7 @@ npx @next/bundle-analyzer
 - `style`: Code formatting (no logic changes)
 
 **Examples**:
+
 ```bash
 feat(products): add warranty period field
 fix(auth): resolve session expiry bug
@@ -423,6 +445,7 @@ Closes #123
 ```
 
 **Example**:
+
 ```
 feat(products): add warranty period field
 
@@ -572,43 +595,50 @@ npx web-vitals-measure http://localhost:3001
 ### Code Documentation
 
 **README.md** (for modules):
-```markdown
+
+````markdown
 # Module Name
 
 ## Purpose
+
 What this module does and why it exists
 
 ## Usage
+
 ```typescript
 // Example code
 ```
+````
 
 ## API
+
 - `functionName(param)` - Description
 
 ## Tests
+
 How to run tests
-```
+
+````
 
 **JSDoc** (for complex functions):
 ```typescript
 /**
  * Calculates bulk pricing with discounts
- * 
- * @param basePriceSats - Base price per unit in satoshis
+ *
+ * @param basePriceBtc - Base price per unit in BTC
  * @param quantity - Number of units
- * @returns Final price in satoshis after discounts
- * 
+ * @returns Final price in BTC after discounts
+ *
  * @example
- * calculateBulkPrice(1000, 10) // Returns 9000 (10% discount)
+ * calculateBulkPrice(0.0001, 10) // Returns 0.00009 (10% discount)
  */
 export function calculateBulkPrice(
-  basePriceSats: number,
+  basePriceBtc: number,
   quantity: number
 ): number {
   // Implementation
 }
-```
+````
 
 ---
 

@@ -35,6 +35,7 @@ export { GET, POST, PUT, DELETE };
 ```
 
 **Benefits**:
+
 - Write once, use for all entities
 - Bug fix once, fixed everywhere
 - Consistent behavior across entities
@@ -50,10 +51,10 @@ import { withAuth, withRequestId, withRateLimit, withCache } from '@/lib/api/mid
 
 // ✅ Build complex handlers from simple pieces
 export const GET = compose(
-  withAuth(),                    // Require authentication
-  withRequestId(),               // Add request tracking
-  withRateLimit('read'),         // Rate limiting (lenient for reads)
-  withCache({ ttl: 60 }),        // Cache for 60 seconds
+  withAuth(), // Require authentication
+  withRequestId(), // Add request tracking
+  withRateLimit('read'), // Rate limiting (lenient for reads)
+  withCache({ ttl: 60 }) // Cache for 60 seconds
 )(async (request, context) => {
   // Handler logic here
   const products = await getProducts(context.user.id);
@@ -61,10 +62,10 @@ export const GET = compose(
 });
 
 export const POST = compose(
-  withAuth(),                    // Require authentication
-  withRequestId(),               // Add request tracking
-  withRateLimit('write'),        // Stricter rate limit for writes
-  withValidation(createProductSchema),  // Validate input
+  withAuth(), // Require authentication
+  withRequestId(), // Add request tracking
+  withRateLimit('write'), // Stricter rate limit for writes
+  withValidation(createProductSchema) // Validate input
 )(async (request, context) => {
   const product = await createProduct(context.validData, context.user.id);
   return apiSuccess({ data: product }, 201);
@@ -72,6 +73,7 @@ export const POST = compose(
 ```
 
 **Available Middleware**:
+
 - `withAuth()` - Require authentication
 - `withRateLimit(type)` - Rate limiting ('read' | 'write')
 - `withValidation(schema)` - Zod validation
@@ -90,9 +92,9 @@ export const POST = compose(
 import { apiSuccess, apiError, apiValidationError, apiNotFound } from '@/lib/api/responses';
 
 // ✅ Success response
-return apiSuccess({ 
+return apiSuccess({
   data: product,
-  meta: { total: 100, page: 1 }
+  meta: { total: 100, page: 1 },
 });
 // Returns: { success: true, data: {...}, meta: {...} }
 
@@ -109,7 +111,7 @@ return apiNotFound('Product');
 // Returns: { success: false, error: 'Product not found' } with 404 status
 
 // ❌ Don't return raw responses
-return new Response(JSON.stringify({ data }));  // Inconsistent!
+return new Response(JSON.stringify({ data })); // Inconsistent!
 ```
 
 ---
@@ -128,7 +130,7 @@ export async function GET() {
 }
 
 // ❌ Don't use browser client in API routes
-import { createClient } from '@supabase/supabase-js';  // Wrong!
+import { createClient } from '@supabase/supabase-js'; // Wrong!
 ```
 
 ### MCP Supabase Tools (Prefer When Available)
@@ -139,15 +141,15 @@ import { createClient } from '@supabase/supabase-js';  // Wrong!
 await mcp_supabase_list_tables({ schemas: ['public'] });
 
 // Execute query
-await mcp_supabase_execute_sql({ 
+await mcp_supabase_execute_sql({
   query: 'SELECT * FROM user_products WHERE actor_id = $1',
-  params: [actorId]
+  params: [actorId],
 });
 
 // Create migration
 await mcp_supabase_apply_migration({
   name: 'add_warranty_field',
-  query: 'ALTER TABLE user_products ADD COLUMN warranty_period INTEGER;'
+  query: 'ALTER TABLE user_products ADD COLUMN warranty_period INTEGER;',
 });
 
 // Check for issues
@@ -163,14 +165,10 @@ await mcp_supabase_get_advisors({ type: 'performance' });
 
 ```typescript
 // ❌ Don't check ownership in application code
-const { data: product } = await supabase
-  .from('user_products')
-  .select('*')
-  .eq('id', id)
-  .single();
+const { data: product } = await supabase.from('user_products').select('*').eq('id', id).single();
 
 if (product.actor_id !== userActorId) {
-  return apiError('Unauthorized', 403);  // Wrong approach!
+  return apiError('Unauthorized', 403); // Wrong approach!
 }
 
 // ✅ Let RLS handle it automatically
@@ -188,12 +186,14 @@ if (error) {
 ```
 
 **Why RLS is better**:
+
 - Security enforced at database level
 - Can't be bypassed by application bugs
 - Applies to all queries automatically
 - Consistent across all clients
 
 **RLS Policy Example**:
+
 ```sql
 -- Migration: Enable RLS
 ALTER TABLE user_products ENABLE ROW LEVEL SECURITY;
@@ -225,14 +225,14 @@ CREATE POLICY "Users can create own products"
 // ✅ Select only needed columns
 const { data } = await supabase
   .from('user_products')
-  .select('id, title, price_sats, status, created_at')
+  .select('id, title, price_btc, status, created_at')
   .eq('id', id)
   .single();
 
 // ❌ Don't select everything if not needed
 const { data } = await supabase
   .from('user_products')
-  .select('*')  // Wasteful if you only need a few fields
+  .select('*') // Wasteful if you only need a few fields
   .eq('id', id)
   .single();
 ```
@@ -243,7 +243,8 @@ const { data } = await supabase
 // ✅ Join related tables
 const { data } = await supabase
   .from('user_products')
-  .select(`
+  .select(
+    `
     *,
     actor:actors(
       id,
@@ -254,7 +255,8 @@ const { data } = await supabase
       id,
       name
     )
-  `)
+  `
+  )
   .eq('id', id)
   .single();
 
@@ -279,14 +281,14 @@ const { data, count, error } = await supabase
   .order('created_at', { ascending: false });
 
 // Return with pagination metadata
-return apiSuccess({ 
+return apiSuccess({
   data,
   meta: {
     total: count,
     page,
     pageSize,
-    totalPages: Math.ceil(count / pageSize)
-  }
+    totalPages: Math.ceil(count / pageSize),
+  },
 });
 ```
 
@@ -297,18 +299,12 @@ return apiSuccess({
 const products = await getProducts();
 for (const product of products) {
   // Each iteration makes a query - BAD!
-  const actor = await supabase
-    .from('actors')
-    .select('*')
-    .eq('id', product.actor_id)
-    .single();
+  const actor = await supabase.from('actors').select('*').eq('id', product.actor_id).single();
   product.actor = actor.data;
 }
 
 // ✅ Single query with join
-const { data: products } = await supabase
-  .from('user_products')
-  .select(`
+const { data: products } = await supabase.from('user_products').select(`
     *,
     actor:actors(*)
   `);
@@ -326,31 +322,24 @@ import { z } from 'zod';
 
 // ✅ Define schema with constraints
 export const createProductSchema = baseEntitySchema.extend({
-  price_sats: z.number()
-    .positive('Price must be positive')
-    .int('Price must be whole number'),
-  category: z.string()
-    .min(1, 'Category required')
-    .optional(),
-  inventory: z.number()
-    .int()
-    .min(0, 'Inventory cannot be negative')
-    .optional(),
+  price_btc: z.number().positive('Price must be positive'),
+  category: z.string().min(1, 'Category required').optional(),
+  inventory: z.number().int().min(0, 'Inventory cannot be negative').optional(),
 });
 
 // ✅ Use in API route
 export async function POST(request: Request) {
   const body = await request.json();
   const result = createProductSchema.safeParse(body);
-  
+
   if (!result.success) {
     return apiValidationError(result.error);
   }
-  
+
   // Now data is validated and typed
   const validData: CreateProductInput = result.data;
   const product = await createProduct(validData);
-  
+
   return apiSuccess({ data: product }, 201);
 }
 ```
@@ -363,7 +352,7 @@ import DOMPurify from 'isomorphic-dompurify';
 
 const sanitizedDescription = DOMPurify.sanitize(userInput, {
   ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p'],
-  ALLOWED_ATTR: ['href']
+  ALLOWED_ATTR: ['href'],
 });
 ```
 
@@ -376,21 +365,20 @@ const sanitizedDescription = DOMPurify.sanitize(userInput, {
 ```typescript
 export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
-  
+
   try {
     const body = await request.json();
-    
+
     // Validation
     const result = schema.safeParse(body);
     if (!result.success) {
       return apiValidationError(result.error);
     }
-    
+
     // Business logic
     const product = await createProduct(result.data);
-    
+
     return apiSuccess({ data: product }, 201);
-    
   } catch (error) {
     // Log error with context
     console.error('[API Error]', {
@@ -401,20 +389,20 @@ export async function POST(request: Request) {
       stack: error.stack,
       timestamp: new Date().toISOString(),
     });
-    
+
     // Handle specific error types
     if (error instanceof ZodError) {
       return apiValidationError(error);
     }
-    
+
     if (error.code === 'PGRST116') {
       return apiNotFound('Resource');
     }
-    
+
     if (error.code === '23505') {
       return apiError('Duplicate entry', 409);
     }
-    
+
     // Generic error (don't expose details to client)
     return apiError('Internal server error', 500);
   }
@@ -446,8 +434,8 @@ console.error('[API Error]', {
 });
 
 // ❌ Don't log generic messages
-console.log('Success');  // Not helpful!
-console.error('Error');  // Not helpful!
+console.log('Success'); // Not helpful!
+console.error('Error'); // Not helpful!
 ```
 
 ---
@@ -459,7 +447,10 @@ console.error('Error');  // Not helpful!
 ```typescript
 // ✅ Check authentication with Supabase
 const supabase = createServerClient();
-const { data: { user }, error } = await supabase.auth.getUser();
+const {
+  data: { user },
+  error,
+} = await supabase.auth.getUser();
 
 if (!user) {
   return apiError('Unauthorized', 401);
@@ -475,12 +466,12 @@ const userActorId = await getUserActorId(user.id);
 // ✅ Apply rate limits based on operation type
 export const GET = compose(
   withAuth(),
-  withRateLimit('read'),  // 100 requests/minute
+  withRateLimit('read') // 100 requests/minute
 )(handler);
 
 export const POST = compose(
   withAuth(),
-  withRateLimit('write'),  // 20 requests/minute (stricter)
+  withRateLimit('write') // 20 requests/minute (stricter)
 )(handler);
 ```
 
@@ -490,7 +481,7 @@ export const POST = compose(
 // ✅ Set CORS headers appropriately
 export async function GET() {
   const data = await getData();
-  
+
   return new Response(JSON.stringify(data), {
     headers: {
       'Content-Type': 'application/json',
@@ -518,6 +509,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 ```
 
 **Environment File** (`.env.local`):
+
 ```bash
 # Public (safe to expose to browser)
 NEXT_PUBLIC_SUPABASE_URL=https://project.supabase.co
@@ -539,20 +531,18 @@ DATABASE_URL=postgresql://...
 ```typescript
 // ✅ Cache GET requests
 export const GET = compose(
-  withCache({ 
-    ttl: 60,                    // Cache for 60 seconds
-    key: (req) => `products-${req.url}`,  // Cache key
-    vary: ['Authorization'],    // Vary by auth
-  }),
-)(async (request) => {
+  withCache({
+    ttl: 60, // Cache for 60 seconds
+    key: req => `products-${req.url}`, // Cache key
+    vary: ['Authorization'], // Vary by auth
+  })
+)(async request => {
   const products = await getProducts();
   return apiSuccess({ data: products });
 });
 
 // ✅ Invalidate cache on mutation
-export const POST = compose(
-  withCacheInvalidation(['products-*']),
-)(async (request) => {
+export const POST = compose(withCacheInvalidation(['products-*']))(async request => {
   const product = await createProduct(data);
   // Cache automatically invalidated
   return apiSuccess({ data: product }, 201);
@@ -568,7 +558,7 @@ CREATE INDEX idx_user_products_status ON user_products(status);
 CREATE INDEX idx_user_products_created_at ON user_products(created_at DESC);
 
 -- ✅ Composite index for common queries
-CREATE INDEX idx_user_products_actor_status 
+CREATE INDEX idx_user_products_actor_status
   ON user_products(actor_id, status);
 
 -- Check with Supabase MCP
@@ -579,10 +569,9 @@ await mcp_supabase_get_advisors({ type: 'performance' });
 
 ```typescript
 // ✅ Use database functions for complex logic
-const { data } = await supabase
-  .rpc('get_user_products_with_stats', {
-    user_actor_id: actorId
-  });
+const { data } = await supabase.rpc('get_user_products_with_stats', {
+  user_actor_id: actorId,
+});
 
 // Database function (faster than app-level logic):
 // CREATE FUNCTION get_user_products_with_stats(user_actor_id UUID)
@@ -607,14 +596,14 @@ const { data } = await supabase
 
 export class CommerceService {
   constructor(private supabase: SupabaseClient) {}
-  
+
   async createProduct(input: CreateProductInput, actorId: string) {
     // Validation
     const schema = createProductSchema.parse(input);
-    
+
     // Business logic
     const slug = this.generateSlug(schema.title);
-    
+
     // Database operation
     const { data, error } = await this.supabase
       .from('user_products')
@@ -625,34 +614,34 @@ export class CommerceService {
       })
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     // Post-processing
     await this.notifyNewProduct(data);
-    
+
     return data;
   }
-  
+
   async calculateProductPrice(product: Product, quantity: number) {
     // Complex pricing logic
-    let price = product.price_sats * quantity;
-    
+    let price = product.price_btc * quantity;
+
     // Apply bulk discount
     if (quantity >= 10) {
-      price *= 0.9;  // 10% discount
+      price *= 0.9; // 10% discount
     }
-    
+
     return Math.floor(price);
   }
-  
+
   private generateSlug(title: string): string {
     return title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
   }
-  
+
   private async notifyNewProduct(product: Product) {
     // Send notifications, update indexes, etc.
   }
@@ -667,22 +656,25 @@ export class CommerceService {
 
 export async function POST(request: Request) {
   const supabase = createServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) return apiError('Unauthorized', 401);
-  
+
   const body = await request.json();
   const actorId = await getUserActorId(user.id);
-  
+
   // Delegate to domain service
   const commerce = new CommerceService(supabase);
   const product = await commerce.createProduct(body, actorId);
-  
+
   return apiSuccess({ data: product }, 201);
 }
 ```
 
 **Benefits**:
+
 - Business logic separate from HTTP concerns
 - Testable without HTTP mocking
 - Reusable across different entry points
@@ -701,46 +693,46 @@ describe('POST /api/products', () => {
   it('creates product with valid data', async () => {
     const response = await fetch('/api/products', {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${testToken}`,
+        Authorization: `Bearer ${testToken}`,
       },
       body: JSON.stringify({
         title: 'Test Product',
-        price_sats: 100000,
+        price_btc: 0.001,
         description: 'Test description',
       }),
     });
-    
+
     expect(response.status).toBe(201);
     const data = await response.json();
     expect(data.success).toBe(true);
     expect(data.data.title).toBe('Test Product');
   });
-  
+
   it('rejects invalid data', async () => {
     const response = await fetch('/api/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        title: '',  // Invalid: empty title
-        price_sats: -100,  // Invalid: negative price
+        title: '', // Invalid: empty title
+        price_btc: -0.001, // Invalid: negative price
       }),
     });
-    
+
     expect(response.status).toBe(400);
     const data = await response.json();
     expect(data.success).toBe(false);
     expect(data.errors).toHaveLength(2);
   });
-  
+
   it('requires authentication', async () => {
     const response = await fetch('/api/products', {
       method: 'POST',
       // No Authorization header
       body: JSON.stringify({ title: 'Test' }),
     });
-    
+
     expect(response.status).toBe(401);
   });
 });
@@ -754,20 +746,20 @@ describe('POST /api/products', () => {
 describe('CommerceService', () => {
   let service: CommerceService;
   let mockSupabase: MockSupabaseClient;
-  
+
   beforeEach(() => {
     mockSupabase = createMockSupabaseClient();
     service = new CommerceService(mockSupabase);
   });
-  
+
   it('calculates bulk discount correctly', () => {
-    const product = { price_sats: 1000 };
-    
+    const product = { price_btc: 0.00001 };
+
     // No discount for small quantity
-    expect(service.calculateProductPrice(product, 5)).toBe(5000);
-    
+    expect(service.calculateProductPrice(product, 5)).toBeCloseTo(0.00005);
+
     // 10% discount for bulk
-    expect(service.calculateProductPrice(product, 10)).toBe(9000);
+    expect(service.calculateProductPrice(product, 10)).toBeCloseTo(0.00009);
   });
 });
 ```
@@ -782,10 +774,7 @@ describe('CommerceService', () => {
 
 ```typescript
 // ✅ Query by actor
-const { data: products } = await supabase
-  .from('user_products')
-  .select('*')
-  .eq('actor_id', actorId);
+const { data: products } = await supabase.from('user_products').select('*').eq('actor_id', actorId);
 
 // Users have actors
 const userActor = await getUserActor(userId);
@@ -797,17 +786,13 @@ const groupActor = await getGroupActor(groupId);
 ### Bitcoin Integration
 
 ```typescript
-// ✅ Always store in sats
-const price_sats = 100000;  // 0.001 BTC
+// ✅ Always store in BTC using NUMERIC(18,8)
+const price_btc = 0.001; // stored as 0.00100000
 
-// ✅ Display with formatting
-import { formatSats, formatBTC } from '@/lib/bitcoin';
-
-formatSats(100000);  // "100,000 sats"
-formatBTC(100000);   // "0.001 BTC"
-
-// ❌ Never store in BTC (floating point errors!)
-const price_btc = 0.001;  // WRONG!
+// ✅ Display with formatting via hook
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+const { formatAmount } = useDisplayCurrency();
+formatAmount(0.001); // "0.001 BTC" or "CHF 86.00" depending on user pref
 ```
 
 ### Remote-Only Supabase

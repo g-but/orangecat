@@ -15,7 +15,7 @@
 ```tsx
 // ✅ Correct usage
 <div className="text-bitcoin-orange">  {/* Bitcoin balance */}
-  {formatAmount(balance_sats)}  {/* Uses useDisplayCurrency hook */}
+  {formatAmount(balance_btc)}  {/* Uses useDisplayCurrency hook */}
 </div>
 
 <BitcoinIcon className="text-bitcoin-orange" />
@@ -36,38 +36,27 @@
 
 ---
 
-### Satoshis Everywhere (Storage)
+### Bitcoin Amounts: BTC is the Unit
 
-**CRITICAL**: Always store and calculate in sats (smallest unit)
+**CRITICAL**: Store Bitcoin amounts as BTC using `NUMERIC`/`DECIMAL` in the database. Satoshis are a Lightning protocol detail — they do not exist as a product concept.
 
 ```typescript
-// ✅ Correct: Store in sats
-const price_sats = 100000; // 0.001 BTC
-const balance_sats = 21000000; // 0.21 BTC
+// ✅ Correct: store and work in BTC
+const price_btc = 0.001; // DB column: NUMERIC(18, 8)
+const balance_btc = 0.21;
 
-// ❌ NEVER store in BTC (floating point errors!)
-const price_btc = 0.001; // WRONG! Precision issues!
-const balance_btc = 0.21; // WRONG!
+// ❌ Never name fields _sats or store as integers
+const price_sats = 100000; // WRONG — satoshis don't exist here
 ```
-
-**Why Sats**:
-
-- Avoids floating point errors
-- Precision guaranteed (integers)
-- Standard in Lightning Network
-- User-friendly (whole numbers)
 
 **Database Schema**:
 
 ```sql
--- ✅ All price columns in satoshis
+-- ✅ BTC columns use NUMERIC for exact decimal arithmetic
 CREATE TABLE user_products (
-  price_sats BIGINT NOT NULL,  -- Integer, no decimals
+  price_btc NUMERIC(18, 8) NOT NULL,
   -- ...
 );
-
--- ❌ Never use DECIMAL for Bitcoin
-price_btc DECIMAL(10, 8);  -- WRONG!
 ```
 
 ---
@@ -80,29 +69,20 @@ price_btc DECIMAL(10, 8);  -- WRONG!
 // ✅ CORRECT: Use useDisplayCurrency hook in components
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
-function PriceDisplay({ price_sats }: Props) {
+function PriceDisplay({ price_btc }: Props) {
   const { formatAmount } = useDisplayCurrency();
-  return <span>{formatAmount(price_sats)}</span>;
-  // Shows "CHF 86.00" or user's preferred currency
-}
-
-// ❌ WRONG: Direct formatSats in components (ignores user preference!)
-import { formatSats } from '@/services/currency';
-
-function PriceDisplay({ price_sats }: Props) {
-  return <span>{formatSats(price_sats)}</span>;
-  // Always shows "100,000 sats" regardless of user setting!
+  return <span>{formatAmount(price_btc)}</span>;
+  // Shows "CHF 86.00", "0.001 BTC", or user's preferred currency
 }
 ```
 
 **When to use what**:
 
-| Scenario                          | Use                                   | Output                    |
-| --------------------------------- | ------------------------------------- | ------------------------- |
-| User-facing amounts in components | `useDisplayCurrency().formatAmount()` | User's preferred currency |
-| API responses                     | Raw sats number                       | `{ price_sats: 100000 }`  |
-| Logs/debugging                    | `formatSats()` is fine                | "100,000 sats"            |
-| Internal calculations             | Raw sats numbers                      | `100000`                  |
+| Scenario                          | Use                                   | Output example         |
+| --------------------------------- | ------------------------------------- | ---------------------- |
+| User-facing amounts in components | `useDisplayCurrency().formatAmount()` | "CHF 86" / "0.001 BTC" |
+| API responses                     | Raw BTC number                        | `{ price_btc: 0.001 }` |
+| Internal calculations             | Raw BTC decimal                       | `0.001`                |
 
 **SSOT Architecture**:
 
@@ -110,8 +90,6 @@ function PriceDisplay({ price_sats }: Props) {
 - Service: `src/services/currency` - Conversion & formatting functions
 - Hook: `src/hooks/useDisplayCurrency.ts` - User preference + formatting
 - User Pref: `src/hooks/useUserCurrency.ts` - Gets user's currency choice
-
-**ESLint enforces this** - direct `formatSats` imports in components will error.
 
 ---
 
@@ -124,7 +102,7 @@ import { generateLNURL, decodeLNURL } from '@/lib/bitcoin/lightning';
 
 // ✅ Generate payment request
 const lnurl = generateLNURL({
-  amount_sats: 1000,
+  amount_btc: 0.00001, // BTC amount; library converts to protocol units internally
   description: 'Coffee purchase',
   callback_url: `${baseUrl}/api/payments/callback`,
   metadata: {
@@ -135,7 +113,7 @@ const lnurl = generateLNURL({
 
 // ✅ Decode incoming LNURL
 const decoded = decodeLNURL(lnurlString);
-const { amount_sats, description } = decoded;
+const { amount_btc, description } = decoded;
 ```
 
 **Payment Flow**:
@@ -259,8 +237,7 @@ CREATE TABLE user_products (
 
 **Bitcoin**:
 
-- "Bitcoin" or "BTC" (not "crypto")
-- "Satoshis" or "sats" (not "bits")
+- "Bitcoin" or "BTC" (not "crypto", not "sats", not "satoshis")
 - "Lightning Network" (not "LN")
 - "Bitcoin funding" (not "Bitcoin donations")
 
@@ -531,7 +508,7 @@ interface Wallet {
   id: string;
   actor_id: string;
   type: 'lightning' | 'onchain' | 'both';
-  balance_sats: number;
+  balance_btc: number;
   lnurl_address?: string;
   btc_address?: string;
   is_primary: boolean;
@@ -642,7 +619,7 @@ console.log('[Event]', {
   type: 'product_created',
   userId: user.id,
   productId: product.id,
-  price_sats: product.price_sats,
+  price_btc: product.price_btc,
   timestamp: new Date().toISOString(),
 });
 
@@ -650,7 +627,7 @@ console.log('[Event]', {
 console.error('[Error]', {
   type: 'payment_failed',
   userId: user.id,
-  amount_sats: amount,
+  amount_btc: amount,
   error: error.message,
   stack: error.stack,
   timestamp: new Date().toISOString(),
@@ -680,4 +657,4 @@ console.error('[Error]', {
 
 ---
 
-**Remember**: OrangeCat is a Bitcoin-native platform. Satoshis are the unit. Transparency is the goal. Actors unify ownership.
+**Remember**: OrangeCat is a Bitcoin-native platform. BTC is the unit. Transparency is the goal. Actors unify ownership.

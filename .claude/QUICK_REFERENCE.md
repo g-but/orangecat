@@ -7,6 +7,7 @@
 ## 🚀 Common Workflows
 
 ### Add New Entity Type
+
 ```bash
 1. Update src/config/entity-registry.ts
 2. Create validation schema in src/lib/validation.ts
@@ -15,6 +16,7 @@
 ```
 
 ### Fix Type Error
+
 ```bash
 1. Read error from post-hook stderr
 2. Locate file and line number
@@ -24,31 +26,35 @@
 ```
 
 ### Create Migration
+
 ```typescript
 mcp_supabase_apply_migration({
-  name: "add_field_name",
+  name: 'add_field_name',
   query: `
     ALTER TABLE user_products 
     ADD COLUMN new_field TEXT;
     CREATE INDEX idx_user_products_new_field 
     ON user_products(new_field);
-  `
-})
+  `,
+});
 ```
 
 ### Test UI Change
+
 ```javascript
 // Navigate
-mcp_cursor-ide-browser_browser_navigate({ url: 'http://localhost:3001/page' })
+mcp_cursor - ide - browser_browser_navigate({ url: 'http://localhost:3001/page' });
 
 // Snapshot
-mcp_cursor-ide-browser_browser_snapshot()
+mcp_cursor - ide - browser_browser_snapshot();
 
 // Interact
-mcp_cursor-ide-browser_browser_click({ element: 'Button', ref: 'button[data-testid="submit"]' })
+mcp_cursor -
+  ide -
+  browser_browser_click({ element: 'Button', ref: 'button[data-testid="submit"]' });
 
 // Verify
-mcp_cursor-ide-browser_browser_wait_for({ text: 'Success message' })
+mcp_cursor - ide - browser_browser_wait_for({ text: 'Success message' });
 ```
 
 ---
@@ -56,6 +62,7 @@ mcp_cursor-ide-browser_browser_wait_for({ text: 'Success message' })
 ## 🎯 Decision Tree
 
 ### "Where should this code go?"
+
 ```
 Is it HTTP-related?
 ├─ Yes → app/api/ (thin wrapper)
@@ -67,6 +74,7 @@ Is it HTTP-related?
 ```
 
 ### "Which tool should I use?"
+
 ```
 Need to query database?
 ├─ Use mcp_supabase_execute_sql()
@@ -86,6 +94,7 @@ Need to find code?
 ```
 
 ### "What validation approach?"
+
 ```
 API input?
 ├─ Use Zod schema validation
@@ -105,70 +114,84 @@ Database constraint?
 ## 🔧 Tool Quick Reference
 
 ### Supabase MCP
+
 ```typescript
 // List tables
-mcp_supabase_list_tables({ schemas: ['public'] })
+mcp_supabase_list_tables({ schemas: ['public'] });
 
 // Run query
-mcp_supabase_execute_sql({ 
-  query: 'SELECT * FROM user_products WHERE actor_id = $1 LIMIT 10'
-})
+mcp_supabase_execute_sql({
+  query: 'SELECT * FROM user_products WHERE actor_id = $1 LIMIT 10',
+});
 
 // Create migration
-mcp_supabase_apply_migration({ 
-  name: 'migration_name', 
-  query: 'SQL here' 
-})
+mcp_supabase_apply_migration({
+  name: 'migration_name',
+  query: 'SQL here',
+});
 
 // Security check
-mcp_supabase_get_advisors({ type: 'security' })
+mcp_supabase_get_advisors({ type: 'security' });
 
 // Performance check
-mcp_supabase_get_advisors({ type: 'performance' })
+mcp_supabase_get_advisors({ type: 'performance' });
 ```
 
 ### Browser Automation MCP
+
 ```typescript
 // Navigate
-mcp_cursor-ide-browser_browser_navigate({ 
-  url: 'http://localhost:3001/dashboard' 
-})
+mcp_cursor -
+  ide -
+  browser_browser_navigate({
+    url: 'http://localhost:3001/dashboard',
+  });
 
 // Snapshot (better than screenshot)
-mcp_cursor-ide-browser_browser_snapshot()
+mcp_cursor - ide - browser_browser_snapshot();
 
 // Click
-mcp_cursor-ide-browser_browser_click({ 
-  element: 'Submit button', 
-  ref: 'button[type="submit"]' 
-})
+mcp_cursor -
+  ide -
+  browser_browser_click({
+    element: 'Submit button',
+    ref: 'button[type="submit"]',
+  });
 
 // Type
-mcp_cursor-ide-browser_browser_type({ 
-  element: 'Title input', 
-  ref: 'input[name="title"]', 
-  text: 'Test value' 
-})
+mcp_cursor -
+  ide -
+  browser_browser_type({
+    element: 'Title input',
+    ref: 'input[name="title"]',
+    text: 'Test value',
+  });
 
 // Wait
-mcp_cursor-ide-browser_browser_wait_for({ 
-  text: 'Success message' 
-})
+mcp_cursor -
+  ide -
+  browser_browser_wait_for({
+    text: 'Success message',
+  });
 ```
 
 ### Context7 (Documentation)
+
 ```typescript
 // Find library
-mcp_context7_resolve-library-id({ 
-  libraryName: 'next.js', 
-  query: 'user question' 
-})
+mcp_context7_resolve -
+  library -
+  id({
+    libraryName: 'next.js',
+    query: 'user question',
+  });
 
 // Get docs
-mcp_context7_query-docs({ 
-  libraryId: '/vercel/next.js', 
-  query: 'how to use server actions' 
-})
+mcp_context7_query -
+  docs({
+    libraryId: '/vercel/next.js',
+    query: 'how to use server actions',
+  });
 ```
 
 ---
@@ -176,6 +199,7 @@ mcp_context7_query-docs({
 ## 📋 Code Patterns
 
 ### API Route (Generic Handler)
+
 ```typescript
 // app/api/products/route.ts
 import { createEntityCrudHandlers } from '@/lib/api/entityHandler';
@@ -185,6 +209,7 @@ export { GET, POST, PUT, DELETE };
 ```
 
 ### API Route (Custom)
+
 ```typescript
 import { compose } from '@/lib/api/compose';
 import { withAuth, withRateLimit, withValidation } from '@/lib/api/middleware';
@@ -192,7 +217,7 @@ import { withAuth, withRateLimit, withValidation } from '@/lib/api/middleware';
 export const POST = compose(
   withAuth(),
   withRateLimit('write'),
-  withValidation(schema),
+  withValidation(schema)
 )(async (request, context) => {
   const service = new Service(context.supabase);
   const result = await service.doSomething(context.validData);
@@ -201,20 +226,28 @@ export const POST = compose(
 ```
 
 ### Component with Form
+
 ```tsx
 'use client';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
 
 export function MyForm() {
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { title: '', price_sats: 0 },
+    defaultValues: { title: '', price_btc: 0 },
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async data => {
     const response = await fetch('/api/endpoint', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -246,11 +279,12 @@ export function MyForm() {
 ```
 
 ### Database Query with RLS
+
 ```typescript
 // ✅ Let RLS handle authorization
 const { data, error } = await supabase
   .from('user_products')
-  .select('id, title, price_sats')
+  .select('id, title, price_btc')
   .eq('id', productId)
   .single();
 
@@ -262,24 +296,28 @@ const { data, error } = await supabase
 ## 🔍 Debugging Checklist
 
 ### Type Error
+
 1. Read error message carefully
 2. Check schema definition
 3. Verify types match schema
 4. Run `npm run type-check` to verify
 
 ### API Not Working
+
 1. Check Supabase connection (credentials in .env.local)
 2. Verify RLS policies
 3. Check browser console for errors
 4. Test with direct SQL query
 
 ### UI Not Rendering
+
 1. Check browser console for errors
 2. Verify data is loading (check Network tab)
 3. Check component props
 4. Test with browser automation
 
 ### Build Failing
+
 1. Run `npm run type-check`
 2. Run `npm run lint`
 3. Check for missing dependencies
@@ -290,26 +328,30 @@ const { data, error } = await supabase
 ## 🚨 Common Errors & Fixes
 
 ### "Cannot find module '@/...'"
+
 ```bash
 # Fix: Update tsconfig.json paths or install missing package
 npm install <package-name>
 ```
 
 ### "PGRST116 - Row not found"
+
 ```
 # Fix: Check RLS policies - user likely doesn't have access
-mcp_supabase_execute_sql({ 
-  query: "SELECT * FROM pg_policies WHERE tablename = 'table_name'" 
+mcp_supabase_execute_sql({
+  query: "SELECT * FROM pg_policies WHERE tablename = 'table_name'"
 })
 ```
 
 ### "Type 'X' is not assignable to type 'Y'"
+
 ```typescript
 // Fix: Update schema or add type assertion
 const data: Y = schema.parse(input);
 ```
 
 ### "Module not found: Can't resolve 'fs'"
+
 ```
 # Fix: Add to next.config.js
 webpack: (config) => {
@@ -329,35 +371,32 @@ import { ENTITY_REGISTRY } from '@/config/entity-registry';
 const meta = ENTITY_REGISTRY[entityType];
 
 // Use for everything
-meta.tableName      // 'user_products'
-meta.name          // 'Product'
-meta.namePlural    // 'Products'
-meta.basePath      // '/dashboard/store'
-meta.apiEndpoint   // '/api/products'
-meta.icon          // Package (component)
+meta.tableName; // 'user_products'
+meta.name; // 'Product'
+meta.namePlural; // 'Products'
+meta.basePath; // '/dashboard/store'
+meta.apiEndpoint; // '/api/products'
+meta.icon; // Package (component)
 
 // ❌ NEVER hardcode
-'user_products'    // VIOLATION!
-'/api/products'    // VIOLATION!
+('user_products'); // VIOLATION!
+('/api/products'); // VIOLATION!
 ```
 
 ---
 
 ## 🎯 OrangeCat-Specific Patterns
 
-### Bitcoin & Sats
+### Bitcoin Amounts
 
 ```typescript
-// ✅ Always use sats (smallest unit)
-const price_sats = 100000;  // 0.001 BTC
+// ✅ Always store in BTC (NUMERIC(18,8) in DB)
+const price_btc = 0.001; // 0.00100000
 
-// ✅ Display formatting
-import { formatSats, formatBTC } from '@/lib/bitcoin';
-formatSats(100000);    // "100,000 sats"
-formatBTC(100000);     // "0.001 BTC"
-
-// ❌ Never store in BTC (floating point errors!)
-const price_btc = 0.001;  // WRONG!
+// ✅ Display formatting via hook (respects user preference)
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+const { formatAmount } = useDisplayCurrency();
+formatAmount(0.001); // "0.001 BTC" or "CHF 86.00" depending on user pref
 ```
 
 ### Actor System
@@ -379,7 +418,7 @@ const { data } = await supabase
 // ✅ Generate LNURL payment
 import { generateLNURL } from '@/lib/bitcoin/lightning';
 const lnurl = generateLNURL({
-  amount_sats: 1000,
+  amount_btc: 0.00001,
   description: 'Product purchase',
   callback_url: '/api/payments/callback',
 });
@@ -389,20 +428,21 @@ const lnurl = generateLNURL({
 
 ```typescript
 // ✅ Use correct terms
-"funding"           // not "donations"
-"supporters"        // not "donors"
-"Bitcoin funding"   // not "Bitcoin donations"
-"sats"             // not "bits"
-"satoshis"         // not "sat"
+'funding'; // not "donations"
+'supporters'; // not "donors"
+'Bitcoin funding'; // not "Bitcoin donations"
+'BTC'; // not "sats", not "satoshis", not "crypto"
 
 // ❌ Wrong terms
-"donate"           // ❌
-"crypto"           // ❌ (say "Bitcoin")
+'donate'; // ❌
+'crypto'; // ❌ (say "Bitcoin")
+'sats'; // ❌ (say "BTC")
 ```
 
 ### Common Workflows
 
 #### Add New Entity Type
+
 ```bash
 # 1. Add to entity registry
 edit src/config/entity-registry.ts
@@ -420,10 +460,11 @@ mcp_supabase_apply_migration({
 ```
 
 #### Create Bitcoin Payment
+
 ```typescript
 // Generate LNURL
 const lnurl = generateLNURL({
-  amount_sats: product.price_sats,
+  amount_btc: product.price_btc,
   description: `Purchase: ${product.title}`,
 });
 
@@ -438,6 +479,7 @@ const lnurl = generateLNURL({
 **Location**: `.env.local` (NEVER delete this file!)
 
 **Required Variables**:
+
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
@@ -445,6 +487,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 ```
 
 **Access**:
+
 ```typescript
 // Server-side only
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

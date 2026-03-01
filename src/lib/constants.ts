@@ -11,15 +11,16 @@
 // ==================== BITCOIN CONSTANTS ====================
 
 export const BITCOIN_CONSTANTS = {
-  SATOSHI_PER_BTC: 100000000,
-  MIN_SATOSHI_AMOUNT: 1,
-  MAX_SATOSHI_AMOUNT: 2100000000000000, // 21M BTC in sats
-  LIGHTNING_MIN_AMOUNT: 1,
-  LIGHTNING_MAX_AMOUNT: 4294967295, // Max Lightning payment
-  NETWORK_FEE_ESTIMATE: 1, // sats per byte
+  // Internal conversion constant — protocol-level detail, not user-facing
+  SATS_PER_BTC: 100000000,
+  BTC_MIN_AMOUNT: 0.00000001, // 1 satoshi expressed in BTC
+  BTC_MAX_AMOUNT: 21000000, // 21M BTC
+  LIGHTNING_MIN_AMOUNT_BTC: 0.00000001,
+  LIGHTNING_MAX_AMOUNT_BTC: 0.04294967295, // Max Lightning payment in BTC
+  NETWORK_FEE_ESTIMATE_BTC: 0.00000001, // per byte
   CONFIRMATION_BLOCKS: 6,
-  LIGHTNING_CONFIRMATION_BLOCKS: 1
-} as const
+  LIGHTNING_CONFIRMATION_BLOCKS: 1,
+} as const;
 
 // ==================== PAGINATION CONSTANTS ====================
 
@@ -27,8 +28,8 @@ export const PAGINATION = {
   DEFAULT_PAGE_SIZE: 20,
   MAX_PAGE_SIZE: 100,
   DEFAULT_OFFSET: 0,
-  MAX_OFFSET: 10000
-} as const
+  MAX_OFFSET: 10000,
+} as const;
 
 // ==================== RATE LIMITING CONSTANTS ====================
 
@@ -37,8 +38,8 @@ export const RATE_LIMITS = {
   API_REQUESTS_PER_HOUR: 1000,
   AUTH_ATTEMPTS_PER_MINUTE: 5,
   PASSWORD_RESET_REQUESTS_PER_HOUR: 3,
-  EMAIL_VERIFICATION_REQUESTS_PER_HOUR: 5
-} as const
+  EMAIL_VERIFICATION_REQUESTS_PER_HOUR: 5,
+} as const;
 
 // ==================== VALIDATION CONSTANTS ====================
 
@@ -52,8 +53,8 @@ export const VALIDATION_LIMITS = {
   ORGANIZATION_NAME_MAX_LENGTH: 100,
   ORGANIZATION_DESCRIPTION_MAX_LENGTH: 1000,
   PASSWORD_MIN_LENGTH: 8,
-  PASSWORD_MAX_LENGTH: 128
-} as const
+  PASSWORD_MAX_LENGTH: 128,
+} as const;
 
 // ==================== FILE UPLOAD CONSTANTS ====================
 
@@ -63,8 +64,8 @@ export const FILE_UPLOAD = {
   ALLOWED_AVATAR_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
   ALLOWED_BANNER_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
   AVATAR_DIMENSIONS: { width: 400, height: 400 },
-  BANNER_DIMENSIONS: { width: 1200, height: 400 }
-} as const
+  BANNER_DIMENSIONS: { width: 1200, height: 400 },
+} as const;
 
 // ==================== CACHE CONSTANTS ====================
 
@@ -73,8 +74,8 @@ export const CACHE_DURATIONS = {
   CAMPAIGN_DATA: 10 * 60 * 1000, // 10 minutes
   ORGANIZATION_DATA: 15 * 60 * 1000, // 15 minutes
   SEARCH_RESULTS: 2 * 60 * 1000, // 2 minutes
-  STATIC_CONTENT: 60 * 60 * 1000 // 1 hour
-} as const
+  STATIC_CONTENT: 60 * 60 * 1000, // 1 hour
+} as const;
 
 // ==================== PERFORMANCE CONSTANTS ====================
 
@@ -84,8 +85,8 @@ export const PERFORMANCE = {
   DATABASE_CONNECTION_TIMEOUT: 10000, // 10 seconds
   MAX_CONCURRENT_REQUESTS: 50,
   MAX_RETRY_ATTEMPTS: 3,
-  RETRY_DELAY_BASE: 1000 // 1 second
-} as const
+  RETRY_DELAY_BASE: 1000, // 1 second
+} as const;
 
 // ==================== SECURITY CONSTANTS ====================
 
@@ -95,8 +96,8 @@ export const SECURITY = {
   MAX_LOGIN_ATTEMPTS: 5,
   ACCOUNT_LOCKOUT_DURATION: 15 * 60 * 1000, // 15 minutes
   PASSWORD_HASH_ROUNDS: 12,
-  SESSION_TIMEOUT: 24 * 3600 * 1000 // 24 hours
-} as const
+  SESSION_TIMEOUT: 24 * 3600 * 1000, // 24 hours
+} as const;
 
 // ==================== FEATURE FLAGS ====================
 
@@ -107,8 +108,8 @@ export const FEATURE_FLAGS = {
   ENABLE_LIGHTNING_PAYMENTS: true,
   ENABLE_ADVANCED_ANALYTICS: false,
   ENABLE_BETA_FEATURES: process.env.NODE_ENV === 'development',
-  ENABLE_DEBUG_LOGS: process.env.NODE_ENV === 'development'
-} as const
+  ENABLE_DEBUG_LOGS: process.env.NODE_ENV === 'development',
+} as const;
 
 // ==================== REGEX PATTERNS ====================
 
@@ -119,8 +120,8 @@ export const REGEX_PATTERNS = {
   SLUG: /^[a-z0-9-]+$/,
   URL: /^https?:\/\/[^\s/$.?#].[^\s]*$/i,
   EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  PHONE: /^\+?[1-9]\d{1,14}$/
-} as const
+  PHONE: /^\+?[1-9]\d{1,14}$/,
+} as const;
 
 // ==================== ERROR CODES ====================
 
@@ -150,36 +151,36 @@ export const ERROR_CODES = {
 
   // System errors
   INTERNAL_ERROR: 'INTERNAL_ERROR',
-  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE'
-} as const
+  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
+} as const;
 
 // ==================== TYPE HELPERS ====================
 
-export type BitcoinUnit = 'SATS' | 'BTC' | 'USD'
-export type CampaignStatus = 'draft' | 'active' | 'completed' | 'cancelled' | 'paused'
-export type OrganizationType = 'nonprofit' | 'company' | 'dao' | 'collective' | 'foundation'
-export type TransactionStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+export type BitcoinUnit = 'BTC' | 'CHF' | 'USD' | 'EUR';
+export type CampaignStatus = 'draft' | 'active' | 'completed' | 'cancelled' | 'paused';
+export type OrganizationType = 'nonprofit' | 'company' | 'dao' | 'collective' | 'foundation';
+export type TransactionStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
 
 // ==================== UTILITY FUNCTIONS ====================
 
-export function formatSatoshiToBTC(satoshis: number): number {
-  return satoshis / BITCOIN_CONSTANTS.SATOSHI_PER_BTC
+/** Internal: convert a Lightning/protocol satoshi amount to BTC for display */
+export function satsToBTC(sats: number): number {
+  return sats / BITCOIN_CONSTANTS.SATS_PER_BTC;
 }
 
-export function formatBTCToSatoshi(btc: number): number {
-  return Math.round(btc * BITCOIN_CONSTANTS.SATOSHI_PER_BTC)
+/** Internal: convert BTC to satoshis for Lightning protocol use */
+export function btcToSats(btc: number): number {
+  return Math.round(btc * BITCOIN_CONSTANTS.SATS_PER_BTC);
 }
 
 export function isValidBitcoinAmount(amount: number, unit: BitcoinUnit): boolean {
   switch (unit) {
-    case 'SATS':
-      return amount >= BITCOIN_CONSTANTS.MIN_SATOSHI_AMOUNT &&
-             amount <= BITCOIN_CONSTANTS.MAX_SATOSHI_AMOUNT
     case 'BTC':
-      return amount >= formatSatoshiToBTC(BITCOIN_CONSTANTS.MIN_SATOSHI_AMOUNT) &&
-             amount <= 21000000 // 21M BTC max
+      return (
+        amount >= BITCOIN_CONSTANTS.BTC_MIN_AMOUNT && amount <= BITCOIN_CONSTANTS.BTC_MAX_AMOUNT
+      );
     default:
-      return true // USD validation handled elsewhere
+      return true; // Fiat validation handled elsewhere
   }
 }
 
@@ -187,7 +188,7 @@ export function getErrorMessage(code: string): string {
   const errorMessages: Record<string, string> = {
     [ERROR_CODES.INVALID_CREDENTIALS]: 'Invalid email or password',
     [ERROR_CODES.TOKEN_EXPIRED]: 'Your session has expired. Please sign in again.',
-    [ERROR_CODES.INSUFFICIENT_PERMISSIONS]: 'You don\'t have permission to perform this action',
+    [ERROR_CODES.INSUFFICIENT_PERMISSIONS]: "You don't have permission to perform this action",
     [ERROR_CODES.INVALID_INPUT]: 'Please check your input and try again',
     [ERROR_CODES.MISSING_REQUIRED_FIELD]: 'Required field is missing',
     [ERROR_CODES.INVALID_FORMAT]: 'Invalid format provided',
@@ -199,8 +200,8 @@ export function getErrorMessage(code: string): string {
     [ERROR_CODES.PAYMENT_FAILED]: 'Payment processing failed',
     [ERROR_CODES.RATE_LIMIT_EXCEEDED]: 'Too many requests. Please try again later.',
     [ERROR_CODES.INTERNAL_ERROR]: 'An internal error occurred',
-    [ERROR_CODES.SERVICE_UNAVAILABLE]: 'Service temporarily unavailable'
-  }
+    [ERROR_CODES.SERVICE_UNAVAILABLE]: 'Service temporarily unavailable',
+  };
 
-  return errorMessages[code] || 'An unexpected error occurred'
+  return errorMessages[code] || 'An unexpected error occurred';
 }

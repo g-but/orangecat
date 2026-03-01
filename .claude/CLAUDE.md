@@ -133,17 +133,15 @@ const path = meta.basePath; // NOT '/dashboard/store'
 
 ### Bitcoin amounts: BTC is the canonical unit
 
-Store Bitcoin amounts as BTC using `NUMERIC`/`DECIMAL` in the database — not as integer satoshis. Satoshis are just one user-selectable display preference, with no special status.
+Store Bitcoin amounts as BTC using `NUMERIC`/`DECIMAL` in the database.
 
 ```typescript
 // DB column: NUMERIC(18, 8)  — exact decimal, no float errors
 // e.g., 0.001 BTC stored as 0.00100000
-
-// WRONG — satoshis are not the canonical unit
-price_sats: BIGINT; // NO! BTC is the unit, not sats
+const price_btc = 0.001; // ✅ BTC is the canonical unit
 ```
 
-**Display**: Show BTC by default, or the user's chosen currency (CHF default). If the user has selected satoshis as their display preference, format accordingly — but satoshis are just one option, not the default. Use `useDisplayCurrency()` hook in components.
+**Display**: Show BTC by default, or the user's chosen currency (CHF default). Use `useDisplayCurrency()` hook in components.
 
 ### Payment Methods Are Universal
 
@@ -259,8 +257,8 @@ export async function POST(request: Request) {
 ## Don't
 
 - Hardcode entity names (use `ENTITY_REGISTRY`)
-- Use integer satoshis as the storage unit (use BTC via `NUMERIC`/`DECIMAL`)
-- Default display to satoshis (use BTC or user's chosen currency via `useDisplayCurrency()`)
+- Use any unit other than BTC for Bitcoin storage (always `NUMERIC(18,8)`)
+- Bypass `useDisplayCurrency()` for amount display — always use it
 - Use Bitcoin Orange for non-Bitcoin UI
 - Query by `user_id` (use `actor_id`)
 - Run local Supabase (use remote)
