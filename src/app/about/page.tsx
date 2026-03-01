@@ -7,7 +7,7 @@ import BitBaumLogo from '@/components/layout/BitBaumLogo';
 export const metadata: Metadata = {
   title: 'About OrangeCat - A BitBaum Company',
   description:
-    'Learn about OrangeCat, the Bitcoin Super-App for commerce, finance, community, and AI, and our parent company BitBaum.',
+    'OrangeCat is your AI economic agent — buy, sell, fund, lend, invest, and govern with any identity, in any currency, without gatekeepers. A BitBaum company.',
 };
 
 export default function AboutPage() {
@@ -21,8 +21,7 @@ export default function AboutPage() {
               About <span className="text-tiffany-600">OrangeCat</span>
             </h1>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              The Bitcoin Super-App—unifying commerce, finance, community, and AI. A BitBaum
-              company.
+              Your AI economic agent — and the platform where it operates. A BitBaum company.
             </p>
           </div>
         </div>
@@ -78,17 +77,17 @@ export default function AboutPage() {
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">OrangeCat</h3>
             <p className="text-gray-600 mb-6">
-              Our flagship product—the Bitcoin Super-App that unifies commerce, finance, community,
-              and AI. Everything you need in one friendly, approachable platform.
+              Your AI economic agent — and the platform where it operates. Buy, sell, fund, lend,
+              invest, and govern with any identity, in any currency, without gatekeepers.
             </p>
             <div className="flex justify-center space-x-4 mb-6">
               <div className="flex items-center text-sm text-gray-500">
                 <Heart className="w-4 h-4 mr-2" />
-                Consumer Product
+                AI-Native Platform
               </div>
               <div className="flex items-center text-sm text-gray-500">
                 <Zap className="w-4 h-4 mr-2" />
-                Bitcoin Native
+                Universal Payments
               </div>
             </div>
             <Link
@@ -107,29 +106,32 @@ export default function AboutPage() {
           <div className="text-center mb-12">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Our Mission</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Empower individuals and communities with a unified platform for Bitcoin-powered
-              commerce, finance, collaboration, and innovation—all with complete transparency.
+              Enable anyone — any person, pseudonym, or organization — to participate in the full
+              spectrum of economic and governance activity: exchanging, funding, lending, investing,
+              and governing, with any counterparty, in any currency, without gatekeepers.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <TreePine className="w-8 h-8 text-orange-600" />
+              <div className="w-16 h-16 bg-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TreePine className="w-8 h-8 text-tiffany-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Grow Together</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Pseudonymous by Default</h3>
               <p className="text-gray-600">
-                Build interconnected communities where ideas branch and flourish like trees.
+                Any identity — human, pseudonymous, or AI — is a full economic participant. Real
+                name is always optional.
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-8 h-8 text-tiffany-600" />
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-8 h-8 text-orange-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Bitcoin Native</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Any Currency</h3>
               <p className="text-gray-600">
-                Every transaction is transparent, borderless, and powered by Bitcoin's network.
+                Bitcoin and Lightning are native, but any payment method — local or global — is
+                first-class. Meet users where they are.
               </p>
             </div>
 
@@ -137,9 +139,10 @@ export default function AboutPage() {
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Heart className="w-8 h-8 text-orange-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Community First</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">The Cat is the Interface</h3>
               <p className="text-gray-600">
-                Empower creators, supporters, and communities to thrive together.
+                My Cat is the primary AI agent for every user and group — it manages economic
+                activity so you don't have to.
               </p>
             </div>
           </div>
@@ -150,10 +153,10 @@ export default function AboutPage() {
       <div className="bg-gradient-to-r from-orange-500 to-tiffany-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-white mb-4">Join Our Growing Community</h2>
+            <h2 className="text-2xl font-semibold text-white mb-4">Join the Open Economy</h2>
             <p className="text-xl text-orange-100 mb-8">
-              Sell products, offer services, fund projects, build communities, and deploy AI—all
-              with Bitcoin.
+              Exchange, fund, lend, invest, and govern — with your AI agent, under any identity, in
+              any currency.
             </p>
             <Link
               href="/auth?mode=register"

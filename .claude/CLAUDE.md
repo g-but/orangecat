@@ -4,9 +4,51 @@
 
 ---
 
+## Mission & Vision
+
+**Mission**: Enable anyone — any person, pseudonym, or organization — to participate in the full spectrum of economic and governance activity: exchanging, funding, lending, investing, and governing, with any counterparty, in any currency, without gatekeepers.
+
+**Vision**: A world where economic participation is as open and uncensorable as speech. Where any identity — human, pseudonymous, or AI — can earn, fund, lend, invest, and govern freely. Where AI agents work on behalf of people and organizations to make this effortless, and where every economic relationship is structured, transparent where appropriate, and private where it matters.
+
+**What OrangeCat is (one sentence)**: Your AI economic agent — and the platform where it operates.
+
+### Core Principles (derive every product and engineering decision from these)
+
+1. **The Cat is the interface** — "My Cat" is the primary AI agent for every user and group. Entities provide structured context the Cat reads and operates on. Build for the Cat first.
+2. **Pseudonymous by default** — real identity is opt-in, never required. Any pseudonymous actor is a full economic participant.
+3. **Any currency** — Bitcoin/Lightning is native and preferred, but any payment method — local or global (Twint, PayPal, Venmo, Monero, and regional equivalents worldwide) — is a first-class citizen. Meet users where they are.
+4. **Full economic spectrum** — from gift (no strings) to loan (some strings) to investment (more strings). All forms of value coordination belong on this platform. Investments are the current gap.
+5. **Private where needed, transparent where chosen** — E2E encrypted messaging, Nostr as the censorship-resistant layer, Bitcoin's on-chain transparency available when appropriate.
+6. **Entities are the Cat's world model** — every entity type represents a form of economic or governance activity. The richer the entity structure, the smarter the Cat can be.
+
+### Entity Economic Taxonomy
+
+| Category               | Entities                  | Finance Type               |
+| ---------------------- | ------------------------- | -------------------------- |
+| Exchange               | product, service          | Market transaction         |
+| Funding (no strings)   | cause, wishlist, research | Donation/gift              |
+| Funding (soft strings) | project                   | Milestone accountability   |
+| Lending                | loan                      | Repayment expected         |
+| Investing              | _(missing — to be built)_ | Return/equity expected     |
+| Assets                 | asset                     | Collateral, rental         |
+| Governance             | group, circle             | Collective decisions       |
+| AI services            | ai_assistant              | Automated economic actor   |
+| Events                 | event                     | Time-bound coordination    |
+| Cat context            | document                  | Structured context for Cat |
+
+### What This Means for Development
+
+- When adding features, ask: does this serve the Cat, or does it serve a human manually? Prefer both.
+- Payment fields should support any payment method, not just Bitcoin addresses.
+- "Wallet" is a subset of "payment methods" — a user may have Lightning, Monero, PayPal, and Twint all as valid receiving options.
+- Messaging should be built with E2E encryption and Nostr integration in mind, even if not yet implemented.
+- Entities missing from the registry (`investment`) should be added as the platform matures.
+
+---
+
 ## Overview
 
-**OrangeCat** is a Bitcoin-native marketplace platform featuring Lightning Network payments, sats-only pricing, and multi-entity commerce.
+**OrangeCat** is an AI-native platform for universal economic and governance participation. The central product is "My Cat" — an AI agent that manages economic activity for each user and group, operating within a structured ecosystem of entities (products, services, projects, causes, loans, events, assets, groups, and more).
 
 **Project Path**: `/home/g/dev/orangecat`
 
@@ -25,7 +67,7 @@ npm run dev -- -p 3020  # Port 3020 to avoid conflicts
 | Language   | TypeScript 5.8                     |
 | Styling    | Tailwind CSS 3.3                   |
 | Database   | Supabase (PostgreSQL + Auth + RLS) |
-| Bitcoin    | Lightning Network, sats-only       |
+| Bitcoin    | Lightning Network, BTCPay, NWC     |
 | Deployment | Vercel                             |
 
 ---
@@ -62,16 +104,22 @@ const table = meta.tableName; // NOT 'user_products'
 const path = meta.basePath; // NOT '/dashboard/store'
 ```
 
-**Supported Entities**:
+**Supported Entities** (see Entity Economic Taxonomy in Mission section above):
 
-- `product` - Physical/digital goods
-- `service` - Professional services
-- `project` - Fundraising projects
-- `cause` - Charitable causes
-- `event` - Events/meetups
+- `product` - Physical/digital goods (exchange)
+- `service` - Professional services (exchange)
+- `project` - Fundraising with accountability (soft-strings funding)
+- `cause` - Charitable/no-strings funding
+- `research` - Decentralized science funding
+- `wishlist` - Gift registries
+- `event` - Time-bound coordination
 - `loan` - Peer-to-peer lending
-- `asset` - Real estate, assets
-- `ai_assistant` - AI chatbots
+- `asset` - Real estate, collateral, rentable assets
+- `ai_assistant` - Autonomous AI economic actors
+- `group` - Organizations with shared wallets and governance
+- `circle` - Lighter community structures
+- `document` - Structured context for the Cat
+- `investment` - _(planned)_ Equity/revenue-share investing
 
 **Adding New Entity**:
 
@@ -83,16 +131,23 @@ const path = meta.basePath; // NOT '/dashboard/store'
 
 ## Critical: Bitcoin Rules
 
-### Satoshis ONLY
+### Bitcoin storage: integers only
+
+When storing or calculating Bitcoin amounts internally, always use integer satoshis to avoid floating-point errors. Other payment methods (PayPal, Twint, Monero, etc.) use their own units.
 
 ```typescript
-// CORRECT - always sats (integer)
-const price_sats = 100000; // 0.001 BTC
-formatSats(100000); // "100,000 sats"
+// CORRECT - store as integer (avoids float precision errors)
+const price_sats = 100000; // 0.001 BTC internally
 
-// WRONG - never BTC floats (precision errors!)
-const price_btc = 0.001; // NO!
+// WRONG - never store as BTC float
+const price_btc = 0.001; // NO! Precision errors!
 ```
+
+**Display**: Always show BTC or user's preferred fiat (CHF by default), never raw satoshis in user-facing UI. Use `useDisplayCurrency()` hook in components.
+
+### Payment Methods Are Universal
+
+Bitcoin/Lightning is native and preferred, but the platform supports any payment method. Use `payment_methods` concepts (not just "wallet") where possible.
 
 ### Bitcoin Orange (#F7931A)
 
@@ -204,7 +259,8 @@ export async function POST(request: Request) {
 ## Don't
 
 - Hardcode entity names (use `ENTITY_REGISTRY`)
-- Store prices in BTC (use sats)
+- Store Bitcoin amounts as floats (use integer satoshis internally)
+- Display raw satoshis to users (use BTC or fiat via `useDisplayCurrency()`)
 - Use Bitcoin Orange for non-Bitcoin UI
 - Query by `user_id` (use `actor_id`)
 - Run local Supabase (use remote)

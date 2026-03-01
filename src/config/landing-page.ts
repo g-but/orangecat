@@ -11,15 +11,26 @@
  * - Follows SSOT principle from CLAUDE.md
  *
  * Created: 2026-01-28
+ * Last updated: 2026-03-01 — Aligned with vision: Cat-centric, universal payments, pseudonymous-by-default
  */
 
-import { LucideIcon, Bitcoin, Globe, Shield, Zap, Package, Rocket, Users, Bot } from 'lucide-react';
+import {
+  LucideIcon,
+  Globe,
+  Package,
+  Lock,
+  Wallet,
+  Scale,
+  Coins,
+  Cat,
+  TrendingUp,
+} from 'lucide-react';
 
 // ==================== SUPER-APP CATEGORIES ====================
 
 /**
  * Main categories shown on landing page
- * Simplified from 13 entity types to 4 clear categories
+ * Reflects the full economic spectrum: exchange → funding → governance → AI agent
  */
 export interface SuperAppCategory {
   id: string;
@@ -36,51 +47,66 @@ export interface SuperAppCategory {
 
 export const SUPER_APP_CATEGORIES: SuperAppCategory[] = [
   {
-    id: 'commerce',
-    title: 'Commerce',
-    description: 'Buy and sell with Bitcoin',
+    id: 'exchange',
+    title: 'Exchange',
+    description: 'Buy and sell with anyone',
     icon: Package,
     color: 'from-blue-500 to-blue-600',
     bgColor: 'bg-blue-50',
     features: [
-      { title: 'Products', description: 'Sell physical or digital goods' },
-      { title: 'Services', description: 'Offer your professional expertise' },
+      { title: 'Products', description: 'Sell physical or digital goods to anyone, anywhere' },
+      { title: 'Services', description: 'Offer your expertise — hourly, fixed, or on your terms' },
     ],
   },
   {
-    id: 'funding',
-    title: 'Funding',
-    description: 'Raise and manage Bitcoin',
-    icon: Rocket,
+    id: 'finance',
+    title: 'Fund & Finance',
+    description: 'From gifts to investments',
+    icon: Coins,
     color: 'from-orange-500 to-orange-600',
     bgColor: 'bg-orange-50',
     features: [
-      { title: 'Projects', description: 'Launch crowdfunding campaigns' },
-      { title: 'Causes', description: 'Support meaningful initiatives' },
+      {
+        title: 'Fund Projects & Causes',
+        description: 'No-strings donations to milestone-based funding — all forms supported',
+      },
+      {
+        title: 'Loans & Investments',
+        description: 'Peer-to-peer lending and equity-style investing without intermediaries',
+      },
     ],
   },
   {
-    id: 'community',
-    title: 'Community',
-    description: 'Connect and collaborate',
-    icon: Users,
+    id: 'governance',
+    title: 'Govern Together',
+    description: 'Organize and decide as one',
+    icon: Scale,
     color: 'from-purple-500 to-purple-600',
     bgColor: 'bg-purple-50',
     features: [
-      { title: 'Groups', description: 'Build communities around shared interests' },
-      { title: 'Events', description: 'Organize and attend meetups' },
+      { title: 'Groups', description: 'Shared treasuries, collective decisions, governance rules' },
+      {
+        title: 'Circles & Events',
+        description: 'Lighter communities and time-bound coordination',
+      },
     ],
   },
   {
-    id: 'innovation',
-    title: 'AI & Innovation',
-    description: 'Build with intelligence',
-    icon: Bot,
-    color: 'from-green-500 to-green-600',
-    bgColor: 'bg-green-50',
+    id: 'your-cat',
+    title: 'Your Cat',
+    description: 'AI that acts on your behalf',
+    icon: Cat,
+    color: 'from-tiffany-500 to-tiffany-600',
+    bgColor: 'bg-tiffany-50',
     features: [
-      { title: 'AI Assistants', description: 'Create and monetize AI services' },
-      { title: 'Research', description: 'Fund decentralized science' },
+      {
+        title: 'My Cat',
+        description: 'Your personal AI economic agent — it buys, sells, funds, and governs for you',
+      },
+      {
+        title: 'AI Assistants',
+        description: 'Deploy AI agents as independent economic actors and monetize them',
+      },
     ],
   },
 ];
@@ -88,8 +114,7 @@ export const SUPER_APP_CATEGORIES: SuperAppCategory[] = [
 // ==================== HOW IT WORKS STEPS ====================
 
 /**
- * Unified 4-step process for all landing pages
- * Consistency: Same steps on home page and dedicated page
+ * Unified 4-step process — Cat-centric flow
  */
 export interface HowItWorksStep {
   number: string;
@@ -103,35 +128,37 @@ export interface HowItWorksStep {
 export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
   {
     number: '1',
-    icon: Users,
-    title: 'Create Your Account',
-    description: 'Sign up free in seconds. Get instant access to everything OrangeCat offers.',
+    icon: Lock,
+    title: 'Choose Your Identity',
+    description:
+      'Pseudonymous by default — no documents, no verification. Use a pseudonym or your real name. You decide.',
     color: 'from-tiffany-500 to-tiffany-600',
     bgColor: 'bg-tiffany-50',
   },
   {
     number: '2',
-    icon: Package,
-    title: 'Choose What to Do',
+    icon: Cat,
+    title: 'Meet Your Cat',
     description:
-      'Sell products, offer services, fund projects, build communities, deploy AI—pick what fits your needs.',
+      'Your AI economic agent is ready. Tell it what you want to do — sell, fund, lend, invest, or govern.',
     color: 'from-purple-500 to-purple-600',
     bgColor: 'bg-purple-50',
   },
   {
     number: '3',
-    icon: Bitcoin,
-    title: 'Transact with Bitcoin',
+    icon: Wallet,
+    title: 'Pick Your Currency',
     description:
-      'Link your wallet. Buy, sell, fund, or receive—all directly with Bitcoin. Zero platform fees.',
-    color: 'from-bitcoinOrange to-orange-600',
+      'Bitcoin and Lightning native — but Twint, PayPal, Venmo, Monero, and more are all first-class. Meet your counterparty where they are.',
+    color: 'from-orange-500 to-orange-600',
     bgColor: 'bg-orange-50',
   },
   {
     number: '4',
-    icon: Shield,
-    title: 'Build Through Transparency',
-    description: 'Every transaction on-chain. Share updates, build trust, grow your reputation.',
+    icon: TrendingUp,
+    title: 'Economic Activity Begins',
+    description:
+      'Buy, sell, fund, lend, invest, or govern. Your Cat keeps track, surfaces insights, and acts on your behalf.',
     color: 'from-green-500 to-green-600',
     bgColor: 'bg-green-50',
   },
@@ -151,19 +178,33 @@ export interface ComparisonRow {
 }
 
 export const PLATFORM_COMPARISON: ComparisonRow[] = [
-  { feature: 'Platform fees', traditional: '5-10%', orangecat: '0%', highlight: true },
-  { feature: 'Geographic reach', traditional: 'Limited', orangecat: 'Global' },
-  { feature: 'Funds control', traditional: 'Platform holds', orangecat: 'Direct to wallet' },
-  { feature: 'Account freezing', traditional: 'Can happen', orangecat: 'Impossible' },
-  { feature: 'Transaction speed', traditional: '3-7 days', orangecat: 'Instant' },
-  { feature: 'Transparency', traditional: 'Limited', orangecat: 'Blockchain verified' },
+  {
+    feature: 'Identity required',
+    traditional: 'Real name + documents',
+    orangecat: 'Pseudonymous by default',
+    highlight: true,
+  },
+  {
+    feature: 'Payment methods',
+    traditional: 'One currency, their rules',
+    orangecat: 'Any currency — Bitcoin, Twint, PayPal, Monero…',
+    highlight: true,
+  },
+  { feature: 'Platform fees', traditional: '5–10%', orangecat: '0%' },
+  { feature: 'AI agent', traditional: 'None', orangecat: 'Your Cat acts on your behalf' },
+  { feature: 'Account freezing', traditional: 'Can happen anytime', orangecat: 'Impossible' },
+  { feature: 'Geographic reach', traditional: 'Limited', orangecat: 'Global, no restrictions' },
+  {
+    feature: 'Funds control',
+    traditional: 'Platform holds your money',
+    orangecat: 'Direct to your wallet',
+  },
 ];
 
 // ==================== PLATFORM BENEFITS ====================
 
 /**
  * Key benefits of using OrangeCat
- * Terminology: Uses "funding" not "donations" per domain-specific.md
  */
 export interface PlatformBenefit {
   icon: LucideIcon;
@@ -173,32 +214,35 @@ export interface PlatformBenefit {
 
 export const PLATFORM_BENEFITS: PlatformBenefit[] = [
   {
-    icon: Bitcoin,
-    title: 'No Platform Fees',
-    description: 'Keep 100% of your funding. Bitcoin transactions go directly to your wallet.',
+    icon: Lock,
+    title: 'Pseudonymous by Default',
+    description:
+      'Any identity — human, pseudonym, or AI — is a full economic participant. No documents, no gatekeepers.',
+  },
+  {
+    icon: Wallet,
+    title: 'Any Currency',
+    description:
+      'Bitcoin and Lightning are native, but Twint, PayPal, Venmo, Monero, and others are first-class. Meet users where they are.',
+  },
+  {
+    icon: Cat,
+    title: 'Your AI Cat',
+    description:
+      'My Cat is your personal economic agent. It sets up entities, manages activity, and acts on your behalf.',
   },
   {
     icon: Globe,
-    title: 'Works Globally',
-    description: 'Accept support from anywhere in the world. No geographic restrictions.',
-  },
-  {
-    icon: Shield,
-    title: 'Transparent & Secure',
-    description: 'All transactions are recorded on the Bitcoin blockchain. Fully auditable.',
-  },
-  {
-    icon: Zap,
-    title: 'Instant Setup',
-    description: 'Create your page in minutes. No lengthy verification process.',
+    title: 'No Gatekeepers',
+    description:
+      'No middlemen, no verification walls, no account freezing. Economic participation as open as speech.',
   },
 ];
 
 // ==================== EXAMPLE USE CASES ====================
 
 /**
- * Example use cases - clearly labeled as examples, not real testimonials
- * No fake names, numbers, or fabricated stories
+ * Example use cases — clearly labeled as examples, not real testimonials
  */
 export interface ExampleUseCase {
   emoji: string;
@@ -212,41 +256,41 @@ export interface ExampleUseCase {
 export const EXAMPLE_USE_CASES: ExampleUseCase[] = [
   {
     emoji: '🎨',
-    category: 'Creative',
-    title: 'Fund Your Art',
+    category: 'Creator',
+    title: 'Fund Your Work',
     description:
-      'Artists can raise funds for supplies, studio space, or new projects. Supporters see exactly how their contributions are used.',
+      'Artists, writers, and makers can raise funds, sell work, and accept support — from anywhere, in any currency, under any identity.',
     transparencyExample:
-      'Share receipts for materials, post progress photos, show your creative process.',
+      'Share receipts and progress updates publicly, or keep it private. Your choice.',
     gradient: 'from-purple-50 to-pink-50',
   },
   {
     emoji: '🚀',
-    category: 'Business',
-    title: 'Launch Your Startup',
+    category: 'Entrepreneur',
+    title: 'Build Without Permission',
     description:
-      'Entrepreneurs can fund inventory, equipment, or expansion. Build trust by showing how every sat is spent.',
+      'Launch products, offer services, and raise funding — no platform approval, no geography limits, no identity requirements.',
     transparencyExample:
-      'Document purchases, share milestones, post regular updates on business growth.',
+      'Your Cat helps you set up your store, manage pricing, and track payments automatically.',
     gradient: 'from-amber-50 to-orange-50',
   },
   {
     emoji: '🔬',
     category: 'Research',
-    title: 'Advance Science',
+    title: 'Decentralized Science',
     description:
-      'Researchers can fund equipment, studies, or publications. Decentralized science funding with full accountability.',
-    transparencyExample: 'Share lab updates, publish findings, document equipment purchases.',
+      'Fund equipment, studies, and publications. Accept Bitcoin, PayPal, Twint — whatever your supporters use.',
+    transparencyExample: 'Publish findings, share lab updates, build scientific credibility.',
     gradient: 'from-blue-50 to-cyan-50',
   },
   {
-    emoji: '🏠',
+    emoji: '🏛️',
     category: 'Community',
-    title: 'Build Together',
+    title: 'Govern Together',
     description:
-      'Communities can pool resources for shared goals—events, spaces, or local initiatives.',
+      'Organize shared treasuries, collective decisions, and community governance — with or without revealing identities.',
     transparencyExample:
-      'Track collective contributions, show spending decisions, celebrate achievements.',
+      'Groups have their own Cat. It manages the treasury and executes collective decisions.',
     gradient: 'from-green-50 to-emerald-50',
   },
 ];
@@ -257,9 +301,9 @@ export const EXAMPLE_USE_CASES: ExampleUseCase[] = [
  * Trust indicators shown at bottom of sections
  */
 export const TRUST_SIGNALS = [
-  'No platform fees',
-  'Everything transparent',
-  'Direct Bitcoin transfers',
+  'Pseudonymous by default',
+  'Any currency accepted',
+  'No account freezing',
   'Open source',
 ] as const;
 
@@ -285,24 +329,27 @@ export const CTA_LABELS = {
  */
 export const SECTION_HEADERS = {
   whatCanYouDo: {
-    title: 'One Platform, Endless Possibilities',
-    subtitle: 'Commerce, funding, community, and AI—all powered by Bitcoin.',
+    title: 'The Full Economic Spectrum',
+    subtitle:
+      'Exchange, fund, lend, invest, and govern — with your AI agent, in any currency, under any identity.',
   },
   howItWorks: {
-    title: 'How It Works',
-    subtitle: 'From idea to execution in 4 simple steps.',
+    title: 'Meet Your Cat',
+    subtitle: 'Your AI economic agent handles the complexity. You focus on what matters.',
   },
   exampleUseCases: {
-    title: 'Example Use Cases',
-    subtitle: 'Here are some ways people use OrangeCat. The possibilities are endless.',
+    title: 'Built for Everyone',
+    subtitle:
+      'Any person, pseudonym, or organization can participate fully. Here are some examples.',
   },
   transparency: {
-    title: 'The Transparency Difference',
+    title: 'Private Where It Matters, Transparent Where You Choose',
     subtitle:
-      'All Bitcoin transactions are public. Show how you use support. Build trust. Earn a transparency score.',
+      'End-to-end encrypted messaging. On-chain Bitcoin transparency when you want it. Your data, your rules.',
   },
   whyBitcoin: {
-    title: 'Why Bitcoin? Why OrangeCat?',
-    subtitle: 'Traditional platforms charge fees and control your funds. Bitcoin changes the game.',
+    title: 'Why OrangeCat?',
+    subtitle:
+      'Traditional platforms gatekeep, freeze accounts, and force identity. OrangeCat removes all of that.',
   },
 } as const;

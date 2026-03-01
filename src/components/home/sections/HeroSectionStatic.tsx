@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Bitcoin, Shield, Zap, TrendingUp } from 'lucide-react';
+import { ArrowRight, Lock, Globe, Zap, TrendingUp, Cat } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 /**
@@ -32,22 +32,23 @@ export default function HeroSectionStatic() {
 
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-4 sm:mb-6">
-              The Bitcoin Super-App.{' '}
-              <span className="bg-gradient-to-r from-bitcoinOrange to-orange-600 bg-clip-text text-transparent">
-                Everything in One Place.
+              Your AI Economic Agent.{' '}
+              <span className="bg-gradient-to-r from-tiffany-500 to-tiffany-700 bg-clip-text text-transparent">
+                Any Currency. Any Identity.
               </span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 leading-relaxed mb-3 sm:mb-4">
-              Sell products. Offer services. Fund projects. Connect communities. Build with AI. All
-              powered by Bitcoin.
+              Buy, sell, fund, lend, invest, and govern — with your own AI, under any identity, in
+              any currency.
             </p>
 
             {/* Supporting text */}
             <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8">
-              Commerce, finance, community, and AI—unified in one platform. Whether you're a
-              creator, entrepreneur, or community builder, OrangeCat has the tools you need.
+              OrangeCat gives every person, pseudonym, and organization a full-spectrum AI agent for
+              economic activity. No gatekeepers. No documents required. Bitcoin-native, but not
+              Bitcoin-only.
             </p>
 
             {/* CTA Buttons */}
@@ -55,7 +56,7 @@ export default function HeroSectionStatic() {
               <Link href="/discover" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 min-h-[48px] sm:min-h-[56px] bg-gradient-to-r from-bitcoinOrange to-orange-500 hover:from-orange-600 hover:to-orange-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 min-h-[48px] sm:min-h-[56px] bg-gradient-to-r from-tiffany-500 to-tiffany-600 hover:from-tiffany-600 hover:to-tiffany-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   <TrendingUp className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   Discover
@@ -68,8 +69,8 @@ export default function HeroSectionStatic() {
                   size="lg"
                   className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 min-h-[48px] sm:min-h-[56px] border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
                 >
-                  <Bitcoin className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  Get Started Free
+                  <Cat className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  Meet Your Cat
                 </Button>
               </Link>
             </div>
@@ -77,12 +78,12 @@ export default function HeroSectionStatic() {
             {/* Key Benefits */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { icon: Bitcoin, text: 'Bitcoin-powered' },
-                { icon: Shield, text: 'Transparent' },
+                { icon: Lock, text: 'Pseudonymous by default' },
+                { icon: Globe, text: 'Any currency' },
                 { icon: Zap, text: 'Instant setup' },
               ].map(benefit => (
                 <div key={benefit.text} className="flex items-center gap-2 text-gray-600">
-                  <benefit.icon className="w-4 h-4 text-bitcoinOrange flex-shrink-0" />
+                  <benefit.icon className="w-4 h-4 text-tiffany-600 flex-shrink-0" />
                   <span className="text-sm font-medium">{benefit.text}</span>
                 </div>
               ))}
@@ -91,19 +92,17 @@ export default function HeroSectionStatic() {
 
           {/* Right Column - Visual Demo */}
           <div className="relative">
-            {/* Demo Card - Real Orange Cat Project */}
+            {/* Demo Card */}
             <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
               {/* Card Header */}
               <div className="p-4 sm:p-6 border-b border-gray-100">
                 <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-bitcoinOrange to-orange-500 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
-                    🐈
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-tiffany-400 to-tiffany-600 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
+                    🐱
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Orange Cat</h3>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      Transparent Bitcoin Fundraising Platform
-                    </p>
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">My Cat</h3>
+                    <p className="text-xs sm:text-sm text-gray-600">Your AI economic agent</p>
                   </div>
                 </div>
               </div>
@@ -118,7 +117,7 @@ export default function HeroSectionStatic() {
                   </div>
                   <div className="w-full h-2 sm:h-3 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-bitcoinOrange to-orange-500 rounded-full"
+                      className="h-full bg-gradient-to-r from-tiffany-400 to-tiffany-600 rounded-full"
                       style={{ width: '35%' }}
                     />
                   </div>
@@ -140,9 +139,9 @@ export default function HeroSectionStatic() {
                 {/* CTA Button in Demo */}
                 <a
                   href="/discover"
-                  className="block w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-bitcoinOrange to-orange-500 text-white text-sm sm:text-base font-semibold rounded-lg hover:from-orange-600 hover:to-orange-600 transition-all duration-200 flex items-center justify-center gap-2"
+                  className="block w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-tiffany-500 to-tiffany-600 text-white text-sm sm:text-base font-semibold rounded-lg hover:from-tiffany-600 hover:to-tiffany-700 transition-all duration-200 flex items-center justify-center gap-2"
                 >
-                  <Bitcoin className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Cat className="w-4 h-4 sm:w-5 sm:h-5" />
                   View Project
                 </a>
               </div>
@@ -153,12 +152,12 @@ export default function HeroSectionStatic() {
               </div>
 
               <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 px-2 py-1 sm:px-3 sm:py-1.5 bg-tiffany-500 text-white text-[10px] sm:text-xs font-semibold rounded-full shadow-lg">
-                ⚡ Instant
+                🔒 Pseudonymous
               </div>
             </div>
 
             {/* Background decoration dots */}
-            <div className="absolute -z-10 -top-4 -right-4 w-24 h-24 bg-bitcoinOrange/20 rounded-full blur-2xl" />
+            <div className="absolute -z-10 -top-4 -right-4 w-24 h-24 bg-tiffany-400/20 rounded-full blur-2xl" />
             <div className="absolute -z-10 -bottom-4 -left-4 w-32 h-32 bg-tiffany-400/20 rounded-full blur-2xl" />
           </div>
         </div>
