@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Plus, User, Compass, BookOpen } from 'lucide-react';
+import { Home, Plus, User, Compass, BookOpen, Cat } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useBottomNavScroll } from '@/hooks/useHeaderScroll';
 import { useComposer } from '@/contexts/ComposerContext';
@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 import { getRouteContext, ROUTE_CONTEXTS, ROUTES } from '@/config/routes';
 import { getContextualCreateAction } from '@/lib/navigation/contextual-create';
 import { MobileCreateSheet } from '@/components/create/MobileCreateSheet';
-import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 const MobileBottomNav = React.memo(function MobileBottomNav() {
   const pathname = usePathname();
@@ -77,12 +76,10 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
           createAction, // Pass the action for the click handler
         },
         {
-          icon: ENTITY_REGISTRY.project.icon,
-          label: ENTITY_REGISTRY.project.namePlural,
-          href: ENTITY_REGISTRY.project.basePath,
-          active:
-            pathname?.startsWith(ENTITY_REGISTRY.project.basePath) ||
-            (pathname?.startsWith(ROUTES.PROJECTS.LIST) && pathname !== ROUTES.PROJECTS.CREATE),
+          icon: Cat,
+          label: 'My Cat',
+          href: ROUTES.DASHBOARD.CAT,
+          active: pathname?.startsWith(ROUTES.DASHBOARD.CAT),
         },
         {
           icon: User,

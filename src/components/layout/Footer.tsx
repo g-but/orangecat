@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { footerNavigation } from '@/config/navigation';
 import { shouldShowFooter } from '@/config/routes';
 import Logo from './Logo';
-import BitBaumLogo from './BitBaumLogo';
 import { usePathname } from 'next/navigation';
 import { ArrowUp } from 'lucide-react';
 
@@ -44,24 +43,9 @@ const Footer = React.memo(function Footer() {
             <div className="space-y-4">
               <div className="flex items-center space-x-4 mb-2">
                 <Logo />
-                <div className="text-gray-400 text-sm">by</div>
-                <BitBaumLogo
-                  showText={false}
-                  className="opacity-80 hover:opacity-100 transition-opacity"
-                />
               </div>
               <p className="text-gray-600 text-base leading-relaxed max-w-xs">
-                Making Bitcoin funding simple and accessible for everyone.
-              </p>
-              <p className="text-gray-500 text-sm">
-                A{' '}
-                <Link
-                  href="/company/about"
-                  className="text-orange-600 hover:text-orange-700 underline"
-                >
-                  BitBaum
-                </Link>{' '}
-                company
+                Your AI economic agent — and the platform where it operates.
               </p>
             </div>
 
@@ -195,17 +179,7 @@ const Footer = React.memo(function Footer() {
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gradient-to-r from-orange-200/50 to-tiffany-200/50">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <div className="text-sm text-gray-500 text-center sm:text-left">
-              <p>&copy; 2025 BitBaum AG. All rights reserved.</p>
-              <p className="mt-1">
-                OrangeCat is a product of{' '}
-                <Link
-                  href="/company/about"
-                  className="text-orange-600 hover:text-orange-700 underline"
-                >
-                  BitBaum
-                </Link>
-                .
-              </p>
+              <p>&copy; 2025 OrangeCat. All rights reserved.</p>
             </div>
 
             {/* Additional Links */}

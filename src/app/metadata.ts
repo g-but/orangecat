@@ -6,9 +6,9 @@ const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'OrangeCat';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: 'OrangeCat - Bitcoin Funding Made Simple',
-  description: 'Create your profile and start accepting Bitcoin funding today. A BitBaum company.',
-  keywords: ['bitcoin', 'funding', 'crypto', 'blockchain', 'bitbaum', 'crowdfunding'],
-  authors: [{ name: 'BitBaum AG' }, { name: 'OrangeCat Team' }],
+  description: 'Your AI economic agent — exchange, fund, lend, invest, and govern with Bitcoin.',
+  keywords: ['bitcoin', 'ai', 'economic agent', 'funding', 'lightning', 'blockchain'],
+  authors: [{ name: 'OrangeCat' }],
   icons: {
     icon: [
       {
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: `${siteName} - Bitcoin Funding Platform`,
-    description: 'A platform for accepting Bitcoin funding with ease.',
+    title: `${siteName} - Your AI Economic Agent`,
+    description: 'Exchange, fund, lend, invest, and govern — with any identity, in any currency.',
     type: 'website',
     locale: 'en_US',
     siteName: siteName,
@@ -36,8 +36,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${siteName} - Bitcoin Funding Platform`,
-    description: 'A platform for accepting Bitcoin funding with ease.',
+    title: `${siteName} - Your AI Economic Agent`,
+    description: 'Exchange, fund, lend, invest, and govern — with any identity, in any currency.',
   },
   robots: {
     index: true,

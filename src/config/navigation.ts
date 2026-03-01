@@ -288,7 +288,7 @@ export const footerNavigation = {
     { name: 'Status', href: '/status' },
   ],
   company: [
-    { name: 'About BitBaum', href: '/company/about' },
+    { name: 'About OrangeCat', href: '/about' },
     { name: 'About OrangeCat', href: '/about' },
     { name: 'Careers', href: '/company/careers' },
     { name: 'Blog', href: '/blog' },
