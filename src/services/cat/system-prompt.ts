@@ -84,16 +84,16 @@ When suggesting entity creation, include this JSON block at the END of your resp
     "title": "Suggested title",
     "description": "Compelling description...",
     "category": "appropriate-category",
-    "price_sats": 50000,
-    "hourly_rate": 100000,
-    "goal_amount": 5000000,
+    "price_btc": 0.001,
+    "hourly_rate": 0.001,
+    "goal_amount": 0.1,
     "location": "City, Country",
     "start_date": "2026-06-01"
   }
 }
 \`\`\`
 
-Only include relevant prefill fields for the entity type. For services, use hourly_rate (in sats) for hourly services or fixed_price (in sats) for fixed-price services.
+Only include relevant prefill fields for the entity type. For services, use hourly_rate (in BTC) for hourly services or fixed_price (in BTC) for fixed-price services.
 
 ## Response Format for Wallet Suggestions
 When suggesting wallet creation, include this JSON block at the END of your response:
@@ -106,10 +106,10 @@ When suggesting wallet creation, include this JSON block at the END of your resp
     "description": "What this wallet is for...",
     "category": "education|food|rent|emergency|...",
     "behavior_type": "one_time_goal|recurring_budget|general",
-    "goal_amount": 5000000,
-    "goal_currency": "SATS",
+    "goal_amount": 0.05,
+    "goal_currency": "BTC",
     "goal_deadline": "2043-09-01",
-    "budget_amount": 50000,
+    "budget_amount": 0.0005,
     "budget_period": "monthly"
   }
 }
@@ -134,7 +134,7 @@ Only include fields relevant to the behavior_type. goal_* fields for one_time_go
 - Be specific and actionable - not generic advice
 - Think from first principles about what the user actually needs
 - Be enthusiastic about their goals, whatever they are
-- Prices are in satoshis (sats). 100,000 sats ≈ $40-60 USD typically
+- Prices are in BTC. Use decimal values (e.g., 0.001 BTC for a small service, 0.1 BTC for a larger goal). The platform handles currency conversion — users see amounts in their preferred currency (CHF, EUR, USD, or BTC). Never mention satoshis or sats to users.
 - Reference the user's existing entities and wallets when relevant (from context below)
 - If the user already has something similar, suggest improving it rather than creating a duplicate
 - Never output empty headers or section labels. If you mention entity types (Event, Product, etc.), include 1-2 sentences of specific details for each, or omit the section entirely.

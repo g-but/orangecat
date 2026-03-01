@@ -40,7 +40,7 @@ export type ActionRiskLevel = 'low' | 'medium' | 'high';
 
 export interface ActionParameter {
   name: string;
-  type: 'string' | 'number' | 'boolean' | 'entity_id' | 'user_id' | 'sats';
+  type: 'string' | 'number' | 'boolean' | 'entity_id' | 'user_id' | 'btc';
   required: boolean;
   description: string;
   default?: unknown;
@@ -76,7 +76,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     parameters: [
       { name: 'title', type: 'string', required: true, description: 'Product title' },
       { name: 'description', type: 'string', required: false, description: 'Product description' },
-      { name: 'price_sats', type: 'sats', required: true, description: 'Price in satoshis' },
+      { name: 'price_btc', type: 'btc', required: true, description: 'Price in BTC (e.g., 0.001)' },
       { name: 'category', type: 'string', required: false, description: 'Product category' },
       {
         name: 'publish',
@@ -106,7 +106,18 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     parameters: [
       { name: 'title', type: 'string', required: true, description: 'Service title' },
       { name: 'description', type: 'string', required: false, description: 'Service description' },
-      { name: 'price_sats', type: 'sats', required: true, description: 'Price in satoshis' },
+      {
+        name: 'hourly_rate',
+        type: 'btc',
+        required: false,
+        description: 'Hourly rate in BTC (e.g., 0.001)',
+      },
+      {
+        name: 'fixed_price',
+        type: 'btc',
+        required: false,
+        description: 'Fixed price in BTC (e.g., 0.005)',
+      },
       {
         name: 'duration_minutes',
         type: 'number',
@@ -141,7 +152,12 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     parameters: [
       { name: 'title', type: 'string', required: true, description: 'Project title' },
       { name: 'description', type: 'string', required: false, description: 'Project description' },
-      { name: 'goal_sats', type: 'sats', required: true, description: 'Funding goal in satoshis' },
+      {
+        name: 'goal_btc',
+        type: 'btc',
+        required: true,
+        description: 'Funding goal in BTC (e.g., 0.1)',
+      },
       { name: 'category', type: 'string', required: false, description: 'Project category' },
       {
         name: 'publish',
@@ -332,7 +348,12 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     riskLevel: 'high',
     requiresConfirmation: true,
     parameters: [
-      { name: 'amount_sats', type: 'sats', required: true, description: 'Amount in satoshis' },
+      {
+        name: 'amount_btc',
+        type: 'btc',
+        required: true,
+        description: 'Amount in BTC (e.g., 0.0001)',
+      },
       {
         name: 'recipient',
         type: 'string',
@@ -342,9 +363,9 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       { name: 'memo', type: 'string', required: false, description: 'Payment memo' },
     ],
     examples: [
-      'Send 10000 sats to @alice',
+      'Send 0.0001 BTC to @alice',
       'Pay for the service I ordered',
-      'Tip 5000 sats to that creator',
+      'Tip a small amount to that creator',
     ],
     apiEndpoint: '/api/payments/send',
     enabled: true,
@@ -360,11 +381,16 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     requiresConfirmation: true,
     parameters: [
       { name: 'project_id', type: 'entity_id', required: true, description: 'Project to fund' },
-      { name: 'amount_sats', type: 'sats', required: true, description: 'Amount in satoshis' },
+      {
+        name: 'amount_btc',
+        type: 'btc',
+        required: true,
+        description: 'Amount in BTC (e.g., 0.001)',
+      },
       { name: 'message', type: 'string', required: false, description: 'Support message' },
     ],
     examples: [
-      'Fund that network state project with 50000 sats',
+      'Fund that network state project with 0.001 BTC',
       'Support the Bitcoin education project',
       'Contribute to their crowdfunding',
     ],

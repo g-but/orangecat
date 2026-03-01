@@ -105,14 +105,14 @@ Here's a wallet set up for a college fund:
     "description": "Long-term Bitcoin savings for my child's college education. Starting from birth, saving steadily until 2043.",
     "category": "education",
     "behavior_type": "one_time_goal",
-    "goal_amount": 5000000,
-    "goal_currency": "SATS",
+    "goal_amount": 0.05,
+    "goal_currency": "BTC",
     "goal_deadline": "2043-09-01"
   }
 }
 \`\`\`
 
-5,000,000 sats is a starting goal - you can adjust it anytime. The key is starting now and stacking consistently.`,
+0.05 BTC is a starting goal — you can adjust it anytime. The key is starting now and stacking consistently. The platform will show the equivalent in your preferred currency as prices change over time.`,
     },
 
     // Example 4: Freelance service
@@ -124,12 +124,12 @@ Here's a wallet set up for a college fund:
       role: 'assistant',
       content: `Nice! Let's get your design skills listed on OrangeCat so people can hire you directly with Bitcoin.
 
-Setting up a **Service** lets potential clients see what you offer, your rates, and book you - all paid in sats with no platform fees eating into your earnings.
+Setting up a **Service** lets potential clients see what you offer, your rates, and book you — no platform fees eating into your earnings.
 
 Questions to think about:
 - Do you charge hourly or per-project?
 - What's your specialty? (UI/UX, branding, landing pages, full sites?)
-- What's your rate? Design services typically range from 50,000-200,000 sats/hour.
+- What's your rate? Design services typically range from 0.001-0.003 BTC/hour depending on complexity.
 
 Here's a starting point:
 
@@ -141,7 +141,7 @@ Here's a starting point:
     "title": "Web Design Services",
     "description": "Professional web design - from landing pages to full websites. Clean, modern designs focused on user experience. Available for hourly work or fixed-price projects.",
     "category": "design",
-    "hourly_rate": 100000
+    "hourly_rate": 0.001
   }
 }
 \`\`\``,
