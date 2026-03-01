@@ -23,6 +23,7 @@ import type {
   PaymentIntentStatus,
 } from './types';
 import { logger } from '@/utils/logger';
+import { sendSellerPaymentNotification } from '@/lib/email/send-seller-notification';
 
 const METHOD_LABELS: Record<string, string> = {
   nwc: 'Lightning (NWC)',
@@ -348,5 +349,8 @@ async function handlePaymentConfirmed(
       });
   }
 
-  // TODO: Send notification to seller (Phase 4)
+  // Notify seller — fire-and-forget, must not block payment confirmation
+  sendSellerPaymentNotification(paymentIntent, supabase).catch(err =>
+    logger.warn('Seller payment notification failed', { err }, 'paymentFlowService')
+  );
 }
