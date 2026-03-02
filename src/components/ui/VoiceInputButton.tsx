@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { logger } from '@/utils/logger';
 import { Mic, MicOff } from 'lucide-react';
 
 // Web Speech API types (not in default TypeScript lib)
@@ -114,7 +115,7 @@ export function VoiceInputButton({
     try {
       recognitionRef.current?.stop?.();
     } catch (e) {
-      console.warn('[VoiceInput] Failed to stop recognition:', e);
+      logger.warn('[VoiceInput] Failed to stop recognition', { error: e });
     }
     setListening(false);
     recognitionRef.current = null;

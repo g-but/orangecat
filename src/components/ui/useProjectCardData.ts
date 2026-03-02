@@ -8,6 +8,7 @@
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import { logger } from '@/utils/logger';
 import { useAuth } from '@/hooks/useAuth';
 import { getUniqueCategories } from '@/utils/project';
 import { ROUTES } from '@/config/routes';
@@ -168,7 +169,7 @@ export function useProjectCardData(project: ExtendedProject): ProjectCardDataRes
           setIsLiked(result.isFavorited || false);
         }
       } catch (e) {
-        console.debug('[useProjectCardData] Failed to check favorite status:', e);
+        logger.debug('[useProjectCardData] Failed to check favorite status', { error: e });
       }
     };
 
@@ -196,7 +197,7 @@ export function useProjectCardData(project: ExtendedProject): ProjectCardDataRes
         const result = await response.json();
         setIsLiked(result.isFavorited);
       } catch (e) {
-        console.warn('[useProjectCardData] Failed to toggle favorite:', e);
+        logger.warn('[useProjectCardData] Failed to toggle favorite', { error: e });
       } finally {
         setIsTogglingFavorite(false);
       }

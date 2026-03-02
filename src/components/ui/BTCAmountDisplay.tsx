@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { logger } from '@/utils/logger';
 import { Bitcoin } from 'lucide-react';
 import { currencyConverter } from '@/services/currency';
 import type { CurrencyCode } from '@/config/currencies';
@@ -50,7 +51,7 @@ export default function BTCAmountDisplay({
           setIsLoading(false);
         }
       } catch (e) {
-        console.error('[BTCAmountDisplay] Conversion failed:', { amount, currency, error: e });
+        logger.error('[BTCAmountDisplay] Conversion failed', { amount, currency, error: e });
         if (mounted) {
           setBtcAmount('');
           setIsLoading(false);

@@ -57,26 +57,26 @@ describe('🪙 Currency Utilities - Comprehensive Coverage', () => {
 
     describe('formatSats', () => {
       test('formats satoshi amounts', () => {
-        expect(formatSats(100000000)).toBe('100,000,000 sats'); // 1 BTC
-        expect(formatSats(1)).toBe('1 sats');
-        expect(formatSats(0)).toBe('0 sats');
+        expect(formatSats(100000000)).toBe('100,000,000 sat'); // 1 BTC
+        expect(formatSats(1)).toBe('1 sat');
+        expect(formatSats(0)).toBe('0 sat');
       });
 
       test('formats with thousands separators', () => {
-        expect(formatSats(1000)).toBe('1,000 sats');
-        expect(formatSats(1000000)).toBe('1,000,000 sats');
-        expect(formatSats(2100000000000000)).toBe('2,100,000,000,000,000 sats'); // 21M BTC
+        expect(formatSats(1000)).toBe('1,000 sat');
+        expect(formatSats(1000000)).toBe('1,000,000 sat');
+        expect(formatSats(2100000000000000)).toBe('2,100,000,000,000,000 sat'); // 21M BTC
       });
 
       test('handles negative satoshi amounts', () => {
-        expect(formatSats(-1000)).toBe('-1,000 sats');
-        expect(formatSats(-100000000)).toBe('-100,000,000 sats');
+        expect(formatSats(-1000)).toBe('-1,000 sat');
+        expect(formatSats(-100000000)).toBe('-100,000,000 sat');
       });
 
       test('handles edge cases', () => {
-        expect(formatSats(NaN)).toBe('0 sats');
-        expect(formatSats(Infinity)).toBe('0 sats');
-        expect(formatSats(-Infinity)).toBe('0 sats');
+        expect(formatSats(NaN)).toBe('0 sat');
+        expect(formatSats(Infinity)).toBe('0 sat');
+        expect(formatSats(-Infinity)).toBe('0 sat');
       });
     });
   });
@@ -167,7 +167,7 @@ describe('🪙 Currency Utilities - Comprehensive Coverage', () => {
       test('formats different currencies', () => {
         expect(formatCurrency(100, 'USD')).toBe('$100.00');
         expect(formatCurrency(1, 'BTC')).toBe('₿1');
-        expect(formatCurrency(1000, 'SATS')).toBe('1,000 sats');
+        expect(formatCurrency(1000, 'SATS')).toBe('1,000 sat');
       });
 
       test('handles known currencies with proper symbols', () => {
@@ -180,7 +180,7 @@ describe('🪙 Currency Utilities - Comprehensive Coverage', () => {
         // formatCurrency doesn't guard against NaN/Infinity (formatBTC/formatSats do)
         expect(formatCurrency(0, 'USD')).toBe('$0.00');
         expect(formatCurrency(0, 'BTC')).toBe('₿0');
-        expect(formatCurrency(0, 'SATS')).toBe('0 sats');
+        expect(formatCurrency(0, 'SATS')).toBe('0 sat');
       });
     });
   });
@@ -303,7 +303,7 @@ describe('🪙 Currency Utilities - Comprehensive Coverage', () => {
     test('maintains satoshi precision (whole numbers)', () => {
       const amount = 1000.7; // Fractional sats
       const formatted = formatSats(Math.round(amount));
-      expect(formatted).toBe('1,001 sats'); // Rounded to whole number
+      expect(formatted).toBe('1,001 sat'); // Rounded to whole number
     });
 
     test('handles floating point precision issues', () => {
@@ -316,7 +316,7 @@ describe('🪙 Currency Utilities - Comprehensive Coverage', () => {
   describe('🌍 Internationalization', () => {
     test('formats numbers with locale-specific separators', () => {
       // Test assumes US locale formatting
-      expect(formatSats(1234567)).toBe('1,234,567 sats');
+      expect(formatSats(1234567)).toBe('1,234,567 sat');
       expect(formatUSD(1234.56)).toBe('$1,234.56');
     });
 

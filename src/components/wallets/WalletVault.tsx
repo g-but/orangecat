@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { logger } from '@/utils/logger';
 import { Plus, Bitcoin } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -95,7 +96,7 @@ export default function WalletVault() {
       setCopiedAddress(address);
       setTimeout(() => setCopiedAddress(null), 2000);
     } catch (e) {
-      console.warn('[WalletVault] Clipboard copy failed:', e);
+      logger.warn('[WalletVault] Clipboard copy failed', { error: e });
     }
   };
 
