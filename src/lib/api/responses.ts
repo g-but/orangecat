@@ -1,16 +1,31 @@
-import { NextResponse } from 'next/server'
-import { logger } from '@/utils/logger'
-
 /**
- * Standardized API Response Helpers
- * 
- * Eliminates DRY violations by providing consistent error and success responses.
- * Used across all API routes for consistent response formatting.
- * 
- * ♻️ REFACTORED: Eliminates ~35 instances of similar error responses
+ * API Response Helpers — Thin delegation layer
+ *
+ * All implementations live in standardResponse.ts (SSOT).
+ * This file re-exports an object-based API for existing callers.
+ *
+ * New code should import from '@/lib/api/standardResponse' directly.
  */
 
-// Standard error types
+import { NextResponse } from 'next/server';
+import {
+  apiSuccess,
+  apiCreated,
+  apiNoContent,
+  apiBadRequest,
+  apiUnauthorized,
+  apiForbidden,
+  apiNotFound,
+  apiConflict,
+  apiRateLimited,
+  apiInternalError,
+  apiServiceUnavailable,
+  apiValidationError,
+  handleApiError as handleApiErrorImpl,
+} from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
+
+// Constants for backwards compatibility
 export const ErrorTypes = {
   AUTHENTICATION_REQUIRED: 'AUTHENTICATION_REQUIRED',
   AUTHORIZATION_FAILED: 'AUTHORIZATION_FAILED',
@@ -21,10 +36,9 @@ export const ErrorTypes = {
   BAD_REQUEST: 'BAD_REQUEST',
   CONFLICT: 'CONFLICT',
   FILE_TOO_LARGE: 'FILE_TOO_LARGE',
-  UNSUPPORTED_MEDIA_TYPE: 'UNSUPPORTED_MEDIA_TYPE'
-} as const
+  UNSUPPORTED_MEDIA_TYPE: 'UNSUPPORTED_MEDIA_TYPE',
+} as const;
 
-// Standard HTTP status codes
 export const HttpStatus = {
   OK: 200,
   CREATED: 201,
@@ -39,31 +53,39 @@ export const HttpStatus = {
   UNSUPPORTED_MEDIA_TYPE: 415,
   RATE_LIMITED: 429,
   INTERNAL_SERVER_ERROR: 500,
-  SERVICE_UNAVAILABLE: 503
-} as const
+  SERVICE_UNAVAILABLE: 503,
+} as const;
 
-interface ErrorResponseData {
-  error: string
-  type?: string
+// Pre-configured error responses (delegates to standardResponse)
+export const ApiResponses = {
+  authenticationRequired: () => apiUnauthorized(),
+  authorizationFailed: (message = 'Insufficient permissions') => apiForbidden(message),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  details?: any
-  timestamp?: string
-  requestId?: string
-}
+  validationError: (message: string, details?: any) => apiValidationError(message, details),
+  badRequest: (message = 'Bad request') => apiBadRequest(message),
+  notFound: (resource = 'Resource') => apiNotFound(`${resource} not found`),
+  conflict: (message = 'Resource conflict') => apiConflict(message),
+  rateLimitExceeded: (message = 'Rate limit exceeded') => apiRateLimited(message),
+  internalServerError: (message = 'Internal server error') => apiInternalError(message),
+  serviceUnavailable: (message = 'Service temporarily unavailable') =>
+    apiServiceUnavailable(message),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fileTooLarge: (maxSize?: string) =>
+    apiBadRequest(`File too large${maxSize ? `. Maximum size: ${maxSize}` : ''}`),
+  unsupportedMediaType: (supportedTypes?: string[]) =>
+    apiBadRequest(
+      `Unsupported media type${supportedTypes ? `. Supported: ${supportedTypes.join(', ')}` : ''}`
+    ),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  success: (data?: any, message?: string) => apiSuccess(data ?? null),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  created: (data?: any, message?: string) => apiCreated(data ?? null),
+  accepted: (message = 'Request accepted for processing') =>
+    apiSuccess({ message }, { status: 202 }),
+  noContent: () => apiNoContent(),
+};
 
-interface SuccessResponseData {
-  success?: boolean
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data?: any
-  message?: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  meta?: any
-  timestamp?: string
-}
-
-/**
- * Create standardized error response
- */
+// Re-export helper functions (delegate to standardResponse)
 export function createErrorResponse(
   message: string,
   status: number,
@@ -71,165 +93,29 @@ export function createErrorResponse(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse {
-  const responseData: ErrorResponseData = {
-    error: message,
-    timestamp: new Date().toISOString()
-  }
-
-  if (type) {responseData.type = type}
-  if (details) {responseData.details = details}
-
-  return NextResponse.json(responseData, { status })
+  return apiBadRequest(message, details);
 }
 
-/**
- * Create standardized success response
- */
 export function createSuccessResponse(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any,
-  status: number = HttpStatus.OK,
+  status: number = 200,
   message?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meta?: any
 ): NextResponse {
-  const responseData: SuccessResponseData = {
-    success: true,
-    timestamp: new Date().toISOString()
-  }
-
-  if (data !== undefined) {responseData.data = data}
-  if (message) {responseData.message = message}
-  if (meta) {responseData.meta = meta}
-
-  return NextResponse.json(responseData, { status })
+  return apiSuccess(data ?? null, { status });
 }
 
-// Pre-configured error responses for common scenarios
-export const ApiResponses = {
-  // Authentication & Authorization
-  authenticationRequired: () => createErrorResponse(
-    'Authentication required',
-    HttpStatus.UNAUTHORIZED,
-    ErrorTypes.AUTHENTICATION_REQUIRED
-  ),
-
-  authorizationFailed: (message = 'Insufficient permissions') => createErrorResponse(
-    message,
-    HttpStatus.FORBIDDEN,
-    ErrorTypes.AUTHORIZATION_FAILED
-  ),
-
-  // Validation
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  validationError: (message: string, details?: any) => createErrorResponse(
-    message,
-    HttpStatus.BAD_REQUEST,
-    ErrorTypes.VALIDATION_ERROR,
-    details
-  ),
-
-  badRequest: (message = 'Bad request') => createErrorResponse(
-    message,
-    HttpStatus.BAD_REQUEST,
-    ErrorTypes.BAD_REQUEST
-  ),
-
-  // Resource handling
-  notFound: (resource = 'Resource') => createErrorResponse(
-    `${resource} not found`,
-    HttpStatus.NOT_FOUND,
-    ErrorTypes.NOT_FOUND
-  ),
-
-  conflict: (message = 'Resource conflict') => createErrorResponse(
-    message,
-    HttpStatus.CONFLICT,
-    ErrorTypes.CONFLICT
-  ),
-
-  // Rate limiting
-  rateLimitExceeded: (message = 'Rate limit exceeded') => createErrorResponse(
-    message,
-    HttpStatus.RATE_LIMITED,
-    ErrorTypes.RATE_LIMIT_EXCEEDED
-  ),
-
-  // Server errors
-  internalServerError: (message = 'Internal server error') => createErrorResponse(
-    message,
-    HttpStatus.INTERNAL_SERVER_ERROR,
-    ErrorTypes.INTERNAL_SERVER_ERROR
-  ),
-
-  serviceUnavailable: (message = 'Service temporarily unavailable') => createErrorResponse(
-    message,
-    HttpStatus.SERVICE_UNAVAILABLE
-  ),
-
-  // File upload errors
-  fileTooLarge: (maxSize?: string) => createErrorResponse(
-    `File too large${maxSize ? `. Maximum size: ${maxSize}` : ''}`,
-    HttpStatus.PAYLOAD_TOO_LARGE,
-    ErrorTypes.FILE_TOO_LARGE
-  ),
-
-  unsupportedMediaType: (supportedTypes?: string[]) => createErrorResponse(
-    `Unsupported media type${supportedTypes ? `. Supported: ${supportedTypes.join(', ')}` : ''}`,
-    HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-    ErrorTypes.UNSUPPORTED_MEDIA_TYPE
-  ),
-
-  // Success responses
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  success: (data?: any, message?: string) => createSuccessResponse(
-    data,
-    HttpStatus.OK,
-    message
-  ),
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  created: (data?: any, message?: string) => createSuccessResponse(
-    data,
-    HttpStatus.CREATED,
-    message || 'Resource created successfully'
-  ),
-
-  accepted: (message = 'Request accepted for processing') => createSuccessResponse(
-    undefined,
-    HttpStatus.ACCEPTED,
-    message
-  ),
-
-  noContent: () => new NextResponse(null, { status: HttpStatus.NO_CONTENT })
-}
-
-/**
- * Utility to handle async operations with standardized error handling
- */
 export async function withErrorHandling<T>(
   operation: () => Promise<T>,
   errorMessage?: string
 ): Promise<T | NextResponse> {
   try {
-    return await operation()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return await operation();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    logger.error('API operation failed', { error: error?.message, stack: error?.stack }, 'API')
-    
-    // Handle specific error types
-    if (error.name === 'ValidationError') {
-      return ApiResponses.validationError(error.message, error.details)
-    }
-    
-    if (error.code === 'PGRST116') { // Supabase not found
-      return ApiResponses.notFound()
-    }
-    
-    if (error.status === 429) {
-      return ApiResponses.rateLimitExceeded()
-    }
-    
-    return ApiResponses.internalServerError(errorMessage)
+    logger.error('API operation failed', { error: error?.message }, 'API');
+    return handleApiErrorImpl(error);
   }
 }
