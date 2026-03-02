@@ -11,6 +11,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 
@@ -54,19 +56,19 @@ export async function searchPlatform(
       ? searchProfiles(supabase, pattern, results)
       : Promise.resolve(),
     type === 'all' || type === 'projects'
-      ? searchTable(supabase, 'projects', 'projects', '/fund', pattern, results)
+      ? searchTable(supabase, getTableName('project'), 'projects', '/fund', pattern, results)
       : Promise.resolve(),
     type === 'all' || type === 'causes'
-      ? searchTable(supabase, 'user_causes', 'causes', '/causes', pattern, results)
+      ? searchTable(supabase, getTableName('cause'), 'causes', '/causes', pattern, results)
       : Promise.resolve(),
     type === 'all' || type === 'products'
-      ? searchTable(supabase, 'user_products', 'products', '/market', pattern, results)
+      ? searchTable(supabase, getTableName('product'), 'products', '/market', pattern, results)
       : Promise.resolve(),
     type === 'all' || type === 'services'
-      ? searchTable(supabase, 'user_services', 'services', '/services', pattern, results)
+      ? searchTable(supabase, getTableName('service'), 'services', '/services', pattern, results)
       : Promise.resolve(),
     type === 'all' || type === 'events'
-      ? searchTable(supabase, 'events', 'events', '/events', pattern, results)
+      ? searchTable(supabase, getTableName('event'), 'events', '/events', pattern, results)
       : Promise.resolve(),
   ]);
 
@@ -81,7 +83,7 @@ async function searchProfiles(
   results: SearchResult[]
 ): Promise<void> {
   const { data } = await supabase
-    .from('profiles')
+    .from(DATABASE_TABLES.PROFILES)
     .select('username, display_name, bio')
     .not('username', 'is', null)
     .or(`username.ilike.${pattern},display_name.ilike.${pattern},bio.ilike.${pattern}`)

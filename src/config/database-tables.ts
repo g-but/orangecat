@@ -130,6 +130,8 @@ export const DATABASE_TABLES = {
   LOAN_COLLATERAL: 'loan_collateral',
 
   // Cat (AI Assistant)
+  CAT_CONVERSATIONS: 'cat_conversations',
+  CAT_MESSAGES: 'cat_messages',
   CAT_PERMISSIONS: 'cat_permissions',
   CAT_ACTION_LOG: 'cat_action_log',
   CAT_PENDING_ACTIONS: 'cat_pending_actions',

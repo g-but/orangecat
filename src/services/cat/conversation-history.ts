@@ -12,6 +12,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Type alias that accepts any typed Supabase client (avoids schema mismatch errors)
 type AnySupabaseClient = SupabaseClient<any, any, any>;
@@ -42,7 +43,7 @@ export async function getOrCreateDefaultConversation(
 ): Promise<string> {
   // Try to get existing default conversation
   const { data: existing } = await supabase
-    .from('cat_conversations')
+    .from(DATABASE_TABLES.CAT_CONVERSATIONS)
     .select('id')
     .eq('user_id', userId)
     .eq('is_default', true)
@@ -54,7 +55,7 @@ export async function getOrCreateDefaultConversation(
 
   // Create new default conversation
   const { data: created, error } = await supabase
-    .from('cat_conversations')
+    .from(DATABASE_TABLES.CAT_CONVERSATIONS)
     .insert({ user_id: userId, is_default: true })
     .select('id')
     .single();
@@ -92,7 +93,7 @@ export async function saveMessages(
     token_count: m.token_count ?? null,
   }));
 
-  await supabase.from('cat_messages').insert(rows);
+  await supabase.from(DATABASE_TABLES.CAT_MESSAGES).insert(rows);
   // Ignore errors — history is best-effort, never blocks responses
 }
 
@@ -111,7 +112,7 @@ export async function getMessagesForContext(
   }
 
   const { data } = await supabase
-    .from('cat_messages')
+    .from(DATABASE_TABLES.CAT_MESSAGES)
     .select('role, content')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
@@ -140,7 +141,7 @@ export async function getMessagesForDisplay(
   }
 
   const { data } = await supabase
-    .from('cat_messages')
+    .from(DATABASE_TABLES.CAT_MESSAGES)
     .select('id, role, content, model_used, provider, token_count, created_at')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
@@ -165,7 +166,7 @@ export async function clearDefaultConversation(
     return;
   }
 
-  await supabase.from('cat_messages').delete().eq('conversation_id', conversationId);
+  await supabase.from(DATABASE_TABLES.CAT_MESSAGES).delete().eq('conversation_id', conversationId);
 }
 
 // ─── Internal helpers ───────────────────────────────────────────────────────
@@ -175,7 +176,7 @@ async function getDefaultConversationId(
   userId: string
 ): Promise<string | null> {
   const { data } = await supabase
-    .from('cat_conversations')
+    .from(DATABASE_TABLES.CAT_CONVERSATIONS)
     .select('id')
     .eq('user_id', userId)
     .eq('is_default', true)

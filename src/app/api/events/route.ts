@@ -14,7 +14,6 @@ import { createEntityListHandler } from '@/lib/api/entityListHandler';
 import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 import { normalizeDates } from '@/lib/api/helpers';
 import { CURRENCY_CODES, PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
-import { COLUMNS } from '@/config/database-columns';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
@@ -51,8 +50,8 @@ export const POST = createEntityPostHandler({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(DATABASE_TABLES.PROFILES) as any
     )
-      .select(COLUMNS.profiles.CURRENCY)
-      .eq(COLUMNS.profiles.ID, userId)
+      .select('currency')
+      .eq('id', userId)
       .single();
 
     if (

@@ -11,6 +11,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getEmailClient } from '@/lib/email/client';
 import { paymentReceivedTemplate } from '@/lib/email/templates/payment-received';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   nwc: 'Lightning',
@@ -30,7 +31,7 @@ export async function sendSellerPaymentNotification(
 
     // 1. Fetch seller profile (contact_email, display_name, username)
     const { data: sellerProfile } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('contact_email, display_name, username')
       .eq('id', sellerId)
       .single();
@@ -55,7 +56,7 @@ export async function sendSellerPaymentNotification(
 
     // 3. Resolve buyer display name (never expose buyer email)
     const { data: buyerProfile } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('display_name, username')
       .eq('id', paymentIntent.buyer_id)
       .single();
