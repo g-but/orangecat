@@ -11,8 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      # Provide safe defaults so build doesn't crash on env checks.
-      NODE_ENV: production
+      # Safe defaults so build doesn't crash on env checks.
+      # NOTE: NODE_ENV=production is set only on the Build step,
+      # not globally, because npm ci skips devDependencies when
+      # NODE_ENV=production (npm 10+).
       NEXT_PUBLIC_SUPABASE_URL: http://localhost
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: dummy
       NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
@@ -43,6 +45,8 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Build
+        env:
+          NODE_ENV: production
         run: npm run build
 
       - name: Start server

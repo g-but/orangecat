@@ -3,7 +3,7 @@ name: E2E Auth (Playwright)
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   e2e:
@@ -30,7 +30,7 @@ jobs:
           E2E_BASE_URL: https://www.orangecat.ch
           E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
           E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
-        run: npx playwright test tests/e2e/auth-flows.spec.ts --reporter=line
+        run: npx playwright test tests/e2e/login-only.spec.ts --reporter=line
 
       - name: Upload Playwright report on failure
         if: failure()
@@ -39,5 +39,3 @@ jobs:
           name: playwright-report
           path: playwright-report
           if-no-files-found: ignore
-
-

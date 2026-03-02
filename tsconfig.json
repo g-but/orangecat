@@ -47,6 +47,8 @@
     "cypress.config.ts",
     "playwright.config.ts",
     "**/*.spec.ts",
-    "**/*.test.ts"
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }
