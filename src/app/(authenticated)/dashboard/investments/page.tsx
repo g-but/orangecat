@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useRequireAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
@@ -54,8 +54,6 @@ export default function InvestmentsPage() {
     enabled: hydrated && !isLoading && activeTab === 'open',
   });
 
-  const memoizedInvestments = useMemo(() => myInvestments, [myInvestments]);
-
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) {
       return;
@@ -103,7 +101,7 @@ export default function InvestmentsPage() {
 
   const headerActions = (
     <div className="flex items-center gap-2">
-      {activeTab === 'my-investments' && memoizedInvestments.length > 0 && (
+      {activeTab === 'my-investments' && myInvestments.length > 0 && (
         <Button onClick={() => setShowSelection(!showSelection)} variant="outline" size="sm">
           {showSelection ? 'Cancel' : 'Select'}
         </Button>
@@ -140,8 +138,8 @@ export default function InvestmentsPage() {
               <TrendingUp className="h-4 w-4" />
               <span className="hidden sm:inline">My Investments</span>
               <span className="sm:hidden">Mine</span>
-              {memoizedInvestments.length > 0 && (
-                <span className="ml-1 text-xs">({memoizedInvestments.length})</span>
+              {myInvestments.length > 0 && (
+                <span className="ml-1 text-xs">({myInvestments.length})</span>
               )}
             </TabsTrigger>
             <TabsTrigger value="open" className="gap-2">
@@ -156,16 +154,15 @@ export default function InvestmentsPage() {
               <div className="rounded-xl border bg-white p-6 text-red-600">{error}</div>
             ) : (
               <>
-                {showSelection && memoizedInvestments.length > 0 && (
+                {showSelection && myInvestments.length > 0 && (
                   <div className="mb-4 flex items-center justify-between">
                     <label className="flex items-center gap-2 text-sm text-gray-700">
                       <input
                         type="checkbox"
                         checked={
-                          selectedIds.size === memoizedInvestments.length &&
-                          memoizedInvestments.length > 0
+                          selectedIds.size === myInvestments.length && myInvestments.length > 0
                         }
-                        onChange={() => toggleSelectAll(memoizedInvestments.map(i => i.id))}
+                        onChange={() => toggleSelectAll(myInvestments.map(i => i.id))}
                         className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                       />
                       <span>Select All</span>
@@ -173,7 +170,7 @@ export default function InvestmentsPage() {
                   </div>
                 )}
                 <EntityList
-                  items={memoizedInvestments}
+                  items={myInvestments}
                   isLoading={loading}
                   makeHref={investmentEntityConfig.makeHref}
                   makeCardProps={investmentEntityConfig.makeCardProps}
@@ -189,35 +186,23 @@ export default function InvestmentsPage() {
           </TabsContent>
 
           <TabsContent value="open" className="space-y-6">
-            {openInvestments.length > 0 || openLoading ? (
-              <>
-                <EntityList
-                  items={openInvestments}
-                  isLoading={openLoading}
-                  makeHref={investmentEntityConfig.makeHref}
-                  makeCardProps={investmentEntityConfig.makeCardProps}
-                  emptyState={{
-                    title: 'No open opportunities',
-                    description: 'Check back later for investment opportunities',
-                  }}
-                  gridCols={investmentEntityConfig.gridCols}
-                />
-                <CommercePagination
-                  page={openPage}
-                  limit={12}
-                  total={openTotal}
-                  onPageChange={setOpenPage}
-                />
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No open opportunities</h3>
-                <p className="text-muted-foreground">
-                  Check back later for investment opportunities from the community
-                </p>
-              </div>
-            )}
+            <EntityList
+              items={openInvestments}
+              isLoading={openLoading}
+              makeHref={investmentEntityConfig.makeHref}
+              makeCardProps={investmentEntityConfig.makeCardProps}
+              emptyState={{
+                title: 'No open opportunities',
+                description: 'Check back later for investment opportunities from the community',
+              }}
+              gridCols={investmentEntityConfig.gridCols}
+            />
+            <CommercePagination
+              page={openPage}
+              limit={12}
+              total={openTotal}
+              onPageChange={setOpenPage}
+            />
           </TabsContent>
         </Tabs>
       </EntityListShell>

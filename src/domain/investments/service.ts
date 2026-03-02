@@ -3,35 +3,15 @@ import { logger } from '@/utils/logger';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
+import { entityTransforms } from '@/lib/api/normalizeEntityData';
+import type { CreateInvestmentRequest } from '@/types/investments';
 
-interface CreateInvestmentInput {
-  title: string;
-  description?: string;
-  investment_type?: string;
-  target_amount: number;
-  minimum_investment: number;
-  maximum_investment?: number | null;
-  expected_return_rate?: number | null;
-  return_frequency?: string | null;
-  term_months?: number | null;
-  end_date?: string | null;
-  risk_level?: string | null;
-  terms?: string | null;
-  bitcoin_address?: string | null;
-  lightning_address?: string | null;
-  currency?: string;
-}
-
-const normalizeToNull = <T>(value: T): T | null => {
-  if (value === '' || value === undefined) {
-    return null;
-  }
-  return value;
-};
+const normalizeToNull = (value: unknown): unknown =>
+  entityTransforms.emptyStringToNull(value) ?? null;
 
 export async function createInvestment(
   userId: string,
-  input: CreateInvestmentInput,
+  input: CreateInvestmentRequest,
   supabase?: Awaited<ReturnType<typeof createServerClient>>
 ) {
   const client = supabase || (await createServerClient());
@@ -54,7 +34,7 @@ export async function createInvestment(
     end_date: normalizeToNull(input.end_date),
     risk_level: normalizeToNull(input.risk_level),
     terms: normalizeToNull(input.terms),
-    is_public: false,
+    is_public: input.is_public ?? false,
     investor_count: 0,
     bitcoin_address: normalizeToNull(input.bitcoin_address),
     lightning_address: normalizeToNull(input.lightning_address),

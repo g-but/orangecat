@@ -10,6 +10,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { STATUS } from '@/config/database-constants';
 import { ROUTES } from '@/config/routes';
 
 export const investmentEntityConfig: EntityConfig<Investment> = {
@@ -52,12 +53,12 @@ export const investmentEntityConfig: EntityConfig<Investment> = {
         : 0;
 
     const statusBadgeMap: Record<string, { label: string; variant: string }> = {
-      draft: { label: 'Draft', variant: 'default' },
-      open: { label: 'Open', variant: 'success' },
-      funded: { label: 'Funded', variant: 'success' },
-      active: { label: 'Active', variant: 'success' },
-      closed: { label: 'Closed', variant: 'default' },
-      cancelled: { label: 'Cancelled', variant: 'warning' },
+      [STATUS.INVESTMENTS.DRAFT]: { label: 'Draft', variant: 'default' },
+      [STATUS.INVESTMENTS.OPEN]: { label: 'Open', variant: 'success' },
+      [STATUS.INVESTMENTS.FUNDED]: { label: 'Funded', variant: 'success' },
+      [STATUS.INVESTMENTS.ACTIVE]: { label: 'Active', variant: 'success' },
+      [STATUS.INVESTMENTS.CLOSED]: { label: 'Closed', variant: 'default' },
+      [STATUS.INVESTMENTS.CANCELLED]: { label: 'Cancelled', variant: 'warning' },
     };
 
     const badge = statusBadgeMap[investment.status];

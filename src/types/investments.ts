@@ -6,8 +6,9 @@
  */
 
 import { type CurrencyCode } from '@/config/currencies';
+import { type InvestmentStatus } from '@/config/database-constants';
 
-export type InvestmentStatus = 'draft' | 'open' | 'funded' | 'active' | 'closed' | 'cancelled';
+export type { InvestmentStatus };
 export type InvestmentType = 'equity' | 'revenue_share' | 'profit_share' | 'token' | 'other';
 export type ReturnFrequency = 'monthly' | 'quarterly' | 'annually' | 'at_exit' | 'custom';
 
@@ -48,7 +49,7 @@ export interface Investment {
 
 export interface CreateInvestmentRequest {
   title: string;
-  description?: string;
+  description: string;
   investment_type: InvestmentType;
   target_amount: number;
   minimum_investment: number;
@@ -60,6 +61,7 @@ export interface CreateInvestmentRequest {
   end_date?: string;
   risk_level?: 'low' | 'medium' | 'high';
   terms?: string;
+  is_public?: boolean;
   bitcoin_address?: string;
   lightning_address?: string;
 }

@@ -840,35 +840,46 @@ export const loanSchema = z.object({
 });
 
 // Investment validation
-export const investmentSchema = z.object({
-  title: z
-    .string()
-    .min(3, 'Title must be at least 3 characters')
-    .max(100, 'Title must be at most 100 characters'),
-  description: z
-    .string()
-    .min(10, 'Description must be at least 10 characters')
-    .max(2000, 'Description must be at most 2000 characters'),
-  investment_type: z
-    .enum(['equity', 'revenue_share', 'profit_share', 'token', 'other'])
-    .default('revenue_share'),
-  target_amount: z.number().positive('Target amount must be greater than 0'),
-  minimum_investment: z.number().positive('Minimum investment must be greater than 0'),
-  maximum_investment: z.number().positive().optional().nullable(),
-  expected_return_rate: z.number().min(0).max(1000).optional().nullable(),
-  return_frequency: z
-    .enum(['monthly', 'quarterly', 'annually', 'at_exit', 'custom'])
-    .optional()
-    .nullable(),
-  term_months: z.number().int().positive().optional().nullable(),
-  end_date: z.string().optional().nullable().or(z.literal('')),
-  risk_level: z.enum(['low', 'medium', 'high']).optional().nullable(),
-  terms: z.string().max(5000).optional().nullable().or(z.literal('')),
-  is_public: z.boolean().optional().default(false),
-  bitcoin_address: z.string().optional().nullable().or(z.literal('')),
-  lightning_address: lightningAddressSchema,
-  currency: z.string().optional(),
-});
+export const investmentSchema = z
+  .object({
+    title: z
+      .string()
+      .min(3, 'Title must be at least 3 characters')
+      .max(100, 'Title must be at most 100 characters'),
+    description: z
+      .string()
+      .min(10, 'Description must be at least 10 characters')
+      .max(2000, 'Description must be at most 2000 characters'),
+    investment_type: z
+      .enum(['equity', 'revenue_share', 'profit_share', 'token', 'other'])
+      .default('revenue_share'),
+    target_amount: z.number().positive('Target amount must be greater than 0'),
+    minimum_investment: z.number().positive('Minimum investment must be greater than 0'),
+    maximum_investment: z.number().positive().optional().nullable(),
+    expected_return_rate: z.number().min(0).max(1000).optional().nullable(),
+    return_frequency: z
+      .enum(['monthly', 'quarterly', 'annually', 'at_exit', 'custom'])
+      .optional()
+      .nullable(),
+    term_months: z.number().int().positive().optional().nullable(),
+    end_date: z.string().optional().nullable().or(z.literal('')),
+    risk_level: z.enum(['low', 'medium', 'high']).optional().nullable(),
+    terms: z.string().max(5000).optional().nullable().or(z.literal('')),
+    is_public: z.boolean().optional().default(false),
+    bitcoin_address: z.string().optional().nullable().or(z.literal('')),
+    lightning_address: lightningAddressSchema,
+    currency: z.enum(CURRENCY_CODES).optional(),
+  })
+  .refine(
+    data =>
+      !data.maximum_investment ||
+      !data.minimum_investment ||
+      data.minimum_investment <= data.maximum_investment,
+    {
+      message: 'Maximum investment must be greater than or equal to minimum investment',
+      path: ['maximum_investment'],
+    }
+  );
 
 // Event validation
 export const eventSchema = z
