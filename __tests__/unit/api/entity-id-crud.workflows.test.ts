@@ -31,6 +31,10 @@ jest.mock('@/lib/api/standardResponse', () => ({
     status: 500,
     json: async () => ({ success: false, error: { message: 'DB error' } }),
   })),
+  apiForbidden: jest.fn((message = 'Forbidden') => ({
+    status: 403,
+    json: async () => ({ success: false, error: { message } }),
+  })),
   apiRateLimited: jest.fn(() => ({
     status: 429,
     json: async () => ({ success: false, error: { message: 'Rate limited' } }),
@@ -206,7 +210,7 @@ describe('Entity [id] CRUD workflows (service/product/cause)', () => {
       const response = await putHandler(request as any, { params: { id: 'e1' } });
       const body = await response.json();
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(403);
       expect(body.success).toBe(false);
     });
   });

@@ -29,6 +29,10 @@ jest.mock('@/lib/api/standardResponse', () => ({
     status: 500,
     json: async () => ({ success: false, error: { message: 'DB error' } }),
   })),
+  apiForbidden: jest.fn((message = 'Forbidden') => ({
+    status: 403,
+    json: async () => ({ success: false, error: { message } }),
+  })),
   apiRateLimited: jest.fn(() => ({
     status: 429,
     json: async () => ({ success: false, error: { message: 'Rate limited' } }),
@@ -207,7 +211,7 @@ describe('Project [id] API workflow', () => {
     const response = await PUT(request as any, { params: { id: 'p1' } });
     const body = await response.json();
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(403);
     expect(body.success).toBe(false);
   });
 });
