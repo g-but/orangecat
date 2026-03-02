@@ -15,7 +15,7 @@ jobs:
       # NOTE: NODE_ENV=production is set only on the Build step,
       # not globally, because npm ci skips devDependencies when
       # NODE_ENV=production (npm 10+).
-      NEXT_PUBLIC_SUPABASE_URL: http://localhost
+      NEXT_PUBLIC_SUPABASE_URL: https://dummy-project.supabase.co
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: dummy
       NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
       PORT: 3000
