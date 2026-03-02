@@ -1,5 +1,6 @@
 import { type CurrencyCode } from '@/config/currencies';
-import { type EntityStatus, type VerificationStatus } from '@/types/common';
+import { type EntityStatus } from '@/config/status-config';
+import { type VerificationStatus } from '@/types/common';
 
 export type AssetType =
   | 'real_estate'
