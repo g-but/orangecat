@@ -146,9 +146,8 @@ export const POST = compose(
 
     const validatedData = ctx.body as ResearchEntityCreate;
 
-    // Generate unique wallet address for this research entity
-    // In production, this would integrate with a wallet service
-    const walletAddress = `bc1q${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+    // Wallet address is null until a real wallet is linked by the user
+    const walletAddress = null;
 
     // Get funding_goal_sats from validated data
     const fundingGoalSats =

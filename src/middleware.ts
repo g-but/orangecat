@@ -37,6 +37,11 @@ const protectedRoutes = [
   '/timeline',
   '/messages',
   '/projects/create',
+  '/investments',
+  '/research/create',
+  '/wishlists/create',
+  '/documents/create',
+  '/loans/create',
 ];
 
 export async function middleware(request: NextRequest) {

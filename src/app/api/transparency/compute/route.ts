@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
 import {
   generateTransparencyReport,
   getTransparencyCriteriaForDisplay,
   type TransparencyData,
 } from '@/services/transparency';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiSuccess, apiError } from '@/lib/api/standardResponse';
 
 const TRANSPARENCY_KEYS: (keyof TransparencyData)[] = [
   'isOpenSource',
@@ -25,7 +26,7 @@ const TRANSPARENCY_KEYS: (keyof TransparencyData)[] = [
  * Computes a weighted transparency score from provided boolean criteria.
  * Uses the config-driven weighted calculation from src/config/transparency.ts.
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const body = await request.json();
 
@@ -37,17 +38,11 @@ export async function POST(request: NextRequest) {
 
     const report = await generateTransparencyReport(data);
 
-    return NextResponse.json({
-      success: true,
-      data: report,
-    });
+    return apiSuccess(report);
   } catch {
-    return NextResponse.json(
-      { success: false, error: 'Failed to compute transparency score' },
-      { status: 400 }
-    );
+    return apiError('Failed to compute transparency score', 'COMPUTATION_ERROR', 400);
   }
-}
+});
 
 /**
  * GET /api/transparency/compute
@@ -57,8 +52,5 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   const criteria = getTransparencyCriteriaForDisplay();
 
-  return NextResponse.json({
-    success: true,
-    data: { criteria },
-  });
+  return apiSuccess({ criteria }, { cache: 'LONG' });
 }

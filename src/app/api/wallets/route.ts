@@ -1,6 +1,5 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import type { User } from '@supabase/supabase-js';
 import {
   WalletFormData,
   validateWalletFormData,
@@ -29,12 +28,14 @@ import { validateOneOfIds, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { getTableName } from '@/config/entity-registry';
 
-type _SupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
+// Public wallet fields (safe to return without auth)
+const PUBLIC_WALLET_FIELDS =
+  'id, address_or_xpub, wallet_type, label, category, category_icon, lightning_address, is_primary, display_order, profile_id, project_id';
 
 // GET /api/wallets?profile_id=xxx OR ?project_id=xxx
-export async function GET(request: NextRequest) {
+export const GET = withOptionalAuth(async request => {
   try {
-    const supabase = await createServerClient();
+    const { user, supabase } = request;
     const searchParams = request.nextUrl.searchParams;
     const profileId = searchParams.get('profile_id');
     const projectId = searchParams.get('project_id');
@@ -49,10 +50,16 @@ export async function GET(request: NextRequest) {
       return validationError;
     }
 
+    // Determine if this is an owner request (authenticated user viewing own wallets)
+    const isOwner = user ? isWalletOwner(user, profileId, projectId) : false;
+
+    // Select all fields for owner, public-safe fields for everyone else
+    const selectFields = isOwner ? '*' : PUBLIC_WALLET_FIELDS;
+
     // Build query for wallets table
     let query = supabase
       .from(getTableName('wallet'))
-      .select('*')
+      .select(selectFields)
       .eq('is_active', true)
       .order('display_order', { ascending: true })
       .order('created_at', { ascending: false });
@@ -81,6 +88,16 @@ export async function GET(request: NextRequest) {
     logger.error('Unexpected error in GET /api/wallets', { error });
     return handleSupabaseError('fetch wallets', error);
   }
+});
+
+function isWalletOwner(user: User, profileId: string | null, projectId: string | null): boolean {
+  // Profile wallets: profile_id IS the user_id
+  if (profileId) {
+    return profileId === user.id;
+  }
+  // Project ownership requires a DB check; skip for now (RLS handles it)
+  // For the GET path, returning public fields for project wallets is safe
+  return false;
 }
 
 // POST /api/wallets - Create new wallet (FIXED VERSION)
