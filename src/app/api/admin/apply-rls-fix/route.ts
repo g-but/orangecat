@@ -9,12 +9,18 @@
  * Last Modified Summary: Added admin auth guard to prevent unauthorized access
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { logger } from '@/utils/logger';
+import {
+  apiUnauthorized,
+  apiForbidden,
+  apiSuccess,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 export async function POST(_req: NextRequest) {
   try {
@@ -25,14 +31,11 @@ export async function POST(_req: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized('Unauthorized');
     }
     const isAdmin = user.email?.endsWith('@orangecat.ch') && user.app_metadata?.role === 'admin';
     if (!isAdmin) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden: admin access required' },
-        { status: 403 }
-      );
+      return apiForbidden('Forbidden: admin access required');
     }
 
     const _admin = createAdminClient();
@@ -47,12 +50,11 @@ export async function POST(_req: NextRequest) {
     logger.info('Applying RLS fix migration', {}, 'Admin/ApplyRLSFix');
 
     // Execute the migration SQL using the admin client
-    // Note: Supabase JS client doesn\'t support direct DDL execution
+    // Note: Supabase JS client doesn't support direct DDL execution
     // We need to use the Management API or apply via SQL editor
     // For now, return the SQL so it can be applied manually or via another method
 
-    return NextResponse.json({
-      success: true,
+    return apiSuccess({
       message: 'Migration SQL ready. Please apply via Supabase Studio.',
       sql: migrationSQL,
       instructions: [
@@ -63,9 +65,6 @@ export async function POST(_req: NextRequest) {
     });
   } catch (error) {
     logger.error('Failed to prepare RLS fix migration', error, 'Admin/ApplyRLSFix');
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    return apiInternalError(error instanceof Error ? error.message : 'Unknown error');
   }
 }

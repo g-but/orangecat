@@ -11,11 +11,18 @@
  * Last Modified Summary: Initial implementation
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createActionExecutor } from '@/services/cat';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiUnauthorized,
+  apiBadRequest,
+  apiNotFound,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -36,7 +43,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized('Unauthorized');
     }
 
     // Get user's actor ID
@@ -47,29 +54,20 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       .single()) as { data: { id: string } | null; error: unknown };
 
     if (actorError || !actor) {
-      return NextResponse.json({ success: false, error: 'Actor not found' }, { status: 404 });
+      return apiNotFound('Actor not found');
     }
 
     const executor = createActionExecutor(supabase);
     const result = await executor.confirmPendingAction(user.id, actor.id, pendingActionId);
 
     if (result.success) {
-      return NextResponse.json({
-        success: true,
-        data: result,
-      });
+      return apiSuccess(result);
     } else {
-      return NextResponse.json(
-        { success: false, error: result.error, data: result },
-        { status: 400 }
-      );
+      return apiBadRequest(result.error);
     }
   } catch (error) {
     logger.error('Confirm pending action error', error, 'CatActionsAPI');
-    return NextResponse.json(
-      { success: false, error: 'Failed to confirm action' },
-      { status: 500 }
-    );
+    return apiInternalError('Failed to confirm action');
   }
 }
 
@@ -88,7 +86,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized('Unauthorized');
     }
 
     // Get optional rejection reason from body
@@ -103,12 +101,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const executor = createActionExecutor(supabase);
     await executor.rejectPendingAction(user.id, pendingActionId, reason);
 
-    return NextResponse.json({
-      success: true,
-      data: { rejected: true },
-    });
+    return apiSuccess({ rejected: true });
   } catch (error) {
     logger.error('Reject pending action error', error, 'CatActionsAPI');
-    return NextResponse.json({ success: false, error: 'Failed to reject action' }, { status: 500 });
+    return apiInternalError('Failed to reject action');
   }
 }

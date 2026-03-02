@@ -5,7 +5,7 @@
  * These suggestions appear in the empty state of My Cat chat
  */
 
-import { NextResponse } from 'next/server';
+import { apiSuccess } from '@/lib/api/standardResponse';
 import { createServerClient } from '@/lib/supabase/server';
 import { fetchDocumentsForCat, type DocumentContext } from '@/services/ai/document-context';
 import { logger } from '@/utils/logger';
@@ -129,12 +129,9 @@ export async function GET() {
 
     if (authError || !user) {
       // Return default suggestions for unauthenticated users
-      return NextResponse.json({
-        success: true,
-        data: {
-          suggestions: DEFAULT_SUGGESTIONS,
-          hasContext: false,
-        },
+      return apiSuccess({
+        suggestions: DEFAULT_SUGGESTIONS,
+        hasContext: false,
       });
     }
 
@@ -144,23 +141,17 @@ export async function GET() {
     // Generate personalized suggestions
     const suggestions = generateSuggestions(documents);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        suggestions,
-        hasContext: documents.length > 0,
-        documentCount: documents.length,
-      },
+    return apiSuccess({
+      suggestions,
+      hasContext: documents.length > 0,
+      documentCount: documents.length,
     });
   } catch (error) {
     logger.error('Cat Suggestions error', error, 'CatSuggestionsAPI');
     // Return defaults on error
-    return NextResponse.json({
-      success: true,
-      data: {
-        suggestions: DEFAULT_SUGGESTIONS,
-        hasContext: false,
-      },
+    return apiSuccess({
+      suggestions: DEFAULT_SUGGESTIONS,
+      hasContext: false,
     });
   }
 }

@@ -5,12 +5,12 @@
  * DELETE /api/cat/history - Clear conversation history
  */
 
-import { NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import {
   getMessagesForDisplay,
   clearDefaultConversation,
 } from '@/services/cat/conversation-history';
+import { apiUnauthorized, apiSuccess } from '@/lib/api/standardResponse';
 
 export async function GET() {
   const supabase = await createServerClient();
@@ -20,12 +20,12 @@ export async function GET() {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return apiUnauthorized('Unauthorized');
   }
 
   const messages = await getMessagesForDisplay(supabase, user.id);
 
-  return NextResponse.json({ success: true, data: messages });
+  return apiSuccess(messages);
 }
 
 export async function DELETE() {
@@ -36,10 +36,10 @@ export async function DELETE() {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return apiUnauthorized('Unauthorized');
   }
 
   await clearDefaultConversation(supabase, user.id);
 
-  return NextResponse.json({ success: true });
+  return apiSuccess({ success: true });
 }

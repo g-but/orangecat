@@ -18,8 +18,18 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import {
+  apiSuccess,
+  apiUnauthorized,
+  apiBadRequest,
+  apiNotFound,
+  apiInternalError,
+  apiServiceUnavailable,
+  apiRateLimited,
+  apiError,
+} from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { createAIPaymentService } from '@/services/ai-payments';
@@ -64,7 +74,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized();
     }
 
     // Rate limit AI message requests (30 per minute per user)
@@ -74,28 +84,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     } catch (e) {
       if (e instanceof RateLimitError) {
         const retryAfter = e.details?.retryAfter || 60;
+        const rateLimitResponse = apiRateLimited('Rate limit exceeded', retryAfter);
         const limit = e.details?.limit || 30;
         const resetTime = Date.now() + retryAfter * 1000;
-        return new NextResponse(
-          JSON.stringify({
-            error: 'Rate limit exceeded',
-            code: 'RATE_LIMIT_EXCEEDED',
-            limit,
-            remaining: 0,
-            resetTime,
-            resetDate: new Date(resetTime).toUTCString(),
-          }),
-          {
-            status: 429,
-            headers: {
-              'Content-Type': 'application/json',
-              'X-RateLimit-Limit': String(limit),
-              'X-RateLimit-Remaining': '0',
-              'X-RateLimit-Reset': String(resetTime),
-              'Retry-After': String(retryAfter),
-            },
-          }
-        );
+        rateLimitResponse.headers.set('X-RateLimit-Limit', String(limit));
+        rateLimitResponse.headers.set('X-RateLimit-Remaining', '0');
+        rateLimitResponse.headers.set('X-RateLimit-Reset', String(resetTime));
+        return rateLimitResponse;
       }
       throw e;
     }
@@ -104,13 +99,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const result = sendMessageSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: result.error.flatten(),
-        },
-        { status: 400 }
-      );
+      return apiBadRequest('Validation failed', result.error.flatten());
     }
 
     const { content, model: requestedModel } = result.data;
@@ -127,11 +116,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const conversation = conversationData as any;
 
     if (convError || !conversation) {
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      return apiNotFound('Conversation not found');
     }
 
     if (conversation.status !== STATUS.AI_ASSISTANTS.ACTIVE) {
-      return NextResponse.json({ error: 'Conversation is archived' }, { status: 400 });
+      return apiBadRequest('Conversation is archived');
     }
 
     // Get assistant details including all configuration
@@ -146,7 +135,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const assistant = assistantData as any;
 
     if (assistantError || !assistant) {
-      return NextResponse.json({ error: 'Assistant not found' }, { status: 404 });
+      return apiNotFound('Assistant not found');
     }
 
     // Check BYOK status — try OpenRouter first, then Groq
@@ -165,27 +154,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     } else if (isGroqAvailable()) {
       provider = 'groq';
     } else {
-      return NextResponse.json(
-        { error: 'AI service not configured', code: 'NO_API_KEY' },
-        { status: 503 }
-      );
+      return apiServiceUnavailable('AI service not configured');
     }
 
     // For non-BYOK users, check platform limits
     if (!hasByok) {
       const platformUsage = await keyService.checkPlatformUsage(user.id);
       if (!platformUsage.can_use_platform) {
-        return NextResponse.json(
-          {
-            error: 'Daily limit reached',
-            details: {
-              message:
-                'You have reached your daily free message limit. Add your own OpenRouter API key for unlimited usage.',
-              dailyLimit: platformUsage.daily_limit,
-              used: platformUsage.daily_requests,
-            },
-          },
-          { status: 429 }
+        return apiRateLimited(
+          'Daily limit reached. Add your own OpenRouter API key for unlimited usage.'
         );
       }
     }
@@ -292,17 +269,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (creatorCharge > 0) {
       const balanceCheck = await paymentService.checkBalance(user.id, assistantId);
       if (!balanceCheck.hasBalance) {
-        return NextResponse.json(
-          {
-            error: 'Insufficient credits',
-            details: {
-              currentBalance: balanceCheck.currentBalance,
-              requiredAmount: balanceCheck.requiredAmount,
-              shortfall: balanceCheck.shortfall,
-            },
-          },
-          { status: 402 }
-        );
+        return apiError('Insufficient credits', 'INSUFFICIENT_CREDITS', 402, {
+          currentBalance: balanceCheck.currentBalance,
+          requiredAmount: balanceCheck.requiredAmount,
+          shortfall: balanceCheck.shortfall,
+        });
       }
     }
 
@@ -323,7 +294,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     if (userMsgError) {
       logger.error('Error storing user message', userMsgError, 'AIMessagesAPI');
-      return NextResponse.json({ error: 'Failed to store message' }, { status: 500 });
+      return apiInternalError('Failed to store message');
     }
 
     // Build messages array
@@ -393,13 +364,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any).delete().eq('id', userMessage.id);
 
       const errorMessage = aiError instanceof Error ? aiError.message : 'AI service error';
-      return NextResponse.json(
-        {
-          error: 'Failed to generate AI response',
-          details: { message: errorMessage },
-        },
-        { status: 502 }
-      );
+      return apiError('Failed to generate AI response', 'AI_ERROR', 502, { message: errorMessage });
     }
 
     // Calculate costs
@@ -434,7 +399,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     if (aiMsgError) {
       logger.error('Error storing AI message', aiMsgError, 'AIMessagesAPI');
-      return NextResponse.json({ error: 'Failed to store AI response' }, { status: 500 });
+      return apiInternalError('Failed to store AI response');
     }
 
     // Handle payments
@@ -467,46 +432,41 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       })
       .eq('id', convId);
 
-    const response = NextResponse.json({
-      success: true,
-      data: {
-        userMessage,
-        assistantMessage: {
-          ...assistantMessage,
-          // Add helpful metadata for frontend
-          model_name:
-            (provider === 'openrouter' ? getModelMetadata(modelToUse)?.name : null) || modelToUse,
-          is_free_model: aiResponse.isFreeModel,
-          used_byok: hasByok,
-        },
-        payment: paymentResult
-          ? {
-              charged: paymentResult.amountCharged,
-              balanceRemaining: paymentResult.balanceRemaining,
-            }
-          : null,
-        usage: {
-          inputTokens: aiResponse.inputTokens,
-          outputTokens: aiResponse.outputTokens,
-          totalTokens: aiResponse.totalTokens,
-          apiCostSats,
-          creatorMarkupSats,
-          totalCostSats,
-        },
-        // User status info for UI
-        userStatus: {
-          hasByok,
-          usedFreeMessage: usesFreeMessage,
-          freeMessagesRemaining: usesFreeMessage
-            ? freeMessagesRemaining - 1
-            : freeMessagesRemaining,
-          freeMessagesPerDay: freeMessagesPerDay,
-        },
+    const response = apiSuccess({
+      userMessage,
+      assistantMessage: {
+        ...assistantMessage,
+        // Add helpful metadata for frontend
+        model_name:
+          (provider === 'openrouter' ? getModelMetadata(modelToUse)?.name : null) || modelToUse,
+        is_free_model: aiResponse.isFreeModel,
+        used_byok: hasByok,
+      },
+      payment: paymentResult
+        ? {
+            charged: paymentResult.amountCharged,
+            balanceRemaining: paymentResult.balanceRemaining,
+          }
+        : null,
+      usage: {
+        inputTokens: aiResponse.inputTokens,
+        outputTokens: aiResponse.outputTokens,
+        totalTokens: aiResponse.totalTokens,
+        apiCostSats,
+        creatorMarkupSats,
+        totalCostSats,
+      },
+      // User status info for UI
+      userStatus: {
+        hasByok,
+        usedFreeMessage: usesFreeMessage,
+        freeMessagesRemaining: usesFreeMessage ? freeMessagesRemaining - 1 : freeMessagesRemaining,
+        freeMessagesPerDay: freeMessagesPerDay,
       },
     });
     return applyRateLimitHeaders(response, rateLimitResult);
   } catch (error) {
     logger.error('Send message error', error, 'AIMessagesAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 }

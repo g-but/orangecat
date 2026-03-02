@@ -4,8 +4,8 @@
  * GET /api/groups/[slug]/proposals/[id]/votes - Get all votes for a proposal
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { handleApiError, apiSuccess } from '@/lib/api/standardResponse';
+import { NextRequest } from 'next/server';
+import { handleApiError, apiSuccess, apiNotFound } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getProposalVotes } from '@/services/groups/queries/proposals';
 import { createServerClient } from '@/lib/supabase/server';
@@ -25,7 +25,7 @@ export async function GET(
     const { id } = await params;
     const result = await getProposalVotes(id);
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 404 });
+      return apiNotFound(result.error);
     }
 
     // Filter votes if not authenticated or not a member

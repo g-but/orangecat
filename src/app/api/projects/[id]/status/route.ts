@@ -7,17 +7,17 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import {
   apiSuccess,
   apiUnauthorized,
   apiNotFound,
   apiValidationError,
+  apiRateLimited,
   handleApiError,
   handleSupabaseError,
 } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { rateLimit, createRateLimitResponse, applyRateLimitHeaders } from '@/lib/rate-limit';
+import { rateLimit, applyRateLimitHeaders } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { VALID_PROJECT_STATUSES, type ProjectStatus } from '@/config/project-statuses';
@@ -41,11 +41,12 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     // Rate limiting check
     const rateLimitResult = await rateLimit(request);
     if (!rateLimitResult.success) {
-      const rateLimited = createRateLimitResponse(rateLimitResult);
-      return NextResponse.json(await rateLimited.json(), {
-        status: rateLimited.status,
-        headers: rateLimited.headers,
-      });
+      return apiRateLimited(
+        'Too many requests',
+        rateLimitResult.resetTime
+          ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+          : undefined
+      );
     }
 
     const { user, supabase } = request;

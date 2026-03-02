@@ -11,11 +11,16 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiNotFound,
+  apiBadRequest,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 interface RouteContext {
   params: Promise<{ id: string; convId: string }>;
@@ -41,7 +46,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
       .single();
 
     if (convError || !conversation) {
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      return apiNotFound('Conversation not found');
     }
 
     // Get messages
@@ -53,7 +58,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
 
     if (msgError) {
       logger.error('Error fetching messages', msgError, 'AIConversationAPI');
-      return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
+      return apiInternalError('Failed to fetch messages');
     }
 
     // Get assistant info
@@ -63,17 +68,14 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
       .eq('id', assistantId)
       .single();
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        ...(conversation as Record<string, unknown>),
-        messages: messages || [],
-        assistant,
-      },
+    return apiSuccess({
+      ...(conversation as Record<string, unknown>),
+      messages: messages || [],
+      assistant,
     });
   } catch (error) {
     logger.error('Get conversation error', error, 'AIConversationAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });
 
@@ -86,13 +88,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     const result = updateConversationSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: result.error.flatten(),
-        },
-        { status: 400 }
-      );
+      return apiBadRequest('Validation failed', result.error.flatten());
     }
 
     // Update conversation
@@ -111,20 +107,17 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
 
     if (error) {
       logger.error('Error updating conversation', error, 'AIConversationAPI');
-      return NextResponse.json({ error: 'Failed to update conversation' }, { status: 500 });
+      return apiInternalError('Failed to update conversation');
     }
 
     if (!conversation) {
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      return apiNotFound('Conversation not found');
     }
 
-    return NextResponse.json({
-      success: true,
-      data: conversation,
-    });
+    return apiSuccess(conversation);
   } catch (error) {
     logger.error('Update conversation error', error, 'AIConversationAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });
 
@@ -143,15 +136,12 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
 
     if (error) {
       logger.error('Error deleting conversation', error, 'AIConversationAPI');
-      return NextResponse.json({ error: 'Failed to delete conversation' }, { status: 500 });
+      return apiInternalError('Failed to delete conversation');
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Conversation deleted',
-    });
+    return apiSuccess({ message: 'Conversation deleted' });
   } catch (error) {
     logger.error('Delete conversation error', error, 'AIConversationAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });

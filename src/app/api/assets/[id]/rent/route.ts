@@ -7,12 +7,17 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import { createBookingService } from '@/services/bookings';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
+import {
+  apiCreated,
+  apiBadRequest,
+  apiNotFound,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -33,13 +38,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const result = rentAssetSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: result.error.flatten(),
-        },
-        { status: 400 }
-      );
+      return apiBadRequest('Validation failed', result.error.flatten());
     }
 
     const { starts_at, ends_at, notes } = result.data;
@@ -61,10 +60,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const asset = assetData as any;
 
     if (assetError || !asset) {
-      return NextResponse.json(
-        { error: 'Asset not found or not available for rent' },
-        { status: 404 }
-      );
+      return apiNotFound('Asset not found or not available for rent');
     }
 
     // Get customer's actor
@@ -77,7 +73,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const customerActor = customerActorData as any;
 
     if (!customerActor) {
-      return NextResponse.json({ error: 'Customer profile not found' }, { status: 400 });
+      return apiBadRequest('Customer profile not found');
     }
 
     // Calculate rental duration and price
@@ -103,21 +99,15 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Check minimum rental period
     if (asset.min_rental_period && periods < asset.min_rental_period) {
-      return NextResponse.json(
-        {
-          error: `Minimum rental period is ${asset.min_rental_period} ${asset.rental_period_type} periods`,
-        },
-        { status: 400 }
+      return apiBadRequest(
+        `Minimum rental period is ${asset.min_rental_period} ${asset.rental_period_type} periods`
       );
     }
 
     // Check maximum rental period
     if (asset.max_rental_period && periods > asset.max_rental_period) {
-      return NextResponse.json(
-        {
-          error: `Maximum rental period is ${asset.max_rental_period} ${asset.rental_period_type} periods`,
-        },
-        { status: 400 }
+      return apiBadRequest(
+        `Maximum rental period is ${asset.max_rental_period} ${asset.rental_period_type} periods`
       );
     }
 
@@ -147,23 +137,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     });
 
     if (!bookingResult.success) {
-      return NextResponse.json(
-        {
-          error: bookingResult.error,
-        },
-        { status: 400 }
-      );
+      return apiBadRequest(bookingResult.error);
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: bookingResult.booking,
-      },
-      { status: 201 }
-    );
+    return apiCreated(bookingResult.booking);
   } catch (error) {
     logger.error('Rent asset error', error, 'AssetRentAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });

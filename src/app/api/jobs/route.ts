@@ -2,12 +2,12 @@
  * Public Job Postings API
  *
  * GET /api/jobs - Browse public job postings
- * 
+ *
  * Follows Network State Development Guide - Job Postings feature
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
+import { NextRequest } from 'next/server';
+import { apiSuccess, apiInternalError, handleApiError } from '@/lib/api/standardResponse';
 import { getPublicJobPostings } from '@/services/groups/queries/proposals';
 import { logger } from '@/utils/logger';
 
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const result = await getPublicJobPostings({ limit, offset, location, job_type });
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 500 });
+      return apiInternalError(result.error);
     }
 
     return apiSuccess({
@@ -34,4 +34,3 @@ export async function GET(request: NextRequest) {
     return handleApiError(error);
   }
 }
-

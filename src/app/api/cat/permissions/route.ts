@@ -12,7 +12,7 @@
  * Last Modified Summary: Initial implementation
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createPermissionService } from '@/services/cat';
 import {
@@ -23,6 +23,12 @@ import {
 } from '@/config/cat-actions';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiUnauthorized,
+  apiBadRequest,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 // Validation schemas - category enum derived from ACTION_CATEGORIES (DRY)
 const categorySchema = z.enum(ACTION_CATEGORY_KEYS);
@@ -53,7 +59,7 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized();
     }
 
     const permissionService = createPermissionService(supabase);
@@ -76,20 +82,14 @@ export async function GET() {
       ...value,
     }));
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        summary,
-        availableActions,
-        categories,
-      },
+    return apiSuccess({
+      summary,
+      availableActions,
+      categories,
     });
   } catch (error) {
     logger.error('Get cat permissions error', error, 'CatPermissionsAPI');
-    return NextResponse.json(
-      { success: false, error: 'Failed to get permissions' },
-      { status: 500 }
-    );
+    return apiInternalError('Failed to get permissions');
   }
 }
 
@@ -106,17 +106,14 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized();
     }
 
     const body = await request.json();
     const parseResult = grantPermissionSchema.safeParse(body);
 
     if (!parseResult.success) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid request', details: parseResult.error.errors },
-        { status: 400 }
-      );
+      return apiBadRequest('Invalid request', parseResult.error.errors);
     }
 
     const { actionId, category, requiresConfirmation, dailyLimit, maxSatsPerAction } =
@@ -126,16 +123,10 @@ export async function POST(request: NextRequest) {
     if (actionId !== '*') {
       const action = CAT_ACTIONS[actionId];
       if (!action) {
-        return NextResponse.json(
-          { success: false, error: `Unknown action: ${actionId}` },
-          { status: 400 }
-        );
+        return apiBadRequest(`Unknown action: ${actionId}`);
       }
       if (action.category !== category) {
-        return NextResponse.json(
-          { success: false, error: `Action ${actionId} is not in category ${category}` },
-          { status: 400 }
-        );
+        return apiBadRequest(`Action ${actionId} is not in category ${category}`);
       }
     }
 
@@ -159,16 +150,10 @@ export async function POST(request: NextRequest) {
     // Return updated summary
     const summary = await permissionService.getPermissionSummary(user.id);
 
-    return NextResponse.json({
-      success: true,
-      data: { summary },
-    });
+    return apiSuccess({ summary });
   } catch (error) {
     logger.error('Grant cat permission error', error, 'CatPermissionsAPI');
-    return NextResponse.json(
-      { success: false, error: 'Failed to grant permission' },
-      { status: 500 }
-    );
+    return apiInternalError('Failed to grant permission');
   }
 }
 
@@ -185,17 +170,14 @@ export async function DELETE(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized();
     }
 
     const body = await request.json();
     const parseResult = revokePermissionSchema.safeParse(body);
 
     if (!parseResult.success) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid request', details: parseResult.error.errors },
-        { status: 400 }
-      );
+      return apiBadRequest('Invalid request', parseResult.error.errors);
     }
 
     const { actionId, category } = parseResult.data;
@@ -213,15 +195,9 @@ export async function DELETE(request: NextRequest) {
     // Return updated summary
     const summary = await permissionService.getPermissionSummary(user.id);
 
-    return NextResponse.json({
-      success: true,
-      data: { summary },
-    });
+    return apiSuccess({ summary });
   } catch (error) {
     logger.error('Revoke cat permission error', error, 'CatPermissionsAPI');
-    return NextResponse.json(
-      { success: false, error: 'Failed to revoke permission' },
-      { status: 500 }
-    );
+    return apiInternalError('Failed to revoke permission');
   }
 }

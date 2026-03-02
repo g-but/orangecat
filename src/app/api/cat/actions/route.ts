@@ -11,12 +11,20 @@
  * Last Modified Summary: Initial implementation
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createActionExecutor } from '@/services/cat';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiUnauthorized,
+  apiBadRequest,
+  apiNotFound,
+  apiForbidden,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 // Validation schema
 const executeActionSchema = z.object({
@@ -39,7 +47,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized('Unauthorized');
     }
 
     const { searchParams } = new URL(request.url);
@@ -55,16 +63,13 @@ export async function GET(request: NextRequest) {
       executor.getActionHistory(user.id, { limit, actionId, status }),
     ]);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        pendingActions,
-        history,
-      },
+    return apiSuccess({
+      pendingActions,
+      history,
     });
   } catch (error) {
     logger.error('Get cat actions error', error, 'CatActionsAPI');
-    return NextResponse.json({ success: false, error: 'Failed to get actions' }, { status: 500 });
+    return apiInternalError('Failed to get actions');
   }
 }
 
@@ -81,17 +86,14 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized('Unauthorized');
     }
 
     const body = await request.json();
     const parseResult = executeActionSchema.safeParse(body);
 
     if (!parseResult.success) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid request', details: parseResult.error.errors },
-        { status: 400 }
-      );
+      return apiBadRequest('Invalid request', parseResult.error.errors);
     }
 
     // Get user's actor ID
@@ -102,28 +104,19 @@ export async function POST(request: NextRequest) {
       .single()) as { data: { id: string } | null; error: unknown };
 
     if (actorError || !actor) {
-      return NextResponse.json({ success: false, error: 'Actor not found' }, { status: 404 });
+      return apiNotFound('Actor not found');
     }
 
     const executor = createActionExecutor(supabase);
     const result = await executor.executeAction(user.id, actor.id, parseResult.data);
 
     if (result.success) {
-      return NextResponse.json({
-        success: true,
-        data: result,
-      });
+      return apiSuccess(result);
     } else {
-      return NextResponse.json(
-        { success: false, error: result.error, data: result },
-        { status: result.status === 'denied' ? 403 : 400 }
-      );
+      return result.status === 'denied' ? apiForbidden(result.error) : apiBadRequest(result.error);
     }
   } catch (error) {
     logger.error('Execute cat action error', error, 'CatActionsAPI');
-    return NextResponse.json(
-      { success: false, error: 'Failed to execute action' },
-      { status: 500 }
-    );
+    return apiInternalError('Failed to execute action');
   }
 }

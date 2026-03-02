@@ -8,11 +8,11 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import { createApiKeyService } from '@/services/ai/api-key-service';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
+import { apiSuccess, apiBadRequest, apiInternalError } from '@/lib/api/standardResponse';
 
 interface RouteContext {
   params: Promise<{ keyId: string }>;
@@ -35,13 +35,13 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const success = await keyService.deleteKey(user.id, keyId);
 
     if (!success) {
-      return NextResponse.json({ error: 'Failed to delete key' }, { status: 400 });
+      return apiBadRequest('Failed to delete key');
     }
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ success: true });
   } catch (error) {
     logger.error('Error deleting API key', error, 'ApiKeysAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });
 
@@ -58,13 +58,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     const result = updateKeySchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: result.error.flatten(),
-        },
-        { status: 400 }
-      );
+      return apiBadRequest('Validation failed', result.error.flatten());
     }
 
     const keyService = createApiKeyService(supabase);
@@ -72,13 +66,13 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     if (result.data.isPrimary) {
       const success = await keyService.setPrimary(user.id, keyId);
       if (!success) {
-        return NextResponse.json({ error: 'Failed to set primary key' }, { status: 400 });
+        return apiBadRequest('Failed to set primary key');
       }
     }
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ success: true });
   } catch (error) {
     logger.error('Error updating API key', error, 'ApiKeysAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });

@@ -9,13 +9,20 @@
  * Last Modified Summary: Updated to use unified groups API
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import groupsService from '@/services/groups';
 import { getUserRole } from '@/services/groups/utils/helpers';
 import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiNotFound,
+  apiUnauthorized,
+  apiForbidden,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -43,23 +50,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const slug = await getOrgSlugById(id);
 
     if (!slug) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+      return apiNotFound('Organization not found');
     }
 
     // Use unified groups service
     const result = await groupsService.getGroup(slug, true);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Failed to fetch organization' },
-        { status: result.error?.includes('not found') ? 404 : 500 }
-      );
+      return result.error?.includes('not found')
+        ? apiNotFound(result.error || 'Failed to fetch organization')
+        : apiInternalError(result.error || 'Failed to fetch organization');
     }
 
-    return NextResponse.json({ group: result.group });
+    return apiSuccess({ group: result.group });
   } catch (error) {
     logger.error('Error in GET /api/organizations/[id]', { error }, 'Organizations');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 }
 
@@ -73,29 +79,26 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized();
     }
 
     const { id } = await params;
     const slug = await getOrgSlugById(id);
 
     if (!slug) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+      return apiNotFound('Organization not found');
     }
 
     // Get group first to check permissions
     const groupResult = await groupsService.getGroup(slug, true);
     if (!groupResult.success || !groupResult.group) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+      return apiNotFound('Organization not found');
     }
 
     // Authorization: only founders and admins can update
     const role = await getUserRole(groupResult.group.id, user.id);
     if (role !== STATUS.GROUP_MEMBERS.FOUNDER && role !== STATUS.GROUP_MEMBERS.ADMIN) {
-      return NextResponse.json(
-        { error: 'Forbidden: must be founder or admin to update organization' },
-        { status: 403 }
-      );
+      return apiForbidden('Must be founder or admin to update organization');
     }
 
     const body = await request.json();
@@ -109,16 +112,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const result = await groupsService.updateGroup(groupResult.group.id, bodyWithType);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Failed to update organization' },
-        { status: 500 }
-      );
+      return apiInternalError(result.error || 'Failed to update organization');
     }
 
-    return NextResponse.json({ group: result.group });
+    return apiSuccess({ group: result.group });
   } catch (error) {
     logger.error('Error in PUT /api/organizations/[id]', { error }, 'Organizations');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 }
 
@@ -132,44 +132,38 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized();
     }
 
     const { id } = await params;
     const slug = await getOrgSlugById(id);
 
     if (!slug) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+      return apiNotFound('Organization not found');
     }
 
     // Get group first to check permissions
     const groupResult = await groupsService.getGroup(slug, true);
     if (!groupResult.success || !groupResult.group) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+      return apiNotFound('Organization not found');
     }
 
     // Authorization: only founders can delete
     const role = await getUserRole(groupResult.group.id, user.id);
     if (role !== STATUS.GROUP_MEMBERS.FOUNDER) {
-      return NextResponse.json(
-        { error: 'Forbidden: only the founder can delete an organization' },
-        { status: 403 }
-      );
+      return apiForbidden('Only the founder can delete an organization');
     }
 
     // Delete using unified service
     const result = await groupsService.deleteGroup(groupResult.group.id);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Failed to delete organization' },
-        { status: 500 }
-      );
+      return apiInternalError(result.error || 'Failed to delete organization');
     }
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ success: true });
   } catch (error) {
     logger.error('Error in DELETE /api/organizations/[id]', { error }, 'Organizations');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 }

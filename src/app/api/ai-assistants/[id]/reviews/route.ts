@@ -4,10 +4,11 @@
  * GET /api/ai-assistants/[id]/reviews - Get reviews for an assistant
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
+import { apiNotFound, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .single();
 
     if (assistantError || !assistant) {
-      return NextResponse.json({ error: 'Assistant not found' }, { status: 404 });
+      return apiNotFound('Assistant not found');
     }
 
     // Build query
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (reviewsError) {
       logger.error('Error fetching reviews', reviewsError, 'AIAssistantReviewsAPI');
-      return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
+      return apiInternalError('Failed to fetch reviews');
     }
 
     // Get rating distribution
@@ -128,26 +129,23 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       userRating = myRating;
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        reviews,
-        summary: {
-          averageRating: assistant.average_rating,
-          totalRatings: assistant.total_ratings,
-          distribution: ratingDistribution,
-        },
-        userRating,
-        pagination: {
-          page,
-          limit,
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit),
-        },
+    return apiSuccess({
+      reviews,
+      summary: {
+        averageRating: assistant.average_rating,
+        totalRatings: assistant.total_ratings,
+        distribution: ratingDistribution,
+      },
+      userRating,
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
       },
     });
   } catch (error) {
     logger.error('Fetch reviews error', error, 'AIAssistantReviewsAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 }

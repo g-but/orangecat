@@ -8,11 +8,16 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import { createApiKeyService } from '@/services/ai/api-key-service';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiCreated,
+  apiBadRequest,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 const addKeySchema = z.object({
   provider: z
@@ -37,17 +42,14 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     // Also get platform usage
     const platformUsage = await keyService.checkPlatformUsage(user.id);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        keys,
-        platformUsage,
-        hasByok: keys.some(k => k.is_valid && k.is_primary),
-      },
+    return apiSuccess({
+      keys,
+      platformUsage,
+      hasByok: keys.some(k => k.is_valid && k.is_primary),
     });
   } catch (error) {
     logger.error('Error fetching API keys', error, 'ApiKeysAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });
 
@@ -63,13 +65,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const result = addKeySchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: result.error.flatten(),
-        },
-        { status: 400 }
-      );
+      return apiBadRequest('Validation failed', result.error.flatten());
     }
 
     const { provider, keyName, apiKey, isPrimary } = result.data;
@@ -84,23 +80,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     });
 
     if (!addResult.success) {
-      return NextResponse.json(
-        {
-          error: addResult.error || 'Failed to add API key',
-        },
-        { status: 400 }
-      );
+      return apiBadRequest(addResult.error || 'Failed to add API key');
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: addResult.key,
-      },
-      { status: 201 }
-    );
+    return apiCreated(addResult.key);
   } catch (error) {
     logger.error('Error adding API key', error, 'ApiKeysAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });

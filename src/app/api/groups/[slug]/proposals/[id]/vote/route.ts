@@ -7,8 +7,7 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
-import { handleApiError, apiSuccess } from '@/lib/api/standardResponse';
+import { handleApiError, apiSuccess, apiBadRequest } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { logger } from '@/utils/logger';
 import { castVote } from '@/services/groups/mutations/votes';
@@ -24,7 +23,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const result = await castVote({ proposal_id: id, vote: body.vote });
     if (!result.success) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return NextResponse.json({ error: (result as any).error }, { status: 400 });
+      return apiBadRequest((result as any).error);
     }
     return apiSuccess(result.vote);
   } catch (error) {

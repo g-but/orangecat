@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { apiBadRequest, apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
         },
         'Auth'
       );
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return apiBadRequest('Invalid request body');
     }
 
     const { event, session } = body;
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Handle sign out
     if (event === 'SIGNED_OUT' || !session) {
       await supabase.auth.signOut();
-      return NextResponse.json({ success: true });
+      return apiSuccess({ success: true });
     }
 
     // Validate session structure
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
         },
         'Auth'
       );
-      return NextResponse.json({ error: 'Invalid session: missing tokens' }, { status: 400 });
+      return apiBadRequest('Invalid session: missing tokens');
     }
 
     // Set session on server
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
         },
         'Auth'
       );
-      return NextResponse.json({ error: error.message, code: error.status }, { status: 400 });
+      return apiBadRequest(error.message);
     }
 
     logger.debug(
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       'Auth'
     );
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ success: true });
   } catch (error) {
     logger.error(
       'Unexpected error in auth callback',
@@ -85,9 +86,6 @@ export async function POST(request: NextRequest) {
       },
       'Auth'
     );
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    return apiInternalError(error instanceof Error ? error.message : 'Unknown error');
   }
 }

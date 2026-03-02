@@ -1,5 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import {
+  apiUnauthorized,
+  apiForbidden,
+  apiBadRequest,
+  apiSuccess,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 // Ensure Node.js runtime for fs access
 export const runtime = 'nodejs';
@@ -33,11 +40,11 @@ export async function POST(_req: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized('Unauthorized');
     }
     const isAdmin = user.email?.endsWith('@orangecat.ch') && user.app_metadata?.role === 'admin';
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+      return apiForbidden('Forbidden: admin access required');
     }
 
     const token = process.env.SUPABASE_ACCESS_TOKEN;
@@ -45,10 +52,7 @@ export async function POST(_req: NextRequest) {
     const projectRef = supabaseUrl ? getProjectRefFromUrl(supabaseUrl) : null;
 
     if (!token || !projectRef) {
-      return NextResponse.json(
-        { error: 'Missing SUPABASE_ACCESS_TOKEN or project ref' },
-        { status: 400 }
-      );
+      return apiBadRequest('Missing SUPABASE_ACCESS_TOKEN or project ref');
     }
 
     const root = process.cwd();
@@ -95,13 +99,13 @@ export async function POST(_req: NextRequest) {
       results.push({ file, status: res.status, ok: res.ok, body: parsed });
 
       if (!res.ok) {
-        return NextResponse.json({ error: 'Migration failed', results }, { status: 500 });
+        return apiInternalError('Migration failed', results);
       }
     }
 
-    return NextResponse.json({ success: true, results });
+    return apiSuccess({ results });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Internal error' }, { status: 500 });
+    return apiInternalError(error?.message || 'Internal error');
   }
 }

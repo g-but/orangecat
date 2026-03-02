@@ -1,13 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { logger } from '@/utils/logger';
 import { createServerClient } from '@/lib/supabase/server';
+import {
+  apiBadRequest,
+  apiUnauthorized,
+  apiSuccess,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 export async function POST(request: NextRequest) {
   try {
     const { accessToken, refreshToken } = await request.json();
 
     if (!accessToken) {
-      return NextResponse.json({ error: 'No access token provided' }, { status: 400 });
+      return apiBadRequest('No access token provided');
     }
 
     // Create server client and set the session
@@ -16,7 +22,7 @@ export async function POST(request: NextRequest) {
     // First, get the current user to verify the token works
     const { data: currentUser, error: verifyError } = await supabase.auth.getUser(accessToken);
     if (verifyError || !currentUser.user) {
-      return NextResponse.json({ error: 'Invalid access token' }, { status: 401 });
+      return apiUnauthorized('Invalid access token');
     }
 
     // Set the session in the server client (this should set cookies)
@@ -26,16 +32,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return apiBadRequest(error.message);
     }
 
     if (!data.session) {
-      return NextResponse.json({ error: 'Failed to establish session' }, { status: 400 });
+      return apiBadRequest('Failed to establish session');
     }
 
     // Return success with user data
-    return NextResponse.json({
-      success: true,
+    return apiSuccess({
       user: data.user,
       session: {
         access_token: data.session.access_token,
@@ -45,11 +50,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Auth sync error:', error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return apiInternalError(error instanceof Error ? error.message : 'Unknown error');
   }
 }

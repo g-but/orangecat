@@ -7,13 +7,18 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import { createBookingService } from '@/services/bookings';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
+import {
+  apiBadRequest,
+  apiNotFound,
+  apiCreated,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -34,13 +39,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const result = bookServiceSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: result.error.flatten(),
-        },
-        { status: 400 }
-      );
+      return apiBadRequest('Validation failed', result.error.flatten());
     }
 
     const { starts_at, ends_at, notes } = result.data;
@@ -59,7 +58,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       .single();
 
     if (serviceError || !service) {
-      return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+      return apiNotFound('Service not found');
     }
 
     // Get customer's actor
@@ -73,7 +72,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       .single();
 
     if (!customerActor) {
-      return NextResponse.json({ error: 'Customer profile not found' }, { status: 400 });
+      return apiBadRequest('Customer profile not found');
     }
 
     // Calculate price based on duration
@@ -105,23 +104,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     });
 
     if (!bookingResult.success) {
-      return NextResponse.json(
-        {
-          error: bookingResult.error,
-        },
-        { status: 400 }
-      );
+      return apiBadRequest(bookingResult.error);
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: bookingResult.booking,
-      },
-      { status: 201 }
-    );
+    return apiCreated(bookingResult.booking);
   } catch (error) {
     logger.error('Book service error', error, 'ServiceBookAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });

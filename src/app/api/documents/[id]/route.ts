@@ -8,7 +8,7 @@
  * Last Modified Summary: Initial creation
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
@@ -18,6 +18,7 @@ import {
   handleApiError,
   apiSuccess,
   apiNotFound,
+  apiUnauthorized,
   apiValidationError,
 } from '@/lib/api/standardResponse';
 import { getDocument, updateDocument, deleteDocument } from '@/domain/documents/service';
@@ -58,7 +59,7 @@ export const PUT = compose(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized();
     }
 
     const { id } = await context.params;
@@ -90,7 +91,7 @@ export const DELETE = compose(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized();
     }
 
     const { id } = await context.params;

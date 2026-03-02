@@ -8,8 +8,8 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiForbidden, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
 import projectSupportService from '@/services/projects/support';
 import { logger } from '@/utils/logger';
 
@@ -26,15 +26,16 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const result = await projectSupportService.deleteProjectSupport(supportId);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Failed to delete support' },
-        { status: result.error === 'Unauthorized' || result.error === 'Forbidden' ? 403 : 500 }
-      );
+      const msg = result.error || 'Failed to delete support';
+      if (result.error === 'Unauthorized' || result.error === 'Forbidden') {
+        return apiForbidden(msg);
+      }
+      return apiInternalError(msg);
     }
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ success: true });
   } catch (error) {
     logger.error('Error in DELETE /api/projects/[id]/support/[supportId]:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });

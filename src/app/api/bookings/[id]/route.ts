@@ -9,12 +9,18 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import { createBookingService } from '@/services/bookings';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiNotFound,
+  apiForbidden,
+  apiBadRequest,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -35,7 +41,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
     const booking = await bookingService.getBooking(id);
 
     if (!booking) {
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+      return apiNotFound('Booking not found');
     }
 
     // Verify user has access (is customer or provider)
@@ -49,17 +55,16 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
     const isProvider = actorIds.includes(booking.provider_actor_id);
 
     if (!isCustomer && !isProvider) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+      return apiForbidden('Access denied');
     }
 
-    return NextResponse.json({
-      success: true,
-      data: booking,
+    return apiSuccess({
+      ...booking,
       role: isProvider ? 'provider' : 'customer',
     });
   } catch (error) {
     logger.error('Get booking error', error, 'BookingsAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });
 
@@ -72,13 +77,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     const result = updateBookingSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: result.error.flatten(),
-        },
-        { status: 400 }
-      );
+      return apiBadRequest('Validation failed', result.error.flatten());
     }
 
     const { action, reason } = result.data;
@@ -132,25 +131,17 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
         break;
 
       default:
-        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+        return apiBadRequest('Invalid action');
     }
 
     if (!bookingResult?.success) {
-      return NextResponse.json(
-        {
-          error: bookingResult?.error || 'Action failed',
-        },
-        { status: 400 }
-      );
+      return apiBadRequest(bookingResult?.error || 'Action failed');
     }
 
-    return NextResponse.json({
-      success: true,
-      data: bookingResult.booking,
-    });
+    return apiSuccess(bookingResult.booking);
   } catch (error) {
     logger.error('Update booking error', error, 'BookingsAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });
 
@@ -167,12 +158,12 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const result = await bookingService.cancelBooking(id, user.id, reason);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return apiBadRequest(result.error || 'Cancel failed');
     }
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ success: true });
   } catch (error) {
     logger.error('Cancel booking error', error, 'BookingsAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });

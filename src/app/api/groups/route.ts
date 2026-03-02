@@ -9,12 +9,17 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import groupsService from '@/services/groups';
 import { createGroupSchema } from '@/services/groups/validation';
 import { logger } from '@/utils/logger';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import type { CreateGroupInput } from '@/types/group';
+import {
+  apiSuccess,
+  apiCreated,
+  apiBadRequest,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
@@ -39,19 +44,16 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     const userGroupsResult = await groupsService.getUserGroups(query, { page, pageSize });
 
     if (!userGroupsResult.success) {
-      return NextResponse.json(
-        { error: userGroupsResult.error || 'Failed to fetch groups' },
-        { status: 500 }
-      );
+      return apiInternalError(userGroupsResult.error || 'Failed to fetch groups');
     }
 
-    return NextResponse.json({
+    return apiSuccess({
       groups: userGroupsResult.groups || [],
       total: userGroupsResult.total || 0,
     });
   } catch (error) {
     logger.error('Error in GET /api/groups:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });
 
@@ -64,10 +66,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     // Validate request
     const validationResult = createGroupSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return apiBadRequest('Invalid request', validationResult.error.errors);
     }
 
     // Create group using server client
@@ -75,16 +74,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const result = await createGroup(validationResult.data as CreateGroupInput, supabase, user.id);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Failed to create group' },
-        { status: 500 }
-      );
+      return apiInternalError(result.error || 'Failed to create group');
     }
 
     // Return in format expected by EntityForm (data property)
-    return NextResponse.json({ data: result.group, group: result.group }, { status: 201 });
+    return apiCreated({ data: result.group, group: result.group });
   } catch (error) {
     logger.error('Error in POST /api/groups:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });

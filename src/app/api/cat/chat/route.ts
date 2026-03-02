@@ -9,7 +9,15 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import {
+  apiUnauthorized,
+  apiBadRequest,
+  apiServiceUnavailable,
+  apiRateLimited,
+  apiInternalError,
+  apiSuccess,
+} from '@/lib/api/standardResponse';
 import { createServerClient } from '@/lib/supabase/server';
 import { ROUTES } from '@/config/routes';
 import { z } from 'zod';
@@ -65,7 +73,7 @@ export async function POST(request: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized();
     }
 
     // Rate limit per user (write-tier limits reused for chat to prevent abuse)
@@ -104,10 +112,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = bodySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.flatten() },
-        { status: 400 }
-      );
+      return apiBadRequest('Invalid request', parsed.error.flatten());
     }
 
     const { message, model: requestedModel, stream } = parsed.data;
@@ -143,19 +148,13 @@ export async function POST(request: NextRequest) {
       provider = 'openrouter';
     } else {
       // No AI provider available
-      return NextResponse.json(
-        {
-          error: 'AI chat not configured',
-          code: 'NO_API_KEY',
-          details: {
-            message:
-              'To use My Cat AI chat, you need to add your own API key in Settings → API Keys. Get a free Groq key at console.groq.com/keys',
-            hasByok: false,
-            helpUrl: `${ROUTES.DASHBOARD.SETTINGS}?tab=api-keys`,
-          },
-        },
-        { status: 503 }
-      );
+      return apiServiceUnavailable('AI chat not configured', {
+        code: 'NO_API_KEY',
+        message:
+          'To use My Cat AI chat, you need to add your own API key in Settings → API Keys. Get a free Groq key at console.groq.com/keys',
+        hasByok: false,
+        helpUrl: `${ROUTES.DASHBOARD.SETTINGS}?tab=api-keys`,
+      });
     }
 
     // Platform usage for non-BYOK
@@ -163,18 +162,7 @@ export async function POST(request: NextRequest) {
     if (!hasByok) {
       const usage = await keyService.checkPlatformUsage(user.id);
       if (!usage.can_use_platform) {
-        return NextResponse.json(
-          {
-            error: 'Daily limit reached',
-            details: {
-              message:
-                'You have reached your daily free message limit. Add your own API key for unlimited usage.',
-              dailyLimit: usage.daily_limit,
-              used: usage.daily_requests,
-            },
-          },
-          { status: 429 }
-        );
+        return apiRateLimited('Daily limit reached');
       }
       platformUsage = {
         daily_limit: usage.daily_limit,
@@ -546,7 +534,7 @@ export async function POST(request: NextRequest) {
         costSats: result.costSats,
       };
     } else {
-      return NextResponse.json({ error: 'No AI service available' }, { status: 500 });
+      return apiInternalError('No AI service available');
     }
 
     // Track platform usage (non-BYOK)
@@ -571,31 +559,28 @@ export async function POST(request: NextRequest) {
       ]).catch(() => {});
     }
 
-    const responseJson = NextResponse.json({
-      success: true,
-      data: {
-        message: cleanedMessage,
-        actions: actions.length > 0 ? actions : undefined,
-        modelUsed: aiResult.model,
-        provider,
-        usage: {
-          inputTokens: aiResult.inputTokens,
-          outputTokens: aiResult.outputTokens,
-          totalTokens: aiResult.totalTokens,
-          apiCostSats: aiResult.costSats || 0,
-          isFreeModel: aiResult.isFreeModel,
-          usedByok: aiResult.usedByok,
-        },
-        userStatus: {
-          hasByok,
-          freeMessagesPerDay: platformUsage?.daily_limit ?? 0,
-          freeMessagesRemaining: platformUsage?.requests_remaining ?? 0,
-        },
+    const responseJson = apiSuccess({
+      message: cleanedMessage,
+      actions: actions.length > 0 ? actions : undefined,
+      modelUsed: aiResult.model,
+      provider,
+      usage: {
+        inputTokens: aiResult.inputTokens,
+        outputTokens: aiResult.outputTokens,
+        totalTokens: aiResult.totalTokens,
+        apiCostSats: aiResult.costSats || 0,
+        isFreeModel: aiResult.isFreeModel,
+        usedByok: aiResult.usedByok,
+      },
+      userStatus: {
+        hasByok,
+        freeMessagesPerDay: platformUsage?.daily_limit ?? 0,
+        freeMessagesRemaining: platformUsage?.requests_remaining ?? 0,
       },
     });
     return applyRateLimitHeaders(responseJson, rl);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiInternalError(message);
   }
 }

@@ -8,7 +8,8 @@
  * Last Modified Summary: Created API to fetch wishlist items as donation tiers
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -43,12 +44,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (error) {
       logger.error('Failed to fetch wishlist tiers', { error: error.message, userId });
-      return NextResponse.json({ error: 'Failed to fetch wishlist tiers' }, { status: 500 });
+      return apiInternalError('Failed to fetch wishlist tiers');
     }
 
-    return NextResponse.json({ items: items || [] });
+    return apiSuccess({ items: items || [] });
   } catch (error) {
     logger.error('Error in wishlist-tiers API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 }

@@ -1,5 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { handleApiError, apiUnauthorized, apiSuccess } from '@/lib/api/standardResponse';
+import { NextRequest } from 'next/server';
+import {
+  handleApiError,
+  apiUnauthorized,
+  apiSuccess,
+  apiBadRequest,
+} from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { activateProposal } from '@/services/groups/mutations/proposals';
 import { createServerClient } from '@/lib/supabase/server';
@@ -14,12 +19,14 @@ export async function POST(
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-    if (authError || !user) {return apiUnauthorized();}
+    if (authError || !user) {
+      return apiUnauthorized();
+    }
 
     const { id } = params;
     const result = await activateProposal(id);
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return apiBadRequest(result.error);
     }
     return apiSuccess(result.proposal);
   } catch (error) {
@@ -27,4 +34,3 @@ export async function POST(
     return handleApiError(error);
   }
 }
-

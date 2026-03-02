@@ -1,6 +1,10 @@
-import { NextResponse } from 'next/server';
+import { apiSuccess, apiServiceUnavailable } from '@/lib/api/standardResponse';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
+
+const HEALTH_CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
+};
 
 // GET /api/health - lightweight liveness/readiness endpoint
 export async function GET() {
@@ -11,58 +15,30 @@ export async function GET() {
     const { error } = await supabase.from(DATABASE_TABLES.PROFILES).select('id').limit(1);
 
     if (error) {
-      return NextResponse.json(
-        {
-          status: 'unhealthy',
-          timestamp,
-          services: {
-            api: 'healthy',
-            database: 'unhealthy',
-          },
-          error: 'Database connection failed',
-        },
-        {
-          status: 503,
-          headers: {
-            'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
-          },
-        }
-      );
+      const response = apiServiceUnavailable('Database connection failed', {
+        status: 'unhealthy',
+        timestamp,
+        services: { api: 'healthy', database: 'unhealthy' },
+      });
+      response.headers.set('Cache-Control', HEALTH_CACHE_HEADERS['Cache-Control']);
+      return response;
     }
 
-    return NextResponse.json(
+    return apiSuccess(
       {
         status: 'healthy',
         timestamp,
-        services: {
-          api: 'healthy',
-          database: 'healthy',
-        },
+        services: { api: 'healthy', database: 'healthy' },
       },
-      {
-        status: 200,
-        headers: {
-          'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
-        },
-      }
+      { headers: HEALTH_CACHE_HEADERS }
     );
   } catch {
-    return NextResponse.json(
-      {
-        status: 'unhealthy',
-        timestamp,
-        services: {
-          api: 'healthy',
-          database: 'unhealthy',
-        },
-        error: 'Health check exception',
-      },
-      {
-        status: 503,
-        headers: {
-          'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
-        },
-      }
-    );
+    const response = apiServiceUnavailable('Health check exception', {
+      status: 'unhealthy',
+      timestamp,
+      services: { api: 'healthy', database: 'unhealthy' },
+    });
+    response.headers.set('Cache-Control', HEALTH_CACHE_HEADERS['Cache-Control']);
+    return response;
   }
 }

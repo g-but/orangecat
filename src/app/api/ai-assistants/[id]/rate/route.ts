@@ -10,11 +10,17 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiBadRequest,
+  apiForbidden,
+  apiNotFound,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -34,13 +40,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const result = ratingSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: result.error.flatten(),
-        },
-        { status: 400 }
-      );
+      return apiBadRequest('Validation failed', result.error.flatten());
     }
 
     const { rating, review } = result.data;
@@ -54,7 +54,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       .single();
 
     if (assistantError || !assistant) {
-      return NextResponse.json({ error: 'Assistant not found' }, { status: 404 });
+      return apiNotFound('Assistant not found');
     }
 
     // Check if user has used this assistant (has conversations)
@@ -67,12 +67,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       .limit(1);
 
     if (convError || !conversations || conversations.length === 0) {
-      return NextResponse.json(
-        {
-          error: 'You must use this assistant before rating it',
-        },
-        { status: 403 }
-      );
+      return apiForbidden('You must use this assistant before rating it');
     }
 
     // Upsert rating (insert or update)
@@ -96,16 +91,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     if (ratingError) {
       logger.error('Error saving rating', ratingError, 'AIAssistantRateAPI');
-      return NextResponse.json({ error: 'Failed to save rating' }, { status: 500 });
+      return apiInternalError('Failed to save rating');
     }
 
-    return NextResponse.json({
-      success: true,
-      data: ratingData,
-    });
+    return apiSuccess(ratingData);
   } catch (error) {
     logger.error('Rating error', error, 'AIAssistantRateAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });
 
@@ -123,12 +115,12 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
 
     if (deleteError) {
       logger.error('Error deleting rating', deleteError, 'AIAssistantRateAPI');
-      return NextResponse.json({ error: 'Failed to delete rating' }, { status: 500 });
+      return apiInternalError('Failed to delete rating');
     }
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ success: true });
   } catch (error) {
     logger.error('Delete rating error', error, 'AIAssistantRateAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });

@@ -7,11 +7,11 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import { createBookingService } from '@/services/bookings';
 import { BookingStatus } from '@/services/bookings';
 import { logger } from '@/utils/logger';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
@@ -34,12 +34,9 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
       offset,
     });
 
-    return NextResponse.json({
-      success: true,
-      data: bookings,
-    });
+    return apiSuccess(bookings);
   } catch (error) {
     logger.error('Fetch bookings error', error, 'BookingsAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });

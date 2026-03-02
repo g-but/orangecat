@@ -7,8 +7,13 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
-import { handleApiError, apiSuccess } from '@/lib/api/standardResponse';
+import {
+  handleApiError,
+  apiSuccess,
+  apiNotFound,
+  apiForbidden,
+  apiBadRequest,
+} from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { logger } from '@/utils/logger';
 import { refreshWalletBalance } from '@/services/groups/mutations/treasury';
@@ -27,20 +32,20 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     // Get group
     const groupResult = await getGroupBySlug(slug);
     if (!groupResult.success || !groupResult.group) {
-      return NextResponse.json({ error: 'Group not found' }, { status: 404 });
+      return apiNotFound('Group not found');
     }
 
     // Check permissions
     const canView = await checkGroupPermission(groupResult.group.id, user.id, 'canView');
     if (!canView) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+      return apiForbidden('Insufficient permissions');
     }
 
     // Refresh balance
     const result = await refreshWalletBalance(walletId);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return apiBadRequest(result.error);
     }
 
     return apiSuccess({ balance: result.balance });

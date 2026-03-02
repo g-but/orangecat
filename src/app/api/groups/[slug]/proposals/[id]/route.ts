@@ -1,5 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { handleApiError, apiUnauthorized, apiSuccess } from '@/lib/api/standardResponse';
+import { NextRequest } from 'next/server';
+import {
+  handleApiError,
+  apiUnauthorized,
+  apiSuccess,
+  apiNotFound,
+  apiBadRequest,
+} from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getProposal } from '@/services/groups/queries/proposals';
 import { updateProposal, deleteProposal } from '@/services/groups/mutations/proposals';
@@ -13,7 +19,7 @@ export async function GET(
     const { id } = params;
     const result = await getProposal(id);
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 404 });
+      return apiNotFound(result.error);
     }
     return apiSuccess(result.proposal);
   } catch (error) {
@@ -32,13 +38,15 @@ export async function PUT(
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-    if (authError || !user) {return apiUnauthorized();}
+    if (authError || !user) {
+      return apiUnauthorized();
+    }
 
     const { id } = params;
     const payload = await request.json();
     const result = await updateProposal(id, payload);
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return apiBadRequest(result.error);
     }
     return apiSuccess(result.proposal);
   } catch (error) {
@@ -57,12 +65,14 @@ export async function DELETE(
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-    if (authError || !user) {return apiUnauthorized();}
+    if (authError || !user) {
+      return apiUnauthorized();
+    }
 
     const { id } = params;
     const result = await deleteProposal(id);
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return apiBadRequest(result.error);
     }
     return apiSuccess({ deleted: true });
   } catch (error) {
@@ -70,4 +80,3 @@ export async function DELETE(
     return handleApiError(error);
   }
 }
-

@@ -7,8 +7,8 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiBadRequest, apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { createApiKeyService } from '@/services/ai/api-key-service';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
@@ -29,13 +29,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const result = validateSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: result.error.flatten(),
-        },
-        { status: 400 }
-      );
+      return apiBadRequest('Validation failed', result.error.flatten());
     }
 
     const { apiKey } = result.data;
@@ -43,16 +37,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const keyService = createApiKeyService(supabase);
     const validation = await keyService.validateKeyWithProvider(apiKey);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        isValid: validation.isValid,
-        error: validation.error,
-        rateLimits: validation.rateLimits,
-      },
+    return apiSuccess({
+      isValid: validation.isValid,
+      error: validation.error,
+      rateLimits: validation.rateLimits,
     });
   } catch (error) {
     logger.error('Error validating API key', error, 'ApiKeysValidateAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });

@@ -10,11 +10,17 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiCreated,
+  apiBadRequest,
+  apiNotFound,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -33,7 +39,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
       .single();
 
     if (assistantError || !assistant) {
-      return NextResponse.json({ error: 'Assistant not found' }, { status: 404 });
+      return apiNotFound('Assistant not found');
     }
 
     // Get user's conversations with this assistant
@@ -46,16 +52,13 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
 
     if (error) {
       logger.error('Error fetching conversations', error, 'AIConversationsAPI');
-      return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
+      return apiInternalError('Failed to fetch conversations');
     }
 
-    return NextResponse.json({
-      success: true,
-      data: conversations || [],
-    });
+    return apiSuccess(conversations || []);
   } catch (error) {
     logger.error('Conversations API error', error, 'AIConversationsAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });
 
@@ -73,11 +76,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       .single();
 
     if (assistantError || !assistant) {
-      return NextResponse.json({ error: 'Assistant not found' }, { status: 404 });
+      return apiNotFound('Assistant not found');
     }
 
     if (assistant.status !== STATUS.AI_ASSISTANTS.ACTIVE) {
-      return NextResponse.json({ error: 'Assistant is not active' }, { status: 400 });
+      return apiBadRequest('Assistant is not active');
     }
 
     // Create new conversation
@@ -94,7 +97,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     if (createError) {
       logger.error('Error creating conversation', createError, 'AIConversationsAPI');
-      return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 });
+      return apiInternalError('Failed to create conversation');
     }
 
     // Add system prompt as first message if exists
@@ -115,15 +118,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       });
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: conversation,
-      },
-      { status: 201 }
-    );
+    return apiCreated(conversation);
   } catch (error) {
     logger.error('Create conversation error', error, 'AIConversationsAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 });

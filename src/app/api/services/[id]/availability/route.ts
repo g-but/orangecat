@@ -4,11 +4,17 @@
  * GET /api/services/[id]/availability - Get available time slots for a service
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createBookingService } from '@/services/bookings';
 import { getTableName } from '@/config/entity-registry';
 import { logger } from '@/utils/logger';
+import {
+  apiBadRequest,
+  apiNotFound,
+  apiSuccess,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -23,22 +29,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const dateParam = url.searchParams.get('date');
 
     if (!dateParam) {
-      return NextResponse.json(
-        {
-          error: 'Date parameter required (format: YYYY-MM-DD)',
-        },
-        { status: 400 }
-      );
+      return apiBadRequest('Date parameter required (format: YYYY-MM-DD)');
     }
 
     const date = new Date(dateParam);
     if (isNaN(date.getTime())) {
-      return NextResponse.json(
-        {
-          error: 'Invalid date format',
-        },
-        { status: 400 }
-      );
+      return apiBadRequest('Invalid date format');
     }
 
     // Verify service exists
@@ -53,33 +49,30 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .single();
 
     if (serviceError || !service) {
-      return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+      return apiNotFound('Service not found');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookingService = createBookingService(supabase as any);
     const slots = await bookingService.getServiceAvailability(serviceId, date);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        service: {
-          id: service.id,
-          title: service.title,
-          hourly_rate: service.hourly_rate,
-          fixed_price: service.fixed_price,
-          currency: service.currency,
-        },
-        date: dateParam,
-        slots: slots.map(slot => ({
-          start: slot.start.toISOString(),
-          end: slot.end.toISOString(),
-          available: slot.available,
-        })),
+    return apiSuccess({
+      service: {
+        id: service.id,
+        title: service.title,
+        hourly_rate: service.hourly_rate,
+        fixed_price: service.fixed_price,
+        currency: service.currency,
       },
+      date: dateParam,
+      slots: slots.map(slot => ({
+        start: slot.start.toISOString(),
+        end: slot.end.toISOString(),
+        available: slot.available,
+      })),
     });
   } catch (error) {
     logger.error('Get availability error', error, 'ServiceAvailabilityAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError('Internal server error');
   }
 }

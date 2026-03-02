@@ -9,11 +9,12 @@
  * Last Modified Summary: Initial implementation
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { fetchFullContextForCat, type FullUserContext } from '@/services/ai/document-context';
 import { logger } from '@/utils/logger';
 import { ROUTES } from '@/config/routes';
+import { apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api/standardResponse';
 
 interface ContextSummary {
   greeting: string;
@@ -309,7 +310,7 @@ export async function GET(_request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiUnauthorized();
     }
 
     // Fetch full context
@@ -325,12 +326,9 @@ export async function GET(_request: NextRequest) {
       tips: generateTips(context, completeness),
     };
 
-    return NextResponse.json({
-      success: true,
-      data: summary,
-    });
+    return apiSuccess(summary);
   } catch (error) {
     logger.error('Error fetching cat context', error, 'CatContextAPI');
-    return NextResponse.json({ error: 'Failed to fetch context' }, { status: 500 });
+    return apiInternalError('Failed to fetch context');
   }
 }
