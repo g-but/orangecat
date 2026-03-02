@@ -1,61 +1,62 @@
-import { NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
-import { logger } from '@/utils/logger'
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { logger } from '@/utils/logger';
 
 // This is a server-side API route that handles sign out
 export async function POST(_request: Request) {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createServerClient();
 
     // Get the current user before signing out
-    const { data: { user: _user } } = await supabase.auth.getUser()
-    
+    const {
+      data: { user: _user },
+    } = await supabase.auth.getUser();
+
     // Sign out using Supabase
-    const { error } = await supabase.auth.signOut()
-    
+    const { error } = await supabase.auth.signOut();
+
     if (error) {
     }
 
-    const cookieStore = await cookies()
-    const allCookies = cookieStore.getAll()
+    const cookieStore = await cookies();
+    const allCookies = cookieStore.getAll();
 
     // Manually clear all Supabase auth cookies
     allCookies.forEach(cookie => {
-      if (cookie.name.startsWith('sb-') ||
-          cookie.name.includes('supabase') ||
-          cookie.name.includes('auth')) {
-        // REMOVED: console.log statement for security
-        cookieStore.delete(cookie.name)
+      if (
+        cookie.name.startsWith('sb-') ||
+        cookie.name.includes('supabase') ||
+        cookie.name.includes('auth')
+      ) {
+        cookieStore.delete(cookie.name);
       }
-    })
+    });
 
     // Create response
     const response = NextResponse.json({
       success: true,
       message: 'Successfully signed out',
-      user: _user?.id || null
-    })
+      user: _user?.id || null,
+    });
 
     // Also clear cookies in the response headers
     allCookies.forEach(cookie => {
-      if (cookie.name.startsWith('sb-') ||
-          cookie.name.includes('supabase') ||
-          cookie.name.includes('auth')) {
-        response.cookies.delete(cookie.name)
+      if (
+        cookie.name.startsWith('sb-') ||
+        cookie.name.includes('supabase') ||
+        cookie.name.includes('auth')
+      ) {
+        response.cookies.delete(cookie.name);
       }
-    })
+    });
 
     // Prevent caching
-    response.headers.set('Cache-Control', 'no-store, max-age=0')
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
 
-    return response
-
+    return response;
   } catch (error) {
-    logger.error('Unexpected error during sign out', { error }, 'Auth')
-    return NextResponse.json(
-      { error: 'Failed to sign out' },
-      { status: 500 }
-    )
+    logger.error('Unexpected error during sign out', { error }, 'Auth');
+    return NextResponse.json({ error: 'Failed to sign out' }, { status: 500 });
   }
-} 
+}
