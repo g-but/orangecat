@@ -91,7 +91,7 @@ jobs:
         if: ${{ !github.event.inputs.skip_tests }}
         env:
           NODE_ENV: production
-          NEXT_PUBLIC_SUPABASE_URL: http://localhost
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy-project.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: dummy
           NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
         run: |
