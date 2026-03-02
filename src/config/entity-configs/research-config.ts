@@ -106,6 +106,9 @@ export const researchEntitySchema = z.object({
   is_public: z.boolean().optional(),
 });
 
+// Partial schema for PUT updates — all fields optional
+export const researchUpdateSchema = researchEntitySchema.partial();
+
 export const researchConfig: EntityConfig<ResearchEntity> = {
   entityType: 'research',
   name: 'Research',

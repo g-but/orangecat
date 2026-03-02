@@ -24,7 +24,7 @@ export async function POST(
     }
 
     const { id } = params;
-    const result = await activateProposal(id);
+    const result = await activateProposal(id, supabase);
     if (!result.success) {
       return apiBadRequest(result.error);
     }

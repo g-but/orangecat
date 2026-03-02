@@ -24,6 +24,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import {
   apiSuccess,
   apiUnauthorized,
+  apiForbidden,
   apiNotFound,
   apiValidationError,
   handleApiError,
@@ -289,13 +290,13 @@ export function createPutHandler(config: EntityHandlerConfig) {
           // Use actor-based ownership check
           const hasAccess = await checkOwnership(existing as { actor_id: string }, user.id);
           if (!hasAccess) {
-            return apiUnauthorized(`You can only update your own ${meta.namePlural.toLowerCase()}`);
+            return apiForbidden(`You can only update your own ${meta.namePlural.toLowerCase()}`);
           }
         } else {
           // Use field-based ownership check
           const ownerId = (existing as Record<string, unknown>)[ownershipField];
           if (ownerId !== user.id) {
-            return apiUnauthorized(`You can only update your own ${meta.namePlural.toLowerCase()}`);
+            return apiForbidden(`You can only update your own ${meta.namePlural.toLowerCase()}`);
           }
         }
       }
@@ -412,13 +413,13 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
           // Use actor-based ownership check
           const hasAccess = await checkOwnership(existing as { actor_id: string }, user.id);
           if (!hasAccess) {
-            return apiUnauthorized(`You can only delete your own ${meta.namePlural.toLowerCase()}`);
+            return apiForbidden(`You can only delete your own ${meta.namePlural.toLowerCase()}`);
           }
         } else {
           // Use field-based ownership check
           const ownerId = (existing as Record<string, unknown>)[ownershipField];
           if (ownerId !== user.id) {
-            return apiUnauthorized(`You can only delete your own ${meta.namePlural.toLowerCase()}`);
+            return apiForbidden(`You can only delete your own ${meta.namePlural.toLowerCase()}`);
           }
         }
       }

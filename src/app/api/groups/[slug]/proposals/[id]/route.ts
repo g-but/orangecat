@@ -44,7 +44,7 @@ export async function PUT(
 
     const { id } = params;
     const payload = await request.json();
-    const result = await updateProposal(id, payload);
+    const result = await updateProposal(id, payload, supabase);
     if (!result.success) {
       return apiBadRequest(result.error);
     }
@@ -70,7 +70,7 @@ export async function DELETE(
     }
 
     const { id } = params;
-    const result = await deleteProposal(id);
+    const result = await deleteProposal(id, supabase);
     if (!result.success) {
       return apiBadRequest(result.error);
     }

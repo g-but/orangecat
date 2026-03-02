@@ -24,7 +24,7 @@ export async function POST(
     }
 
     const { id } = params;
-    const result = await cancelProposal(id);
+    const result = await cancelProposal(id, supabase);
     if (!result.success) {
       return apiBadRequest(result.error);
     }

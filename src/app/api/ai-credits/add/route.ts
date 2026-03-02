@@ -1,10 +1,7 @@
 /**
- * AI Credits - Manual Add
+ * AI Credits - Manual Add (admin only)
  *
- * POST /api/ai-credits/add - Manually add credits (for testing/admin)
- *
- * In production, this would be restricted to admins or triggered by payment webhooks.
- * For MVP/development, we allow users to add credits to themselves.
+ * POST /api/ai-credits/add - Manually add credits (admin or payment webhooks)
  */
 
 import { NextRequest } from 'next/server';
@@ -25,10 +22,7 @@ const addCreditsSchema = z.object({
 
 /**
  * POST /api/ai-credits/add
- * Add credits to user's balance
- *
- * For MVP: Users can add credits to themselves (no real payment)
- * For production: This should only be called by payment webhooks or admins
+ * Add credits to user's balance (admin only)
  */
 export const POST = compose(
   withRequestId(),
@@ -43,6 +37,12 @@ export const POST = compose(
 
     if (!user) {
       return apiUnauthorized();
+    }
+
+    // Admin-only: check role from user metadata
+    const userRole = user.app_metadata?.role || user.user_metadata?.role;
+    if (userRole !== 'admin') {
+      return apiUnauthorized('Admin role required');
     }
 
     const body = await request.json();

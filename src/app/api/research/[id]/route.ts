@@ -4,11 +4,14 @@ import {
   apiSuccess,
   apiNotFound,
   apiUnauthorized,
+  apiForbidden,
+  apiBadRequest,
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
+import { researchUpdateSchema } from '@/config/entity-configs/research-config';
 
 // GET /api/research/[id] - Get specific research entity
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
@@ -37,7 +40,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
     // Check if user can view this entity
     if (!entity.is_public && (!user || user.id !== entity.user_id)) {
-      return apiUnauthorized('This research entity is private');
+      return apiForbidden('This research entity is private');
     }
 
     // Get additional data
@@ -95,7 +98,12 @@ export async function PUT(_request: NextRequest, { params }: { params: { id: str
       return apiUnauthorized();
     }
 
-    const updates = await _request.json();
+    const body = await _request.json();
+    const parsed = researchUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiBadRequest('Invalid request body', parsed.error.flatten().fieldErrors);
+    }
+    const updates = parsed.data;
 
     // Check ownership
     const tableName = getTableName('research');
@@ -116,7 +124,7 @@ export async function PUT(_request: NextRequest, { params }: { params: { id: str
     }
 
     if (existing.user_id !== user.id) {
-      return apiUnauthorized('You can only update your own research entities');
+      return apiForbidden('You can only update your own research entities');
     }
 
     // Update the entity
@@ -180,12 +188,12 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     }
 
     if (existing.user_id !== user.id) {
-      return apiUnauthorized('You can only delete your own research entities');
+      return apiForbidden('You can only delete your own research entities');
     }
 
     // Prevent deletion if funding has been raised (protect contributors)
     if (existing.funding_raised_sats > 0) {
-      return apiUnauthorized('Cannot delete research entity with funding. Archive instead.');
+      return apiForbidden('Cannot delete research entity with funding. Archive instead.');
     }
 
     // Delete the entity (cascading deletes will handle related records)
