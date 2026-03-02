@@ -10,11 +10,19 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { wishlistFeedbackSchema } from '@/lib/validation';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import {
+  apiSuccess,
+  apiBadRequest,
+  apiNotFound,
+  apiForbidden,
+  apiConflict,
+  apiInternalError,
+  apiCreated,
+} from '@/lib/api/standardResponse';
 
 // POST /api/wishlists/feedback - Submit like/dislike feedback
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
@@ -26,10 +34,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     // Validate request
     const validationResult = wishlistFeedbackSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return apiBadRequest('Invalid request', validationResult.error.errors);
     }
 
     // Verify the wishlist item exists
@@ -43,7 +48,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       .single();
 
     if (itemError || !wishlistItem) {
-      return NextResponse.json({ error: 'Wishlist item not found' }, { status: 404 });
+      return apiNotFound('Wishlist item not found');
     }
 
     // Users cannot feedback on their own wishlist items
@@ -51,10 +56,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       ? wishlistItem.wishlists[0]
       : wishlistItem.wishlists;
     if (wishlist && wishlist.actor_id === user.id) {
-      return NextResponse.json(
-        { error: 'You cannot provide feedback on your own wishlist items' },
-        { status: 403 }
-      );
+      return apiForbidden('You cannot provide feedback on your own wishlist items');
     }
 
     // If feedback is associated with a proof, verify it exists
@@ -70,10 +72,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
         .single();
 
       if (proofError || !proof) {
-        return NextResponse.json(
-          { error: 'Fulfillment proof not found or does not match wishlist item' },
-          { status: 404 }
-        );
+        return apiNotFound('Fulfillment proof not found or does not match wishlist item');
       }
     }
 
@@ -101,16 +100,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
         userId: user.id,
         wishlistItemId: validationResult.data.wishlist_item_id,
       });
-      return NextResponse.json({ error: 'Failed to check existing feedback' }, { status: 500 });
+      return apiInternalError('Failed to check existing feedback');
     }
 
     if (existingFeedback && existingFeedback.length > 0) {
       const existing = existingFeedback[0];
       if (existing.feedback_type === validationResult.data.feedback_type) {
-        return NextResponse.json(
-          { error: 'You have already provided this type of feedback' },
-          { status: 409 }
-        );
+        return apiConflict('You have already provided this type of feedback');
       } else {
         // Update existing feedback (allow changing like to dislike or vice versa)
         const { data: updatedFeedback, error: updateError } = await (
@@ -132,7 +128,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
             feedbackId: existing.id,
             userId: user.id,
           });
-          return NextResponse.json({ error: 'Failed to update feedback' }, { status: 500 });
+          return apiInternalError('Failed to update feedback');
         }
 
         logger.info('Updated wishlist feedback successfully', {
@@ -142,7 +138,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
           feedbackType: validationResult.data.feedback_type,
         });
 
-        return NextResponse.json({ feedback: updatedFeedback }, { status: 200 });
+        return apiSuccess(updatedFeedback);
       }
     }
 
@@ -168,7 +164,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
         userId: user.id,
         wishlistItemId: validationResult.data.wishlist_item_id,
       });
-      return NextResponse.json({ error: 'Failed to create feedback' }, { status: 500 });
+      return apiInternalError('Failed to create feedback');
     }
 
     logger.info('Created wishlist feedback successfully', {
@@ -178,9 +174,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       feedbackType: validationResult.data.feedback_type,
     });
 
-    return NextResponse.json({ feedback }, { status: 201 });
+    return apiCreated(feedback);
   } catch (error) {
     logger.error('Error in POST /api/wishlists/feedback:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });

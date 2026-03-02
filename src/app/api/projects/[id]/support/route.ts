@@ -8,7 +8,7 @@
  * Last Modified Summary: Refactored POST to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import projectSupportService from '@/services/projects/support';
 import {
@@ -17,6 +17,12 @@ import {
   supportPaginationSchema,
 } from '@/services/projects/support/validation';
 import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiBadRequest,
+  apiInternalError,
+  apiCreated,
+} from '@/lib/api/standardResponse';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -52,10 +58,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const paginationValidation = supportPaginationSchema.safeParse(pagination);
 
     if (!filtersValidation.success || !paginationValidation.success) {
-      return NextResponse.json(
-        { error: 'Invalid filters or pagination parameters' },
-        { status: 400 }
-      );
+      return apiBadRequest('Invalid filters or pagination parameters');
     }
 
     // Get project support
@@ -65,10 +68,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
       paginationValidation.data
     );
 
-    return NextResponse.json(result);
+    return apiSuccess(result);
   } catch (error) {
     logger.error('Error in GET /api/projects/[id]/support:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 }
 
@@ -82,10 +85,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     // Validate request
     const validationResult = supportProjectSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return apiBadRequest('Invalid request', validationResult.error.errors);
     }
 
     // Create support
@@ -95,15 +95,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     );
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Failed to create support' },
-        { status: 500 }
-      );
+      return apiInternalError(result.error || 'Failed to create support');
     }
 
-    return NextResponse.json({ support: result.support }, { status: 201 });
+    return apiCreated(result.support);
   } catch (error) {
     logger.error('Error in POST /api/projects/[id]/support:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });

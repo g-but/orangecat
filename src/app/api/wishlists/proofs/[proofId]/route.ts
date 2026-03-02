@@ -10,11 +10,17 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import {
+  apiSuccess,
+  apiBadRequest,
+  apiNotFound,
+  apiForbidden,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
 
 interface RouteContext {
   params: Promise<{ proofId: string }>;
@@ -27,7 +33,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
 
     // Validate proof ID
     if (!validateUUID(proofId)) {
-      return NextResponse.json({ error: 'Invalid proof ID' }, { status: 400 });
+      return apiBadRequest('Invalid proof ID');
     }
 
     const { user, supabase } = request;
@@ -43,12 +49,12 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
       .single();
 
     if (proofError || !proof) {
-      return NextResponse.json({ error: 'Proof not found' }, { status: 404 });
+      return apiNotFound('Proof not found');
     }
 
     // Users can only delete their own proofs
     if (proof.user_id !== user.id) {
-      return NextResponse.json({ error: 'You can only delete your own proofs' }, { status: 403 });
+      return apiForbidden('You can only delete your own proofs');
     }
 
     // Delete the proof
@@ -66,7 +72,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
         proofId,
         userId: user.id,
       });
-      return NextResponse.json({ error: 'Failed to delete proof' }, { status: 500 });
+      return apiInternalError('Failed to delete proof');
     }
 
     // Also delete any associated feedback
@@ -91,9 +97,9 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
       userId: user.id,
     });
 
-    return NextResponse.json({ message: 'Proof deleted successfully' }, { status: 200 });
+    return apiSuccess({ message: 'Proof deleted successfully' });
   } catch (error) {
     logger.error('Error in DELETE /api/wishlists/proofs/[proofId]:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });

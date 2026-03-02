@@ -10,11 +10,17 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { wishlistFulfillmentProofSchema } from '@/lib/validation';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import {
+  apiBadRequest,
+  apiNotFound,
+  apiForbidden,
+  apiInternalError,
+  apiCreated,
+} from '@/lib/api/standardResponse';
 
 // POST /api/wishlists/proofs - Create proof of purchase/wishlist fulfillment
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
@@ -26,10 +32,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     // Validate request
     const validationResult = wishlistFulfillmentProofSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return apiBadRequest('Invalid request', validationResult.error.errors);
     }
 
     // Verify the wishlist item exists and user has access
@@ -43,7 +46,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       .single();
 
     if (itemError || !wishlistItem) {
-      return NextResponse.json({ error: 'Wishlist item not found' }, { status: 404 });
+      return apiNotFound('Wishlist item not found');
     }
 
     // Users can only add proofs to their own wishlists
@@ -51,10 +54,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       ? wishlistItem.wishlists[0]
       : wishlistItem.wishlists;
     if (!wishlist || wishlist.actor_id !== user.id) {
-      return NextResponse.json(
-        { error: 'You can only add proofs to your own wishlists' },
-        { status: 403 }
-      );
+      return apiForbidden('You can only add proofs to your own wishlists');
     }
 
     // Create the proof
@@ -80,7 +80,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
         userId: user.id,
         wishlistItemId: validationResult.data.wishlist_item_id,
       });
-      return NextResponse.json({ error: 'Failed to create proof' }, { status: 500 });
+      return apiInternalError('Failed to create proof');
     }
 
     logger.info('Created wishlist proof successfully', {
@@ -90,9 +90,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       proofType: validationResult.data.proof_type,
     });
 
-    return NextResponse.json({ proof }, { status: 201 });
+    return apiCreated(proof);
   } catch (error) {
     logger.error('Error in POST /api/wishlists/proofs:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 });

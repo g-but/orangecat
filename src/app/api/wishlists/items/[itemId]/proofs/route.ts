@@ -10,10 +10,11 @@
  * Last Modified Summary: Created API endpoint to fetch wishlist item proofs
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { apiSuccess, apiNotFound, apiInternalError } from '@/lib/api/standardResponse';
 
 interface RouteParams {
   params: Promise<{ itemId: string }>;
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const wishlistItem = wishlistItemData as WishlistItem | null;
 
     if (itemError || !wishlistItem) {
-      return NextResponse.json({ error: 'Wishlist item not found' }, { status: 404 });
+      return apiNotFound('Wishlist item not found');
     }
 
     // Get all proofs for this item
@@ -106,7 +107,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         error: proofsError.message,
         itemId,
       });
-      return NextResponse.json({ error: 'Failed to fetch proofs' }, { status: 500 });
+      return apiInternalError('Failed to fetch proofs');
     }
 
     // Get feedback for each proof
@@ -188,12 +189,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       : wishlistItem.wishlists;
     const canAddProof = user && wishlist && wishlist.actor_id === user.id;
 
-    return NextResponse.json({
+    return apiSuccess({
       proofs: proofsWithFeedback,
       can_add_proof: canAddProof || false,
     });
   } catch (error) {
     logger.error('Error in GET /api/wishlists/items/[itemId]/proofs:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiInternalError();
   }
 }

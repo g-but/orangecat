@@ -9,12 +9,11 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextResponse } from 'next/server';
 import groupsService from '@/services/groups';
 import { createGroupSchema } from '@/services/groups/validation';
 import { logger } from '@/utils/logger';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { apiSuccess, apiError, apiBadRequest } from '@/lib/api/standardResponse';
+import { apiSuccess, apiError, apiBadRequest, apiCreated } from '@/lib/api/standardResponse';
 import type { CreateGroupInput } from '@/types/group';
 
 // GET /api/organizations - Get organizations (exclude circles)
@@ -87,7 +86,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       return apiError(result.error || 'Failed to create organization');
     }
 
-    return NextResponse.json({ success: true, organization: result.group }, { status: 201 });
+    return apiCreated({ organization: result.group });
   } catch (error) {
     logger.error('Error in POST /api/organizations', { error }, 'Organizations');
     return apiError('Internal server error');
