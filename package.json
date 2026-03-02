@@ -27,6 +27,7 @@
     "start": "next start",
     "lint": "next lint",
     "lint:check": "next lint",
+    "lint:umlauts": "grep -rn --include='*.ts' --include='*.tsx' -E '(fuer|koennen|moeglich|muessen|wuerde|aehnlich|aerger|aendern|oeffnen|ueber|ueberall|zurueck|natuerlich|genuegt|Strasse|Gruesse)' src/ || echo 'No umlaut violations found'",
     "type-check": "tsc --noEmit --skipLibCheck",
     "test": "jest",
     "test:watch": "jest --watch",

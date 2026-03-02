@@ -326,7 +326,7 @@ export const SECTION_HEADERS = {
   transparency: {
     title: 'Private Where It Matters, Transparent Where You Choose',
     subtitle:
-      'End-to-end encrypted messaging. On-chain Bitcoin transparency when you want it. Your data, your rules.',
+      'Private messaging (E2E encryption planned). On-chain Bitcoin transparency when you want it. Your data, your rules.',
   },
   whyBitcoin: {
     title: 'Why OrangeCat?',

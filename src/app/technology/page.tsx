@@ -178,8 +178,10 @@ export default function TechnologyPage() {
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                     <div>
-                      <span className="font-medium">End-to-End Encryption</span>
-                      <p className="text-sm text-gray-600">Secure data transmission</p>
+                      <span className="font-medium">Transport Encryption (TLS 1.3)</span>
+                      <p className="text-sm text-gray-600">
+                        Secure data transmission; E2E messaging planned
+                      </p>
                     </div>
                   </li>
                   <li className="flex items-start">

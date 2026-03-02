@@ -11,8 +11,9 @@ export default function SecurityPage() {
   const securityFeatures = [
     {
       icon: Lock,
-      title: 'End-to-End Encryption',
-      description: 'All data transmission is encrypted using industry-standard TLS 1.3 protocols.',
+      title: 'Transport Encryption',
+      description:
+        'All data transmission is encrypted using industry-standard TLS 1.3 protocols. E2E messaging encryption is planned.',
     },
     {
       icon: Key,

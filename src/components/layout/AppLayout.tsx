@@ -1,8 +1,8 @@
-import { ReactNode } from 'react'
-import UserProfileDropdown from '@/components/ui/UserProfileDropdown'
+import { ReactNode } from 'react';
+import UserProfileDropdown from '@/components/ui/UserProfileDropdown';
 
 interface AppLayoutProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
@@ -14,7 +14,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold text-tiffany-600">SignDim</span>
+                <span className="text-xl font-bold text-tiffany-600">OrangeCat</span>
               </div>
             </div>
             <div className="flex items-center">
@@ -25,9 +25,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       </header>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
-      </main>
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">{children}</main>
     </div>
-  )
-} 
+  );
+}
