@@ -180,6 +180,7 @@ export interface EntityConfig<T extends Record<string, any> = Record<string, any
     | 'service'
     | 'cause'
     | 'loan'
+    | 'investment'
     | 'project'
     | 'asset'
     | 'ai_assistant'

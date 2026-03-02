@@ -133,6 +133,14 @@ export const STATUS = {
     PAUSED: 'paused',
     ARCHIVED: 'archived',
   },
+  INVESTMENTS: {
+    DRAFT: 'draft',
+    OPEN: 'open',
+    FUNDED: 'funded',
+    ACTIVE: 'active',
+    CLOSED: 'closed',
+    CANCELLED: 'cancelled',
+  },
   EVENTS: {
     DRAFT: 'draft',
     PUBLISHED: 'published',
@@ -167,6 +175,7 @@ export type GroupInvitationStatus =
   (typeof STATUS.GROUP_INVITATIONS)[keyof typeof STATUS.GROUP_INVITATIONS];
 export type ContractStatus = (typeof STATUS.CONTRACTS)[keyof typeof STATUS.CONTRACTS];
 export type AiAssistantStatus = (typeof STATUS.AI_ASSISTANTS)[keyof typeof STATUS.AI_ASSISTANTS];
+export type InvestmentStatus = (typeof STATUS.INVESTMENTS)[keyof typeof STATUS.INVESTMENTS];
 export type EventStatus = (typeof STATUS.EVENTS)[keyof typeof STATUS.EVENTS];
 
 /**

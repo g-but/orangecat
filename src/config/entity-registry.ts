@@ -33,6 +33,7 @@ import {
   Calendar,
   Gift,
   FileText,
+  TrendingUp,
 } from 'lucide-react';
 
 // ==================== ENTITY TYPES ====================
@@ -50,6 +51,7 @@ export const ENTITY_TYPES = [
   'group',
   'asset',
   'loan',
+  'investment',
   'event',
   'research',
   'wishlist',
@@ -299,6 +301,25 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'finance',
     createPriority: 2,
     paymentPattern: 'none',
+  },
+  investment: {
+    type: 'investment',
+    name: 'Investment',
+    namePlural: 'Investments',
+    tableName: 'investments',
+    userIdField: 'actor_id',
+    icon: TrendingUp,
+    colorTheme: 'green',
+    basePath: '/dashboard/investments',
+    createPath: '/dashboard/investments/create',
+    publicBasePath: '/investments',
+    apiEndpoint: '/api/investments',
+    hasTemplates: false,
+    description: 'Equity, revenue-share, and structured investment deals',
+    createActionLabel: 'Create an investment opportunity',
+    category: 'finance',
+    createPriority: 3,
+    paymentPattern: 'contribution',
   },
   event: {
     type: 'event',

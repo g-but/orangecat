@@ -46,6 +46,7 @@ export const ROUTE_CONTEXTS = {
     '/services',
     '/causes',
     '/loans',
+    '/investments',
     '/groups',
     '/ai-assistants',
     '/technology',
@@ -253,6 +254,9 @@ export const ROUTES = {
   LOANS: {
     VIEW: (id: string) => `/loans/${id}`,
   },
+  INVESTMENTS: {
+    VIEW: (id: string) => `/investments/${id}`,
+  },
   EVENTS: {
     VIEW: (id: string) => `/events/${id}`,
   },
@@ -277,6 +281,8 @@ export const ROUTES = {
     ASSETS_CREATE: '/dashboard/assets/create',
     LOANS: '/dashboard/loans',
     LOANS_CREATE: '/dashboard/loans/create',
+    INVESTMENTS: '/dashboard/investments',
+    INVESTMENTS_CREATE: '/dashboard/investments/create',
     ORGANIZATIONS: '/dashboard/organizations',
     EVENTS: '/dashboard/events',
     EVENTS_CREATE: '/dashboard/events/create',

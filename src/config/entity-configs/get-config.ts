@@ -14,6 +14,7 @@ import { productConfig } from './product-config';
 import { serviceConfig } from './service-config';
 import { causeConfig } from './cause-config';
 import { loanConfig } from './loan-config';
+import { investmentConfig } from './investment-config';
 import { assetConfig } from './asset-config';
 import { projectConfig } from './project-config';
 import { aiAssistantConfig } from './ai-assistant-config';
@@ -34,6 +35,7 @@ const ENTITY_CONFIGS: Partial<Record<EntityType, EntityConfig<any>>> = {
   service: serviceConfig,
   cause: causeConfig,
   loan: loanConfig,
+  investment: investmentConfig,
   asset: assetConfig,
   project: projectConfig,
   ai_assistant: aiAssistantConfig,

@@ -13,6 +13,7 @@ export { serviceConfig } from './service-config';
 export { causeConfig } from './cause-config';
 export { circleConfig } from './circle-config';
 export { loanConfig } from './loan-config';
+export { investmentConfig } from './investment-config';
 export { assetConfig } from './asset-config';
 export type { AssetFormData } from '@/lib/validation';
 export { organizationConfig } from './organization-config';

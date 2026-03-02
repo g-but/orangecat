@@ -32,6 +32,8 @@ const ENTITY_COLUMNS: Record<EntityType, string> = {
   asset:
     'id, title, description, type, estimated_value, currency, verification_status, status, created_at',
   loan: 'id, title, description, original_amount, remaining_balance, interest_rate, currency, status, created_at',
+  investment:
+    'id, title, description, investment_type, target_amount, minimum_investment, total_raised, currency, expected_return_rate, return_frequency, term_months, status, risk_level, investor_count, created_at',
   event:
     'id, title, description, event_type, category, start_date, end_date, venue_name, venue_city, is_online, status, ticket_price, is_free, currency, created_at',
   wallet: 'id, label, wallet_type, address, is_active, created_at',
@@ -52,6 +54,7 @@ const USER_ID_FIELD: Record<EntityType, string> = {
   ai_assistant: 'actor_id',
   asset: 'actor_id',
   loan: 'actor_id',
+  investment: 'actor_id',
   event: 'actor_id',
   wallet: 'profile_id',
   group: 'created_by',

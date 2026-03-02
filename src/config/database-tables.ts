@@ -120,6 +120,9 @@ export const DATABASE_TABLES = {
   WISHLIST_FEEDBACK: 'wishlist_feedback',
   WISHLIST_WITH_STATS: 'wishlist_with_stats',
 
+  // Investments
+  INVESTMENTS: 'investments',
+
   // Loans
   LOAN_OFFERS: 'loan_offers',
   LOAN_PAYMENTS: 'loan_payments',
