@@ -283,8 +283,6 @@ async function testBundleOptimization(): Promise<PerformanceTestResult[]> {
 // ==================== MAIN PERFORMANCE TEST RUNNER ====================
 
 export async function runPerformanceTests(): Promise<PerformanceTestSuite> {
-  // REMOVED: console.log statement
-
   const suiteStartTime = performance.now();
 
   // Run all test categories
@@ -303,9 +301,6 @@ export async function runPerformanceTests(): Promise<PerformanceTestSuite> {
   const cacheHits = allTests.filter(t => t.cacheHit).length;
   const cacheHitRatio = cacheHits / allTests.length;
 
-  // Get performance monitor stats
-  const _performanceStats = dbOptimizer.getPerformanceStats();
-
   const results: PerformanceTestSuite = {
     databaseOptimization: databaseTests,
     lazyLoading: lazyLoadingTests,
@@ -321,33 +316,11 @@ export async function runPerformanceTests(): Promise<PerformanceTestSuite> {
     },
   };
 
-  // Log results
-  // REMOVED: console.log statement
-  // REMOVED: console.log statement
-  // REMOVED: console.log statement
-  // REMOVED: console.log statement
-  // REMOVED: console.log statement
-
-  // Log detailed results
-  // REMOVED: console.log statement
-  allTests.forEach(test => {
-    const _status = test.success ? '✅' : '❌';
-    const _cacheStatus = test.cacheHit ? '⚡' : '';
-    // REMOVED: console.log statement
-    if (test.error) {
-      // REMOVED: console.log statement
-    }
-  });
-
   return results;
 }
 
 // ==================== BENCHMARK UTILITIES ====================
 
 export function logPerformanceStats() {
-  const _stats = dbOptimizer.getPerformanceStats();
-  // REMOVED: console.log statement
-  // REMOVED: console.log statement
-  // REMOVED: console.log statement
-  // REMOVED: console.log statement
+  return dbOptimizer.getPerformanceStats();
 }

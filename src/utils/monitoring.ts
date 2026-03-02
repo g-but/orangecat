@@ -1,9 +1,8 @@
-import { logger } from './logger'
+import { logger } from './logger';
 
 // Performance monitoring
 export const trackPerformance = (metricName: string, value: number) => {
   if (process.env.NODE_ENV === 'production') {
-    // REMOVED: console.log statement
     logger.performance(metricName, value);
   }
 };
@@ -24,7 +23,6 @@ export const trackError = (error: Error, context?: Record<string, any>) => {
 // Page view tracking
 export const trackPageView = (path: string) => {
   if (process.env.NODE_ENV === 'production') {
-    // REMOVED: console.log statement
     logger.info(`Page View: ${path}`, undefined, 'Analytics');
   }
 };
@@ -33,7 +31,6 @@ export const trackPageView = (path: string) => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
   if (process.env.NODE_ENV === 'production') {
-    // REMOVED: console.log statement
     logger.info(`Event: ${eventName}`, properties, 'Analytics');
   }
-}; 
+};
