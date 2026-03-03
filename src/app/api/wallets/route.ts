@@ -90,7 +90,7 @@ export const GET = withOptionalAuth(async request => {
   }
 });
 
-function isWalletOwner(user: User, profileId: string | null, projectId: string | null): boolean {
+function isWalletOwner(user: User, profileId: string | null, _projectId: string | null): boolean {
   // Profile wallets: profile_id IS the user_id
   if (profileId) {
     return profileId === user.id;

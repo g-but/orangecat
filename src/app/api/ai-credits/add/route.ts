@@ -4,14 +4,10 @@
  * POST /api/ai-credits/add - Manually add credits (admin or payment webhooks)
  */
 
-import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { createServerClient } from '@/lib/supabase/server';
-import { apiSuccess, apiUnauthorized, handleApiError } from '@/lib/api/standardResponse';
+import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
+import { withRole, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { logger } from '@/utils/logger';
-import { compose } from '@/lib/api/compose';
-import { withRateLimit } from '@/lib/api/withRateLimit';
-import { withRequestId } from '@/lib/api/withRequestId';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Schema for adding credits
@@ -24,26 +20,11 @@ const addCreditsSchema = z.object({
  * POST /api/ai-credits/add
  * Add credits to user's balance (admin only)
  */
-export const POST = compose(
-  withRequestId(),
-  withRateLimit('write')
-)(async (request: NextRequest) => {
+export const POST = withRole('admin', async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
+    const { user, supabase } = request;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
-    }
-
-    // Admin-only: check role from user metadata
-    const userRole = user.app_metadata?.role || user.user_metadata?.role;
-    if (userRole !== 'admin') {
-      return apiUnauthorized('Admin role required');
-    }
 
     const body = await request.json();
     const result = addCreditsSchema.safeParse(body);

@@ -191,49 +191,8 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
           rawError: JSON.stringify(error, Object.getOwnPropertyNames(error || {}), 2),
         };
         logger.error(`Error creating ${entityType}`, errorDetails);
-        // Return more detailed error message
-        // Try to extract error message from various possible properties
-        let errorMsg = 'Unknown error';
-        if (error?.message) {
-          errorMsg = error.message;
-        } else if (error?.details) {
-          errorMsg = error.details;
-        } else if (error?.hint) {
-          errorMsg = error.hint;
-        } else if (error?.code) {
-          errorMsg = `Database error code: ${error.code}`;
-        } else if (typeof error === 'object') {
-          // Try to stringify the error object to see its structure
-          try {
-            // Try with all own properties
-            const errorStr = JSON.stringify(error, Object.getOwnPropertyNames(error), 2);
-            if (errorStr !== '{}') {
-              errorMsg = `Database error: ${errorStr.substring(0, 200)}`;
-            } else {
-              // Try to access common Supabase error properties directly
-              const supabaseError = error as {
-                code?: string;
-                message?: string;
-                details?: string;
-                hint?: string;
-              };
-              const errorCode = supabaseError?.code;
-              const errorMessageProp = supabaseError?.message;
-              const errorDetails = supabaseError?.details;
-              const errorHint = supabaseError?.hint;
-              if (errorCode || errorMessageProp || errorDetails || errorHint) {
-                errorMsg = `Database error: code=${errorCode || 'N/A'}, message=${errorMessageProp || 'N/A'}, details=${errorDetails || 'N/A'}, hint=${errorHint || 'N/A'}`;
-              } else {
-                errorMsg = `Database error: ${error?.toString?.() || String(error)}`;
-              }
-            }
-          } catch {
-            errorMsg = `Database error: ${String(error)}`;
-          }
-        } else {
-          errorMsg = String(error);
-        }
-        return apiInternalError(`Failed to create ${meta.name.toLowerCase()}: ${errorMsg}`);
+        // Return generic error to client — details are already logged above
+        return apiInternalError(`Failed to create ${meta.name.toLowerCase()}`);
       }
 
       const createdEntity = entity as { id: string } & Record<string, unknown>;

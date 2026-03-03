@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
-import type { User } from '@supabase/supabase-js'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import { logger } from '@/utils/logger'
-import { apiUnauthorized, apiInternalError } from './standardResponse'
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@/lib/supabase/server';
+import type { User } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { logger } from '@/utils/logger';
+import { apiUnauthorized, apiForbidden, apiInternalError } from './standardResponse';
 
 // Type alias for any SupabaseClient (accepts any database schema)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,24 +28,24 @@ type AnySupabaseClient = SupabaseClient<any, any, any>;
 // =====================================================================
 
 export interface AuthContext {
-  user: User
-  supabase: AnySupabaseClient
+  user: User;
+  supabase: AnySupabaseClient;
 }
 
 export type AuthenticatedRequest = NextRequest & {
-  user: User
-  supabase: AnySupabaseClient
-}
+  user: User;
+  supabase: AnySupabaseClient;
+};
 
 export type AuthenticatedHandler<TContext = Record<string, unknown>> = (
   req: AuthenticatedRequest,
   context: TContext & { params?: Record<string, string> }
-) => Promise<NextResponse>
+) => Promise<NextResponse>;
 
 export type OptionalAuthHandler<TContext = Record<string, unknown>> = (
   req: NextRequest & { user: User | null; supabase: AnySupabaseClient },
   context: TContext & { params?: Record<string, string> }
-) => Promise<NextResponse>
+) => Promise<NextResponse>;
 
 // =====================================================================
 // MIDDLEWARE FUNCTIONS
@@ -70,26 +70,28 @@ export function withAuth<TContext = Record<string, unknown>>(
     context: TContext & { params?: Record<string, string> }
   ): Promise<NextResponse> {
     try {
-      const supabase = await createServerClient()
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      const supabase = await createServerClient();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
       if (!user || userError) {
-        return apiUnauthorized('Authentication required')
+        return apiUnauthorized('Authentication required');
       }
 
       // Add user and supabase to request object
-      const authenticatedReq = req as AuthenticatedRequest
-      authenticatedReq.user = user
-      authenticatedReq.supabase = supabase
+      const authenticatedReq = req as AuthenticatedRequest;
+      authenticatedReq.user = user;
+      authenticatedReq.supabase = supabase;
 
-      return await handler(authenticatedReq, context)
-
+      return await handler(authenticatedReq, context);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      logger.error('Authentication middleware error', { error: errorMessage }, 'Auth')
-      return apiInternalError('Authentication failed')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Authentication middleware error', { error: errorMessage }, 'Auth');
+      return apiInternalError('Authentication failed');
     }
-  }
+  };
 }
 
 /**
@@ -116,22 +118,23 @@ export function withOptionalAuth<TContext = Record<string, unknown>>(
     context: TContext & { params?: Record<string, string> }
   ): Promise<NextResponse> {
     try {
-      const supabase = await createServerClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      const supabase = await createServerClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       // Add user (may be null) and supabase to request object
-      const augmentedReq = req as NextRequest & { user: User | null; supabase: AnySupabaseClient }
-      augmentedReq.user = user
-      augmentedReq.supabase = supabase
+      const augmentedReq = req as NextRequest & { user: User | null; supabase: AnySupabaseClient };
+      augmentedReq.user = user;
+      augmentedReq.supabase = supabase;
 
-      return await handler(augmentedReq, context)
-
+      return await handler(augmentedReq, context);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      logger.error('Optional auth middleware error', { error: errorMessage }, 'Auth')
-      return apiInternalError('Request failed')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Optional auth middleware error', { error: errorMessage }, 'Auth');
+      return apiInternalError('Request failed');
     }
-  }
+  };
 }
 
 /**
@@ -149,15 +152,15 @@ export function withRole<TContext = Record<string, unknown>>(
   handler: AuthenticatedHandler<TContext>
 ) {
   return withAuth<TContext>(async (req, context) => {
-    // Check user role from app_metadata or user_metadata
-    const userRole = req.user.app_metadata?.role || req.user.user_metadata?.role
+    // Only check app_metadata (server-set, not user-editable)
+    const userRole = req.user.app_metadata?.role;
 
     if (userRole !== requiredRole) {
-      return apiUnauthorized(`Role '${requiredRole}' required`)
+      return apiForbidden(`Role '${requiredRole}' required`);
     }
 
-    return await handler(req, context)
-  })
+    return await handler(req, context);
+  });
 }
 
 // =====================================================================
@@ -170,16 +173,19 @@ export function withRole<TContext = Record<string, unknown>>(
  */
 export async function getAuthUser(_req: NextRequest): Promise<AuthContext | null> {
   try {
-    const supabase = await createServerClient()
-    const { data: { user }, error } = await supabase.auth.getUser()
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     if (!user || error) {
-      return null
+      return null;
     }
 
-    return { user, supabase }
+    return { user, supabase };
   } catch {
-    return null
+    return null;
   }
 }
 
@@ -187,12 +193,14 @@ export async function getAuthUser(_req: NextRequest): Promise<AuthContext | null
  * Require authentication and return user/supabase or throw error response
  * For use in handlers that need manual auth checking
  */
-export async function requireAuth(req: NextRequest): Promise<{ user: User; supabase: AnySupabaseClient }> {
-  const auth = await getAuthUser(req)
+export async function requireAuth(
+  req: NextRequest
+): Promise<{ user: User; supabase: AnySupabaseClient }> {
+  const auth = await getAuthUser(req);
 
   if (!auth) {
-    throw apiUnauthorized('Authentication required')
+    throw apiUnauthorized('Authentication required');
   }
 
-  return auth
+  return auth;
 }

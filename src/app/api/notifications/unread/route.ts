@@ -39,13 +39,8 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
         },
         'Notifications'
       );
-      // Return a proper error response instead of throwing
-      // This prevents "Unexpected end of JSON input" errors
-      return apiError(
-        error.message || 'Failed to fetch notifications',
-        error.code || 'DATABASE_ERROR',
-        500
-      );
+      // Return generic error — details are logged above, not exposed to client
+      return apiError('Failed to fetch notifications', 'DATABASE_ERROR', 500);
     }
 
     return apiSuccess(
@@ -62,10 +57,6 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
         ? { message: error.message, name: error.name, stack: error.stack?.slice(0, 500) }
         : error;
     logger.error('Unread notifications count error', { error: errorInfo }, 'Notifications');
-    return apiError(
-      error instanceof Error ? error.message : 'Failed to fetch notification count',
-      'NOTIFICATIONS_ERROR',
-      500
-    );
+    return apiError('Failed to fetch notification count', 'NOTIFICATIONS_ERROR', 500);
   }
 });

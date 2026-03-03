@@ -74,7 +74,10 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     }
 
     const body = await request.json();
-    const result = await createProposal({ group_id: groupResult.group.id, ...body });
+    const result = await createProposal(
+      { group_id: groupResult.group.id, ...body },
+      request.supabase
+    );
 
     if (!result.success) {
       return apiBadRequest(result.error);

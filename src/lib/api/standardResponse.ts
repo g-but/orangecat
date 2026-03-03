@@ -317,11 +317,13 @@ export function handleSupabaseError(error: any): NextResponse<ApiErrorResponse> 
     return apiForbidden('Access denied');
   }
 
-  // Default to internal error
-  return apiInternalError('Database error', {
+  // Default to internal error — log details server-side, don't expose to client
+  logger.error('Unhandled database error', {
     code: error.code,
     hint: error.hint,
+    message: error.message,
   });
+  return apiInternalError('Database error');
 }
 
 /**

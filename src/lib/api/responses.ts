@@ -77,9 +77,9 @@ export const ApiResponses = {
       `Unsupported media type${supportedTypes ? `. Supported: ${supportedTypes.join(', ')}` : ''}`
     ),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  success: (data?: any, message?: string) => apiSuccess(data ?? null),
+  success: (data?: any, _message?: string) => apiSuccess(data ?? null),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  created: (data?: any, message?: string) => apiCreated(data ?? null),
+  created: (data?: any, _message?: string) => apiCreated(data ?? null),
   accepted: (message = 'Request accepted for processing') =>
     apiSuccess({ message }, { status: 202 }),
   noContent: () => apiNoContent(),
@@ -88,8 +88,8 @@ export const ApiResponses = {
 // Re-export helper functions (delegate to standardResponse)
 export function createErrorResponse(
   message: string,
-  status: number,
-  type?: string,
+  _status: number,
+  _type?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse {
@@ -100,16 +100,16 @@ export function createSuccessResponse(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any,
   status: number = 200,
-  message?: string,
+  _message?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  meta?: any
+  _meta?: any
 ): NextResponse {
   return apiSuccess(data ?? null, { status });
 }
 
 export async function withErrorHandling<T>(
   operation: () => Promise<T>,
-  errorMessage?: string
+  _errorMessage?: string
 ): Promise<T | NextResponse> {
   try {
     return await operation();
