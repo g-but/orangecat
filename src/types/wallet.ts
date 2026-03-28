@@ -249,23 +249,23 @@ export interface WalletContribution {
 
 export interface WalletFormData {
   label: string;
-  description?: string;
+  description?: string | null;
   address_or_xpub: string;
-  lightning_address?: string;
+  lightning_address?: string | null;
   category: WalletCategory;
   category_icon?: string;
   behavior_type: WalletBehaviorType;
 
   // For recurring budgets
-  budget_amount?: number;
+  budget_amount?: number | null;
   budget_currency?: string;
-  budget_period?: BudgetPeriod;
+  budget_period?: BudgetPeriod | null;
   alert_threshold_percent?: number;
 
   // For one-time goals
-  goal_amount?: number;
-  goal_currency?: string;
-  goal_deadline?: string;
+  goal_amount?: number | null;
+  goal_currency?: string | null;
+  goal_deadline?: string | null;
   is_public_goal?: boolean;
   allow_contributions?: boolean;
 

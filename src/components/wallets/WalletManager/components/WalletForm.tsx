@@ -133,7 +133,7 @@ export function WalletForm({
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2">Description (optional)</label>
         <Textarea
-          value={formData.description}
+          value={formData.description ?? ''}
           onChange={e => setFormData({ ...formData, description: e.target.value })}
           onFocus={() => onFieldFocus?.('description')}
           placeholder="Explain how these funds will be used..."
@@ -192,7 +192,7 @@ export function WalletForm({
             className="flex-1"
           />
           <select
-            value={formData.goal_currency}
+            value={formData.goal_currency ?? ''}
             onChange={e => setFormData({ ...formData, goal_currency: e.target.value })}
             onFocus={() => onFieldFocus?.('goalCurrency')}
             className="border rounded px-3 py-2"

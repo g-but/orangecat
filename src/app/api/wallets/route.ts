@@ -1,12 +1,6 @@
 import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import type { User } from '@supabase/supabase-js';
-import {
-  WalletFormData,
-  validateWalletFormData,
-  sanitizeWalletInput,
-  validateAddressOrXpub,
-  detectWalletType,
-} from '@/types/wallet';
+import { sanitizeWalletInput, validateAddressOrXpub, detectWalletType } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import { MAX_WALLETS_PER_ENTITY } from '@/lib/wallets/constants';
 import {
@@ -21,12 +15,13 @@ import {
   apiSuccess,
   apiError,
   apiCreated,
+  apiBadRequest,
   apiForbidden,
-  apiValidationError,
 } from '@/lib/api/standardResponse';
 import { validateOneOfIds, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { getTableName } from '@/config/entity-registry';
+import { walletCreateSchema } from '@/lib/validation/finance';
 
 // Public wallet fields (safe to return without auth)
 const PUBLIC_WALLET_FIELDS =
@@ -118,35 +113,17 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       throw e;
     }
 
-    const body = (await request.json()) as WalletFormData & {
-      profile_id?: string;
-      project_id?: string;
-      force_duplicate?: boolean;
-      lightning_address?: string;
-    };
+    const rawBody = await request.json();
 
-    // Validate entity ownership
-    if (!body.profile_id && !body.project_id) {
-      return apiError('profile_id or project_id required', 'MISSING_ENTITY', 400);
+    // Validate input with Zod schema
+    const parseResult = walletCreateSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      return apiBadRequest('Invalid input', parseResult.error.errors);
     }
+    const body = parseResult.data;
 
-    if (body.profile_id && body.project_id) {
-      return apiError('Cannot specify both profile_id and project_id', 'INVALID_ENTITY', 400);
-    }
-
-    // Validate UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const entityId = body.profile_id || body.project_id!;
+    const entityId = (body.profile_id || body.project_id)!;
     const entityType = body.profile_id ? 'profile' : 'project';
-    if (!uuidRegex.test(entityId)) {
-      return apiError('Invalid entity ID format', 'INVALID_ID', 400);
-    }
-
-    // Validate form data
-    const validation = validateWalletFormData(body);
-    if (!validation.valid) {
-      return apiValidationError(validation.error || 'Validation failed');
-    }
 
     // Verify ownership
     if (body.profile_id) {
