@@ -15,7 +15,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { resolveSellerWallet, getSellerUserId } from './walletResolutionService';
 import { generateInvoice } from './invoiceGenerationService';
-import { checkNWCPaymentStatus } from './paymentStatusService';
+import { checkNWCPaymentStatus, checkOnchainPaymentStatus } from './paymentStatusService';
 import type {
   InitiatePaymentInput,
   InitiatePaymentResult,
@@ -199,6 +199,21 @@ export async function checkPaymentStatus(
     if (paid) {
       await handlePaymentConfirmed(supabase, pi);
       return { status: 'paid', paid_at: new Date().toISOString() };
+    }
+  }
+
+  // For on-chain, check via Mempool.space API
+  if (pi.payment_method === 'onchain' && pi.onchain_address) {
+    const onchainStatus = await checkOnchainPaymentStatus(pi);
+
+    if (onchainStatus === 'confirmed') {
+      await handlePaymentConfirmed(supabase, pi);
+      return { status: 'paid', paid_at: new Date().toISOString() };
+    }
+
+    if (onchainStatus === 'in_mempool' && pi.status !== 'pending_confirmation') {
+      await updatePaymentStatus(supabase, paymentIntentId, 'pending_confirmation');
+      return { status: 'pending_confirmation', paid_at: null };
     }
   }
 

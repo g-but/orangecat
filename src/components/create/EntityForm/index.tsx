@@ -7,7 +7,7 @@
  * Split into smaller subcomponents for maintainability.
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ZodError } from 'zod';
 import { toast } from 'sonner';
@@ -24,6 +24,7 @@ import { AIPrefillBar } from '../AIPrefillBar';
 import type { EntityConfig, EntityTemplate } from '../types';
 import { logger } from '@/utils/logger';
 
+import { EntityCreationSuccess } from '../EntityCreationSuccess';
 import { useEntityFormState } from './hooks/useEntityFormState';
 import { useFieldVisibility } from './hooks/useFieldVisibility';
 import { FormHeader } from './components/FormHeader';
@@ -125,6 +126,9 @@ export function EntityForm<T extends Record<string, unknown>>({
     userId: user?.id,
     mode,
   });
+
+  // Track newly created entity for post-creation publish flow
+  const [createdEntity, setCreatedEntity] = useState<{ id: string; title: string } | null>(null);
 
   const { isFieldVisible, isGroupVisible, visibleFieldGroups } = useFieldVisibility({
     formData: formState.data,
@@ -247,17 +251,35 @@ export function EntityForm<T extends Record<string, unknown>>({
           })();
         }
 
-        toast.success(`${config.name} ${mode === 'create' ? 'created' : 'updated'} successfully!`, {
-          description:
-            mode === 'create'
-              ? `Your ${config.name.toLowerCase()} "${result.data?.title || result.data?.name || ''}" has been created.`
-              : 'Your changes have been saved.',
-          duration: 4000,
-        });
-
         if (onSuccess) {
+          toast.success(
+            `${config.name} ${mode === 'create' ? 'created' : 'updated'} successfully!`,
+            {
+              description:
+                mode === 'create'
+                  ? `Your ${config.name.toLowerCase()} "${result.data?.title || result.data?.name || ''}" has been created.`
+                  : 'Your changes have been saved.',
+              duration: 4000,
+            }
+          );
           onSuccess(result.data);
+        } else if (mode === 'create' && result.data?.id) {
+          // Show post-creation success state with publish option
+          setCreatedEntity({
+            id: result.data.id,
+            title: result.data.title || result.data.name || config.name,
+          });
         } else {
+          toast.success(
+            `${config.name} ${mode === 'create' ? 'created' : 'updated'} successfully!`,
+            {
+              description:
+                mode === 'create'
+                  ? `Your ${config.name.toLowerCase()} "${result.data?.title || result.data?.name || ''}" has been created.`
+                  : 'Your changes have been saved.',
+              duration: 4000,
+            }
+          );
           let redirectUrl = config.successUrl;
           if (result.data) {
             redirectUrl = redirectUrl.replace(/:(\w+)/g, (_, field) => result.data[field] || '');
@@ -311,6 +333,22 @@ export function EntityForm<T extends Record<string, unknown>>({
 
   if (!user) {
     return null;
+  }
+
+  // Show post-creation success state with publish option
+  if (createdEntity) {
+    return (
+      <EntityCreationSuccess
+        entityType={config.type}
+        entityId={createdEntity.id}
+        entityTitle={createdEntity.title}
+        entityTypeName={config.name}
+        dashboardUrl={config.backUrl}
+        detailUrl={config.successUrl
+          .replace(/:id/g, createdEntity.id)
+          .replace(/\[id\]/g, createdEntity.id)}
+      />
+    );
   }
 
   const Icon = config.icon;

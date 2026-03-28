@@ -15,7 +15,7 @@
  * Last Modified Summary: Complete redesign - proper hierarchy, responsive, follows engineering principles
  */
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRequireAuth } from '@/hooks/useAuth';
@@ -27,6 +27,10 @@ import { logger } from '@/utils/logger';
 import Loading from '@/components/Loading';
 import { toast } from 'sonner';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import {
+  ProfileCompletionModal,
+  isProfileIncomplete,
+} from '@/components/onboarding/ProfileCompletionModal';
 
 // Dashboard sections - modular components
 import {
@@ -71,6 +75,7 @@ export default function DashboardPage() {
   const [timelineLoading, setTimelineLoading] = useState(false);
   const [timelineError, setTimelineError] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showProfileCompletion, setShowProfileCompletion] = useState(false);
 
   // Hydration effect
   useEffect(() => {
@@ -142,6 +147,26 @@ export default function DashboardPage() {
       }
     }
   }, [profile, hydrated, localLoading, searchParams, user?.id]);
+
+  // Check if profile is incomplete and show completion modal
+  useEffect(() => {
+    if (profile && hydrated && !localLoading && user?.id) {
+      const completionKey = `orangecat-profile-completed-${user.id}`;
+      const hasCompletedProfile = localStorage.getItem(completionKey) === 'true';
+
+      if (!hasCompletedProfile && isProfileIncomplete(profile, user.email)) {
+        setShowProfileCompletion(true);
+      }
+    }
+  }, [profile, hydrated, localLoading, user?.id, user?.email]);
+
+  // Handler for profile completion modal dismiss
+  const handleProfileCompletionDone = useCallback(() => {
+    setShowProfileCompletion(false);
+    if (user?.id) {
+      localStorage.setItem(`orangecat-profile-completed-${user.id}`, 'true');
+    }
+  }, [user?.id]);
 
   // Reload on window focus
   useEffect(() => {
@@ -309,6 +334,16 @@ export default function DashboardPage() {
           <DashboardQuickActions hasProjects={hasProjects} />
         </div>
       </div>
+
+      {/* Profile completion modal for new users with incomplete profiles */}
+      {profile && showProfileCompletion && (
+        <ProfileCompletionModal
+          open={showProfileCompletion}
+          onComplete={handleProfileCompletionDone}
+          profile={profile}
+          userId={user.id}
+        />
+      )}
     </div>
   );
 }

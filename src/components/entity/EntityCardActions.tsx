@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreHorizontal, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
+import { MoreHorizontal, Edit2, Trash2, Eye, EyeOff, Rocket, Pause } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +33,12 @@ interface EntityCardActionsProps {
   onToggleVisibility?: () => void | Promise<void>;
   /** Whether visibility toggle is in progress */
   isTogglingVisibility?: boolean;
+  /** Current entity status (for publish/pause actions) */
+  entityStatus?: string;
+  /** Callback to change entity status */
+  onStatusChange?: (newStatus: string) => void | Promise<void>;
+  /** Whether status change is in progress */
+  isChangingStatus?: boolean;
 }
 
 export function EntityCardActions({
@@ -45,6 +51,9 @@ export function EntityCardActions({
   showOnProfile,
   onToggleVisibility,
   isTogglingVisibility = false,
+  entityStatus,
+  onStatusChange,
+  isChangingStatus = false,
 }: EntityCardActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -71,7 +80,15 @@ export function EntityCardActions({
     }
   };
 
-  if (!editUrl && !onEdit && !onDelete && !onToggleVisibility) {
+  const handleStatusClick = async (e: React.MouseEvent, newStatus: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onStatusChange) {
+      await onStatusChange(newStatus);
+    }
+  };
+
+  if (!editUrl && !onEdit && !onDelete && !onToggleVisibility && !onStatusChange) {
     return null;
   }
 
@@ -102,6 +119,35 @@ export function EntityCardActions({
                   Edit
                 </>
               )}
+            </DropdownMenuItem>
+          )}
+          {onStatusChange && entityStatus === 'draft' && (
+            <DropdownMenuItem
+              onClick={e => handleStatusClick(e, 'active')}
+              disabled={isChangingStatus}
+              className="text-green-600 focus:text-green-600 focus:bg-green-50"
+            >
+              <Rocket className="mr-2 h-4 w-4" />
+              {isChangingStatus ? 'Publishing...' : 'Publish'}
+            </DropdownMenuItem>
+          )}
+          {onStatusChange && entityStatus === 'active' && (
+            <DropdownMenuItem
+              onClick={e => handleStatusClick(e, 'paused')}
+              disabled={isChangingStatus}
+            >
+              <Pause className="mr-2 h-4 w-4" />
+              {isChangingStatus ? 'Pausing...' : 'Pause'}
+            </DropdownMenuItem>
+          )}
+          {onStatusChange && entityStatus === 'paused' && (
+            <DropdownMenuItem
+              onClick={e => handleStatusClick(e, 'active')}
+              disabled={isChangingStatus}
+              className="text-green-600 focus:text-green-600 focus:bg-green-50"
+            >
+              <Rocket className="mr-2 h-4 w-4" />
+              {isChangingStatus ? 'Publishing...' : 'Resume'}
             </DropdownMenuItem>
           )}
           {onToggleVisibility && (

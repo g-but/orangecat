@@ -75,6 +75,8 @@ export const DATABASE_TABLES = {
 
   // Notifications
   NOTIFICATIONS: 'notifications',
+  NOTIFICATION_PREFERENCES: 'notification_preferences',
+  NOTIFICATION_EMAIL_LOG: 'notification_email_log',
 
   // System
   AUDIT_LOGS: 'audit_logs',

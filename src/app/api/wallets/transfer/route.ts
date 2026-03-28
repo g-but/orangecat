@@ -13,59 +13,38 @@ import {
   apiForbidden,
   apiNotFound,
   apiBadRequest,
+  apiRateLimited,
   apiInternalError,
 } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
-
-interface TransferRequest {
-  from_wallet_id: string;
-  to_wallet_id: string;
-  amount_sats: number;
-  note?: string;
-}
+import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
+import { walletTransferSchema } from '@/lib/validation/finance';
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
 
-    const body = (await request.json()) as TransferRequest;
-
-    // Validate wallet IDs
-    const fromValidation = getValidationError(validateUUID(body.from_wallet_id, 'from_wallet_id'));
-    if (fromValidation) {
-      return fromValidation;
+    // Rate limiting — 30 writes per minute per user
+    try {
+      await enforceUserWriteLimit(user.id);
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        const retryAfter = e.details?.retryAfter || 60;
+        logger.info('Wallet transfer rate limit exceeded', { userId: user.id });
+        return apiRateLimited('Too many transfer requests. Please slow down.', retryAfter);
+      }
+      throw e;
     }
 
-    const toValidation = getValidationError(validateUUID(body.to_wallet_id, 'to_wallet_id'));
-    if (toValidation) {
-      return toValidation;
+    // Validate input with Zod schema
+    const rawBody = await request.json();
+    const parseResult = walletTransferSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      return apiBadRequest('Invalid input', parseResult.error.errors);
     }
-
-    // Validate amount (must be positive integer in sats)
-    if (
-      typeof body.amount_sats !== 'number' ||
-      !Number.isInteger(body.amount_sats) ||
-      body.amount_sats <= 0
-    ) {
-      return apiBadRequest('Amount must be a positive integer (sats)');
-    }
-
-    if (body.amount_sats > 2_100_000_000_000_000) {
-      return apiBadRequest('Amount exceeds maximum BTC supply');
-    }
-
-    // Validate note length
-    if (body.note && body.note.length > 500) {
-      return apiBadRequest('Note cannot exceed 500 characters');
-    }
-
-    // Prevent transferring to the same wallet
-    if (body.from_wallet_id === body.to_wallet_id) {
-      return apiBadRequest('Cannot transfer to the same wallet');
-    }
+    const body = parseResult.data;
 
     // Fetch both wallets and verify ownership
     const { data: walletsData, error: walletsError } = await (
