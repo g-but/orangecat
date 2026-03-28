@@ -6,48 +6,64 @@
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { apiSuccess, apiBadRequest, apiInternalError } from '@/lib/api/standardResponse';
+import {
+  apiSuccess,
+  apiBadRequest,
+  apiInternalError,
+  apiRateLimited,
+} from '@/lib/api/standardResponse';
 import { initiatePayment } from '@/domain/payments';
-import { isValidEntityType } from '@/config/entity-registry';
+import { paymentCreateSchema } from '@/lib/validation/finance';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
+
+    // Rate limiting
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many payment requests. Please slow down.', retryAfter);
+    }
+
     const body = await request.json();
 
-    // Validate required fields
-    if (!body.entity_type || !body.entity_id) {
-      return apiBadRequest('entity_type and entity_id are required');
+    // Zod validation
+    const result = paymentCreateSchema.safeParse(body);
+    if (!result.success) {
+      return apiBadRequest('Invalid input', result.error.errors);
     }
 
-    if (!isValidEntityType(body.entity_type)) {
-      return apiBadRequest(`Invalid entity type: ${body.entity_type}`);
-    }
+    const validated = result.data;
 
-    const result = await initiatePayment(supabase, user.id, {
-      entity_type: body.entity_type,
-      entity_id: body.entity_id,
-      amount_sats: body.amount_sats,
-      message: body.message,
-      is_anonymous: body.is_anonymous,
-      shipping_address_id: body.shipping_address_id,
-      buyer_note: body.buyer_note,
+    const paymentResult = await initiatePayment(supabase, user.id, {
+      entity_type: validated.entity_type,
+      entity_id: validated.entity_id,
+      amount_sats: validated.amount_sats,
+      message: validated.message,
+      is_anonymous: validated.is_anonymous,
+      shipping_address_id: validated.shipping_address_id,
+      buyer_note: validated.buyer_note,
     });
 
-    return apiSuccess(result, { status: 201 });
+    return apiSuccess(paymentResult, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Payment initiation failed';
     logger.error('Payment initiation failed', { error });
 
-    // Return user-friendly errors for known cases
-    if (
-      message.includes('no wallet') ||
-      message.includes('own entity') ||
-      message.includes('no price') ||
-      message.includes('Amount is required')
-    ) {
-      return apiBadRequest(message);
+    // Return safe, user-friendly errors for known domain error patterns
+    const knownErrors: Record<string, string> = {
+      'no wallet': 'Seller has no payment method configured',
+      'own entity': 'You cannot pay for your own entity',
+      'no price': 'This entity has no price set',
+      'Amount is required': 'Payment amount is required for contributions',
+    };
+    for (const [pattern, safeMessage] of Object.entries(knownErrors)) {
+      if (message.includes(pattern)) {
+        return apiBadRequest(safeMessage);
+      }
     }
 
     return apiInternalError('Failed to initiate payment');

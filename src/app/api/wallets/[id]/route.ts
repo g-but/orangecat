@@ -1,4 +1,4 @@
-import { WalletFormData, validateAddressOrXpub, detectWalletType } from '@/types/wallet';
+import { validateAddressOrXpub, detectWalletType } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import { handleSupabaseError } from '@/lib/wallets/errorHandling';
 import {
@@ -6,12 +6,15 @@ import {
   apiForbidden,
   apiNotFound,
   apiBadRequest,
+  apiRateLimited,
   apiInternalError,
 } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
+import { walletUpdateSchema } from '@/lib/validation/finance';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -30,7 +33,25 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
 
     const { user, supabase } = request;
 
-    const body = (await request.json()) as Partial<WalletFormData>;
+    // Rate limiting — 30 writes per minute per user
+    try {
+      await enforceUserWriteLimit(user.id);
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        const retryAfter = e.details?.retryAfter || 60;
+        logger.info('Wallet update rate limit exceeded', { userId: user.id });
+        return apiRateLimited('Too many wallet update requests. Please slow down.', retryAfter);
+      }
+      throw e;
+    }
+
+    // Validate request body with Zod
+    const rawBody = await request.json();
+    const parseResult = walletUpdateSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      return apiBadRequest('Invalid input', parseResult.error.errors);
+    }
+    const body = parseResult.data;
 
     // Fetch wallet with ownership info
     const { data: walletData, error: fetchError } = await (
@@ -69,11 +90,8 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: any = {};
 
-    // Validate and update fields
+    // Build updates from Zod-validated body
     if (body.label !== undefined) {
-      if (!body.label.trim()) {
-        return apiBadRequest('Label cannot be empty');
-      }
       updates.label = body.label.trim();
     }
 
@@ -82,9 +100,10 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     }
 
     if (body.address_or_xpub !== undefined) {
-      const validation = validateAddressOrXpub(body.address_or_xpub);
-      if (!validation.valid) {
-        return apiBadRequest(validation.error || 'Invalid address or xpub');
+      // Zod validates format/length; validateAddressOrXpub checks Bitcoin-specific checksum
+      const addressValidation = validateAddressOrXpub(body.address_or_xpub);
+      if (!addressValidation.valid) {
+        return apiBadRequest(addressValidation.error || 'Invalid address or xpub');
       }
       updates.address_or_xpub = body.address_or_xpub.trim();
       updates.wallet_type = detectWalletType(body.address_or_xpub);
@@ -180,6 +199,16 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     }
 
     const { user, supabase } = request;
+
+    // Rate limit
+    try {
+      await enforceUserWriteLimit(user.id);
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        return apiRateLimited();
+      }
+      throw e;
+    }
 
     // Fetch wallet with ownership info
     const { data: walletData2, error: fetchError } = await (

@@ -8,13 +8,13 @@ import EmptyState from '@/components/ui/EmptyState';
 
 /**
  * EntityList - Modular, reusable list component for displaying entities in a grid
- * 
+ *
  * Features:
  * - Responsive grid (1 col mobile, 2 tablet, 3+ desktop)
  * - Skeleton loading states
  * - Empty states
  * - Type-safe with generics
- * 
+ *
  * Created: 2025-01-27
  * Last Modified: 2025-01-27
  * Last Modified Summary: Initial creation of modular entity list component
@@ -32,7 +32,9 @@ export interface EntityListProps<T extends EntityItem> {
   items: T[];
   isLoading?: boolean;
   makeHref: (item: T) => string;
-  makeCardProps: (item: T) => Omit<EntityCardProps, 'id' | 'title' | 'description' | 'thumbnailUrl' | 'href'>;
+  makeCardProps: (
+    item: T
+  ) => Omit<EntityCardProps, 'id' | 'title' | 'description' | 'thumbnailUrl' | 'href'>;
   emptyState?: {
     title: string;
     description?: string;
@@ -55,6 +57,9 @@ export interface EntityListProps<T extends EntityItem> {
   // Visibility support
   onToggleVisibility?: (id: string, currentValue: boolean | null | undefined) => Promise<void>;
   togglingVisibilityIds?: Set<string>;
+  // Status change support (publish/pause)
+  onStatusChange?: (id: string, newStatus: string) => Promise<void>;
+  changingStatusIds?: Set<string>;
 }
 
 const defaultEmptyState = {
@@ -82,6 +87,8 @@ export default function EntityList<T extends EntityItem>({
   deletingIds,
   onToggleVisibility,
   togglingVisibilityIds,
+  onStatusChange,
+  changingStatusIds,
 }: EntityListProps<T>) {
   // Grid classes - using explicit Tailwind classes
   // Note: Tailwind requires full class names, so we map the numbers to actual classes
@@ -131,11 +138,12 @@ export default function EntityList<T extends EntityItem>({
   // Render items
   return (
     <div className={gridClasses}>
-      {items.map((item) => {
+      {items.map(item => {
         const cardProps = makeCardProps(item);
         const isSelected = selectedIds?.has(item.id) || false;
         const isDeleting = deletingIds?.has(item.id) || false;
         const isTogglingVisibility = togglingVisibilityIds?.has(item.id) || false;
+        const isChangingStatus = changingStatusIds?.has(item.id) || false;
 
         // Normalize title - some entities use 'name' instead of 'title'
         const title = item.title || (item as any).name || 'Untitled';
@@ -157,11 +165,16 @@ export default function EntityList<T extends EntityItem>({
               isDeleting={isDeleting}
               showOnProfile={showOnProfile}
               onToggleVisibility={
-                onToggleVisibility
-                  ? () => onToggleVisibility(item.id, showOnProfile)
-                  : undefined
+                onToggleVisibility ? () => onToggleVisibility(item.id, showOnProfile) : undefined
               }
               isTogglingVisibility={isTogglingVisibility}
+              entityStatus={item.status}
+              onStatusChange={
+                onStatusChange
+                  ? (newStatus: string) => onStatusChange(item.id, newStatus)
+                  : undefined
+              }
+              isChangingStatus={isChangingStatus}
               {...cardProps}
             />
             {/* Selection checkbox - positioned to avoid badge overlap */}
@@ -171,7 +184,7 @@ export default function EntityList<T extends EntityItem>({
                   type="checkbox"
                   checked={isSelected}
                   onChange={() => onToggleSelect(item.id)}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={e => e.stopPropagation()}
                   className="h-5 w-5 rounded border-gray-300 bg-white shadow-lg text-orange-600 focus:ring-orange-500 cursor-pointer"
                   aria-label={`Select ${title}`}
                 />
@@ -218,4 +231,3 @@ function EntityCardSkeleton() {
     </div>
   );
 }
-

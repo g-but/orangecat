@@ -316,11 +316,9 @@ export const paymentCreateSchema = z.object({
  * Schema for POST /api/payments/[id] — action on a payment.
  */
 export const paymentActionSchema = z.object({
-  action: z.enum(['buyer_confirm', 'cancel', 'expire'], {
-    errorMap: () => ({ message: 'Invalid action. Supported: buyer_confirm, cancel, expire' }),
+  action: z.enum(['buyer_confirm'], {
+    errorMap: () => ({ message: 'Invalid action. Supported: buyer_confirm' }),
   }),
-  /** Optional status override (rarely used) */
-  status: z.string().max(50).optional(),
 });
 
 // ==================== ENTITY-WALLET LINK SCHEMA ====================
