@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CURRENCY_CODES } from '@/config/currencies';
 import { ENTITY_TYPES } from '@/config/entity-registry';
-import { lightningAddressSchema } from './base';
+import { lightningAddressSchema, optionalText } from './base';
 
 /**
  * Collateral item for loans.
@@ -48,8 +48,8 @@ export const assetSchema = z.object({
     'securities',
     'other',
   ]),
-  description: z.string().max(2000).optional().nullable().or(z.literal('')),
-  location: z.string().max(200).optional().nullable().or(z.literal('')),
+  description: optionalText(2000),
+  location: optionalText(200),
   estimated_value: z.number().positive().optional().nullable(),
   currency: z.enum(CURRENCY_CODES).optional(),
   documents: z.array(z.string().url()).optional().nullable().default([]),
@@ -96,17 +96,17 @@ export const loanSchema = z.object({
     .string()
     .min(10, 'Description must be at least 10 characters')
     .max(1000, 'Description must be at most 1000 characters'),
-  loan_category_id: z.string().optional().nullable().or(z.literal('')),
+  loan_category_id: optionalText(),
   original_amount: z.number().positive('Amount must be greater than 0'),
   remaining_balance: z.number().positive('Balance must be greater than 0'),
   interest_rate: z.number().min(0).max(100).optional().nullable(),
-  bitcoin_address: z.string().optional().nullable().or(z.literal('')),
+  bitcoin_address: optionalText(),
   lightning_address: lightningAddressSchema,
   fulfillment_type: z.enum(['manual', 'automatic']).default('manual'),
   currency: z.string().optional(),
 
   // Fields specific to existing loans (refinancing)
-  current_lender: z.string().max(100).optional().nullable().or(z.literal('')),
+  current_lender: optionalText(100),
   current_interest_rate: z.number().min(0).max(100).optional().nullable(),
   monthly_payment: z.number().min(0).optional().nullable(),
   desired_rate: z.number().min(0).max(100).optional().nullable(),
@@ -138,11 +138,11 @@ export const investmentSchema = z
       .optional()
       .nullable(),
     term_months: z.number().int().positive().optional().nullable(),
-    end_date: z.string().optional().nullable().or(z.literal('')),
+    end_date: optionalText(),
     risk_level: z.enum(['low', 'medium', 'high']).optional().nullable(),
-    terms: z.string().max(5000).optional().nullable().or(z.literal('')),
+    terms: optionalText(5000),
     is_public: z.boolean().optional().default(false),
-    bitcoin_address: z.string().optional().nullable().or(z.literal('')),
+    bitcoin_address: optionalText(),
     lightning_address: lightningAddressSchema,
     currency: z.enum(CURRENCY_CODES).optional(),
   })
@@ -334,7 +334,24 @@ export const entityWalletLinkSchema = z.object({
   entity_id: z.string().uuid('entity_id must be a valid UUID'),
 });
 
+// ==================== TRANSACTION SCHEMA ====================
+
+/** Transaction validation (peer-to-peer value transfer) */
+export const transactionSchema = z.object({
+  amount_sats: z.number().int().positive().max(1000000000000),
+  from_entity_type: z.enum(['profile', 'project']),
+  from_entity_id: z.string().uuid(),
+  to_entity_type: z.enum(['profile', 'project']),
+  to_entity_id: z.string().uuid(),
+  payment_method: z.enum(['bitcoin', 'lightning', 'on-chain', 'off-chain']),
+  message: z.string().max(500).optional().nullable(),
+  purpose: z.string().optional().nullable(),
+  anonymous: z.boolean().default(false),
+  public_visibility: z.boolean().default(true),
+});
+
 // Types
+export type TransactionData = z.infer<typeof transactionSchema>;
 export type PaymentCreateData = z.infer<typeof paymentCreateSchema>;
 export type PaymentActionData = z.infer<typeof paymentActionSchema>;
 export type EntityWalletLinkData = z.infer<typeof entityWalletLinkSchema>;

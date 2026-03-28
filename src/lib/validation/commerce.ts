@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CURRENCY_CODES } from '@/config/currencies';
-import { lightningAddressSchema } from './base';
+import { lightningAddressSchema, optionalText, optionalUrl } from './base';
 
 // =============================================================================
 // REUSABLE SUB-SCHEMAS FOR JSON FIELDS
@@ -63,7 +63,7 @@ export const beneficiarySchema = z
 // Personal Economy validation schemas
 export const userProductSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
-  description: z.string().max(1000).optional().nullable().or(z.literal('')),
+  description: optionalText(1000),
   // Price interpretation depends on currency:
   // - SATS: Integer value in satoshis (e.g., 100000 = 100,000 sats)
   // - Fiat: Decimal value in currency units (e.g., 9.99 = $9.99)
@@ -72,10 +72,10 @@ export const userProductSchema = z.object({
   currency: z.enum(CURRENCY_CODES).optional(),
   product_type: z.enum(['physical', 'digital', 'service']).default('physical'),
   images: z.array(z.string().url()).optional().default([]),
-  thumbnail_url: z.string().url().optional().nullable().or(z.literal('')),
+  thumbnail_url: optionalUrl(),
   inventory_count: z.number().int().min(-1).default(-1), // -1 = unlimited
   fulfillment_type: z.enum(['manual', 'automatic', 'digital']).default('manual'),
-  category: z.string().max(50).optional().nullable().or(z.literal('')),
+  category: optionalText(50),
   tags: z.array(z.string()).optional().default([]),
   status: z.enum(['draft', 'active', 'paused', 'sold_out']).default('draft'),
   is_featured: z.boolean().default(false),
@@ -84,7 +84,7 @@ export const userProductSchema = z.object({
 export const userServiceSchema = z
   .object({
     title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
-    description: z.string().max(1000).optional().nullable().or(z.literal('')),
+    description: optionalText(1000),
     category: z.string().min(1, 'Category is required').max(50),
     hourly_rate: z.number().positive().optional().nullable(),
     fixed_price: z.number().positive().optional().nullable(),
@@ -92,7 +92,7 @@ export const userServiceSchema = z
     duration_minutes: z.number().positive().optional().nullable(),
     availability_schedule: availabilityScheduleSchema.optional().nullable(),
     service_location_type: z.enum(['remote', 'onsite', 'both']).default('remote'),
-    service_area: z.string().max(200).optional().nullable().or(z.literal('')),
+    service_area: optionalText(200),
     images: z.array(z.string().url()).optional().default([]),
     portfolio_links: z.array(z.string().url()).optional().default([]),
     status: z.enum(['draft', 'active', 'paused', 'unavailable']).default('draft'),
@@ -104,11 +104,11 @@ export const userServiceSchema = z
 
 export const userCauseSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
-  description: z.string().max(1000).optional().nullable().or(z.literal('')),
+  description: optionalText(1000),
   cause_category: z.string().min(1, 'Category is required').max(50),
   goal_amount: z.number().positive().optional().nullable(),
   currency: z.enum(CURRENCY_CODES).optional(),
-  bitcoin_address: z.string().optional().nullable().or(z.literal('')),
+  bitcoin_address: optionalText(),
   lightning_address: lightningAddressSchema,
   distribution_rules: distributionRulesSchema.optional().nullable(),
   beneficiaries: z.array(beneficiarySchema).optional().default([]),

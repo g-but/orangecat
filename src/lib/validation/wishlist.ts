@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CURRENCY_CODES } from '@/config/currencies';
+import { optionalText, optionalUrl } from './base';
 
 // =============================================================================
 // WISHLIST VALIDATION
@@ -10,7 +11,7 @@ export const wishlistSchema = z.object({
     .string()
     .min(3, 'Title must be at least 3 characters')
     .max(100, 'Title must be at most 100 characters'),
-  description: z.string().max(1000).optional().nullable().or(z.literal('')),
+  description: optionalText(1000),
   type: z
     .enum([
       'birthday',
@@ -26,7 +27,7 @@ export const wishlistSchema = z.object({
     .default('general'),
   visibility: z.enum(['public', 'unlisted', 'private']).default('public'),
   event_date: z.string().or(z.date()).optional().nullable(),
-  cover_image_url: z.string().url().optional().nullable().or(z.literal('')),
+  cover_image_url: optionalUrl(),
   is_active: z.boolean().default(true),
 });
 
@@ -35,7 +36,7 @@ export const wishlistItemSchema = z.object({
     .string()
     .min(3, 'Title must be at least 3 characters')
     .max(200, 'Title must be at most 200 characters'),
-  description: z.string().max(1000).optional().nullable().or(z.literal('')),
+  description: optionalText(1000),
   image_url: z.string().url().optional().nullable(),
 
   // Internal reference (mutually exclusive)

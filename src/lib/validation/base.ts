@@ -36,6 +36,22 @@ export function isValidLightningAddress(address: string): boolean {
   return LIGHTNING_ADDRESS_REGEX.test(address.toLowerCase());
 }
 
+// =============================================================================
+// REUSABLE FIELD HELPERS
+// =============================================================================
+
+/**
+ * Optional text field that accepts empty strings from form submissions.
+ * Replaces the repeated `.optional().nullable().or(z.literal(''))` pattern.
+ */
+export const optionalText = (maxLen?: number) => {
+  const base = maxLen ? z.string().max(maxLen) : z.string();
+  return base.optional().nullable().or(z.literal(''));
+};
+
+/** Optional URL field that accepts empty strings */
+export const optionalUrl = () => z.string().url().optional().nullable().or(z.literal(''));
+
 /**
  * Zod schema for Lightning address validation
  * Use this in any schema that accepts Lightning addresses
@@ -155,8 +171,8 @@ export const profileSchema = z.object({
       /^[a-zA-Z0-9_-]+$/,
       'Username can only contain letters, numbers, underscores, and hyphens'
     ), // Required field - no optional/nullable
-  name: z.string().max(100).optional().nullable().or(z.literal('')),
-  bio: z.string().max(500).optional().nullable().or(z.literal('')),
+  name: optionalText(100),
+  bio: optionalText(500),
   // Structured location fields for better search functionality
   location_country: z
     .string()
@@ -167,19 +183,19 @@ export const profileSchema = z.object({
       message: 'Country code must be 2 characters (ISO 3166-1 alpha-2)',
     })
     .or(z.literal('')),
-  location_city: z.string().max(100).optional().nullable().or(z.literal('')),
-  location_zip: z.string().max(20).optional().nullable().or(z.literal('')),
-  location_search: z.string().optional().nullable().or(z.literal('')),
+  location_city: optionalText(100),
+  location_zip: optionalText(20),
+  location_search: optionalText(),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),
   // Extended transparency fields
-  background: z.string().max(1000).optional().nullable().or(z.literal('')),
-  inspiration_statement: z.string().max(500).optional().nullable().or(z.literal('')),
-  location_context: z.string().max(300).optional().nullable().or(z.literal('')),
+  background: optionalText(1000),
+  inspiration_statement: optionalText(500),
+  location_context: optionalText(300),
   // Legacy location field (deprecated but kept for backward compatibility)
-  location: z.string().max(100).optional().nullable().or(z.literal('')),
-  avatar_url: z.string().url().optional().nullable().or(z.literal('')),
-  banner_url: z.string().url().optional().nullable().or(z.literal('')),
+  location: optionalText(100),
+  avatar_url: optionalUrl(),
+  banner_url: optionalUrl(),
   website: z
     .string()
     .max(200)
@@ -238,27 +254,11 @@ export const profileSchema = z.object({
   // Wallet fields (kept for backward compatibility, but wallets are now managed separately)
   // IMPORTANT: Validation is intentionally lenient to avoid blocking profile saves
   // when legacy data contains non-standard test values.
-  bitcoin_address: z.string().max(200).optional().nullable().or(z.literal('')),
-  lightning_address: z.string().max(200).optional().nullable().or(z.literal('')),
+  bitcoin_address: optionalText(200),
+  lightning_address: optionalText(200),
   // Currency preference for displaying prices
   currency: z.enum(CURRENCY_CODES).optional().nullable(),
 });
-
-// Transaction validation (replaces donations)
-export const transactionSchema = z.object({
-  amount_sats: z.number().int().positive().max(1000000000000),
-  from_entity_type: z.enum(['profile', 'project']),
-  from_entity_id: z.string().uuid(),
-  to_entity_type: z.enum(['profile', 'project']),
-  to_entity_id: z.string().uuid(),
-  payment_method: z.enum(['bitcoin', 'lightning', 'on-chain', 'off-chain']),
-  message: z.string().max(500).optional().nullable(),
-  purpose: z.string().optional().nullable(),
-  anonymous: z.boolean().default(false),
-  public_visibility: z.boolean().default(true),
-});
-
-// REMOVED: Organization validation (not in MVP)
 
 // HTML sanitization for rich text content
 export function sanitizeHtml(html: string): string {
@@ -383,4 +383,3 @@ export function normalizeProfileData(data: unknown): ProfileData {
 
 // Types
 export type ProfileData = z.infer<typeof profileSchema>;
-export type TransactionData = z.infer<typeof transactionSchema>;

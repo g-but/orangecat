@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { lightningAddressSchema } from './base';
+import { lightningAddressSchema, optionalText, optionalUrl } from './base';
 
 /**
  * AI Assistant Schema
@@ -11,17 +11,17 @@ import { lightningAddressSchema } from './base';
 export const aiAssistantSchema = z.object({
   // Basic Info
   title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
-  description: z.string().max(1000).optional().nullable().or(z.literal('')),
-  category: z.string().max(50).optional().nullable().or(z.literal('')),
+  description: optionalText(1000),
+  category: optionalText(50),
   tags: z.array(z.string()).optional().default([]),
-  avatar_url: z.string().url().optional().nullable().or(z.literal('')),
+  avatar_url: optionalUrl(),
 
   // AI Configuration (the "software")
   system_prompt: z
     .string()
     .min(10, 'System prompt must be at least 10 characters')
     .max(10000, 'System prompt must be at most 10000 characters'),
-  welcome_message: z.string().max(500).optional().nullable().or(z.literal('')),
+  welcome_message: optionalText(500),
   personality_traits: z.array(z.string()).optional().default([]),
   knowledge_base_urls: z.array(z.string().url()).optional().default([]),
 
@@ -33,7 +33,7 @@ export const aiAssistantSchema = z.object({
   // Compute Configuration
   compute_provider_type: z.enum(['api', 'self_hosted', 'community']).default('api'),
   compute_provider_id: z.string().uuid().optional().nullable(),
-  api_provider: z.string().max(50).optional().nullable().or(z.literal('')),
+  api_provider: optionalText(50),
 
   // Pricing
   pricing_model: z
@@ -51,7 +51,7 @@ export const aiAssistantSchema = z.object({
 
   // Bitcoin Payment Info
   lightning_address: lightningAddressSchema,
-  bitcoin_address: z.string().optional().nullable().or(z.literal('')),
+  bitcoin_address: optionalText(),
 });
 
 // Legacy schema alias for backward compatibility

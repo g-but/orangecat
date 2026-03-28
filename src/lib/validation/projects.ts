@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CURRENCY_CODES } from '@/config/currencies';
-import { lightningAddressSchema } from './base';
+import { lightningAddressSchema, optionalText } from './base';
 
 // Project validation
 export const projectSchema = z.object({
@@ -47,7 +47,7 @@ export const projectSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal('')),
-  category: z.string().optional().nullable().or(z.literal('')),
+  category: optionalText(),
   tags: z
     .array(
       z
@@ -58,8 +58,8 @@ export const projectSchema = z.object({
     .optional()
     .nullable()
     .default([]),
-  start_date: z.string().optional().nullable().or(z.literal('')),
-  target_completion: z.string().optional().nullable().or(z.literal('')),
+  start_date: optionalText(),
+  target_completion: optionalText(),
 });
 
 // Types

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CURRENCY_CODES } from '@/config/currencies';
-import { lightningAddressSchema } from './base';
+import { lightningAddressSchema, optionalText, optionalUrl } from './base';
 
 export const userCircleSchema = z.object({
   name: z
@@ -66,8 +66,8 @@ export const organizationSchema = z.object({
     'syndicate',
     'circle',
   ]),
-  description: z.string().max(5000).optional().nullable().or(z.literal('')),
-  category: z.string().max(100).optional().nullable().or(z.literal('')),
+  description: optionalText(5000),
+  category: optionalText(100),
   tags: z.array(z.string()).default([]).optional(),
   website_url: z
     .string()
@@ -91,10 +91,10 @@ export const organizationSchema = z.object({
       'reputation_based',
     ])
     .default('hierarchical'),
-  treasury_address: z.string().max(255).optional().nullable().or(z.literal('')),
+  treasury_address: optionalText(255),
   lightning_address: lightningAddressSchema,
-  avatar_url: z.string().url().optional().nullable().or(z.literal('')),
-  banner_url: z.string().url().optional().nullable().or(z.literal('')),
+  avatar_url: optionalUrl(),
+  banner_url: optionalUrl(),
   is_public: z.boolean().default(true),
   requires_approval: z.boolean().default(true),
 });
@@ -126,8 +126,8 @@ export const eventSchema = z
       .string()
       .min(3, 'Title must be at least 3 characters')
       .max(100, 'Title must be at most 100 characters'),
-    description: z.string().max(2000).optional().nullable().or(z.literal('')),
-    category: z.string().max(50).optional().nullable().or(z.literal('')),
+    description: optionalText(2000),
+    category: optionalText(50),
     event_type: z
       .enum([
         'meetup',
@@ -168,15 +168,15 @@ export const eventSchema = z
     recurrence_pattern: recurrencePatternSchema.optional().nullable(),
 
     // Location
-    venue_name: z.string().max(200).optional().nullable().or(z.literal('')),
-    venue_address: z.string().max(500).optional().nullable().or(z.literal('')),
-    venue_city: z.string().max(100).optional().nullable().or(z.literal('')),
-    venue_country: z.string().max(100).optional().nullable().or(z.literal('')),
-    venue_postal_code: z.string().max(20).optional().nullable().or(z.literal('')),
+    venue_name: optionalText(200),
+    venue_address: optionalText(500),
+    venue_city: optionalText(100),
+    venue_country: optionalText(100),
+    venue_postal_code: optionalText(20),
     latitude: z.number().min(-90).max(90).optional().nullable(),
     longitude: z.number().min(-180).max(180).optional().nullable(),
     is_online: z.boolean().default(false),
-    online_url: z.string().url().optional().nullable().or(z.literal('')),
+    online_url: optionalUrl(),
     asset_id: z.string().uuid().optional().nullable().or(z.literal('')),
 
     // Capacity & Attendance
@@ -201,14 +201,14 @@ export const eventSchema = z
     currency: z.enum(CURRENCY_CODES).optional(),
     is_free: z.boolean().default(false),
     funding_goal: z.number().positive().optional().nullable(),
-    bitcoin_address: z.string().optional().nullable().or(z.literal('')),
+    bitcoin_address: optionalText(),
     lightning_address: lightningAddressSchema,
 
     // Media
     images: z.array(z.string().url()).optional().default([]),
-    thumbnail_url: z.string().url().optional().nullable().or(z.literal('')),
-    banner_url: z.string().url().optional().nullable().or(z.literal('')),
-    video_url: z.string().url().optional().nullable().or(z.literal('')),
+    thumbnail_url: optionalUrl(),
+    banner_url: optionalUrl(),
+    video_url: optionalUrl(),
 
     // Status
     status: z
