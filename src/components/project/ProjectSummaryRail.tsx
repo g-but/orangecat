@@ -8,6 +8,7 @@ import { logger } from '@/utils/logger';
 import { Bitcoin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { formatCurrency as formatCurrencyFromService } from '@/services/currency';
 
 interface Props {
   project: {
@@ -153,13 +154,5 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
 }
 
 function formatCurrency(amount: number, currency: string) {
-  if (currency === 'BTC') {
-    return `${amount.toFixed(8)} BTC`;
-  }
-  try {
-    // Use a stable locale to avoid SSR/CSR hydration mismatches
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
-  } catch {
-    return `${amount.toFixed(2)} ${currency}`;
-  }
+  return formatCurrencyFromService(amount, currency);
 }

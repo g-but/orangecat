@@ -10,7 +10,14 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse, HttpStatus } from '@/lib/api/responses';
+import {
+  apiUnauthorized,
+  apiForbidden,
+  apiNotFound,
+  apiValidationError,
+  apiInternalError,
+  apiSuccess,
+} from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskUpdateSchema } from '@/lib/schemas/tasks';
 import { logger } from '@/utils/logger';
@@ -38,7 +45,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Fetch task with relations
@@ -80,16 +87,16 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return ApiResponses.notFound('Task');
+        return apiNotFound('Task not found');
       }
       logger.error('Failed to fetch task', { error, id }, 'TasksAPI');
-      return ApiResponses.internalServerError('Failed to fetch task');
+      return apiInternalError('Failed to fetch task');
     }
 
-    return createSuccessResponse({ task });
+    return apiSuccess({ task });
   } catch (err) {
     logger.error('Exception in GET /api/tasks/[id]', { error: err }, 'TasksAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }
 
@@ -107,7 +114,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse and validate body
@@ -115,7 +122,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const result = taskUpdateSchema.safeParse(body);
 
     if (!result.success) {
-      return ApiResponses.validationError('Validation failed', result.error.flatten());
+      return apiValidationError('Validation failed', result.error.flatten());
     }
 
     const updateData = result.data;
@@ -179,16 +186,16 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return ApiResponses.notFound('Task');
+        return apiNotFound('Task not found');
       }
       logger.error('Failed to update task', { error, id }, 'TasksAPI');
-      return ApiResponses.internalServerError('Failed to update task');
+      return apiInternalError('Failed to update task');
     }
 
-    return createSuccessResponse({ task }, HttpStatus.OK, 'Task updated');
+    return apiSuccess({ task });
   } catch (err) {
     logger.error('Exception in PATCH /api/tasks/[id]', { error: err }, 'TasksAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }
 
@@ -206,7 +213,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Check if user is the creator
@@ -218,16 +225,16 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        return ApiResponses.notFound('Task');
+        return apiNotFound('Task not found');
       }
       logger.error('Failed to fetch task for deletion', { error: fetchError, id }, 'TasksAPI');
-      return ApiResponses.internalServerError();
+      return apiInternalError();
     }
 
     const existingTask = existingTaskData as unknown as TaskOwnership;
 
     if (existingTask.created_by !== user.id) {
-      return ApiResponses.authorizationFailed('Only the creator can archive this task');
+      return apiForbidden('Only the creator can archive this task');
     }
 
     // Soft delete (archive)
@@ -239,12 +246,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     if (error) {
       logger.error('Failed to archive task', { error, id }, 'TasksAPI');
-      return ApiResponses.internalServerError('Failed to archive task');
+      return apiInternalError('Failed to archive task');
     }
 
-    return createSuccessResponse(null, HttpStatus.OK, 'Task archived');
+    return apiSuccess(null);
   } catch (err) {
     logger.error('Exception in DELETE /api/tasks/[id]', { error: err }, 'TasksAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }

@@ -10,6 +10,7 @@
 import { createBookingService } from '@/services/bookings';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { STATUS } from '@/config/database-constants';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import {
@@ -53,7 +54,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
           'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats, currency'
         )
         .eq('id', assetId)
-        .eq('status', 'active')
+        .eq('status', STATUS.ASSETS.ACTIVE)
         .eq('is_for_rent', true)
         .single();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

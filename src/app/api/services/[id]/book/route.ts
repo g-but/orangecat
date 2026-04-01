@@ -11,6 +11,7 @@ import { createBookingService } from '@/services/bookings';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { STATUS } from '@/config/database-constants';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import {
@@ -54,7 +55,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     )
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
-      .eq('status', 'active')
+      .eq('status', STATUS.SERVICES.ACTIVE)
       .single();
 
     if (serviceError || !service) {

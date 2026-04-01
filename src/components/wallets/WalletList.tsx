@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Wallet, getWalletBehaviorInfo, formatCurrency, calculateProgress } from '@/types/wallet';
+import { formatBTC } from '@/services/currency';
 
 interface WalletListProps {
   wallets: Wallet[];
@@ -19,9 +20,7 @@ export function WalletList({ wallets, onRefresh: _onRefresh, onTransfer }: Walle
     setExpandedWalletId(expandedWalletId === walletId ? null : walletId);
   };
 
-  const formatBtc = (amount: number) => {
-    return amount.toFixed(8);
-  };
+  const formatBtc = (amount: number) => formatBTC(amount);
 
   const formatUsd = (btc: number) => {
     return formatCurrency(btc * BTC_PRICE_USD, 'USD');

@@ -18,6 +18,7 @@ import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withZodBody } from '@/lib/api/withZod';
 import { withRateLimit } from '@/lib/api/withRateLimit';
+import { STATUS } from '@/config/database-constants';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination, getString } from '@/lib/api/query';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
@@ -84,8 +85,8 @@ export const GET = compose(
       countQuery = countQuery.eq('actor_id', actorId);
     } else {
       // Public listing: only active, public assistants
-      itemsQuery = itemsQuery.eq('status', 'active').eq('is_public', true);
-      countQuery = countQuery.eq('status', 'active').eq('is_public', true);
+      itemsQuery = itemsQuery.eq('status', STATUS.AI_ASSISTANTS.ACTIVE).eq('is_public', true);
+      countQuery = countQuery.eq('status', STATUS.AI_ASSISTANTS.ACTIVE).eq('is_public', true);
       if (actorId) {
         itemsQuery = itemsQuery.eq('actor_id', actorId);
         countQuery = countQuery.eq('actor_id', actorId);

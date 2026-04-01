@@ -8,6 +8,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createBookingService } from '@/services/bookings';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 import {
   apiBadRequest,
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats'
         )
         .eq('id', assetId)
-        .eq('status', 'active')
+        .eq('status', STATUS.ASSETS.ACTIVE)
         .eq('is_for_rent', true)
         .single();
 

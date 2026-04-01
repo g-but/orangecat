@@ -4,8 +4,8 @@
  * Handles invitation creation and response operations.
  *
  * Created: 2025-12-30
- * Last Modified: 2025-12-30
- * Last Modified Summary: Initial implementation
+ * Last Modified: 2026-03-31
+ * Last Modified Summary: Consolidate as-any casts into db-helpers
  */
 
 import supabase from '@/lib/supabase/browser';
@@ -15,10 +15,7 @@ import { STATUS } from '@/config/database-constants';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
 import { canPerformAction } from '../permissions/resolver';
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
+import { fromTable, callRpc, type AnySupabaseClient } from '../db-helpers';
 
 // ==================== TYPES ====================
 
@@ -102,8 +99,7 @@ export async function createInvitation(
       }
 
       // Check for existing pending invitation
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: existing } = await (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+      const { data: existing } = await fromTable(sb, DATABASE_TABLES.GROUP_INVITATIONS)
         .select('id')
         .eq('group_id', input.group_id)
         .eq('user_id', input.user_id)
@@ -146,18 +142,17 @@ export async function createInvitation(
         .replace(/=/g, '');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: invData, error } = await (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+    const { data: invData, error } = await fromTable(sb, DATABASE_TABLES.GROUP_INVITATIONS)
       .insert(invitationData)
       .select()
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = invData as any;
 
     if (error) {
       logger.error('Failed to create invitation', error, 'Groups');
       return { success: false, error: error.message };
     }
+
+    const data = invData as Record<string, string | undefined>;
 
     // Log activity
     const targetDesc = input.user_id ? 'a user' : input.email ? input.email : 'a shareable link';
@@ -173,14 +168,14 @@ export async function createInvitation(
     return {
       success: true,
       invitation: {
-        id: data.id,
-        group_id: data.group_id,
+        id: data.id!,
+        group_id: data.group_id!,
         user_id: data.user_id || undefined,
         email: data.email || undefined,
         token: data.token || undefined,
-        role: data.role,
-        status: data.status,
-        expires_at: data.expires_at,
+        role: data.role!,
+        status: data.status!,
+        expires_at: data.expires_at!,
       },
     };
   } catch (error) {
@@ -206,8 +201,7 @@ export async function acceptInvitation(
     }
 
     // Use the database function for atomic operation
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (sb.rpc as any)('accept_group_invitation', {
+    const { data, error } = await callRpc(sb, 'accept_group_invitation', {
       invitation_id: invitationId,
     });
 
@@ -256,8 +250,7 @@ export async function declineInvitation(
     }
 
     // Use the database function
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (sb.rpc as any)('decline_group_invitation', {
+    const { data, error } = await callRpc(sb, 'decline_group_invitation', {
       invitation_id: invitationId,
     });
 
@@ -294,21 +287,26 @@ export async function acceptInvitationByToken(
     }
 
     // Find invitation by token
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: invitationData, error: findError } =
-      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
-        .select('id, group_id, status, expires_at')
-        .eq('token', token)
-        .eq('status', 'pending')
-        .maybeSingle();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const invitation = invitationData as any;
+    const { data: invitationData, error: findError } = await fromTable(
+      sb,
+      DATABASE_TABLES.GROUP_INVITATIONS
+    )
+      .select('id, group_id, status, expires_at')
+      .eq('token', token)
+      .eq('status', 'pending')
+      .maybeSingle();
 
     if (findError) {
       logger.error('Failed to find invitation by token', findError, 'Groups');
       return { success: false, error: 'Invalid invitation link' };
     }
+
+    const invitation = invitationData as {
+      id: string;
+      group_id: string;
+      status: string;
+      expires_at: string;
+    } | null;
 
     if (!invitation) {
       return { success: false, error: 'Invalid or expired invitation link' };
@@ -350,19 +348,19 @@ export async function revokeInvitation(
     }
 
     // Get invitation to check group
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: invitationData2, error: findError } =
-      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
-        .select('group_id, status')
-        .eq('id', invitationId)
-        .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const invitation = invitationData2 as any;
+    const { data: invitationData, error: findError } = await fromTable(
+      sb,
+      DATABASE_TABLES.GROUP_INVITATIONS
+    )
+      .select('group_id, status')
+      .eq('id', invitationId)
+      .single();
 
-    if (findError || !invitation) {
+    if (findError || !invitationData) {
       return { success: false, error: 'Invitation not found' };
     }
+
+    const invitation = invitationData as { group_id: string; status: string };
 
     if (invitation.status !== STATUS.GROUP_INVITATIONS.PENDING) {
       return { success: false, error: 'Can only revoke pending invitations' };
@@ -375,8 +373,7 @@ export async function revokeInvitation(
     }
 
     // Revoke
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (sb.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+    const { error } = await fromTable(sb, DATABASE_TABLES.GROUP_INVITATIONS)
       .update({ status: 'revoked' })
       .eq('id', invitationId);
 

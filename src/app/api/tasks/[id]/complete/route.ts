@@ -11,7 +11,14 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse, HttpStatus } from '@/lib/api/responses';
+import {
+  apiUnauthorized,
+  apiNotFound,
+  apiValidationError,
+  apiBadRequest,
+  apiInternalError,
+  apiSuccess,
+} from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskCompletionSchema } from '@/lib/schemas/tasks';
 import { NotificationService } from '@/lib/services/notifications';
@@ -49,7 +56,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse and validate body
@@ -57,7 +64,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const result = taskCompletionSchema.safeParse(body);
 
     if (!result.success) {
-      return ApiResponses.validationError('Validation failed', result.error.flatten());
+      return apiValidationError('Validation failed', result.error.flatten());
     }
 
     const completionData = result.data;
@@ -71,16 +78,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (taskError) {
       if (taskError.code === 'PGRST116') {
-        return ApiResponses.notFound('Task');
+        return apiNotFound('Task not found');
       }
       logger.error('Failed to fetch task for completion', { error: taskError, taskId }, 'TasksAPI');
-      return ApiResponses.internalServerError();
+      return apiInternalError();
     }
 
     const task = taskData as unknown as TaskRow;
 
     if (task.is_completed && task.task_type === 'one_time') {
-      return ApiResponses.badRequest('This task has already been completed');
+      return apiBadRequest('This task has already been completed');
     }
 
     // Create completion record
@@ -116,7 +123,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         { error: completionError, taskId },
         'TasksAPI'
       );
-      return ApiResponses.internalServerError('Failed to complete task');
+      return apiInternalError('Failed to complete task');
     }
 
     // Notify task creator if they're not the one completing
@@ -146,9 +153,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       });
     }
 
-    return createSuccessResponse({ completion }, HttpStatus.CREATED, 'Task marked as completed');
+    return apiSuccess({ completion }, { status: 201 });
   } catch (err) {
     logger.error('Exception in POST /api/tasks/[id]/complete', { error: err }, 'TasksAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }

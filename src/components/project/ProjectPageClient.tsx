@@ -7,7 +7,7 @@ import { ArrowLeft, Bitcoin } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { ROUTES } from '@/config/routes';
 import { useState, useEffect } from 'react';
-import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { formatCurrency as formatCurrencyFromService } from '@/services/currency';
 import { getStatusInfo } from '@/config/status-config';
 import { PublicEntityPaymentSection } from '@/components/payment';
 
@@ -238,22 +238,9 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
   );
 }
 
-// Helper function to format currency
 function formatCurrency(amount: number | null, currency: string): string {
   if (!amount) {
     return `0 ${currency}`;
   }
-
-  if (currency === 'BTC') {
-    return `${amount.toFixed(8)} BTC`;
-  }
-
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: currency || PLATFORM_DEFAULT_CURRENCY,
-    }).format(amount);
-  } catch {
-    return `${amount.toFixed(2)} ${currency}`;
-  }
+  return formatCurrencyFromService(amount, currency);
 }

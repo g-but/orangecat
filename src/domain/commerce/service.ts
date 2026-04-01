@@ -6,9 +6,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { getTableName } from '@/config/entity-registry';
 import { STATUS } from '@/config/database-constants';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
+import { createEntity } from '@/domain/base/entityService';
 
 // Table type - using entity registry table names
-// These are the actual table names from the database
 // Accept string to allow dynamic table names from entity registry
 type Table = string;
 // Type alias for SupabaseClient parameter - unused but kept for API compatibility
@@ -182,80 +182,56 @@ export async function createProduct(
     throw new Error('Mock mode is disabled by policy. Set PRODUCTS_WRITE_MODE=db');
   }
 
-  // Resolve user to actor for ownership
-  const actor = await getOrCreateUserActor(userId);
-
-  // Use admin client for write operations - auth is already verified by the API route
-  const adminClient = createAdminClient();
-  const payload = {
-    actor_id: actor.id,
-    status: STATUS.PRODUCTS.DRAFT as typeof STATUS.PRODUCTS.DRAFT,
-    currency: input.currency ?? 'SATS',
-    product_type: input.product_type ?? 'physical',
-    images: input.images ?? [],
-    thumbnail_url: input.thumbnail_url ?? null,
-    inventory_count: input.inventory_count ?? -1,
-    fulfillment_type: input.fulfillment_type ?? 'manual',
-    category: input.category,
-    tags: input.tags ?? [],
-    is_featured: input.is_featured ?? false,
-    title: input.title,
-    description: input.description ?? null,
-    price: input.price,
-  };
-  // Using dynamic table access for entity registry pattern - type assertion required
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = await (adminClient.from(getTableName('product')) as any)
-    .insert(payload)
-    .select()
-    .single();
-  const { data, error } = result as { data: UserProduct | null; error: unknown };
-  if (error) {
-    logger.error('Product creation failed', { error, userId });
-    throw error;
-  }
-  return data as UserProduct;
+  return createEntity<UserProduct>(
+    'product',
+    userId,
+    {
+      status: STATUS.PRODUCTS.DRAFT as typeof STATUS.PRODUCTS.DRAFT,
+      currency: input.currency ?? 'SATS',
+      product_type: input.product_type ?? 'physical',
+      images: input.images ?? [],
+      thumbnail_url: input.thumbnail_url ?? null,
+      inventory_count: input.inventory_count ?? -1,
+      fulfillment_type: input.fulfillment_type ?? 'manual',
+      category: input.category,
+      tags: input.tags ?? [],
+      is_featured: input.is_featured ?? false,
+      title: input.title,
+      description: input.description ?? null,
+      price: input.price,
+    },
+    {
+      client: createAdminClient(),
+    }
+  );
 }
 
 export async function createService(
   userId: string,
   input: CreateServiceInput
 ): Promise<UserService> {
-  // Resolve user to actor for ownership
-  const actor = await getOrCreateUserActor(userId);
-
-  // Use admin client for write operations - auth is already verified by the API route
-  const adminClient = createAdminClient();
-
-  const payload = {
-    actor_id: actor.id,
-    title: input.title,
-    description: input.description ?? null,
-    category: input.category,
-    hourly_rate: input.hourly_rate ?? null,
-    fixed_price: input.fixed_price ?? null,
-    currency: input.currency ?? 'CHF',
-    duration_minutes: input.duration_minutes ?? null,
-    availability_schedule: input.availability_schedule,
-    service_location_type: input.service_location_type ?? 'remote',
-    service_area: input.service_area ?? null,
-    images: input.images ?? [],
-    portfolio_links: input.portfolio_links ?? [],
-    status: STATUS.SERVICES.DRAFT as typeof STATUS.SERVICES.DRAFT,
-  };
-
-  // Using dynamic table access for entity registry pattern - type assertion required
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = await (adminClient.from(getTableName('service')) as any)
-    .insert(payload)
-    .select()
-    .single();
-  const { data, error } = result as { data: UserService | null; error: unknown };
-  if (error) {
-    logger.error('Service creation failed', { error, userId });
-    throw error;
-  }
-  return data as UserService;
+  return createEntity<UserService>(
+    'service',
+    userId,
+    {
+      title: input.title,
+      description: input.description ?? null,
+      category: input.category,
+      hourly_rate: input.hourly_rate ?? null,
+      fixed_price: input.fixed_price ?? null,
+      currency: input.currency ?? 'CHF',
+      duration_minutes: input.duration_minutes ?? null,
+      availability_schedule: input.availability_schedule,
+      service_location_type: input.service_location_type ?? 'remote',
+      service_area: input.service_area ?? null,
+      images: input.images ?? [],
+      portfolio_links: input.portfolio_links ?? [],
+      status: STATUS.SERVICES.DRAFT as typeof STATUS.SERVICES.DRAFT,
+    },
+    {
+      client: createAdminClient(),
+    }
+  );
 }
 
 interface DistributionRules {
@@ -285,39 +261,26 @@ interface CreateCauseInput {
 }
 
 export async function createCause(userId: string, input: CreateCauseInput): Promise<UserCause> {
-  // Resolve user to actor for ownership
-  const actor = await getOrCreateUserActor(userId);
-
-  // Use admin client for write operations - auth is already verified by the API route
-  const adminClient = createAdminClient();
-
-  const payload = {
-    actor_id: actor.id,
-    title: input.title,
-    description: input.description ?? null,
-    cause_category: input.cause_category,
-    goal_amount: input.goal_amount ?? null,
-    currency: input.currency ?? 'CHF',
-    bitcoin_address: input.bitcoin_address ?? null,
-    lightning_address: input.lightning_address ?? null,
-    distribution_rules: input.distribution_rules,
-    beneficiaries: input.beneficiaries ?? [],
-    status: STATUS.CAUSES.DRAFT as typeof STATUS.CAUSES.DRAFT,
-    total_raised: 0,
-  };
-
-  // Using dynamic table access for entity registry pattern - type assertion required
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = await (adminClient.from(getTableName('cause')) as any)
-    .insert(payload)
-    .select()
-    .single();
-  const { data, error } = result as { data: UserCause | null; error: unknown };
-  if (error) {
-    logger.error('Cause creation failed', { error, userId });
-    throw error;
-  }
-  return data as UserCause;
+  return createEntity<UserCause>(
+    'cause',
+    userId,
+    {
+      title: input.title,
+      description: input.description ?? null,
+      cause_category: input.cause_category,
+      goal_amount: input.goal_amount ?? null,
+      currency: input.currency ?? 'CHF',
+      bitcoin_address: input.bitcoin_address ?? null,
+      lightning_address: input.lightning_address ?? null,
+      distribution_rules: input.distribution_rules,
+      beneficiaries: input.beneficiaries ?? [],
+      status: STATUS.CAUSES.DRAFT as typeof STATUS.CAUSES.DRAFT,
+      total_raised: 0,
+    },
+    {
+      client: createAdminClient(),
+    }
+  );
 }
 
 // createCircle function removed - use groups service instead
@@ -359,8 +322,8 @@ interface CreateOrganizationInput {
   contact_info?: Record<string, unknown>;
 }
 
+// Organization uses profile_id instead of actor_id, so it cannot use the generic createEntity.
 export async function createOrganization(userId: string, input: CreateOrganizationInput) {
-  // Use admin client for write operations - auth is already verified by the API route
   const adminClient = createAdminClient();
   const payload = {
     profile_id: userId,
@@ -384,7 +347,6 @@ export async function createOrganization(userId: string, input: CreateOrganizati
     application_process: { questions: [] },
     founded_at: new Date().toISOString(),
   };
-  // Using dynamic table access for entity registry pattern - type assertion required
   interface OrganizationResult {
     id: string;
     [key: string]: unknown;

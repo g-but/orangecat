@@ -16,8 +16,6 @@
  * Created: 2026-03-28
  */
 
-import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -26,26 +24,14 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
-import { ProfileUploadSection } from '@/components/profile/ProfileUploadSection';
-import {
-  User,
-  MapPin,
-  Globe,
-  Wallet,
-  Sparkles,
-  MessageCircle,
-  ArrowRight,
-  ArrowLeft,
-  Check,
-  Loader2,
-} from 'lucide-react';
-import { useAuthStore } from '@/stores/auth';
-import { ENTITY_REGISTRY } from '@/config/entity-registry';
-import { ROUTES } from '@/config/routes';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Profile } from '@/types/database';
+
+import { useProfileCompletionForm, STEPS, TOTAL_STEPS } from './useProfileCompletionForm';
+import { IdentityStep } from './IdentityStep';
+import { AboutStep } from './AboutStep';
+import { GetStartedStep } from './GetStartedStep';
 
 // --- Types ---
 
@@ -55,38 +41,6 @@ interface ProfileCompletionModalProps {
   profile: Profile;
   userId: string;
 }
-
-interface StepConfig {
-  id: string;
-  title: string;
-  subtitle: string;
-  required: boolean;
-}
-
-// --- Constants ---
-
-const STEPS: StepConfig[] = [
-  {
-    id: 'identity',
-    title: "Let's get to know you",
-    subtitle: 'Your Cat needs a name to call you by.',
-    required: true,
-  },
-  {
-    id: 'about',
-    title: 'Tell the world a bit more',
-    subtitle: 'Optional, but it helps your Cat represent you better.',
-    required: false,
-  },
-  {
-    id: 'getstarted',
-    title: 'Nice! Your Cat now knows who you are.',
-    subtitle: "Here's what you can do next.",
-    required: false,
-  },
-];
-
-const TOTAL_STEPS = STEPS.length;
 
 // --- Helpers ---
 
@@ -136,295 +90,9 @@ export function ProfileCompletionModal({
   profile,
   userId,
 }: ProfileCompletionModalProps) {
-  const router = useRouter();
-  const updateProfile = useAuthStore(state => state.updateProfile);
+  const form = useProfileCompletionForm(profile, onComplete);
 
-  // Form state
-  const [currentStep, setCurrentStep] = useState(0);
-  const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const [username, setUsername] = useState(profile.username || '');
-  const [displayName, setDisplayName] = useState(
-    profile.name && profile.name !== 'User' ? profile.name : ''
-  );
-  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || '');
-  const [bio, setBio] = useState(profile.bio || '');
-  const [locationCity, setLocationCity] = useState(profile.location_city || '');
-  const [website, setWebsite] = useState(profile.website || '');
-
-  // Validate step 1 fields
-  const validateIdentity = useCallback((): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!username || username.trim().length < 3) {
-      newErrors.username = 'Username must be at least 3 characters';
-    } else if (!/^[a-zA-Z0-9_-]+$/.test(username.trim())) {
-      newErrors.username = 'Only letters, numbers, underscores, and hyphens';
-    } else if (username.trim().length > 30) {
-      newErrors.username = 'Username must be 30 characters or fewer';
-    }
-
-    if (!displayName || displayName.trim().length === 0) {
-      newErrors.displayName = 'Your Cat needs something to call you';
-    } else if (displayName.trim().length > 100) {
-      newErrors.displayName = 'Display name must be 100 characters or fewer';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [username, displayName]);
-
-  // Save current step data to profile
-  const saveStepData = useCallback(async (): Promise<boolean> => {
-    setSaving(true);
-    setErrors({});
-
-    try {
-      const data: Partial<Profile> = {};
-
-      if (currentStep === 0) {
-        // Step 1: Identity
-        data.username = username.trim();
-        data.name = displayName.trim();
-        if (avatarUrl) {
-          data.avatar_url = avatarUrl;
-        }
-      } else if (currentStep === 1) {
-        // Step 2: About
-        if (bio.trim()) {
-          data.bio = bio.trim();
-        }
-        if (locationCity.trim()) {
-          data.location_city = locationCity.trim();
-        }
-        if (website.trim()) {
-          data.website = website.trim();
-        }
-      }
-
-      // Only save if there are fields to update
-      if (Object.keys(data).length > 0) {
-        const result = await updateProfile(data);
-        if (result.error) {
-          // Check for username taken error
-          if (result.error.toLowerCase().includes('username')) {
-            setErrors({ username: 'That username is already taken. Try another one.' });
-          } else {
-            setErrors({ general: result.error });
-          }
-          return false;
-        }
-      }
-
-      return true;
-    } catch {
-      setErrors({ general: 'Something went wrong. Please try again.' });
-      return false;
-    } finally {
-      setSaving(false);
-    }
-  }, [currentStep, username, displayName, avatarUrl, bio, locationCity, website, updateProfile]);
-
-  // Navigation handlers
-  const handleNext = useCallback(async () => {
-    // Validate step 1 before proceeding
-    if (currentStep === 0 && !validateIdentity()) {
-      return;
-    }
-
-    const saved = await saveStepData();
-    if (saved) {
-      setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS - 1));
-    }
-  }, [currentStep, validateIdentity, saveStepData]);
-
-  const handlePrevious = useCallback(() => {
-    setErrors({});
-    setCurrentStep(prev => Math.max(prev - 1, 0));
-  }, []);
-
-  const handleSkipStep = useCallback(() => {
-    setErrors({});
-    setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS - 1));
-  }, []);
-
-  const handleComplete = useCallback(() => {
-    onComplete();
-  }, [onComplete]);
-
-  const handleQuickAction = useCallback(
-    (href: string) => {
-      onComplete();
-      router.push(href);
-    },
-    [onComplete, router]
-  );
-
-  // --- Step Renderers ---
-
-  const renderIdentityStep = () => (
-    <div className="space-y-5">
-      {/* Avatar upload */}
-      <div className="flex justify-center">
-        <ProfileUploadSection
-          userId={userId}
-          avatarUrl={avatarUrl || undefined}
-          onAvatarUpload={(url: string) => setAvatarUrl(url)}
-          className="flex-shrink-0"
-        />
-      </div>
-
-      <Input
-        label="Username"
-        description="This is your unique handle on OrangeCat"
-        value={username}
-        onChange={e => {
-          setUsername(e.target.value);
-          if (errors.username) {
-            setErrors(prev => ({ ...prev, username: '' }));
-          }
-        }}
-        error={errors.username}
-        placeholder="satoshi"
-        icon={User}
-        required
-        maxLength={30}
-      />
-
-      <Input
-        label="Display Name"
-        description="How your Cat will introduce you to others"
-        value={displayName}
-        onChange={e => {
-          setDisplayName(e.target.value);
-          if (errors.displayName) {
-            setErrors(prev => ({ ...prev, displayName: '' }));
-          }
-        }}
-        error={errors.displayName}
-        placeholder="Satoshi Nakamoto"
-        required
-        maxLength={100}
-      />
-    </div>
-  );
-
-  const renderAboutStep = () => (
-    <div className="space-y-5">
-      <Textarea
-        label="Bio"
-        description="A few words about yourself. Your Cat uses this to understand you better."
-        value={bio}
-        onChange={e => setBio(e.target.value)}
-        placeholder="Builder, dreamer, orange-pilled since 2017..."
-        maxLength={500}
-      />
-
-      <Input
-        label="Location"
-        description="City or region (shown on your public profile)"
-        value={locationCity}
-        onChange={e => setLocationCity(e.target.value)}
-        placeholder="Zurich, Switzerland"
-        icon={MapPin}
-        maxLength={100}
-      />
-
-      <Input
-        label="Website"
-        description="Your personal site, blog, or Nostr profile"
-        value={website}
-        onChange={e => setWebsite(e.target.value)}
-        placeholder="https://yoursite.com"
-        icon={Globe}
-        maxLength={200}
-      />
-    </div>
-  );
-
-  const renderGetStartedStep = () => {
-    // Build summary of what they entered
-    const summaryItems = [
-      displayName && { label: 'Name', value: displayName },
-      username && { label: 'Username', value: `@${username}` },
-      bio && { label: 'Bio', value: bio.length > 60 ? bio.slice(0, 60) + '...' : bio },
-      locationCity && { label: 'Location', value: locationCity },
-    ].filter(Boolean) as { label: string; value: string }[];
-
-    return (
-      <div className="space-y-6">
-        {/* Profile summary */}
-        {summaryItems.length > 0 && (
-          <div className="rounded-lg border border-tiffany-200 bg-tiffany-50/50 p-4">
-            <p className="text-sm font-medium text-tiffany-800 mb-3">Your profile so far:</p>
-            <div className="space-y-1.5">
-              {summaryItems.map(item => (
-                <div key={item.label} className="flex items-center gap-2 text-sm">
-                  <Check className="h-3.5 w-3.5 text-tiffany-600 flex-shrink-0" />
-                  <span className="text-gray-600">{item.label}:</span>
-                  <span className="text-gray-900 font-medium truncate">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Quick actions */}
-        <div className="space-y-3">
-          <p className="text-sm text-gray-500 font-medium">What would you like to do first?</p>
-
-          <button
-            onClick={() => handleQuickAction(ENTITY_REGISTRY.wallet.basePath)}
-            className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-tiffany-300 hover:bg-tiffany-50/30 transition-all text-left group"
-          >
-            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-              <Wallet className="h-4 w-4 text-blue-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">Add a wallet</p>
-              <p className="text-xs text-gray-500">
-                Connect your Bitcoin wallet to receive funding
-              </p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-tiffany-600 transition-colors" />
-          </button>
-
-          <button
-            onClick={() => handleQuickAction(ENTITY_REGISTRY.project.createPath)}
-            className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-tiffany-300 hover:bg-tiffany-50/30 transition-all text-left group"
-          >
-            <div className="p-2 bg-orange-100 rounded-lg flex-shrink-0">
-              <Sparkles className="h-4 w-4 text-orange-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">Create your first offering</p>
-              <p className="text-xs text-gray-500">Launch a project, product, or service</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-tiffany-600 transition-colors" />
-          </button>
-
-          <button
-            onClick={() => handleQuickAction(ROUTES.DASHBOARD.CAT)}
-            className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-tiffany-300 hover:bg-tiffany-50/30 transition-all text-left group"
-          >
-            <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
-              <MessageCircle className="h-4 w-4 text-purple-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">Chat with your Cat</p>
-              <p className="text-xs text-gray-500">Ask anything about the platform</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-tiffany-600 transition-colors" />
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const stepRenderers = [renderIdentityStep, renderAboutStep, renderGetStartedStep];
-  const step = STEPS[currentStep];
-  const isLastStep = currentStep === TOTAL_STEPS - 1;
+  const { currentStep, step, isLastStep, saving, errors } = form;
 
   return (
     <Dialog
@@ -471,13 +139,45 @@ export function ProfileCompletionModal({
         )}
 
         {/* Step content */}
-        <div className="py-2">{stepRenderers[currentStep]()}</div>
+        <div className="py-2">
+          {currentStep === 0 && (
+            <IdentityStep
+              userId={userId}
+              username={form.username}
+              displayName={form.displayName}
+              avatarUrl={form.avatarUrl}
+              errors={errors}
+              onUsernameChange={form.setUsername}
+              onDisplayNameChange={form.setDisplayName}
+              onAvatarUpload={form.setAvatarUrl}
+            />
+          )}
+          {currentStep === 1 && (
+            <AboutStep
+              bio={form.bio}
+              locationCity={form.locationCity}
+              website={form.website}
+              onBioChange={form.setBio}
+              onLocationCityChange={form.setLocationCity}
+              onWebsiteChange={form.setWebsite}
+            />
+          )}
+          {currentStep === 2 && (
+            <GetStartedStep
+              displayName={form.displayName}
+              username={form.username}
+              bio={form.bio}
+              locationCity={form.locationCity}
+              onQuickAction={form.handleQuickAction}
+            />
+          )}
+        </div>
 
         {/* Navigation */}
         <div className="flex items-center justify-between pt-2">
           <div>
             {currentStep > 0 && !isLastStep && (
-              <Button variant="ghost" size="sm" onClick={handlePrevious} disabled={saving}>
+              <Button variant="ghost" size="sm" onClick={form.handlePrevious} disabled={saving}>
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back
               </Button>
@@ -487,17 +187,17 @@ export function ProfileCompletionModal({
           <div className="flex items-center gap-2">
             {/* Skip for optional steps */}
             {!step.required && !isLastStep && (
-              <Button variant="ghost" size="sm" onClick={handleSkipStep} disabled={saving}>
+              <Button variant="ghost" size="sm" onClick={form.handleSkipStep} disabled={saving}>
                 Skip for now
               </Button>
             )}
 
             {isLastStep ? (
-              <Button variant="primary" onClick={handleComplete}>
+              <Button variant="primary" onClick={form.handleComplete}>
                 Looks good!
               </Button>
             ) : (
-              <Button variant="primary" onClick={handleNext} disabled={saving}>
+              <Button variant="primary" onClick={form.handleNext} disabled={saving}>
                 {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {currentStep === 0 ? 'Continue' : 'Save & Continue'}
               </Button>

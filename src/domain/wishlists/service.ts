@@ -4,14 +4,14 @@
  * Business logic for wishlists.
  *
  * Created: 2026-01-07
- * Last Modified: 2026-01-15
- * Last Modified Summary: Added auto-creation of actor if missing
+ * Last Modified: 2026-03-31
+ * Last Modified Summary: Refactored to use generic base entity service for create
  */
 
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
+import { createEntity } from '@/domain/base/entityService';
 
 export async function listWishlistsPage(limit: number, offset: number, userId?: string) {
   const supabase = await createServerClient();
@@ -52,37 +52,13 @@ export async function listWishlistsPage(limit: number, offset: number, userId?: 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createWishlist(userId: string, data: any) {
-  const supabase = await createServerClient();
-
-  // Get or create actor for this user
-  const actor = await getOrCreateUserActor(userId);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: wishlist, error } = await (supabase.from(DATABASE_TABLES.WISHLISTS) as any)
-    .insert({
-      actor_id: actor.id,
-      title: data.title,
-      description: data.description,
-      type: data.type,
-      visibility: data.visibility,
-      is_active: data.is_active ?? true,
-      cover_image_url: data.cover_image_url,
-      event_date: data.event_date,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    logger.error('Failed to create wishlist', {
-      error,
-      errorMessage: error.message,
-      errorCode: error.code,
-      userId,
-      actorId: actor.id,
-      data,
-    });
-    throw error;
-  }
-
-  return wishlist;
+  return createEntity('wishlist', userId, {
+    title: data.title,
+    description: data.description,
+    type: data.type,
+    visibility: data.visibility,
+    is_active: data.is_active ?? true,
+    cover_image_url: data.cover_image_url,
+    event_date: data.event_date,
+  });
 }

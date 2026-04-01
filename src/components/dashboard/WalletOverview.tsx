@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useBitcoinWallet } from '@/hooks/useBitcoinWallet';
 import { BitcoinTransaction } from '@/types/bitcoin';
 import { getTransactionUrl } from '@/services/bitcoin';
+import { formatBTC } from '@/services/currency';
 
 interface WalletOverviewProps {
   walletAddress?: string | null;
@@ -34,10 +35,7 @@ const getTransactionStatus = (status: string, _timestamp: number) => {
   return { label: 'Unknown', color: 'text-gray-600', bgColor: 'bg-gray-100' };
 };
 
-// Format Bitcoin amount
-const formatBitcoinAmount = (amount: number) => {
-  return amount.toFixed(8);
-};
+const formatBitcoinAmount = (amount: number) => formatBTC(amount);
 
 // Format transaction value with color
 const formatTransactionValue = (transaction: BitcoinTransaction) => {

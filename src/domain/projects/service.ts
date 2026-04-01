@@ -1,65 +1,30 @@
-import { createServerClient } from '@/lib/supabase/server';
-import { getTableName } from '@/config/entity-registry';
+import { listEntityPage, createEntity } from '@/domain/base/entityService';
 import { PROJECT_STATUS } from '@/config/project-statuses';
-import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
+import { STATUS } from '@/config/database-constants';
 
 export async function listProjectsPage(limit: number, offset: number, userId?: string) {
-  const supabase = await createServerClient();
-  const tableName = getTableName('project');
+  const result = await listEntityPage('project', {
+    limit,
+    offset,
+    userId,
+    includeOwnDrafts: !!userId,
+    publicStatuses: [PROJECT_STATUS.ACTIVE],
+    select: '*, profiles:user_id(id, username, name, avatar_url, email)',
+  });
 
-  // Resolve user_id to actor_id for ownership filtering
-  let actorId: string | null = null;
-  if (userId) {
-    const actor = await getOrCreateUserActor(userId);
-    actorId = actor.id;
-  }
-
-  // Build filter condition (shared between data and count queries)
-  const applyFilter = (query: ReturnType<typeof supabase.from>) => {
-    if (actorId) {
-      return query.eq('actor_id', actorId);
-    }
-    return query.eq('status', PROJECT_STATUS.ACTIVE);
-  };
-
-  // Run data query (with profile join) and count query in parallel
+  // Ensure raised_amount defaults to 0
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dataQuery = applyFilter(
-    (supabase.from(tableName) as any).select(
-      '*, profiles:user_id(id, username, name, avatar_url, email)'
-    )
-  )
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const countQuery = applyFilter(
-    (supabase.from(tableName) as any).select('*', { count: 'exact', head: true })
-  );
-
-  const [{ data, error }, { count }] = await Promise.all([dataQuery, countQuery]);
-
-  if (error) {
-    throw error;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const items = (data || []).map((project: any) => ({
+  const items = result.items.map((project: any) => ({
     ...project,
     raised_amount: project.raised_amount ?? 0,
   }));
 
-  return { items, total: count || 0 };
+  return { items, total: result.total };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProject(userId: string, payload: any) {
-  // Resolve user to actor for ownership
-  const actor = await getOrCreateUserActor(userId);
-
-  const supabase = await createServerClient();
-  const insertPayload = {
-    actor_id: actor.id,
+  return createEntity('project', userId, {
     title: payload.title,
     description: payload.description,
     goal_amount: payload.goal_amount ?? null,
@@ -70,17 +35,6 @@ export async function createProject(userId: string, payload: any) {
     website_url: payload.website_url ?? null,
     category: payload.category ?? null,
     tags: payload.tags ?? [],
-    status: 'draft' as const,
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.from(getTableName('project')) as any)
-    .insert(insertPayload)
-    .select('*')
-    .single();
-
-  if (error) {
-    throw error;
-  }
-  return data;
+    status: STATUS.PROJECTS.DRAFT,
+  });
 }

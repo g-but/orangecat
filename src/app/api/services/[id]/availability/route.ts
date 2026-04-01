@@ -8,6 +8,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createBookingService } from '@/services/bookings';
 import { getTableName } from '@/config/entity-registry';
+import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 import {
   apiBadRequest,
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     )
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
-      .eq('status', 'active')
+      .eq('status', STATUS.SERVICES.ACTIVE)
       .single();
 
     if (serviceError || !service) {

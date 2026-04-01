@@ -8,7 +8,7 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse } from '@/lib/api/responses';
+import { apiUnauthorized, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse query params
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       logger.error('Failed to fetch contributions', { error }, 'TaskAnalyticsAPI');
-      return ApiResponses.internalServerError('Failed to fetch contributions');
+      return apiInternalError('Failed to fetch contributions');
     }
 
     const completions = (data || []) as CompletionRow[];
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
     const totalCompletions = contributions.reduce((sum, c) => sum + c.totalCompletions, 0);
     const totalMinutes = contributions.reduce((sum, c) => sum + c.totalMinutes, 0);
 
-    return createSuccessResponse({
+    return apiSuccess({
       contributions,
       summary: {
         totalCompletions,
@@ -177,6 +177,6 @@ export async function GET(request: NextRequest) {
       { error: err },
       'TaskAnalyticsAPI'
     );
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }

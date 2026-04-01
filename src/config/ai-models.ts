@@ -394,24 +394,6 @@ export function getAvailableModels(): AIModelMetadata[] {
 }
 
 /**
- * Get models by provider
- */
-export function getModelsByProvider(provider: string): AIModelMetadata[] {
-  return Object.values(AI_MODEL_REGISTRY).filter(
-    m => m.provider.toLowerCase() === provider.toLowerCase() && m.isAvailable
-  );
-}
-
-/**
- * Get models with a specific capability
- */
-export function getModelsWithCapability(capability: ModelCapability): AIModelMetadata[] {
-  return Object.values(AI_MODEL_REGISTRY).filter(
-    m => m.capabilities.includes(capability) && m.isAvailable
-  );
-}
-
-/**
  * Calculate cost in satoshis for a given model and token usage
  *
  * @param modelId - The model ID
@@ -440,44 +422,6 @@ export function calculateCostSats(
   return Math.ceil(totalCostUsd * satsPerUsd);
 }
 
-/**
- * Estimate cost in satoshis for a message before sending
- *
- * @param modelId - The model ID
- * @param inputText - The input text to estimate tokens for
- * @param estimatedOutputTokens - Estimated output tokens (default: 500)
- * @param btcPriceUsd - Current BTC price in USD
- * @returns Estimated cost in satoshis
- */
-export function estimateCostSats(
-  modelId: string,
-  inputText: string,
-  estimatedOutputTokens: number = 500,
-  btcPriceUsd: number = 100000
-): number {
-  // Rough token estimate: ~4 characters per token
-  const estimatedInputTokens = Math.ceil(inputText.length / 4);
-  return calculateCostSats(modelId, estimatedInputTokens, estimatedOutputTokens, btcPriceUsd);
-}
-
-/**
- * Get the default model for a tier
- */
-export function getDefaultModelForTier(tier: ModelTier): AIModelMetadata {
-  const models = getModelsByTier(tier);
-  // Return cheapest available model in tier
-  return models.sort((a, b) => a.inputCostPer1M - b.inputCostPer1M)[0];
-}
-
-/**
- * Get all unique providers
- */
-export function getAllProviders(): string[] {
-  const providers = new Set<string>();
-  Object.values(AI_MODEL_REGISTRY).forEach(m => providers.add(m.provider));
-  return Array.from(providers).sort();
-}
-
 // ==================== CONSTANTS ====================
 
 /** Default model for Auto mode fallback (free model) */
@@ -488,9 +432,6 @@ export const DEFAULT_FREE_MODEL_ID = 'meta-llama/llama-3.3-70b-instruct:free';
 
 /** Default BTC price for cost calculations (updated periodically) */
 export const DEFAULT_BTC_PRICE_USD = 100000;
-
-/** Platform daily limit for free tier users */
-export const PLATFORM_DAILY_LIMIT = 10;
 
 /** Tier display configuration */
 export const TIER_CONFIG: Record<

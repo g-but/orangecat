@@ -8,7 +8,13 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse, HttpStatus } from '@/lib/api/responses';
+import {
+  apiUnauthorized,
+  apiNotFound,
+  apiValidationError,
+  apiInternalError,
+  apiSuccess,
+} from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { attentionFlagSchema } from '@/lib/schemas/tasks';
 import { TASK_STATUSES } from '@/config/tasks';
@@ -45,7 +51,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse and validate body
@@ -53,7 +59,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const result = attentionFlagSchema.safeParse(body);
 
     if (!result.success) {
-      return ApiResponses.validationError('Validation failed', result.error.flatten());
+      return apiValidationError('Validation failed', result.error.flatten());
     }
 
     const flagData = result.data;
@@ -67,10 +73,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (taskError) {
       if (taskError.code === 'PGRST116') {
-        return ApiResponses.notFound('Task');
+        return apiNotFound('Task not found');
       }
       logger.error('Failed to fetch task', { error: taskError, taskId }, 'TasksAPI');
-      return ApiResponses.internalServerError();
+      return apiInternalError();
     }
 
     const task = taskData as unknown as TaskRow;
@@ -96,7 +102,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (flagError) {
       logger.error('Failed to create attention flag', { error: flagError, taskId }, 'TasksAPI');
-      return ApiResponses.internalServerError('Failed to flag task');
+      return apiInternalError('Failed to flag task');
     }
 
     // Update task status to needs_attention
@@ -144,9 +150,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       sourceEntityId: taskId,
     });
 
-    return createSuccessResponse({ flag }, HttpStatus.CREATED, 'Task flagged as urgent');
+    return apiSuccess({ flag }, { status: 201 });
   } catch (err) {
     logger.error('Exception in POST /api/tasks/[id]/attention', { error: err }, 'TasksAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }
