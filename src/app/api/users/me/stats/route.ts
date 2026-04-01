@@ -17,6 +17,7 @@ import {
   getTableName,
   type EntityType,
 } from '@/config/entity-registry';
+import { STATUS } from '@/config/database-constants';
 import {
   buildUserContext,
   getRecommendedTasks,
@@ -141,7 +142,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
       ? (supabase.from(getTableName('project')) as UntypedTable)
           .select('id', { count: 'exact', head: true })
           .eq('actor_id', actorId)
-          .eq('status', 'active')
+          .eq('status', STATUS.PROJECTS.ACTIVE)
       : Promise.resolve({ count: 0 });
 
     const [

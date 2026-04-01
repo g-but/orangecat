@@ -10,7 +10,14 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse, HttpStatus } from '@/lib/api/responses';
+import {
+  apiUnauthorized,
+  apiForbidden,
+  apiNotFound,
+  apiValidationError,
+  apiInternalError,
+  apiSuccess,
+} from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskProjectUpdateSchema } from '@/lib/schemas/tasks';
 import { logger } from '@/utils/logger';
@@ -38,7 +45,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Fetch project with tasks
@@ -63,16 +70,16 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return ApiResponses.notFound('Project');
+        return apiNotFound('Project not found');
       }
       logger.error('Failed to fetch task project', { error, id }, 'TaskProjectsAPI');
-      return ApiResponses.internalServerError('Failed to fetch project');
+      return apiInternalError('Failed to fetch project');
     }
 
-    return createSuccessResponse({ project });
+    return apiSuccess({ project });
   } catch (err) {
     logger.error('Exception in GET /api/task-projects/[id]', { error: err }, 'TaskProjectsAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }
 
@@ -90,7 +97,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Verify ownership
@@ -102,20 +109,20 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        return ApiResponses.notFound('Project');
+        return apiNotFound('Project not found');
       }
       logger.error(
         'Failed to fetch project for update',
         { error: fetchError, id },
         'TaskProjectsAPI'
       );
-      return ApiResponses.internalServerError();
+      return apiInternalError();
     }
 
     const existingProject = projectData as ProjectOwnership;
 
     if (existingProject.created_by !== user.id) {
-      return ApiResponses.authorizationFailed('Only the creator can edit this project');
+      return apiForbidden('Only the creator can edit this project');
     }
 
     // Parse and validate body
@@ -123,7 +130,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const result = taskProjectUpdateSchema.safeParse(body);
 
     if (!result.success) {
-      return ApiResponses.validationError('Validation failed', result.error.flatten());
+      return apiValidationError('Validation failed', result.error.flatten());
     }
 
     const updateData = result.data;
@@ -154,13 +161,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (error) {
       logger.error('Failed to update task project', { error, id }, 'TaskProjectsAPI');
-      return ApiResponses.internalServerError('Failed to update project');
+      return apiInternalError('Failed to update project');
     }
 
-    return createSuccessResponse({ project }, HttpStatus.OK, 'Project updated');
+    return apiSuccess({ project });
   } catch (err) {
     logger.error('Exception in PATCH /api/task-projects/[id]', { error: err }, 'TaskProjectsAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }
 
@@ -178,7 +185,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Verify ownership
@@ -190,20 +197,20 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        return ApiResponses.notFound('Project');
+        return apiNotFound('Project not found');
       }
       logger.error(
         'Failed to fetch project for deletion',
         { error: fetchError, id },
         'TaskProjectsAPI'
       );
-      return ApiResponses.internalServerError();
+      return apiInternalError();
     }
 
     const deleteProject = deleteProjectData as ProjectOwnership;
 
     if (deleteProject.created_by !== user.id) {
-      return ApiResponses.authorizationFailed('Only the creator can delete this project');
+      return apiForbidden('Only the creator can delete this project');
     }
 
     // Delete project (tasks will have project_id set to null via ON DELETE SET NULL)
@@ -211,12 +218,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     if (error) {
       logger.error('Failed to delete task project', { error, id }, 'TaskProjectsAPI');
-      return ApiResponses.internalServerError('Failed to delete project');
+      return apiInternalError('Failed to delete project');
     }
 
-    return createSuccessResponse(null, HttpStatus.OK, 'Project deleted');
+    return apiSuccess(null);
   } catch (err) {
     logger.error('Exception in DELETE /api/task-projects/[id]', { error: err }, 'TaskProjectsAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }

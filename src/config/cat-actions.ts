@@ -506,24 +506,6 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
   },
 };
 
-// ==================== HELPERS ====================
-
-export function getActionsByCategory(category: ActionCategory): CatAction[] {
-  return Object.values(CAT_ACTIONS).filter(a => a.category === category && a.enabled);
-}
-
-export function getEnabledActions(): CatAction[] {
-  return Object.values(CAT_ACTIONS).filter(a => a.enabled);
-}
-
-export function getHighRiskActions(): CatAction[] {
-  return Object.values(CAT_ACTIONS).filter(a => a.riskLevel === 'high' && a.enabled);
-}
-
-export function getActionById(id: string): CatAction | undefined {
-  return CAT_ACTIONS[id];
-}
-
 // Categories with metadata
 export const ACTION_CATEGORIES: Record<ActionCategory, { name: string; description: string }> = {
   entities: {

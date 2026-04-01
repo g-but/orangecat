@@ -23,5 +23,5 @@ export type {
 export { initiatePayment, checkPaymentStatus, buyerConfirmPayment } from './paymentFlowService';
 export { resolveSellerWallet, getSellerUserId } from './walletResolutionService';
 export { generateInvoice } from './invoiceGenerationService';
-export { checkNWCPaymentStatus } from './paymentStatusService';
+export { checkNWCPaymentStatus, checkOnchainPaymentStatus } from './paymentStatusService';
 export { encrypt, decrypt } from './encryptionService';

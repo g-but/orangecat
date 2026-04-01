@@ -9,7 +9,12 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse, HttpStatus } from '@/lib/api/responses';
+import {
+  apiUnauthorized,
+  apiValidationError,
+  apiInternalError,
+  apiSuccess,
+} from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskSchema, type TaskFilter } from '@/lib/schemas/tasks';
 import { TASK_DEFAULTS } from '@/config/tasks';
@@ -28,7 +33,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse query params
@@ -93,17 +98,19 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       logger.error('Failed to fetch tasks', { error }, 'TasksAPI');
-      return ApiResponses.internalServerError('Failed to fetch tasks');
+      return apiInternalError('Failed to fetch tasks');
     }
 
-    return createSuccessResponse({ tasks }, HttpStatus.OK, undefined, {
-      total: count || 0,
-      limit,
-      offset,
-    });
+    return apiSuccess(
+      { tasks },
+      {
+        total: count || 0,
+        limit,
+      }
+    );
   } catch (err) {
     logger.error('Exception in GET /api/tasks', { error: err }, 'TasksAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }
 
@@ -120,7 +127,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse and validate body
@@ -128,7 +135,7 @@ export async function POST(request: NextRequest) {
     const result = taskSchema.safeParse(body);
 
     if (!result.success) {
-      return ApiResponses.validationError('Validation failed', result.error.flatten());
+      return apiValidationError('Validation failed', result.error.flatten());
     }
 
     const taskData = result.data;
@@ -162,12 +169,12 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       logger.error('Failed to create task', { error }, 'TasksAPI');
-      return ApiResponses.internalServerError('Failed to create task');
+      return apiInternalError('Failed to create task');
     }
 
-    return createSuccessResponse({ task }, HttpStatus.CREATED, 'Task created');
+    return apiSuccess({ task }, { status: 201 });
   } catch (err) {
     logger.error('Exception in POST /api/tasks', { error: err }, 'TasksAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }

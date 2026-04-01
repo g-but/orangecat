@@ -11,7 +11,13 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse, HttpStatus } from '@/lib/api/responses';
+import {
+  apiUnauthorized,
+  apiNotFound,
+  apiValidationError,
+  apiInternalError,
+  apiSuccess,
+} from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskRequestSchema } from '@/lib/schemas/tasks';
 import { TASK_STATUSES } from '@/config/tasks';
@@ -47,7 +53,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse and validate body
@@ -55,7 +61,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const result = taskRequestSchema.safeParse(body);
 
     if (!result.success) {
-      return ApiResponses.validationError('Validation failed', result.error.flatten());
+      return apiValidationError('Validation failed', result.error.flatten());
     }
 
     const requestData = result.data;
@@ -70,10 +76,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (taskError) {
       if (taskError.code === 'PGRST116') {
-        return ApiResponses.notFound('Task');
+        return apiNotFound('Task not found');
       }
       logger.error('Failed to fetch task', { error: taskError, taskId }, 'TasksAPI');
-      return ApiResponses.internalServerError();
+      return apiInternalError();
     }
 
     const task = taskData as unknown as TaskRow;
@@ -87,7 +93,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         .single();
 
       if (userError || !requestedUser) {
-        return ApiResponses.notFound('Requested user');
+        return apiNotFound('Requested user not found');
       }
     }
 
@@ -117,7 +123,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (requestError) {
       logger.error('Failed to create task request', { error: requestError, taskId }, 'TasksAPI');
-      return ApiResponses.internalServerError('Failed to create request');
+      return apiInternalError('Failed to create request');
     }
 
     // Update task status to requested
@@ -165,13 +171,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       });
     }
 
-    return createSuccessResponse(
-      { request: taskRequest },
-      HttpStatus.CREATED,
-      isBroadcast ? 'Request sent to all' : 'Request sent'
-    );
+    return apiSuccess({ request: taskRequest }, { status: 201 });
   } catch (err) {
     logger.error('Exception in POST /api/tasks/[id]/request', { error: err }, 'TasksAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }

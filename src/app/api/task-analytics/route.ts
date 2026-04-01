@@ -8,7 +8,7 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse } from '@/lib/api/responses';
+import { apiUnauthorized, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { TASK_STATUSES } from '@/config/tasks';
 import { logger } from '@/utils/logger';
@@ -26,7 +26,7 @@ export async function GET(_request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Get counts for various task states
@@ -183,13 +183,13 @@ export async function GET(_request: NextRequest) {
       openRequests: openRequestsResult.count || 0,
     };
 
-    return createSuccessResponse({
+    return apiSuccess({
       stats,
       recentCompletions: recentCompletions || [],
       urgentTasks: urgentTasks || [],
     });
   } catch (err) {
     logger.error('Exception in GET /api/task-analytics', { error: err }, 'TaskAnalyticsAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }

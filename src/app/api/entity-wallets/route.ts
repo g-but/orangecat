@@ -1,7 +1,18 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { apiSuccess, apiError, apiCreated } from '@/lib/api/standardResponse';
+import {
+  apiSuccess,
+  apiError,
+  apiCreated,
+  apiBadRequest,
+  apiRateLimited,
+} from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
+import { entityWalletLinkSchema } from '@/lib/validation/finance';
+import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
+import { ENTITY_TYPES } from '@/config/entity-registry';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // GET /api/entity-wallets?entity_type=X&entity_id=Y  OR  ?wallet_id=X
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
@@ -12,6 +23,9 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
   const walletId = searchParams.get('wallet_id');
 
   if (walletId) {
+    if (!UUID_REGEX.test(walletId)) {
+      return apiBadRequest('wallet_id must be a valid UUID');
+    }
     // Get entities linked to a specific wallet
     const { data, error } = await supabase
       .from(DATABASE_TABLES.ENTITY_WALLETS)
@@ -29,7 +43,15 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
   }
 
   if (!entityType || !entityId) {
-    return apiError('entity_type and entity_id are required (or wallet_id)', 'MISSING_PARAMS', 400);
+    return apiBadRequest('entity_type and entity_id are required (or wallet_id)');
+  }
+
+  if (!UUID_REGEX.test(entityId)) {
+    return apiBadRequest('entity_id must be a valid UUID');
+  }
+
+  if (!ENTITY_TYPES.includes(entityType as any)) {
+    return apiBadRequest(`entity_type must be one of: ${ENTITY_TYPES.join(', ')}`);
   }
 
   // Get wallets linked to a specific entity, with joined wallet data
@@ -50,16 +72,27 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
 // POST /api/entity-wallets - Create a wallet-entity link
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
-  const body = await request.json();
-  const { wallet_id, entity_type, entity_id } = body as {
-    wallet_id?: string;
-    entity_type?: string;
-    entity_id?: string;
-  };
 
-  if (!wallet_id || !entity_type || !entity_id) {
-    return apiError('wallet_id, entity_type, and entity_id are required', 'MISSING_FIELDS', 400);
+  // Rate limiting
+  try {
+    await enforceUserWriteLimit(user.id);
+  } catch (e) {
+    if (e instanceof RateLimitError) {
+      const retryAfter = e.details?.retryAfter || 60;
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+    throw e;
   }
+
+  // Zod validation
+  const body = await request.json();
+  const result = entityWalletLinkSchema.safeParse(body);
+
+  if (!result.success) {
+    return apiBadRequest('Validation failed', result.error.flatten());
+  }
+
+  const { wallet_id, entity_type, entity_id } = result.data;
 
   // Verify the user owns this wallet
   const { data: wallet, error: walletError } = await supabase

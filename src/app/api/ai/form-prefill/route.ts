@@ -11,7 +11,13 @@
 
 import { z } from 'zod';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { ApiResponses } from '@/lib/api/responses';
+import {
+  apiBadRequest,
+  apiValidationError,
+  apiRateLimited,
+  apiInternalError,
+  apiSuccess,
+} from '@/lib/api/standardResponse';
 import { generateFormPrefill } from '@/lib/ai/form-prefill-service';
 import { getEntityConfig } from '@/config/entity-configs/get-config';
 import { isValidEntityType, type EntityType } from '@/config/entity-registry';
@@ -66,9 +72,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
   // Check rate limit
   if (!checkRateLimit(userId)) {
     logger.warn('Rate limit exceeded for AI form prefill', { userId }, 'AI');
-    return ApiResponses.rateLimitExceeded(
-      'Too many AI requests. Please wait a minute before trying again.'
-    );
+    return apiRateLimited('Too many AI requests. Please wait a minute before trying again.');
   }
 
   try {
@@ -77,23 +81,20 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     const parseResult = requestSchema.safeParse(body);
 
     if (!parseResult.success) {
-      return ApiResponses.validationError(
-        'Invalid request',
-        parseResult.error.flatten().fieldErrors
-      );
+      return apiValidationError('Invalid request', parseResult.error.flatten().fieldErrors);
     }
 
     const { entityType, description, existingData } = parseResult.data;
 
     // Validate entity type
     if (!isValidEntityType(entityType)) {
-      return ApiResponses.badRequest(`Invalid entity type: ${entityType}`);
+      return apiBadRequest(`Invalid entity type: ${entityType}`);
     }
 
     // Get entity configuration
     const entityConfig = getEntityConfig(entityType as EntityType);
     if (!entityConfig) {
-      return ApiResponses.badRequest(`No configuration found for entity type: ${entityType}`);
+      return apiBadRequest(`No configuration found for entity type: ${entityType}`);
     }
 
     logger.info(
@@ -120,7 +121,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         'AI'
       );
 
-      return ApiResponses.badRequest(result.error || 'Failed to generate form data');
+      return apiBadRequest(result.error || 'Failed to generate form data');
     }
 
     logger.info(
@@ -133,7 +134,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       'AI'
     );
 
-    return ApiResponses.success({
+    return apiSuccess({
       success: true,
       data: result.data,
       confidence: result.confidence,
@@ -148,8 +149,6 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       'AI'
     );
 
-    return ApiResponses.internalServerError(
-      'An unexpected error occurred while generating form data'
-    );
+    return apiInternalError('An unexpected error occurred while generating form data');
   }
 });

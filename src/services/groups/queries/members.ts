@@ -5,8 +5,8 @@
  * Unified for both circles and organizations.
  *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
- * Last Modified Summary: Created unified member queries
+ * Last Modified: 2026-03-31
+ * Last Modified Summary: Consolidate as-any casts into db-helpers
  */
 
 import supabase from '@/lib/supabase/browser';
@@ -15,10 +15,23 @@ import type { GroupMembersResponse, GroupMemberDetail } from '../types';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TABLES } from '../constants';
 import { checkGroupPermission } from '../permissions';
 import { getCurrentUserId } from '../utils/helpers';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { fromTable, type AnySupabaseClient } from '../db-helpers';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
+interface MemberRow {
+  id: string;
+  group_id: string;
+  user_id: string;
+  role: string;
+  joined_at: string;
+  invited_by: string | null;
+  permission_overrides: Record<string, unknown> | null;
+  profiles: {
+    id: string;
+    username: string | null;
+    name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
 
 /**
  * Get group members/stakeholders
@@ -40,13 +53,12 @@ export async function getGroupMembers(
       }
     } else {
       // Check if group is public
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: groupData } = await (sb.from(TABLES.groups) as any)
+      const { data: groupData } = await fromTable(sb, TABLES.groups)
         .select('is_public')
         .eq('id', groupId)
         .single();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const group = groupData as any;
+
+      const group = groupData as { is_public: boolean } | null;
 
       if (!group?.is_public) {
         return { success: false, error: 'Cannot view group members' };
@@ -54,8 +66,7 @@ export async function getGroupMembers(
     }
 
     // Build query
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query = (sb.from(TABLES.group_members) as any)
+    let query = fromTable(sb, TABLES.group_members)
       .select(
         `
         *,
@@ -85,26 +96,23 @@ export async function getGroupMembers(
     }
 
     // Transform to GroupMemberDetail format
-    const members: GroupMemberDetail[] =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data?.map((member: any) => ({
-        id: member.id,
-        group_id: member.group_id,
-        user_id: member.user_id,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        role: member.role as any,
-        role_type: member.role, // Map role to role_type for compatibility
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        status: 'active' as any,
-        joined_at: member.joined_at,
-        invited_by: member.invited_by || null,
-        voting_weight: 1.0, // group_members doesn't have voting_weight, use default
-        equity_percentage: null, // group_members doesn't have equity_percentage
-        permissions: member.permission_overrides || null,
-        username: member.profiles?.username || null,
-        display_name: member.profiles?.name || null,
-        avatar_url: member.profiles?.avatar_url || null,
-      })) || [];
+    const rows = (data || []) as MemberRow[];
+    const members: GroupMemberDetail[] = rows.map(member => ({
+      id: member.id,
+      group_id: member.group_id,
+      user_id: member.user_id,
+      role: member.role,
+      role_type: member.role, // Map role to role_type for compatibility
+      status: 'active',
+      joined_at: member.joined_at,
+      invited_by: member.invited_by || null,
+      voting_weight: 1.0, // group_members doesn't have voting_weight, use default
+      equity_percentage: null, // group_members doesn't have equity_percentage
+      permissions: member.permission_overrides || null,
+      username: member.profiles?.username || null,
+      display_name: member.profiles?.name || null,
+      avatar_url: member.profiles?.avatar_url || null,
+    }));
 
     return { success: true, members, total: count || 0 };
   } catch (error) {
@@ -133,8 +141,7 @@ export async function getGroupMember(
       }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (sb.from(TABLES.group_members) as any)
+    const { data, error } = await fromTable(sb, TABLES.group_members)
       .select(
         `
         *,
@@ -159,23 +166,23 @@ export async function getGroupMember(
       return { success: false, error: 'Member not found' };
     }
 
+    const row = data as MemberRow;
+
     const member: GroupMemberDetail = {
-      id: data.id,
-      group_id: data.group_id,
-      user_id: data.user_id,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      role: data.role as any,
-      role_type: data.role, // Map role to role_type for compatibility
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      status: 'active' as any,
-      joined_at: data.joined_at,
-      invited_by: data.invited_by || null,
+      id: row.id,
+      group_id: row.group_id,
+      user_id: row.user_id,
+      role: row.role,
+      role_type: row.role, // Map role to role_type for compatibility
+      status: 'active',
+      joined_at: row.joined_at,
+      invited_by: row.invited_by || null,
       voting_weight: 1.0, // group_members doesn't have voting_weight, use default
       equity_percentage: null, // group_members doesn't have equity_percentage
-      permissions: data.permission_overrides || null,
-      username: data.profiles?.username || null,
-      display_name: data.profiles?.name || null,
-      avatar_url: data.profiles?.avatar_url || null,
+      permissions: row.permission_overrides || null,
+      username: row.profiles?.username || null,
+      display_name: row.profiles?.name || null,
+      avatar_url: row.profiles?.avatar_url || null,
     };
 
     return { success: true, member };

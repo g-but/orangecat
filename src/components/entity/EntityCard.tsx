@@ -65,6 +65,12 @@ export interface EntityCardProps {
   onToggleVisibility?: () => void | Promise<void>;
   /** Whether visibility toggle is in progress */
   isTogglingVisibility?: boolean;
+  /** Current entity status (for publish/pause actions) */
+  entityStatus?: string;
+  /** Callback to change entity status */
+  onStatusChange?: (newStatus: string) => void | Promise<void>;
+  /** Whether status change is in progress */
+  isChangingStatus?: boolean;
   /** Custom header slot (e.g., status badges) */
   headerSlot?: ReactNode;
   /** Custom progress slot (e.g., funding progress bar) */
@@ -153,6 +159,9 @@ export function EntityCard({
   showOnProfile,
   onToggleVisibility,
   isTogglingVisibility,
+  entityStatus,
+  onStatusChange,
+  isChangingStatus,
   headerSlot,
   progressSlot,
   metricsSlot,
@@ -167,7 +176,8 @@ export function EntityCard({
   const showImage = imageSrc && !imageError;
 
   // Determine if we have action menu
-  const hasActions = editUrl || editHref || onEdit || onDelete || onToggleVisibility;
+  const hasActions =
+    editUrl || editHref || onEdit || onDelete || onToggleVisibility || onStatusChange;
 
   // Render image content (shared between linked and non-linked versions)
   const renderImage = () => (
@@ -211,14 +221,14 @@ export function EntityCard({
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
+      onKeyDown={onClick ? e => e.key === 'Enter' && onClick() : undefined}
     >
       {/* Image Section - smaller aspect ratio in compact mode */}
       <Link
         href={detailHref}
         className={cn(
-          "relative w-full overflow-hidden bg-gray-100 block",
-          compact ? "aspect-[4/3]" : "aspect-video"
+          'relative w-full overflow-hidden bg-gray-100 block',
+          compact ? 'aspect-[4/3]' : 'aspect-video'
         )}
       >
         {renderImage()}
@@ -237,6 +247,9 @@ export function EntityCard({
             showOnProfile={showOnProfile}
             onToggleVisibility={onToggleVisibility}
             isTogglingVisibility={isTogglingVisibility}
+            entityStatus={entityStatus}
+            onStatusChange={onStatusChange}
+            isChangingStatus={isChangingStatus}
           />
         </div>
       )}
@@ -246,7 +259,12 @@ export function EntityCard({
         <div className="absolute top-2 left-2 z-10">
           <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-800/80 text-white text-xs font-medium rounded-md">
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+              />
             </svg>
             Hidden
           </span>
@@ -254,28 +272,27 @@ export function EntityCard({
       )}
 
       {/* Content - reduced padding in compact mode */}
-      <div className={cn("flex flex-1 flex-col", compact ? "p-3" : "p-4")}>
+      <div className={cn('flex flex-1 flex-col', compact ? 'p-3' : 'p-4')}>
         {/* Badge Row */}
         {badge && (
-          <div className={cn(compact ? "mb-1" : "mb-2")}>
-            <Badge
-              variant="secondary"
-              className={cn('text-xs', badgeVariantClasses[badgeVariant])}
-            >
+          <div className={cn(compact ? 'mb-1' : 'mb-2')}>
+            <Badge variant="secondary" className={cn('text-xs', badgeVariantClasses[badgeVariant])}>
               {badge}
             </Badge>
           </div>
         )}
 
         {/* Header Slot */}
-        {headerSlot && <div className={cn(compact ? "mb-1" : "mb-2")}>{headerSlot}</div>}
+        {headerSlot && <div className={cn(compact ? 'mb-1' : 'mb-2')}>{headerSlot}</div>}
 
         {/* Title - smaller text in compact mode */}
         <Link href={detailHref}>
-          <h3 className={cn(
-            "font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-1",
-            compact ? "text-sm" : "text-lg"
-          )}>
+          <h3
+            className={cn(
+              'font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-1',
+              compact ? 'text-sm' : 'text-lg'
+            )}
+          >
             {title}
           </h3>
         </Link>
@@ -287,15 +304,17 @@ export function EntityCard({
 
         {/* Price Label */}
         {priceLabel && (
-          <p className={cn(compact ? "mt-1" : "mt-2", "text-sm font-medium text-orange-600")}>{priceLabel}</p>
+          <p className={cn(compact ? 'mt-1' : 'mt-2', 'text-sm font-medium text-orange-600')}>
+            {priceLabel}
+          </p>
         )}
 
         {/* Custom Metadata */}
-        {metadata && <div className={cn(compact ? "mt-1" : "mt-2")}>{metadata}</div>}
+        {metadata && <div className={cn(compact ? 'mt-1' : 'mt-2')}>{metadata}</div>}
 
         {/* Status and Category */}
         {(status || category) && (
-          <div className={cn(compact ? "mt-2" : "mt-3", "flex items-center justify-between")}>
+          <div className={cn(compact ? 'mt-2' : 'mt-3', 'flex items-center justify-between')}>
             <div className="flex items-center gap-2">
               {status && (
                 <Badge variant={status === 'active' ? 'default' : 'secondary'} className="text-xs">
@@ -308,15 +327,13 @@ export function EntityCard({
                 </Badge>
               )}
             </div>
-            {goalAmount && (
-              <span className="text-sm font-medium text-gray-900">{goalAmount}</span>
-            )}
+            {goalAmount && <span className="text-sm font-medium text-gray-900">{goalAmount}</span>}
           </div>
         )}
 
         {/* Funding Progress */}
         {fundingProgress !== undefined && (
-          <div className={cn(compact ? "mt-2" : "mt-3")}>
+          <div className={cn(compact ? 'mt-2' : 'mt-3')}>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Progress</span>
               <span className="font-medium text-gray-900">{fundingProgress}%</span>
@@ -331,13 +348,17 @@ export function EntityCard({
         )}
 
         {/* Progress Slot - tighter spacing in compact mode */}
-        {progressSlot && <div className={cn(compact ? "mt-2" : "mt-3")}>{progressSlot}</div>}
+        {progressSlot && <div className={cn(compact ? 'mt-2' : 'mt-3')}>{progressSlot}</div>}
 
         {/* Metrics Slot - tighter spacing in compact mode */}
-        {metricsSlot && <div className={cn(compact ? "mt-2" : "mt-3")}>{metricsSlot}</div>}
+        {metricsSlot && <div className={cn(compact ? 'mt-2' : 'mt-3')}>{metricsSlot}</div>}
 
         {/* Footer Slot - tighter spacing in compact mode */}
-        {footerSlot && <div className={cn(compact ? "mt-2 pt-2" : "mt-3 pt-3", "border-t border-gray-100")}>{footerSlot}</div>}
+        {footerSlot && (
+          <div className={cn(compact ? 'mt-2 pt-2' : 'mt-3 pt-3', 'border-t border-gray-100')}>
+            {footerSlot}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -3,11 +3,7 @@
 import { useState } from 'react';
 import { Wallet } from '@/types/wallet';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
-
-/** Convert a wallet's balance_btc to sats (integer) */
-function btcToSats(btc: number): number {
-  return Math.round(btc * 100_000_000);
-}
+import { bitcoinToSats as btcToSats } from '@/services/currency';
 
 interface TransferModalProps {
   isOpen: boolean;

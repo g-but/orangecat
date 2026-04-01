@@ -19,6 +19,7 @@ export type PaymentMethod = 'nwc' | 'lightning_address' | 'onchain';
 export type PaymentIntentStatus =
   | 'created'
   | 'invoice_ready'
+  | 'pending_confirmation'
   | 'paid'
   | 'expired'
   | 'failed'

@@ -5,14 +5,21 @@
  * Documents provide personal context that My Cat can use to give personalized advice.
  *
  * Created: 2026-01-20
- * Last Modified: 2026-01-20
- * Last Modified Summary: Initial creation
+ * Last Modified: 2026-03-31
+ * Last Modified Summary: Refactored to use generic base entity service for CRUD
  */
 
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
+import {
+  listEntityPage,
+  getEntity as baseGetEntity,
+  createEntity,
+  updateEntity,
+  deleteEntity,
+} from '@/domain/base/entityService';
 import type { DocumentFormData, DocumentVisibility, DocumentType } from '@/lib/validation';
 
 export interface Document {
@@ -43,95 +50,41 @@ export async function listDocumentsPage(
     visibility?: DocumentVisibility;
   }
 ) {
-  const supabase = await createServerClient();
-
-  let query = supabase.from(DATABASE_TABLES.USER_DOCUMENTS).select('*', { count: 'exact' });
-
-  if (userId) {
-    // Get actor for user
-    const actor = await getOrCreateUserActor(userId);
-    query = query.eq('actor_id', actor.id);
-  }
-
+  const eqFilters: Record<string, unknown> = {};
   if (filters?.document_type) {
-    query = query.eq('document_type', filters.document_type);
+    eqFilters.document_type = filters.document_type;
   }
-
   if (filters?.visibility) {
-    query = query.eq('visibility', filters.visibility);
+    eqFilters.visibility = filters.visibility;
   }
 
-  const { data, count, error } = await query
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (error) {
-    logger.error('Failed to list documents', { error: error.message, userId });
-    throw error;
-  }
-
-  return { items: (data || []) as Document[], total: count || 0 };
+  return listEntityPage<Document>('document', {
+    limit,
+    offset,
+    userId,
+    includeOwnDrafts: true,
+    filters: eqFilters,
+  });
 }
 
 /**
  * Get a single document by ID
  */
 export async function getDocument(id: string): Promise<Document | null> {
-  const supabase = await createServerClient();
-
-  const { data, error } = await supabase
-    .from(DATABASE_TABLES.USER_DOCUMENTS)
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (error) {
-    if (error.code === 'PGRST116') {
-      return null; // Not found
-    }
-    logger.error('Failed to get document', { error: error.message, id });
-    throw error;
-  }
-
-  return data as Document;
+  return baseGetEntity<Document>('document', id);
 }
 
 /**
  * Create a new document
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createDocument(userId: string, data: DocumentFormData): Promise<Document> {
-  const supabase = await createServerClient();
-
-  // Get or create actor for this user
-  const actor = await getOrCreateUserActor(userId);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: document, error } = await (supabase.from(DATABASE_TABLES.USER_DOCUMENTS) as any)
-    .insert({
-      actor_id: actor.id,
-      title: data.title,
-      content: data.content,
-      document_type: data.document_type || 'notes',
-      visibility: data.visibility || 'cat_visible',
-      tags: data.tags || [],
-    })
-    .select()
-    .single();
-
-  if (error) {
-    logger.error('Failed to create document', {
-      error,
-      errorMessage: error.message,
-      errorCode: error.code,
-      userId,
-      actorId: actor.id,
-      data,
-    });
-    throw error;
-  }
-
-  return document as Document;
+  return createEntity<Document>('document', userId, {
+    title: data.title,
+    content: data.content,
+    document_type: data.document_type || 'notes',
+    visibility: data.visibility || 'cat_visible',
+    tags: data.tags || [],
+  });
 }
 
 /**
@@ -142,65 +95,31 @@ export async function updateDocument(
   userId: string,
   data: Partial<DocumentFormData>
 ): Promise<Document> {
-  const supabase = await createServerClient();
-
-  // Verify the document belongs to this user's actor
-  const actor = await getOrCreateUserActor(userId);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: document, error } = await (supabase.from(DATABASE_TABLES.USER_DOCUMENTS) as any)
-    .update({
-      ...(data.title !== undefined && { title: data.title }),
-      ...(data.content !== undefined && { content: data.content }),
-      ...(data.document_type !== undefined && { document_type: data.document_type }),
-      ...(data.visibility !== undefined && { visibility: data.visibility }),
-      ...(data.tags !== undefined && { tags: data.tags }),
-    })
-    .eq('id', id)
-    .eq('actor_id', actor.id)
-    .select()
-    .single();
-
-  if (error) {
-    logger.error('Failed to update document', {
-      error,
-      errorMessage: error.message,
-      errorCode: error.code,
-      id,
-      userId,
-      data,
-    });
-    throw error;
+  const updateData: Record<string, unknown> = {};
+  if (data.title !== undefined) {
+    updateData.title = data.title;
+  }
+  if (data.content !== undefined) {
+    updateData.content = data.content;
+  }
+  if (data.document_type !== undefined) {
+    updateData.document_type = data.document_type;
+  }
+  if (data.visibility !== undefined) {
+    updateData.visibility = data.visibility;
+  }
+  if (data.tags !== undefined) {
+    updateData.tags = data.tags;
   }
 
-  return document as Document;
+  return updateEntity<Document>('document', id, userId, updateData);
 }
 
 /**
  * Delete a document
  */
 export async function deleteDocument(id: string, userId: string): Promise<void> {
-  const supabase = await createServerClient();
-
-  // Verify the document belongs to this user's actor
-  const actor = await getOrCreateUserActor(userId);
-
-  const { error } = await supabase
-    .from(DATABASE_TABLES.USER_DOCUMENTS)
-    .delete()
-    .eq('id', id)
-    .eq('actor_id', actor.id);
-
-  if (error) {
-    logger.error('Failed to delete document', {
-      error,
-      errorMessage: error.message,
-      errorCode: error.code,
-      id,
-      userId,
-    });
-    throw error;
-  }
+  return deleteEntity('document', id, userId);
 }
 
 /**

@@ -8,7 +8,7 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse } from '@/lib/api/responses';
+import { apiUnauthorized, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { TASK_TYPES } from '@/config/tasks';
 import { logger } from '@/utils/logger';
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse query params
@@ -74,13 +74,13 @@ export async function GET(request: NextRequest) {
 
     if (tasksError) {
       logger.error('Failed to fetch recurring tasks', { error: tasksError }, 'TaskAnalyticsAPI');
-      return ApiResponses.internalServerError('Failed to fetch tasks');
+      return apiInternalError('Failed to fetch tasks');
     }
 
     const recurringTasks = (tasksData || []) as TaskRow[];
 
     if (recurringTasks.length === 0) {
-      return createSuccessResponse({
+      return apiSuccess({
         fairnessMetrics: [],
         summary: {
           totalRecurringTasks: 0,
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
 
     if (completionsError) {
       logger.error('Failed to fetch completions', { error: completionsError }, 'TaskAnalyticsAPI');
-      return ApiResponses.internalServerError('Failed to fetch completions');
+      return apiInternalError('Failed to fetch completions');
     }
 
     const completions = (completionsData || []) as CompletionRow[];
@@ -214,7 +214,7 @@ export async function GET(request: NextRequest) {
           tasksWithCompletions.length
         : 0;
 
-    return createSuccessResponse({
+    return apiSuccess({
       fairnessMetrics: taskMetrics,
       summary: {
         totalRecurringTasks: recurringTasks.length,
@@ -237,6 +237,6 @@ export async function GET(request: NextRequest) {
       { error: err },
       'TaskAnalyticsAPI'
     );
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }

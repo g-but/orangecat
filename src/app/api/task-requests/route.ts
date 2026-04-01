@@ -10,7 +10,7 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse } from '@/lib/api/responses';
+import { apiUnauthorized, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse query params
@@ -75,12 +75,12 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       logger.error('Failed to fetch task requests', { error }, 'TaskRequestsAPI');
-      return ApiResponses.internalServerError('Failed to fetch requests');
+      return apiInternalError('Failed to fetch requests');
     }
 
-    return createSuccessResponse({ requests });
+    return apiSuccess({ requests });
   } catch (err) {
     logger.error('Exception in GET /api/task-requests', { error: err }, 'TaskRequestsAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }

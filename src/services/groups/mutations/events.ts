@@ -4,8 +4,8 @@
  * Handles event creation, updates, deletion, and RSVP operations.
  *
  * Created: 2025-12-30
- * Last Modified: 2025-12-30
- * Last Modified Summary: Initial implementation
+ * Last Modified: 2026-03-31
+ * Last Modified Summary: Consolidate as-any casts into db-helpers
  */
 
 import supabase from '@/lib/supabase/browser';
@@ -14,17 +14,16 @@ import { getCurrentUserId, isGroupMember, getUserRole } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
 import { STATUS } from '@/config/database-constants';
 import { TABLES } from '../constants';
+import { fromTable, type AnySupabaseClient } from '../db-helpers';
 import type {
   CreateEventInput,
   UpdateEventInput,
   RsvpStatus,
   EventResponse,
   RsvpResponse,
+  GroupEvent,
+  EventRsvp,
 } from '../types';
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Create a new event for a group
@@ -52,12 +51,7 @@ export async function createEvent(
     }
 
     // Create event
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData, error } = await (
-      sb
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(TABLES.group_events) as any
-    )
+    const { data, error } = await fromTable(sb, TABLES.group_events)
       .insert({
         ...input,
         creator_id: userId,
@@ -69,28 +63,28 @@ export async function createEvent(
       })
       .select()
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = eventData as any;
 
     if (error) {
       logger.error('Failed to create event', error, 'Groups');
       return { success: false, error: error.message };
     }
 
+    const event = data as GroupEvent;
+
     // Log activity
     await logGroupActivity(
       input.group_id,
       userId,
       'created_event',
-      `Created event: ${data.title}`,
+      `Created event: ${event.title}`,
       {
-        event_id: data.id,
-        event_title: data.title,
+        event_id: event.id,
+        event_title: event.title,
       },
       sb
     );
 
-    return { success: true, event: data };
+    return { success: true, event };
   } catch (error) {
     logger.error('Exception creating event', error, 'Groups');
     return { success: false, error: 'Failed to create event' };
@@ -113,21 +107,16 @@ export async function updateEvent(
     }
 
     // Get event to check permissions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData, error: fetchError } = await (
-      sb
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(TABLES.group_events) as any
-    )
+    const { data: existing, error: fetchError } = await fromTable(sb, TABLES.group_events)
       .select('id, group_id, creator_id')
       .eq('id', eventId)
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const event = eventData as any;
 
-    if (fetchError || !event) {
+    if (fetchError || !existing) {
       return { success: false, error: 'Event not found' };
     }
+
+    const event = existing as { id: string; group_id: string; creator_id: string };
 
     // Check if user is creator or admin
     const role = await getUserRole(event.group_id, userId, sb);
@@ -142,38 +131,33 @@ export async function updateEvent(
     }
 
     // Update event
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: updatedData, error } = await (
-      sb
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(TABLES.group_events) as any
-    )
+    const { data: updated, error } = await fromTable(sb, TABLES.group_events)
       .update(input)
       .eq('id', eventId)
       .select()
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = updatedData as any;
 
     if (error) {
       logger.error('Failed to update event', error, 'Groups');
       return { success: false, error: error.message };
     }
 
+    const updatedEvent = updated as GroupEvent;
+
     // Log activity
     await logGroupActivity(
       event.group_id,
       userId,
       'updated_event',
-      `Updated event: ${data.title}`,
+      `Updated event: ${updatedEvent.title}`,
       {
         event_id: eventId,
-        event_title: data.title,
+        event_title: updatedEvent.title,
       },
       sb
     );
 
-    return { success: true, event: data };
+    return { success: true, event: updatedEvent };
   } catch (error) {
     logger.error('Exception updating event', error, 'Groups');
     return { success: false, error: 'Failed to update event' };
@@ -195,21 +179,16 @@ export async function deleteEvent(
     }
 
     // Get event to check permissions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData2, error: fetchError } = await (
-      sb
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(TABLES.group_events) as any
-    )
+    const { data: existing, error: fetchError } = await fromTable(sb, TABLES.group_events)
       .select('id, group_id, creator_id, title')
       .eq('id', eventId)
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const event = eventData2 as any;
 
-    if (fetchError || !event) {
+    if (fetchError || !existing) {
       return { success: false, error: 'Event not found' };
     }
+
+    const event = existing as { id: string; group_id: string; creator_id: string; title: string };
 
     // Check if user is creator or admin
     const role = await getUserRole(event.group_id, userId, sb);
@@ -224,14 +203,7 @@ export async function deleteEvent(
     }
 
     // Delete event (RSVPs will be cascade deleted)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (
-      sb
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(TABLES.group_events) as any
-    )
-      .delete()
-      .eq('id', eventId);
+    const { error } = await fromTable(sb, TABLES.group_events).delete().eq('id', eventId);
 
     if (error) {
       logger.error('Failed to delete event', error, 'Groups');
@@ -274,21 +246,21 @@ export async function rsvpToEvent(
     }
 
     // Get event to verify it exists and is accessible
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData3, error: fetchError } = await (
-      sb
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(TABLES.group_events) as any
-    )
+    const { data: existing, error: fetchError } = await fromTable(sb, TABLES.group_events)
       .select('id, group_id, is_public, requires_rsvp')
       .eq('id', eventId)
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const event = eventData3 as any;
 
-    if (fetchError || !event) {
+    if (fetchError || !existing) {
       return { success: false, error: 'Event not found' };
     }
+
+    const event = existing as {
+      id: string;
+      group_id: string;
+      is_public: boolean;
+      requires_rsvp: boolean;
+    };
 
     // Check if user can see the event (public or member)
     const isMember = await isGroupMember(event.group_id, userId, sb);
@@ -297,12 +269,7 @@ export async function rsvpToEvent(
     }
 
     // Upsert RSVP
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: rsvpData, error } = await (
-      sb
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(TABLES.group_event_rsvps) as any
-    )
+    const { data: rsvpData, error } = await fromTable(sb, TABLES.group_event_rsvps)
       .upsert(
         {
           event_id: eventId,
@@ -315,13 +282,13 @@ export async function rsvpToEvent(
       )
       .select()
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = rsvpData as any;
 
     if (error) {
       logger.error('Failed to RSVP to event', error, 'Groups');
       return { success: false, error: error.message };
     }
+
+    const rsvp = rsvpData as EventRsvp;
 
     // Log activity
     await logGroupActivity(
@@ -336,7 +303,7 @@ export async function rsvpToEvent(
       sb
     );
 
-    return { success: true, rsvp: data };
+    return { success: true, rsvp };
   } catch (error) {
     logger.error('Exception RSVPing to event', error, 'Groups');
     return { success: false, error: 'Failed to RSVP to event' };

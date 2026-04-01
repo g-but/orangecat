@@ -15,7 +15,7 @@ import {
   parseBTCAmount,
   validateBTCAmount,
   convertCurrency,
-} from '../../../src/utils/currency';
+} from '../../../src/services/currency';
 
 describe('🪙 Currency Utilities - Comprehensive Coverage', () => {
   describe('💰 Bitcoin Formatting', () => {

@@ -1,13 +1,17 @@
 import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
 import { TABLES } from '../constants';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { fromTable, type AnySupabaseClient } from '../db-helpers';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ProposalRecord = any;
+interface ProposalRecord {
+  id: string;
+  group_id: string;
+  proposer_id: string;
+  action_type?: string | null;
+  action_data?: Record<string, unknown> | null;
+  executed_at?: string;
+  execution_result?: Record<string, unknown>;
+}
 
 type ActionHandler = (
   proposalId: string,
@@ -26,7 +30,8 @@ const handlers: Record<string, ActionHandler> = {
       // Idempotent: just set group ownership if not already
       const groupId = proposal.group_id;
       const { getTableName } = await import('@/config/entity-registry');
-      const tableName = getTableName(entity_type);
+      type EntityType = import('@/config/entity-registry').EntityType;
+      const tableName = getTableName(entity_type as EntityType);
 
       // Fetch group's actor id
       const { getActorByGroup } = await import('@/services/actors');
@@ -35,8 +40,7 @@ const handlers: Record<string, ActionHandler> = {
         return;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (sb.from(tableName) as any)
+      await fromTable(sb, tableName)
         .update({ actor_id: groupActor.id, group_id: groupId })
         .eq('id', entity_id);
     } catch (error) {
@@ -58,7 +62,7 @@ const handlers: Record<string, ActionHandler> = {
       }
 
       // Get group's actor_id for party_a if not provided
-      let partyAActorId = party_a_actor_id;
+      let partyAActorId = party_a_actor_id as string;
       if (!partyAActorId) {
         const { getActorByGroup } = await import('@/services/actors');
         const groupActor = await getActorByGroup(proposal.group_id);
@@ -69,11 +73,13 @@ const handlers: Record<string, ActionHandler> = {
         partyAActorId = groupActor.id;
       }
 
+      type CreateContractInput =
+        import('@/services/contracts/mutations/contracts').CreateContractInput;
       const result = await createContract({
         party_a_actor_id: partyAActorId,
-        party_b_actor_id,
-        contract_type,
-        terms: terms || {},
+        party_b_actor_id: party_b_actor_id as string,
+        contract_type: contract_type as CreateContractInput['contract_type'],
+        terms: (terms || {}) as Record<string, unknown>,
         proposal_id: proposal.id,
       });
 
@@ -115,12 +121,7 @@ const handlers: Record<string, ActionHandler> = {
       });
 
       // Update proposal with created project ID
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (
-        sb
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from(TABLES.group_proposals) as any
-      )
+      await fromTable(sb, TABLES.group_proposals)
         .update({
           action_data: {
             ...proposal.action_data,
@@ -164,12 +165,7 @@ const handlers: Record<string, ActionHandler> = {
       // 3. Notify authorized signers
       // 4. Wait for multisig execution
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (
-        sb
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from(TABLES.group_proposals) as any
-      )
+      await fromTable(sb, TABLES.group_proposals)
         .update({
           action_data: {
             ...proposal.action_data,
@@ -202,7 +198,11 @@ export async function executeProposalAction(
 ): Promise<void> {
   const sb = client || supabase;
   try {
-    const action = proposal.action_type as string;
+    const action = proposal.action_type;
+    if (!action) {
+      logger.warn('No action type on proposal', { proposalId }, 'Groups');
+      return;
+    }
     const handler = handlers[action];
     if (!handler) {
       logger.warn('Unknown proposal action', { action }, 'Groups');
@@ -210,12 +210,7 @@ export async function executeProposalAction(
     }
 
     // Mark as executed before/after to avoid duplicate runs
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: reloaded } = await (
-      sb
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(TABLES.group_proposals) as any
-    )
+    const { data: reloaded } = await fromTable(sb, TABLES.group_proposals)
       .select('executed_at, execution_result')
       .eq('id', proposalId)
       .single();
@@ -226,12 +221,7 @@ export async function executeProposalAction(
 
     await handler(proposalId, proposal, sb);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (
-      sb
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(TABLES.group_proposals) as any
-    )
+    await fromTable(sb, TABLES.group_proposals)
       .update({
         executed_at: new Date().toISOString(),
         execution_result: { ok: true, action: proposal.action_type },
@@ -239,12 +229,7 @@ export async function executeProposalAction(
       .eq('id', proposalId);
   } catch (error) {
     logger.error('Exception executing proposal action', error, 'Groups');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (
-      sb
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(TABLES.group_proposals) as any
-    )
+    await fromTable(sb, TABLES.group_proposals)
       .update({
         executed_at: new Date().toISOString(),
         execution_result: { ok: false, error: String(error) },

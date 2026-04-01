@@ -11,7 +11,12 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse, HttpStatus } from '@/lib/api/responses';
+import {
+  apiUnauthorized,
+  apiValidationError,
+  apiInternalError,
+  apiSuccess,
+} from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskProjectSchema } from '@/lib/schemas/tasks';
 import { PROJECT_DEFAULTS } from '@/config/tasks';
@@ -30,7 +35,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse query params
@@ -55,13 +60,13 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       logger.error('Failed to fetch task projects', { error }, 'TaskProjectsAPI');
-      return ApiResponses.internalServerError('Failed to fetch projects');
+      return apiInternalError('Failed to fetch projects');
     }
 
-    return createSuccessResponse({ projects });
+    return apiSuccess({ projects });
   } catch (err) {
     logger.error('Exception in GET /api/task-projects', { error: err }, 'TaskProjectsAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }
 
@@ -78,7 +83,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse and validate body
@@ -86,7 +91,7 @@ export async function POST(request: NextRequest) {
     const result = taskProjectSchema.safeParse(body);
 
     if (!result.success) {
-      return ApiResponses.validationError('Validation failed', result.error.flatten());
+      return apiValidationError('Validation failed', result.error.flatten());
     }
 
     const projectData = result.data;
@@ -107,12 +112,12 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       logger.error('Failed to create task project', { error }, 'TaskProjectsAPI');
-      return ApiResponses.internalServerError('Failed to create project');
+      return apiInternalError('Failed to create project');
     }
 
-    return createSuccessResponse({ project }, HttpStatus.CREATED, 'Project created');
+    return apiSuccess({ project }, { status: 201 });
   } catch (err) {
     logger.error('Exception in POST /api/task-projects', { error: err }, 'TaskProjectsAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }

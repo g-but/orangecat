@@ -17,6 +17,7 @@ import { Progress } from '@/components/ui/progress';
 import { formatDistanceToNow } from 'date-fns';
 import type { Loan } from '@/types/loans';
 import { STATUS } from '@/config/database-constants';
+import { formatCurrency as formatCurrencyFn } from '@/services/currency';
 
 interface LoanCardProps {
   loan: Loan;
@@ -24,18 +25,8 @@ interface LoanCardProps {
 }
 
 export function LoanCard({ loan, viewMode = 'grid' }: LoanCardProps) {
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    if (currency === 'BTC') {
-      return `${(amount / 100000000).toFixed(8)} BTC`;
-    }
-    if (currency === 'SATS') {
-      return `${amount.toLocaleString()} SATS`;
-    }
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency === 'EUR' ? 'EUR' : 'USD',
-    }).format(amount);
-  };
+  const formatAmount = (amount: number, currency: string = 'USD') =>
+    formatCurrencyFn(amount, currency);
 
   const calculateProgress = (original: number, remaining: number) => {
     if (original === 0) {
@@ -60,7 +51,7 @@ export function LoanCard({ loan, viewMode = 'grid' }: LoanCardProps) {
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-gray-900 truncate">{loan.title}</h3>
               <p className="text-sm text-gray-500 truncate">
-                {formatCurrency(loan.remaining_balance, loan.currency)} remaining
+                {formatAmount(loan.remaining_balance, loan.currency)} remaining
               </p>
             </div>
 
@@ -118,13 +109,13 @@ export function LoanCard({ loan, viewMode = 'grid' }: LoanCardProps) {
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Remaining</span>
               <span className="font-semibold text-blue-600">
-                {formatCurrency(loan.remaining_balance, loan.currency)}
+                {formatAmount(loan.remaining_balance, loan.currency)}
               </span>
             </div>
             <Progress value={progress} className="h-1.5" />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{progress.toFixed(0)}% funded</span>
-              <span>{formatCurrency(loan.original_amount, loan.currency)} total</span>
+              <span>{formatAmount(loan.original_amount, loan.currency)} total</span>
             </div>
           </div>
 
@@ -139,7 +130,7 @@ export function LoanCard({ loan, viewMode = 'grid' }: LoanCardProps) {
             {loan.monthly_payment && (
               <div className="flex items-center gap-1">
                 <TrendingUp className="h-3 w-3 text-gray-400" />
-                <span>{formatCurrency(loan.monthly_payment, loan.currency)}/mo</span>
+                <span>{formatAmount(loan.monthly_payment, loan.currency)}/mo</span>
               </div>
             )}
           </div>

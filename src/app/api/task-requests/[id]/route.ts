@@ -8,7 +8,15 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { ApiResponses, createSuccessResponse, HttpStatus } from '@/lib/api/responses';
+import {
+  apiUnauthorized,
+  apiForbidden,
+  apiNotFound,
+  apiBadRequest,
+  apiValidationError,
+  apiInternalError,
+  apiSuccess,
+} from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { requestResponseSchema } from '@/lib/schemas/tasks';
 import { TASK_STATUSES, REQUEST_STATUSES } from '@/config/tasks';
@@ -52,7 +60,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return ApiResponses.authenticationRequired();
+      return apiUnauthorized('Authentication required');
     }
 
     // Parse and validate body
@@ -60,7 +68,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const result = requestResponseSchema.safeParse(body);
 
     if (!result.success) {
-      return ApiResponses.validationError('Validation failed', result.error.flatten());
+      return apiValidationError('Validation failed', result.error.flatten());
     }
 
     const responseData = result.data;
@@ -79,14 +87,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        return ApiResponses.notFound('Request');
+        return apiNotFound('Request not found');
       }
       logger.error(
         'Failed to fetch task request',
         { error: fetchError, requestId },
         'TaskRequestsAPI'
       );
-      return ApiResponses.internalServerError();
+      return apiInternalError();
     }
 
     const taskRequest = requestData as unknown as TaskRequestRow;
@@ -98,12 +106,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       taskRequest.requested_user_id === null; // Broadcast
 
     if (!canRespond) {
-      return ApiResponses.authorizationFailed('You cannot respond to this request');
+      return apiForbidden('You cannot respond to this request');
     }
 
     // Verify request is still pending
     if (taskRequest.status !== REQUEST_STATUSES.PENDING) {
-      return ApiResponses.badRequest('This request has already been answered');
+      return apiBadRequest('This request has already been answered');
     }
 
     // Update request
@@ -125,7 +133,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         { error: updateError, requestId },
         'TaskRequestsAPI'
       );
-      return ApiResponses.internalServerError('Failed to respond to request');
+      return apiInternalError('Failed to respond to request');
     }
 
     // If accepted, update task status to in_progress
@@ -169,13 +177,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       sourceEntityId: taskId,
     });
 
-    return createSuccessResponse(
-      { request: updatedRequest },
-      HttpStatus.OK,
-      responseData.status === REQUEST_STATUSES.ACCEPTED ? 'Request accepted' : 'Request declined'
-    );
+    return apiSuccess({ request: updatedRequest });
   } catch (err) {
     logger.error('Exception in PATCH /api/task-requests/[id]', { error: err }, 'TaskRequestsAPI');
-    return ApiResponses.internalServerError();
+    return apiInternalError();
   }
 }

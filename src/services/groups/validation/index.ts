@@ -5,8 +5,8 @@
  * Uses only the new unified groups types.
  *
  * Created: 2025-01-30
- * Last Modified: 2025-12-29
- * Last Modified Summary: Simplified to use only new groups types
+ * Last Modified: 2026-03-31
+ * Last Modified Summary: Remove as-any casts by typing .includes() properly
  */
 
 import { z } from 'zod';
@@ -16,22 +16,24 @@ import { GOVERNANCE_PRESETS } from '@/config/governance-presets';
 
 // Valid label values - auto-derived from config (SSOT)
 // Adding a new label to GROUP_LABELS automatically includes it here
-const validLabels = Object.keys(GROUP_LABELS) as readonly string[];
+const validLabels = Object.keys(GROUP_LABELS);
 const validLabelsTuple = Object.keys(GROUP_LABELS) as [string, ...string[]]; // For zod.enum
 
 // Valid governance presets - auto-derived from config (SSOT)
-const validGovernancePresets = Object.keys(GOVERNANCE_PRESETS) as readonly string[];
+const validGovernancePresets = Object.keys(GOVERNANCE_PRESETS);
 const validGovernancePresetsTuple = Object.keys(GOVERNANCE_PRESETS) as [string, ...string[]]; // For zod.enum
 
 // Valid visibility values from config
 const validVisibilities = ['public', 'members_only', 'private'] as const;
+const validVisibilitiesArray: string[] = [...validVisibilities];
 
 /**
  * Validate create group request
  */
-export function validateCreateGroupRequest(
-  request: CreateGroupInput
-): { valid: boolean; errors: Array<{ field: string; message: string }> } {
+export function validateCreateGroupRequest(request: CreateGroupInput): {
+  valid: boolean;
+  errors: Array<{ field: string; message: string }>;
+} {
   const errors: Array<{ field: string; message: string }> = [];
 
   // Name validation
@@ -50,17 +52,12 @@ export function validateCreateGroupRequest(
   // Label validation
   if (!request.label) {
     errors.push({ field: 'label', message: 'Group label is required' });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } else if (!validLabels.includes(request.label as any)) {
+  } else if (!validLabels.includes(request.label)) {
     errors.push({ field: 'label', message: `Label must be one of: ${validLabels.join(', ')}` });
   }
 
   // Governance preset validation
-  if (
-    request.governance_preset &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    !validGovernancePresets.includes(request.governance_preset as any)
-  ) {
+  if (request.governance_preset && !validGovernancePresets.includes(request.governance_preset)) {
     errors.push({
       field: 'governance_preset',
       message: `Governance preset must be one of: ${validGovernancePresets.join(', ')}`,
@@ -68,8 +65,7 @@ export function validateCreateGroupRequest(
   }
 
   // Visibility validation
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (request.visibility && !validVisibilities.includes(request.visibility as any)) {
+  if (request.visibility && !validVisibilitiesArray.includes(request.visibility)) {
     errors.push({
       field: 'visibility',
       message: `Visibility must be one of: ${validVisibilities.join(', ')}`,
@@ -82,9 +78,10 @@ export function validateCreateGroupRequest(
 /**
  * Validate update group request
  */
-export function validateUpdateGroupRequest(
-  request: UpdateGroupInput
-): { valid: boolean; errors: Array<{ field: string; message: string }> } {
+export function validateUpdateGroupRequest(request: UpdateGroupInput): {
+  valid: boolean;
+  errors: Array<{ field: string; message: string }>;
+} {
   const errors: Array<{ field: string; message: string }> = [];
 
   // Name validation (if provided)
@@ -98,21 +95,23 @@ export function validateUpdateGroupRequest(
   }
 
   // Description validation (if provided)
-  if (request.description !== undefined && request.description !== null && request.description.length > 2000) {
+  if (
+    request.description !== undefined &&
+    request.description !== null &&
+    request.description.length > 2000
+  ) {
     errors.push({ field: 'description', message: 'Description cannot exceed 2000 characters' });
   }
 
   // Label validation (if provided)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (request.label !== undefined && !validLabels.includes(request.label as any)) {
+  if (request.label !== undefined && !validLabels.includes(request.label)) {
     errors.push({ field: 'label', message: `Label must be one of: ${validLabels.join(', ')}` });
   }
 
   // Governance preset validation (if provided)
   if (
     request.governance_preset !== undefined &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    !validGovernancePresets.includes(request.governance_preset as any)
+    !validGovernancePresets.includes(request.governance_preset)
   ) {
     errors.push({
       field: 'governance_preset',
@@ -121,11 +120,7 @@ export function validateUpdateGroupRequest(
   }
 
   // Visibility validation (if provided)
-  if (
-    request.visibility !== undefined &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    !validVisibilities.includes(request.visibility as any)
-  ) {
+  if (request.visibility !== undefined && !validVisibilitiesArray.includes(request.visibility)) {
     errors.push({
       field: 'visibility',
       message: `Visibility must be one of: ${validVisibilities.join(', ')}`,
@@ -175,4 +170,3 @@ export const updateGroupSchema = z.object({
 // Export inferred types
 export type CreateGroupSchemaType = z.infer<typeof createGroupSchema>;
 export type UpdateGroupSchemaType = z.infer<typeof updateGroupSchema>;
-

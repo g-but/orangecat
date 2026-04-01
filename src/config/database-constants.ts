@@ -150,6 +150,18 @@ export const STATUS = {
     COMPLETED: 'completed',
     CANCELLED: 'cancelled',
   },
+  ASSETS: {
+    DRAFT: 'draft',
+    ACTIVE: 'active',
+    ARCHIVED: 'archived',
+  },
+  PROJECTS: {
+    DRAFT: 'draft',
+    ACTIVE: 'active',
+    PAUSED: 'paused',
+    COMPLETED: 'completed',
+    CANCELLED: 'cancelled',
+  },
 } as const;
 
 /**
@@ -245,44 +257,3 @@ export const CONVERSATION_TYPES = {
 } as const;
 
 export type ConversationType = (typeof CONVERSATION_TYPES)[keyof typeof CONVERSATION_TYPES];
-
-/**
- * Visibility levels
- */
-export const VISIBILITY = {
-  PUBLIC: 'public',
-  MEMBERS_ONLY: 'members_only',
-  PRIVATE: 'private',
-} as const;
-
-export type Visibility = (typeof VISIBILITY)[keyof typeof VISIBILITY];
-
-/**
- * Vote values
- */
-export const VOTES = {
-  YES: 'yes',
-  NO: 'no',
-  ABSTAIN: 'abstain',
-} as const;
-
-export type Vote = (typeof VOTES)[keyof typeof VOTES];
-
-/**
- * Support types for projects
- */
-export const SUPPORT_TYPES = {
-  BITCOIN_DONATION: 'bitcoin_donation',
-  SIGNATURE: 'signature',
-  MESSAGE: 'message',
-  REACTION: 'reaction',
-} as const;
-
-export type SupportType = (typeof SUPPORT_TYPES)[keyof typeof SUPPORT_TYPES];
-
-/**
- * Helper function to check if a status is valid
- */
-export function isValidStatus<T extends keyof typeof STATUS>(entity: T, status: string): boolean {
-  return Object.values(STATUS[entity]).includes(status as never);
-}

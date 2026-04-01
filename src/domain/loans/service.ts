@@ -1,9 +1,9 @@
 import { createServerClient } from '@/lib/supabase/server';
-import { logger } from '@/utils/logger';
 import { isTableNotFound } from '@/lib/db/errors';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getTableName } from '@/config/entity-registry';
-import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
+import { STATUS } from '@/config/database-constants';
+import { createEntity } from '@/domain/base/entityService';
 
 interface CreateLoanInput {
   loan_type?: 'new_request' | 'existing_refinance';
@@ -51,14 +51,12 @@ export async function createLoan(
     throw new Error('Mock mode is disabled by policy. Set LOANS_WRITE_MODE=db');
   }
 
-  const client = supabase || (await createServerClient());
-
   // Extract collateral (will be handled separately)
   const { collateral: _collateral, ...loanInput } = input;
 
   // Map form fields to database columns
   // Handle both new schema (original_amount) and legacy schema (amount_sats)
-  // Convert original_amount to sats for legacy field (rough conversion: 1 CHF ≈ 86,000 sats)
+  // Convert original_amount to sats for legacy field (rough conversion: 1 CHF ~ 86,000 sats)
   const amountInSats =
     loanInput.original_amount && loanInput.original_amount > 0
       ? Math.floor((loanInput.original_amount * 100000000) / 86000)
@@ -72,56 +70,39 @@ export async function createLoan(
     return value;
   };
 
-  // Resolve user to actor for ownership
-  const actor = await getOrCreateUserActor(userId);
-
-  const payload: Record<string, unknown> = {
-    actor_id: actor.id,
-    title: loanInput.title,
-    description: loanInput.description || '',
-    loan_type: loanInput.loan_type || 'new_request',
-    // New schema fields
-    original_amount: loanInput.original_amount,
-    remaining_balance: loanInput.remaining_balance,
-    interest_rate: normalizeToNull(loanInput.interest_rate),
-    loan_category_id: normalizeToNull(loanInput.loan_category_id), // UUID column - empty string becomes null
-    bitcoin_address: normalizeToNull(loanInput.bitcoin_address),
-    lightning_address: normalizeToNull(loanInput.lightning_address),
-    fulfillment_type: loanInput.fulfillment_type || 'manual',
-    currency: loanInput.currency || PLATFORM_DEFAULT_CURRENCY,
-    // Refinancing fields
-    current_lender: normalizeToNull(loanInput.current_lender),
-    current_interest_rate: normalizeToNull(loanInput.current_interest_rate),
-    monthly_payment: normalizeToNull(loanInput.monthly_payment),
-    desired_rate: normalizeToNull(loanInput.desired_rate),
-    // Legacy fields (for backward compatibility) - required by schema
-    amount_sats: amountInSats,
-    status: 'active',
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (client.from(getTableName('loan')) as any)
-    .insert(payload)
-    .select()
-    .single();
-  if (error) {
-    logger.error('Failed to create loan', {
-      error,
-      errorCode: error.code,
-      errorMessage: error.message,
-      errorDetails: error.details,
-      errorHint: error.hint,
-      userId,
-      input: loanInput,
-      payload: JSON.stringify(payload, null, 2),
-    });
-    throw error;
-  }
+  const data = await createEntity(
+    'loan',
+    userId,
+    {
+      title: loanInput.title,
+      description: loanInput.description || '',
+      loan_type: loanInput.loan_type || 'new_request',
+      // New schema fields
+      original_amount: loanInput.original_amount,
+      remaining_balance: loanInput.remaining_balance,
+      interest_rate: normalizeToNull(loanInput.interest_rate),
+      loan_category_id: normalizeToNull(loanInput.loan_category_id),
+      bitcoin_address: normalizeToNull(loanInput.bitcoin_address),
+      lightning_address: normalizeToNull(loanInput.lightning_address),
+      fulfillment_type: loanInput.fulfillment_type || 'manual',
+      currency: loanInput.currency || PLATFORM_DEFAULT_CURRENCY,
+      // Refinancing fields
+      current_lender: normalizeToNull(loanInput.current_lender),
+      current_interest_rate: normalizeToNull(loanInput.current_interest_rate),
+      monthly_payment: normalizeToNull(loanInput.monthly_payment),
+      desired_rate: normalizeToNull(loanInput.desired_rate),
+      // Legacy fields (for backward compatibility) - required by schema
+      amount_sats: amountInSats,
+      status: STATUS.LOANS.ACTIVE,
+    },
+    {
+      client: supabase,
+    }
+  );
 
   // Handle collateral separately if provided
   if (_collateral && Array.isArray(_collateral) && _collateral.length > 0 && data?.id) {
     // Collateral will be handled via separate API endpoint
-    // For now, we just create the loan without collateral
     // TODO: Create loan_collateral entries via /api/loan-collateral endpoint
   }
 

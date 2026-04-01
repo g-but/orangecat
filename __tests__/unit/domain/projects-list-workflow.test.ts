@@ -36,20 +36,22 @@ describe('Project list workflow', () => {
     },
   ];
 
-  function makeQuery(result: any) {
-    return {
+  /**
+   * Create a chainable mock query that supports arbitrary .select/.eq/.order/.range/.in chains.
+   * The final resolution happens when .range() is called (for data queries)
+   * or after all .eq() chains are done (for count queries).
+   */
+  function makeChainableQuery(resolveValue: any) {
+    const query: any = {
       select: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
+      in: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
-      range: jest.fn().mockResolvedValue(result),
-    } as any;
-  }
-
-  function makeCountQuery(count: number) {
-    return {
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ count }),
-    } as any;
+      range: jest.fn().mockReturnThis(),
+    };
+    // Make query thenable so Promise.all resolves it
+    query.then = (resolve: any, reject: any) => Promise.resolve(resolveValue).then(resolve, reject);
+    return query;
   }
 
   beforeEach(() => {
@@ -57,13 +59,10 @@ describe('Project list workflow', () => {
   });
 
   it('lists active projects and maps profile info', async () => {
-    const dataQuery = makeQuery({ data: dataRows, error: null });
-    const countQuery = makeCountQuery(2);
+    const dataQuery = makeChainableQuery({ data: dataRows, error: null });
+    const countQuery = makeChainableQuery({ count: 2, error: null });
 
-    const from = jest
-      .fn()
-      .mockReturnValueOnce(dataQuery) // data query with profile join
-      .mockReturnValueOnce(countQuery); // count query
+    const from = jest.fn().mockReturnValueOnce(dataQuery).mockReturnValueOnce(countQuery);
 
     (createServerClient as jest.Mock).mockResolvedValue({ from });
 
@@ -77,8 +76,8 @@ describe('Project list workflow', () => {
   });
 
   it('applies user filter when userId is provided', async () => {
-    const dataQuery = makeQuery({ data: [dataRows[0]], error: null });
-    const countQuery = makeCountQuery(1);
+    const dataQuery = makeChainableQuery({ data: [dataRows[0]], error: null });
+    const countQuery = makeChainableQuery({ count: 1, error: null });
 
     const from = jest.fn().mockReturnValueOnce(dataQuery).mockReturnValueOnce(countQuery);
 

@@ -5,10 +5,7 @@ import { TABLES } from '../constants';
 import { canPerformAction } from '../permissions/resolver';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
 import { getProposal } from '../queries/proposals';
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
+import { fromTable, type AnySupabaseClient } from '../db-helpers';
 
 export interface CreateProposalInput {
   group_id: string;
@@ -16,8 +13,7 @@ export interface CreateProposalInput {
   description?: string;
   proposal_type?: string;
   action_type?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  action_data?: Record<string, any>;
+  action_data?: Record<string, unknown>;
   voting_threshold?: number;
   voting_starts_at?: string;
   voting_ends_at?: string;
@@ -47,8 +43,7 @@ export async function createProposal(input: CreateProposalInput, client?: AnySup
       return { success: false, error: 'Description must be 5000 characters or less' };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (sb.from(TABLES.group_proposals) as any)
+    const { data, error } = await fromTable(sb, TABLES.group_proposals)
       .insert({
         group_id: input.group_id,
         proposer_id: userId,
@@ -111,8 +106,7 @@ export async function activateProposal(proposalId: string, client?: AnySupabaseC
 
     const threshold = proposal.voting_threshold || 50;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (sb.from(TABLES.group_proposals) as any)
+    const { data, error } = await fromTable(sb, TABLES.group_proposals)
       .update({
         status: 'active',
         voting_starts_at: votingStartsAt.toISOString(),
@@ -143,8 +137,7 @@ export async function updateProposal(
     description: string;
     proposal_type: string;
     action_type: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    action_data: Record<string, any>;
+    action_data: Record<string, unknown>;
     voting_threshold: number;
     voting_starts_at: string;
     voting_ends_at: string;
@@ -173,8 +166,7 @@ export async function updateProposal(
       return { success: false, error: 'Only the proposer can update the proposal' };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload: Record<string, any> = {};
+    const payload: Record<string, unknown> = {};
     const fields = [
       'title',
       'description',
@@ -188,19 +180,16 @@ export async function updateProposal(
     ] as const;
 
     for (const key of fields) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((updates as any)[key] !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (payload as any)[key] = (updates as any)[key];
+      if (updates[key] !== undefined) {
+        payload[key] = updates[key];
       }
     }
 
-    if (payload.title && payload.title.trim().length === 0) {
+    if (payload.title && (payload.title as string).trim().length === 0) {
       return { success: false, error: 'Title is required' };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (sb.from(TABLES.group_proposals) as any)
+    const { data, error } = await fromTable(sb, TABLES.group_proposals)
       .update({ ...payload, updated_at: new Date().toISOString() })
       .eq('id', proposalId)
       .select()
@@ -242,8 +231,7 @@ export async function cancelProposal(proposalId: string, client?: AnySupabaseCli
       return { success: false, error: 'Only the proposer can cancel the proposal' };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (sb.from(TABLES.group_proposals) as any)
+    const { data, error } = await fromTable(sb, TABLES.group_proposals)
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
       .eq('id', proposalId)
       .select()
@@ -283,8 +271,7 @@ export async function deleteProposal(proposalId: string, client?: AnySupabaseCli
       return { success: false, error: 'Only the proposer can delete the proposal' };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (sb.from(TABLES.group_proposals) as any).delete().eq('id', proposalId);
+    const { error } = await fromTable(sb, TABLES.group_proposals).delete().eq('id', proposalId);
     if (error) {
       logger.error('Failed to delete proposal', error, 'Groups');
       return { success: false, error: error.message };
