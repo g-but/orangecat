@@ -1,5 +1,12 @@
 #!/usr/bin/env sh
 
+# Skip tests for branch deletions (no code is being pushed)
+if read local_ref local_oid remote_ref remote_oid; then
+  if [ "$local_oid" = "0000000000000000000000000000000000000000" ]; then
+    exit 0
+  fi
+fi
+
 echo "🚀 Running pre-push checks..."
 
 # Run tests before pushing (target: ≤30s)
