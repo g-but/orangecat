@@ -139,8 +139,9 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
       try {
         if (transformData) {
           transformedData = await Promise.resolve(transformData(ctx.body, user.id, supabase));
-        } else if (useActorOwnership) {
-          // Resolve user ID to actor ID for actor-based ownership
+        } else if (useActorOwnership !== false) {
+          // Default: resolve user ID to actor ID for actor-based ownership
+          // Only use user_id if explicitly set to useActorOwnership: false
           const actor = await getOrCreateUserActor(user.id);
           transformedData = { ...ctx.body, actor_id: actor.id };
         } else {

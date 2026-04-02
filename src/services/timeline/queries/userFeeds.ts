@@ -83,14 +83,19 @@ export async function getUserFeed(
     // Transform to display events
     const displayEvents = await enrichEventsForDisplay(events || []);
 
-    // Get total count
-    const { count } = await supabase
-      .from(TIMELINE_TABLES.EVENTS)
-      .select('*', { count: 'exact', head: true })
-      .eq('actor_id', userId)
-      .eq('is_deleted', false);
+    // Total count: use the RPC with count option (it resolves user→actor internally)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { count } = await (supabase.rpc as any)(
+      'get_user_timeline_feed',
+      {
+        p_user_id: userId,
+        p_limit: 0,
+        p_offset: 0,
+      },
+      { count: 'exact', head: true }
+    );
 
-    const totalEvents = count || 0;
+    const totalEvents = count || displayEvents.length;
 
     return {
       events: displayEvents,

@@ -12,6 +12,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { createEntity } from '@/domain/base/entityService';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 export async function listWishlistsPage(limit: number, offset: number, userId?: string) {
   const supabase = await createServerClient();
@@ -19,7 +20,8 @@ export async function listWishlistsPage(limit: number, offset: number, userId?: 
   let query = supabase.from(DATABASE_TABLES.WISHLIST_WITH_STATS).select('*', { count: 'exact' });
 
   if (userId) {
-    query = query.eq('actor_id', userId);
+    const actor = await getOrCreateUserActor(userId);
+    query = query.eq('actor_id', actor.id);
   }
 
   const { data, count, error } = await query

@@ -19,6 +19,7 @@ import {
   getUserIdField,
   EntityType,
 } from '@/config/entity-registry';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
 
@@ -55,6 +56,10 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     const tableName = getTableName(entityType as EntityType);
     const userIdField = getUserIdField(entityType as EntityType);
 
+    // Resolve ownership value: actor_id fields need user→actor resolution
+    const ownerValue =
+      userIdField === 'actor_id' ? (await getOrCreateUserActor(user.id)).id : user.id;
+
     // Update entities - RLS ensures user can only update their own
     const { data, error } = await (
       supabase
@@ -63,7 +68,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     )
       .update({ show_on_profile, updated_at: new Date().toISOString() })
       .in('id', ids)
-      .eq(userIdField, user.id)
+      .eq(userIdField, ownerValue)
       .select('id');
 
     if (error) {

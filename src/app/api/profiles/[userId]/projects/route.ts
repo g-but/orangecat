@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { getTableName } from '@/config/entity-registry';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 export async function GET(
   request: NextRequest,
@@ -30,6 +31,7 @@ export async function GET(
 
     // Get user's projects (simplified MVP - no organizations)
     // Exclude draft projects from public profiles - drafts should only show in dashboards
+    const actor = await getOrCreateUserActor(userId);
     const { data: projects, error: projectsError } = await supabase
       .from(getTableName('project'))
       .select(
@@ -52,7 +54,7 @@ export async function GET(
         project_media(id, storage_path, position)
       `
       )
-      .eq('user_id', userId)
+      .eq('actor_id', actor.id)
       .neq('status', 'draft') // Exclude drafts from public profile view
       .order('created_at', { ascending: false });
 
