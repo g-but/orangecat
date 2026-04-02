@@ -164,9 +164,9 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
           table: 'notifications',
           filter: `recipient_user_id=eq.${user.id}`,
         },
-        payload => {
+        (payload: { new: Record<string, unknown> }) => {
           // Add new notification to the top
-          setNotifications(prev => [payload.new as Notification, ...prev]);
+          setNotifications(prev => [payload.new as unknown as Notification, ...prev]);
           setUnreadCount(prev => prev + 1);
           setTotal(prev => prev + 1);
         }
@@ -179,10 +179,12 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
           table: 'notifications',
           filter: `recipient_user_id=eq.${user.id}`,
         },
-        payload => {
+        (payload: { new: Record<string, unknown> }) => {
           // Update notification in list
           setNotifications(prev =>
-            prev.map(n => (n.id === payload.new.id ? { ...n, ...payload.new } : n))
+            prev.map(n =>
+              n.id === (payload.new as { id: string }).id ? { ...n, ...payload.new } : n
+            )
           );
           // Recalculate unread count
           fetchUnreadCount();
@@ -196,7 +198,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
           table: 'notifications',
           filter: `recipient_user_id=eq.${user.id}`,
         },
-        payload => {
+        (payload: { old: { id: string } }) => {
           // Remove notification from list
           setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
           setTotal(prev => prev - 1);

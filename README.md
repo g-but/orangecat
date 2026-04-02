@@ -1,151 +1,109 @@
 # OrangeCat
 
-Bitcoin transparency platform — commerce, funding, community, and AI, all powered by Bitcoin.
+Your AI economic agent — and the platform where it operates.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
 [![Live](https://img.shields.io/badge/Live-orangecat.ch-orange.svg)](https://orangecat.ch)
-[![Bitcoin Only](https://img.shields.io/badge/Bitcoin-Only-F7931A.svg)](https://bitcoin.org)
+[![Bitcoin](https://img.shields.io/badge/Bitcoin-Native-F7931A.svg)](https://bitcoin.org)
 
-## What It Does
+## The Problem
 
-- **Commerce**: Buy and sell products and services with Bitcoin (Lightning Network native)
-- **Funding**: Transparent project funding, loans, and cause support — all on-chain accountability
-- **Community**: Groups, events, wishlists, and shared ownership through an actor system
-- **AI**: Integrated AI assistants as first-class entities, not bolted-on features
-- **Research**: Document and knowledge management for Bitcoin-related research
+Economic participation still requires gatekeepers. To sell, fund, lend, invest, or govern collectively, you need banks, payment processors, platforms that take cuts and dictate terms. Pseudonymous participation is impossible. AI agents can't transact on your behalf.
+
+## The Solution
+
+OrangeCat is an AI-native platform for universal economic participation. Every user gets "My Cat" — an AI agent that manages their economic activity across the full spectrum: exchanging, funding, lending, investing, and governing.
+
+- **Any identity**: Human, pseudonymous, or AI — all are first-class economic participants
+- **Any currency**: Bitcoin/Lightning is native and preferred, but any payment method (Twint, PayPal, Monero, local methods worldwide) is supported
+- **Full economic spectrum**: From gifts (no strings) to loans (some strings) to investments (more strings)
+- **Private where needed, transparent where chosen**: E2E encrypted messaging, on-chain transparency when appropriate
+
+## What Works Today
+
+- **Commerce**: Products and services with Bitcoin Lightning payments
+- **Funding**: Transparent project funding, cause support, wishlists, and research funding
+- **Lending**: Peer-to-peer loans with repayment tracking
+- **Assets**: Real estate, collateral, and rentable asset management
+- **Groups**: Organizations with shared wallets, governance proposals, and collective decision-making
+- **AI Assistants**: Autonomous economic actors as first-class entities
+- **Events**: Time-bound coordination with ticketing
+- **Documents**: Structured context for the AI agent
+
+Live at [orangecat.ch](https://orangecat.ch)
 
 ## Architecture
 
-This is the section that matters. OrangeCat is built on a handful of architectural decisions that eliminate entire categories of problems.
+13 entity types, one registry. One ownership model (actors), one permission layer (database RLS). Adding a new entity type requires 2-3 files.
 
-### Entity Registry Pattern (Single Source of Truth)
+<details>
+<summary><strong>Technical details</strong></summary>
 
-The centerpiece. One file — `src/config/entity-registry.ts` — defines 13 entity types: products, services, projects, causes, events, loans, assets, AI assistants, groups, wishlists, research, documents, and wallets.
+### Entity Registry Pattern
 
-This single registry drives CRUD operations, navigation, form generation, and validation across the entire application. Adding a new entity type requires changes to 2-3 files: registry, schema, and migration.
-
-```typescript
-// src/config/entity-registry.ts (concept)
-export const ENTITY_REGISTRY = {
-  products: {
-    slug: 'products',
-    labelDe: 'Produkte',
-    schema: productSchema,
-    icon: Package,
-    features: ['commerce', 'images', 'variants'],
-    crud: { list: true, create: true, edit: true, delete: true },
-  },
-  loans: {
-    slug: 'loans',
-    labelDe: 'Darlehen',
-    schema: loanSchema,
-    icon: Landmark,
-    features: ['funding', 'repayment-schedule'],
-    crud: { list: true, create: true, edit: true, delete: false },
-  },
-  // ... 11 more entity types, same shape
-} as const;
-```
-
-Every UI component, API route, and form reads from this registry. No entity-specific switch statements scattered across the codebase. The registry is the truth; everything else derives from it.
-
-### Middleware Composition
-
-`src/lib/api/compose.ts` — functional composition for building complex API handlers from simple middleware.
-
-```typescript
-// Instead of duplicating auth + validation + rate limiting in 40+ routes:
-export default compose(
-  withAuth(),
-  withRateLimit('write'),
-  withValidation(schema)
-)(handler);
-```
-
-Each middleware does one thing. Compose them for any combination. No inheritance, no base classes, no "AbstractAuthenticatedValidatedRateLimitedHandler".
-
-### Generic Entity CRUD
-
-`src/lib/api/entityCrudHandler.ts` — one handler implementation serves products, services, causes, events, loans, and assets. Eliminates 95% of CRUD code duplication. Entity-specific validation and business rules plug in through configuration, not subclassing.
-
-### Response Standardization
-
-`src/lib/api/responses.ts` — pre-configured error and success responses replacing 35+ instances of ad-hoc response construction. Every API route returns the same shape:
-
-```typescript
-// Success
-{ success: true, data: {...}, meta?: { total, page } }
-
-// Error
-{ success: false, error: "Message", details?: [...] }
-```
+`src/config/entity-registry.ts` — single source of truth for all 13 entity types. Drives CRUD, navigation, forms, and validation. No entity-specific switch statements.
 
 ### Actor System
 
-Users and groups both have actors. All entities reference `actor_id` instead of `user_id`. This enables context switching between individual and group dashboards without special-casing ownership logic throughout the codebase.
+Users and groups both have actors. All entities reference `actor_id`. One ownership model, one permission check — works for individuals, organizations, and (future) AI agents.
 
-One ownership model. One permission check. Works for individuals and organizations.
+### Middleware Composition
 
-### Bitcoin-Native Engineering
+```typescript
+export default compose(withAuth(), withRateLimit('write'), withValidation(schema))(handler);
+```
 
-Bitcoin is not a payment plugin — it is the foundation.
+Functional composition replaces inheritance. Each middleware does one thing.
 
-- BTC as the primary unit of account, CHF as the default fiat display currency
-- `useDisplayCurrency` hook lets users choose their preferred display (BTC, CHF, satoshis, EUR, etc.)
-- Lightning Network as native payment format, not an adapter over fiat rails
-- LNURL payment integration with QR code generation
-- Bitcoin orange (#F7931A) reserved exclusively for Bitcoin-specific UI elements — not decoration
+### Security
 
-### Security Model
+- Row Level Security (RLS) at the database level — bugs in app code can't bypass authorization
+- Zod schemas as SSOT — TypeScript types derived from schemas, never separate
+- Structured API responses across all 40+ routes
 
-- Row Level Security (RLS) enforced at the database level, not application code. If the app has a bug, the database still refuses unauthorized access.
-- Zod schemas as SSOT for validation — TypeScript types derived from schemas, never defined separately
-- Remote-only Supabase (shared cloud, no local Docker emulation diverging from production)
+</details>
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 15, React 18, TypeScript 5.8 |
-| Styling | Tailwind CSS 3.3, shadcn/ui |
-| Database | Supabase (PostgreSQL 15), Row Level Security |
-| Bitcoin | bitcoinjs-lib, Lightning Network, LNURL |
-| Auth | Supabase Auth, JWT, Row Level Security |
-| Validation | Zod, React Hook Form |
-| State | Zustand, TanStack Query |
-| Deployment | Vercel, GitHub Actions |
+| Layer      | Technology                              |
+| ---------- | --------------------------------------- |
+| Framework  | Next.js 15, React 18, TypeScript 5.8    |
+| Styling    | Tailwind CSS, shadcn/ui                 |
+| Database   | Supabase (PostgreSQL + RLS)             |
+| Bitcoin    | Lightning Network, LNURL, bitcoinjs-lib |
+| Auth       | Supabase Auth, JWT, Row Level Security  |
+| Deployment | Vercel, GitHub Actions CI/CD            |
 
 <details>
 <summary><strong>Quick Start</strong></summary>
 
 ### Prerequisites
 
-- Node.js 18+
-- A Supabase project (remote — no local Docker)
-- Bitcoin/Lightning node access for payment features
+- Node.js 20+
+- A Supabase project (remote — no local Docker needed)
 
 ### Setup
 
 ```bash
-git clone https://github.com/your-org/orangecat.git
+git clone https://github.com/g-but/orangecat.git
 cd orangecat
 npm install
 cp .env.example .env.local
-# Fill in Supabase credentials, Bitcoin config
+# Fill in Supabase credentials
 npm run dev
 ```
 
-The dev server starts at `http://localhost:3000`.
+Dev server starts at `http://localhost:3000`.
 
 ### Environment Variables
 
-Configure in `.env.local`:
+See `.env.example` for the full list. Key variables:
+
 - `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anonymous key
 - `SUPABASE_SERVICE_ROLE_KEY` — Server-side Supabase key
-- Bitcoin/Lightning configuration as documented in `.env.example`
 
 </details>
 
@@ -153,36 +111,22 @@ Configure in `.env.local`:
 
 ```
 src/
-  config/
-    entity-registry.ts    -- SSOT: all 13 entity types defined here
-  lib/
-    api/
-      compose.ts          -- Middleware composition
-      entityCrudHandler.ts -- Generic CRUD for all entities
-      responses.ts        -- Standardized API responses
-    auth/                  -- Authentication and session management
-    domain/                -- Business logic (no HTTP, no UI)
-    bitcoin/               -- BTC/currency conversion, Lightning, LNURL
-  app/
-    api/                   -- API routes (thin, composed from middleware)
-    (dashboard)/           -- Actor-aware dashboard views
-  components/
-    entities/              -- Entity-type-aware UI components
-    bitcoin/               -- Payment, QR, currency display
+  config/entity-registry.ts  -- SSOT: all 13 entity types
+  lib/api/                    -- Middleware composition, generic CRUD
+  domain/                     -- Business logic (no HTTP, no UI)
+  services/                   -- Currency, search, notifications, groups
+  features/                   -- Messaging, auth
+  app/api/                    -- API routes (thin, composed from middleware)
+  components/                 -- UI components (shadcn/ui based)
 ```
 
 ## Testing
 
-84 test files covering unit, integration, E2E, security, and smoke tests.
+17 test suites, 74 tests. Pre-push hooks run type-check, lint, and the full test suite before any code reaches the remote.
 
-**CI/CD Workflows:**
-- `ci.yml` — Full test suite on every push
-- `e2e-auth.yml` — End-to-end authentication flows
-- `one-button-deploy.yml` — Production deployment
-- `promote-develop-to-main.yml` — Branch promotion with gates
-- `auto-merge-claude-branches.yml` — Automated merging of AI-generated PRs
+## Contributing
 
-**Pre-commit hooks** run type-check, lint, unit tests, and E2E smoke tests. Nothing reaches the remote without passing locally first.
+See [SECURITY.md](SECURITY.md) for reporting vulnerabilities. Pull requests welcome.
 
 ## License
 

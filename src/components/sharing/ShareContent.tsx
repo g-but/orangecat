@@ -1,17 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Share2,
-  X as XIcon,
-  Facebook,
-  Linkedin,
-  MessageCircle,
-  Mail,
-  Copy,
-  Check,
-  X,
-} from 'lucide-react';
+import { Share2, X as XIcon, Globe, MessageCircle, Mail, Copy, Check, X } from 'lucide-react';
+
+// Brand icons removed in lucide-react 0.400+
+const Facebook = Globe;
+const Linkedin = Globe;
 import { toast } from 'sonner';
 import { createPortal } from 'react-dom';
 

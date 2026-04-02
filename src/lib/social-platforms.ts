@@ -9,17 +9,16 @@
  * Last Modified Summary: Initial configuration with common platforms
  */
 
-import {
-  Twitter,
-  Instagram,
-  Facebook,
-  Linkedin,
-  Github,
-  Youtube,
-  MessageCircle,
-  Globe,
-  Heart,
-} from 'lucide-react';
+import { MessageCircle, Globe, Heart } from 'lucide-react';
+
+// Brand icons were removed in lucide-react 0.400+
+// Using Globe as a generic fallback for social platforms
+const Twitter = Globe;
+const Instagram = Globe;
+const Facebook = Globe;
+const Linkedin = Globe;
+const Github = Globe;
+const Youtube = Globe;
 
 export type SocialPlatformId =
   | 'x'

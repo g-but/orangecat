@@ -27,8 +27,6 @@ import {
   MessageSquare,
   BookOpen,
   Globe,
-  Github,
-  Twitter,
   Info,
   HelpCircle,
   Search,
@@ -303,12 +301,12 @@ export const footerNavigation = {
     {
       name: 'Twitter',
       href: 'https://twitter.com/orangecat',
-      icon: Twitter,
+      icon: Globe,
     },
     {
       name: 'GitHub',
       href: 'https://github.com/g-but/orangecat',
-      icon: Github,
+      icon: Globe,
     },
   ],
 };
