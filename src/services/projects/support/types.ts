@@ -25,7 +25,7 @@ export interface ProjectSupport {
   support_type: SupportType;
 
   // Bitcoin funding fields (if type = 'bitcoin_donation')
-  amount_sats?: number | null;
+  amount_btc?: number | null;
   transaction_hash?: string | null;
   lightning_invoice?: string | null;
 
@@ -55,7 +55,7 @@ export interface ProjectSupportWithUser extends ProjectSupport {
 // Project support stats
 export interface ProjectSupportStats {
   project_id: string;
-  total_bitcoin_sats: number;
+  total_bitcoin_btc: number;
   total_signatures: number;
   total_messages: number;
   total_reactions: number;

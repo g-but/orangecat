@@ -89,7 +89,7 @@ export function usePaymentFlow() {
     async (params: {
       entity_type: EntityType;
       entity_id: string;
-      amount_sats?: number;
+      amount_btc?: number;
       message?: string;
       is_anonymous?: boolean;
       shipping_address_id?: string;

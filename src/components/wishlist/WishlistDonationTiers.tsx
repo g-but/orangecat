@@ -23,8 +23,8 @@ import { convert, formatCurrency } from '@/services/currency';
 interface WishlistItem {
   id: string;
   title: string;
-  target_amount_sats: number;
-  funded_amount_sats: number;
+  target_amount_btc: number;
+  funded_amount_btc: number;
   image_url?: string;
 }
 
@@ -94,9 +94,9 @@ export function WishlistDonationTiers({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {items.map(item => {
-          const displayAmount = convert(item.target_amount_sats, 'SATS', userCurrency);
+          const displayAmount = convert(item.target_amount_btc, 'SATS', userCurrency);
           const formattedAmount = formatCurrency(displayAmount, userCurrency, { compact: true });
-          const satsDisplay = formatCurrency(item.target_amount_sats, 'SATS', { compact: true });
+          const satsDisplay = formatCurrency(item.target_amount_btc, 'SATS', { compact: true });
 
           return (
             <button
@@ -113,7 +113,7 @@ export function WishlistDonationTiers({
                 <div
                   className="bg-orange-500 h-1 rounded-full"
                   style={{
-                    width: `${Math.min(100, (item.funded_amount_sats / item.target_amount_sats) * 100)}%`,
+                    width: `${Math.min(100, (item.funded_amount_btc / item.target_amount_btc) * 100)}%`,
                   }}
                 />
               </div>
@@ -128,7 +128,7 @@ export function WishlistDonationTiers({
           onClose={() => setIsPaymentModalOpen(false)}
           projectId={projectId || ''}
           projectTitle={`${projectTitle} - ${selectedItem.title}`}
-          suggestedAmount={selectedItem.target_amount_sats}
+          suggestedAmount={selectedItem.target_amount_btc}
           recipientAddress={recipientAddress}
         />
       )}

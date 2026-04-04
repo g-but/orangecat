@@ -78,12 +78,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Calculate price based on duration
     const durationHours = (endsAt.getTime() - startsAt.getTime()) / (1000 * 60 * 60);
-    let priceSats = 0;
+    let priceBtc = 0;
 
     if (service.fixed_price) {
-      priceSats = service.fixed_price;
+      priceBtc = service.fixed_price;
     } else if (service.hourly_rate) {
-      priceSats = Math.ceil(service.hourly_rate * durationHours);
+      priceBtc = Math.ceil(service.hourly_rate * durationHours);
     }
 
     // Create the booking
@@ -96,7 +96,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       customerUserId: user.id,
       startsAt,
       endsAt,
-      priceSats,
+      priceBtc,
       customerNotes: notes,
       metadata: {
         service_title: service.title,

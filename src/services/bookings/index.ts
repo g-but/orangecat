@@ -36,11 +36,11 @@ export interface Booking {
   ends_at: string;
   timezone: string;
   duration_minutes?: number;
-  price_sats: number;
+  price_btc: number;
   currency: string;
-  deposit_sats: number;
+  deposit_btc: number;
   deposit_paid: boolean;
-  total_paid_sats: number;
+  total_paid_btc: number;
   status: BookingStatus;
   customer_notes?: string;
   provider_notes?: string;
@@ -80,8 +80,8 @@ export interface CreateBookingParams {
   customerUserId: string;
   startsAt: Date;
   endsAt: Date;
-  priceSats: number;
-  depositSats?: number;
+  priceBtc: number;
+  depositBtc?: number;
   customerNotes?: string;
   metadata?: Record<string, unknown>;
 }
@@ -250,8 +250,8 @@ export class BookingService {
       customerUserId,
       startsAt,
       endsAt,
-      priceSats,
-      depositSats = 0,
+      priceBtc,
+      depositBtc = 0,
       customerNotes,
       metadata,
     } = params;
@@ -286,8 +286,8 @@ export class BookingService {
         starts_at: startsAt.toISOString(),
         ends_at: endsAt.toISOString(),
         duration_minutes: durationMinutes,
-        price_sats: priceSats,
-        deposit_sats: depositSats,
+        price_btc: priceBtc,
+        deposit_btc: depositBtc,
         customer_notes: customerNotes,
         metadata,
         status: STATUS.BOOKINGS.PENDING,

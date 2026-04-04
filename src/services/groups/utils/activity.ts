@@ -33,7 +33,7 @@ export async function logGroupActivity(
     related_project_id?: string;
     related_loan_id?: string;
     related_proposal_id?: string;
-    related_amount_sats?: number;
+    related_amount_btc?: number;
     [key: string]: unknown;
   },
   client?: AnySupabaseClient
@@ -50,7 +50,7 @@ export async function logGroupActivity(
       related_project_id: metadata?.related_project_id || null,
       related_loan_id: metadata?.related_loan_id || null,
       related_proposal_id: metadata?.related_proposal_id || null,
-      related_amount_sats: metadata?.related_amount_sats || null,
+      related_amount_btc: metadata?.related_amount_btc || null,
       metadata: metadata || {},
     });
   } catch (error) {

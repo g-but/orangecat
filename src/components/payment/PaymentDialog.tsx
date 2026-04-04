@@ -32,8 +32,8 @@ interface PaymentDialogProps {
   entityId: string;
   /** Entity title for display */
   entityTitle: string;
-  /** Price in sats (for fixed_price entities) */
-  priceSats?: number;
+  /** Price in BTC (for fixed_price entities) */
+  priceBtc?: number;
   /** Seller's profile ID (for checking wallet availability) */
   sellerProfileId?: string;
 }
@@ -44,7 +44,7 @@ export function PaymentDialog({
   entityType,
   entityId,
   entityTitle,
-  priceSats,
+  priceBtc,
 }: PaymentDialogProps) {
   const meta = getEntityMetadata(entityType);
   const isContribution = meta.paymentPattern === 'contribution';
@@ -68,13 +68,13 @@ export function PaymentDialog({
     initiate({
       entity_type: entityType,
       entity_id: entityId,
-      amount_sats: isContribution ? contributionAmount : undefined,
+      amount_btc: isContribution ? contributionAmount : undefined,
       message: isContribution ? message || undefined : undefined,
       is_anonymous: isContribution ? isAnonymous : undefined,
     });
   };
 
-  const amountSats = isContribution ? contributionAmount : (priceSats ?? 0);
+  const amountBtc = isContribution ? contributionAmount : (priceBtc ?? 0);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -86,7 +86,7 @@ export function PaymentDialog({
           <DialogDescription>
             {isContribution
               ? `Choose an amount to support this ${meta.name.toLowerCase()}`
-              : `Pay ${formatAmount(amountSats)}`}
+              : `Pay ${formatAmount(amountBtc)}`}
           </DialogDescription>
         </DialogHeader>
 
@@ -124,12 +124,12 @@ export function PaymentDialog({
 
               <Button
                 onClick={handleInitiate}
-                disabled={isLoading || amountSats <= 0}
+                disabled={isLoading || amountBtc <= 0}
                 className="w-full min-h-11"
               >
                 {isContribution
-                  ? `Support with ${formatAmount(amountSats)}`
-                  : `Pay ${formatAmount(amountSats)}`}
+                  ? `Support with ${formatAmount(amountBtc)}`
+                  : `Pay ${formatAmount(amountBtc)}`}
               </Button>
             </>
           )}
@@ -148,7 +148,7 @@ export function PaymentDialog({
               <PaymentQRCode
                 qrData={state.data.qr_data}
                 methodLabel={state.data.method_label}
-                amountSats={state.data.payment_intent.amount_sats}
+                amountBtc={state.data.payment_intent.amount_btc}
                 expiresInSeconds={state.data.expires_in_seconds ?? undefined}
               />
 

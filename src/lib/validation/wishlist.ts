@@ -49,7 +49,7 @@ export const wishlistItemSchema = z.object({
   external_source: z.string().max(100).optional().nullable(),
 
   // Funding
-  target_amount_sats: z
+  target_amount_btc: z
     .number()
     .int('Amount must be whole satoshis')
     .positive('Target amount must be positive'),
@@ -68,7 +68,7 @@ export const wishlistItemSchema = z.object({
 
 export const wishlistContributionSchema = z.object({
   wishlist_item_id: z.string().uuid(),
-  amount_sats: z.number().int('Amount must be whole satoshis').positive('Amount must be positive'),
+  amount_btc: z.number().int('Amount must be whole satoshis').positive('Amount must be positive'),
   message: z.string().max(500).optional().nullable(),
   is_anonymous: z.boolean().default(false),
 });

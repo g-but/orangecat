@@ -21,7 +21,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Schema for deposit request
 const depositRequestSchema = z.object({
-  amount_sats: z.number().int().positive().min(100).max(1000000000),
+  amount_btc: z.number().positive().min(0.000001).max(10),
   payment_method: z.enum(['lightning', 'onchain']).default('lightning'),
 });
 
@@ -55,25 +55,25 @@ export const GET = compose(
 
     // If no credits record exists, create one
     let balance = {
-      balance_sats: 0,
-      total_deposited_sats: 0,
-      total_spent_sats: 0,
+      balance_btc: 0,
+      total_deposited_btc: 0,
+      total_spent_btc: 0,
     };
 
     if (creditsError && creditsError.code === 'PGRST116') {
       // No record found - user has 0 credits
       balance = {
-        balance_sats: 0,
-        total_deposited_sats: 0,
-        total_spent_sats: 0,
+        balance_btc: 0,
+        total_deposited_btc: 0,
+        total_spent_btc: 0,
       };
     } else if (creditsError) {
       throw creditsError;
     } else if (credits) {
       balance = {
-        balance_sats: credits.balance_sats || 0,
-        total_deposited_sats: credits.total_deposited_sats || 0,
-        total_spent_sats: credits.total_spent_sats || 0,
+        balance_btc: credits.balance_btc || 0,
+        total_deposited_btc: credits.total_deposited_btc || 0,
+        total_spent_btc: credits.total_spent_btc || 0,
       };
     }
 
@@ -84,7 +84,7 @@ export const GET = compose(
         `
         id,
         transaction_type,
-        amount_sats,
+        amount_btc,
         balance_before,
         balance_after,
         description,
@@ -151,7 +151,7 @@ export const POST = compose(
       });
     }
 
-    const { amount_sats, payment_method } = result.data;
+    const { amount_btc, payment_method } = result.data;
 
     // Generate a deposit request ID
     const depositId = `dep_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -163,7 +163,7 @@ export const POST = compose(
       .insert({
         id: depositId,
         user_id: user.id,
-        amount_sats,
+        amount_btc,
         payment_method,
         status: 'pending',
         expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutes
@@ -177,7 +177,7 @@ export const POST = compose(
 
       return apiSuccess({
         deposit_id: depositId,
-        amount_sats,
+        amount_btc,
         payment_method,
         status: 'pending',
         expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
@@ -196,7 +196,7 @@ export const POST = compose(
     // TODO: Integrate with actual Lightning provider (BTCPay, Strike, Alby, etc.)
     return apiSuccess({
       deposit_id: deposit?.id || depositId,
-      amount_sats,
+      amount_btc,
       payment_method,
       status: 'pending',
       expires_at: deposit?.expires_at || new Date(Date.now() + 15 * 60 * 1000).toISOString(),

@@ -40,7 +40,7 @@ export async function getProjectSupportStats(
           success: true,
           stats: {
             project_id: projectId,
-            total_bitcoin_sats: 0,
+            total_bitcoin_btc: 0,
             total_signatures: 0,
             total_messages: 0,
             total_reactions: 0,
@@ -112,7 +112,7 @@ export async function getProjectSupport(
         supports: [],
         stats: {
           project_id: projectId,
-          total_bitcoin_sats: 0,
+          total_bitcoin_btc: 0,
           total_signatures: 0,
           total_messages: 0,
           total_reactions: 0,
@@ -140,7 +140,7 @@ export async function getProjectSupport(
     const statsResult = await getProjectSupportStats(projectId);
     const stats = statsResult.stats || {
       project_id: projectId,
-      total_bitcoin_sats: 0,
+      total_bitcoin_btc: 0,
       total_signatures: 0,
       total_messages: 0,
       total_reactions: 0,
@@ -165,7 +165,7 @@ export async function getProjectSupport(
       supports: [],
       stats: {
         project_id: projectId,
-        total_bitcoin_sats: 0,
+        total_bitcoin_btc: 0,
         total_signatures: 0,
         total_messages: 0,
         total_reactions: 0,

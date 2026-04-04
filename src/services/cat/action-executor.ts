@@ -63,10 +63,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   // ---------- ENTITY ACTIONS ----------
 
   create_product: async (supabase, _userId, actorId, params) => {
-    // Accept price_btc (BTC decimal) or legacy price_sats (integer) — convert to sats for DB
-    const priceSats = params.price_btc
-      ? Math.round((params.price_btc as number) * 100_000_000)
-      : ((params.price_sats as number | null) ?? null);
+    const priceBtc = (params.price_btc as number | null) ?? null;
 
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.product.tableName)
@@ -74,7 +71,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
         actor_id: actorId,
         title: params.title,
         description: params.description || null,
-        price_sats: priceSats,
+        price_btc: priceBtc,
         category: params.category || null,
         status: params.publish ? 'active' : 'draft',
       })
@@ -88,16 +85,13 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   },
 
   create_service: async (supabase, _userId, actorId, params) => {
-    // Accept BTC decimals (hourly_rate, fixed_price) or legacy sats — convert to sats for DB
-    const toSats = (val: unknown) =>
-      val !== null && val !== undefined ? Math.round((val as number) * 100_000_000) : null;
     const priceField = params.hourly_rate
-      ? { hourly_rate_sats: toSats(params.hourly_rate) }
+      ? { hourly_rate_btc: params.hourly_rate as number }
       : params.fixed_price
-        ? { fixed_price_sats: toSats(params.fixed_price) }
-        : params.hourly_rate_sats
-          ? { hourly_rate_sats: params.hourly_rate_sats }
-          : { fixed_price_sats: params.fixed_price_sats ?? params.price_sats ?? null };
+        ? { fixed_price_btc: params.fixed_price as number }
+        : params.hourly_rate_btc
+          ? { hourly_rate_btc: params.hourly_rate_btc }
+          : { fixed_price_btc: params.fixed_price_btc ?? params.price_btc ?? null };
 
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.service.tableName)
@@ -119,10 +113,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   },
 
   create_project: async (supabase, _userId, actorId, params) => {
-    // Accept goal_btc (BTC decimal) or legacy goal_sats — convert to sats for DB
-    const goalSats = params.goal_btc
-      ? Math.round((params.goal_btc as number) * 100_000_000)
-      : ((params.goal_sats as number | null) ?? null);
+    const goalBtc = (params.goal_btc as number | null) ?? null;
 
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.project.tableName)
@@ -130,7 +121,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
         actor_id: actorId,
         title: params.title,
         description: params.description || null,
-        goal_sats: goalSats,
+        goal_btc: goalBtc,
         category: params.category || null,
         status: params.publish ? 'active' : 'draft',
       })
@@ -628,7 +619,7 @@ export class CatActionExecutor {
         conversation_id: conversationId || null,
         message_id: messageId || null,
         started_at: new Date().toISOString(),
-        sats_amount: this.extractSatsAmount(action, parameters),
+        amount_btc: this.extractBtcAmount(action, parameters),
       })
       .select()
       .single();
@@ -745,9 +736,7 @@ export class CatActionExecutor {
     // Generate human-readable description of what will happen
     switch (action.id) {
       case 'create_product': {
-        const price =
-          parameters.price_btc ??
-          (parameters.price_sats ? `${parameters.price_sats} sats` : 'unpriced');
+        const price = parameters.price_btc ?? 'unpriced';
         return `Create product "${parameters.title}" priced at ${price} BTC`;
       }
       case 'create_service': {
@@ -755,9 +744,7 @@ export class CatActionExecutor {
         return `Create service "${parameters.title}"${rate ? ` at ${rate} BTC` : ''}`;
       }
       case 'create_project': {
-        const goal =
-          parameters.goal_btc ??
-          (parameters.goal_sats ? `${parameters.goal_sats} sats` : 'open-ended');
+        const goal = parameters.goal_btc ?? 'open-ended';
         return `Create crowdfunding project "${parameters.title}" with goal of ${goal} BTC`;
       }
       case 'create_cause':
@@ -775,7 +762,7 @@ export class CatActionExecutor {
       case 'send_message':
         return `Send message to user`;
       case 'send_payment': {
-        const amount = parameters.amount_btc ?? parameters.amount_sats;
+        const amount = parameters.amount_btc;
         return `Send ${amount} BTC to ${parameters.recipient}`;
       }
       case 'add_context':
@@ -804,14 +791,10 @@ export class CatActionExecutor {
       .eq('id', logId);
   }
 
-  private extractSatsAmount(action: CatAction, parameters: Record<string, unknown>): number | null {
-    // Extract amount from payment-related actions, normalizing BTC → sats for logging
+  private extractBtcAmount(action: CatAction, parameters: Record<string, unknown>): number | null {
+    // Extract BTC amount from payment-related actions
     if (action.category === 'payments') {
-      const btcAmount = (parameters.amount_btc as number) || (parameters.price_btc as number);
-      if (btcAmount) {
-        return Math.round(btcAmount * 100_000_000);
-      }
-      return (parameters.amount_sats as number) || null;
+      return (parameters.amount_btc as number) || (parameters.price_btc as number) || null;
     }
     return null;
   }

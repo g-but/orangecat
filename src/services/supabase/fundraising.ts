@@ -16,7 +16,7 @@ interface RawProject {
 }
 
 interface RawTransaction {
-  amount_sats?: number;
+  amount_btc?: number;
   from_entity_id?: string;
   to_entity_id?: string;
   from_entity_type?: string;
@@ -85,7 +85,7 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
       if (projectFilters) {
         const { data: transactions, error: transactionsError } = await supabase
           .from(DATABASE_TABLES.TRANSACTIONS)
-          .select('amount_sats, from_entity_id, to_entity_id, from_entity_type')
+          .select('amount_btc, from_entity_id, to_entity_id, from_entity_type')
           .eq('to_entity_type', 'project')
           .or(projectFilters)
           .eq('status', 'confirmed');
@@ -95,7 +95,7 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
         }
 
         const txList = (transactions as RawTransaction[] | null) || [];
-        totalRaised = txList.reduce((sum, t) => sum + (t.amount_sats || 0), 0);
+        totalRaised = txList.reduce((sum, t) => sum + (t.amount_btc || 0), 0);
 
         // Count unique donors (from_entity_id where from_entity_type = 'profile')
         const uniqueDonors = new Set(

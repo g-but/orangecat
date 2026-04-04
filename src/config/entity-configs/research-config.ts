@@ -39,7 +39,7 @@ export const researchEntitySchema = z.object({
   ]),
   expected_outcome: z.string().min(1).max(1000),
   timeline: z.enum(['short_term', 'medium_term', 'long_term', 'ongoing', 'indefinite']),
-  funding_goal_sats: z.number().min(1000),
+  funding_goal_btc: z.number().min(1000),
   funding_model: z.enum(['donation', 'subscription', 'milestone', 'royalty', 'hybrid']),
   resource_needs: z
     .array(
@@ -55,7 +55,7 @@ export const researchEntitySchema = z.object({
           'other',
         ]),
         description: z.string().optional(),
-        estimated_cost_sats: z.number().min(0).optional(),
+        estimated_cost_btc: z.number().min(0).optional(),
         priority: z.enum(['low', 'medium', 'high', 'critical']),
       })
     )
@@ -229,11 +229,11 @@ export const researchConfig: EntityConfig<ResearchEntity> = {
       description: 'How your research will be funded and what resources you need',
       fields: [
         {
-          name: 'funding_goal_sats',
+          name: 'funding_goal_btc',
           label: 'Funding Goal (sats)',
           type: 'number',
           required: true,
-          placeholder: 'How many sats do you need to complete this research?',
+          placeholder: 'How much BTC do you need to complete this research?',
           min: 1000, // Minimum 1000 sats
         },
         {
@@ -423,7 +423,7 @@ export const researchConfig: EntityConfig<ResearchEntity> = {
   validation: {
     custom: [
       {
-        field: 'funding_goal_sats',
+        field: 'funding_goal_btc',
         rule: (value: unknown) => typeof value === 'number' && value >= 1000,
         message: 'Funding goal must be at least 1,000',
       },

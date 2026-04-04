@@ -63,7 +63,7 @@ const proposalSchema = z.object({
   voting_ends_at: z.string().optional(),
   is_public: z.boolean().optional().default(false),
   // Treasury proposal fields
-  amount_sats: z.number().int().min(1).optional(),
+  amount_btc: z.number().int().min(1).optional(),
   recipient_address: z.string().optional(),
   wallet_id: z.string().uuid().optional(),
   // Action type for proposals that execute actions
@@ -121,7 +121,7 @@ export function CreateProposalDialog({
       if (data.proposal_type === 'treasury') {
         payload.action_type = 'spend_funds';
         payload.action_data = {
-          amount_sats: data.amount_sats,
+          amount_btc: data.amount_btc,
           recipient_address: data.recipient_address,
           wallet_id: data.wallet_id,
           note: data.description,
@@ -340,7 +340,7 @@ export function CreateProposalDialog({
                   <>
                     <FormField
                       control={form.control}
-                      name="amount_sats"
+                      name="amount_btc"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Amount ({displayCurrency}) *</FormLabel>
@@ -355,7 +355,7 @@ export function CreateProposalDialog({
                                   e.target.value ? parseInt(e.target.value) : undefined
                                 )
                               }
-                              onFocus={() => setActiveField('amount_sats')}
+                              onFocus={() => setActiveField('amount_btc')}
                               onBlur={() => setActiveField(null)}
                             />
                           </FormControl>

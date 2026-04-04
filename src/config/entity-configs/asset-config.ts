@@ -77,7 +77,7 @@ const fieldGroups: FieldGroup[] = [
         hint: 'Enable if you want to sell this asset',
         colSpan: 2,
       },
-      { name: 'sale_price_sats', label: 'Sale Price', type: 'number', min: 1, colSpan: 2 },
+      { name: 'sale_price_btc', label: 'Sale Price', type: 'number', min: 1, colSpan: 2 },
     ],
   },
   {
@@ -92,7 +92,7 @@ const fieldGroups: FieldGroup[] = [
         hint: 'Enable if you want to rent out this asset',
         colSpan: 2,
       },
-      { name: 'rental_price_sats', label: 'Rental Price', type: 'number', min: 1 },
+      { name: 'rental_price_btc', label: 'Rental Price', type: 'number', min: 1 },
       {
         name: 'rental_period_type',
         label: 'Rental Period',
@@ -121,7 +121,7 @@ const fieldGroups: FieldGroup[] = [
         colSpan: 2,
       },
       {
-        name: 'deposit_amount_sats',
+        name: 'deposit_amount_btc',
         label: 'Deposit Amount (sats)',
         type: 'number',
         min: 1,
@@ -154,14 +154,14 @@ const defaultValues: AssetFormData = {
   currency: DEFAULT_CURRENCY,
   documents: [],
   is_for_sale: false,
-  sale_price_sats: undefined,
+  sale_price_btc: undefined,
   is_for_rent: false,
-  rental_price_sats: undefined,
+  rental_price_btc: undefined,
   rental_period_type: 'daily',
   min_rental_period: 1,
   max_rental_period: undefined,
   requires_deposit: false,
-  deposit_amount_sats: undefined,
+  deposit_amount_btc: undefined,
   show_on_profile: true,
 };
 

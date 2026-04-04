@@ -31,18 +31,18 @@ const LIGHTNING_INVOICE_EXPIRY_SECS = 3600; // 1 hour
  */
 export async function generateInvoice(
   wallet: ResolvedWallet,
-  amountSats: number,
+  amountBtc: number,
   description: string
 ): Promise<GeneratedInvoice> {
   switch (wallet.method) {
     case 'nwc':
-      return generateNWCInvoice(wallet.nwc_uri!, amountSats, description);
+      return generateNWCInvoice(wallet.nwc_uri!, amountBtc, description);
 
     case 'lightning_address':
-      return generateLightningAddressInvoice(wallet.lightning_address!, amountSats, description);
+      return generateLightningAddressInvoice(wallet.lightning_address!, amountBtc, description);
 
     case 'onchain':
-      return generateOnchainInvoice(wallet.onchain_address!, amountSats, description);
+      return generateOnchainInvoice(wallet.onchain_address!, amountBtc, description);
 
     default:
       throw new Error(`Unsupported payment method: ${wallet.method}`);
@@ -54,10 +54,12 @@ export async function generateInvoice(
  */
 async function generateNWCInvoice(
   nwcUri: string,
-  amountSats: number,
+  amountBtc: number,
   description: string
 ): Promise<GeneratedInvoice> {
   const client = new NWCClient(nwcUri);
+  // NWC protocol uses sats
+  const amountSats = Math.round(amountBtc * 100_000_000);
 
   try {
     await client.connect();
@@ -89,7 +91,7 @@ async function generateNWCInvoice(
  */
 async function generateLightningAddressInvoice(
   lightningAddress: string,
-  amountSats: number,
+  amountBtc: number,
   description: string
 ): Promise<GeneratedInvoice> {
   // Step 1: Resolve Lightning Address to LNURL-pay endpoint
@@ -113,6 +115,8 @@ async function generateLightningAddressInvoice(
     throw new Error('LNURL endpoint is not a pay request');
   }
 
+  // LNURL-pay protocol uses millisatoshis
+  const amountSats = Math.round(amountBtc * 100_000_000);
   const amountMsats = amountSats * 1000;
 
   // Validate amount is within bounds
@@ -154,11 +158,9 @@ async function generateLightningAddressInvoice(
  */
 async function generateOnchainInvoice(
   address: string,
-  amountSats: number,
+  amountBtc: number,
   description: string
 ): Promise<GeneratedInvoice> {
-  const amountBtc = amountSats / 100_000_000;
-
   // BIP21 format: bitcoin:<address>?amount=<btc>&label=<description>
   const params = new URLSearchParams();
   params.set('amount', amountBtc.toFixed(8));

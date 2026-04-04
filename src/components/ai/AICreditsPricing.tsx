@@ -36,10 +36,10 @@ export function AICreditsPricing() {
               >
                 <div className="font-semibold text-sm">{tier.label}</div>
                 <div className="text-lg font-bold mt-1">
-                  {tier.price_sats === 0 ? 'Free' : `${formatAmount(tier.price_sats)}/mo`}
+                  {tier.price_btc === 0 ? 'Free' : `${formatAmount(tier.price_btc)}/mo`}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  {formatAmount(tier.monthly_credits_sats)} credits/month
+                  {formatAmount(tier.monthly_credits_btc)} credits/month
                 </div>
                 <div className="mt-2 pt-2 border-t border-gray-100">
                   <div className="flex items-center gap-1.5 text-xs text-green-700">
@@ -66,7 +66,7 @@ export function AICreditsPricing() {
                 className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 text-sm"
               >
                 <span>{op.label}</span>
-                <span className="font-medium text-orange-700">{formatAmount(op.cost_sats)}</span>
+                <span className="font-medium text-orange-700">{formatAmount(op.cost_btc)}</span>
               </div>
             ))}
           </div>

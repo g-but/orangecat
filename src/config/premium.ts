@@ -5,19 +5,19 @@
  * Config-only — no UI gating yet. Future "upgrade" prompts and feature gates
  * reference this file.
  *
- * All prices in satoshis.
+ * All prices in BTC (NUMERIC(18,8) in DB).
  */
 
 export const PREMIUM_TIERS = {
   free: {
     label: 'Free',
-    price_sats: 0,
+    price_btc: 0,
     period: null,
     features: ['basic_entities', 'community', 'my_cat_basic', 'basic_transparency', 'discover'],
   },
   pro: {
     label: 'Pro',
-    price_sats: 50_000,
+    price_btc: 0.0005,
     period: 'month' as const,
     features: [
       'basic_entities',

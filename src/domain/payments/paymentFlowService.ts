@@ -59,14 +59,14 @@ export async function initiatePayment(
   }
 
   // 3. Determine amount
-  const amountSats = await resolveAmount(supabase, entity_type, entity_id, input.amount_sats);
+  const amountBtc = await resolveAmount(supabase, entity_type, entity_id, input.amount_btc);
 
   // 4. Determine entity title (snapshot for order)
   const entityTitle = await getEntityTitle(supabase, entity_type, entity_id);
 
   // 5. Generate invoice
   const description = `${meta.name}: ${entityTitle}`;
-  const invoice = await generateInvoice(wallet, amountSats, description);
+  const invoice = await generateInvoice(wallet, amountBtc, description);
 
   // 6. Create payment intent
   const { data: paymentIntent, error: piError } = await supabase
@@ -76,7 +76,7 @@ export async function initiatePayment(
       seller_id: sellerId,
       entity_type,
       entity_id,
-      amount_sats: amountSats,
+      amount_btc: amountBtc,
       payment_method: wallet.method,
       bolt11: invoice.bolt11,
       payment_hash: invoice.payment_hash,
@@ -106,7 +106,7 @@ export async function initiatePayment(
         seller_id: sellerId,
         entity_type,
         entity_id,
-        amount_sats: amountSats,
+        amount_btc: amountBtc,
         entity_title: entityTitle,
         status: 'pending_payment',
         shipping_address_id: input.shipping_address_id || null,
@@ -128,7 +128,7 @@ export async function initiatePayment(
         contributor_id: buyerId,
         entity_type,
         entity_id,
-        amount_sats: amountSats,
+        amount_btc: amountBtc,
         message: input.message || null,
         is_anonymous: input.is_anonymous ?? false,
       })
@@ -280,18 +280,18 @@ async function resolveAmount(
     return inputAmount;
   }
 
-  // Fixed price: read from entity's price_sats column
+  // Fixed price: read from entity's price_btc column
   const { data: entity } = await supabase
     .from(meta.tableName)
-    .select('price_sats')
+    .select('price_btc')
     .eq('id', entityId)
     .single();
 
-  if (!entity?.price_sats) {
+  if (!entity?.price_btc) {
     throw new Error('Entity has no price set');
   }
 
-  return entity.price_sats;
+  return entity.price_btc;
 }
 
 async function getEntityTitle(

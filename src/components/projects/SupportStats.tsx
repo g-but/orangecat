@@ -62,7 +62,7 @@ export function SupportStats({ projectId, className }: SupportStatsProps) {
               <Coins className="h-5 w-5 text-orange-600" />
             </div>
             <div className="text-2xl font-bold text-orange-600">
-              {formatAmount(stats.total_bitcoin_sats)}
+              {formatAmount(stats.total_bitcoin_btc)}
             </div>
             <div className="text-sm text-gray-500">Funded</div>
           </div>

@@ -28,7 +28,7 @@ interface Booking {
   customer_user_id: string;
   starts_at: string;
   ends_at: string;
-  price_sats: number;
+  price_btc: number;
   currency: string;
   status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'rejected';
   customer_notes?: string;
@@ -301,7 +301,7 @@ export default function BookingsDashboardPage() {
                       </span>
                     </div>
                     <div className="text-sm font-medium text-gray-900">
-                      {formatPrice(booking.price_sats)}
+                      {formatPrice(booking.price_btc)}
                     </div>
                   </div>
 

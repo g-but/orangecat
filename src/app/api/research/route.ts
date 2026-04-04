@@ -149,9 +149,9 @@ export const POST = compose(
     // Wallet address is null until a real wallet is linked by the user
     const walletAddress = null;
 
-    // Get funding_goal_sats from validated data
-    const fundingGoalSats =
-      (validatedData as { funding_goal_sats?: number }).funding_goal_sats || 1000;
+    // Get funding_goal_btc from validated data
+    const fundingGoalBtc =
+      (validatedData as { funding_goal_btc?: number }).funding_goal_btc || 0.00001;
 
     // Build insert data
     const insertData = {
@@ -162,8 +162,8 @@ export const POST = compose(
       methodology: validatedData.methodology,
       expected_outcome: validatedData.expected_outcome,
       timeline: validatedData.timeline,
-      funding_goal_sats: fundingGoalSats,
-      funding_raised_sats: 0,
+      funding_goal_btc: fundingGoalBtc,
+      funding_raised_btc: 0,
       funding_model: validatedData.funding_model,
       wallet_address: walletAddress,
       lead_researcher: validatedData.lead_researcher,

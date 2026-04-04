@@ -145,7 +145,7 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
           const balanceBTC = project.bitcoin_balance_btc || 0;
           const goalAmount = project.goal_amount || 0;
           const raisedAmount = project.raised_amount || 0;
-          const currentAmount = balanceBTC > 0 ? balanceBTC * 100_000_000 : raisedAmount;
+          const currentAmount = balanceBTC > 0 ? balanceBTC : raisedAmount;
           const progress = goalAmount > 0 ? Math.min((currentAmount / goalAmount) * 100, 100) : 0;
           const showStatusBadge =
             project.status &&

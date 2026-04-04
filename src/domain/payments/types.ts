@@ -31,7 +31,7 @@ export interface PaymentIntent {
   seller_id: string;
   entity_type: EntityType;
   entity_id: string;
-  amount_sats: number;
+  amount_btc: number;
   payment_method: PaymentMethod;
   bolt11: string | null;
   payment_hash: string | null;
@@ -63,7 +63,7 @@ export interface Order {
   seller_id: string;
   entity_type: EntityType;
   entity_id: string;
-  amount_sats: number;
+  amount_btc: number;
   entity_title: string;
   status: OrderStatus;
   shipping_address_id: string | null;
@@ -85,7 +85,7 @@ export interface Contribution {
   contributor_id: string;
   entity_type: EntityType;
   entity_id: string;
-  amount_sats: number;
+  amount_btc: number;
   message: string | null;
   is_anonymous: boolean;
   created_at: string;
@@ -118,8 +118,8 @@ export interface ShippingAddress {
 export interface InitiatePaymentInput {
   entity_type: EntityType;
   entity_id: string;
-  /** Required for contributions, ignored for fixed_price (uses entity's price_sats) */
-  amount_sats?: number;
+  /** Required for contributions, ignored for fixed_price (uses entity's price_btc) */
+  amount_btc?: number;
   /** Optional message for contributions */
   message?: string;
   /** Whether contribution is anonymous */

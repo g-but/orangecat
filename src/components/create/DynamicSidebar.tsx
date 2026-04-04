@@ -37,28 +37,25 @@ interface DynamicSidebarProps<T extends string = string> {
 }
 
 function CurrencyBreakdown({ amount, currency }: { amount: number; currency: string }) {
-  const toSatoshis = (): number => {
+  const toBtc = (): number => {
     if (!amount || isNaN(amount)) {
       return 0;
     }
     switch (currency) {
-      case 'SATS':
-        return amount;
       case 'BTC':
-        return amount * 100_000_000;
+        return amount;
       case 'USD':
-        return (amount / MOCK_RATES.BTC_TO_USD) * 100_000_000;
+        return amount / MOCK_RATES.BTC_TO_USD;
       case 'EUR':
-        return (amount / MOCK_RATES.BTC_TO_EUR) * 100_000_000;
+        return amount / MOCK_RATES.BTC_TO_EUR;
       case 'CHF':
-        return (amount / MOCK_RATES.BTC_TO_CHF) * 100_000_000;
+        return amount / MOCK_RATES.BTC_TO_CHF;
       default:
         return 0;
     }
   };
 
-  const satoshis = toSatoshis();
-  const btc = satoshis / 100_000_000;
+  const btc = toBtc();
   const usd = btc * MOCK_RATES.BTC_TO_USD;
   const eur = btc * MOCK_RATES.BTC_TO_EUR;
   const chf = btc * MOCK_RATES.BTC_TO_CHF;
@@ -86,7 +83,7 @@ function CurrencyBreakdown({ amount, currency }: { amount: number; currency: str
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Satoshis</span>
-          <span className="font-mono font-semibold">{fmt(satoshis, 0)} sats</span>
+          <span className="font-mono font-semibold">{fmt(Math.round(btc * 100_000_000), 0)} sats (protocol)</span>
         </div>
         <div className="border-t border-gray-100 pt-2 space-y-1 text-xs">
           <div className="flex justify-between text-gray-500">

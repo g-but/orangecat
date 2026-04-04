@@ -49,7 +49,7 @@ export default function TransactionTracker({
       setTransactions(data || []);
 
       // Calculate total balance
-      const totalBalance = data?.reduce((sum, tx) => sum + (tx.amount_sats || 0), 0) || 0;
+      const totalBalance = data?.reduce((sum, tx) => sum + (tx.amount_btc || 0), 0) || 0;
       onBalanceUpdate(totalBalance);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch transactions');
@@ -121,7 +121,7 @@ export default function TransactionTracker({
                   </p>
                 </div>
                 <p className="text-sm font-medium text-tiffany-600">
-                  {formatAmount(tx.amount_sats || tx.amount || 0)}
+                  {formatAmount(tx.amount_btc || tx.amount || 0)}
                 </p>
               </div>
             ))}

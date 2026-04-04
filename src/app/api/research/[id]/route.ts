@@ -176,7 +176,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(tableName) as any
     )
-      .select('user_id, funding_raised_sats')
+      .select('user_id, funding_raised_btc')
       .eq('id', params.id)
       .single();
 
@@ -192,7 +192,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     }
 
     // Prevent deletion if funding has been raised (protect contributors)
-    if (existing.funding_raised_sats > 0) {
+    if (existing.funding_raised_btc > 0) {
       return apiForbidden('Cannot delete research entity with funding. Archive instead.');
     }
 

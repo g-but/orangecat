@@ -66,7 +66,7 @@ export interface EntityDetailConfig {
   renderHeaderExtra?: (entity: EntityData) => ReactNode;
   /** Entity-specific detail cards below description */
   renderDetails?: (entity: EntityData) => ReactNode;
-  /** Select columns for metadata query (defaults to 'title, description, price_sats') */
+  /** Select columns for metadata query (defaults to 'title, description, price_btc') */
   metadataSelect?: string;
   /** View route for sign-in redirect */
   getViewRoute?: (id: string) => string;
@@ -79,7 +79,7 @@ export async function fetchEntityForMetadata(entityType: EntityType, id: string,
   const supabase = await createServerClient();
   const { data } = await supabase
     .from(getTableName(entityType))
-    .select(select || 'title, description, price_sats')
+    .select(select || 'title, description, price_btc')
     .eq('id', id)
     .eq('status', STATUS.PRODUCTS.ACTIVE)
     .single();
@@ -201,7 +201,7 @@ export default async function PublicEntityDetailPage({
                 entityType={config.entityType}
                 entityId={id}
                 entityTitle={entity.title}
-                priceSats={entity.price_sats ? Number(entity.price_sats) : undefined}
+                priceBtc={entity.price_btc ? Number(entity.price_btc) : undefined}
                 sellerProfileId={owner?.id ?? null}
                 sellerUserId={owner?.user_id ?? null}
                 signInRedirect={viewRoute}

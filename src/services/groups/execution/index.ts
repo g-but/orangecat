@@ -143,13 +143,13 @@ const handlers: Record<string, ActionHandler> = {
   async spend_funds(_proposalId, proposal, sb) {
     try {
       const {
-        amount_sats,
+        amount_btc,
         recipient_address,
         wallet_id: _wallet_id,
         note: _note,
       } = proposal.action_data || {};
 
-      if (!amount_sats || !recipient_address) {
+      if (!amount_btc || !recipient_address) {
         logger.warn(
           'Missing required fields for spend_funds',
           { proposalId: _proposalId },
@@ -179,7 +179,7 @@ const handlers: Record<string, ActionHandler> = {
         'Spending proposal marked for manual execution',
         {
           proposalId: _proposalId,
-          amount_sats,
+          amount_btc,
           recipient_address,
         },
         'Groups'

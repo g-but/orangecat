@@ -28,7 +28,7 @@ export interface Proposal {
     total_voting_power: number;
   } | null;
   is_public?: boolean;
-  amount_sats?: number | null;
+  amount_btc?: number | null;
   recipient_address?: string | null;
   created_at: string;
   updated_at: string;

@@ -26,7 +26,7 @@ export interface CatPermission {
   granted: boolean;
   requires_confirmation: boolean; // Override: always confirm even if action doesn't require it
   daily_limit?: number; // Max executions per day (null = unlimited)
-  max_sats_per_action?: number; // Max sats for payment actions
+  max_btc_per_action?: number; // Max sats for payment actions
   created_at: string;
   updated_at: string;
 }
@@ -195,7 +195,7 @@ export class CatPermissionService {
           granted: true,
           requires_confirmation: options.requiresConfirmation ?? true,
           daily_limit: options.dailyLimit ?? null,
-          max_sats_per_action: options.maxSatsPerAction ?? null,
+          max_btc_per_action: options.maxSatsPerAction ?? null,
           updated_at: new Date().toISOString(),
         },
         {

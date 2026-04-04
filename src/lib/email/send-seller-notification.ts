@@ -70,7 +70,7 @@ export async function sendSellerPaymentNotification(
       colonIndex !== -1 ? description.slice(colonIndex + 2) : description || 'Item';
 
     // 5. Format amount
-    const amountBtc = (paymentIntent.amount_sats / 100_000_000).toFixed(8);
+    const amountBtc = paymentIntent.amount_btc.toFixed(8);
 
     // 6. Map payment method
     const paymentMethod =

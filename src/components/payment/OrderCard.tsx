@@ -37,7 +37,7 @@ export function OrderCard({ order, role }: OrderCardProps) {
           <Package className="mt-0.5 h-5 w-5 text-gray-400" />
           <div>
             <h4 className="font-medium">{order.entity_title}</h4>
-            <p className="text-sm text-gray-500">{formatAmount(order.amount_sats)}</p>
+            <p className="text-sm text-gray-500">{formatAmount(order.amount_btc)}</p>
             <p className="text-xs text-gray-400">
               {new Date(order.created_at).toLocaleDateString()}
             </p>

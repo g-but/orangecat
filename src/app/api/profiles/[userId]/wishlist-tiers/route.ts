@@ -31,8 +31,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         `
         id,
         title,
-        target_amount_sats,
-        funded_amount_sats,
+        target_amount_btc,
+        funded_amount_btc,
         wishlists!inner(actor_id)
       `
       )

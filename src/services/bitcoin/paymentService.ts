@@ -50,7 +50,7 @@ class MockPaymentProvider implements PaymentProvider {
   }
 
   async createInvoice(
-    amount_sats: number,
+    amount_btc: number,
     description: string,
     type: PaymentType = 'lightning'
   ): Promise<PaymentResult> {
@@ -59,15 +59,15 @@ class MockPaymentProvider implements PaymentProvider {
 
       const invoice: Invoice = {
         id: paymentId,
-        amount_sats,
-        amount: amount_sats,
+        amount_btc,
+        amount: amount_btc,
         type,
         description,
         createdAt: new Date(),
         status: 'pending',
         ...(type === 'lightning'
           ? {
-              invoice: `lntb${amount_sats}u1p${Math.random().toString(36).substr(2, 50)}`,
+              invoice: `lntb${amount_btc}u1p${Math.random().toString(36).substr(2, 50)}`,
               expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
             }
           : {
@@ -128,7 +128,7 @@ class MockPaymentProvider implements PaymentProvider {
     if (payment.type === 'lightning' && payment.invoice) {
       return payment.invoice.toUpperCase();
     } else if (payment.type === 'onchain' && payment.address) {
-      return `bitcoin:${payment.address}?amount=${payment.amount_sats / 100000000}&label=${encodeURIComponent(payment.description)}`;
+      return `bitcoin:${payment.address}?amount=${payment.amount_btc}&label=${encodeURIComponent(payment.description)}`;
     }
     throw new Error('Invalid payment request');
   }

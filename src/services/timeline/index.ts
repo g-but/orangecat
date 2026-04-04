@@ -114,7 +114,6 @@ class TimelineService {
     transactionId: string,
     projectId: string,
     donorId: string,
-    amountSats: number,
     amountBtc: number,
     eventType: 'donation_received' | 'donation_sent' = 'donation_received'
   ): Promise<TimelineEventResponse> {
@@ -122,7 +121,6 @@ class TimelineService {
       transactionId,
       projectId,
       donorId,
-      amountSats,
       amountBtc,
       eventType
     );

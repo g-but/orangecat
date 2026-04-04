@@ -43,8 +43,8 @@ export default async function WishlistItemDetailPage({ params }: PageProps) {
       title,
       description,
       image_url,
-      target_amount_sats,
-      funded_amount_sats,
+      target_amount_btc,
+      funded_amount_btc,
       is_fully_funded,
       is_fulfilled,
       wishlist_id,
@@ -84,17 +84,17 @@ export default async function WishlistItemDetailPage({ params }: PageProps) {
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-gray-600">Target:</span>
-            <FormattedAmount sats={item.target_amount_sats} className="font-medium" />
+            <FormattedAmount sats={item.target_amount_btc} className="font-medium" />
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Funded:</span>
-            <FormattedAmount sats={item.funded_amount_sats} className="font-medium" />
+            <FormattedAmount sats={item.funded_amount_btc} className="font-medium" />
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
             <div
               className="bg-orange-600 h-2 rounded-full"
               style={{
-                width: `${Math.min(100, (item.funded_amount_sats / item.target_amount_sats) * 100)}%`,
+                width: `${Math.min(100, (item.funded_amount_btc / item.target_amount_btc) * 100)}%`,
               }}
             />
           </div>

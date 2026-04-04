@@ -30,7 +30,7 @@ export function validateEventRequest(request: CreateTimelineEventRequest): {
   switch (request.eventType) {
     case 'donation_received':
     case 'donation_sent':
-      if (!request.amountSats || request.amountSats <= 0) {
+      if (!request.amountBtc || request.amountBtc <= 0) {
         return { valid: false, error: 'Valid contribution amount required' };
       }
       break;

@@ -112,11 +112,11 @@ export class AIPaymentService {
     // This will be enhanced with actual Lightning deposits later
     const { data } = await this.supabase
       .from(DATABASE_TABLES.AI_USER_CREDITS)
-      .select('balance_sats')
+      .select('balance_btc')
       .eq('user_id', userId)
       .single();
 
-    return data?.balance_sats ?? 0;
+    return data?.balance_btc ?? 0;
   }
 
   /**
@@ -200,21 +200,21 @@ export class AIPaymentService {
     }
 
     // Calculate charge amount
-    let amountSats = 0;
+    let amountBtc = 0;
     if (assistant.pricing_model === 'per_message') {
-      amountSats = assistant.price_per_message || 0;
+      amountBtc = assistant.price_per_message || 0;
     } else if (assistant.pricing_model === 'per_token') {
       const pricePerKTokens = assistant.price_per_1k_tokens || 0;
-      amountSats = Math.ceil((tokenCount / 1000) * pricePerKTokens);
+      amountBtc = Math.ceil((tokenCount / 1000) * pricePerKTokens);
     }
 
-    if (amountSats === 0) {
+    if (amountBtc === 0) {
       return { success: true, amountCharged: 0 };
     }
 
     // Check balance
     const credits = await this.getUserCredits(userId);
-    if (credits < amountSats) {
+    if (credits < amountBtc) {
       return {
         success: false,
         error: 'Insufficient credits',
@@ -225,7 +225,7 @@ export class AIPaymentService {
     // Deduct credits (atomic operation)
     const { error: deductError } = await this.supabase.rpc('deduct_ai_credits', {
       p_user_id: userId,
-      p_amount_sats: amountSats,
+      p_amount_btc: amountBtc,
       p_assistant_id: assistantId,
       p_conversation_id: conversationId,
       p_message_id: messageId,
@@ -237,12 +237,12 @@ export class AIPaymentService {
     }
 
     // Record earnings for the assistant owner
-    await this.recordEarnings(assistantId, assistant.user_id, amountSats);
+    await this.recordEarnings(assistantId, assistant.user_id, amountBtc);
 
     return {
       success: true,
-      amountCharged: amountSats,
-      balanceRemaining: credits - amountSats,
+      amountCharged: amountBtc,
+      balanceRemaining: credits - amountBtc,
     };
   }
 
@@ -252,12 +252,12 @@ export class AIPaymentService {
   async recordEarnings(
     assistantId: string,
     creatorUserId: string,
-    amountSats: number
+    amountBtc: number
   ): Promise<void> {
-    // Update total_revenue_sats on the assistant
+    // Update total_revenue_btc on the assistant
     const { error } = await this.supabase.rpc('increment_ai_revenue', {
       p_assistant_id: assistantId,
-      p_amount_sats: amountSats,
+      p_amount_btc: amountBtc,
     });
 
     if (error) {
@@ -265,9 +265,9 @@ export class AIPaymentService {
       await this.supabase
         .from(DATABASE_TABLES.AI_ASSISTANTS)
         .update({
-          total_revenue_sats: this.supabase.rpc('coalesce_add', {
-            current: 'total_revenue_sats',
-            add: amountSats,
+          total_revenue_btc: this.supabase.rpc('coalesce_add', {
+            current: 'total_revenue_btc',
+            add: amountBtc,
           }),
         })
         .eq('id', assistantId);
@@ -278,18 +278,18 @@ export class AIPaymentService {
    * Get assistant's total earnings
    */
   async getAssistantEarnings(assistantId: string): Promise<{
-    totalRevenueSats: number;
+    totalRevenueBtc: number;
     totalConversations: number;
     totalMessages: number;
   }> {
     const { data: assistant } = await this.supabase
       .from(DATABASE_TABLES.AI_ASSISTANTS)
-      .select('total_revenue_sats, total_conversations, total_messages')
+      .select('total_revenue_btc, total_conversations, total_messages')
       .eq('id', assistantId)
       .single();
 
     return {
-      totalRevenueSats: assistant?.total_revenue_sats ?? 0,
+      totalRevenueBtc: assistant?.total_revenue_btc ?? 0,
       totalConversations: assistant?.total_conversations ?? 0,
       totalMessages: assistant?.total_messages ?? 0,
     };
@@ -299,25 +299,25 @@ export class AIPaymentService {
    * Get user's spending on AI assistants
    */
   async getUserSpending(userId: string): Promise<{
-    totalSpentSats: number;
+    totalSpentBtc: number;
     assistantsUsed: number;
     messagesCount: number;
   }> {
     // Get all conversations for this user
     const { data: conversations } = await this.supabase
       .from(DATABASE_TABLES.AI_CONVERSATIONS)
-      .select('id, assistant_id, total_cost_sats')
+      .select('id, assistant_id, total_cost_btc')
       .eq('user_id', userId);
 
     if (!conversations || conversations.length === 0) {
       return {
-        totalSpentSats: 0,
+        totalSpentBtc: 0,
         assistantsUsed: 0,
         messagesCount: 0,
       };
     }
 
-    const totalSpentSats = conversations.reduce((sum, c) => sum + (c.total_cost_sats || 0), 0);
+    const totalSpentBtc = conversations.reduce((sum, c) => sum + (c.total_cost_btc || 0), 0);
     const uniqueAssistants = new Set(conversations.map(c => c.assistant_id));
 
     // Get total message count
@@ -329,7 +329,7 @@ export class AIPaymentService {
       .eq('role', 'user');
 
     return {
-      totalSpentSats,
+      totalSpentBtc,
       assistantsUsed: uniqueAssistants.size,
       messagesCount: count ?? 0,
     };

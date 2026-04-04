@@ -42,13 +42,13 @@ export class BTCPayProvider implements PaymentProvider {
   }
 
   async createInvoice(
-    amount_sats: number,
+    amount_btc: number,
     description: string,
     type: PaymentType = 'lightning'
   ): Promise<PaymentResult> {
     // TODO: Call BTCPay Server Greenfield API
     // POST /api/v1/stores/{storeId}/invoices
-    logger.info(`BTCPay createInvoice: ${amount_sats} sats, type=${type}`, null, 'Bitcoin');
+    logger.info(`BTCPay createInvoice: ${amount_btc} sats, type=${type}`, null, 'Bitcoin');
 
     return {
       success: false,

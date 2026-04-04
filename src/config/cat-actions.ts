@@ -512,7 +512,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     ],
     examples: [
       'Remember that I want to focus on Bitcoin education',
-      'Add to my context that my budget is 1M sats',
+      'Add to my context that my budget is 0.01 BTC',
       'Note that my goal is to launch by March',
     ],
     apiEndpoint: '/api/documents',

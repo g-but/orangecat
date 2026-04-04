@@ -198,8 +198,8 @@ export function isValidGoalAmount(amount: number): boolean {
     return false;
   }
 
-  // Must be positive and reasonable (max 1 BTC = 100,000,000 sats)
-  return amount > 0 && amount <= 100000000;
+  // Must be positive and reasonable (max 21M BTC)
+  return amount > 0 && amount <= 21_000_000;
 }
 
 /**

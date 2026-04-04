@@ -78,7 +78,7 @@ export default function NotificationCenter({
         <Avatar className="h-8 w-8">
           <AvatarImage src={notification.source_actor.avatar_url} />
           <AvatarFallback>
-            {notification.source_actor.display_name?.charAt(0) || '?'}
+            {notification.source_actor.name?.charAt(0) || '?'}
           </AvatarFallback>
         </Avatar>
       );

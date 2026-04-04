@@ -76,7 +76,7 @@ export async function getOrCreateUserActor(userId: string): Promise<{ id: string
     .insert({
       actor_type: 'user',
       user_id: userId,
-      display_name: displayName,
+      name: displayName,
       avatar_url: profile?.avatar_url || null,
       slug: slug,
     })

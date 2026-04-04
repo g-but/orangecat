@@ -59,7 +59,7 @@ export interface Circle {
   created_by: string;
   rules?: string;
   member_count: number;
-  total_balance_sats: number;
+  total_balance_btc: number;
   total_projects: number;
   created_at: string;
   updated_at: string;
@@ -90,9 +90,9 @@ export interface CircleWallet {
   purpose?: CircleWalletPurpose;
   bitcoin_address?: string;
   lightning_address?: string;
-  total_received_sats: number;
-  total_sent_sats: number;
-  current_balance_sats: number;
+  total_received_btc: number;
+  total_sent_btc: number;
+  current_balance_btc: number;
   is_active: boolean;
   created_by: string;
   authorized_users?: string[];
@@ -125,7 +125,7 @@ export interface CircleActivity {
   related_wallet_id?: string;
   related_project_id?: string;
   related_loan_id?: string;
-  related_amount_sats?: number;
+  related_amount_btc?: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
   created_at: string;
@@ -142,7 +142,7 @@ export interface UserCircleSummary {
   role: CircleRole;
   joined_at: string;
   is_public: boolean;
-  total_balance_sats: number;
+  total_balance_btc: number;
   recent_activity_count: number;
 }
 
@@ -165,7 +165,7 @@ export interface CircleWalletSummary {
   purpose?: CircleWalletPurpose;
   bitcoin_address?: string;
   lightning_address?: string;
-  current_balance_sats: number;
+  current_balance_btc: number;
   is_active: boolean;
   can_access: boolean;
   authorized_users_count: number;
@@ -285,7 +285,7 @@ export interface CirclesQuery {
   visibility?: CircleVisibility;
   member_count_min?: number;
   member_count_max?: number;
-  sort_by?: 'created_at' | 'member_count' | 'name' | 'total_balance_sats';
+  sort_by?: 'created_at' | 'member_count' | 'name' | 'total_balance_btc';
   sort_order?: 'asc' | 'desc';
 }
 

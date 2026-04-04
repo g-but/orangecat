@@ -15,16 +15,16 @@ const QUICK_AMOUNTS = [1_000, 5_000, 10_000, 50_000, 100_000];
 
 interface ContributionAmountInputProps {
   value: number;
-  onChange: (sats: number) => void;
-  minSats?: number;
-  maxSats?: number;
+  onChange: (btc: number) => void;
+  minBtc?: number;
+  maxBtc?: number;
 }
 
 export function ContributionAmountInput({
   value,
   onChange,
-  minSats = 100,
-  maxSats = 10_000_000,
+  minBtc = 0.000001,
+  maxBtc = 0.1,
 }: ContributionAmountInputProps) {
   const [customMode, setCustomMode] = useState(false);
   const [customInput, setCustomInput] = useState('');
@@ -33,7 +33,7 @@ export function ContributionAmountInput({
   const handleCustomBlur = () => {
     const val = parseInt(customInput, 10);
     if (!isNaN(val)) {
-      const clamped = Math.max(minSats, Math.min(maxSats, val));
+      const clamped = Math.max(minBtc, Math.min(maxBtc, val));
       setCustomInput(String(clamped));
       onChange(clamped);
     }
@@ -82,14 +82,14 @@ export function ContributionAmountInput({
           onChange={e => {
             setCustomInput(e.target.value);
             const val = parseInt(e.target.value, 10);
-            if (!isNaN(val) && val >= minSats && val <= maxSats) {
+            if (!isNaN(val) && val >= minBtc && val <= maxBtc) {
               onChange(val);
             }
           }}
           onBlur={handleCustomBlur}
-          placeholder={`Min ${formatAmount(minSats)}`}
-          min={minSats}
-          max={maxSats}
+          placeholder={`Min ${formatAmount(minBtc)}`}
+          min={minBtc}
+          max={maxBtc}
           className="w-full"
         />
       )}

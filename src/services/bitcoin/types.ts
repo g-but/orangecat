@@ -12,8 +12,8 @@ export type PaymentStatus = 'pending' | 'paid' | 'expired' | 'failed';
 
 export interface Invoice {
   id: string;
-  amount_sats: number;
-  /** @deprecated Use amount_sats. Kept for backward compatibility with existing components. */
+  amount_btc: number;
+  /** @deprecated Use amount_btc. Kept for backward compatibility with existing components. */
   amount: number;
   type: PaymentType;
   address?: string;
@@ -33,7 +33,7 @@ export interface PaymentResult {
 
 export interface PaymentProvider {
   createInvoice(
-    amount_sats: number,
+    amount_btc: number,
     description: string,
     type?: PaymentType
   ): Promise<PaymentResult>;

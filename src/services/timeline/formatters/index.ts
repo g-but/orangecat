@@ -69,7 +69,6 @@ export function mapDbEventToTimelineEvent(dbEvent: TimelineEventDb): TimelineEve
     title: dbEvent.title,
     description: dbEvent.description || undefined,
     content: dbEvent.content,
-    amountSats: dbEvent.amount_sats || undefined,
     amountBtc: dbEvent.amount_btc || undefined,
     quantity: dbEvent.quantity || undefined,
     locationData: dbEvent.location_data,
@@ -175,10 +174,7 @@ export function getEventDisplayType(eventType: TimelineEventType): string {
  */
 export function formatAmount(event: TimelineEvent): string | undefined {
   if (event.amountBtc) {
-    return `₿${event.amountBtc.toFixed(6)}`;
-  }
-  if (event.amountSats) {
-    return `${event.amountSats.toLocaleString()} sat`;
+    return `₿${event.amountBtc.toFixed(8)}`;
   }
   return undefined;
 }

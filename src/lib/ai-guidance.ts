@@ -30,7 +30,7 @@ export type AIFieldType =
   | 'defaultModel'
   | 'defaultTier'
   | 'autoRouter'
-  | 'maxCostSats'
+  | 'maxCostBtc'
   | 'requireVision'
   | 'requireFunctionCalling'
   | null;
@@ -123,11 +123,11 @@ export const aiGuidanceContent: Record<NonNullable<AIFieldType>, FieldGuidanceCo
       '"Refactor this complex codebase" → Uses premium model',
     ],
   },
-  maxCostSats: {
+  maxCostBtc: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-tiffany' }),
-    title: 'Maximum Cost (Sats)',
+    title: 'Maximum Cost (BTC)',
     description:
-      'Set a cost limit per request in satoshis. The auto-router will not select models that exceed this limit.',
+      'Set a cost limit per request in BTC. The auto-router will not select models that exceed this limit.',
     tips: [
       'Prevents expensive requests by accident',
       'Set to 0 for unlimited (not recommended)',

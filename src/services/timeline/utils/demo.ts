@@ -37,7 +37,6 @@ export function getDemoTimelineEvents(userId: string): any[] {
             description:
               'Just set up my personal timeline on OrangeCat. Excited to share my Bitcoin crowdfunding journey!',
             content: null,
-            amount_sats: null,
             amount_btc: null,
             quantity: null,
             visibility: 'public',
@@ -65,7 +64,6 @@ export function getDemoTimelineEvents(userId: string): any[] {
             description:
               'Just made my first Bitcoin transaction on OrangeCat. The future of crowdfunding is here! ₿',
             content: null,
-            amount_sats: 10000,
             amount_btc: 0.0001,
             quantity: null,
             visibility: 'public',
@@ -93,7 +91,6 @@ export function getDemoTimelineEvents(userId: string): any[] {
             description:
               'Bitcoin crowdfunding eliminates middlemen and gives creators direct access to supporters. No fees, no delays, just pure value exchange. This is the future! 🚀',
             content: null,
-            amount_sats: null,
             amount_btc: null,
             quantity: null,
             visibility: 'public',

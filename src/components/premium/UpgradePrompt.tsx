@@ -49,8 +49,8 @@ export function UpgradePrompt({ feature, children, hideWhenLocked = false }: Upg
             <p className="text-sm font-medium text-gray-900">{featureLabel}</p>
             <p className="text-xs text-gray-600 mt-0.5">
               Requires {tierDetails.label} plan
-              {tierDetails.price_sats > 0 && (
-                <> &middot; {formatAmount(tierDetails.price_sats)}/mo</>
+              {tierDetails.price_btc > 0 && (
+                <> &middot; {formatAmount(tierDetails.price_btc)}/mo</>
               )}
             </p>
           </div>

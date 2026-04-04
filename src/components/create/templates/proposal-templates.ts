@@ -28,7 +28,7 @@ export interface ProposalTemplateData {
   proposal_type: 'general' | 'treasury' | 'membership' | 'governance' | 'employment';
   voting_threshold?: number;
   is_public?: boolean;
-  amount_sats?: number;
+  amount_btc?: number;
   recipient_address?: string;
   action_type?: string;
   action_data?: Record<string, any>;
@@ -46,7 +46,7 @@ export const PROPOSAL_TEMPLATES: EntityTemplate<ProposalTemplateData>[] = [
       proposal_type: 'treasury',
       voting_threshold: 50,
       is_public: false,
-      amount_sats: 0,
+      amount_btc: 0,
       recipient_address: '',
       action_type: 'spend_funds',
       action_data: {},
@@ -140,7 +140,7 @@ export const PROPOSAL_TEMPLATES: EntityTemplate<ProposalTemplateData>[] = [
       proposal_type: 'treasury',
       voting_threshold: 50,
       is_public: false,
-      amount_sats: 0,
+      amount_btc: 0,
       recipient_address: '',
       action_type: 'spend_funds',
       action_data: {},

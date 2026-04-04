@@ -15,7 +15,7 @@ export interface Actor {
   actor_type: ActorType;
   user_id: string | null;
   group_id: string | null;
-  display_name: string;
+  name: string;
   avatar_url: string | null;
   slug: string | null;
   created_at: string;

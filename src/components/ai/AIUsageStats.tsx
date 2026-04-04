@@ -8,7 +8,7 @@ import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 interface UsageData {
   totalRequests: number;
   totalTokens: number;
-  totalCostSats: number;
+  totalCostBtc: number;
   lastUsedAt?: string;
   periodLabel?: string;
 }
@@ -25,7 +25,7 @@ interface AIUsageStatsProps {
  * Shows:
  * - Total requests
  * - Total tokens used
- * - Total cost in sats
+ * - Total cost in BTC
  * - Last used timestamp
  */
 export function AIUsageStats({ usage, periodSelector, className }: AIUsageStatsProps) {
@@ -77,7 +77,7 @@ export function AIUsageStats({ usage, periodSelector, className }: AIUsageStatsP
     },
     {
       label: 'Cost',
-      value: formatAmount(usage.totalCostSats),
+      value: formatAmount(usage.totalCostBtc),
       icon: Coins,
       color: 'text-amber-600',
       bgColor: 'bg-amber-100',
@@ -155,7 +155,7 @@ export function AIUsageStatsCompact({ usage }: { usage: UsageData }) {
       </div>
       <div className="flex items-center gap-1">
         <Coins className="w-4 h-4" />
-        <span>{formatAmount(usage.totalCostSats)}</span>
+        <span>{formatAmount(usage.totalCostBtc)}</span>
       </div>
     </div>
   );

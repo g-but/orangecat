@@ -11,7 +11,7 @@ import { logger } from '@/utils/logger';
 export interface MessagingActor {
   actor_id: string;
   actor_type: 'user' | 'group';
-  display_name: string;
+  name: string;
   avatar_url: string | null;
   is_personal: boolean;
 }

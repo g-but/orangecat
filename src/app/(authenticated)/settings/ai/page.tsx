@@ -55,7 +55,7 @@ export default function AISettingsPage() {
         defaultModelId: preferences.default_model_id,
         defaultTier: preferences.default_tier,
         autoRouterEnabled: preferences.auto_router_enabled,
-        maxCostSats: preferences.max_cost_sats,
+        maxCostBtc: preferences.max_cost_btc,
         requireVision: preferences.require_vision,
         requireFunctionCalling: preferences.require_function_calling,
       }
@@ -63,7 +63,7 @@ export default function AISettingsPage() {
         defaultModelId: null,
         defaultTier: 'economy',
         autoRouterEnabled: true,
-        maxCostSats: 100,
+        maxCostBtc: 0.000001,
         requireVision: false,
         requireFunctionCalling: false,
       };
@@ -80,8 +80,8 @@ export default function AISettingsPage() {
     if (updates.autoRouterEnabled !== undefined) {
       dbUpdates.auto_router_enabled = updates.autoRouterEnabled;
     }
-    if (updates.maxCostSats !== undefined) {
-      dbUpdates.max_cost_sats = updates.maxCostSats;
+    if (updates.maxCostBtc !== undefined) {
+      dbUpdates.max_cost_btc = updates.maxCostBtc;
     }
     if (updates.requireVision !== undefined) {
       dbUpdates.require_vision = updates.requireVision;
@@ -176,7 +176,7 @@ export default function AISettingsPage() {
                 usage={{
                   totalRequests: preferences?.cached_total_requests || 0,
                   totalTokens: preferences?.cached_total_tokens || 0,
-                  totalCostSats: preferences?.cached_total_cost_sats || 0,
+                  totalCostBtc: preferences?.cached_total_cost_btc || 0,
                   periodLabel: 'All time',
                 }}
               />

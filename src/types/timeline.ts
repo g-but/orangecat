@@ -140,7 +140,6 @@ export interface TimelineEvent {
   content?: TimelineEventContent;
 
   // Quantitative data
-  amountSats?: number;
   amountBtc?: number;
   quantity?: number;
 
@@ -413,7 +412,6 @@ export interface CreateTimelineEventRequest {
   title: string;
   description?: string;
   content?: TimelineEventContent;
-  amountSats?: number;
   amountBtc?: number;
   quantity?: number;
   visibility?: TimelineVisibility;
@@ -493,7 +491,6 @@ export interface TimelineEventDb
   subject_type: string;
   target_type?: string;
   visibility: string;
-  amount_sats?: number;
   amount_btc?: number;
   location_data?: TimelineLocationData;
   device_info?: TimelineDeviceInfo;

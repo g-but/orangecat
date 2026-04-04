@@ -49,7 +49,7 @@ export default function BitcoinPaymentModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId,
-          amount_sats: amount,
+          amount_btc: amount,
           payment_method: paymentType,
         }),
       });

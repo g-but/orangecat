@@ -42,10 +42,10 @@ const config: EntityDetailConfig = {
         <CardContent className="space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-500">
-              {Number(entity.raised_amount || 0).toLocaleString()} sats raised
+              {Number(entity.raised_amount || 0)} BTC raised
             </span>
             <span className="font-bold text-lg text-rose-600">
-              {Number(entity.goal_amount).toLocaleString()} sats goal
+              {Number(entity.goal_amount)} BTC goal
             </span>
           </div>
           <Progress value={progress} className="h-2" />

@@ -12,7 +12,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Schema for adding credits
 const addCreditsSchema = z.object({
-  amount_sats: z.number().int().positive().min(1).max(1000000), // Max 1M sats for safety
+  amount_btc: z.number().int().positive().min(1).max(1000000), // Max 1M sats for safety
   description: z.string().max(200).optional(),
 });
 
@@ -36,14 +36,14 @@ export const POST = withRole('admin', async (request: AuthenticatedRequest) => {
       });
     }
 
-    const { amount_sats, description } = result.data;
+    const { amount_btc, description } = result.data;
 
     // Call the add_ai_credits RPC function
     const { data: newBalance, error: addError } = await db.rpc('add_ai_credits', {
       p_user_id: user.id,
-      p_amount_sats: amount_sats,
+      p_amount_btc: amount_btc,
       p_transaction_type: 'deposit',
-      p_description: description || `Manual deposit of ${amount_sats} sats`,
+      p_description: description || `Manual deposit of ${amount_btc} BTC`,
     });
 
     if (addError) {
@@ -54,18 +54,18 @@ export const POST = withRole('admin', async (request: AuthenticatedRequest) => {
         // Upsert the credits record
         const { data: existingCredits } = await db
           .from(DATABASE_TABLES.AI_USER_CREDITS)
-          .select('balance_sats')
+          .select('balance_btc')
           .eq('user_id', user.id)
           .single();
 
-        const currentBalance = existingCredits?.balance_sats || 0;
-        const newBalanceValue = currentBalance + amount_sats;
+        const currentBalance = existingCredits?.balance_btc || 0;
+        const newBalanceValue = currentBalance + amount_btc;
 
         const { error: upsertError } = await db.from(DATABASE_TABLES.AI_USER_CREDITS).upsert(
           {
             user_id: user.id,
-            balance_sats: newBalanceValue,
-            total_deposited_sats: amount_sats,
+            balance_btc: newBalanceValue,
+            total_deposited_btc: amount_btc,
             updated_at: new Date().toISOString(),
           },
           {
@@ -81,16 +81,16 @@ export const POST = withRole('admin', async (request: AuthenticatedRequest) => {
         await db.from(DATABASE_TABLES.AI_CREDIT_TRANSACTIONS).insert({
           user_id: user.id,
           transaction_type: 'deposit',
-          amount_sats,
+          amount_btc,
           balance_before: currentBalance,
           balance_after: newBalanceValue,
-          description: description || `Manual deposit of ${amount_sats} sats`,
+          description: description || `Manual deposit of ${amount_btc} BTC`,
         });
 
         return apiSuccess({
-          balance_sats: newBalanceValue,
-          amount_added: amount_sats,
-          message: `Added ${amount_sats} sats to your AI credits`,
+          balance_btc: newBalanceValue,
+          amount_added: amount_btc,
+          message: `Added ${amount_btc} BTC to your AI credits`,
         });
       }
 
@@ -98,9 +98,9 @@ export const POST = withRole('admin', async (request: AuthenticatedRequest) => {
     }
 
     return apiSuccess({
-      balance_sats: newBalance,
-      amount_added: amount_sats,
-      message: `Added ${amount_sats} sats to your AI credits`,
+      balance_btc: newBalance,
+      amount_added: amount_btc,
+      message: `Added ${amount_btc} BTC to your AI credits`,
     });
   } catch (error) {
     logger.error('Failed to add credits', { error });

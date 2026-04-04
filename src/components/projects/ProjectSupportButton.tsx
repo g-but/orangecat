@@ -87,10 +87,10 @@ export function ProjectSupportButton({
 
         {showStats && stats && (
           <div className="flex items-center gap-4 text-sm text-gray-600">
-            {stats.total_bitcoin_sats > 0 && (
+            {stats.total_bitcoin_btc > 0 && (
               <div className="flex items-center gap-1">
                 <Coins className="h-4 w-4 text-orange-600" />
-                <span className="font-medium">{formatAmount(stats.total_bitcoin_sats)}</span>
+                <span className="font-medium">{formatAmount(stats.total_bitcoin_btc)}</span>
               </div>
             )}
             {totalSupport > 0 && (

@@ -15,7 +15,7 @@ export interface UserAIPreferences {
   default_model_id: string | null;
   default_tier: ModelTier;
   auto_router_enabled: boolean;
-  max_cost_sats: number;
+  max_cost_btc: number;
   require_vision: boolean;
   require_function_calling: boolean;
   onboarding_completed: boolean;
@@ -23,7 +23,7 @@ export interface UserAIPreferences {
   onboarding_step: number;
   cached_total_requests: number;
   cached_total_tokens: number;
-  cached_total_cost_sats: number;
+  cached_total_cost_btc: number;
   created_at: string;
   updated_at: string;
 }

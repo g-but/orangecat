@@ -19,8 +19,8 @@ interface PaymentQRCodeProps {
   qrData: string;
   /** Human-readable payment method label */
   methodLabel: string;
-  /** Amount in sats */
-  amountSats: number;
+  /** Amount in BTC */
+  amountBtc: number;
   /** Size of the QR code in pixels */
   size?: number;
   /** Seconds until this invoice expires */
@@ -30,7 +30,7 @@ interface PaymentQRCodeProps {
 export function PaymentQRCode({
   qrData,
   methodLabel,
-  amountSats,
+  amountBtc,
   size = 256,
   expiresInSeconds,
 }: PaymentQRCodeProps) {
@@ -93,7 +93,7 @@ export function PaymentQRCode({
 
       {/* Amount display */}
       <div className="text-center">
-        <p className="text-lg font-semibold">{formatAmount(amountSats)}</p>
+        <p className="text-lg font-semibold">{formatAmount(amountBtc)}</p>
       </div>
 
       {/* Countdown timer */}

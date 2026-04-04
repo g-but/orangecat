@@ -19,7 +19,7 @@ interface TransactionCardProps {
 
 export function TransactionCard({ transaction }: TransactionCardProps) {
   const isIncoming = transaction.type === 'incoming';
-  const valueInSats = transaction.value * 100000000;
+  const valueBtc = transaction.value;
 
   return (
     <motion.div
@@ -40,7 +40,7 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
             )}
             <div>
               <p className="font-semibold text-lg text-gray-800">
-                {isIncoming ? 'Received' : 'Sent'} {formatBtcValue(valueInSats)} BTC
+                {isIncoming ? 'Received' : 'Sent'} {formatBtcValue(valueBtc)} BTC
               </p>
               <p className="text-xs text-gray-500">
                 {formatDistanceToNow(new Date(transaction.timestamp), { addSuffix: true })}

@@ -42,14 +42,13 @@ export const useTimelineEvents = () => {
 
     // Listen for donation events
     const handleDonationReceived = async (event: CustomEvent) => {
-      const { transactionId, projectId, amountSats, amountBtc, donorId } = event.detail;
+      const { transactionId, projectId, amountBtc, donorId } = event.detail;
 
       try {
         await timelineService.createTransactionEvent(
           transactionId,
           projectId,
           donorId || user.id,
-          amountSats,
           amountBtc
         );
 
@@ -163,13 +162,12 @@ export const useTimelineEvents = () => {
     dispatchDonationReceived: (
       transactionId: string,
       projectId: string,
-      amountSats: number,
       amountBtc: number,
       donorId?: string
     ) => {
       window.dispatchEvent(
         new CustomEvent('donation-received', {
-          detail: { transactionId, projectId, amountSats, amountBtc, donorId },
+          detail: { transactionId, projectId, amountBtc, donorId },
         })
       );
     },

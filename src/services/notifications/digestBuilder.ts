@@ -132,7 +132,7 @@ async function fetchPaymentStats(
   // Current week
   const { data: currentPayments } = await admin
     .from(DATABASE_TABLES.PAYMENT_INTENTS)
-    .select('amount_sats')
+    .select('amount_btc')
     .eq('seller_id', userId)
     .eq('status', 'completed')
     .gte('created_at', since.toISOString());
@@ -142,11 +142,10 @@ async function fetchPaymentStats(
   }
 
   const totalPaymentsReceived = currentPayments.length;
-  const totalSats = currentPayments.reduce(
-    (sum: number, p: { amount_sats: number }) => sum + (p.amount_sats || 0),
+  const paymentAmountBtc = currentPayments.reduce(
+    (sum: number, p: { amount_btc: number }) => sum + (p.amount_btc || 0),
     0
   );
-  const paymentAmountBtc = totalSats / 100_000_000;
 
   return { totalPaymentsReceived, paymentAmountBtc };
 }

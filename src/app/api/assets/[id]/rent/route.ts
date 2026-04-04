@@ -51,7 +51,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       await // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
         .select(
-          'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats, currency'
+          'id, title, actor_id, is_for_rent, rental_price_btc, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_btc, currency'
         )
         .eq('id', assetId)
         .eq('status', STATUS.ASSETS.ACTIVE)
@@ -112,8 +112,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       );
     }
 
-    const priceSats = (asset.rental_price_sats || 0) * periods;
-    const depositSats = asset.requires_deposit ? asset.deposit_amount_sats || 0 : 0;
+    const priceBtc = (asset.rental_price_btc || 0) * periods;
+    const depositBtc = asset.requires_deposit ? asset.deposit_amount_btc || 0 : 0;
 
     // Create the booking
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -126,8 +126,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       customerUserId: user.id,
       startsAt,
       endsAt,
-      priceSats,
-      depositSats,
+      priceBtc,
+      depositBtc,
       customerNotes: notes,
       metadata: {
         asset_title: asset.title,

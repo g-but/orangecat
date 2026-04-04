@@ -132,7 +132,7 @@ export async function checkOwnership(
 export async function getActorDisplayName(actorId: string): Promise<string> {
   try {
     const actor = await getActor(actorId);
-    return actor?.display_name || 'Unknown';
+    return actor?.name || 'Unknown';
   } catch (error) {
     logger.error('Exception getting actor display name', error, 'Actors');
     return 'Unknown';

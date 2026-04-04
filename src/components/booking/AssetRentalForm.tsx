@@ -12,10 +12,10 @@ import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 interface AssetRentalFormProps {
   assetId: string;
   assetName: string;
-  rentalPriceSats: number;
+  rentalPriceBtc: number;
   periodType: 'hourly' | 'daily' | 'weekly' | 'monthly';
   requiresDeposit?: boolean;
-  depositAmountSats?: number;
+  depositAmountBtc?: number;
   currency?: string;
   selectedStartDate: Date | null;
   selectedEndDate: Date | null;
@@ -25,10 +25,10 @@ interface AssetRentalFormProps {
 export function AssetRentalForm({
   assetId,
   assetName,
-  rentalPriceSats,
+  rentalPriceBtc,
   periodType,
   requiresDeposit = false,
-  depositAmountSats = 0,
+  depositAmountBtc = 0,
   currency: _currency = 'SATS',
   selectedStartDate,
   selectedEndDate,
@@ -68,7 +68,7 @@ export function AssetRentalForm({
   };
 
   const periods = calculatePeriods();
-  const totalPrice = rentalPriceSats * periods;
+  const totalPrice = rentalPriceBtc * periods;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,8 +153,8 @@ export function AssetRentalForm({
               {periods} {getPeriodLabel()}
             </p>
             <p className="font-medium text-gray-900">{formatPrice(totalPrice)}</p>
-            {requiresDeposit && depositAmountSats > 0 && (
-              <p className="text-orange-600">+ {formatPrice(depositAmountSats)} deposit</p>
+            {requiresDeposit && depositAmountBtc > 0 && (
+              <p className="text-orange-600">+ {formatPrice(depositAmountBtc)} deposit</p>
             )}
           </div>
         </div>
@@ -192,18 +192,18 @@ export function AssetRentalForm({
             <CreditCard className="h-5 w-5 text-gray-400 mt-0.5" />
             <div>
               <p className="text-sm text-gray-600">
-                {formatPrice(rentalPriceSats)} per {periodType.replace('ly', '')} × {periods}
+                {formatPrice(rentalPriceBtc)} per {periodType.replace('ly', '')} × {periods}
               </p>
               <p className="font-medium text-gray-900">{formatPrice(totalPrice)}</p>
             </div>
           </div>
 
-          {requiresDeposit && depositAmountSats > 0 && (
+          {requiresDeposit && depositAmountBtc > 0 && (
             <div className="flex items-start gap-3">
               <Shield className="h-5 w-5 text-orange-400 mt-0.5" />
               <div>
                 <p className="font-medium text-orange-600">
-                  Security deposit: {formatPrice(depositAmountSats)}
+                  Security deposit: {formatPrice(depositAmountBtc)}
                 </p>
                 <p className="text-sm text-gray-600">Refundable upon return</p>
               </div>
@@ -214,7 +214,7 @@ export function AssetRentalForm({
             <div className="flex justify-between items-center">
               <span className="font-medium text-gray-900">Total</span>
               <span className="text-lg font-bold text-gray-900">
-                {formatPrice(totalPrice + (requiresDeposit ? depositAmountSats : 0))}
+                {formatPrice(totalPrice + (requiresDeposit ? depositAmountBtc : 0))}
               </span>
             </div>
           </div>

@@ -59,12 +59,12 @@ export async function fetchBitcoinBalance(bitcoinAddress: string): Promise<numbe
  * Update treasury balance for a group wallet
  *
  * @param walletId - Wallet ID to update
- * @param balanceSats - New balance in sats
+ * @param balanceBtc - New balance in BTC
  * @param client - Optional Supabase client override
  */
 export async function updateWalletBalance(
   walletId: string,
-  balanceSats: number,
+  balanceBtc: number,
   client?: AnySupabaseClient
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -76,7 +76,7 @@ export async function updateWalletBalance(
         .from(TABLES.group_wallets) as any
     )
       .update({
-        current_balance_sats: balanceSats,
+        current_balance_btc: balanceBtc,
         last_balance_update: new Date().toISOString(),
       })
       .eq('id', walletId);
@@ -125,20 +125,20 @@ export async function refreshWalletBalance(
     }
 
     // Fetch balance from mempool.space
-    const balanceSats = await fetchBitcoinBalance(wallet.bitcoin_address);
+    const balanceBtc = await fetchBitcoinBalance(wallet.bitcoin_address);
 
-    if (balanceSats === null) {
+    if (balanceBtc === null) {
       return { success: false, error: 'Failed to fetch balance from blockchain' };
     }
 
     // Update wallet balance
-    const updateResult = await updateWalletBalance(walletId, balanceSats, sb);
+    const updateResult = await updateWalletBalance(walletId, balanceBtc, sb);
 
     if (!updateResult.success) {
       return updateResult;
     }
 
-    return { success: true, balance: balanceSats };
+    return { success: true, balance: balanceBtc };
   } catch (error) {
     logger.error('Exception refreshing wallet balance', error, 'Groups');
     return { success: false, error: 'Failed to refresh balance' };

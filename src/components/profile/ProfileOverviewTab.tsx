@@ -92,7 +92,7 @@ export default function ProfileOverviewTab({
             <CardContent className="pt-4 sm:pt-6">
               <div className="text-center">
                 <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-green-600">
-                  ₿{(stats.totalRaised / 100000000).toFixed(8)}
+                  ₿{stats.totalRaised.toFixed(8)}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-600 mt-1">Total Raised</div>
               </div>

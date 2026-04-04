@@ -116,13 +116,13 @@ export const POST = createEntityPostHandler({
 
     // Map schema field names to database column names
     // Schema uses: ticket_price, funding_goal
-    // Database uses: ticket_price_sats, funding_goal_sats
+    // Database uses: ticket_price_btc, funding_goal_btc
     if ('ticket_price' in cleaned) {
-      cleaned.ticket_price_sats = cleaned.ticket_price;
+      cleaned.ticket_price_btc = cleaned.ticket_price;
       delete cleaned.ticket_price;
     }
     if ('funding_goal' in cleaned) {
-      cleaned.funding_goal_sats = cleaned.funding_goal;
+      cleaned.funding_goal_btc = cleaned.funding_goal;
       delete cleaned.funding_goal;
     }
 

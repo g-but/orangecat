@@ -17,19 +17,19 @@ const config: EntityDetailConfig = {
   createdLabel: 'Listed',
   getViewRoute: id => ROUTES.PRODUCTS.VIEW(id),
   getJsonLdExtra: entity => ({
-    ...(entity.price_sats && {
-      offers: { '@type': 'Offer', priceCurrency: 'SATS', price: entity.price_sats },
+    ...(entity.price_btc && {
+      offers: { '@type': 'Offer', priceCurrency: 'SATS', price: entity.price_btc },
     }),
   }),
   renderDetails: entity =>
-    entity.price_sats ? (
+    entity.price_btc ? (
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Price</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold text-blue-600">
-            {Number(entity.price_sats).toLocaleString()} sats
+            {Number(entity.price_btc)} BTC
           </p>
         </CardContent>
       </Card>

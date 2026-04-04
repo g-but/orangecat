@@ -18,8 +18,8 @@ interface PaymentButtonProps {
   entityType: EntityType;
   entityId: string;
   entityTitle: string;
-  /** Price in sats (for fixed_price entities) */
-  priceSats?: number;
+  /** Price in BTC (for fixed_price entities) */
+  priceBtc?: number;
   /** Seller's profile ID */
   sellerProfileId?: string;
   /** Whether the seller has a wallet connected */
@@ -32,7 +32,7 @@ export function PaymentButton({
   entityType,
   entityId,
   entityTitle,
-  priceSats,
+  priceBtc,
   sellerProfileId,
   sellerHasWallet = true,
   className,
@@ -60,8 +60,8 @@ export function PaymentButton({
       >
         <Wallet className="mr-2 h-4 w-4" />
         {disabled ? 'No wallet connected' : buttonText}
-        {!isContribution && priceSats && !disabled && (
-          <span className="ml-1 opacity-75">({formatAmount(priceSats)})</span>
+        {!isContribution && priceBtc && !disabled && (
+          <span className="ml-1 opacity-75">({formatAmount(priceBtc)})</span>
         )}
       </Button>
 
@@ -71,7 +71,7 @@ export function PaymentButton({
         entityType={entityType}
         entityId={entityId}
         entityTitle={entityTitle}
-        priceSats={priceSats}
+        priceBtc={priceBtc}
         sellerProfileId={sellerProfileId}
       />
     </>

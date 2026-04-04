@@ -193,7 +193,7 @@ export async function fetchProfileForCat(
   try {
     const { data: actor, error: actorError } = await supabase
       .from(DATABASE_TABLES.ACTORS)
-      .select('username, display_name, bio, location_city, location_country, background, website')
+      .select('username, name, bio, location_city, location_country, background, website')
       .eq('actor_type', 'user')
       .eq('user_id', userId)
       .maybeSingle();
@@ -204,7 +204,7 @@ export async function fetchProfileForCat(
 
     return {
       username: actor.username,
-      name: actor.display_name,
+      name: actor.name,
       bio: actor.bio,
       location_city: actor.location_city,
       location_country: actor.location_country,
@@ -402,7 +402,7 @@ export async function fetchEntitiesForCat(
     const { data: assets, error: assetsError } = await supabase
       .from(ENTITY_REGISTRY.asset.tableName)
       .select(
-        'id, title, description, status, type, location, estimated_value, sale_price_sats, rental_price_sats'
+        'id, title, description, status, type, location, estimated_value, sale_price_btc, rental_price_btc'
       )
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
@@ -423,7 +423,7 @@ export async function fetchEntitiesForCat(
           title: a.title,
           description: a.description?.substring(0, 300),
           status: a.status,
-          price_btc: a.sale_price_sats || a.rental_price_sats || a.estimated_value,
+          price_btc: a.sale_price_btc || a.rental_price_btc || a.estimated_value,
           location: a.location,
         });
       });

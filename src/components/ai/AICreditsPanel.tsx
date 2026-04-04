@@ -17,15 +17,15 @@ import {
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface CreditBalance {
-  balance_sats: number;
-  total_deposited_sats: number;
-  total_spent_sats: number;
+  balance_btc: number;
+  total_deposited_btc: number;
+  total_spent_btc: number;
 }
 
 interface Transaction {
   id: string;
   transaction_type: 'deposit' | 'charge' | 'refund' | 'bonus';
-  amount_sats: number;
+  amount_btc: number;
   balance_before: number;
   balance_after: number;
   description: string;
@@ -93,7 +93,7 @@ export function AICreditsPanel() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount_sats: amount,
+          amount_btc: amount,
           description: 'Manual deposit',
         }),
       });
@@ -158,9 +158,9 @@ export function AICreditsPanel() {
   }
 
   const balance = data?.balance || {
-    balance_sats: 0,
-    total_deposited_sats: 0,
-    total_spent_sats: 0,
+    balance_btc: 0,
+    total_deposited_btc: 0,
+    total_spent_btc: 0,
   };
 
   return (
@@ -182,11 +182,11 @@ export function AICreditsPanel() {
           <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200">
             <div className="text-sm text-yellow-800 mb-1">Available Balance</div>
             <div className="text-3xl font-bold text-yellow-900">
-              {formatAmount(balance.balance_sats)}
+              {formatAmount(balance.balance_btc)}
             </div>
             <div className="text-xs text-yellow-700 mt-2 flex gap-4">
-              <span>Deposited: {formatAmount(balance.total_deposited_sats)}</span>
-              <span>Spent: {formatAmount(balance.total_spent_sats)}</span>
+              <span>Deposited: {formatAmount(balance.total_deposited_btc)}</span>
+              <span>Spent: {formatAmount(balance.total_spent_btc)}</span>
             </div>
           </div>
 
@@ -219,7 +219,7 @@ export function AICreditsPanel() {
                     </div>
                     <div className={`font-medium ${getTransactionColor(tx.transaction_type)}`}>
                       {tx.transaction_type === 'charge' ? '-' : '+'}
-                      {formatAmount(tx.amount_sats)}
+                      {formatAmount(tx.amount_btc)}
                     </div>
                   </div>
                 ))}

@@ -17,7 +17,7 @@ interface AssistantRevenue {
   id: string;
   name: string;
   avatar_url: string | null;
-  total_revenue_sats: number;
+  total_revenue_btc: number;
   total_conversations: number;
   total_messages: number;
   pricing_model: string;
@@ -51,7 +51,7 @@ export const GET = compose(
         id,
         name,
         avatar_url,
-        total_revenue_sats,
+        total_revenue_btc,
         total_conversations,
         total_messages,
         pricing_model,
@@ -59,7 +59,7 @@ export const GET = compose(
       `
       )
       .eq('user_id', user.id)
-      .order('total_revenue_sats', { ascending: false });
+      .order('total_revenue_btc', { ascending: false });
 
     if (assistantsError) {
       throw assistantsError;
@@ -68,8 +68,8 @@ export const GET = compose(
     // Calculate totals from assistants
     const assistantRows = (assistants || []) as any[];
 
-    const totalRevenueSats = assistantRows.reduce(
-      (sum: number, a: any) => sum + (a.total_revenue_sats || 0),
+    const totalRevenueBtc = assistantRows.reduce(
+      (sum: number, a: any) => sum + (a.total_revenue_btc || 0),
       0
     );
 
@@ -91,12 +91,12 @@ export const GET = compose(
       .single();
 
     // Calculate available balance (from earnings table if exists, otherwise total revenue)
-    const availableBalanceSats = earnings?.available_balance_sats ?? totalRevenueSats;
+    const availableBalanceBtc = earnings?.available_balance_btc ?? totalRevenueBtc;
 
     return apiSuccess({
       summary: {
-        total_revenue_sats: totalRevenueSats,
-        available_balance_sats: availableBalanceSats,
+        total_revenue_btc: totalRevenueBtc,
+        available_balance_btc: availableBalanceBtc,
         total_conversations: totalConversations,
         total_messages: totalMessages,
         total_assistants: assistants?.length || 0,
@@ -106,7 +106,7 @@ export const GET = compose(
           id: a.id,
           name: a.name,
           avatar_url: a.avatar_url,
-          total_revenue_sats: a.total_revenue_sats || 0,
+          total_revenue_btc: a.total_revenue_btc || 0,
           total_conversations: a.total_conversations || 0,
           total_messages: a.total_messages || 0,
           pricing_model: a.pricing_model || 'free',

@@ -100,21 +100,20 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       return apiForbidden('You can only transfer between your own wallets');
     }
 
-    // Check sufficient balance (compare in sats)
-    const availableSats = Math.round(fromWallet.balance_btc * 100_000_000);
-    if (availableSats < body.amount_sats) {
+    // Check sufficient balance (both in BTC)
+    if (fromWallet.balance_btc < body.amount_btc) {
       logger.info('Insufficient balance for transfer', {
         userId: user.id,
         fromWalletId: body.from_wallet_id,
-        availableSats,
-        requestedSats: body.amount_sats,
+        availableBtc: fromWallet.balance_btc,
+        requestedBtc: body.amount_btc,
       });
       return apiBadRequest(
-        `Insufficient balance. Available: ${availableSats} sat, Requested: ${body.amount_sats} sat`
+        `Insufficient balance. Available: ${fromWallet.balance_btc} BTC, Requested: ${body.amount_btc} BTC`
       );
     }
 
-    const amount_sats = body.amount_sats;
+    const amount_btc = body.amount_btc;
 
     // Determine entity types for transaction record
     const from_entity_type = fromWallet.profile_id ? 'profile' : 'project';
@@ -129,7 +128,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
         .from(DATABASE_TABLES.TRANSACTIONS) as any
     )
       .insert({
-        amount_sats,
+        amount_btc,
         from_entity_type,
         from_entity_id,
         to_entity_type,
@@ -159,14 +158,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       return apiInternalError('Failed to create transaction record');
     }
 
-    // Update wallet balances using RPC function
-    // RPC function expects BTC, so convert sats back
-    const amountBtcForRpc = body.amount_sats / 100_000_000;
+    // Update wallet balances using RPC function (amount already in BTC)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: updateError } = await (supabase.rpc as any)('transfer_between_wallets', {
       p_from_wallet_id: body.from_wallet_id,
       p_to_wallet_id: body.to_wallet_id,
-      p_amount_btc: amountBtcForRpc,
+      p_amount_btc: body.amount_btc,
       p_transaction_id: transaction.id,
     });
 
@@ -200,7 +197,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
         action: 'transfer',
         fromWalletId: body.from_wallet_id,
         toWalletId: body.to_wallet_id,
-        amountSats: body.amount_sats,
+        amountBtc: body.amount_btc,
         transactionId: transaction.id,
         fromWalletLabel: fromWallet.label,
         toWalletLabel: toWallet.label,
@@ -211,14 +208,14 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       userId: user.id,
       fromWalletId: body.from_wallet_id,
       toWalletId: body.to_wallet_id,
-      amountSats: body.amount_sats,
+      amountBtc: body.amount_btc,
       transactionId: transaction.id,
     });
 
     return apiSuccess({
       transaction,
       wallets: updatedWallets,
-      message: `Transferred ${body.amount_sats} sats from ${fromWallet.label} to ${toWallet.label}`,
+      message: `Transferred ${body.amount_btc} BTC from ${fromWallet.label} to ${toWallet.label}`,
     });
   } catch (error) {
     logger.error('Unexpected error in wallet transfer', { error });

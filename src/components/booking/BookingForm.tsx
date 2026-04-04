@@ -12,7 +12,7 @@ import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 interface BookingFormProps {
   serviceId: string;
   serviceName: string;
-  priceSats: number;
+  priceBtc: number;
   currency?: string;
   selectedSlot: { start: Date; end: Date } | null;
   onBack?: () => void;
@@ -21,7 +21,7 @@ interface BookingFormProps {
 export function BookingForm({
   serviceId,
   serviceName,
-  priceSats,
+  priceBtc,
   currency: _currency = 'SATS',
   selectedSlot,
   onBack,
@@ -118,7 +118,7 @@ export function BookingForm({
             <p>
               {formatTime(selectedSlot.start)} - {formatTime(selectedSlot.end)}
             </p>
-            <p className="font-medium text-gray-900">{formatPrice(priceSats)}</p>
+            <p className="font-medium text-gray-900">{formatPrice(priceBtc)}</p>
           </div>
         </div>
 
@@ -164,7 +164,7 @@ export function BookingForm({
           <div className="flex items-start gap-3">
             <CreditCard className="h-5 w-5 text-gray-400 mt-0.5" />
             <div>
-              <p className="font-medium text-gray-900">{formatPrice(priceSats)}</p>
+              <p className="font-medium text-gray-900">{formatPrice(priceBtc)}</p>
               <p className="text-sm text-gray-600">Payment due upon confirmation</p>
             </div>
           </div>

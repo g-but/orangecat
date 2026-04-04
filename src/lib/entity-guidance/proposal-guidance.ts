@@ -33,7 +33,7 @@ export type ProposalFieldType =
   | 'voting_threshold'
   | 'voting_ends_at'
   | 'is_public'
-  | 'amount_sats'
+  | 'amount_btc'
   | 'recipient_address'
   | 'wallet_id'
   | null;
@@ -55,7 +55,7 @@ export const proposalGuidanceContent: Record<NonNullable<ProposalFieldType>, Gui
       'Hire Full-Stack Developer',
       'Update Governance Threshold to 60%',
       'Create Partnership with Local Makerspace',
-      'Allocate 1M Sats for Marketing Campaign',
+      'Allocate 0.01 BTC for Marketing Campaign',
     ],
   },
   description: {
@@ -151,7 +151,7 @@ export const proposalGuidanceContent: Record<NonNullable<ProposalFieldType>, Gui
       'Disabled - Internal decisions, member-only proposals',
     ],
   },
-  amount_sats: {
+  amount_btc: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Amount (Satoshis)',
     description:

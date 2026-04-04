@@ -264,7 +264,7 @@ export class NotificationService {
           *,
           source_actor:actors!source_actor_id (
             id,
-            display_name,
+            name,
             avatar_url,
             actor_type
           )
@@ -349,7 +349,7 @@ interface Notification {
   source_entity_id: string | null;
   source_actor?: {
     id: string;
-    display_name: string;
+    name: string;
     avatar_url: string | null;
     actor_type: string;
   } | null;

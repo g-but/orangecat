@@ -56,13 +56,12 @@ export const assetSchema = z.object({
 
   // Sale options
   is_for_sale: z.boolean().optional().default(false),
-  sale_price_sats: z.number().int('Price must be whole satoshis').positive().optional().nullable(),
+  sale_price_btc: z.number().positive().optional().nullable(),
 
   // Rental options
   is_for_rent: z.boolean().optional().default(false),
-  rental_price_sats: z
+  rental_price_btc: z
     .number()
-    .int('Price must be whole satoshis')
     .positive()
     .optional()
     .nullable(),
@@ -72,9 +71,8 @@ export const assetSchema = z.object({
 
   // Deposit
   requires_deposit: z.boolean().optional().default(false),
-  deposit_amount_sats: z
+  deposit_amount_btc: z
     .number()
-    .int('Amount must be whole satoshis')
     .positive()
     .optional()
     .nullable(),
@@ -273,11 +271,10 @@ export const walletTransferSchema = z
   .object({
     from_wallet_id: z.string().uuid('Invalid from_wallet_id format'),
     to_wallet_id: z.string().uuid('Invalid to_wallet_id format'),
-    amount_sats: z
-      .number({ required_error: 'amount_sats is required' })
-      .int('Amount must be a whole number of sats')
+    amount_btc: z
+      .number({ required_error: 'amount_btc is required' })
       .positive('Amount must be positive')
-      .max(2_100_000_000_000_000, 'Amount exceeds maximum BTC supply'),
+      .max(21_000_000, 'Amount exceeds maximum BTC supply'),
     note: z.string().max(500, 'Note cannot exceed 500 characters').optional(),
   })
   .refine(data => data.from_wallet_id !== data.to_wallet_id, {
@@ -297,10 +294,9 @@ export const paymentCreateSchema = z.object({
   }),
   entity_id: z.string().uuid('entity_id must be a valid UUID'),
   /** Required for contributions; ignored for fixed-price entities */
-  amount_sats: z
+  amount_btc: z
     .number()
-    .int('amount_sats must be a whole number')
-    .positive('amount_sats must be positive')
+    .positive('amount_btc must be positive')
     .optional(),
   /** Optional message for contributions */
   message: z.string().max(500, 'Message must be at most 500 characters').optional(),
@@ -336,7 +332,7 @@ export const entityWalletLinkSchema = z.object({
 
 /** Transaction validation (peer-to-peer value transfer) */
 export const transactionSchema = z.object({
-  amount_sats: z.number().int().positive().max(1000000000000),
+  amount_btc: z.number().positive().max(21_000_000),
   from_entity_type: z.enum(['profile', 'project']),
   from_entity_id: z.string().uuid(),
   to_entity_type: z.enum(['profile', 'project']),

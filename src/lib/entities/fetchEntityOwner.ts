@@ -30,7 +30,7 @@ export async function fetchEntityOwner(
         id: actor.id!,
         user_id: actor.user_id!,
         username: actor.username,
-        name: actor.display_name,
+        name: actor.name,
         avatar_url: actor.avatar_url,
       };
     }

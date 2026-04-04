@@ -124,7 +124,7 @@ export interface GroupWalletSummary {
   purpose?: string; // 'general' | 'projects' | 'investment' | 'community' | 'emergency' | 'savings' | 'other'
   bitcoin_address?: string;
   lightning_address?: string;
-  current_balance_sats: number;
+  current_balance_btc: number;
   is_active: boolean;
   can_access: boolean; // Based on group membership
   required_signatures: number;

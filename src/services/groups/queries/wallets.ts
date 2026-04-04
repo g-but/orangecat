@@ -61,7 +61,7 @@ export async function getGroupWallets(
         purpose: (wallet.purpose as string) || undefined,
         bitcoin_address: (wallet.bitcoin_address as string) || undefined,
         lightning_address: (wallet.lightning_address as string) || undefined,
-        current_balance_sats: (wallet.current_balance_sats as number) || 0,
+        current_balance_btc: (wallet.current_balance_btc as number) || 0,
         is_active: wallet.is_active as boolean,
         // In the new schema, wallet access is determined by group membership + role
         // Members can view, founders/admins can manage

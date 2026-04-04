@@ -11,7 +11,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 
 const TransactionSchema = z.object({
   projectId: z.string().min(1).max(64),
-  amount_sats: z.number().int().positive().max(1_000_000_000_000),
+  amount_btc: z.number().int().positive().max(1_000_000_000_000),
   payment_method: z.enum(['lightning', 'on-chain']),
   message: z.string().max(200).optional().nullable(),
 });
@@ -46,8 +46,8 @@ export const POST = compose(
 
       // Create pending transaction
       const insertPayload = {
-        amount_sats: data.amount_sats,
-        currency: 'sats',
+        amount_btc: data.amount_btc,
+        currency: 'BTC',
         from_entity_type: 'profile',
         from_entity_id: user.id,
         to_entity_type: 'project',

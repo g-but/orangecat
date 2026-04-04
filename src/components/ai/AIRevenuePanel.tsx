@@ -32,7 +32,7 @@ interface AssistantRevenue {
   id: string;
   name: string;
   avatar_url: string | null;
-  total_revenue_sats: number;
+  total_revenue_btc: number;
   total_conversations: number;
   total_messages: number;
   pricing_model: string;
@@ -40,8 +40,8 @@ interface AssistantRevenue {
 }
 
 interface RevenueSummary {
-  total_revenue_sats: number;
-  available_balance_sats: number;
+  total_revenue_btc: number;
+  available_balance_btc: number;
   total_conversations: number;
   total_messages: number;
   total_assistants: number;
@@ -54,17 +54,17 @@ interface RevenueData {
 
 interface Withdrawal {
   id: string;
-  amount_sats: number;
+  amount_btc: number;
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
   lightning_address: string | null;
   created_at: string;
 }
 
 interface EarningsData {
-  total_earned_sats: number;
-  total_withdrawn_sats: number;
-  available_balance_sats: number;
-  pending_withdrawal_sats: number;
+  total_earned_btc: number;
+  total_withdrawn_btc: number;
+  available_balance_btc: number;
+  pending_withdrawal_btc: number;
 }
 
 const MIN_WITHDRAWAL_SATS = 1000;
@@ -132,8 +132,8 @@ export function AIRevenuePanel() {
       return;
     }
 
-    const availableBalance = earnings?.available_balance_sats || 0;
-    const pendingAmount = earnings?.pending_withdrawal_sats || 0;
+    const availableBalance = earnings?.available_balance_btc || 0;
+    const pendingAmount = earnings?.pending_withdrawal_btc || 0;
     const maxWithdrawable = availableBalance - pendingAmount;
 
     if (amount > maxWithdrawable) {
@@ -147,7 +147,7 @@ export function AIRevenuePanel() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount_sats: amount,
+          amount_btc: amount,
           lightning_address: lightningAddress,
         }),
       });
@@ -206,8 +206,8 @@ export function AIRevenuePanel() {
   }
 
   const summary = data?.summary || {
-    total_revenue_sats: 0,
-    available_balance_sats: 0,
+    total_revenue_btc: 0,
+    available_balance_btc: 0,
     total_conversations: 0,
     total_messages: 0,
     total_assistants: 0,
@@ -233,16 +233,16 @@ export function AIRevenuePanel() {
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
           <div className="text-sm text-green-800 mb-1">Total Earnings</div>
           <div className="text-3xl font-bold text-green-900">
-            {formatAmount(earnings?.total_earned_sats || summary.total_revenue_sats)}
+            {formatAmount(earnings?.total_earned_btc || summary.total_revenue_btc)}
           </div>
           <div className="text-sm text-green-700 mt-1 space-y-0.5">
             <div>
               Available:{' '}
-              {formatAmount(earnings?.available_balance_sats || summary.available_balance_sats)}
+              {formatAmount(earnings?.available_balance_btc || summary.available_balance_btc)}
             </div>
-            {(earnings?.pending_withdrawal_sats || 0) > 0 && (
+            {(earnings?.pending_withdrawal_btc || 0) > 0 && (
               <div className="text-yellow-700">
-                Pending: {formatAmount(earnings?.pending_withdrawal_sats || 0)}
+                Pending: {formatAmount(earnings?.pending_withdrawal_btc || 0)}
               </div>
             )}
           </div>
@@ -271,7 +271,7 @@ export function AIRevenuePanel() {
         </div>
 
         {/* Withdraw Button */}
-        {(earnings?.available_balance_sats || 0) - (earnings?.pending_withdrawal_sats || 0) >=
+        {(earnings?.available_balance_btc || 0) - (earnings?.pending_withdrawal_btc || 0) >=
           MIN_WITHDRAWAL_SATS && (
           <Button className="w-full" variant="outline" onClick={() => setShowWithdrawDialog(true)}>
             <Wallet className="h-4 w-4 mr-2" />
@@ -292,7 +292,7 @@ export function AIRevenuePanel() {
                   <div className="flex items-center gap-2">
                     {getStatusIcon(withdrawal.status)}
                     <div>
-                      <div className="font-medium">{formatAmount(withdrawal.amount_sats)}</div>
+                      <div className="font-medium">{formatAmount(withdrawal.amount_btc)}</div>
                       <div className="text-xs text-gray-500">
                         {new Date(withdrawal.created_at).toLocaleDateString()}
                       </div>
@@ -339,7 +339,7 @@ export function AIRevenuePanel() {
                   </div>
                   <div className="text-right flex-shrink-0 ml-2">
                     <div className="font-medium text-green-600">
-                      {formatAmount(assistant.total_revenue_sats)}
+                      {formatAmount(assistant.total_revenue_btc)}
                     </div>
                   </div>
                 </div>
@@ -375,7 +375,7 @@ export function AIRevenuePanel() {
               <div className="text-sm text-green-800">Available to withdraw</div>
               <div className="text-2xl font-bold text-green-900">
                 {formatAmount(
-                  (earnings?.available_balance_sats || 0) - (earnings?.pending_withdrawal_sats || 0)
+                  (earnings?.available_balance_btc || 0) - (earnings?.pending_withdrawal_btc || 0)
                 )}
               </div>
             </div>
@@ -384,8 +384,8 @@ export function AIRevenuePanel() {
             <div className="grid grid-cols-4 gap-2">
               {[1000, 5000, 10000, 50000].map(amount => {
                 const maxAmount =
-                  (earnings?.available_balance_sats || 0) -
-                  (earnings?.pending_withdrawal_sats || 0);
+                  (earnings?.available_balance_btc || 0) -
+                  (earnings?.pending_withdrawal_btc || 0);
                 const isDisabled = amount > maxAmount;
                 return (
                   <Button
@@ -410,7 +410,7 @@ export function AIRevenuePanel() {
                 onChange={e => setWithdrawAmount(e.target.value)}
                 min={MIN_WITHDRAWAL_SATS}
                 max={
-                  (earnings?.available_balance_sats || 0) - (earnings?.pending_withdrawal_sats || 0)
+                  (earnings?.available_balance_btc || 0) - (earnings?.pending_withdrawal_btc || 0)
                 }
                 className="mt-1"
                 placeholder={`Minimum: ${formatAmount(MIN_WITHDRAWAL_SATS)}`}

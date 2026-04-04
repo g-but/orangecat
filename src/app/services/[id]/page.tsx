@@ -18,8 +18,8 @@ const config: EntityDetailConfig = {
   descriptionTitle: 'About this Service',
   getViewRoute: id => ROUTES.SERVICES.VIEW(id),
   getJsonLdExtra: entity => ({
-    ...(entity.price_sats && {
-      offers: { '@type': 'Offer', priceCurrency: 'SATS', price: entity.price_sats },
+    ...(entity.price_btc && {
+      offers: { '@type': 'Offer', priceCurrency: 'SATS', price: entity.price_btc },
     }),
     ...(entity.duration_minutes && { duration: `PT${entity.duration_minutes}M` }),
   }),
@@ -29,11 +29,11 @@ const config: EntityDetailConfig = {
         <CardTitle className="text-lg">Details</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {entity.price_sats && (
+        {entity.price_btc && (
           <div className="flex items-center justify-between">
             <span className="text-gray-500">Price</span>
             <span className="text-xl font-bold text-tiffany-600">
-              {Number(entity.price_sats).toLocaleString()} sats
+              {Number(entity.price_btc)} BTC
             </span>
           </div>
         )}

@@ -33,7 +33,7 @@ export async function createContract(input: CreateContractInput) {
       const proposalResult = await createProposal({
         group_id: partyB.group_id!,
         title: `Create ${CONTRACT_TYPES[input.contract_type].name} Contract`,
-        description: `Proposal to create contract with ${partyA.display_name || partyA.id}`,
+        description: `Proposal to create contract with ${partyA.name || partyA.id}`,
         proposal_type: 'membership',
         action_type: 'create_contract',
         action_data: {

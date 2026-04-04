@@ -471,7 +471,7 @@ const generalTemplates: WishlistTemplate[] = [
 export interface WishlistItemDefaults extends Partial<WishlistItemFormData> {
   title: string;
   description?: string;
-  target_amount_sats: number;
+  target_amount_btc: number;
   external_source?: string;
 }
 
@@ -493,7 +493,7 @@ const electronicsItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Laptop',
       description: 'A new laptop for work and productivity.',
-      target_amount_sats: 50000000, // ~$500
+      target_amount_btc: 0.5, // ~$500
       allow_partial_funding: true,
     },
   },
@@ -505,7 +505,7 @@ const electronicsItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Smartphone',
       description: 'Upgrade to a new phone.',
-      target_amount_sats: 40000000, // ~$400
+      target_amount_btc: 0.4, // ~$400
       allow_partial_funding: true,
     },
   },
@@ -517,7 +517,7 @@ const electronicsItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Tablet',
       description: 'A tablet for reading, drawing, and entertainment.',
-      target_amount_sats: 30000000, // ~$300
+      target_amount_btc: 0.3, // ~$300
       allow_partial_funding: true,
     },
   },
@@ -529,7 +529,7 @@ const electronicsItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Headphones',
       description: 'Quality headphones for music and calls.',
-      target_amount_sats: 15000000, // ~$150
+      target_amount_btc: 0.15, // ~$150
       allow_partial_funding: true,
     },
   },
@@ -541,7 +541,7 @@ const electronicsItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Gaming Console',
       description: 'A gaming console for entertainment.',
-      target_amount_sats: 35000000, // ~$350
+      target_amount_btc: 0.35, // ~$350
       allow_partial_funding: true,
     },
   },
@@ -557,7 +557,7 @@ const homeItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Coffee Machine',
       description: 'A quality coffee machine for the perfect morning brew.',
-      target_amount_sats: 20000000, // ~$200
+      target_amount_btc: 0.2, // ~$200
       allow_partial_funding: true,
     },
   },
@@ -569,7 +569,7 @@ const homeItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Kitchen Appliance',
       description: 'A useful appliance for the kitchen.',
-      target_amount_sats: 15000000, // ~$150
+      target_amount_btc: 0.15, // ~$150
       allow_partial_funding: true,
     },
   },
@@ -581,7 +581,7 @@ const homeItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Furniture',
       description: 'A quality piece of furniture for the home.',
-      target_amount_sats: 50000000, // ~$500
+      target_amount_btc: 0.5, // ~$500
       allow_partial_funding: true,
     },
   },
@@ -593,7 +593,7 @@ const homeItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Bedding Set',
       description: 'Comfortable bedding for better sleep.',
-      target_amount_sats: 15000000, // ~$150
+      target_amount_btc: 0.15, // ~$150
       allow_partial_funding: true,
     },
   },
@@ -609,7 +609,7 @@ const fashionItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Watch',
       description: 'A beautiful watch for everyday wear.',
-      target_amount_sats: 30000000, // ~$300
+      target_amount_btc: 0.3, // ~$300
       allow_partial_funding: true,
     },
   },
@@ -621,7 +621,7 @@ const fashionItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Jewelry',
       description: 'A special piece of jewelry.',
-      target_amount_sats: 25000000, // ~$250
+      target_amount_btc: 0.25, // ~$250
       allow_partial_funding: true,
     },
   },
@@ -633,7 +633,7 @@ const fashionItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Designer Bag',
       description: 'A quality bag that will last.',
-      target_amount_sats: 40000000, // ~$400
+      target_amount_btc: 0.4, // ~$400
       allow_partial_funding: true,
     },
   },
@@ -649,7 +649,7 @@ const experienceItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Concert Tickets',
       description: 'Tickets to see my favorite artist live!',
-      target_amount_sats: 15000000, // ~$150
+      target_amount_btc: 0.15, // ~$150
       allow_partial_funding: true,
     },
   },
@@ -661,7 +661,7 @@ const experienceItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Spa Day',
       description: 'A day of relaxation and self-care.',
-      target_amount_sats: 10000000, // ~$100
+      target_amount_btc: 0.1, // ~$100
       allow_partial_funding: true,
     },
   },
@@ -673,7 +673,7 @@ const experienceItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Restaurant Experience',
       description: 'A special dining experience.',
-      target_amount_sats: 15000000, // ~$150
+      target_amount_btc: 0.15, // ~$150
       allow_partial_funding: true,
     },
   },
@@ -685,7 +685,7 @@ const experienceItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Course Enrollment',
       description: 'A class or course to learn something new.',
-      target_amount_sats: 20000000, // ~$200
+      target_amount_btc: 0.2, // ~$200
       allow_partial_funding: true,
     },
   },
@@ -701,7 +701,7 @@ const subscriptionItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Streaming Subscription',
       description: '1 year of streaming service.',
-      target_amount_sats: 12000000, // ~$120 annual
+      target_amount_btc: 0.12, // ~$120 annual
       allow_partial_funding: true,
       external_source: 'subscription',
     },
@@ -714,7 +714,7 @@ const subscriptionItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Software Subscription',
       description: 'Annual software subscription for productivity.',
-      target_amount_sats: 20000000, // ~$200 annual
+      target_amount_btc: 0.2, // ~$200 annual
       allow_partial_funding: true,
       external_source: 'subscription',
     },
@@ -727,7 +727,7 @@ const subscriptionItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Gym Membership',
       description: 'Annual gym membership for fitness goals.',
-      target_amount_sats: 30000000, // ~$300 annual
+      target_amount_btc: 0.3, // ~$300 annual
       allow_partial_funding: true,
       external_source: 'subscription',
     },
@@ -744,7 +744,7 @@ const bigPurchaseItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Car Fund',
       description: 'Saving for a reliable vehicle.',
-      target_amount_sats: 500000000, // ~$5000
+      target_amount_btc: 5.0, // ~$5000
       allow_partial_funding: true,
       external_source: 'vehicle',
     },
@@ -757,7 +757,7 @@ const bigPurchaseItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'House Down Payment',
       description: 'Saving for a home down payment.',
-      target_amount_sats: 1000000000, // ~$10000
+      target_amount_btc: 10.0, // ~$10000
       allow_partial_funding: true,
       external_source: 'real_estate',
     },
@@ -770,7 +770,7 @@ const bigPurchaseItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Motorcycle',
       description: 'A motorcycle for commuting and adventure.',
-      target_amount_sats: 300000000, // ~$3000
+      target_amount_btc: 3.0, // ~$3000
       allow_partial_funding: true,
       external_source: 'vehicle',
     },
@@ -787,7 +787,7 @@ const externalItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Amazon Wishlist Item',
       description: 'An item from my Amazon wishlist.',
-      target_amount_sats: 5000000, // ~$50
+      target_amount_btc: 0.05, // ~$50
       allow_partial_funding: true,
       external_source: 'amazon',
     },
@@ -800,7 +800,7 @@ const externalItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'Etsy Item',
       description: 'A unique handmade item from Etsy.',
-      target_amount_sats: 5000000, // ~$50
+      target_amount_btc: 0.05, // ~$50
       allow_partial_funding: true,
       external_source: 'etsy',
     },
@@ -813,7 +813,7 @@ const externalItemTemplates: WishlistItemTemplate[] = [
     defaults: {
       title: 'External Item',
       description: 'An item from an external website.',
-      target_amount_sats: 5000000, // ~$50
+      target_amount_btc: 0.05, // ~$50
       allow_partial_funding: true,
       external_source: 'custom',
     },

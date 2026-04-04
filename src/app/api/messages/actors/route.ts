@@ -17,7 +17,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 interface MessagingActor {
   actor_id: string;
   actor_type: 'user' | 'group';
-  display_name: string;
+  name: string;
   avatar_url: string | null;
   is_personal: boolean;
 }
@@ -26,7 +26,7 @@ interface MessagingActor {
 interface ActorRow {
   id: string;
   actor_type: string;
-  display_name: string | null;
+  name: string | null;
   avatar_url: string | null;
 }
 
@@ -52,7 +52,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
     // 1. Get user's personal actor
     const { data: personalActorData, error: personalError } = await admin
       .from(DATABASE_TABLES.ACTORS)
-      .select('id, actor_type, display_name, avatar_url')
+      .select('id, actor_type, name, avatar_url')
       .eq('user_id', user.id)
       .eq('actor_type', 'user')
       .maybeSingle();
@@ -70,7 +70,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
       actors.push({
         actor_id: personalActor.id,
         actor_type: 'user',
-        display_name: personalActor.display_name || 'You',
+        name: personalActor.name || 'You',
         avatar_url: personalActor.avatar_url,
         is_personal: true,
       });
@@ -110,7 +110,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
       if (actorIds.length > 0) {
         const { data: groupActors } = await admin
           .from(DATABASE_TABLES.ACTORS)
-          .select('id, actor_type, display_name, avatar_url')
+          .select('id, actor_type, name, avatar_url')
           .in('id', actorIds);
 
         const actorMap = new Map((groupActors as ActorRow[] | null)?.map(a => [a.id, a]) ?? []);
@@ -123,7 +123,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
               actors.push({
                 actor_id: groupActor.id,
                 actor_type: 'group',
-                display_name: groupActor.display_name || group.name || 'Group',
+                name: groupActor.name || group.name || 'Group',
                 avatar_url: groupActor.avatar_url || group.avatar_url,
                 is_personal: false,
               });

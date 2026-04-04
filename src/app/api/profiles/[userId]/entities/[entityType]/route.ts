@@ -39,7 +39,7 @@ const ENTITY_COLUMNS: Record<EntityType, string> = {
   wallet: 'id, label, wallet_type, address, is_active, created_at',
   group: 'id, name, slug, description, is_public, created_at',
   research:
-    'id, title, description, field, methodology, expected_outcome, funding_goal_sats, current_funding_sats, status, created_at',
+    'id, title, description, field, methodology, expected_outcome, funding_goal_btc, current_funding_btc, status, created_at',
   wishlist:
     'id, title, description, type, visibility, is_active, event_date, cover_image_url, created_at',
   document: 'id, title, content, document_type, visibility, tags, created_at',

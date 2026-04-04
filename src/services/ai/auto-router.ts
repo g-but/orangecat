@@ -32,8 +32,8 @@ export interface RoutingParams {
   allowedModels?: string[];
   /** Preferred tier (overrides complexity analysis) */
   preferredTier?: ModelTier;
-  /** Maximum cost per request in sats */
-  maxCostSats?: number;
+  /** Maximum cost per request in BTC */
+  maxCostBtc?: number;
   /** Whether the task requires vision */
   requiresVision?: boolean;
   /** Whether the task requires function calling */
@@ -47,8 +47,8 @@ export interface RoutingResult {
   reason: string;
   /** Model tier */
   tier: ModelTier;
-  /** Estimated cost in sats */
-  estimatedCostSats: number;
+  /** Estimated cost in BTC */
+  estimatedCostBtc: number;
   /** Complexity score (0-1) */
   complexityScore: number;
 }
@@ -152,7 +152,7 @@ export class AIAutoRouter {
       conversationHistory = [],
       allowedModels,
       preferredTier,
-      maxCostSats,
+      maxCostBtc,
       requiresVision,
       requiresFunctionCalling,
     } = params;
@@ -189,10 +189,10 @@ export class AIAutoRouter {
     }
 
     // Filter by max cost if specified
-    if (maxCostSats !== undefined && maxCostSats > 0) {
+    if (maxCostBtc !== undefined && maxCostBtc > 0) {
       candidates = candidates.filter(m => {
         const estimatedCost = this.estimateCost(m, complexity.estimatedTokens);
-        return estimatedCost <= maxCostSats;
+        return estimatedCost <= maxCostBtc;
       });
     }
 
@@ -203,7 +203,7 @@ export class AIAutoRouter {
         model: fallback.id,
         reason: 'Fallback to default model (no matching candidates)',
         tier: fallback.tier,
-        estimatedCostSats: this.estimateCost(fallback, complexity.estimatedTokens),
+        estimatedCostBtc: this.estimateCost(fallback, complexity.estimatedTokens),
         complexityScore: complexity.score,
       };
     }
@@ -216,7 +216,7 @@ export class AIAutoRouter {
       model: selected.id,
       reason: this.buildReason(complexity, selected),
       tier: selected.tier,
-      estimatedCostSats: this.estimateCost(selected, complexity.estimatedTokens),
+      estimatedCostBtc: this.estimateCost(selected, complexity.estimatedTokens),
       complexityScore: complexity.score,
     };
   }

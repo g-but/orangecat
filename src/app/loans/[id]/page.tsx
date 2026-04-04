@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 function formatCurrency(amount: number, currency: string = 'USD') {
   if (currency === 'BTC') {
-    return `${(amount / 100000000).toFixed(8)} BTC`;
+    return `${amount.toFixed(8)} BTC`;
   }
   if (currency === 'SATS') {
     return `${amount.toLocaleString()} SATS`;

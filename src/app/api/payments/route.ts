@@ -41,7 +41,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const paymentResult = await initiatePayment(supabase, user.id, {
       entity_type: validated.entity_type,
       entity_id: validated.entity_id,
-      amount_sats: validated.amount_sats,
+      amount_btc: validated.amount_btc,
       message: validated.message,
       is_anonymous: validated.is_anonymous,
       shipping_address_id: validated.shipping_address_id,

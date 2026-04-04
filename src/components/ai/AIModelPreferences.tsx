@@ -20,7 +20,7 @@ export interface AIPreferences {
   defaultModelId: string | null;
   defaultTier: ModelTier;
   autoRouterEnabled: boolean;
-  maxCostSats: number;
+  maxCostBtc: number;
   requireVision: boolean;
   requireFunctionCalling: boolean;
 }
@@ -257,9 +257,9 @@ export function AIModelPreferences({
             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               type="number"
-              value={preferences.maxCostSats}
-              onChange={e => onChange({ maxCostSats: parseInt(e.target.value) || 0 })}
-              onFocus={() => onFieldFocus?.('maxCostSats')}
+              value={preferences.maxCostBtc}
+              onChange={e => onChange({ maxCostBtc: parseInt(e.target.value) || 0 })}
+              onFocus={() => onFieldFocus?.('maxCostBtc')}
               onBlur={() => onFieldFocus?.(null)}
               disabled={disabled}
               min={0}

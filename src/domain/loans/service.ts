@@ -55,12 +55,11 @@ export async function createLoan(
   const { collateral: _collateral, ...loanInput } = input;
 
   // Map form fields to database columns
-  // Handle both new schema (original_amount) and legacy schema (amount_sats)
-  // Convert original_amount to sats for legacy field (rough conversion: 1 CHF ~ 86,000 sats)
-  const amountInSats =
+  // original_amount is stored directly as BTC
+  const amountBtc =
     loanInput.original_amount && loanInput.original_amount > 0
-      ? Math.floor((loanInput.original_amount * 100000000) / 86000)
-      : 1000000; // Default to 1M sats if no amount provided (shouldn't happen due to validation)
+      ? loanInput.original_amount
+      : 0.01; // Default to 0.01 BTC if no amount provided (shouldn't happen due to validation)
 
   // Normalize empty strings to null for UUID and optional fields
   const normalizeToNull = <T>(value: T): T | null => {
@@ -92,7 +91,7 @@ export async function createLoan(
       monthly_payment: normalizeToNull(loanInput.monthly_payment),
       desired_rate: normalizeToNull(loanInput.desired_rate),
       // Legacy fields (for backward compatibility) - required by schema
-      amount_sats: amountInSats,
+      amount_btc: amountBtc,
       status: STATUS.LOANS.ACTIVE,
     },
     {

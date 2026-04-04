@@ -83,9 +83,9 @@ export async function checkNWCPaymentStatus(
  * Never throws — Mempool API errors are caught and logged internally.
  */
 export async function checkOnchainPaymentStatus(
-  paymentIntent: Pick<PaymentIntent, 'id' | 'onchain_address' | 'amount_sats' | 'created_at'>
+  paymentIntent: Pick<PaymentIntent, 'id' | 'onchain_address' | 'amount_btc' | 'created_at'>
 ): Promise<'confirmed' | 'in_mempool' | 'not_found'> {
-  if (!paymentIntent.onchain_address || !paymentIntent.amount_sats) {
+  if (!paymentIntent.onchain_address || !paymentIntent.amount_btc) {
     return 'not_found';
   }
 
@@ -95,9 +95,11 @@ export async function checkOnchainPaymentStatus(
     ? Math.floor(new Date(paymentIntent.created_at).getTime() / 1000)
     : undefined;
 
+  // Convert BTC to sats for mempool API (protocol level)
+  const expectedAmountSats = Math.round(paymentIntent.amount_btc * 100_000_000);
   const result: OnchainPaymentCheck = await checkAddressPayment({
     address: paymentIntent.onchain_address,
-    expectedAmountSats: paymentIntent.amount_sats,
+    expectedAmountSats,
     sinceTimestamp,
   });
 

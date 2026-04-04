@@ -34,7 +34,7 @@ export type ResearchWizardFormData = {
   methodology: string;
   expected_outcome: string;
   timeline: string;
-  funding_goal_sats: number;
+  funding_goal_btc: number;
   funding_model: string;
   lead_researcher: string;
   open_collaboration: boolean;
@@ -53,7 +53,7 @@ const researchWizardSchema = z.object({
   methodology: z.string().min(1, 'Methodology is required'),
   expected_outcome: z.string().min(1, 'Expected outcome is required').max(1000),
   timeline: z.string().min(1, 'Timeline is required'),
-  funding_goal_sats: z.number().min(1000, 'Funding goal must be at least 1,000'),
+  funding_goal_btc: z.number().min(1000, 'Funding goal must be at least 1,000'),
   funding_model: z.string().min(1, 'Funding model is required'),
   lead_researcher: z.string().min(1, 'Lead researcher is required'),
   open_collaboration: z.boolean().optional().default(true),
@@ -129,7 +129,7 @@ const fieldGroups: FieldGroup[] = [
     description: 'How your research will be funded',
     fields: [
       {
-        name: 'funding_goal_sats',
+        name: 'funding_goal_btc',
         label: 'Funding Goal',
         type: 'number',
         placeholder: '1000000',
@@ -218,7 +218,7 @@ const defaultValues: ResearchWizardFormData = {
   methodology: '',
   expected_outcome: '',
   timeline: '',
-  funding_goal_sats: 0,
+  funding_goal_btc: 0,
   funding_model: 'donation',
   lead_researcher: '',
   open_collaboration: true,

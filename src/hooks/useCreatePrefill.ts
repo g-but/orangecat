@@ -22,7 +22,7 @@ interface BasePrefillFields {
   title?: string;
   description?: string;
   category?: string;
-  price_sats?: number;
+  price_btc?: number;
   goal_amount?: number;
   hourly_rate?: number;
   fixed_price?: number;
@@ -93,7 +93,7 @@ export function useCreatePrefill<T extends Record<string, unknown>>({
       }
 
       // Parse additional fields from URL params
-      const numericFields = ['price_sats', 'goal_amount', 'hourly_rate', 'fixed_price'] as const;
+      const numericFields = ['price_btc', 'goal_amount', 'hourly_rate', 'fixed_price'] as const;
       for (const field of numericFields) {
         const val = searchParams?.get(field);
         if (val) {

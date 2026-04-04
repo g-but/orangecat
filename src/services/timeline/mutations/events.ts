@@ -269,7 +269,6 @@ export async function createEvent(
       p_target_id: request.targetId || null,
       p_description: request.description || null,
       p_content: request.content || {},
-      p_amount_sats: request.amountSats || null,
       p_amount_btc: request.amountBtc || null,
       p_quantity: request.quantity || null,
       p_visibility: request.visibility || 'public',
@@ -377,7 +376,6 @@ export async function createTransactionEvent(
   transactionId: string,
   projectId: string,
   donorId: string,
-  amountSats: number,
   amountBtc: number,
   eventType: 'donation_received' | 'donation_sent' = 'donation_received'
 ): Promise<TimelineEventResponse> {
@@ -429,7 +427,6 @@ export async function createTransactionEvent(
     targetId: projectId,
     title,
     description,
-    amountSats,
     amountBtc,
     visibility: 'public',
     metadata: {

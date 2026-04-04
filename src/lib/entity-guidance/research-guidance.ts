@@ -94,7 +94,7 @@ export const researchGuidanceContent: Record<string, GuidanceContent> = {
       'Ongoing is fine for open-ended research',
     ],
   },
-  funding_goal_sats: {
+  funding_goal_btc: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Funding Goal',
     description: 'How much funding do you need in satoshis to complete this research?',

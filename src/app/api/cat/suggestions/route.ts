@@ -66,7 +66,7 @@ const DOCUMENT_TYPE_SUGGESTIONS: Record<string, (doc: DocumentContext) => string
 const DEFAULT_SUGGESTIONS = [
   'Help me write a product description',
   'Give me ideas for my first listing',
-  'How do I price my products in sats?',
+  'How do I price my products in BTC?',
   'What makes a successful OrangeCat seller?',
 ];
 

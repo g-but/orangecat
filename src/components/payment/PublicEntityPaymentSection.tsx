@@ -24,8 +24,8 @@ interface PublicEntityPaymentSectionProps {
   entityType: EntityType;
   entityId: string;
   entityTitle: string;
-  /** Price in sats (for fixed_price entities) */
-  priceSats?: number;
+  /** Price in BTC (for fixed_price entities) */
+  priceBtc?: number;
   /** Seller's profile/actor ID for wallet lookup (null if no seller found) */
   sellerProfileId: string | null;
   /** Seller's auth.users ID for self-purchase detection (null if no seller found) */
@@ -38,7 +38,7 @@ export function PublicEntityPaymentSection({
   entityType,
   entityId,
   entityTitle,
-  priceSats,
+  priceBtc,
   sellerProfileId,
   sellerUserId,
   signInRedirect,
@@ -101,7 +101,7 @@ export function PublicEntityPaymentSection({
           entityType={entityType}
           entityId={entityId}
           entityTitle={entityTitle}
-          priceSats={priceSats}
+          priceBtc={priceBtc}
           sellerProfileId={sellerProfileId ?? undefined}
           sellerHasWallet={hasWallet}
           className="w-full min-h-11"

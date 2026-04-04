@@ -272,7 +272,7 @@ export default function MessageComposer({
                     )}
                   </AvatarFallback>
                 </Avatar>
-                <span className="font-medium text-gray-700">{selectedActor.display_name}</span>
+                <span className="font-medium text-gray-700">{selectedActor.name}</span>
                 <ChevronDown className="h-3 w-3 text-gray-400" />
               </button>
             </DropdownMenuTrigger>
@@ -295,7 +295,7 @@ export default function MessageComposer({
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{personalActor.display_name}</p>
+                    <p className="text-sm font-medium">{personalActor.name}</p>
                     <p className="text-xs text-gray-500">Personal account</p>
                   </div>
                 </DropdownMenuItem>
@@ -322,7 +322,7 @@ export default function MessageComposer({
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">{actor.display_name}</p>
+                        <p className="text-sm font-medium">{actor.name}</p>
                         <p className="text-xs text-gray-500">Organization</p>
                       </div>
                     </DropdownMenuItem>

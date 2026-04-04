@@ -286,7 +286,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         role: 'user',
         content,
         tokens_used: Math.ceil(content.length / 4),
-        cost_sats: 0,
+        cost_btc: 0,
       })
       .select()
       .single();
@@ -314,7 +314,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       outputTokens: number;
       totalTokens: number;
       isFreeModel: boolean;
-      costSats: number;
+      costBtc: number;
     };
 
     try {
@@ -334,7 +334,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           outputTokens: result.outputTokens,
           totalTokens: result.totalTokens,
           isFreeModel: result.isFreeModel,
-          costSats: 0,
+          costBtc: 0,
         };
       } else {
         const openRouter = hasByok
@@ -354,7 +354,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           outputTokens: result.outputTokens,
           totalTokens: result.totalTokens,
           isFreeModel: result.isFreeModel,
-          costSats: result.costSats,
+          costBtc: result.costBtc,
         };
       }
     } catch (aiError: unknown) {
@@ -368,9 +368,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Calculate costs
-    const apiCostSats = aiResponse.costSats; // 0 for free/Groq models
-    const creatorMarkupSats = creatorCharge;
-    const totalCostSats = apiCostSats + creatorMarkupSats;
+    const apiCostBtc = aiResponse.costBtc; // 0 for free/Groq models
+    const creatorMarkupBtc = creatorCharge;
+    const totalCostBtc = apiCostBtc + creatorMarkupBtc;
 
     // Store AI response
     const { data: assistantMessageData, error: aiMsgError } = await (
@@ -381,9 +381,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         role: 'assistant',
         content: aiResponse.content,
         tokens_used: aiResponse.totalTokens,
-        cost_sats: totalCostSats,
-        api_cost_sats: apiCostSats,
-        creator_markup_sats: creatorMarkupSats,
+        cost_btc: totalCostBtc,
+        api_cost_btc: apiCostBtc,
+        creator_markup_btc: creatorMarkupBtc,
         model_used: aiResponse.model,
         metadata: {
           pricing_model: assistant.pricing_model,
@@ -406,7 +406,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     let paymentResult = null;
 
     // 1. Charge user for creator markup (if any)
-    if (creatorMarkupSats > 0) {
+    if (creatorMarkupBtc > 0) {
       paymentResult = await paymentService.chargeForMessage({
         userId: user.id,
         assistantId,
@@ -452,9 +452,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         inputTokens: aiResponse.inputTokens,
         outputTokens: aiResponse.outputTokens,
         totalTokens: aiResponse.totalTokens,
-        apiCostSats,
-        creatorMarkupSats,
-        totalCostSats,
+        apiCostBtc,
+        creatorMarkupBtc,
+        totalCostBtc,
       },
       // User status info for UI
       userStatus: {

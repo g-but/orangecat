@@ -59,7 +59,7 @@ export interface ResourceNeed {
     | 'software'
     | 'other';
   description?: string;
-  estimated_cost_sats?: number;
+  estimated_cost_btc?: number;
   priority: 'low' | 'medium' | 'high' | 'critical';
 }
 

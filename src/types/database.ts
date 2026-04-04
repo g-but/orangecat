@@ -347,7 +347,7 @@ export interface Database {
           actor_id: string | null;
           title: string;
           description: string | null;
-          price_sats: number;
+          price_btc: number;
           currency: 'SATS' | 'BTC';
           product_type: 'physical' | 'digital' | 'service';
           images: string[];
@@ -367,7 +367,7 @@ export interface Database {
           actor_id?: string | null;
           title: string;
           description?: string | null;
-          price_sats: number;
+          price_btc: number;
           currency?: 'SATS' | 'BTC';
           product_type?: 'physical' | 'digital' | 'service';
           images?: string[];
@@ -387,7 +387,7 @@ export interface Database {
           actor_id?: string | null;
           title?: string;
           description?: string | null;
-          price_sats?: number;
+          price_btc?: number;
           currency?: 'SATS' | 'BTC';
           product_type?: 'physical' | 'digital' | 'service';
           images?: string[];
@@ -411,8 +411,8 @@ export interface Database {
           title: string;
           description: string | null;
           category: string;
-          hourly_rate_sats: number | null;
-          fixed_price_sats: number | null;
+          hourly_rate_btc: number | null;
+          fixed_price_btc: number | null;
           currency: 'SATS' | 'BTC';
           duration_minutes: number | null;
           availability_schedule: Json | null;
@@ -431,8 +431,8 @@ export interface Database {
           title: string;
           description?: string | null;
           category: string;
-          hourly_rate_sats?: number | null;
-          fixed_price_sats?: number | null;
+          hourly_rate_btc?: number | null;
+          fixed_price_btc?: number | null;
           currency?: 'SATS' | 'BTC';
           duration_minutes?: number | null;
           availability_schedule?: Json | null;
@@ -451,8 +451,8 @@ export interface Database {
           title?: string;
           description?: string | null;
           category?: string;
-          hourly_rate_sats?: number | null;
-          fixed_price_sats?: number | null;
+          hourly_rate_btc?: number | null;
+          fixed_price_btc?: number | null;
           currency?: 'SATS' | 'BTC';
           duration_minutes?: number | null;
           availability_schedule?: Json | null;
@@ -730,7 +730,7 @@ export interface Database {
           total_conversations: number;
           total_messages: number;
           total_tokens_used: number;
-          total_revenue_sats: number;
+          total_revenue_btc: number;
           average_rating: number | null;
           total_ratings: number;
           lightning_address: string | null;
@@ -769,7 +769,7 @@ export interface Database {
           total_conversations?: number;
           total_messages?: number;
           total_tokens_used?: number;
-          total_revenue_sats?: number;
+          total_revenue_btc?: number;
           average_rating?: number | null;
           total_ratings?: number;
           lightning_address?: string | null;
@@ -808,7 +808,7 @@ export interface Database {
           total_conversations?: number;
           total_messages?: number;
           total_tokens_used?: number;
-          total_revenue_sats?: number;
+          total_revenue_btc?: number;
           average_rating?: number | null;
           total_ratings?: number;
           lightning_address?: string | null;
@@ -860,9 +860,9 @@ export interface Database {
           role: 'user' | 'assistant' | 'system';
           content: string;
           tokens_used: number;
-          cost_sats: number;
-          api_cost_sats: number | null;
-          creator_markup_sats: number | null;
+          cost_btc: number;
+          api_cost_btc: number | null;
+          creator_markup_btc: number | null;
           model_used: string | null;
           metadata: Json | null;
           created_at: string;
@@ -873,9 +873,9 @@ export interface Database {
           role: 'user' | 'assistant' | 'system';
           content: string;
           tokens_used?: number;
-          cost_sats?: number;
-          api_cost_sats?: number | null;
-          creator_markup_sats?: number | null;
+          cost_btc?: number;
+          api_cost_btc?: number | null;
+          creator_markup_btc?: number | null;
           model_used?: string | null;
           metadata?: Json | null;
           created_at?: string;
@@ -886,9 +886,9 @@ export interface Database {
           role?: 'user' | 'assistant' | 'system';
           content?: string;
           tokens_used?: number;
-          cost_sats?: number;
-          api_cost_sats?: number | null;
-          creator_markup_sats?: number | null;
+          cost_btc?: number;
+          api_cost_btc?: number | null;
+          creator_markup_btc?: number | null;
           model_used?: string | null;
           metadata?: Json | null;
           created_at?: string;
@@ -1009,8 +1009,8 @@ export interface Database {
           wishlist_id: string;
           title: string;
           description: string | null;
-          target_amount_sats: number;
-          funded_amount_sats: number;
+          target_amount_btc: number;
+          funded_amount_btc: number;
           priority: number;
           url: string | null;
           image_url: string | null;
@@ -1028,8 +1028,8 @@ export interface Database {
           wishlist_id: string;
           title: string;
           description?: string | null;
-          target_amount_sats?: number;
-          funded_amount_sats?: number;
+          target_amount_btc?: number;
+          funded_amount_btc?: number;
           priority?: number;
           url?: string | null;
           image_url?: string | null;
@@ -1042,8 +1042,8 @@ export interface Database {
           wishlist_id?: string;
           title?: string;
           description?: string | null;
-          target_amount_sats?: number;
-          funded_amount_sats?: number;
+          target_amount_btc?: number;
+          funded_amount_btc?: number;
           priority?: number;
           url?: string | null;
           image_url?: string | null;
@@ -1089,8 +1089,8 @@ export interface Database {
             | 'action_research';
           expected_outcome: string;
           timeline: 'short_term' | 'medium_term' | 'long_term' | 'ongoing' | 'indefinite';
-          funding_goal_sats: number;
-          funding_raised_sats: number;
+          funding_goal_btc: number;
+          funding_raised_btc: number;
           funding_model: 'donation' | 'subscription' | 'milestone' | 'royalty' | 'hybrid';
           wallet_address: string;
           lead_researcher: string;
@@ -1159,8 +1159,8 @@ export interface Database {
             | 'action_research';
           expected_outcome: string;
           timeline: 'short_term' | 'medium_term' | 'long_term' | 'ongoing' | 'indefinite';
-          funding_goal_sats: number;
-          funding_raised_sats?: number;
+          funding_goal_btc: number;
+          funding_raised_btc?: number;
           funding_model: 'donation' | 'subscription' | 'milestone' | 'royalty' | 'hybrid';
           wallet_address: string;
           lead_researcher: string;
@@ -1229,8 +1229,8 @@ export interface Database {
             | 'action_research';
           expected_outcome?: string;
           timeline?: 'short_term' | 'medium_term' | 'long_term' | 'ongoing' | 'indefinite';
-          funding_goal_sats?: number;
-          funding_raised_sats?: number;
+          funding_goal_btc?: number;
+          funding_raised_btc?: number;
           funding_model?: 'donation' | 'subscription' | 'milestone' | 'royalty' | 'hybrid';
           wallet_address?: string;
           lead_researcher?: string;
@@ -1513,7 +1513,7 @@ export interface Database {
           address: string | null;
           xpub: string | null;
           derivation_path: string | null;
-          balance_sats: number;
+          balance_btc: number;
           last_sync_at: string | null;
           is_primary: boolean;
           is_verified: boolean;
@@ -1530,7 +1530,7 @@ export interface Database {
           address?: string | null;
           xpub?: string | null;
           derivation_path?: string | null;
-          balance_sats?: number;
+          balance_btc?: number;
           last_sync_at?: string | null;
           is_primary?: boolean;
           is_verified?: boolean;
@@ -1547,7 +1547,7 @@ export interface Database {
           address?: string | null;
           xpub?: string | null;
           derivation_path?: string | null;
-          balance_sats?: number;
+          balance_btc?: number;
           last_sync_at?: string | null;
           is_primary?: boolean;
           is_verified?: boolean;
@@ -1562,7 +1562,7 @@ export interface Database {
           actor_type: 'user' | 'group';
           user_id: string | null;
           group_id: string | null;
-          display_name: string;
+          name: string;
           avatar_url: string | null;
           slug: string | null;
           created_at: string;
@@ -1635,8 +1635,8 @@ export interface Database {
           from_wallet_id: string | null;
           to_wallet_id: string | null;
           type: string;
-          amount_sats: number;
-          fee_sats: number | null;
+          amount_btc: number;
+          fee_btc: number | null;
           status: 'pending' | 'confirmed' | 'failed';
           tx_hash: string | null;
           description: string | null;
@@ -1650,8 +1650,8 @@ export interface Database {
           from_wallet_id?: string | null;
           to_wallet_id?: string | null;
           type: string;
-          amount_sats: number;
-          fee_sats?: number | null;
+          amount_btc: number;
+          fee_btc?: number | null;
           status?: 'pending' | 'confirmed' | 'failed';
           tx_hash?: string | null;
           description?: string | null;
@@ -1665,8 +1665,8 @@ export interface Database {
           from_wallet_id?: string | null;
           to_wallet_id?: string | null;
           type?: string;
-          amount_sats?: number;
-          fee_sats?: number | null;
+          amount_btc?: number;
+          fee_btc?: number | null;
           status?: 'pending' | 'confirmed' | 'failed';
           tx_hash?: string | null;
           description?: string | null;
@@ -1956,7 +1956,7 @@ export interface Database {
           start_time: string;
           end_time: string;
           status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-          total_price_sats: number | null;
+          total_price_btc: number | null;
           notes: string | null;
           created_at: string;
           updated_at: string;
@@ -1968,7 +1968,7 @@ export interface Database {
           start_time: string;
           end_time: string;
           status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-          total_price_sats?: number | null;
+          total_price_btc?: number | null;
           notes?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1980,7 +1980,7 @@ export interface Database {
           start_time?: string;
           end_time?: string;
           status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-          total_price_sats?: number | null;
+          total_price_btc?: number | null;
           notes?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -2023,7 +2023,7 @@ export interface Database {
           asset_id: string;
           date: string;
           is_available: boolean;
-          price_override_sats: number | null;
+          price_override_btc: number | null;
           notes: string | null;
           created_at: string;
         };
@@ -2032,7 +2032,7 @@ export interface Database {
           asset_id: string;
           date: string;
           is_available?: boolean;
-          price_override_sats?: number | null;
+          price_override_btc?: number | null;
           notes?: string | null;
           created_at?: string;
         };
@@ -2041,7 +2041,7 @@ export interface Database {
           asset_id?: string;
           date?: string;
           is_available?: boolean;
-          price_override_sats?: number | null;
+          price_override_btc?: number | null;
           notes?: string | null;
           created_at?: string;
         };
@@ -2118,8 +2118,8 @@ export interface Database {
           user_id: string;
           title: string;
           description: string | null;
-          goal_sats: number | null;
-          raised_sats: number;
+          goal_btc: number | null;
+          raised_btc: number;
           status: 'draft' | 'active' | 'completed' | 'paused';
           category: string | null;
           tags: string[];
@@ -2135,8 +2135,8 @@ export interface Database {
           user_id: string;
           title: string;
           description?: string | null;
-          goal_sats?: number | null;
-          raised_sats?: number;
+          goal_btc?: number | null;
+          raised_btc?: number;
           status?: 'draft' | 'active' | 'completed' | 'paused';
           category?: string | null;
           tags?: string[];
@@ -2152,8 +2152,8 @@ export interface Database {
           user_id?: string;
           title?: string;
           description?: string | null;
-          goal_sats?: number | null;
-          raised_sats?: number;
+          goal_btc?: number | null;
+          raised_btc?: number;
           status?: 'draft' | 'active' | 'completed' | 'paused';
           category?: string | null;
           tags?: string[];
@@ -2195,7 +2195,7 @@ export interface Database {
           id: string;
           project_id: string;
           user_id: string;
-          amount_sats: number;
+          amount_btc: number;
           message: string | null;
           is_anonymous: boolean;
           transaction_id: string | null;
@@ -2206,7 +2206,7 @@ export interface Database {
           id?: string;
           project_id: string;
           user_id: string;
-          amount_sats: number;
+          amount_btc: number;
           message?: string | null;
           is_anonymous?: boolean;
           transaction_id?: string | null;
@@ -2217,7 +2217,7 @@ export interface Database {
           id?: string;
           project_id?: string;
           user_id?: string;
-          amount_sats?: number;
+          amount_btc?: number;
           message?: string | null;
           is_anonymous?: boolean;
           transaction_id?: string | null;
@@ -2286,7 +2286,7 @@ export interface Database {
           user_id: string;
           title: string | null;
           description: string | null;
-          goal_sats: number | null;
+          goal_btc: number | null;
           category: string | null;
           tags: string[];
           metadata: Json;
@@ -2298,7 +2298,7 @@ export interface Database {
           user_id: string;
           title?: string | null;
           description?: string | null;
-          goal_sats?: number | null;
+          goal_btc?: number | null;
           category?: string | null;
           tags?: string[];
           metadata?: Json;
@@ -2310,7 +2310,7 @@ export interface Database {
           user_id?: string;
           title?: string | null;
           description?: string | null;
-          goal_sats?: number | null;
+          goal_btc?: number | null;
           category?: string | null;
           tags?: string[];
           metadata?: Json;
@@ -2325,7 +2325,7 @@ export interface Database {
           id: string;
           research_entity_id: string;
           user_id: string | null;
-          amount_sats: number;
+          amount_btc: number;
           funding_model: 'donation' | 'subscription' | 'milestone' | 'royalty';
           message: string | null;
           anonymous: boolean;
@@ -2339,7 +2339,7 @@ export interface Database {
           id?: string;
           research_entity_id: string;
           user_id?: string | null;
-          amount_sats: number;
+          amount_btc: number;
           funding_model: 'donation' | 'subscription' | 'milestone' | 'royalty';
           message?: string | null;
           anonymous?: boolean;
@@ -2353,7 +2353,7 @@ export interface Database {
           id?: string;
           research_entity_id?: string;
           user_id?: string | null;
-          amount_sats?: number;
+          amount_btc?: number;
           funding_model?: 'donation' | 'subscription' | 'milestone' | 'royalty';
           message?: string | null;
           anonymous?: boolean;
@@ -2449,7 +2449,7 @@ export interface Database {
           contract_type: string;
           terms: Json;
           status: 'draft' | 'pending' | 'active' | 'completed' | 'cancelled';
-          amount_sats: number | null;
+          amount_btc: number | null;
           signed_at: string | null;
           expires_at: string | null;
           created_at: string;
@@ -2464,7 +2464,7 @@ export interface Database {
           contract_type: string;
           terms?: Json;
           status?: 'draft' | 'pending' | 'active' | 'completed' | 'cancelled';
-          amount_sats?: number | null;
+          amount_btc?: number | null;
           signed_at?: string | null;
           expires_at?: string | null;
           created_at?: string;
@@ -2479,7 +2479,7 @@ export interface Database {
           contract_type?: string;
           terms?: Json;
           status?: 'draft' | 'pending' | 'active' | 'completed' | 'cancelled';
-          amount_sats?: number | null;
+          amount_btc?: number | null;
           signed_at?: string | null;
           expires_at?: string | null;
           created_at?: string;
@@ -2548,8 +2548,8 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          total_raised_sats: number;
-          total_donated_sats: number;
+          total_raised_btc: number;
+          total_donated_btc: number;
           total_projects: number;
           total_supporters: number;
           follower_count: number;
@@ -2561,8 +2561,8 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
-          total_raised_sats?: number;
-          total_donated_sats?: number;
+          total_raised_btc?: number;
+          total_donated_btc?: number;
           total_projects?: number;
           total_supporters?: number;
           follower_count?: number;
@@ -2574,8 +2574,8 @@ export interface Database {
         Update: {
           id?: string;
           user_id?: string;
-          total_raised_sats?: number;
-          total_donated_sats?: number;
+          total_raised_btc?: number;
+          total_donated_btc?: number;
           total_projects?: number;
           total_supporters?: number;
           follower_count?: number;
@@ -2739,27 +2739,27 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          balance_sats: number;
-          total_deposited_sats: number;
-          total_spent_sats: number;
+          balance_btc: number;
+          total_deposited_btc: number;
+          total_spent_btc: number;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          balance_sats?: number;
-          total_deposited_sats?: number;
-          total_spent_sats?: number;
+          balance_btc?: number;
+          total_deposited_btc?: number;
+          total_spent_btc?: number;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
-          balance_sats?: number;
-          total_deposited_sats?: number;
-          total_spent_sats?: number;
+          balance_btc?: number;
+          total_deposited_btc?: number;
+          total_spent_btc?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -2773,7 +2773,7 @@ export interface Database {
           conversation_id: string | null;
           message_id: string | null;
           transaction_type: 'deposit' | 'charge' | 'refund' | 'bonus';
-          amount_sats: number;
+          amount_btc: number;
           balance_before: number;
           balance_after: number;
           description: string | null;
@@ -2787,7 +2787,7 @@ export interface Database {
           conversation_id?: string | null;
           message_id?: string | null;
           transaction_type: 'deposit' | 'charge' | 'refund' | 'bonus';
-          amount_sats: number;
+          amount_btc: number;
           balance_before: number;
           balance_after: number;
           description?: string | null;
@@ -2801,7 +2801,7 @@ export interface Database {
           conversation_id?: string | null;
           message_id?: string | null;
           transaction_type?: 'deposit' | 'charge' | 'refund' | 'bonus';
-          amount_sats?: number;
+          amount_btc?: number;
           balance_before?: number;
           balance_after?: number;
           description?: string | null;

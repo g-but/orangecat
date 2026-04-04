@@ -402,7 +402,7 @@ export function getAvailableModels(): AIModelMetadata[] {
  * @param btcPriceUsd - Current BTC price in USD (default: 100000)
  * @returns Cost in satoshis
  */
-export function calculateCostSats(
+export function calculateCostBtc(
   modelId: string,
   inputTokens: number,
   outputTokens: number,

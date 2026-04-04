@@ -166,9 +166,9 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
                   )}
 
                   {/* Bitcoin Funding */}
-                  {support.amount_sats && support.amount_sats > 0 && (
+                  {support.amount_btc && support.amount_btc > 0 && (
                     <div className="text-sm font-medium text-orange-600 mb-2">
-                      {formatAmount(support.amount_sats)}
+                      {formatAmount(support.amount_btc)}
                     </div>
                   )}
 

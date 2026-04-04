@@ -80,19 +80,17 @@ export const lightningAddressSchema = z
  */
 
 /**
- * Schema for satoshi amounts (Bitcoin's smallest unit)
- * Always stored as positive integers
+ * Schema for BTC amounts (stored as NUMERIC(18,8) in DB)
  */
-export const satoshiAmountSchema = z
+export const btcAmountSchema = z
   .number()
-  .int('Amount must be a whole number of satoshis')
   .positive('Amount must be positive')
-  .max(2100000000000000, 'Amount exceeds maximum Bitcoin supply');
+  .max(21_000_000, 'Amount exceeds maximum Bitcoin supply');
 
 /**
- * Optional satoshi amount schema
+ * Optional BTC amount schema
  */
-export const optionalSatoshiAmountSchema = satoshiAmountSchema.optional().nullable();
+export const optionalBtcAmountSchema = btcAmountSchema.optional().nullable();
 
 /**
  * Schema for fiat amounts stored as cents (smallest unit)
@@ -147,12 +145,9 @@ export function fromCents(cents: number): number {
 export function normalizePrice(amount: number, currency: string): number {
   const upperCurrency = currency.toUpperCase();
 
-  if (upperCurrency === 'SATS' || upperCurrency === 'BTC') {
-    // For Bitcoin, amount is already in sats (or convert from BTC)
-    if (upperCurrency === 'BTC') {
-      return Math.round(amount * 100000000); // Convert BTC to sats
-    }
-    return Math.round(amount); // Ensure integer
+  if (upperCurrency === 'BTC') {
+    // BTC stored as-is (NUMERIC(18,8) in DB)
+    return amount;
   }
 
   // For fiat currencies, convert to cents

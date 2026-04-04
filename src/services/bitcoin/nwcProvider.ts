@@ -43,7 +43,7 @@ export class NWCPaymentProvider implements PaymentProvider {
    * Create a Lightning invoice via NWC
    */
   async createInvoice(
-    amount_sats: number,
+    amount_btc: number,
     description: string,
     type: PaymentType = 'lightning'
   ): Promise<PaymentResult> {
@@ -60,15 +60,15 @@ export class NWCPaymentProvider implements PaymentProvider {
       }
 
       const nwcInvoice = await this.client.makeInvoice(
-        amount_sats,
+        amount_btc,
         description,
         3600 // 1 hour expiry
       );
 
       const invoice: Invoice = {
         id: nwcInvoice.payment_hash,
-        amount_sats,
-        amount: amount_sats, // backward compat
+        amount_btc,
+        amount: amount_btc, // backward compat
         type: 'lightning',
         invoice: nwcInvoice.invoice,
         description,
@@ -81,12 +81,12 @@ export class NWCPaymentProvider implements PaymentProvider {
 
       logger.info('NWC invoice created', {
         paymentHash: nwcInvoice.payment_hash,
-        amount_sats,
+        amount_btc,
       });
 
       return { success: true, invoice };
     } catch (error) {
-      logger.error('NWC createInvoice failed', { error, amount_sats });
+      logger.error('NWC createInvoice failed', { error, amount_btc });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to create invoice',

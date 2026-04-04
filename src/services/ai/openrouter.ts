@@ -13,7 +13,7 @@
 
 import {
   getModelMetadata,
-  calculateCostSats,
+  calculateCostBtc,
   isModelFree,
   DEFAULT_BTC_PRICE_USD,
   DEFAULT_FREE_MODEL_ID,
@@ -80,7 +80,7 @@ export interface ChatCompletionResult {
   inputTokens: number;
   outputTokens: number;
   totalTokens: number;
-  costSats: number;
+  costBtc: number;
   finishReason: string;
   /** Whether this used a free model (no API cost) */
   isFreeModel: boolean;
@@ -200,9 +200,9 @@ export class OpenRouterService {
     const isFreeModel = isModelFree(model);
 
     // Calculate cost in sats (0 for free models)
-    const costSats = isFreeModel
+    const costBtc = isFreeModel
       ? 0
-      : calculateCostSats(
+      : calculateCostBtc(
           model,
           response.usage.prompt_tokens,
           response.usage.completion_tokens,
@@ -215,7 +215,7 @@ export class OpenRouterService {
       inputTokens: response.usage.prompt_tokens,
       outputTokens: response.usage.completion_tokens,
       totalTokens: response.usage.total_tokens,
-      costSats,
+      costBtc,
       finishReason: response.choices[0]?.finish_reason || 'stop',
       isFreeModel,
       usedByok: this.isByok,

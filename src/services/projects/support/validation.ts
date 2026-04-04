@@ -22,7 +22,7 @@ export const supportProjectSchema = z
     support_type: supportTypeSchema,
     
     // Bitcoin donation fields
-    amount_sats: z.number().positive().int().optional(),
+    amount_btc: z.number().positive().int().optional(),
     lightning_invoice: z.string().optional(),
     transaction_hash: z.string().optional(),
     
@@ -36,15 +36,15 @@ export const supportProjectSchema = z
   })
   .refine(
     (data) => {
-      // Bitcoin donation must have amount_sats
+      // Bitcoin donation must have amount_btc
       if (data.support_type === 'bitcoin_donation') {
-        return data.amount_sats !== undefined && data.amount_sats > 0;
+        return data.amount_btc !== undefined && data.amount_btc > 0;
       }
       return true;
     },
     {
-      message: 'Bitcoin donation must include amount_sats',
-      path: ['amount_sats'],
+      message: 'Bitcoin donation must include amount_btc',
+      path: ['amount_btc'],
     }
   )
   .refine(

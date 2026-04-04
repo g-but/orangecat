@@ -45,13 +45,13 @@ export function TransferModal({
       return;
     }
 
-    const amountSats = parseInt(amount, 10);
-    if (isNaN(amountSats) || amountSats <= 0) {
+    const amountBtc = parseInt(amount, 10);
+    if (isNaN(amountBtc) || amountBtc <= 0) {
       setError('Please enter a valid amount');
       return;
     }
 
-    if (fromWallet && amountSats > btcToSats(fromWallet.balance_btc)) {
+    if (fromWallet && amountBtc > btcToSats(fromWallet.balance_btc)) {
       setError('Insufficient balance');
       return;
     }
@@ -67,7 +67,7 @@ export function TransferModal({
         body: JSON.stringify({
           from_wallet_id: fromWalletId,
           to_wallet_id: toWalletId,
-          amount_sats: amountSats,
+          amount_btc: amountBtc,
           note: note || undefined,
         }),
       });
@@ -97,7 +97,7 @@ export function TransferModal({
     return null;
   }
 
-  const walletBalanceSats = (wallet: Wallet) => btcToSats(wallet.balance_btc);
+  const walletBalanceBtc = (wallet: Wallet) => btcToSats(wallet.balance_btc);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -134,13 +134,13 @@ export function TransferModal({
               <option value="">Select wallet</option>
               {wallets.map(wallet => (
                 <option key={wallet.id} value={wallet.id}>
-                  {wallet.category_icon} {wallet.label} ({formatAmount(walletBalanceSats(wallet))})
+                  {wallet.category_icon} {wallet.label} ({formatAmount(walletBalanceBtc(wallet))})
                 </option>
               ))}
             </select>
             {fromWallet && (
               <p className="mt-1 text-sm text-gray-600">
-                Available: {formatAmount(walletBalanceSats(fromWallet))}
+                Available: {formatAmount(walletBalanceBtc(fromWallet))}
               </p>
             )}
           </div>
@@ -160,14 +160,14 @@ export function TransferModal({
                 .filter(w => w.id !== fromWalletId)
                 .map(wallet => (
                   <option key={wallet.id} value={wallet.id}>
-                    {wallet.category_icon} {wallet.label} ({formatAmount(walletBalanceSats(wallet))}
+                    {wallet.category_icon} {wallet.label} ({formatAmount(walletBalanceBtc(wallet))}
                     )
                   </option>
                 ))}
             </select>
             {toWallet && (
               <p className="mt-1 text-sm text-gray-600">
-                Current: {formatAmount(walletBalanceSats(toWallet))}
+                Current: {formatAmount(walletBalanceBtc(toWallet))}
               </p>
             )}
           </div>
@@ -181,7 +181,7 @@ export function TransferModal({
               onChange={e => setAmount(e.target.value)}
               step="1"
               min="1"
-              max={fromWallet ? walletBalanceSats(fromWallet) : undefined}
+              max={fromWallet ? walletBalanceBtc(fromWallet) : undefined}
               placeholder="0"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isSubmitting}
@@ -193,7 +193,7 @@ export function TransferModal({
             {fromWallet && (
               <button
                 type="button"
-                onClick={() => setAmount(String(walletBalanceSats(fromWallet)))}
+                onClick={() => setAmount(String(walletBalanceBtc(fromWallet)))}
                 className="mt-1 text-sm text-blue-600 hover:text-blue-700"
                 disabled={isSubmitting}
               >
@@ -236,15 +236,15 @@ export function TransferModal({
                   <div className="flex justify-between">
                     <span>{fromWallet.label}:</span>
                     <span>
-                      {formatAmount(walletBalanceSats(fromWallet))} →{' '}
-                      {formatAmount(walletBalanceSats(fromWallet) - parseInt(amount, 10))}
+                      {formatAmount(walletBalanceBtc(fromWallet))} →{' '}
+                      {formatAmount(walletBalanceBtc(fromWallet) - parseInt(amount, 10))}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>{toWallet.label}:</span>
                     <span>
-                      {formatAmount(walletBalanceSats(toWallet))} →{' '}
-                      {formatAmount(walletBalanceSats(toWallet) + parseInt(amount, 10))}
+                      {formatAmount(walletBalanceBtc(toWallet))} →{' '}
+                      {formatAmount(walletBalanceBtc(toWallet) + parseInt(amount, 10))}
                     </span>
                   </div>
                 </div>

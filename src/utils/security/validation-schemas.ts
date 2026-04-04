@@ -58,7 +58,7 @@ export const SecuritySchemas = {
     goal_amount: z
       .number()
       .min(1, 'Goal amount must be positive')
-      .max(100000000, 'Goal amount too large') // 1 BTC in sats
+      .max(21_000_000, 'Goal amount too large') // Max BTC supply
       .optional(),
 
     category: z.enum(['technology', 'community', 'education', 'creative', 'health', 'environment']),

@@ -180,7 +180,7 @@ export function GroupWallets({
                           <div>
                             <div className="text-sm text-gray-500">Balance</div>
                             <div className="text-lg font-bold text-green-600">
-                              {formatAmount(wallet.current_balance_sats)}
+                              {formatAmount(wallet.current_balance_btc)}
                             </div>
                           </div>
                           {wallet.bitcoin_address && (

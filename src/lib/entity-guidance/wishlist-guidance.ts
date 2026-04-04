@@ -36,7 +36,7 @@ export type WishlistFieldType =
 export type WishlistItemFieldType =
   | 'title'
   | 'description'
-  | 'target_amount_sats'
+  | 'target_amount_btc'
   | 'external_url'
   | 'external_source'
   | 'use_dedicated_wallet'
@@ -186,7 +186,7 @@ export const wishlistItemGuidanceContent: Record<NonNullable<WishlistItemFieldTy
       'This will help me work from home more comfortably.',
     ],
   },
-  target_amount_sats: {
+  target_amount_btc: {
     icon: React.createElement(Target, { className: 'w-5 h-5 text-rose-600' }),
     title: 'Target Amount',
     description:

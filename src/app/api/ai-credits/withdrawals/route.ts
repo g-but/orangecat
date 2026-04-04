@@ -25,7 +25,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 const MIN_WITHDRAWAL_SATS = 1000;
 
 const withdrawalRequestSchema = z.object({
-  amount_sats: z
+  amount_btc: z
     .number()
     .int()
     .positive()
@@ -85,10 +85,10 @@ export const GET = compose(
 
     return apiSuccess({
       earnings: earnings || {
-        total_earned_sats: 0,
-        total_withdrawn_sats: 0,
-        available_balance_sats: 0,
-        pending_withdrawal_sats: 0,
+        total_earned_btc: 0,
+        total_withdrawn_btc: 0,
+        available_balance_btc: 0,
+        pending_withdrawal_btc: 0,
       },
       withdrawals: withdrawals || [],
       pagination: {
@@ -130,12 +130,12 @@ export const POST = compose(
       return apiValidationError('Invalid request', result.error.flatten().fieldErrors);
     }
 
-    const { amount_sats, lightning_address } = result.data;
+    const { amount_btc, lightning_address } = result.data;
 
     // Request withdrawal via RPC
     const { data: withdrawalId, error } = await db.rpc('request_ai_withdrawal', {
       p_user_id: user.id,
-      p_amount_sats: amount_sats,
+      p_amount_btc: amount_btc,
       p_lightning_address: lightning_address,
     });
 
@@ -156,7 +156,7 @@ export const POST = compose(
     logger.info('Withdrawal requested', {
       userId: user.id,
       withdrawalId,
-      amount_sats,
+      amount_btc,
     });
 
     return apiSuccess(

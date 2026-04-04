@@ -309,11 +309,11 @@ class AnalyticsService {
   }
 
   // Utility methods
-  formatCurrency(amount: number, currency: string = 'SATS'): string {
+  formatCurrency(amount: number, currency: string = 'BTC'): string {
     if (currency === 'BTC') {
-      return `₿${(amount / 100000000).toFixed(6)}`;
+      return `₿${amount.toFixed(8)}`;
     }
-    return `${amount.toLocaleString('en-US')} sat`;
+    return `${amount.toLocaleString('en-US')}`;
   }
 
   clearCache(): void {

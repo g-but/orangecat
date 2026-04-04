@@ -498,7 +498,7 @@ export async function POST(request: NextRequest) {
       totalTokens: number;
       isFreeModel: boolean;
       usedByok: boolean;
-      costSats?: number;
+      costBtc?: number;
     };
 
     if (aiService.provider === 'groq' && aiService.groq) {
@@ -515,7 +515,7 @@ export async function POST(request: NextRequest) {
         totalTokens: result.totalTokens,
         isFreeModel: result.isFreeModel,
         usedByok: result.usedByok,
-        costSats: 0, // Groq is free
+        costBtc: 0, // Groq is free
       };
     } else if (aiService.provider === 'openrouter' && aiService.openrouter) {
       const result = await aiService.openrouter.chatCompletion({
@@ -531,7 +531,7 @@ export async function POST(request: NextRequest) {
         totalTokens: result.totalTokens,
         isFreeModel: result.isFreeModel,
         usedByok: result.usedByok,
-        costSats: result.costSats,
+        costBtc: result.costBtc,
       };
     } else {
       return apiInternalError('No AI service available');
@@ -568,7 +568,7 @@ export async function POST(request: NextRequest) {
         inputTokens: aiResult.inputTokens,
         outputTokens: aiResult.outputTokens,
         totalTokens: aiResult.totalTokens,
-        apiCostSats: aiResult.costSats || 0,
+        apiCostBtc: aiResult.costBtc || 0,
         isFreeModel: aiResult.isFreeModel,
         usedByok: aiResult.usedByok,
       },

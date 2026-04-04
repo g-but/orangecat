@@ -53,7 +53,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       await // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
         .select(
-          'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats'
+          'id, title, actor_id, is_for_rent, rental_price_btc, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_btc'
         )
         .eq('id', assetId)
         .eq('status', STATUS.ASSETS.ACTIVE)
@@ -72,12 +72,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       asset: {
         id: asset.id,
         title: asset.title,
-        rental_price_sats: asset.rental_price_sats,
+        rental_price_btc: asset.rental_price_btc,
         rental_period_type: asset.rental_period_type,
         min_rental_period: asset.min_rental_period,
         max_rental_period: asset.max_rental_period,
         requires_deposit: asset.requires_deposit,
-        deposit_amount_sats: asset.deposit_amount_sats,
+        deposit_amount_btc: asset.deposit_amount_btc,
       },
       start_date: startDateParam,
       end_date: endDate.toISOString().split('T')[0],
