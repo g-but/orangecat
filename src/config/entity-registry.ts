@@ -347,7 +347,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     name: 'Research',
     namePlural: 'Research',
     tableName: 'research_entities', // Database table name (unchanged for compatibility)
-    userIdField: 'user_id',
+    userIdField: 'actor_id',
     icon: Bot,
     colorTheme: 'purple',
     basePath: '/dashboard/research',

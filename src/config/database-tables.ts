@@ -19,7 +19,6 @@ export const DATABASE_TABLES = {
   // Social
   PROFILES: 'profiles',
   FOLLOWS: 'follows',
-  USER_FOLLOWS: 'user_follows',
   ACTORS: 'actors',
 
   // User Stats & Presence
@@ -144,11 +143,6 @@ export const DATABASE_TABLES = {
 
   // Entity Tables (for direct access when not using entity-registry)
   USER_ASSETS: 'user_assets',
-  USER_PRODUCTS: 'user_products',
-  USER_SERVICES: 'user_services',
-  USER_PROJECTS: 'user_projects',
-  USER_CAUSES: 'user_causes',
-  USER_LOANS: 'user_loans',
   AI_ASSISTANTS: 'ai_assistants',
 } as const;
 
