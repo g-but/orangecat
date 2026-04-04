@@ -17,13 +17,13 @@ describe('bitcoinPaymentService', () => {
     const addr = 'tb1qfm8k0n7l2p0ssr7a3t5z2c7ml8c5p9h6s4p3qy' // sample bech32 testnet format length
     expect(bitcoinPaymentService.isValidBitcoinAddress(addr)).toBe(true)
 
-    const res = await bitcoinPaymentService.createOnChainPayment('project-2', 5000, 'Test donation', addr)
+    const res = await bitcoinPaymentService.createOnChainPayment('project-2', 0.00005, 'Test donation', addr)
     expect(res.success).toBe(true)
     expect(res.paymentRequest?.address).toBe(addr)
 
     const qr = bitcoinPaymentService.getPaymentQRData(res.paymentRequest!)
     expect(qr.startsWith('bitcoin:')).toBe(true)
-    expect(qr).toContain('amount=0.00005') // 5000 sats to BTC
+    expect(qr).toContain('amount=0.00005') // BTC amount in BIP21 URI
   })
 
   test('validates bitcoin addresses', () => {
