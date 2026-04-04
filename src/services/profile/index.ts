@@ -17,12 +17,7 @@
  */
 
 // Export all types
-export type {
-  ScalableProfile,
-  ScalableProfileFormData,
-  ProfileAnalytics,
-  ProfileServiceResponse,
-} from './types';
+export type { ScalableProfile, ScalableProfileFormData, ProfileServiceResponse } from './types';
 
 // Export all modules
 export { ProfileMapper } from './mapper';
@@ -33,12 +28,7 @@ export { ProfileWriter } from './writer';
 import supabase from '@/lib/supabase/browser';
 import { ProfileReader } from './reader';
 import { ProfileWriter } from './writer';
-import type {
-  ScalableProfile,
-  ScalableProfileFormData,
-  ProfileAnalytics,
-  ProfileServiceResponse,
-} from './types';
+import type { ScalableProfile, ScalableProfileFormData, ProfileServiceResponse } from './types';
 
 export class ProfileService {
   // =====================================================================
@@ -92,13 +82,6 @@ export class ProfileService {
     formData: ScalableProfileFormData
   ): Promise<ProfileServiceResponse<ScalableProfile>> {
     return ProfileWriter.createProfile(userId, formData);
-  }
-
-  static async updateAnalytics(
-    userId: string,
-    analytics: ProfileAnalytics
-  ): Promise<ProfileServiceResponse<void>> {
-    return ProfileWriter.updateAnalytics(userId, analytics);
   }
 
   static async deleteProfile(userId: string): Promise<ProfileServiceResponse<void>> {

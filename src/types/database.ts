@@ -25,8 +25,6 @@ export interface Database {
           name: string | null;
           bio: string | null;
           email: string | null;
-          // Note: display_name should be migrated to name - see migration 20250130000006
-          display_name?: string | null; // @deprecated - use 'name' instead
           // Location fields
           location: string | null;
           location_search: string | null;
@@ -39,45 +37,27 @@ export interface Database {
           // Media fields
           avatar_url: string | null;
           banner_url: string | null;
-          cover_image_url: string | null;
           website: string | null;
           // Contact
           contact_email: string | null;
           phone: string | null;
           // Social
           social_links: Json | null;
-          follower_count: number | null;
-          following_count: number | null;
-          profile_views: number | null;
           // Crypto
           bitcoin_address: string | null;
           lightning_address: string | null;
           bitcoin_public_key: string | null;
           lightning_node_id: string | null;
-          bitcoin_balance: number | null;
-          lightning_balance: number | null;
           // Status & Verification
           verification_status: string | null;
-          verification_level: string | null;
-          is_verified: boolean | null;
-          kyc_status: string | null;
           verification_data: Json | null;
-          verification_badge: string | null;
           status: string | null;
           // Activity
-          campaign_count: number | null;
-          total_raised: number | null;
-          total_donated: number | null;
           last_login_at: string | null;
           last_active_at: string | null;
-          login_count: number | null;
           // Preferences
           language: string | null;
           currency: string | null;
-          theme_preferences: Json | null;
-          custom_css: string | null;
-          profile_color: string | null;
-          profile_badges: Json | null;
           payment_preferences: Json | null;
           preferences: Json | null;
           privacy_settings: Json | null;
@@ -90,7 +70,6 @@ export interface Database {
           profile_completed_at: string | null;
           terms_accepted_at: string | null;
           privacy_policy_accepted_at: string | null;
-          two_factor_enabled: boolean | null;
           // Timestamps
           created_at: string;
           updated_at: string;
@@ -101,8 +80,6 @@ export interface Database {
           name?: string | null;
           bio?: string | null;
           email?: string | null;
-          // Note: display_name should be migrated to name - see migration 20250130000006
-          display_name?: string | null; // @deprecated - use 'name' instead
           // Location fields
           location?: string | null;
           location_search?: string | null;
@@ -115,45 +92,27 @@ export interface Database {
           // Media fields
           avatar_url?: string | null;
           banner_url?: string | null;
-          cover_image_url?: string | null;
           website?: string | null;
           // Contact
           contact_email?: string | null;
           phone?: string | null;
           // Social
           social_links?: Json | null;
-          follower_count?: number | null;
-          following_count?: number | null;
-          profile_views?: number | null;
           // Crypto
           bitcoin_address?: string | null;
           lightning_address?: string | null;
           bitcoin_public_key?: string | null;
           lightning_node_id?: string | null;
-          bitcoin_balance?: number | null;
-          lightning_balance?: number | null;
           // Status & Verification
           verification_status?: string | null;
-          verification_level?: string | null;
-          is_verified?: boolean | null;
-          kyc_status?: string | null;
           verification_data?: Json | null;
-          verification_badge?: string | null;
           status?: string | null;
           // Activity
-          campaign_count?: number | null;
-          total_raised?: number | null;
-          total_donated?: number | null;
           last_login_at?: string | null;
           last_active_at?: string | null;
-          login_count?: number | null;
           // Preferences
           language?: string | null;
           currency?: string | null;
-          theme_preferences?: Json | null;
-          custom_css?: string | null;
-          profile_color?: string | null;
-          profile_badges?: Json | null;
           payment_preferences?: Json | null;
           preferences?: Json | null;
           privacy_settings?: Json | null;
@@ -166,7 +125,6 @@ export interface Database {
           profile_completed_at?: string | null;
           terms_accepted_at?: string | null;
           privacy_policy_accepted_at?: string | null;
-          two_factor_enabled?: boolean | null;
           // Timestamps
           created_at?: string;
           updated_at?: string;
@@ -177,7 +135,6 @@ export interface Database {
           name?: string | null;
           bio?: string | null;
           email?: string | null;
-          display_name?: string | null;
           // Location fields
           location?: string | null;
           location_search?: string | null;
@@ -190,45 +147,27 @@ export interface Database {
           // Media fields
           avatar_url?: string | null;
           banner_url?: string | null;
-          cover_image_url?: string | null;
           website?: string | null;
           // Contact
           contact_email?: string | null;
           phone?: string | null;
           // Social
           social_links?: Json | null;
-          follower_count?: number | null;
-          following_count?: number | null;
-          profile_views?: number | null;
           // Crypto
           bitcoin_address?: string | null;
           lightning_address?: string | null;
           bitcoin_public_key?: string | null;
           lightning_node_id?: string | null;
-          bitcoin_balance?: number | null;
-          lightning_balance?: number | null;
           // Status & Verification
           verification_status?: string | null;
-          verification_level?: string | null;
-          is_verified?: boolean | null;
-          kyc_status?: string | null;
           verification_data?: Json | null;
-          verification_badge?: string | null;
           status?: string | null;
           // Activity
-          campaign_count?: number | null;
-          total_raised?: number | null;
-          total_donated?: number | null;
           last_login_at?: string | null;
           last_active_at?: string | null;
-          login_count?: number | null;
           // Preferences
           language?: string | null;
           currency?: string | null;
-          theme_preferences?: Json | null;
-          custom_css?: string | null;
-          profile_color?: string | null;
-          profile_badges?: Json | null;
           payment_preferences?: Json | null;
           preferences?: Json | null;
           privacy_settings?: Json | null;
@@ -241,7 +180,6 @@ export interface Database {
           profile_completed_at?: string | null;
           terms_accepted_at?: string | null;
           privacy_policy_accepted_at?: string | null;
-          two_factor_enabled?: boolean | null;
           // Timestamps
           created_at?: string;
           updated_at?: string;

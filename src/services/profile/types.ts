@@ -43,18 +43,9 @@ export interface ScalableProfile extends Omit<
   bitcoin_public_key: string | null;
   lightning_node_id: string | null;
   payment_preferences: Record<string, unknown> | null;
-  bitcoin_balance: number | null;
-  lightning_balance: number | null;
 
-  // Analytics & Engagement
-  following_count: number | null;
-  project_count: number | null;
-  total_raised: number | null;
-  total_donated: number | null;
-
-  // Verification & Security
+  // Verification
   verification_status: 'unverified' | 'pending' | 'verified' | 'rejected' | null;
-  verification_level: number | null;
 
   // Customization & Branding
 
@@ -99,13 +90,6 @@ export interface ScalableProfileFormData extends Omit<
   social_links?: Record<string, unknown>;
   preferences?: Record<string, unknown>;
   privacy_settings?: Record<string, unknown>;
-}
-
-export interface ProfileAnalytics {
-  following_count?: number;
-  project_count?: number;
-  total_raised?: number;
-  total_donated?: number;
 }
 
 export interface ProfileServiceResponse<T = unknown> {

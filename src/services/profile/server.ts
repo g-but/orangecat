@@ -11,6 +11,7 @@ import { logger } from '@/utils/logger';
 import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 // Type alias for any SupabaseClient (accepts any database schema)
 type AnySupabaseClient = SupabaseClient<any, any, any>;
@@ -159,7 +160,25 @@ export class ProfileServerService {
         updated_at: new Date().toISOString(),
       };
 
-      return this.createProfile(supabase, profileData);
+      const result = await this.createProfile(supabase, profileData);
+
+      // Create actor eagerly so it exists before the user creates any entity.
+      // This eliminates the lazy-creation gap where the Cat and other services
+      // can't find the actor for a new user.
+      if (result.data) {
+        try {
+          await getOrCreateUserActor(userId);
+        } catch (actorErr) {
+          // Non-fatal — actor will be created lazily on first entity creation
+          logger.warn(
+            'Failed to eagerly create actor for new user',
+            { userId, error: actorErr },
+            'ProfileServer'
+          );
+        }
+      }
+
+      return result;
     } catch (err) {
       logger.error('ProfileServerService.ensureProfile unexpected error', err, 'ProfileServer');
       return { data: null, error: err as Error };
@@ -169,10 +188,7 @@ export class ProfileServerService {
   /**
    * Get project count for a user
    */
-  static async getProjectCount(
-    supabase: AnySupabaseClient,
-    userId: string
-  ): Promise<number> {
+  static async getProjectCount(supabase: AnySupabaseClient, userId: string): Promise<number> {
     try {
       const { count, error } = await supabase
         .from(getTableName('project'))

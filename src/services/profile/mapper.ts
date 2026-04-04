@@ -47,18 +47,9 @@ export class ProfileMapper {
       bitcoin_public_key: null,
       lightning_node_id: null,
       payment_preferences: {},
-      bitcoin_balance: 0,
-      lightning_balance: 0,
 
-      // Analytics & Engagement
-      following_count: 0,
-      project_count: 0,
-      total_raised: 0,
-      total_donated: 0,
-
-      // Verification & Security
+      // Verification
       verification_status: 'unverified',
-      verification_level: 0,
 
       // Customization & Branding
 
