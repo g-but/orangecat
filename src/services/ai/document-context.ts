@@ -44,7 +44,7 @@ export interface EntitySummary {
   title: string;
   description?: string;
   status: string;
-  price_sats?: number;
+  price_btc?: number;
   category?: string;
   location?: string;
 }
@@ -276,7 +276,7 @@ export async function fetchEntitiesForCat(
           title: p.title,
           description: p.description?.substring(0, 300),
           status: p.status,
-          price_sats: p.price,
+          price_btc: p.price,
         });
       });
     }
@@ -303,7 +303,7 @@ export async function fetchEntitiesForCat(
           title: s.title,
           description: s.description?.substring(0, 300),
           status: s.status,
-          price_sats: s.fixed_price || s.hourly_rate,
+          price_btc: s.fixed_price || s.hourly_rate,
         });
       });
     }
@@ -330,7 +330,7 @@ export async function fetchEntitiesForCat(
           title: p.title,
           description: p.description?.substring(0, 300),
           status: p.status,
-          price_sats: p.goal_amount,
+          price_btc: p.goal_amount,
         });
       });
     }
@@ -358,7 +358,7 @@ export async function fetchEntitiesForCat(
           description: c.description?.substring(0, 300),
           status: c.status,
           category: c.cause_category,
-          price_sats: c.goal_amount,
+          price_btc: c.goal_amount,
         });
       });
     }
@@ -416,7 +416,7 @@ export async function fetchEntitiesForCat(
           title: a.title,
           description: a.description?.substring(0, 300),
           status: a.status,
-          price_sats: a.sale_price_sats || a.rental_price_sats || a.estimated_value,
+          price_btc: a.sale_price_sats || a.rental_price_sats || a.estimated_value,
           location: a.location,
         });
       });
@@ -577,8 +577,8 @@ export function buildFullContextString(context: FullUserContext): string {
       const itemList = items
         .map(item => {
           const parts = [`- **${item.title}**`];
-          if (item.price_sats) {
-            parts.push(` (${item.price_sats.toLocaleString()} sats)`);
+          if (item.price_btc) {
+            parts.push(` (${item.price_btc} BTC)`);
           }
           if (item.category) {
             parts.push(` [${item.category}]`);
@@ -608,15 +608,13 @@ export function buildFullContextString(context: FullUserContext): string {
       const parts = [`- **${w.label}**`];
       parts.push(`(${w.category}`);
       if (w.behavior_type === 'one_time_goal' && w.goal_amount) {
-        parts.push(`, goal: ${w.goal_amount.toLocaleString()} ${w.goal_currency || 'SATS'}`);
+        parts.push(`, goal: ${w.goal_amount} ${w.goal_currency || 'BTC'}`);
         if (w.goal_deadline) {
           parts.push(` by ${w.goal_deadline}`);
         }
       }
       if (w.behavior_type === 'recurring_budget' && w.budget_amount) {
-        parts.push(
-          `, budget: ${w.budget_amount.toLocaleString()} sats/${w.budget_period || 'month'}`
-        );
+        parts.push(`, budget: ${w.budget_amount} BTC/${w.budget_period || 'month'}`);
       }
       parts.push(')');
       if (w.behavior_type !== 'general') {

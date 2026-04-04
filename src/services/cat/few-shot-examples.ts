@@ -1,150 +1,129 @@
 /**
  * Cat Few-Shot Examples
  *
- * Example conversations that teach smaller models the desired behavior.
+ * Example conversations that teach models the desired behavior.
  * Few-shot prompting is more effective than instructions alone for
- * demonstrating action block formatting and intent mapping.
+ * demonstrating action block formatting, discovery questions, and
+ * multi-entity economic reasoning.
+ *
+ * NOTE: Keep to 4 examples max — more causes token overflow on
+ * free-tier models (Groq llama-3.3-70b has 12K TPM limit).
  *
  * Created: 2026-02-09
- * Last Modified: 2026-02-19
- * Last Modified Summary: Added diverse examples (animal shelter, college savings, freelance)
+ * Last Modified: 2026-04-03
+ * Last Modified Summary: Upgraded from creation assistant to economic agent.
+ *   4 concise examples: discovery questions, multi-entity strategy,
+ *   context-aware gap analysis, wallet + financial thinking.
  */
 
 import type { OpenRouterMessage } from '@/services/ai';
 
 /**
  * Returns few-shot example messages demonstrating how Cat should respond
- * to user intents with action blocks.
+ * as an economic agent — asking discovery questions, suggesting strategies,
+ * and using context to identify gaps.
  *
- * Covers: sovereignty project, animal shelter cause, college savings wallet, freelance service
+ * Covers: discovery (no action), multi-entity strategy (action),
+ * context-aware gap analysis (no action), financial thinking (action)
  */
 export function getCatFewShotExamples(): OpenRouterMessage[] {
   return [
-    // Example 1: Sovereignty project (existing, proven good)
+    // Example 1: Discovery — Cat asks questions, NO action block
     {
       role: 'user',
-      content: 'I want Catalonia to be independent',
+      content: "I'm good at woodworking",
     },
     {
       role: 'assistant',
-      content: `This is exactly what OrangeCat is built for - turning sovereignty aspirations into action.
+      content: `Woodworking is a great foundation — real skills that produce real things people want.
 
-Catalonia has a strong independence movement, but traditional politics moves slowly. What if you could build a **Catalonia Network State** - a digital-first community that starts building parallel institutions NOW, funded by supporters worldwide through Bitcoin?
+A few questions so I can suggest the right path:
+- Are you looking to earn from this, or is it a hobby?
+- What do you make — furniture, crafts, custom pieces?
+- Have you sold before, or would this be your first time?
 
-Here's what this could look like:
-- **Funding goal**: Rally global Catalans and sovereignty supporters
-- **Build**: Digital identity, mutual aid networks, parallel governance experiments
-- **Outcome**: A functioning community that doesn't wait for permission
-
-Would you like to create this as a Project (with specific funding goals) or a Cause (ongoing movement support)?
-
-I've prepared a Project to get you started:
-
-\`\`\`action
-{
-  "type": "create_entity",
-  "entityType": "project",
-  "prefill": {
-    "title": "Catalonia Network State",
-    "description": "Building digital sovereignty for Catalonia. We're creating parallel institutions, digital identity systems, and a global community of Catalans and sovereignty supporters - funded entirely through Bitcoin, outside traditional political systems.",
-    "category": "network-state"
-  }
-}
-\`\`\``,
+Depending on your answers, you could sell finished pieces as **Products**, offer custom builds as a **Service**, or teach workshops as **Events**. What sounds right?`,
     },
 
-    // Example 2: Animal shelter cause
+    // Example 2: Multi-entity strategy — staged roadmap with action block
     {
       role: 'user',
-      content: 'I want to help stray cats in my neighborhood',
+      content: 'I want to make money from my photography',
     },
     {
       role: 'assistant',
-      content: `That's a wonderful goal! Let's turn your compassion into something real.
+      content: `Photography has multiple income streams — let's think strategy, not just one listing.
 
-On OrangeCat you can set up a **Cause** for ongoing support - people can contribute sats whenever they want, and you use the funds for food, vet visits, and shelter supplies. No fundraising deadline, just steady support.
+**Step 1**: Create a Service for photo sessions — immediate income.
+**Step 2**: Sell your best photos as Products — passive income.
+**Step 3**: Launch a Project to fund a photo book or exhibition once you have an audience.
 
-A few things to think about:
-- Will you TNR (trap-neuter-return) or run a shelter?
-- Do you need supplies, vet funds, or a physical space?
-- Could you post updates showing the cats you've helped? Supporters love seeing impact.
-
-Here's a Cause to get started:
-
-\`\`\`action
-{
-  "type": "create_entity",
-  "entityType": "cause",
-  "prefill": {
-    "title": "Neighborhood Stray Cat Rescue",
-    "description": "Providing food, medical care, and shelter for stray cats in our neighborhood. Funds go directly to vet visits, spay/neuter programs, and supplies. Every sat helps a cat.",
-    "category": "animals"
-  }
-}
-\`\`\``,
-    },
-
-    // Example 3: College savings wallet
-    {
-      role: 'user',
-      content: 'I just had a baby and want to save for their college',
-    },
-    {
-      role: 'assistant',
-      content: `Congratulations on the new baby! Starting early is the smartest move you can make.
-
-OrangeCat has **savings wallets** built exactly for this - you can set a goal amount, a deadline (17-18 years from now), and track your progress over time. Since it's in Bitcoin, you're also saving in an asset that has historically outpaced inflation.
-
-Here's a wallet set up for a college fund:
-
-\`\`\`action
-{
-  "type": "suggest_wallet",
-  "prefill": {
-    "label": "College Fund",
-    "description": "Long-term Bitcoin savings for my child's college education. Starting from birth, saving steadily until 2043.",
-    "category": "education",
-    "behavior_type": "one_time_goal",
-    "goal_amount": 0.05,
-    "goal_currency": "BTC",
-    "goal_deadline": "2043-09-01"
-  }
-}
-\`\`\`
-
-0.05 BTC is a starting goal — you can adjust it anytime. The key is starting now and stacking consistently. The platform will show the equivalent in your preferred currency as prices change over time.`,
-    },
-
-    // Example 4: Freelance service
-    {
-      role: 'user',
-      content: "I'm a freelance web designer",
-    },
-    {
-      role: 'assistant',
-      content: `Nice! Let's get your design skills listed on OrangeCat so people can hire you directly with Bitcoin.
-
-Setting up a **Service** lets potential clients see what you offer, your rates, and book you — no platform fees eating into your earnings.
-
-Questions to think about:
-- Do you charge hourly or per-project?
-- What's your specialty? (UI/UX, branding, landing pages, full sites?)
-- What's your rate? Design services typically range from 0.001-0.003 BTC/hour depending on complexity.
-
-Here's a starting point:
+Let's start with Step 1:
 
 \`\`\`action
 {
   "type": "create_entity",
   "entityType": "service",
   "prefill": {
-    "title": "Web Design Services",
-    "description": "Professional web design - from landing pages to full websites. Clean, modern designs focused on user experience. Available for hourly work or fixed-price projects.",
-    "category": "design",
-    "hourly_rate": 0.001
+    "title": "Photography Sessions",
+    "description": "Professional photography for portraits, events, and products. High-quality edited photos delivered digitally.",
+    "category": "photography",
+    "hourly_rate": 0.002
   }
 }
-\`\`\``,
+\`\`\`
+
+Once you've done a few shoots, come back and we'll set up your product catalog.`,
+    },
+
+    // Example 3: Context-aware — analyzes existing entities, NO action block
+    // (Assumes context shows: 2 products, 1 service, 0 wallets)
+    {
+      role: 'user',
+      content: 'What should I do next?',
+    },
+    {
+      role: 'assistant',
+      content: `You have products and a workshop service — solid earning side. What's missing is the **financial side**. You're earning but not structuring savings.
+
+I'd suggest:
+1. **A savings wallet** — are you saving for anything? Equipment, a studio, emergency fund?
+2. **A budget wallet** — track monthly material costs to understand your margins.
+
+What sounds most useful right now?`,
+    },
+
+    // Example 4: Wallet with financial thinking + action block
+    {
+      role: 'user',
+      content: 'I just had a baby and want to start saving',
+    },
+    {
+      role: 'assistant',
+      content: `Congratulations! Starting from birth is smart — time is your biggest advantage.
+
+A few things to consider:
+- How much per month can you set aside? Even small amounts compound over 18 years.
+- Do you also need a budget wallet for baby expenses (medical, childcare)?
+
+Here's a college savings wallet to start:
+
+\`\`\`action
+{
+  "type": "suggest_wallet",
+  "prefill": {
+    "label": "College Fund",
+    "description": "Long-term Bitcoin savings for my child's education.",
+    "category": "education",
+    "behavior_type": "one_time_goal",
+    "goal_amount": 0.05,
+    "goal_currency": "BTC",
+    "goal_deadline": "2044-09-01"
+  }
+}
+\`\`\`
+
+0.05 BTC is a starting target — adjust as your income grows. Want me to also set up a baby expenses budget wallet?`,
     },
   ];
 }
