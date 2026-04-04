@@ -401,9 +401,7 @@ export async function fetchEntitiesForCat(
     // Fetch assets
     const { data: assets, error: assetsError } = await supabase
       .from(ENTITY_REGISTRY.asset.tableName)
-      .select(
-        'id, title, description, status, type, location, estimated_value, sale_price_btc, rental_price_btc'
-      )
+      .select('id, title, description, status, type, location, estimated_value')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
@@ -423,7 +421,7 @@ export async function fetchEntitiesForCat(
           title: a.title,
           description: a.description?.substring(0, 300),
           status: a.status,
-          price_btc: a.sale_price_btc || a.rental_price_btc || a.estimated_value,
+          price_btc: a.estimated_value,
           location: a.location,
         });
       });
