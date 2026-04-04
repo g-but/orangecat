@@ -157,7 +157,7 @@ async function fetchNewFollowers(
   since: Date
 ): Promise<number | undefined> {
   const { count, error } = await admin
-    .from(DATABASE_TABLES.USER_FOLLOWS)
+    .from(DATABASE_TABLES.FOLLOWS)
     .select('*', { count: 'exact', head: true })
     .eq('following_id', actorId)
     .gte('created_at', since.toISOString());

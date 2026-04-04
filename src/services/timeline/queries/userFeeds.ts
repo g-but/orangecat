@@ -171,7 +171,7 @@ export async function getFollowedUsersFeed(
     const { data: follows, error: followsError } = await (
       supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.USER_FOLLOWS) as any
+        .from(DATABASE_TABLES.FOLLOWS) as any
     )
       .select('followed_user_id')
       .eq('follower_id', currentUserId)
