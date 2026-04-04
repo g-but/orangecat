@@ -23,6 +23,7 @@ import {
   Settings,
   FileText,
   Bell,
+  Building2,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -232,6 +233,41 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Organize a community gathering',
     ],
     apiEndpoint: '/api/events',
+    enabled: true,
+  },
+
+  create_asset: {
+    id: 'create_asset',
+    name: 'Create Asset',
+    description: 'Register a rentable or sellable asset',
+    category: 'entities',
+    icon: Building2,
+    riskLevel: 'medium',
+    requiresConfirmation: true,
+    parameters: [
+      { name: 'title', type: 'string', required: true, description: 'Asset title' },
+      { name: 'description', type: 'string', required: false, description: 'Asset description' },
+      {
+        name: 'asset_type',
+        type: 'string',
+        required: false,
+        description: 'Type of asset (equipment, space, vehicle, etc.)',
+      },
+      { name: 'location', type: 'string', required: false, description: 'Asset location' },
+      {
+        name: 'publish',
+        type: 'boolean',
+        required: false,
+        description: 'Publish immediately',
+        default: false,
+      },
+    ],
+    examples: [
+      'Register my rental equipment',
+      'List my co-working space',
+      'Add my property as an asset',
+    ],
+    apiEndpoint: '/api/assets',
     enabled: true,
   },
 

@@ -40,6 +40,7 @@ export interface ProfileContext {
 }
 
 export interface EntitySummary {
+  id: string;
   type: string;
   title: string;
   description?: string;
@@ -257,7 +258,7 @@ export async function fetchEntitiesForCat(
     // Fetch products (include draft so user can ask about their drafts)
     const { data: products, error: productsError } = await supabase
       .from(ENTITY_REGISTRY.product.tableName)
-      .select('title, description, status, price, currency, category')
+      .select('id, title, description, status, price, currency, category')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
@@ -272,6 +273,7 @@ export async function fetchEntitiesForCat(
       stats.totalProducts = products.length;
       products.forEach(p => {
         entities.push({
+          id: p.id,
           type: 'product',
           title: p.title,
           description: p.description?.substring(0, 300),
@@ -284,7 +286,7 @@ export async function fetchEntitiesForCat(
     // Fetch services (include draft)
     const { data: services, error: servicesError } = await supabase
       .from(ENTITY_REGISTRY.service.tableName)
-      .select('title, description, status, hourly_rate, fixed_price, currency, category')
+      .select('id, title, description, status, hourly_rate, fixed_price, currency, category')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
@@ -299,6 +301,7 @@ export async function fetchEntitiesForCat(
       stats.totalServices = services.length;
       services.forEach(s => {
         entities.push({
+          id: s.id,
           type: 'service',
           title: s.title,
           description: s.description?.substring(0, 300),
@@ -311,7 +314,7 @@ export async function fetchEntitiesForCat(
     // Fetch projects
     const { data: projects, error: projectsError } = await supabase
       .from(ENTITY_REGISTRY.project.tableName)
-      .select('title, description, status, goal_amount, currency, category')
+      .select('id, title, description, status, goal_amount, currency, category')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
@@ -326,6 +329,7 @@ export async function fetchEntitiesForCat(
       stats.totalProjects = projects.length;
       projects.forEach(p => {
         entities.push({
+          id: p.id,
           type: 'project',
           title: p.title,
           description: p.description?.substring(0, 300),
@@ -338,7 +342,7 @@ export async function fetchEntitiesForCat(
     // Fetch causes
     const { data: causes, error: causesError } = await supabase
       .from(ENTITY_REGISTRY.cause.tableName)
-      .select('title, description, status, cause_category, goal_amount')
+      .select('id, title, description, status, cause_category, goal_amount')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
@@ -353,6 +357,7 @@ export async function fetchEntitiesForCat(
       stats.totalCauses = causes.length;
       causes.forEach(c => {
         entities.push({
+          id: c.id,
           type: 'cause',
           title: c.title,
           description: c.description?.substring(0, 300),
@@ -367,7 +372,7 @@ export async function fetchEntitiesForCat(
     const { data: events, error: eventsError } = await supabase
       .from(ENTITY_REGISTRY.event.tableName)
       .select(
-        'title, description, status, start_date, end_date, venue_name, venue_city, venue_country'
+        'id, title, description, status, start_date, end_date, venue_name, venue_city, venue_country'
       )
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
@@ -383,6 +388,7 @@ export async function fetchEntitiesForCat(
       stats.totalEvents = events.length;
       events.forEach(e => {
         entities.push({
+          id: e.id,
           type: 'event',
           title: e.title,
           description: e.description?.substring(0, 300),
@@ -396,7 +402,7 @@ export async function fetchEntitiesForCat(
     const { data: assets, error: assetsError } = await supabase
       .from(ENTITY_REGISTRY.asset.tableName)
       .select(
-        'title, description, status, type, location, estimated_value, sale_price_sats, rental_price_sats'
+        'id, title, description, status, type, location, estimated_value, sale_price_sats, rental_price_sats'
       )
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
@@ -412,6 +418,7 @@ export async function fetchEntitiesForCat(
       stats.totalAssets = assets.length;
       assets.forEach(a => {
         entities.push({
+          id: a.id,
           type: 'asset',
           title: a.title,
           description: a.description?.substring(0, 300),
@@ -577,6 +584,9 @@ export function buildFullContextString(context: FullUserContext): string {
       const itemList = items
         .map(item => {
           const parts = [`- **${item.title}**`];
+          if (item.status !== 'active') {
+            parts.push(` [${item.status}]`);
+          }
           if (item.price_btc) {
             parts.push(` (${item.price_btc} BTC)`);
           }
@@ -589,6 +599,7 @@ export function buildFullContextString(context: FullUserContext): string {
           if (item.description) {
             parts.push(`: ${item.description}`);
           }
+          parts.push(` (id: ${item.id})`);
           return parts.join('');
         })
         .join('\n');

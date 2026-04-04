@@ -182,6 +182,90 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     return { success: true, data };
   },
 
+  create_asset: async (supabase, _userId, actorId, params) => {
+    const { data, error } = await supabase
+      .from(ENTITY_REGISTRY.asset.tableName)
+      .insert({
+        actor_id: actorId,
+        title: params.title,
+        description: params.description || null,
+        type: params.asset_type || null,
+        location: params.location || null,
+        status: params.publish ? 'active' : 'draft',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  },
+
+  // ---------- ENTITY MANAGEMENT ACTIONS ----------
+
+  update_entity: async (supabase, _userId, actorId, params) => {
+    const entityType = params.entity_type as string;
+    const entityId = params.entity_id as string;
+    const updates = (
+      typeof params.updates === 'string' ? JSON.parse(params.updates) : params.updates
+    ) as Record<string, unknown>;
+
+    const meta = ENTITY_REGISTRY[entityType as keyof typeof ENTITY_REGISTRY];
+    if (!meta) {
+      return { success: false, error: `Unknown entity type: ${entityType}` };
+    }
+
+    // Only allow updating safe fields
+    const safeFields = ['title', 'description', 'category', 'status', 'tags'];
+    const safeUpdates: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(updates)) {
+      if (safeFields.includes(key)) {
+        safeUpdates[key] = value;
+      }
+    }
+
+    if (Object.keys(safeUpdates).length === 0) {
+      return { success: false, error: 'No valid fields to update' };
+    }
+
+    const { data, error } = await supabase
+      .from(meta.tableName)
+      .update(safeUpdates)
+      .eq('id', entityId)
+      .eq('actor_id', actorId)
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  },
+
+  publish_entity: async (supabase, _userId, actorId, params) => {
+    const entityType = params.entity_type as string;
+    const entityId = params.entity_id as string;
+
+    const meta = ENTITY_REGISTRY[entityType as keyof typeof ENTITY_REGISTRY];
+    if (!meta) {
+      return { success: false, error: `Unknown entity type: ${entityType}` };
+    }
+
+    const { data, error } = await supabase
+      .from(meta.tableName)
+      .update({ status: 'active' })
+      .eq('id', entityId)
+      .eq('actor_id', actorId)
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  },
+
   // ---------- COMMUNICATION ACTIONS ----------
 
   post_to_timeline: async (supabase, _userId, actorId, params) => {
@@ -680,6 +764,12 @@ export class CatActionExecutor {
         return `Create cause "${parameters.title}"`;
       case 'create_event':
         return `Create event "${parameters.title}" at ${parameters.location}`;
+      case 'create_asset':
+        return `Register asset "${parameters.title}"${parameters.location ? ` at ${parameters.location}` : ''}`;
+      case 'update_entity':
+        return `Update ${parameters.entity_type} with ${Object.keys(typeof parameters.updates === 'object' ? (parameters.updates as object) : {}).join(', ') || 'changes'}`;
+      case 'publish_entity':
+        return `Publish ${parameters.entity_type} (make it live)`;
       case 'post_to_timeline':
         return `Post to timeline: "${String(parameters.content).slice(0, 50)}..."`;
       case 'send_message':

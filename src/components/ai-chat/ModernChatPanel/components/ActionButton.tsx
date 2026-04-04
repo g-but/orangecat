@@ -35,26 +35,37 @@ export function ActionButton({ action, onClick }: ActionButtonProps) {
     );
   }
 
-  // create_entity action
+  // Entity actions (create, update, publish)
   const entityMeta = ENTITY_REGISTRY[action.entityType];
   const Icon = entityMeta?.icon || Plus;
   const entityName = entityMeta?.name || action.entityType;
+
+  let label: string;
+  if (action.type === 'create_entity') {
+    label = `Create ${entityName}: ${action.prefill.title}`;
+  } else if (action.type === 'update_entity') {
+    label = `Update ${entityName}`;
+  } else {
+    label = `Publish ${entityName}`;
+  }
 
   return (
     <button
       onClick={onClick}
       className={cn(
         'flex items-center gap-2 px-4 py-2.5 rounded-xl',
-        'bg-gradient-to-r from-tiffany-500 to-tiffany-600 hover:from-tiffany-600 hover:to-tiffany-700',
+        action.type === 'publish_entity'
+          ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+          : action.type === 'update_entity'
+            ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
+            : 'bg-gradient-to-r from-tiffany-500 to-tiffany-600 hover:from-tiffany-600 hover:to-tiffany-700',
         'text-white font-medium text-sm shadow-md hover:shadow-lg',
         'transition-all transform hover:scale-[1.02]'
       )}
     >
       <Plus className="h-4 w-4" />
       <Icon className="h-4 w-4" />
-      <span>
-        Create {entityName}: {action.prefill.title}
-      </span>
+      <span>{label}</span>
     </button>
   );
 }

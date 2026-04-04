@@ -12,6 +12,8 @@
 import {
   CAT_CREATABLE_ENTITY_TYPES,
   type SuggestedAction,
+  type UpdateEntityAction,
+  type PublishEntityAction,
   type SuggestedWalletAction,
   type CatAction,
 } from '@/types/cat';
@@ -30,7 +32,7 @@ export interface ParsedResponse {
 /**
  * Parse action blocks from AI response.
  * Actions are embedded as ```action JSON blocks in the response content.
- * Supports both create_entity and suggest_wallet actions.
+ * Supports: create_entity, update_entity, publish_entity, suggest_wallet.
  * Invalid blocks (bad JSON, unknown types, missing required fields) are silently skipped.
  */
 export function parseActionsFromResponse(content: string): ParsedResponse {
@@ -45,13 +47,28 @@ export function parseActionsFromResponse(content: string): ParsedResponse {
     try {
       const actionJson = match[1].trim();
       const raw = JSON.parse(actionJson);
+      const entityTypes = CAT_CREATABLE_ENTITY_TYPES as readonly string[];
 
       if (
         raw.type === 'create_entity' &&
-        (CAT_CREATABLE_ENTITY_TYPES as readonly string[]).includes(raw.entityType) &&
+        entityTypes.includes(raw.entityType) &&
         raw.prefill?.title
       ) {
         actions.push(raw as SuggestedAction);
+      } else if (
+        raw.type === 'update_entity' &&
+        entityTypes.includes(raw.entityType) &&
+        raw.entityId &&
+        raw.updates &&
+        typeof raw.updates === 'object'
+      ) {
+        actions.push(raw as UpdateEntityAction);
+      } else if (
+        raw.type === 'publish_entity' &&
+        entityTypes.includes(raw.entityType) &&
+        raw.entityId
+      ) {
+        actions.push(raw as PublishEntityAction);
       } else if (raw.type === 'suggest_wallet' && raw.prefill?.label) {
         // Validate wallet-specific fields
         const wallet = raw as SuggestedWalletAction;

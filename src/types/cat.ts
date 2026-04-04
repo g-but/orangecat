@@ -47,6 +47,25 @@ export interface SuggestedAction {
 }
 
 /**
+ * An action to update an existing entity.
+ */
+export interface UpdateEntityAction {
+  type: 'update_entity';
+  entityType: CatCreatableEntityType;
+  entityId: string;
+  updates: Record<string, unknown>;
+}
+
+/**
+ * An action to publish (set status to active) a draft entity.
+ */
+export interface PublishEntityAction {
+  type: 'publish_entity';
+  entityType: CatCreatableEntityType;
+  entityId: string;
+}
+
+/**
  * An action suggesting wallet creation, embedded as ```action JSON blocks in AI responses.
  */
 export interface SuggestedWalletAction {
@@ -65,4 +84,8 @@ export interface SuggestedWalletAction {
 }
 
 /** Union of all action types Cat can suggest */
-export type CatAction = SuggestedAction | SuggestedWalletAction;
+export type CatAction =
+  | SuggestedAction
+  | UpdateEntityAction
+  | PublishEntityAction
+  | SuggestedWalletAction;

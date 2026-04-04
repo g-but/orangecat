@@ -94,6 +94,11 @@ export function ModernChatPanel() {
           const url = `${entityMeta.createPath}?${prefillParams.toString()}`;
           router.push(url);
         }
+      } else if (action.type === 'update_entity' || action.type === 'publish_entity') {
+        const entityMeta = ENTITY_REGISTRY[action.entityType];
+        if (entityMeta?.basePath) {
+          router.push(`${entityMeta.basePath}/${action.entityId}/edit`);
+        }
       } else if (action.type === 'suggest_wallet') {
         const walletMeta = ENTITY_REGISTRY.wallet;
         const prefillParams = new URLSearchParams();
