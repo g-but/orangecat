@@ -386,7 +386,7 @@ export function EntityForm<T extends Record<string, unknown>>({
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-8">
-                {mode === 'create' && !wizardMode && (
+                {mode === 'create' && (
                   <AIPrefillBar
                     entityType={config.type}
                     onPrefill={handleAIPrefill}

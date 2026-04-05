@@ -7,6 +7,7 @@ import type { Json } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { clientFrom } from './db-helpers.server';
 import { getServerUser } from './auth.server';
+import { NotificationDispatcher } from '@/services/notifications/dispatcher';
 import type {
   MessagesInsert,
   ConversationsUpdate,
@@ -129,6 +130,41 @@ export async function sendMessage(
 
     if (readError) {
       logger.warn('Failed to update sender read time:', readError);
+    }
+
+    // Notify other participants (fire-and-forget)
+    try {
+      const { data: otherParticipants } = await admin
+        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+        .select('user_id')
+        .eq('conversation_id', conversationId)
+        .eq('is_active', true)
+        .neq('user_id', senderId);
+
+      if (otherParticipants && otherParticipants.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: senderProfile } = await (admin.from(DATABASE_TABLES.PROFILES) as any)
+          .select('name, username')
+          .eq('id', senderId)
+          .maybeSingle();
+        const senderName: string =
+          senderProfile?.name || senderProfile?.username || 'Someone';
+        const preview = content.length > 100 ? `${content.substring(0, 100)}...` : content;
+
+        for (const recipient of otherParticipants as Array<{ user_id: string }>) {
+          void NotificationDispatcher.dispatch({
+            userId: recipient.user_id,
+            type: 'message',
+            title: `New message from ${senderName}`,
+            message: preview,
+            sourceEntityType: 'conversation',
+            sourceEntityId: conversationId,
+            actionUrl: `/messages?id=${conversationId}`,
+          });
+        }
+      }
+    } catch (notifError) {
+      logger.warn('Failed to dispatch message notifications', { error: notifError });
     }
 
     logger.info('Message sent successfully:', message.id);

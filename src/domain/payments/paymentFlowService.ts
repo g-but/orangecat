@@ -24,6 +24,7 @@ import type {
 } from './types';
 import { logger } from '@/utils/logger';
 import { sendSellerPaymentNotification } from '@/lib/email/send-seller-notification';
+import { NotificationDispatcher } from '@/services/notifications/dispatcher';
 
 const METHOD_LABELS: Record<string, string> = {
   nwc: 'Lightning (NWC)',
@@ -368,4 +369,18 @@ async function handlePaymentConfirmed(
   sendSellerPaymentNotification(paymentIntent, supabase).catch(err =>
     logger.warn('Seller payment notification failed', { err }, 'paymentFlowService')
   );
+
+  // Also create in-app notification for the seller
+  const entityTitle = paymentIntent.description?.split(': ')[1] || 'your listing';
+  const amount = paymentIntent.amount_btc;
+  void NotificationDispatcher.dispatch({
+    userId: paymentIntent.seller_id,
+    type: 'payment',
+    title: `Payment received: ${amount} BTC`,
+    message: `You received ${amount} BTC for ${entityTitle}.`,
+    data: { paymentIntentId: piId, amount_btc: amount },
+    sourceEntityType: entityType,
+    sourceEntityId: entityId,
+    actionUrl: `/dashboard`,
+  });
 }

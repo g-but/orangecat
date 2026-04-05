@@ -8,7 +8,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PaymentIntent } from '@/domain/payments/types';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getEmailClient } from '@/lib/email/client';
+import { getEmailClient, isEmailConfigured } from '@/lib/email/client';
 import { paymentReceivedTemplate } from '@/lib/email/templates/payment-received';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -26,6 +26,16 @@ export async function sendSellerPaymentNotification(
   paymentIntent: PaymentIntent,
   supabase: SupabaseClient
 ): Promise<void> {
+  // Skip silently if email provider isn't configured — avoids throwing in dev
+  if (!isEmailConfigured()) {
+    logger.info(
+      'Email not configured, skipping seller notification',
+      { paymentIntentId: paymentIntent.id },
+      'SellerNotification'
+    );
+    return;
+  }
+
   try {
     const sellerId = paymentIntent.seller_id;
 

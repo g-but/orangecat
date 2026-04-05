@@ -101,22 +101,29 @@ export class NotificationDispatcher {
 
   /**
    * Insert a notification row into the notifications table.
-   * Mirrors the pattern used in src/app/api/notifications/route.ts.
+   * Schema: id, user_id, type, message, metadata, is_read, created_at, read_at, action_url
+   * Title is combined with message since the table has no title column.
    */
   private static async createInAppNotification(params: DispatchParams): Promise<void> {
     const admin = createAdminClient();
 
-    const { error } = await (admin.from(DATABASE_TABLES.NOTIFICATIONS) as any).insert({
-      recipient_user_id: params.userId,
-      type: params.type,
+    // Fold title into metadata so the UI can display it separately if desired
+    const metadata: Record<string, unknown> = {
+      ...(params.data ?? {}),
       title: params.title,
+      source_actor_id: params.sourceActorId,
+      source_entity_type: params.sourceEntityType,
+      source_entity_id: params.sourceEntityId,
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (admin.from(DATABASE_TABLES.NOTIFICATIONS) as any).insert({
+      user_id: params.userId,
+      type: params.type,
       message: params.message,
       action_url: params.actionUrl ?? null,
-      metadata: params.data ?? {},
-      source_actor_id: params.sourceActorId ?? null,
-      source_entity_type: params.sourceEntityType ?? null,
-      source_entity_id: params.sourceEntityId ?? null,
-      read: false,
+      metadata,
+      is_read: false,
     });
 
     if (error) {

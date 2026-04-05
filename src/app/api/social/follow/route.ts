@@ -14,6 +14,7 @@ import { enforceUserSocialLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { NotificationDispatcher } from '@/services/notifications/dispatcher';
 
 async function handleFollow(request: AuthenticatedRequest) {
   try {
@@ -87,6 +88,25 @@ async function handleFollow(request: AuthenticatedRequest) {
 
     // Audit log follow action
     await auditSuccess(AUDIT_ACTIONS.USER_FOLLOWED, user.id, 'profile', following_id);
+
+    // Notify the followed user (fire-and-forget)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: followerProfile } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
+      .select('name, username')
+      .eq('id', user.id)
+      .maybeSingle();
+    const followerName: string =
+      followerProfile?.name || followerProfile?.username || 'Someone';
+    const followerUsername: string | null = followerProfile?.username ?? null;
+    void NotificationDispatcher.dispatch({
+      userId: following_id,
+      type: 'follow',
+      title: `${followerName} followed you`,
+      message: `${followerName} started following you on OrangeCat.`,
+      sourceEntityType: 'profile',
+      sourceEntityId: user.id,
+      actionUrl: followerUsername ? `/profiles/${followerUsername}` : undefined,
+    });
 
     logger.info('User followed successfully', {
       userId: user.id,

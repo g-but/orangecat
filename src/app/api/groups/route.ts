@@ -9,7 +9,6 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import groupsService from '@/services/groups';
 import { createGroupSchema } from '@/services/groups/validation';
 import { logger } from '@/utils/logger';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
@@ -23,25 +22,27 @@ import {
 
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const { user: _user } = request;
+    const { supabase } = request;
 
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type'); // 'circle', 'organization', etc.
     const category = searchParams.get('category');
-    const isPublic = searchParams.get('is_public');
     const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('limit') || '20');
+    // Accept both 'pageSize' and 'limit' for backward compatibility
+    const pageSize = parseInt(
+      searchParams.get('pageSize') || searchParams.get('limit') || '20'
+    );
 
     // Build query filters
     const query = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(type && { type: type as any }),
       ...(category && { category }),
-      ...(isPublic !== null && { is_public: isPublic === 'true' }),
     };
 
-    // Get user's groups (userId is obtained internally from auth)
-    const userGroupsResult = await groupsService.getUserGroups(query, { page, pageSize });
+    // Pass the server-side supabase client so auth works in API route context
+    const { getUserGroups } = await import('@/services/groups/queries/groups');
+    const userGroupsResult = await getUserGroups(query, { page, pageSize }, supabase);
 
     if (!userGroupsResult.success) {
       return apiInternalError(userGroupsResult.error || 'Failed to fetch groups');
