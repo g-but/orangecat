@@ -16,8 +16,9 @@ import {
 } from './schema-to-prompt';
 import { getSystemPrompt, getUserPrompt, parseAIResponse } from './prompts/form-prefill';
 
-// Default model for form prefill (fast, good at JSON generation)
-const DEFAULT_MODEL = 'meta-llama/llama-4-maverick:free';
+// Default models for form prefill (fast, good at JSON generation)
+const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile';
+const DEFAULT_OPENROUTER_MODEL = 'meta-llama/llama-4-maverick:free';
 
 /**
  * Configuration for the form prefill service
@@ -95,8 +96,12 @@ export async function generateFormPrefill(
       existingData
     );
 
-    // Get API key from config or environment
-    const apiKey = config?.apiKey || process.env.OPENROUTER_API_KEY;
+    // Determine provider: Groq first, OpenRouter fallback
+    const groqKey = process.env.GROQ_API_KEY;
+    const openRouterKey = config?.apiKey || process.env.OPENROUTER_API_KEY;
+
+    const useGroq = !!groqKey;
+    const apiKey = useGroq ? groqKey : openRouterKey;
 
     if (!apiKey) {
       return {
@@ -107,25 +112,33 @@ export async function generateFormPrefill(
       };
     }
 
+    const model = config?.model || (useGroq ? DEFAULT_GROQ_MODEL : DEFAULT_OPENROUTER_MODEL);
+    const baseUrl = useGroq
+      ? 'https://api.groq.com/openai/v1/chat/completions'
+      : 'https://openrouter.ai/api/v1/chat/completions';
+
     // Make API request
-    const model = config?.model || DEFAULT_MODEL;
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    };
+    if (!useGroq) {
+      headers['HTTP-Referer'] = process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.ch';
+      headers['X-Title'] = 'OrangeCat Form Prefill';
+    }
+
+    const response = await fetch(baseUrl, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.ch',
-        'X-Title': 'OrangeCat Form Prefill',
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
-        model: model.replace('openrouter/', ''),
+        model: useGroq ? model : model.replace('openrouter/', ''),
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        temperature: config?.temperature ?? 0.3, // Lower temperature for more deterministic output
+        temperature: config?.temperature ?? 0.3,
         max_tokens: config?.maxTokens ?? 1000,
-        response_format: { type: 'json_object' }, // Request JSON output if supported
+        ...(useGroq ? {} : { response_format: { type: 'json_object' } }),
       }),
     });
 
