@@ -16,6 +16,7 @@ import {
   apiServiceUnavailable,
   apiRateLimited,
   apiInternalError,
+  apiError,
   apiSuccess,
 } from '@/lib/api/standardResponse';
 import { createServerClient } from '@/lib/supabase/server';
@@ -28,6 +29,7 @@ import {
   createGroqServiceWithByok,
   isGroqAvailable,
   DEFAULT_GROQ_MODEL,
+  GroqAPIError,
   type OpenRouterMessage,
   type GroqMessage,
 } from '@/services/ai';
@@ -55,6 +57,24 @@ import { searchPlatform, type SearchType } from '@/services/cat/platform-search'
 
 // Header for Groq API key (BYOK)
 const GROQ_KEY_HEADER = 'x-groq-api-key';
+
+/**
+ * Check if an error is a Groq TPM/rate-limit error.
+ * Groq sometimes returns these as 413 "Request too large" rather than HTTP 429,
+ * so we check the error message text as well as the status code and type.
+ */
+function isAiRateLimitError(error: unknown): boolean {
+  if (error instanceof GroqAPIError) {
+    if (error.type === 'rate_limit' || error.statusCode === 429) return true;
+    const msg = error.message.toLowerCase();
+    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) return true;
+  }
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) return true;
+  }
+  return false;
+}
 
 // Supported AI providers
 type AIProvider = 'groq' | 'openrouter';
@@ -465,11 +485,20 @@ export async function POST(request: NextRequest) {
               await keyService.incrementPlatformUsage(user.id, 1, usage.totalTokens);
             }
           } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'stream_error';
-            controller.enqueue(encoder.encode(`event: error\n`));
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ error: errorMessage })}\n\n`)
-            );
+            if (isAiRateLimitError(err)) {
+              controller.enqueue(encoder.encode(`event: error\n`));
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ error: 'AI is temporarily busy. Please try again in a minute.', code: 'AI_RATE_LIMITED' })}\n\n`
+                )
+              );
+            } else {
+              const errorMessage = err instanceof Error ? err.message : 'stream_error';
+              controller.enqueue(encoder.encode(`event: error\n`));
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ error: errorMessage })}\n\n`)
+              );
+            }
           } finally {
             controller.close();
           }
@@ -580,6 +609,14 @@ export async function POST(request: NextRequest) {
     });
     return applyRateLimitHeaders(responseJson, rl);
   } catch (error) {
+    // Groq TPM / rate-limit errors should return 429, not 500
+    if (isAiRateLimitError(error)) {
+      return apiError(
+        'AI is temporarily busy. Please try again in a minute.',
+        'AI_RATE_LIMITED',
+        429
+      );
+    }
     const message = error instanceof Error ? error.message : 'Internal server error';
     return apiInternalError(message);
   }

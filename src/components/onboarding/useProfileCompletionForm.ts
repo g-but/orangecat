@@ -104,6 +104,9 @@ export function useProfileCompletionForm(profile: Profile, onComplete: () => voi
           data.avatar_url = avatarUrl;
         }
       } else if (currentStep === 1) {
+        // Always include username — the API schema requires it
+        data.username = username.trim();
+        data.name = displayName.trim();
         if (bio.trim()) {
           data.bio = bio.trim();
         }

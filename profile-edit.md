@@ -1,0 +1,254 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - button "Toggle sidebar" [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+          - link "OrangeCat - Bitcoin crowdfunding platform" [ref=e8] [cursor=pointer]:
+            - /url: /
+            - img "OrangeCat - Cute cat in pirate hat" [ref=e10]
+            - text: OrangeCat
+        - generic [ref=e29]:
+          - img [ref=e30]
+          - combobox "Search" [ref=e33]
+          - generic [ref=e35]: ⌘K
+        - generic [ref=e36]:
+          - button "Create new" [ref=e39] [cursor=pointer]:
+            - img [ref=e40]
+          - button "Messages" [ref=e53] [cursor=pointer]:
+            - img [ref=e54]
+          - button "Notifications" [ref=e56] [cursor=pointer]:
+            - img [ref=e57]
+          - button "User menu" [ref=e61] [cursor=pointer]:
+            - img [ref=e64]
+            - generic [ref=e80]: Marco
+            - img [ref=e81]
+    - generic [ref=e44]:
+      - complementary [ref=e83]:
+        - generic [ref=e84]:
+          - img [ref=e88]
+          - navigation "Main navigation" [ref=e104]:
+            - generic [ref=e106]:
+              - link "Home" [ref=e108] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e109]
+              - link "Timeline" [ref=e113] [cursor=pointer]:
+                - /url: /timeline
+                - img [ref=e114]
+              - link "Messages" [ref=e117] [cursor=pointer]:
+                - /url: /messages
+                - img [ref=e118]
+              - link "My Cat" [ref=e121] [cursor=pointer]:
+                - /url: /dashboard/cat
+                - img [ref=e122]
+              - link "Explore" [ref=e126] [cursor=pointer]:
+                - /url: /discover
+                - img [ref=e127]
+            - generic [ref=e132]:
+              - link "Products" [ref=e134] [cursor=pointer]:
+                - /url: /dashboard/store
+                - img [ref=e135]
+              - link "Services" [ref=e140] [cursor=pointer]:
+                - /url: /dashboard/services
+                - img [ref=e141]
+              - link "AI Assistants" [ref=e145] [cursor=pointer]:
+                - /url: /dashboard/ai-assistants
+                - img [ref=e146]
+              - link "Wishlists" [ref=e150] [cursor=pointer]:
+                - /url: /dashboard/wishlists
+                - img [ref=e151]
+              - link "Projects" [ref=e156] [cursor=pointer]:
+                - /url: /dashboard/projects
+                - img [ref=e157]
+              - link "Causes" [ref=e163] [cursor=pointer]:
+                - /url: /dashboard/causes
+                - img [ref=e164]
+              - link "Research" [ref=e167] [cursor=pointer]:
+                - /url: /dashboard/research
+                - img [ref=e168]
+              - link "Groups" [ref=e172] [cursor=pointer]:
+                - /url: /dashboard/groups
+                - img [ref=e173]
+              - link "Events" [ref=e179] [cursor=pointer]:
+                - /url: /dashboard/events
+                - img [ref=e180]
+              - link "Wallets" [ref=e183] [cursor=pointer]:
+                - /url: /dashboard/wallets
+                - img [ref=e184]
+              - link "Assets" [ref=e188] [cursor=pointer]:
+                - /url: /dashboard/assets
+                - img [ref=e189]
+              - link "Loans" [ref=e193] [cursor=pointer]:
+                - /url: /dashboard/loans
+                - img [ref=e194]
+              - link "Investments" [ref=e200] [cursor=pointer]:
+                - /url: /dashboard/investments
+                - img [ref=e201]
+              - link "People" [ref=e205] [cursor=pointer]:
+                - /url: /dashboard/people
+                - img [ref=e206]
+            - generic [ref=e213]:
+              - link "Tasks" [ref=e215] [cursor=pointer]:
+                - /url: /dashboard/tasks
+                - img [ref=e216]
+              - link "Analytics" [ref=e220] [cursor=pointer]:
+                - /url: /dashboard/tasks/analytics
+                - img [ref=e221]
+            - generic [ref=e225]:
+              - link "Profile" [ref=e227] [cursor=pointer]:
+                - /url: /dashboard/info
+                - img [ref=e228]
+              - link "Settings" [ref=e232] [cursor=pointer]:
+                - /url: /settings
+                - img [ref=e233]
+              - link "Community" [ref=e237] [cursor=pointer]:
+                - /url: /community
+                - img [ref=e238]
+              - link "About" [ref=e242] [cursor=pointer]:
+                - /url: /about
+                - img [ref=e243]
+              - link "Help" [ref=e246] [cursor=pointer]:
+                - /url: /faq
+                - img [ref=e247]
+      - main [ref=e45]:
+        - generic [ref=e251]:
+          - generic [ref=e253]:
+            - generic [ref=e254]:
+              - generic [ref=e255]: Profile Completion
+              - generic [ref=e256]: 44%
+            - generic [ref=e259]:
+              - generic [ref=e260]: "To reach 100%, add:"
+              - list [ref=e261]:
+                - listitem [ref=e262]: Profile picture
+                - listitem [ref=e263]: Location
+                - listitem [ref=e264]: Public contact email
+                - listitem [ref=e265]: At least one social link
+                - listitem [ref=e266]: Phone number
+          - generic [ref=e267]:
+            - generic [ref=e268]:
+              - link "Back to View" [ref=e269] [cursor=pointer]:
+                - /url: /dashboard/info
+                - button "Back to View" [ref=e270]:
+                  - img [ref=e271]
+                  - text: Back to View
+              - img [ref=e274]
+              - heading "Edit Profile" [level=1] [ref=e277]
+            - paragraph [ref=e278]: Update your profile details. This information will be visible on your public profile.
+          - generic [ref=e282]:
+            - generic [ref=e283]:
+              - generic [ref=e287] [cursor=pointer]:
+                - img [ref=e288]
+                - paragraph [ref=e291]: Add banner photo
+              - generic [ref=e293] [cursor=pointer]:
+                - img [ref=e295]
+                - img [ref=e299]
+            - generic [ref=e302]:
+              - generic [ref=e303]:
+                - generic [ref=e304]:
+                  - heading "Profile" [level=3] [ref=e305]
+                  - paragraph [ref=e306]: Your basic profile information – username, name, bio and location.
+                - generic [ref=e307]:
+                  - generic [ref=e308]: Username *
+                  - generic [ref=e309]:
+                    - generic: "@"
+                    - textbox "your_unique_username" [ref=e312]: marcorossi
+                - generic [ref=e313]:
+                  - text: Name
+                  - textbox "Name" [ref=e316]:
+                    - /placeholder: Your display name
+                    - text: Marco Rossi
+                  - paragraph [ref=e317]: This is how others will see you
+                - generic [ref=e318]:
+                  - text: Bio
+                  - textbox "Bio" [ref=e320]:
+                    - /placeholder: Tell your story...
+                    - text: Maker, engineer, builder. Ich betreibe einen kleinen Makerspace in Basel. 3D-Druck, Laserschnitt, CNC — alles was man braucht um Ideen real zu machen. Open-source Hardware Enthusiast.
+                  - paragraph [ref=e321]: Share your story with the community
+                - generic [ref=e322]:
+                  - text: Location
+                  - generic [ref=e324]:
+                    - textbox "Type your city or address..." [ref=e327]
+                    - img [ref=e329]
+                  - paragraph [ref=e332]: "Choose how this appears below: show real city, hide it, or use a custom group like \"Moon\" or \"Hell\"."
+                - generic [ref=e333]:
+                  - generic [ref=e334]: Location visibility
+                  - generic [ref=e335]:
+                    - generic [ref=e336]:
+                      - radio "Show actual city/region" [checked] [ref=e337]
+                      - text: Show actual city/region
+                    - generic [ref=e338]:
+                      - radio "Hide my location" [ref=e339]
+                      - text: Hide my location
+                    - generic [ref=e340]:
+                      - radio "Use custom group" [ref=e341]
+                      - text: Use custom group
+              - generic [ref=e342]:
+                - generic [ref=e343]:
+                  - heading "Online Presence" [level=3] [ref=e344]
+                  - paragraph [ref=e345]: Your website and social media – where people can find you online.
+                - generic [ref=e346]:
+                  - text: Website
+                  - textbox "Website" [ref=e349]:
+                    - /placeholder: https://your-website.com
+                    - text: https://makerspace-basel.ch
+                - generic [ref=e350]:
+                  - generic [ref=e352]:
+                    - generic [ref=e353]:
+                      - generic [ref=e354]:
+                        - heading "Social Media & Links" [level=4] [ref=e355]
+                        - paragraph [ref=e356]: 0 links added
+                      - button "+ Add Link" [ref=e357] [cursor=pointer]
+                    - generic [ref=e358]:
+                      - paragraph [ref=e359]: No social links yet
+                      - paragraph [ref=e360]: Add links to build credibility and help supporters find you
+                      - button "Add Your First Link" [ref=e361] [cursor=pointer]:
+                        - img [ref=e362]
+                        - text: Add Your First Link
+                  - paragraph [ref=e363]:
+                    - text: 💡 Want to add wallets? Manage them in
+                    - link "My Wallets" [ref=e364] [cursor=pointer]:
+                      - /url: /dashboard/wallets
+              - generic [ref=e365]:
+                - generic [ref=e366]:
+                  - heading "Contact Information" [level=3] [ref=e367]
+                  - paragraph [ref=e368]: How people can reach you directly.
+                - generic [ref=e369]:
+                  - text: Contact Email (public)
+                  - textbox "Contact Email (public)" [ref=e372]:
+                    - /placeholder: contact@example.com
+                    - text: marco.rossi.test@proton.me
+                  - paragraph [ref=e373]: Visible on your public profile. Defaults to your registration email.
+                - generic [ref=e374]:
+                  - generic [ref=e375]:
+                    - img [ref=e376]
+                    - generic [ref=e379]: Registration Email (private)
+                  - paragraph [ref=e380]: marco.rossi.test@proton.me
+                  - paragraph [ref=e381]: Used for account login only
+                - generic [ref=e382]:
+                  - text: Phone (optional)
+                  - textbox "Phone (optional)" [ref=e385]:
+                    - /placeholder: +41 XX XXX XX XX
+                  - paragraph [ref=e386]: Helps supporters contact you
+              - generic [ref=e387]:
+                - generic [ref=e388]:
+                  - heading "Preferences" [level=3] [ref=e389]
+                  - paragraph [ref=e390]: Your display preferences – currency and other settings.
+                - generic [ref=e391]:
+                  - text: Default Currency
+                  - combobox "Default Currency" [ref=e392] [cursor=pointer]:
+                    - generic: CHF (Swiss Franc)
+                    - img [ref=e393]
+                  - combobox [ref=e395]
+                  - paragraph [ref=e396]: Prices and amounts will be displayed in this currency. All transactions are settled in Bitcoin.
+            - generic [ref=e397]:
+              - button "Cancel" [ref=e398] [cursor=pointer]
+              - button "Save Profile" [ref=e399] [cursor=pointer]:
+                - img [ref=e400]
+                - text: Save Profile
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e409] [cursor=pointer]:
+    - img [ref=e410]
+  - alert [ref=e413]

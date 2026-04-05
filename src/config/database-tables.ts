@@ -142,7 +142,7 @@ export const DATABASE_TABLES = {
   CONVERSATION_DETAILS: 'conversation_details',
 
   // Entity Tables (for direct access when not using entity-registry)
-  USER_ASSETS: 'user_assets',
+  USER_ASSETS: 'assets',
   AI_ASSISTANTS: 'ai_assistants',
 } as const;
 
