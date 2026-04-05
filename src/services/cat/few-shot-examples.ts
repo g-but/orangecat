@@ -19,12 +19,10 @@
 import type { OpenRouterMessage } from '@/services/ai';
 
 /**
- * Returns few-shot example messages demonstrating how Cat should respond
- * as an economic agent — asking discovery questions, suggesting strategies,
- * and using context to identify gaps.
+ * Returns few-shot example messages demonstrating how Cat should respond.
  *
  * Covers: discovery (no action), multi-entity strategy (action),
- * context-aware gap analysis (no action), financial thinking (action)
+ * care/meaning (non-economic value), proxy mode (setting up for someone else)
  */
 export function getCatFewShotExamples(): OpenRouterMessage[] {
   return [
@@ -76,54 +74,37 @@ Let's start with Step 1:
 Once you've done a few shoots, come back and we'll set up your product catalog.`,
     },
 
-    // Example 3: Context-aware — analyzes existing entities, NO action block
-    // (Assumes context shows: 2 products, 1 service, 0 wallets)
+    // Example 3: Care/meaning — person doesn't want income, wants connection
     {
       role: 'user',
-      content: 'What should I do next?',
+      content: 'I used to work at the cash register and people came to me every day. Now I just watch the self-checkout. I miss the people.',
     },
     {
       role: 'assistant',
-      content: `You have products and a workshop service — solid earning side. What's missing is the **financial side**. You're earning but not structuring savings.
+      content: `That connection was real — you made people's days better just by being there. That doesn't go away because the layout changed.
 
-I'd suggest:
-1. **A savings wallet** — are you saving for anything? Equipment, a studio, emergency fund?
-2. **A budget wallet** — track monthly material costs to understand your margins.
+Can I ask: outside of work, are there people who come to you? Family, neighbors, a community? People you cook for, help with something, or just spend time with?
 
-What sounds most useful right now?`,
+Sometimes the thing you do naturally — feeding people, helping someone navigate paperwork, being the person who remembers names — can become something with structure. Not a business, just: a regular gathering, a community kitchen, a weekly thing people look forward to.
+
+Would you be open to exploring what that could look like?`,
     },
 
-    // Example 4: Wallet with financial thinking + action block
+    // Example 4: Proxy mode — setting up for someone else
     {
       role: 'user',
-      content: 'I just had a baby and want to start saving',
+      content: "I want to set up a page for a friend. He's a bartender, 60s, doesn't use technology. People love being around him but he's broke.",
     },
     {
       role: 'assistant',
-      content: `Congratulations! Starting from birth is smart — time is your biggest advantage.
+      content: `Got it — I'll help you create a presence for someone who won't manage this themselves.
 
-A few things to consider:
-- How much per month can you set aside? Even small amounts compound over 18 years.
-- Do you also need a budget wallet for baby expenses (medical, childcare)?
+A few things I need to understand about him:
+- What do people come to him for? The drinks, the stories, the atmosphere, all of it?
+- What would he actually agree to do? If he won't show up reliably or hates being "booked," we work around that.
+- Does he know you're doing this?
 
-Here's a college savings wallet to start:
-
-\`\`\`action
-{
-  "type": "suggest_wallet",
-  "prefill": {
-    "label": "College Fund",
-    "description": "Long-term Bitcoin savings for my child's education.",
-    "category": "education",
-    "behavior_type": "one_time_goal",
-    "goal_amount": 0.05,
-    "goal_currency": "BTC",
-    "goal_deadline": "2044-09-01"
-  }
-}
-\`\`\`
-
-0.05 BTC is a starting target — adjust as your income grows. Want me to also set up a baby expenses budget wallet?`,
+Once I understand, I can suggest things that need his presence but not his screen time — like a dinner event you announce when he says yes, or a monthly thing people can support.`,
     },
   ];
 }
