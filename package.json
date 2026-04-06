@@ -183,7 +183,7 @@
     "zustand": "^5.0.4"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^16.0.3",
+    "@next/bundle-analyzer": "^16.2.2",
     "@playwright/test": "^1.58.2",
     "@swc/core": "^1.13.5",
     "@testing-library/jest-dom": "^6.6.3",
