@@ -82,8 +82,8 @@ function CurrencyBreakdown({ amount, currency }: { amount: number; currency: str
           <span className="font-mono font-semibold">₿ {btc.toFixed(8)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Satoshis</span>
-          <span className="font-mono font-semibold">{fmt(Math.round(btc * 100_000_000), 0)} sats (protocol)</span>
+          <span className="text-gray-600">Lightning (sats)</span>
+          <span className="font-mono font-semibold">{fmt(Math.round(btc * 100_000_000), 0)}</span>
         </div>
         <div className="border-t border-gray-100 pt-2 space-y-1 text-xs">
           <div className="flex justify-between text-gray-500">

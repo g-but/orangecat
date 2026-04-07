@@ -43,7 +43,7 @@ const config: EntityDetailConfig = {
         <CardContent className="space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-500">
-              {Number(entity.raised_amount || 0)} BTC raised
+              {displayBTC(entity.raised_amount)} raised
             </span>
             <span className="font-bold text-lg text-rose-600">
               {displayBTC(entity.goal_amount)} goal

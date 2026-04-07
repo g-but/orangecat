@@ -85,7 +85,7 @@ const fieldGroups: FieldGroup[] = [
           { value: 'USD', label: 'US Dollar (USD)' },
           { value: 'EUR', label: 'Euro (EUR)' },
           { value: 'BTC', label: 'Bitcoin (BTC)' },
-          { value: 'SATS', label: 'Satoshis (SATS)' },
+          { value: 'BTC', label: 'Bitcoin (BTC)' },
         ],
         hint: 'Your preferred currency for displaying prices. All transactions settle in Bitcoin.',
       },

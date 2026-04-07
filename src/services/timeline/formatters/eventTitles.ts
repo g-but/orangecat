@@ -44,7 +44,7 @@ export function generateProjectEventDescription(
 ): string {
   switch (eventType) {
     case 'project_created':
-      return `Started working on "${project.title}" with a goal of ${project.goal_amount || 0} ${project.currency || 'sats'}`;
+      return `Started working on "${project.title}" with a goal of ${project.goal_amount || 0} ${project.currency || 'BTC'}`;
     case 'project_published':
       return `"${project.title}" is now live and accepting funding`;
     case 'project_completed':

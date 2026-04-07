@@ -57,7 +57,7 @@ export function getCurrencyHint(currency: Currency): string {
   if (currency === 'BTC') {
     return 'Bitcoin-native: No fractions, direct BTC amounts';
   } else if (currency === 'SATS') {
-    return 'Satoshis: For Bitcoin-native users who prefer whole numbers';
+    return 'Bitcoin: All amounts stored in BTC';
   } else {
     return 'Fiat: Can benefit from Bitcoin price appreciation';
   }

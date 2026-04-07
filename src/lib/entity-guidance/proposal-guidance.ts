@@ -153,7 +153,7 @@ export const proposalGuidanceContent: Record<NonNullable<ProposalFieldType>, Gui
   },
   amount_btc: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-blue-600' }),
-    title: 'Amount (Satoshis)',
+    title: 'Amount (BTC)',
     description:
       'The amount to spend in satoshis. 1 BTC = 100,000,000 sats. Be specific and justify the amount.',
     tips: [
