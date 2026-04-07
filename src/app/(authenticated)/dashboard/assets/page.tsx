@@ -19,7 +19,7 @@ export default function AssetsPage() {
       config={assetEntityConfig}
       title="My Assets"
       description="Manage your assets and use them as collateral for loans"
-      createButtonLabel="Add Asset"
+      createButtonLabel="Create Asset"
     />
   );
 }

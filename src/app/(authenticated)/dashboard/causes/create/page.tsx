@@ -21,6 +21,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { EntityCreationWizard } from '@/components/create';
 import { EntityForm } from '@/components/create/EntityForm';
 import { causeConfig } from '@/config/entity-configs';
+import { useCreatePrefill } from '@/hooks/useCreatePrefill';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -35,7 +36,11 @@ export default function CreateCausePage() {
   const [causeData, setCauseData] = useState<Partial<UserCauseFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
   const [editError, setEditError] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState<Partial<UserCauseFormData> | undefined>(undefined);
+
+  const { initialData } = useCreatePrefill<UserCauseFormData>({
+    entityType: 'cause',
+    enabled: !editId,
+  });
 
   // Fetch cause data if in edit mode
   useEffect(() => {
@@ -65,31 +70,6 @@ export default function CreateCausePage() {
       setLoading(false);
     }
   }, [editId, user?.id, hydrated]);
-
-  // Prefill support from URL params (create mode only)
-  useEffect(() => {
-    if (editId) {
-      return;
-    }
-
-    const title = searchParams?.get('title');
-    const description = searchParams?.get('description');
-    const category = searchParams?.get('category');
-
-    if (title || description) {
-      const prefillData: Partial<UserCauseFormData> = {};
-      if (title) {
-        prefillData.title = title;
-      }
-      if (description) {
-        prefillData.description = description;
-      }
-      if (category) {
-        prefillData.cause_category = category;
-      }
-      setInitialData(prefillData);
-    }
-  }, [searchParams, editId]);
 
   if (loading) {
     return <Loading fullScreen message="Loading cause..." />;

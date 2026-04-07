@@ -167,7 +167,7 @@ function DocumentPageContent() {
             <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
               <Cat className="h-6 w-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Add Context for My Cat</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Create Context for My Cat</h1>
           </div>
           <p className="text-gray-600 text-lg">
             Help My Cat understand you better by adding context about your goals, skills, and

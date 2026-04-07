@@ -21,6 +21,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { EntityCreationWizard } from '@/components/create';
 import { EntityForm } from '@/components/create/EntityForm';
 import { researchWizardConfig } from '@/config/entity-configs';
+import { useCreatePrefill } from '@/hooks/useCreatePrefill';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -35,9 +36,11 @@ export default function CreateResearchPage() {
   const [researchData, setResearchData] = useState<Partial<ResearchWizardFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
   const [editError, setEditError] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState<Partial<ResearchWizardFormData> | undefined>(
-    undefined
-  );
+
+  const { initialData } = useCreatePrefill<ResearchWizardFormData>({
+    entityType: 'research',
+    enabled: !editId,
+  });
 
   // Fetch research data if in edit mode
   useEffect(() => {
@@ -69,31 +72,6 @@ export default function CreateResearchPage() {
       setLoading(false);
     }
   }, [editId, user?.id, hydrated]);
-
-  // Prefill support from URL params (create mode only)
-  useEffect(() => {
-    if (editId) {
-      return;
-    }
-
-    const title = searchParams?.get('title');
-    const description = searchParams?.get('description');
-    const field = searchParams?.get('field');
-
-    if (title || description) {
-      const prefillData: Partial<ResearchWizardFormData> = {};
-      if (title) {
-        prefillData.title = title;
-      }
-      if (description) {
-        prefillData.description = description;
-      }
-      if (field) {
-        prefillData.field = field;
-      }
-      setInitialData(prefillData);
-    }
-  }, [searchParams, editId]);
 
   if (loading) {
     return <Loading fullScreen message="Loading research..." />;

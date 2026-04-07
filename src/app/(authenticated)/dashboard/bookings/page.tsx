@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import EmptyState from '@/components/ui/EmptyState';
 import { logger } from '@/utils/logger';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { STATUS } from '@/config/database-constants';
@@ -131,17 +132,17 @@ export default function BookingsDashboardPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       ) : filteredBookings.length === 0 ? (
-        <div className="text-center py-12">
-          <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-1">No bookings found</h3>
-          <p className="text-gray-500">
-            {activeTab === 'incoming'
+        <EmptyState
+          icon={Calendar}
+          title="No bookings found"
+          description={
+            activeTab === 'incoming'
               ? "You don't have any pending booking requests"
               : activeTab === 'confirmed'
                 ? "You don't have any confirmed bookings"
-                : 'No booking history yet'}
-          </p>
-        </div>
+                : 'No booking history yet'
+          }
+        />
       ) : (
         <div className="space-y-4">
           {filteredBookings.map(booking => (

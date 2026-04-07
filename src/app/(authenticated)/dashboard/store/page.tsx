@@ -19,7 +19,7 @@ export default function StoreDashboardPage() {
       config={productEntityConfig}
       title="My Store"
       description="Manage your products and build your personal marketplace"
-      createButtonLabel="Add Product"
+      createButtonLabel="Create Product"
     />
   );
 }

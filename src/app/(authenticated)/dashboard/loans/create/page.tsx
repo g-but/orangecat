@@ -21,6 +21,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { EntityCreationWizard } from '@/components/create';
 import { EntityForm } from '@/components/create/EntityForm';
 import { loanConfig } from '@/config/entity-configs';
+import { useCreatePrefill } from '@/hooks/useCreatePrefill';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -34,7 +35,11 @@ export default function CreateLoanPage() {
   const { user, hydrated } = useAuth();
   const [loanData, setLoanData] = useState<Partial<LoanFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
-  const [initialData, setInitialData] = useState<Partial<LoanFormData> | undefined>(undefined);
+
+  const { initialData } = useCreatePrefill<LoanFormData>({
+    entityType: 'loan',
+    enabled: !editId,
+  });
 
   // Fetch loan data if in edit mode
   useEffect(() => {
@@ -59,31 +64,6 @@ export default function CreateLoanPage() {
       setLoading(false);
     }
   }, [editId, user?.id, hydrated]);
-
-  // Prefill support from URL params (create mode only)
-  useEffect(() => {
-    if (editId) {
-      return;
-    } // Don't prefill in edit mode
-
-    const title = searchParams?.get('title');
-    const description = searchParams?.get('description');
-    const loanType = searchParams?.get('loan_type');
-
-    if (title || description) {
-      const prefillData: Partial<LoanFormData> = {};
-      if (title) {
-        prefillData.title = title;
-      }
-      if (description) {
-        prefillData.description = description;
-      }
-      if (loanType) {
-        prefillData.loan_type = loanType as LoanFormData['loan_type'];
-      }
-      setInitialData(prefillData);
-    }
-  }, [searchParams, editId]);
 
   if (loading) {
     return <Loading fullScreen message="Loading loan..." />;

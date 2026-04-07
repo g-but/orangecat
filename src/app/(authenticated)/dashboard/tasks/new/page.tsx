@@ -197,7 +197,7 @@ export default function NewTaskPage() {
 
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">New Task</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Create Task</h1>
             <p className="text-gray-600 mt-1">Create a new task for the team</p>
           </div>
 

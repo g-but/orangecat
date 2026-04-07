@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Loading from '@/components/Loading';
-import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import EmptyState from '@/components/ui/EmptyState';
 import { Users, Search } from 'lucide-react';
 import Link from 'next/link';
 import InviteBanner from './components/InviteBanner';
@@ -114,19 +114,19 @@ export default function PeoplePage() {
 
         {/* Connections List */}
         {connections.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No connections yet</h3>
-              <p className="text-gray-600 mb-6">{emptyMessage}</p>
+          <EmptyState
+            icon={Users}
+            title="No connections yet"
+            description={emptyMessage}
+            action={
               <Link href="/discover?section=people">
                 <Button>
                   <Search className="w-4 h-4 mr-2" />
                   Discover People
                 </Button>
               </Link>
-            </CardContent>
-          </Card>
+            }
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {connections.map(connection => (

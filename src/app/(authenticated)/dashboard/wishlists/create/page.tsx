@@ -16,6 +16,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { EntityCreationWizard } from '@/components/create';
 import { EntityForm } from '@/components/create/EntityForm';
 import { wishlistConfig } from '@/config/entity-configs';
+import { useCreatePrefill } from '@/hooks/useCreatePrefill';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -30,7 +31,11 @@ export default function CreateWishlistPage() {
   const [wishlistData, setWishlistData] = useState<Partial<WishlistFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
   const [editError, setEditError] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState<Partial<WishlistFormData> | undefined>(undefined);
+
+  const { initialData } = useCreatePrefill<WishlistFormData>({
+    entityType: 'wishlist',
+    enabled: !editId,
+  });
 
   // Fetch wishlist data if in edit mode
   useEffect(() => {
@@ -62,31 +67,6 @@ export default function CreateWishlistPage() {
       setLoading(false);
     }
   }, [editId, user?.id, hydrated]);
-
-  // Prefill support from URL params (create mode only)
-  useEffect(() => {
-    if (editId) {
-      return;
-    }
-
-    const title = searchParams?.get('title');
-    const description = searchParams?.get('description');
-    const wishlistType = searchParams?.get('type');
-
-    if (title || description) {
-      const prefillData: Partial<WishlistFormData> = {};
-      if (title) {
-        prefillData.title = title;
-      }
-      if (description) {
-        prefillData.description = description;
-      }
-      if (wishlistType) {
-        prefillData.type = wishlistType as WishlistFormData['type'];
-      }
-      setInitialData(prefillData);
-    }
-  }, [searchParams, editId]);
 
   if (loading) {
     return <Loading fullScreen message="Loading wishlist..." />;

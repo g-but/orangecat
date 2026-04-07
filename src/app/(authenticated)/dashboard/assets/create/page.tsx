@@ -16,6 +16,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { EntityCreationWizard } from '@/components/create';
 import { EntityForm } from '@/components/create/EntityForm';
 import { assetConfig } from '@/config/entity-configs';
+import { useCreatePrefill } from '@/hooks/useCreatePrefill';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -30,7 +31,11 @@ export default function CreateAssetPage() {
   const [assetData, setAssetData] = useState<Partial<AssetFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
   const [editError, setEditError] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState<Partial<AssetFormData> | undefined>(undefined);
+
+  const { initialData } = useCreatePrefill<AssetFormData>({
+    entityType: 'asset',
+    enabled: !editId,
+  });
 
   // Fetch asset data if in edit mode
   useEffect(() => {
@@ -60,31 +65,6 @@ export default function CreateAssetPage() {
       setLoading(false);
     }
   }, [editId, user?.id, hydrated]);
-
-  // Prefill support from URL params (create mode only)
-  useEffect(() => {
-    if (editId) {
-      return;
-    }
-
-    const title = searchParams?.get('title');
-    const description = searchParams?.get('description');
-    const assetType = searchParams?.get('type');
-
-    if (title || description) {
-      const prefillData: Partial<AssetFormData> = {};
-      if (title) {
-        prefillData.title = title;
-      }
-      if (description) {
-        prefillData.description = description;
-      }
-      if (assetType) {
-        prefillData.type = assetType as AssetFormData['type'];
-      }
-      setInitialData(prefillData);
-    }
-  }, [searchParams, editId]);
 
   if (loading) {
     return <Loading fullScreen message="Loading asset..." />;

@@ -21,6 +21,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { EntityCreationWizard } from '@/components/create';
 import { EntityForm } from '@/components/create/EntityForm';
 import { productConfig } from '@/config/entity-configs';
+import { useCreatePrefill } from '@/hooks/useCreatePrefill';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -35,9 +36,11 @@ export default function CreateProductPage() {
   const [productData, setProductData] = useState<Partial<UserProductFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
   const [editError, setEditError] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState<Partial<UserProductFormData> | undefined>(
-    undefined
-  );
+
+  const { initialData } = useCreatePrefill<UserProductFormData>({
+    entityType: 'product',
+    enabled: !editId,
+  });
 
   // Fetch product data if in edit mode
   useEffect(() => {
@@ -69,31 +72,6 @@ export default function CreateProductPage() {
       setLoading(false);
     }
   }, [editId, user?.id, hydrated]);
-
-  // Prefill support from URL params (create mode only)
-  useEffect(() => {
-    if (editId) {
-      return;
-    }
-
-    const title = searchParams?.get('title');
-    const description = searchParams?.get('description');
-    const category = searchParams?.get('category');
-
-    if (title || description) {
-      const prefillData: Partial<UserProductFormData> = {};
-      if (title) {
-        prefillData.title = title;
-      }
-      if (description) {
-        prefillData.description = description;
-      }
-      if (category) {
-        prefillData.category = category;
-      }
-      setInitialData(prefillData);
-    }
-  }, [searchParams, editId]);
 
   if (loading) {
     return <Loading fullScreen message="Loading product..." />;

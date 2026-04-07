@@ -151,7 +151,7 @@ export default function TasksPage() {
       </Button>
       <Button href={ROUTES.DASHBOARD.TASKS_NEW} className="flex items-center gap-2 bg-gradient-to-r from-tiffany-600 to-tiffany-700">
         <Plus className="h-4 w-4" />
-        <span>New task</span>
+        <span>Create Task</span>
       </Button>
     </div>
   );
@@ -200,7 +200,7 @@ export default function TasksPage() {
           </p>
           <Button href={ROUTES.DASHBOARD.TASKS_NEW} className="inline-flex">
             <Plus className="h-4 w-4 mr-2" />
-            New task
+            Create Task
           </Button>
         </div>
       ) : (

@@ -16,7 +16,8 @@ import { Loan, LoanOffer } from '@/types/loans';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DollarSign, Target, TrendingUp } from 'lucide-react';
+import { Coins, DollarSign, Target, TrendingUp } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
 import { AvailableLoans } from '@/components/loans/AvailableLoans';
 import { LoanOffersList } from '@/components/loans/LoanOffersList';
 import { CreateLoanDialog } from '@/components/loans/CreateLoanDialog';
@@ -275,13 +276,11 @@ export default function LoansPage() {
                 />
               </>
             ) : (
-              <div className="text-center py-12">
-                <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No loans available</h3>
-                <p className="text-muted-foreground">
-                  Check back later for community loan listings
-                </p>
-              </div>
+              <EmptyState
+                icon={Coins}
+                title="No loans available"
+                description="Check back later for community loan listings"
+              />
             )}
           </TabsContent>
 
@@ -289,16 +288,16 @@ export default function LoansPage() {
             {myOffers.length > 0 ? (
               <LoanOffersList offers={myOffers} onOfferUpdated={loadOffers} />
             ) : (
-              <div className="text-center py-12">
-                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No offers made yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Browse available loans to make your first refinancing offer
-                </p>
-                <Button onClick={() => setActiveTab('available')} variant="outline">
-                  Browse Available Loans
-                </Button>
-              </div>
+              <EmptyState
+                icon={TrendingUp}
+                title="No offers made yet"
+                description="Browse available loans to make your first refinancing offer"
+                action={
+                  <Button onClick={() => setActiveTab('available')} variant="outline">
+                    Browse Available Loans
+                  </Button>
+                }
+              />
             )}
           </TabsContent>
         </Tabs>

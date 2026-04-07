@@ -16,6 +16,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { EntityCreationWizard } from '@/components/create';
 import { EntityForm } from '@/components/create/EntityForm';
 import { groupConfig } from '@/config/entity-configs';
+import { useCreatePrefill } from '@/hooks/useCreatePrefill';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -30,9 +31,11 @@ export default function CreateGroupPage() {
   const [groupData, setGroupData] = useState<Partial<CreateGroupSchemaType> | null>(null);
   const [loading, setLoading] = useState(!!editId);
   const [editError, setEditError] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState<Partial<CreateGroupSchemaType> | undefined>(
-    undefined
-  );
+
+  const { initialData } = useCreatePrefill<CreateGroupSchemaType>({
+    entityType: 'group',
+    enabled: !editId,
+  });
 
   // Fetch group data if in edit mode
   useEffect(() => {
@@ -62,31 +65,6 @@ export default function CreateGroupPage() {
       setLoading(false);
     }
   }, [editId, user?.id, hydrated]);
-
-  // Prefill support from URL params (create mode only)
-  useEffect(() => {
-    if (editId) {
-      return;
-    }
-
-    const name = searchParams?.get('name');
-    const description = searchParams?.get('description');
-    const label = searchParams?.get('label');
-
-    if (name || description) {
-      const prefillData: Partial<CreateGroupSchemaType> = {};
-      if (name) {
-        prefillData.name = name;
-      }
-      if (description) {
-        prefillData.description = description;
-      }
-      if (label) {
-        prefillData.label = label as CreateGroupSchemaType['label'];
-      }
-      setInitialData(prefillData);
-    }
-  }, [searchParams, editId]);
 
   if (loading) {
     return <Loading fullScreen message="Loading group..." />;

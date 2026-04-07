@@ -16,6 +16,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { EntityCreationWizard } from '@/components/create';
 import { EntityForm } from '@/components/create/EntityForm';
 import { aiAssistantConfig } from '@/config/entity-configs';
+import { useCreatePrefill } from '@/hooks/useCreatePrefill';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -30,9 +31,11 @@ export default function CreateAIAssistantPage() {
   const [assistantData, setAssistantData] = useState<Partial<AIAssistantFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
   const [editError, setEditError] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState<Partial<AIAssistantFormData> | undefined>(
-    undefined
-  );
+
+  const { initialData } = useCreatePrefill<AIAssistantFormData>({
+    entityType: 'ai_assistant',
+    enabled: !editId,
+  });
 
   // Fetch assistant data if in edit mode
   useEffect(() => {
@@ -66,31 +69,6 @@ export default function CreateAIAssistantPage() {
       setLoading(false);
     }
   }, [editId, user?.id, hydrated]);
-
-  // Prefill support from URL params (create mode only)
-  useEffect(() => {
-    if (editId) {
-      return;
-    }
-
-    const title = searchParams?.get('title');
-    const description = searchParams?.get('description');
-    const category = searchParams?.get('category');
-
-    if (title || description) {
-      const prefillData: Partial<AIAssistantFormData> = {};
-      if (title) {
-        prefillData.title = title;
-      }
-      if (description) {
-        prefillData.description = description;
-      }
-      if (category) {
-        prefillData.category = category;
-      }
-      setInitialData(prefillData);
-    }
-  }, [searchParams, editId]);
 
   if (loading) {
     return <Loading fullScreen message="Loading AI assistant..." />;

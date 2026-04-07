@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { EntityCreationWizard } from '@/components/create';
 import { EntityForm } from '@/components/create/EntityForm';
 import { investmentConfig } from '@/config/entity-configs';
+import { useCreatePrefill } from '@/hooks/useCreatePrefill';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -25,9 +26,11 @@ export default function CreateInvestmentPage() {
   const { user, hydrated } = useAuth();
   const [investmentData, setInvestmentData] = useState<Partial<InvestmentFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
-  const [initialData, setInitialData] = useState<Partial<InvestmentFormData> | undefined>(
-    undefined
-  );
+
+  const { initialData } = useCreatePrefill<InvestmentFormData>({
+    entityType: 'investment',
+    enabled: !editId,
+  });
 
   // Fetch investment data if in edit mode
   useEffect(() => {
@@ -52,27 +55,6 @@ export default function CreateInvestmentPage() {
       setLoading(false);
     }
   }, [editId, user?.id, hydrated]);
-
-  // Prefill support from URL params (create mode only)
-  useEffect(() => {
-    if (editId) {
-      return;
-    }
-
-    const title = searchParams?.get('title');
-    const description = searchParams?.get('description');
-
-    if (title || description) {
-      const prefillData: Partial<InvestmentFormData> = {};
-      if (title) {
-        prefillData.title = title;
-      }
-      if (description) {
-        prefillData.description = description;
-      }
-      setInitialData(prefillData);
-    }
-  }, [searchParams, editId]);
 
   if (loading) {
     return <Loading fullScreen message="Loading investment..." />;

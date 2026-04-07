@@ -19,7 +19,7 @@ export default function ServicesDashboardPage() {
       config={serviceEntityConfig}
       title="My Services"
       description="Offer your expertise and skills to the community"
-      createButtonLabel="Add Service"
+      createButtonLabel="Create Service"
     />
   );
 }

@@ -30,6 +30,13 @@ interface BasePrefillFields {
   location?: string;
   start_date?: string;
   end_date?: string;
+  // Entity-specific string fields parsed from URL params
+  name?: string;
+  label?: string;
+  field?: string;
+  type?: string;
+  loan_type?: string;
+  cause_category?: string;
 }
 
 interface UseCreatePrefillOptions {
@@ -79,8 +86,9 @@ export function useCreatePrefill<T extends Record<string, unknown>>({
     const title = searchParams?.get('title');
     const description = searchParams?.get('description');
     const category = searchParams?.get('category');
+    const name = searchParams?.get('name');
 
-    if (title || description) {
+    if (title || description || name) {
       const prefillData: BasePrefillFields = {};
       if (title) {
         prefillData.title = title;
@@ -90,6 +98,9 @@ export function useCreatePrefill<T extends Record<string, unknown>>({
       }
       if (category) {
         prefillData.category = category;
+      }
+      if (name) {
+        prefillData.name = name;
       }
 
       // Parse additional fields from URL params
@@ -103,7 +114,7 @@ export function useCreatePrefill<T extends Record<string, unknown>>({
           }
         }
       }
-      const stringFields = ['goal_deadline', 'location', 'start_date', 'end_date'] as const;
+      const stringFields = ['goal_deadline', 'location', 'start_date', 'end_date', 'label', 'field', 'type', 'loan_type', 'cause_category'] as const;
       for (const field of stringFields) {
         const val = searchParams?.get(field);
         if (val) {
