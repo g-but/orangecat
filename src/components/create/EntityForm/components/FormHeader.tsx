@@ -3,8 +3,8 @@
  * Renders back link and page title
  */
 
-import Link from 'next/link';
-import { ArrowLeft, LucideIcon } from 'lucide-react';
+import { type LucideIcon } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 
 interface FormHeaderProps {
   icon: LucideIcon;
@@ -27,13 +27,13 @@ export function FormHeader({
 }: FormHeaderProps) {
   return (
     <div className="mb-6">
-      <Link
-        href={backUrl}
-        className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to {namePlural}
-      </Link>
+      <Breadcrumb
+        items={[
+          { label: namePlural, href: backUrl },
+          { label: `${mode === 'create' ? 'Create' : 'Edit'} ${name}` },
+        ]}
+        className="mb-4"
+      />
       <div className="flex items-center gap-3">
         <Icon className={`w-8 h-8 text-${colorTheme}-600`} />
         <div>

@@ -22,6 +22,7 @@ import PublicEntityTimestamps from '@/components/public/PublicEntityTimestamps';
 import { PublicEntityPaymentSection } from '@/components/payment';
 import { fetchEntityOwner } from '@/lib/entities/fetchEntityOwner';
 import { ROUTES } from '@/config/routes';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import type { ReactNode } from 'react';
 
 // Color theme → Tailwind class mapping
@@ -132,13 +133,13 @@ export default async function PublicEntityDetailPage({
       <div className={`min-h-screen bg-gradient-to-br ${gradient}`}>
         <div className="bg-white border-b border-gray-200">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <Link
-              href={config.backHref || ROUTES.DISCOVER}
-              className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {config.backText || 'Back to Discover'}
-            </Link>
+            <Breadcrumb
+              items={[
+                { label: meta.namePlural, href: meta.publicBasePath || ROUTES.DISCOVER },
+                { label: entity.title },
+              ]}
+              className="mb-4"
+            />
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
                 <div
