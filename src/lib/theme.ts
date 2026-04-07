@@ -130,10 +130,10 @@ export const componentColors = {
   },
   
   // Currency display
-  currencyDisplay: (currency: 'BTC' | 'USD' | 'CHF' | 'SATS') => ({
-    className: currency === 'BTC' || currency === 'SATS' ? 'text-bitcoinOrange font-medium' : 'text-gray-600',
+  currencyDisplay: (currency: 'BTC' | 'USD' | 'CHF' | string) => ({
+    className: currency === 'BTC' ? 'text-bitcoinOrange font-medium' : 'text-gray-600',
     style: {
-      color: currency === 'BTC' || currency === 'SATS' ? colors.bitcoin.main : colors.neutral.gray600,
+      color: currency === 'BTC' ? colors.bitcoin.main : colors.neutral.gray600,
     }
   }),
   
