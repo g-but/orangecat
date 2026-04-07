@@ -175,7 +175,7 @@ async function generateOnchainInvoice(
     payment_hash: null,
     onchain_address: address,
     qr_data: bip21Uri,
-    // On-chain payments don't have a hard expiry, but we set a soft one
-    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+    // On-chain payments don't expire — address is valid forever
+    expires_at: null,
   };
 }
