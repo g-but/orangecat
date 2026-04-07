@@ -22,7 +22,7 @@ const config: EntityDetailConfig = {
     ...(entity.goal_amount && {
       funding: {
         '@type': 'MonetaryGrant',
-        amount: { '@type': 'MonetaryAmount', value: entity.goal_amount, currency: 'SATS' },
+        amount: { '@type': 'MonetaryAmount', value: entity.goal_amount, currency: 'BTC' },
       },
     }),
   }),

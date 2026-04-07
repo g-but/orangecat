@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { ROUTES } from '@/config/routes';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
-import { satoshisToBitcoin, bitcoinToSatoshis } from '@/services/currency';
+// DB stores amounts in BTC directly (NUMERIC(18,8)), no conversion needed
 import type { ProjectFormData, FormErrors, ProjectStatus } from './types';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { getCompletionPercentage } from './constants';
@@ -129,11 +129,8 @@ export function useProjectForm({
         const project = result.data;
 
         const currency = project.currency || PLATFORM_DEFAULT_CURRENCY;
-        const isBitcoinCurrency = currency === 'BTC' || currency === 'SATS';
         const goalAmount = project.goal_amount
-          ? isBitcoinCurrency
-            ? satoshisToBitcoin(project.goal_amount).toString()
-            : project.goal_amount.toString()
+          ? project.goal_amount.toString()
           : '';
 
         setFormData({
@@ -251,11 +248,7 @@ export function useProjectForm({
 
       let goalAmount = null;
       if (formData.goalAmount) {
-        const amount = parseFloat(formData.goalAmount);
-        goalAmount =
-          formData.goalCurrency === 'BTC' || formData.goalCurrency === 'SATS'
-            ? bitcoinToSatoshis(amount)
-            : Math.round(amount);
+        goalAmount = parseFloat(formData.goalAmount);
       }
 
       let websiteUrl = formData.websiteUrl.trim() || null;

@@ -63,8 +63,8 @@ function formatCurrency(amount: number, currency: string = 'USD') {
   if (currency === 'BTC') {
     return `${amount.toFixed(8)} BTC`;
   }
-  if (currency === 'SATS') {
-    return `${amount.toLocaleString()} SATS`;
+  if (currency === 'BTC') {
+    return `${amount.toLocaleString()} BTC`;
   }
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -125,7 +125,7 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
       amount: {
         '@type': 'MonetaryAmount',
         value: loan.original_amount,
-        currency: loan.currency || 'SATS',
+        currency: loan.currency || 'BTC',
       },
       ...(loan.interest_rate !== null &&
         loan.interest_rate !== undefined && { annualPercentageRate: loan.interest_rate }),

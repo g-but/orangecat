@@ -25,8 +25,8 @@ export default async function LoanDetailPage({ params }: PageProps) {
     if (currency === 'BTC') {
       return `${amount.toFixed(8)} BTC`;
     }
-    if (currency === 'SATS') {
-      return `${amount.toLocaleString()} SATS`;
+    if (currency === 'BTC') {
+      return `${amount.toLocaleString()} BTC`;
     }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',

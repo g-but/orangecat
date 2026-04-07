@@ -234,9 +234,9 @@ export default function AnalyticsPage() {
                       <p className="text-sm font-medium text-gray-600">{metric.label}</p>
                       <p className="text-2xl font-bold text-gray-900">
                         {typeof metric.value === 'number' && metric.label === 'Total Raised'
-                          ? formatCurrency(metric.value, 'SATS')
+                          ? formatCurrency(metric.value, 'BTC')
                           : typeof metric.value === 'number' && metric.label === 'Avg Donation'
-                            ? formatCurrency(metric.value, 'SATS')
+                            ? formatCurrency(metric.value, 'BTC')
                             : metric.value}
                       </p>
                     </div>
@@ -297,10 +297,10 @@ export default function AnalyticsPage() {
                           </div>
                         </td>
                         <td className="py-3 px-4 font-medium">
-                          {formatCurrency(project.totalRaised, 'SATS')}
+                          {formatCurrency(project.totalRaised, 'BTC')}
                         </td>
                         <td className="py-3 px-4 text-gray-600">
-                          {formatCurrency(project.goalAmount, 'SATS')}
+                          {formatCurrency(project.goalAmount, 'BTC')}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
@@ -315,7 +315,7 @@ export default function AnalyticsPage() {
                         </td>
                         <td className="py-3 px-4 font-medium">{project.supporters}</td>
                         <td className="py-3 px-4 text-gray-600">
-                          {formatCurrency(project.avgDonation, 'SATS')}
+                          {formatCurrency(project.avgDonation, 'BTC')}
                         </td>
                         <td className="py-3 px-4 text-gray-600">{project.views}</td>
                         <td className="py-3 px-4">

@@ -22,7 +22,7 @@ export function BookingForm({
   serviceId,
   serviceName,
   priceBtc,
-  currency: _currency = 'SATS',
+  currency: _currency = 'BTC',
   selectedSlot,
   onBack,
 }: BookingFormProps) {

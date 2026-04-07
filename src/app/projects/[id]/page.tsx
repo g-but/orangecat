@@ -169,13 +169,13 @@ export default async function PublicProjectPage({ params }: PageProps) {
         amount: {
           '@type': 'MonetaryAmount',
           value: project.goal_amount,
-          currency: project.currency || 'SATS',
+          currency: project.currency || 'BTC',
         },
         ...(project.raised_amount && {
           amountRaised: {
             '@type': 'MonetaryAmount',
             value: project.raised_amount,
-            currency: project.currency || 'SATS',
+            currency: project.currency || 'BTC',
           },
         }),
       },

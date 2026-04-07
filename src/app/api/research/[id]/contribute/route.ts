@@ -166,7 +166,7 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
     }
 
     // Convert amount to BTC for storage
-    const amountBtc = convertToBtc(amount, currency || 'SATS');
+    const amountBtc = convertToBtc(amount, currency || 'BTC');
 
     if (amountBtc < 0.00001) {
       // Minimum ~500 sats at current rates

@@ -38,7 +38,7 @@ export function WalletsGuidanceSidebar({ focusedField }: WalletsGuidanceSidebarP
             <li>Choose a clear category like Rent, Food, or Emergency</li>
             <li>Give the wallet a human name that explains its purpose</li>
             <li>Paste a Bitcoin address or xpub from your own wallet</li>
-            <li>Optionally set a funding goal in CHF, EUR, USD, BTC, or SATS</li>
+            <li>Optionally set a funding goal in CHF, EUR, USD, or BTC</li>
           </ul>
         </Card>
 

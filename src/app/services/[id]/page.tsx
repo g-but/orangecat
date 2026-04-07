@@ -19,7 +19,7 @@ const config: EntityDetailConfig = {
   getViewRoute: id => ROUTES.SERVICES.VIEW(id),
   getJsonLdExtra: entity => ({
     ...(entity.price_btc && {
-      offers: { '@type': 'Offer', priceCurrency: 'SATS', price: entity.price_btc },
+      offers: { '@type': 'Offer', priceCurrency: 'BTC', price: entity.price_btc },
     }),
     ...(entity.duration_minutes && { duration: `PT${entity.duration_minutes}M` }),
   }),

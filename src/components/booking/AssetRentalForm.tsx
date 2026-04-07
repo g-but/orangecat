@@ -29,7 +29,7 @@ export function AssetRentalForm({
   periodType,
   requiresDeposit = false,
   depositAmountBtc = 0,
-  currency: _currency = 'SATS',
+  currency: _currency = 'BTC',
   selectedStartDate,
   selectedEndDate,
   onBack,
