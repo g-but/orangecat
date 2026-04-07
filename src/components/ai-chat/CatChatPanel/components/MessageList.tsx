@@ -6,7 +6,7 @@
 import { RefObject } from 'react';
 import { useRouter } from 'next/navigation';
 import { renderMarkdownToReact } from '@/utils/markdown';
-import { Bot, Key, Loader2 } from 'lucide-react';
+import { Bot, Key } from 'lucide-react';
 import type { ChatMessage } from '../types';
 
 interface MessageListProps {
@@ -98,8 +98,22 @@ export function MessageList({
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 px-3 py-2 rounded-2xl">
-              <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+            <div className="bg-white border border-gray-200 px-3 py-2 rounded-2xl flex items-center gap-2">
+              <span className="inline-flex items-center gap-1">
+                <span
+                  className="w-2 h-2 bg-orange-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '0ms' }}
+                />
+                <span
+                  className="w-2 h-2 bg-orange-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '150ms' }}
+                />
+                <span
+                  className="w-2 h-2 bg-orange-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '300ms' }}
+                />
+              </span>
+              <span className="text-xs text-gray-400">Cat is thinking</span>
             </div>
           </div>
         )}

@@ -133,7 +133,7 @@ export function NostrConnectionCard() {
               <div className="flex items-center gap-3 min-w-0">
                 {profile?.picture ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profile.picture} alt="" className="h-8 w-8 rounded-full" />
+                  <img src={profile.picture} alt={profile.display_name || profile.name || 'Nostr profile picture'} className="h-8 w-8 rounded-full" />
                 ) : (
                   <div className="h-8 w-8 rounded-full bg-purple-200 flex items-center justify-center">
                     <Key className="h-4 w-4 text-purple-600" />

@@ -286,6 +286,15 @@ const config: Config = {
   			'700': '700ms',
   			'1000': '1000ms',
   		},
+  		zIndex: {
+  			dropdown: '20',
+  			sticky: '30',
+  			fixed: '40',
+  			'modal-backdrop': '50',
+  			modal: '51',
+  			toast: '60',
+  			tooltip: '70',
+  		},
   		transitionTimingFunction: {
   			// Native app easing curves
   			'ease-ios': 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // iOS standard

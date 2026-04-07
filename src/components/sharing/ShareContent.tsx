@@ -254,11 +254,11 @@ export default function ShareContent({
           createPortal(
             <>
               <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-opacity"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-modal-backdrop transition-opacity"
                 onClick={onClose}
                 aria-hidden="true"
               />
-              <div className="fixed inset-0 z-[9999] flex items-end justify-center p-4 pointer-events-none sm:items-center">
+              <div className="fixed inset-0 z-modal flex items-end justify-center p-4 pointer-events-none sm:items-center">
                 <div className="pointer-events-auto w-full max-w-md animate-slide-up">
                   {shareContent}
                 </div>

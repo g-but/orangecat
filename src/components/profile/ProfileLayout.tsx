@@ -394,7 +394,7 @@ export default function ProfileLayout({
               {showShare && (
                 <div
                   ref={shareDropdownRef}
-                  className="absolute top-full right-0 mt-2 z-[9999] sm:z-50"
+                  className="absolute top-full right-0 mt-2 z-modal"
                   style={{
                     // Ensure dropdown appears above banner on mobile
                     position:
