@@ -11,12 +11,10 @@
 export { productConfig } from './product-config';
 export { serviceConfig } from './service-config';
 export { causeConfig } from './cause-config';
-export { circleConfig } from './circle-config';
 export { loanConfig } from './loan-config';
 export { investmentConfig } from './investment-config';
 export { assetConfig } from './asset-config';
 export type { AssetFormData } from '@/lib/validation';
-export { organizationConfig } from './organization-config';
 export { projectConfig } from './project-config';
 export { aiAssistantConfig } from './ai-assistant-config';
 export { eventConfig } from './event-config';

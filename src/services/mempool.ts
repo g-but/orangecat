@@ -184,25 +184,6 @@ export function formatBTC(sats: number, decimals: number = 8): string {
 }
 
 /**
- * Format satoshis with appropriate units
- */
-export function formatSats(sats: number): string {
-  if (sats >= 100000000) {
-    // 1+ BTC
-    return `${formatBTC(sats, 4)} BTC`;
-  } else if (sats >= 1000000) {
-    // 0.01+ BTC (show as BTC)
-    return `${formatBTC(sats, 6)} BTC`;
-  } else if (sats >= 1000) {
-    // Show in thousands of sats
-    return `${(sats / 1000).toFixed(2)}k sat`;
-  } else {
-    // Show in satoshis
-    return `${sats} sat`;
-  }
-}
-
-/**
  * Get transaction explorer URL
  */
 export function getTxUrl(txid: string): string {
