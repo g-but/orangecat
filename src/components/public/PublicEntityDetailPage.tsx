@@ -8,8 +8,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, Tag } from 'lucide-react';
+import { Tag } from 'lucide-react';
 import { createServerClient } from '@/lib/supabase/server';
 import { getTableName, getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { STATUS } from '@/config/database-constants';
