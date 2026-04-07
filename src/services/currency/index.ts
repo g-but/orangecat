@@ -563,6 +563,16 @@ export function formatBTC(amount: number): string {
 }
 
 /**
+ * Format BTC for clean display — strips unnecessary trailing zeros.
+ * 0.001 → "0.001 BTC", 0.00500000 → "0.005 BTC", 1.0 → "1 BTC"
+ */
+export function displayBTC(amount: number | string | null | undefined): string {
+  const num = typeof amount === 'string' ? parseFloat(amount) : (amount ?? 0);
+  if (!isFinite(num) || num === 0) return '0 BTC';
+  return `${parseFloat(num.toFixed(8))} BTC`;
+}
+
+/**
  * Format amount in satoshis
  */
 export function formatSats(amount: number): string {

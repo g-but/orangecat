@@ -7,6 +7,7 @@ import PublicEntityDetailPage, {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Progress } from '@/components/ui/progress';
 import { ROUTES } from '@/config/routes';
+import { displayBTC } from '@/services/currency';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -45,7 +46,7 @@ const config: EntityDetailConfig = {
               {Number(entity.raised_amount || 0)} BTC raised
             </span>
             <span className="font-bold text-lg text-rose-600">
-              {Number(entity.goal_amount)} BTC goal
+              {displayBTC(entity.goal_amount)} goal
             </span>
           </div>
           <Progress value={progress} className="h-2" />

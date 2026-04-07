@@ -6,6 +6,7 @@ import PublicEntityDetailPage, {
 } from '@/components/public/PublicEntityDetailPage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { ROUTES } from '@/config/routes';
+import { displayBTC } from '@/services/currency';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -29,7 +30,7 @@ const config: EntityDetailConfig = {
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold text-blue-600">
-            {Number(entity.price_btc)} BTC
+            {displayBTC(entity.price_btc)}
           </p>
         </CardContent>
       </Card>
