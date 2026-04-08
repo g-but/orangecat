@@ -73,12 +73,13 @@ export default function NotificationCenter({
 
   const getNotificationIcon = (notification: Notification) => {
     // If notification has a source actor with avatar, show avatar
-    if (notification.source_actor?.avatar_url) {
+    const sourceProfile = notification.source_actor?.profiles;
+    if (sourceProfile?.avatar_url) {
       return (
         <Avatar className="h-8 w-8">
-          <AvatarImage src={notification.source_actor.avatar_url} />
+          <AvatarImage src={sourceProfile.avatar_url} />
           <AvatarFallback>
-            {notification.source_actor.name?.charAt(0) || '?'}
+            {sourceProfile.name?.charAt(0) || '?'}
           </AvatarFallback>
         </Avatar>
       );

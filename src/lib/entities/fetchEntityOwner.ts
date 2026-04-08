@@ -17,21 +17,26 @@ export async function fetchEntityOwner(
   supabase: any,
   entity: { actor_id?: string | null; user_id?: string | null; created_by?: string | null }
 ): Promise<EntityOwner | null> {
-  // Try actors table if actor_id is present
+  // Try actors table if actor_id is present — join profiles for user actors
   if (entity.actor_id) {
     const { data: actorData } = await supabase
       .from(DATABASE_TABLES.ACTORS)
-      .select('id, user_id, username, display_name, avatar_url')
+      .select(`
+        id, actor_type, user_id, group_id,
+        profiles:user_id (username, name, avatar_url)
+      `)
       .eq('id', entity.actor_id)
       .maybeSingle();
     if (actorData) {
-      const actor = actorData as Record<string, string | null>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const actor = actorData as any;
+      const profile = actor.profiles;
       return {
-        id: actor.id!,
-        user_id: actor.user_id!,
-        username: actor.username,
-        name: actor.name,
-        avatar_url: actor.avatar_url,
+        id: actor.id,
+        user_id: actor.user_id || '',
+        username: profile?.username || null,
+        name: profile?.name || null,
+        avatar_url: profile?.avatar_url || null,
       };
     }
   }

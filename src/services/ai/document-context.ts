@@ -191,25 +191,24 @@ export async function fetchProfileForCat(
   userId: string
 ): Promise<ProfileContext | null> {
   try {
-    const { data: actor, error: actorError } = await supabase
-      .from(DATABASE_TABLES.ACTORS)
+    const { data: profile, error: profileError } = await supabase
+      .from(DATABASE_TABLES.PROFILES)
       .select('username, name, bio, location_city, location_country, background, website')
-      .eq('actor_type', 'user')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .maybeSingle();
 
-    if (actorError || !actor) {
+    if (profileError || !profile) {
       return null;
     }
 
     return {
-      username: actor.username,
-      name: actor.name,
-      bio: actor.bio,
-      location_city: actor.location_city,
-      location_country: actor.location_country,
-      background: actor.background,
-      website: actor.website,
+      username: profile.username,
+      name: profile.name,
+      bio: profile.bio,
+      location_city: profile.location_city,
+      location_country: profile.location_country,
+      background: profile.background,
+      website: profile.website,
     };
   } catch (error) {
     logger.error('Exception fetching profile for cat', error, 'DocumentContext');

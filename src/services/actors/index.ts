@@ -127,12 +127,35 @@ export async function checkOwnership(
 }
 
 /**
- * Get actor display name
+ * Get actor display name by joining profiles (for user actors) or groups (for group actors)
  */
 export async function getActorDisplayName(actorId: string): Promise<string> {
   try {
-    const actor = await getActor(actorId);
-    return actor?.name || 'Unknown';
+    const { data, error } = await supabase
+      .from(DATABASE_TABLES.ACTORS)
+      .select(`
+        id, actor_type, user_id, group_id,
+        profiles:user_id (name, username),
+        groups:group_id (name)
+      `)
+      .eq('id', actorId)
+      .maybeSingle();
+
+    if (error || !data) {
+      logger.error('Failed to get actor display name', error, 'Actors');
+      return 'Unknown';
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const actor = data as any;
+    if (actor.actor_type === 'user') {
+      return actor.profiles?.name || actor.profiles?.username || 'Unknown';
+    }
+    if (actor.actor_type === 'group') {
+      return actor.groups?.name || 'Unknown';
+    }
+
+    return 'Unknown';
   } catch (error) {
     logger.error('Exception getting actor display name', error, 'Actors');
     return 'Unknown';

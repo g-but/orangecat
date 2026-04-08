@@ -1562,9 +1562,6 @@ export interface Database {
           actor_type: 'user' | 'group';
           user_id: string | null;
           group_id: string | null;
-          name: string;
-          avatar_url: string | null;
-          slug: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1573,9 +1570,6 @@ export interface Database {
           actor_type: 'user' | 'group';
           user_id?: string | null;
           group_id?: string | null;
-          display_name: string;
-          avatar_url?: string | null;
-          slug?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1584,9 +1578,6 @@ export interface Database {
           actor_type?: 'user' | 'group';
           user_id?: string | null;
           group_id?: string | null;
-          display_name?: string;
-          avatar_url?: string | null;
-          slug?: string | null;
           created_at?: string;
           updated_at?: string;
         };

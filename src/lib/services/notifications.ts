@@ -264,9 +264,9 @@ export class NotificationService {
           *,
           source_actor:actors!source_actor_id (
             id,
-            name,
-            avatar_url,
-            actor_type
+            actor_type,
+            user_id,
+            profiles:user_id (name, avatar_url)
           )
         `,
           { count: 'exact' }
@@ -349,9 +349,9 @@ interface Notification {
   source_entity_id: string | null;
   source_actor?: {
     id: string;
-    name: string;
-    avatar_url: string | null;
     actor_type: string;
+    user_id: string | null;
+    profiles: { name: string | null; avatar_url: string | null } | null;
   } | null;
 }
 

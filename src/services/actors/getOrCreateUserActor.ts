@@ -40,35 +40,7 @@ export async function getOrCreateUserActor(userId: string): Promise<{ id: string
     throw findError;
   }
 
-  // Actor doesn't exist - create one
-  // First get user profile for display name
-  interface ProfileData {
-    username: string | null;
-    name: string | null;
-    avatar_url: string | null;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const profileResult: any = await supabase
-    .from(DATABASE_TABLES.PROFILES)
-    .select('username, name, avatar_url')
-    .eq('id', userId)
-    .maybeSingle();
-
-  const profile = profileResult.data as ProfileData | null;
-  const profileError = profileResult.error;
-
-  if (profileError) {
-    logger.error('Failed to get profile for actor creation', {
-      error: profileError?.message,
-      userId,
-    });
-    throw profileError;
-  }
-
-  const displayName = profile?.name || profile?.username || 'User';
-  const slug = profile?.username || null;
-
-  // Create actor using admin client (bypasses RLS)
+  // Actor doesn't exist - create one using admin client (bypasses RLS)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: newActor, error: createError } = await (
     adminClient.from(DATABASE_TABLES.ACTORS) as any
@@ -76,9 +48,6 @@ export async function getOrCreateUserActor(userId: string): Promise<{ id: string
     .insert({
       actor_type: 'user',
       user_id: userId,
-      name: displayName,
-      avatar_url: profile?.avatar_url || null,
-      slug: slug,
     })
     .select('id')
     .single();

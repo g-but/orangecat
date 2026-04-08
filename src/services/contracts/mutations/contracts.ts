@@ -4,7 +4,7 @@ import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 import { CONTRACT_TYPES } from '@/config/contract-types';
 import { getCurrentUserId } from '@/services/groups/utils/helpers';
-import { getActor } from '@/services/actors';
+import { getActor, getActorDisplayName } from '@/services/actors';
 import { getContract } from '../queries/contracts';
 
 export interface CreateContractInput {
@@ -30,10 +30,11 @@ export async function createContract(input: CreateContractInput) {
 
     if (partyB.actor_type === 'group') {
       const { createProposal } = await import('@/services/groups/mutations/proposals');
+      const partyADisplayName = await getActorDisplayName(input.party_a_actor_id);
       const proposalResult = await createProposal({
         group_id: partyB.group_id!,
         title: `Create ${CONTRACT_TYPES[input.contract_type].name} Contract`,
-        description: `Proposal to create contract with ${partyA.name || partyA.id}`,
+        description: `Proposal to create contract with ${partyADisplayName}`,
         proposal_type: 'membership',
         action_type: 'create_contract',
         action_data: {

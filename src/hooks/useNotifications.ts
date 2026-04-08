@@ -33,9 +33,9 @@ export interface Notification {
   source_entity_id: string | null;
   source_actor?: {
     id: string;
-    name: string;
-    avatar_url: string | null;
     actor_type: string;
+    user_id: string | null;
+    profiles: { name: string | null; avatar_url: string | null } | null;
   } | null;
 }
 

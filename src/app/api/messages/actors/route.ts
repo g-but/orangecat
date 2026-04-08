@@ -22,12 +22,12 @@ interface MessagingActor {
   is_personal: boolean;
 }
 
-// Actor row shape from database
+// Actor row shape from database (joined with profiles)
 interface ActorRow {
   id: string;
   actor_type: string;
-  name: string | null;
-  avatar_url: string | null;
+  user_id: string | null;
+  profiles: { name: string | null; avatar_url: string | null } | null;
 }
 
 // Group membership row with nested group
@@ -49,10 +49,10 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
 
     const actors: MessagingActor[] = [];
 
-    // 1. Get user's personal actor
+    // 1. Get user's personal actor (join profiles for name/avatar)
     const { data: personalActorData, error: personalError } = await admin
       .from(DATABASE_TABLES.ACTORS)
-      .select('id, actor_type, name, avatar_url')
+      .select('id, actor_type, user_id, profiles:user_id (name, avatar_url)')
       .eq('user_id', user.id)
       .eq('actor_type', 'user')
       .maybeSingle();
@@ -70,8 +70,8 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
       actors.push({
         actor_id: personalActor.id,
         actor_type: 'user',
-        name: personalActor.name || 'You',
-        avatar_url: personalActor.avatar_url,
+        name: personalActor.profiles?.name || 'You',
+        avatar_url: personalActor.profiles?.avatar_url || null,
         is_personal: true,
       });
     }
@@ -108,26 +108,17 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
       const actorIds = memberships.map(m => m.groups?.actor_id).filter((id): id is string => !!id);
 
       if (actorIds.length > 0) {
-        const { data: groupActors } = await admin
-          .from(DATABASE_TABLES.ACTORS)
-          .select('id, actor_type, name, avatar_url')
-          .in('id', actorIds);
-
-        const actorMap = new Map((groupActors as ActorRow[] | null)?.map(a => [a.id, a]) ?? []);
-
+        // For group actors, name/avatar come from groups table (already fetched above)
         for (const membership of memberships) {
           const group = membership.groups;
-          if (group?.actor_id) {
-            const groupActor = actorMap.get(group.actor_id);
-            if (groupActor) {
-              actors.push({
-                actor_id: groupActor.id,
-                actor_type: 'group',
-                name: groupActor.name || group.name || 'Group',
-                avatar_url: groupActor.avatar_url || group.avatar_url,
-                is_personal: false,
-              });
-            }
+          if (group?.actor_id && actorIds.includes(group.actor_id)) {
+            actors.push({
+              actor_id: group.actor_id,
+              actor_type: 'group',
+              name: group.name || 'Group',
+              avatar_url: group.avatar_url,
+              is_personal: false,
+            });
           }
         }
       }

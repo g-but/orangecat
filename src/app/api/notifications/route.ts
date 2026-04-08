@@ -44,9 +44,9 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
         source_entity_id,
         source_actor:actors!source_actor_id (
           id,
-          display_name,
-          avatar_url,
-          actor_type
+          actor_type,
+          user_id,
+          profiles:user_id (name, avatar_url)
         )
       `,
         { count: 'exact' }
