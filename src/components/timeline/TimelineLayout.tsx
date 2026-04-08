@@ -60,7 +60,7 @@ export default function TimelineLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto flex justify-center px-0 sm:px-4 lg:px-8">
-        <div className="w-full max-w-2xl border-x border-gray-200 bg-white">
+        <div className="w-full max-w-2xl sm:border-x sm:border-gray-200 bg-white">
           <div
             className={cn(
               'sticky top-0 z-20 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-gray-200 bg-white/95 backdrop-blur'

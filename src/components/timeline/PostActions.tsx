@@ -50,7 +50,7 @@ export function PostActions({
         {/* Reply */}
         <button
           onClick={onToggleComments}
-          className="group flex items-center gap-1 text-gray-500 hover:text-blue-500 hover:bg-blue-50/50 rounded-full p-2 -ml-2 transition-colors min-h-[44px]"
+          className="group flex items-center gap-1 text-gray-500 hover:text-tiffany-500 hover:bg-tiffany-50/50 rounded-full p-2 -ml-2 transition-colors min-h-[44px]"
         >
           <MessageCircle className="w-5 h-5" />
           <span className="text-sm">
@@ -116,8 +116,8 @@ export function PostActions({
           disabled={isSharing}
           className={`group flex items-center gap-1 rounded-full p-2 transition-colors min-h-[44px] ${
             event.userShared
-              ? 'text-blue-500 hover:bg-blue-50/50'
-              : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50/50'
+              ? 'text-tiffany-500 hover:bg-tiffany-50/50'
+              : 'text-gray-500 hover:text-tiffany-500 hover:bg-tiffany-50/50'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           <Share2 className="w-5 h-5" />

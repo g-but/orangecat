@@ -242,7 +242,7 @@ export function ThreadIndicator({
           variant="ghost"
           size="sm"
           onClick={onShowThread}
-          className="text-xs text-blue-600 hover:text-blue-800 p-0 h-auto"
+          className="text-xs text-tiffany-500 hover:text-tiffany-700 p-0 h-auto"
         >
           Show thread
         </Button>

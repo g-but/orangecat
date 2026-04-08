@@ -12,7 +12,6 @@ import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { RepostModal } from './RepostModal';
-import { QuoteReplyComposer, QuoteReplyButton } from './QuoteReplyComposer';
 import { ThreadIndicator } from './ThreadContext';
 import { EditPostModal } from './EditPostModal';
 import { DeletePostDialog } from './DeletePostDialog';
@@ -56,7 +55,6 @@ export function PostCard({
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [isReplying, setIsReplying] = useState(false);
-  const [showQuoteReply, setShowQuoteReply] = useState(false);
 
   // Edit/Delete state
   const [showMenu, setShowMenu] = useState(false);
@@ -205,21 +203,6 @@ export function PostCard({
     }
   }, [replyText, isReplying, user, event, onReplyCreated, onUpdate]);
 
-  // Handle quote reply creation
-  const handleQuoteReply = useCallback(
-    (reply: TimelineDisplayEvent) => {
-      setShowQuoteReply(false);
-      onReplyCreated?.(reply);
-
-      // Update reply count
-      onUpdate({
-        threadRepliesCount: (event.threadRepliesCount || 0) + 1,
-        replyCount: (event.replyCount || 0) + 1,
-      });
-    },
-    [onReplyCreated, onUpdate, event]
-  );
-
   // Handle selection checkbox click
   const handleSelectionClick = useCallback(
     (e: React.MouseEvent) => {
@@ -258,7 +241,7 @@ export function PostCard({
           'px-4 py-3 border-b border-gray-200 hover:bg-gray-50/50 transition-colors cursor-pointer',
           compact && 'py-2',
           isSelectionMode && 'pl-2',
-          isSelected && 'bg-sky-50/70 hover:bg-sky-50'
+          isSelected && 'bg-tiffany-50/70 hover:bg-tiffany-50'
         )}
         data-event-id={event.id}
       >
@@ -286,8 +269,8 @@ export function PostCard({
                 className={cn(
                   'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
                   isSelected
-                    ? 'bg-sky-500 border-sky-500 text-white'
-                    : 'border-gray-300 hover:border-sky-400 bg-white'
+                    ? 'bg-tiffany-500 border-tiffany-500 text-white'
+                    : 'border-gray-300 hover:border-tiffany-400 bg-white'
                 )}
                 aria-label={isSelected ? 'Deselect post' : 'Select post'}
                 aria-checked={isSelected}
@@ -340,33 +323,17 @@ export function PostCard({
               isReposting={isReposting}
             />
 
-            {/* Thread Indicator and Quote Reply */}
-            {showThreading && (
-              <div className="flex items-center justify-between mt-2">
+            {/* Thread Indicator - only visible when there's a real thread */}
+            {showThreading && event.threadId && (event.threadRepliesCount || event.replyCount || 0) > 0 && (
+              <div className="mt-2">
                 <ThreadIndicator
                   threadId={event.threadId}
                   replyCount={event.threadRepliesCount || event.replyCount || 0}
                   onShowThread={onShowThread}
                 />
-
-                <div className="flex items-center gap-2">
-                  {!showQuoteReply && (
-                    <QuoteReplyButton onClick={() => setShowQuoteReply(true)} disabled={!user} />
-                  )}
-                </div>
               </div>
             )}
 
-            {/* Quote Reply Composer */}
-            {showQuoteReply && (
-              <div className="mt-3">
-                <QuoteReplyComposer
-                  parentPost={event}
-                  onReply={handleQuoteReply}
-                  onCancel={() => setShowQuoteReply(false)}
-                />
-              </div>
-            )}
 
             {/* Inline Reply Input (X-style) */}
             {showReplyInput && user && (
@@ -393,7 +360,7 @@ export function PostCard({
                       onClick={handleReplySubmit}
                       disabled={!replyText.trim() || isReplying}
                       size="sm"
-                      className="rounded-full px-4 py-1.5 text-sm font-bold bg-sky-500 hover:bg-sky-600 text-white"
+                      className="rounded-full px-4 py-1.5 text-sm font-bold bg-tiffany-500 hover:bg-tiffany-600 text-white"
                     >
                       {isReplying ? 'Replying...' : 'Reply'}
                     </Button>

@@ -133,7 +133,7 @@ export function EditPostModal({
             onClick={handleSave}
             disabled={isSaving || !hasChanges || isOverLimit || !content.trim()}
             size="sm"
-            className="rounded-full px-4 py-1.5 text-sm font-bold bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300 text-white"
+            className="rounded-full px-4 py-1.5 text-sm font-bold bg-tiffany-500 hover:bg-tiffany-600 disabled:bg-tiffany-300 text-white"
           >
             {isSaving ? (
               <>
@@ -177,7 +177,7 @@ export function EditPostModal({
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
                   visibility === 'public'
-                    ? 'text-sky-600 bg-sky-50 hover:bg-sky-100'
+                    ? 'text-tiffany-500 bg-tiffany-50 hover:bg-tiffany-100'
                     : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
                 )}
                 disabled={isSaving}

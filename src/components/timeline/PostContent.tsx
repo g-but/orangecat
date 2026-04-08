@@ -67,7 +67,7 @@ export function PostContent({ event }: PostContentProps) {
 
       {/* Event Description/Content */}
       {displayContent && (!isRepost || isQuoteRepost) && (
-        <div className="text-gray-900 text-sm leading-relaxed whitespace-pre-line break-words max-w-prose">
+        <div className="text-gray-900 text-[15px] leading-relaxed whitespace-pre-line break-words">
           {renderMarkdownToReact(displayContent)}
         </div>
       )}
@@ -183,6 +183,8 @@ export function PostContent({ event }: PostContentProps) {
           const internalKeys = [
             'is_repost',
             'is_quote_repost',
+            'is_reply',
+            'is_user_post',
             'original_event_id',
             'original_actor_id',
             'original_actor_name',
@@ -190,7 +192,7 @@ export function PostContent({ event }: PostContentProps) {
             'original_actor_avatar',
             'original_description',
             'quote_text',
-            'is_user_post',
+            'attachments',
           ];
           const visibleEntries = Object.entries(event.metadata)
             .filter(

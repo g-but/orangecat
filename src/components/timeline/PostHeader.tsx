@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { MoreHorizontal, Lock, Pencil, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Lock, Users, Pencil, Trash2 } from 'lucide-react';
 import { TimelineDisplayEvent } from '@/types/timeline';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -104,10 +104,15 @@ export function PostHeader({
         {timestamp ? formatTimestamp(timestamp) : ''}
       </time>
 
-      {/* Visibility Indicator - only show if private */}
+      {/* Visibility Indicator */}
       {event.visibility === 'private' && (
-        <span title="Private post">
-          <Lock className="w-4 h-4 text-gray-400 ml-1" />
+        <span title="Only you can see this">
+          <Lock className="w-3.5 h-3.5 text-gray-400" />
+        </span>
+      )}
+      {event.visibility === 'followers' && (
+        <span title="Followers only">
+          <Users className="w-3.5 h-3.5 text-gray-400" />
         </span>
       )}
 

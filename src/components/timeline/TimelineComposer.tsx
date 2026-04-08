@@ -232,7 +232,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
 
           {/* Bottom Toolbar - simplified by default */}
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-            <div className="flex items-center gap-2 text-sky-600 flex-wrap">
+            <div className="flex items-center gap-2 text-tiffany-500 flex-wrap">
               {!simpleMode && <TextFormatToolbar onFormat={handleFormat} />}
 
               {!simpleMode && allowProjectSelection && postComposer.userProjects.length > 0 && (
@@ -257,8 +257,8 @@ const TimelineComposer = React.memo(function TimelineComposer({
                         className={cn(
                           'px-3 py-1 rounded-full text-xs font-semibold border transition-colors',
                           isActive
-                            ? 'bg-sky-500 text-white border-sky-500 shadow-sm'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-sky-300'
+                            ? 'bg-tiffany-500 text-white border-tiffany-500 shadow-sm'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-tiffany-300'
                         )}
                         title={preset.description}
                       >
@@ -279,7 +279,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
                     )
                   }
                   disabled={postComposer.isPosting}
-                  className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-sky-50 active:bg-sky-100 transition-colors text-sky-600 disabled:opacity-50 touch-manipulation"
+                  className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-tiffany-50 active:bg-tiffany-100 transition-colors text-tiffany-500 disabled:opacity-50 touch-manipulation"
                   title={
                     postComposer.visibility === 'public'
                       ? 'Public - Everyone can see'
@@ -303,7 +303,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
               <Button
                 onClick={postComposer.handlePost}
                 disabled={isButtonDisabled}
-                className="rounded-full px-5 py-2 text-sm font-bold bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white shadow-sm disabled:opacity-50 disabled:shadow-none transition-all"
+                className="rounded-full px-5 py-2 text-sm font-bold bg-tiffany-500 hover:bg-tiffany-600 active:bg-tiffany-700 text-white shadow-sm disabled:opacity-50 disabled:shadow-none transition-all"
                 size="sm"
               >
                 {postComposer.isPosting ? 'Posting...' : buttonText}

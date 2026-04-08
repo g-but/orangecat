@@ -214,7 +214,7 @@ export function QuoteReplyComposer({
                   onClick={handleSubmit}
                   disabled={!content.trim() || isSubmitting}
                   size="sm"
-                  className="rounded-full px-4 py-1.5 text-sm font-bold bg-sky-500 hover:bg-sky-600 text-white"
+                  className="rounded-full px-4 py-1.5 text-sm font-bold bg-tiffany-500 hover:bg-tiffany-600 text-white"
                 >
                   {isSubmitting ? 'Replying...' : 'Reply'}
                 </Button>
@@ -243,7 +243,7 @@ export function QuoteReplyButton({ onClick, disabled, className }: QuoteReplyBut
       size="sm"
       onClick={onClick}
       disabled={disabled}
-      className={cn('text-gray-500 hover:text-blue-600 hover:bg-blue-50', className)}
+      className={cn('text-gray-500 hover:text-tiffany-500 hover:bg-tiffany-50', className)}
     >
       <MessageCircle className="w-4 h-4 mr-1" />
       Quote Reply
