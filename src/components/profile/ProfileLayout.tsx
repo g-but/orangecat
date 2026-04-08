@@ -3,6 +3,7 @@ import { logger } from '@/utils/logger';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { ScalableProfile, ProfileFormData, Project } from '@/types/database';
@@ -34,6 +35,7 @@ import {
   Coins,
   Building,
   Bot,
+  Settings,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -425,7 +427,17 @@ export default function ProfileLayout({
               )}
             </div>
 
-            {!isOwnProfile && (
+            {isOwnProfile ? (
+              <Link href="/dashboard/info/edit">
+                <Button
+                  size="sm"
+                  className="bg-tiffany-600 hover:bg-tiffany-700 text-white shadow-lg text-xs sm:text-sm"
+                >
+                  <Settings className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Edit Profile</span>
+                </Button>
+              </Link>
+            ) : (
               <Button
                 onClick={handleFollowToggle}
                 disabled={isFollowLoading}

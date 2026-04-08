@@ -226,7 +226,7 @@ const simplifiedSections: NavSection[] = [
     items: [
       {
         name: 'Profile',
-        href: ROUTES.DASHBOARD.INFO,
+        href: '/profiles/me',
         icon: UserIcon,
         description: 'Your profile',
         requiresAuth: true,
