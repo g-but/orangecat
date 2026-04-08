@@ -289,6 +289,12 @@ export default async function PublicProfilePage({ params }: PageProps) {
     }),
   };
 
+  // Check if viewing own profile (server-side, avoids hydration flash)
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+  const isOwnProfile = !!currentUser && currentUser.id === profile.id;
+
   // Pass data to client component for interactivity
   return (
     <>
@@ -300,6 +306,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       <ProfilePageClient
         profile={profile}
         projects={projects || []}
+        isOwnProfile={isOwnProfile}
         stats={{
           projectCount,
           totalRaised,

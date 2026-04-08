@@ -73,6 +73,8 @@ interface ProfileLayoutProps {
   onSave?: (data: ProfileFormData) => Promise<void>;
   onModeChange?: (mode: 'view' | 'edit') => void;
   className?: string;
+  /** Server-side own-profile detection (avoids hydration flash) */
+  serverIsOwnProfile?: boolean;
 }
 
 export default function ProfileLayout({
@@ -83,10 +85,11 @@ export default function ProfileLayout({
   onSave,
   onModeChange: _onModeChange,
   className,
+  serverIsOwnProfile,
 }: ProfileLayoutProps) {
   const { user } = useAuth();
   const router = useRouter();
-  const isOwnProfile = profile.id === user?.id;
+  const isOwnProfile = serverIsOwnProfile ?? profile.id === user?.id;
 
   const [showShare, setShowShare] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
