@@ -16,8 +16,8 @@ import {
   apiValidationError,
   apiRateLimited,
   apiInternalError,
-  apiSuccess,
 } from '@/lib/api/standardResponse';
+import { NextResponse } from 'next/server';
 import { generateFormPrefill } from '@/lib/ai/form-prefill-service';
 import { getEntityConfig } from '@/config/entity-configs/get-config';
 import { isValidEntityType, type EntityType } from '@/config/entity-registry';
@@ -134,7 +134,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       'AI'
     );
 
-    return apiSuccess({
+    // Return flat structure — AIPrefillBar reads result.data and result.confidence directly
+    return NextResponse.json({
       success: true,
       data: result.data,
       confidence: result.confidence,

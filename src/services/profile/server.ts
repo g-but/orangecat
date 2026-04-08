@@ -141,8 +141,10 @@ export class ProfileServerService {
       // Profile doesn't exist, create it
       const safeEmail = typeof userEmail === 'string' ? userEmail : null;
       const emailName = safeEmail && safeEmail.includes('@') ? safeEmail.split('@')[0] : null;
+      // Sanitize: replace dots and other invalid chars with underscores, keep only letters/numbers/underscores/hyphens
+      const sanitizedEmailName = emailName ? emailName.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
       const username =
-        emailName && emailName.length > 0 ? emailName : `user_${String(userId).slice(0, 8)}`;
+        sanitizedEmailName && sanitizedEmailName.length > 0 ? sanitizedEmailName : `user_${String(userId).slice(0, 8)}`;
       const name =
         (userMetadata?.full_name as string | undefined) ||
         (userMetadata?.name as string | undefined) ||

@@ -25,7 +25,7 @@ const sampleData = {
     {
       id: '550e8400-e29b-41d4-a716-446655440001',
       username: 'bitcoin_artist',
-      name: 'Sarah Chen',
+      name: 'Alisa',
       bio: 'Digital artist creating Bitcoin-themed illustrations and NFTs. Supporting open-source art tools.',
       avatar_url: null,
       created_at: '2025-01-15T10:00:00Z',

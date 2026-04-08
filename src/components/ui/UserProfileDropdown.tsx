@@ -139,30 +139,29 @@ export default function UserProfileDropdown({
     return null;
   }
 
-  // User display logic - prioritize profile data, but show loading state while fetching
+  // User display logic - always show something immediately, update when profile loads
   const avatarUrl = profile?.avatar_url;
   const email = user?.email || session?.user?.email || '';
 
-  // Show loading state while profile is being fetched
-  const isProfileLoading = !!(user && !profile);
+  // Only show loading state when we have literally nothing to show
+  const isProfileLoading = false; // Never block the UI — always render with best available data
 
-  // PRIORITY: Profile data first, then fallback to user metadata, then email
-  let displayName = 'Loading...';
-  if (!isProfileLoading) {
-    if (profile?.name) {
-      displayName = profile.name;
-    } else if (profile?.username) {
-      displayName = profile.username;
-    } else if (user?.user_metadata?.full_name) {
-      displayName = user.user_metadata.full_name;
-    } else if (email) {
-      // Extract name from email safely
-      const atIndex = email.indexOf('@');
-      const emailName = atIndex > 0 ? email.slice(0, atIndex) : email;
-      displayName = emailName.replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    } else {
-      displayName = 'User';
-    }
+  // PRIORITY: Profile data → user metadata → email prefix → fallback
+  let displayName: string;
+  if (profile?.name) {
+    displayName = profile.name;
+  } else if (profile?.username) {
+    displayName = profile.username;
+  } else if (user?.user_metadata?.full_name) {
+    displayName = user.user_metadata.full_name;
+  } else if (user?.user_metadata?.name) {
+    displayName = user.user_metadata.name;
+  } else if (email) {
+    const atIndex = email.indexOf('@');
+    const emailName = atIndex > 0 ? email.slice(0, atIndex) : email;
+    displayName = emailName.replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  } else {
+    displayName = 'Me';
   }
 
   const firstName = (displayName || '').split(' ')[0] || 'User';
@@ -180,13 +179,10 @@ export default function UserProfileDropdown({
         <button
           ref={buttonRef}
           onClick={toggle}
-          disabled={isProfileLoading}
+          disabled={false}
           className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none disabled:opacity-50"
         >
           <span className="text-sm font-medium">{displayName}</span>
-          {isProfileLoading && (
-            <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin ml-2" />
-          )}
           <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
@@ -258,9 +254,6 @@ export default function UserProfileDropdown({
         )}
         <span className="font-medium text-sm sm:text-base max-w-[80px] sm:max-w-[100px] md:max-w-[140px] truncate flex items-center hidden sm:flex">
           {firstName}
-          {isProfileLoading && (
-            <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin ml-1 sm:ml-2" />
-          )}
         </span>
         <ChevronDown
           className={`h-4 w-4 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}

@@ -81,7 +81,7 @@ export function Header({
           className={`mx-auto ${HEADER_SPACING.MAX_WIDTH} ${HEADER_DIMENSIONS.HEIGHT_MOBILE} ${HEADER_DIMENSIONS.HEIGHT_DESKTOP} ${HEADER_SPACING.CONTAINER_PADDING} flex items-center justify-between w-full ${HEADER_SPACING.ITEM_GAP}`}
         >
           {/* Left Section: Menu + Logo (Mobile-First) */}
-          <div className={`flex items-center ${HEADER_SPACING.ITEM_GAP} min-w-0 flex-1`}>
+          <div className={`flex items-center ${HEADER_SPACING.ITEM_GAP} shrink-0`}>
             {/* Sidebar/Menu Toggle - Always first, proper touch target */}
             {showSidebarToggle && onToggleSidebar ? (
               <MenuToggleButton onClick={onToggleSidebar} ariaLabel="Toggle sidebar" />
@@ -105,7 +105,7 @@ export function Header({
 
           {/* Center Section: Search (Desktop only) */}
           {showSearch && (
-            <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
+            <div className="hidden md:flex flex-1 min-w-0 max-w-sm lg:max-w-md mx-4 lg:mx-8">
               <EnhancedSearchBar />
             </div>
           )}

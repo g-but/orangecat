@@ -195,7 +195,12 @@ export function useProfileEditor({
 
     try {
       // Apply location privacy/group mode before normalization/save
-      const adjusted: ProfileFormValues = { ...data };
+      // Coerce empty strings to undefined for numeric fields (from hidden form inputs)
+      const adjusted: ProfileFormValues = {
+        ...data,
+        latitude: data.latitude === ('' as unknown as number) ? undefined : data.latitude,
+        longitude: data.longitude === ('' as unknown as number) ? undefined : data.longitude,
+      };
       if (locationMode === 'hidden') {
         adjusted.location_context = buildLocationContext(
           adjusted.location_context,
