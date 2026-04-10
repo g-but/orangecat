@@ -3,7 +3,7 @@
 import { logger } from '@/utils/logger';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Send, Paperclip, Smile, ChevronDown, User, Users } from 'lucide-react';
+import { Send, Paperclip, ChevronDown, User, Users } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -348,7 +348,7 @@ export default function MessageComposer({
         </Button>
 
         {/* Message input container - responsive flex layout */}
-        <div className="flex-1 relative min-w-0">
+        <div className="flex-1 min-w-0">
           <textarea
             ref={textareaRef}
             value={content}
@@ -356,8 +356,8 @@ export default function MessageComposer({
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             className={cn(
-              'w-full pr-10 sm:pr-12 py-2.5 sm:py-3 pl-3 sm:pl-4 border border-gray-200 rounded-lg resize-none',
-              'focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent',
+              'w-full py-2.5 sm:py-3 pl-3 sm:pl-4 pr-3 sm:pr-4 border border-gray-200 rounded-lg resize-none',
+              'focus:outline-none focus:ring-2 focus:ring-tiffany-500 focus:border-transparent',
               'max-h-32 min-h-[44px] text-sm sm:text-base',
               'placeholder:text-gray-400',
               isSending && 'opacity-50 cursor-not-allowed'
@@ -365,22 +365,6 @@ export default function MessageComposer({
             rows={1}
             disabled={isSending}
           />
-
-          {/* Emoji button - positioned inside but not covering text */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="absolute right-1.5 sm:right-2 bottom-1.5 sm:bottom-2 p-1.5 sm:p-1 text-gray-400 hover:text-gray-600 flex-shrink-0 z-10"
-            disabled={isSending}
-            aria-label="Add emoji"
-            onClick={e => {
-              e.preventDefault();
-              // TODO: Open emoji picker
-            }}
-          >
-            <Smile className="w-4 h-4 sm:w-5 sm:h-5" />
-          </Button>
         </div>
 
         {/* Send button - responsive sizing */}
@@ -388,7 +372,7 @@ export default function MessageComposer({
           type="submit"
           size="sm"
           className={cn(
-            'px-3 sm:px-4 py-2.5 sm:py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-lg',
+            'px-3 sm:px-4 py-2.5 sm:py-3 bg-tiffany-500 hover:bg-tiffany-600 text-white rounded-lg',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             'transition-colors duration-200 flex-shrink-0',
             'min-w-[44px] sm:min-w-[auto]' // Ensure touch target size on mobile

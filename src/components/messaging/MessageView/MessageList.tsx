@@ -104,13 +104,9 @@ export default function MessageList({
         const showDivider = shouldShowDateDivider(message, prevMessage);
         const isCurrentUser = message.sender_id === currentUserId;
 
-        // Use a combination of id and index to ensure uniqueness even if duplicates exist
-        // This prevents React key warnings while we fix the root cause
-        const uniqueKey = `${message.id}-${index}`;
-
         return (
           <MessageItem
-            key={uniqueKey}
+            key={message.id}
             message={message}
             isCurrentUser={isCurrentUser}
             showDateDivider={showDivider}

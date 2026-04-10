@@ -59,9 +59,9 @@ function MessageStatusIcon({ message }: { message: Message }) {
     );
   }
 
-  // Read messages - double check in blue
+  // Read messages - double check in tiffany
   if (isRead) {
-    return <CheckCheck className="h-3 w-3 text-blue-500" aria-label="Read" />;
+    return <CheckCheck className="h-3 w-3 text-tiffany-500" aria-label="Read" />;
   }
 
   // Delivered messages - single check
@@ -130,7 +130,7 @@ export default function MessageItem({
           <div
             className={cn(
               'rounded-2xl px-4 py-2',
-              isCurrentUser ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-900'
+              isCurrentUser ? 'bg-tiffany-500 text-white' : 'bg-gray-100 text-gray-900'
             )}
           >
             <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
