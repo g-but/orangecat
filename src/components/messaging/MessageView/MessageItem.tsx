@@ -116,7 +116,7 @@ export default function MessageItem({
       {/* Message Bubble */}
       <div className={cn('flex', isCurrentUser ? 'justify-end' : 'justify-start')}>
         <div
-          className={cn('max-w-[70%]', isOptimistic && 'opacity-70')}
+          className={cn('max-w-[85%] sm:max-w-[70%]', isOptimistic && 'opacity-70')}
           onContextMenu={e => {
             if (onLongPress) {
               e.preventDefault();

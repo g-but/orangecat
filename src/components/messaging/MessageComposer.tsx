@@ -3,7 +3,7 @@
 import { logger } from '@/utils/logger';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Send, Paperclip, ChevronDown, User, Users } from 'lucide-react';
+import { Send, ChevronDown, User, Users } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -335,18 +335,6 @@ export default function MessageComposer({
       )}
 
       <form onSubmit={handleSubmit} className="flex items-end gap-2 sm:gap-3">
-        {/* Attachment button - hidden on very small screens */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="hidden sm:flex p-2 text-gray-400 hover:text-gray-600 flex-shrink-0 min-h-[44px] min-w-[44px] items-center justify-center"
-          disabled={isSending}
-          aria-label="Attach file"
-        >
-          <Paperclip className="w-5 h-5" />
-        </Button>
-
         {/* Message input container - responsive flex layout */}
         <div className="flex-1 min-w-0">
           <textarea

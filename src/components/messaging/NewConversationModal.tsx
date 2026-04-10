@@ -182,7 +182,7 @@ export default function NewConversationModal({
               value={search}
               onChange={e => handleChange(e.target.value)}
               placeholder="Search by name or @username"
-              className="w-full pl-11 pr-4 py-3 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
+              className="w-full pl-11 pr-4 py-3 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-tiffany-500 focus:bg-white transition-all"
             />
           </div>
         </div>

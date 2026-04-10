@@ -227,7 +227,7 @@ export default function ConversationList({
 
     if (conversation.is_group) {
       return (
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-tiffany-400 to-tiffany-600 flex items-center justify-center text-white">
           <Users className="w-5 h-5" />
         </div>
       );
