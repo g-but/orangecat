@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useConversations } from '@/features/messaging/hooks';
 import type { Conversation } from '@/features/messaging/types';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface ConversationListProps {
   searchQuery: string;
@@ -35,6 +36,7 @@ export default function ConversationList({
 }: ConversationListProps) {
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [isPointerSelecting, setIsPointerSelecting] = useState(false);
   const [dragAction, setDragAction] = useState<'select' | 'deselect' | null>(null);
   const pressTimerRef = React.useRef<number | null>(null);
@@ -410,7 +412,7 @@ export default function ConversationList({
                     className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 self-start"
                     onClick={e => {
                       e.stopPropagation();
-                      handleDeleteOne(conversation.id);
+                      setConfirmDeleteId(conversation.id);
                     }}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -422,5 +424,17 @@ export default function ConversationList({
         ))
       )}
     </div>
+
+    <ConfirmDialog
+      isOpen={!!confirmDeleteId}
+      onClose={() => setConfirmDeleteId(null)}
+      onConfirm={() => {
+        if (confirmDeleteId) handleDeleteOne(confirmDeleteId);
+        setConfirmDeleteId(null);
+      }}
+      title="Delete conversation?"
+      description="This removes it for you. Other participants won't be affected."
+      confirmLabel="Delete"
+    />
   );
 }

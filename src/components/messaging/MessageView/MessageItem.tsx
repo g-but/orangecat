@@ -8,7 +8,7 @@
  * @module messaging/MessageView/MessageItem
  */
 
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { Check, CheckCheck, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/features/messaging/types';
@@ -26,6 +26,9 @@ interface MessageItemProps {
   showDateDivider: boolean;
   dateDividerText?: string;
   onLongPress?: (message: Message, position?: { x: number; y: number }) => void;
+  isEditing?: boolean;
+  onEditSave?: (newContent: string) => void;
+  onEditCancel?: () => void;
 }
 
 // Re-export for backwards compatibility
@@ -79,9 +82,31 @@ export default function MessageItem({
   showDateDivider,
   dateDividerText,
   onLongPress,
+  isEditing = false,
+  onEditSave,
+  onEditCancel,
 }: MessageItemProps) {
   const isOptimistic = isOptimisticMessage(message);
   const timerRef = useRef<number | null>(null);
+  const [editDraft, setEditDraft] = useState(message.content || '');
+
+  // Reset draft whenever this message enters edit mode
+  useEffect(() => {
+    if (isEditing) setEditDraft(message.content || '');
+  }, [isEditing, message.content]);
+
+  const handleEditKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const trimmed = editDraft.trim();
+        if (trimmed && trimmed !== message.content) onEditSave?.(trimmed);
+        else onEditCancel?.();
+      }
+      if (e.key === 'Escape') onEditCancel?.();
+    },
+    [editDraft, message.content, onEditSave, onEditCancel]
+  );
 
   const handleTouchStart = useCallback(
     (e: React.TouchEvent<HTMLDivElement>) => {
@@ -130,10 +155,44 @@ export default function MessageItem({
           <div
             className={cn(
               'rounded-2xl px-4 py-2',
-              isCurrentUser ? 'bg-tiffany-500 text-white' : 'bg-gray-100 text-gray-900'
+              isCurrentUser ? 'bg-tiffany-500 text-white' : 'bg-gray-100 text-gray-900',
+              isEditing && 'p-2'
             )}
           >
-            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+            {isEditing ? (
+              <div>
+                <textarea
+                  value={editDraft}
+                  onChange={e => setEditDraft(e.target.value)}
+                  onKeyDown={handleEditKeyDown}
+                  className="w-full min-w-[200px] bg-white text-gray-900 text-sm rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-tiffany-500"
+                  rows={Math.min(6, editDraft.split('\n').length + 1)}
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2 mt-1.5">
+                  <button
+                    type="button"
+                    onClick={onEditCancel}
+                    className="text-xs px-2 py-1 rounded text-white/80 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const trimmed = editDraft.trim();
+                      if (trimmed && trimmed !== message.content) onEditSave?.(trimmed);
+                      else onEditCancel?.();
+                    }}
+                    className="text-xs px-2 py-1 rounded bg-white text-tiffany-600 font-medium hover:bg-white/90"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+            )}
           </div>
 
           {/* Timestamp and Read Receipt */}

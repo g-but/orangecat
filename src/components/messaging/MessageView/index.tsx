@@ -43,6 +43,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
     position: { x: number; y: number };
     message: Message | null;
   }>({ open: false, position: { x: 0, y: 0 }, message: null });
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
 
   // Use the messages hook for all data fetching
   const {
@@ -166,44 +167,44 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
 
   const closeMenu = useCallback(() => setMenuState(s => ({ ...s, open: false })), []);
 
-  const handleEdit = useCallback(async () => {
+  // Opens inline edit — closes context menu first
+  const handleEdit = useCallback(() => {
     const msg = menuState.message;
-    if (!msg) {
-      return;
-    }
-    const existing = msg.content || '';
-    // Simple prompt-based edit for now
-    const updated = window.prompt('Edit message:', existing);
-    if (!updated || updated.trim() === existing) {
-      return closeMenu();
-    }
-    try {
-      const res = await fetch(`/api/messages/edit/${encodeURIComponent(msg.id)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ content: updated.trim() }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}) as Record<string, unknown>);
-        toast.error(data.error || 'Failed to edit message');
-      } else {
-        // Fetch updated message and apply
-        const { data: full } = await supabase
-          .from(DATABASE_TABLES.MESSAGE_DETAILS)
-          .select('*')
-          .eq('id', msg.id)
-          .single();
-        if (full) {
-          handleNewMessage(full as Message);
+    if (!msg) return;
+    closeMenu();
+    setEditingMessageId(msg.id);
+  }, [menuState.message, closeMenu]);
+
+  // Called by MessageItem save button / Enter key
+  const handleEditSave = useCallback(
+    async (messageId: string, newContent: string) => {
+      setEditingMessageId(null);
+      try {
+        const res = await fetch(`/api/messages/edit/${encodeURIComponent(messageId)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ content: newContent }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}) as Record<string, unknown>);
+          toast.error(data.error || 'Failed to edit message');
+        } else {
+          const { data: full } = await supabase
+            .from(DATABASE_TABLES.MESSAGE_DETAILS)
+            .select('*')
+            .eq('id', messageId)
+            .single();
+          if (full) handleNewMessage(full as Message);
         }
+      } catch {
+        toast.error('Network error while editing');
       }
-    } catch {
-      toast.error('Network error while editing');
-    } finally {
-      closeMenu();
-    }
-  }, [menuState.message, handleNewMessage, closeMenu]);
+    },
+    [handleNewMessage]
+  );
+
+  const handleEditCancel = useCallback(() => setEditingMessageId(null), []);
 
   const handleDelete = useCallback(async () => {
     const msg = menuState.message;
@@ -300,6 +301,9 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
         onLoadMore={loadMore}
         onMessageLongPress={handleMessageLongPress}
         messagesEndRef={messagesEndRef}
+        editingMessageId={editingMessageId}
+        onEditSave={handleEditSave}
+        onEditCancel={handleEditCancel}
       />
 
       {/* Composer */}

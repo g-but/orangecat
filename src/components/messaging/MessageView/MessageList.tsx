@@ -24,6 +24,9 @@ interface MessageListProps {
   onMessageLongPress?: (message: Message, position?: { x: number; y: number }) => void;
   /** Ref to scroll to bottom */
   messagesEndRef?: React.RefObject<HTMLDivElement>;
+  editingMessageId?: string | null;
+  onEditSave?: (messageId: string, newContent: string) => void;
+  onEditCancel?: () => void;
 }
 
 export default function MessageList({
@@ -34,6 +37,9 @@ export default function MessageList({
   onLoadMore,
   onMessageLongPress,
   messagesEndRef,
+  editingMessageId,
+  onEditSave,
+  onEditCancel,
 }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [previousScrollHeight, setPreviousScrollHeight] = useState<number | null>(null);
@@ -112,6 +118,9 @@ export default function MessageList({
             showDateDivider={showDivider}
             dateDividerText={showDivider ? getDateDividerText(message.created_at) : undefined}
             onLongPress={onMessageLongPress}
+            isEditing={editingMessageId === message.id}
+            onEditSave={onEditSave ? content => onEditSave(message.id, content) : undefined}
+            onEditCancel={onEditCancel}
           />
         );
       })}

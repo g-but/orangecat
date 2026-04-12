@@ -6,6 +6,7 @@ import { MessageSquare, Search, Plus, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import Button from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import ConversationList from './ConversationList';
 import MessageView from './MessageView';
 import { cn } from '@/lib/utils';
@@ -57,6 +58,7 @@ export default function MessagePanel({
   const [activeTab, setActiveTab] = useState<'all' | 'requests'>('all');
   const [convSelectionMode, setConvSelectionMode] = useState(false);
   const [selectedConvIds, setSelectedConvIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
   const [_selectedMessageIds, _setSelectedMessageIds] = useState<Set<string>>(new Set());
   const [refreshSignal, setRefreshSignal] = useState(0);
 
@@ -79,19 +81,14 @@ export default function MessagePanel({
     setCurrentConversation(id);
   };
 
-  const bulkDeleteSelected = async () => {
+  const bulkDeleteSelected = () => {
+    if (selectedConvIds.size === 0) return;
+    setBulkDeleteConfirm(true);
+  };
+
+  const executeBulkDelete = async () => {
     const convIds = Array.from(selectedConvIds);
-    if (convIds.length === 0) {
-      return;
-    }
-    if (convIds.length >= 2) {
-      const ok = window.confirm(
-        `Delete ${convIds.length} conversations? This removes them for you and leaves all participants.`
-      );
-      if (!ok) {
-        return;
-      }
-    }
+    setBulkDeleteConfirm(false);
     try {
       const res = await fetch('/api/messages/bulk-conversations', {
         method: 'POST',
@@ -371,6 +368,16 @@ export default function MessagePanel({
           </div>
         )}
       </div>
+
+      {/* Bulk delete confirmation */}
+      <ConfirmDialog
+        isOpen={bulkDeleteConfirm}
+        onClose={() => setBulkDeleteConfirm(false)}
+        onConfirm={executeBulkDelete}
+        title={`Delete ${selectedConvIds.size} conversation${selectedConvIds.size === 1 ? '' : 's'}?`}
+        description="This removes them for you. Other participants won't be affected."
+        confirmLabel="Delete"
+      />
 
       {/* New Conversation Modal */}
       <NewConversationModal
