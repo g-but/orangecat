@@ -309,6 +309,7 @@ export default function ConversationList({
   }
 
   return (
+    <>
     <div className="divide-y divide-gray-100">
       {filteredConversations.length === 0 ? (
         <div className="p-10 text-center text-gray-500">
@@ -436,5 +437,6 @@ export default function ConversationList({
       description="This removes it for you. Other participants won't be affected."
       confirmLabel="Delete"
     />
+    </>
   );
 }
