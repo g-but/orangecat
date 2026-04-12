@@ -19,6 +19,7 @@ import EntityListShell from '@/components/entity/EntityListShell';
 import EntityList from '@/components/entity/EntityList';
 import CommercePagination from '@/components/commerce/CommercePagination';
 import BulkActionsBar from '@/components/entity/BulkActionsBar';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useEntityList } from '@/hooks/useEntityList';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { projectEntityConfig, type ProjectListItem } from '@/config/entities/projects';
@@ -34,6 +35,7 @@ export default function ProjectsDashboardPage() {
   const { selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelection();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showSelection, setShowSelection] = useState(false);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<'my-projects' | 'favorites'>('my-projects');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -119,19 +121,13 @@ export default function ProjectsDashboardPage() {
     return items;
   }, [activeTab, myProjects, favorites, searchQuery, statusFilter]);
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) {
-      return;
-    }
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleteConfirm(true);
+  };
 
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedIds.size} project${selectedIds.size > 1 ? 's' : ''}? This action cannot be undone.`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+  const executeBulkDelete = async () => {
+    setBulkDeleteConfirm(false);
     setIsDeleting(true);
     try {
       const deletePromises = Array.from(selectedIds).map(async id => {
@@ -350,6 +346,14 @@ export default function ProjectsDashboardPage() {
         onDelete={handleBulkDelete}
         isDeleting={isDeleting}
         entityNamePlural="projects"
+      />
+      <ConfirmDialog
+        isOpen={bulkDeleteConfirm}
+        onClose={() => setBulkDeleteConfirm(false)}
+        onConfirm={executeBulkDelete}
+        title={`Delete ${selectedIds.size} project${selectedIds.size === 1 ? '' : 's'}?`}
+        description="This action cannot be undone."
+        confirmLabel="Delete"
       />
     </>
   );

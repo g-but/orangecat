@@ -42,7 +42,7 @@ export function AIChatMessage({
         {isUser ? (
           <>
             <AvatarImage src={userAvatar || undefined} alt={userName} />
-            <AvatarFallback className="bg-sky-100 text-sky-600">
+            <AvatarFallback className="bg-tiffany-100 text-tiffany-600">
               <User className="h-4 w-4" />
             </AvatarFallback>
           </>

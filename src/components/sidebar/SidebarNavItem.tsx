@@ -85,7 +85,7 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
 
         {/* Collapsed (desktop): tiny unread dot for Messages */}
         {showMessagesBadge && count > 0 && !isExpanded && (
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-sky-500 border-2 border-white"></span>
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-tiffany-500 border-2 border-white"></span>
         )}
 
         {/* Expanded (mobile): Show text labels inline */}
@@ -123,7 +123,7 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
 
         {/* Dynamic messages unread badge - mobile only */}
         {showMessagesBadge && count > 0 && isExpanded && (
-          <span className="ml-auto text-xs bg-sky-500 text-white px-2 py-0.5 rounded-full font-medium">
+          <span className="ml-auto text-xs bg-tiffany-500 text-white px-2 py-0.5 rounded-full font-medium">
             {count > 99 ? '99+' : count}
           </span>
         )}
@@ -145,7 +145,7 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
               </span>
             )}
             {showMessagesBadge && count > 0 && (
-              <span className="text-xs bg-sky-500 text-white px-1.5 py-0.5 rounded font-medium">
+              <span className="text-xs bg-tiffany-500 text-white px-1.5 py-0.5 rounded font-medium">
                 {count > 99 ? '99+' : count}
               </span>
             )}

@@ -184,7 +184,7 @@ export function BookingForm({
           placeholder="Any special requests or information for the service provider..."
           rows={3}
           maxLength={500}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tiffany-500 focus:border-tiffany-500"
         />
         <p className="text-xs text-gray-500 mt-1">{notes.length}/500 characters</p>
       </div>

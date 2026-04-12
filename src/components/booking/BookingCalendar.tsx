@@ -193,8 +193,8 @@ export function BookingCalendar({ serviceId, onSlotSelect, selectedSlot }: Booki
                   'h-11 w-full rounded-md text-sm font-medium transition-colors',
                   isPast && 'text-gray-300 cursor-not-allowed',
                   !isPast && !isSelected && 'hover:bg-gray-100 text-gray-700',
-                  isSelected && 'bg-sky-500 text-white',
-                  isToday && !isSelected && 'border border-sky-500 text-sky-600'
+                  isSelected && 'bg-tiffany-500 text-white',
+                  isToday && !isSelected && 'border border-tiffany-500 text-tiffany-600'
                 )}
               >
                 {date.getDate()}
@@ -237,7 +237,7 @@ export function BookingCalendar({ serviceId, onSlotSelect, selectedSlot }: Booki
                   className={cn(
                     'text-sm',
                     !slot.available && 'opacity-50 cursor-not-allowed',
-                    isSelectedSlot(slot) && 'ring-2 ring-sky-500 ring-offset-2'
+                    isSelectedSlot(slot) && 'ring-2 ring-tiffany-500 ring-offset-2'
                   )}
                 >
                   {formatTime(slot.start)} - {formatTime(slot.end)}

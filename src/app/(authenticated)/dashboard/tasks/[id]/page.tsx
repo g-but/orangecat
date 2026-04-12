@@ -28,6 +28,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useTaskActions } from './useTaskActions';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CompleteModal, AttentionModal, RequestModal } from './TaskActionModals';
 import CompletionHistory, { type CompletionWithUser } from './CompletionHistory';
 import type { TaskWithRelations } from './types';
@@ -84,7 +85,7 @@ export default function TaskDetailPage() {
   }, [hydrated, authLoading, user, loadTask]);
 
   // Action handlers
-  const { actionLoading, handleComplete, handleFlagAttention, handleRequest, handleArchive } =
+  const { actionLoading, handleComplete, handleFlagAttention, handleRequest, archiveConfirmOpen, requestArchiveConfirm, executeArchive, closeArchiveConfirm } =
     useTaskActions({
       taskId,
       onSuccess: () => {
@@ -137,7 +138,7 @@ export default function TaskDetailPage() {
               Edit
             </Button>
             <Button
-              onClick={handleArchive}
+              onClick={requestArchiveConfirm}
               variant="ghost"
               size="sm"
               className="text-red-600 hover:bg-red-50"
@@ -295,6 +296,15 @@ export default function TaskDetailPage() {
           onRequest={handleRequest}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={archiveConfirmOpen}
+        onClose={closeArchiveConfirm}
+        onConfirm={executeArchive}
+        title="Archive this task?"
+        description="The task will be archived and removed from your active list."
+        confirmLabel="Archive"
+      />
     </div>
   );
 }

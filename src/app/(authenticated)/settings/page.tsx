@@ -23,6 +23,7 @@ import {
 import { ROUTES } from '@/config/routes';
 import { MFASetup, MFAStatus } from '@/components/auth/MFASetup';
 import { RecoveryCodes } from '@/components/auth/RecoveryCodes';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { NostrConnectionCard } from '@/components/nostr/NostrConnectionCard';
 
 interface SettingsFormData {
@@ -52,6 +53,7 @@ export default function SettingsPage() {
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteAccountConfirm, setDeleteAccountConfirm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showMFASetup, setShowMFASetup] = useState(false);
   const [showRecoveryCodes, setShowRecoveryCodes] = useState(false);
@@ -141,19 +143,16 @@ export default function SettingsPage() {
     }
   };
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = () => {
     if (!user) {
       toast.error('User not found.');
       return;
     }
+    setDeleteAccountConfirm(true);
+  };
 
-    const confirmed = window.confirm(
-      'Are you absolutely sure you want to delete your account? This action cannot be undone.'
-    );
-    if (!confirmed) {
-      return;
-    }
-
+  const executeDeleteAccount = async () => {
+    setDeleteAccountConfirm(false);
     setIsDeleting(true);
     try {
       const response = await fetch('/api/delete-user', { method: 'POST' });
@@ -406,6 +405,15 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteAccountConfirm}
+        onClose={() => setDeleteAccountConfirm(false)}
+        onConfirm={executeDeleteAccount}
+        title="Delete your account?"
+        description="This action cannot be undone. All your data will be permanently deleted."
+        confirmLabel="Delete Account"
+      />
     </div>
   );
 }

@@ -20,6 +20,7 @@ interface UseTaskActionsOptions {
 export function useTaskActions({ taskId, onSuccess }: UseTaskActionsOptions) {
   const router = useRouter();
   const [actionLoading, setActionLoading] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
 
   const handleComplete = async (notes: string, durationMinutes: number | '') => {
     setActionLoading(true);
@@ -105,11 +106,10 @@ export function useTaskActions({ taskId, onSuccess }: UseTaskActionsOptions) {
     }
   };
 
-  const handleArchive = async () => {
-    if (!window.confirm('Are you sure you want to archive this task?')) {
-      return;
-    }
+  const requestArchiveConfirm = () => setArchiveConfirmOpen(true);
 
+  const executeArchive = async () => {
+    setArchiveConfirmOpen(false);
     try {
       const response = await fetch(`/api/tasks/${taskId}`, {
         method: 'DELETE',
@@ -133,6 +133,9 @@ export function useTaskActions({ taskId, onSuccess }: UseTaskActionsOptions) {
     handleComplete,
     handleFlagAttention,
     handleRequest,
-    handleArchive,
+    archiveConfirmOpen,
+    requestArchiveConfirm,
+    executeArchive,
+    closeArchiveConfirm: () => setArchiveConfirmOpen(false),
   };
 }

@@ -8,6 +8,7 @@ import EntityListShell from '@/components/entity/EntityListShell';
 import EntityList from '@/components/entity/EntityList';
 import CommercePagination from '@/components/commerce/CommercePagination';
 import BulkActionsBar from '@/components/entity/BulkActionsBar';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useEntityList } from '@/hooks/useEntityList';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { investmentEntityConfig } from '@/config/entities/investments';
@@ -25,6 +26,7 @@ export default function InvestmentsPage() {
   const { selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelection();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showSelection, setShowSelection] = useState(false);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<'my-investments' | 'open'>('my-investments');
 
   const {
@@ -54,18 +56,13 @@ export default function InvestmentsPage() {
     enabled: hydrated && !isLoading && activeTab === 'open',
   });
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) {
-      return;
-    }
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleteConfirm(true);
+  };
 
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedIds.size} investment${selectedIds.size > 1 ? 's' : ''}? This action cannot be undone.`
-    );
-    if (!confirmed) {
-      return;
-    }
-
+  const executeBulkDelete = async () => {
+    setBulkDeleteConfirm(false);
     setIsDeleting(true);
     try {
       const deletePromises = Array.from(selectedIds).map(async id => {
@@ -219,6 +216,14 @@ export default function InvestmentsPage() {
           entityNamePlural="investments"
         />
       )}
+      <ConfirmDialog
+        isOpen={bulkDeleteConfirm}
+        onClose={() => setBulkDeleteConfirm(false)}
+        onConfirm={executeBulkDelete}
+        title={`Delete ${selectedIds.size} investment${selectedIds.size === 1 ? '' : 's'}?`}
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+      />
     </>
   );
 }

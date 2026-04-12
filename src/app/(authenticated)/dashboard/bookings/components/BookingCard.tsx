@@ -1,7 +1,17 @@
+'use client';
+
+import { useState } from 'react';
 import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { STATUS } from '@/config/database-constants';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 interface Booking {
   id: string;
@@ -78,6 +88,7 @@ export default function BookingCard({
   onViewDetails,
 }: BookingCardProps) {
   const isProcessing = processingId === booking.id;
+  const [reasonDialog, setReasonDialog] = useState<{ action: 'reject' | 'cancel'; reason: string } | null>(null);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -158,10 +169,7 @@ export default function BookingCard({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => {
-                  const reason = window.prompt('Reason for rejection (optional):');
-                  onAction(booking.id, 'reject', reason || undefined);
-                }}
+                onClick={() => setReasonDialog({ action: 'reject', reason: '' })}
                 disabled={isProcessing}
               >
                 <XCircle className="h-4 w-4 mr-1" />
@@ -190,10 +198,7 @@ export default function BookingCard({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => {
-                  const reason = window.prompt('Reason for cancellation (optional):');
-                  onAction(booking.id, 'cancel', reason || undefined);
-                }}
+                onClick={() => setReasonDialog({ action: 'cancel', reason: '' })}
                 disabled={isProcessing}
               >
                 <XCircle className="h-4 w-4 mr-1" />
@@ -242,11 +247,45 @@ export default function BookingCard({
         </span>
         <button
           onClick={() => onViewDetails(booking.id)}
-          className="text-sky-600 hover:text-sky-700"
+          className="text-tiffany-600 hover:text-tiffany-700"
         >
           View details &rarr;
         </button>
       </div>
+      <Dialog open={!!reasonDialog} onOpenChange={open => !open && setReasonDialog(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {reasonDialog?.action === 'reject' ? 'Reject booking' : 'Cancel booking'}
+            </DialogTitle>
+          </DialogHeader>
+          <textarea
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none text-sm focus:ring-2 focus:ring-tiffany-500 focus:border-tiffany-500"
+            rows={3}
+            placeholder="Reason (optional)"
+            value={reasonDialog?.reason ?? ''}
+            onChange={e =>
+              setReasonDialog(prev => prev ? { ...prev, reason: e.target.value } : null)
+            }
+          />
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setReasonDialog(null)}>
+              Back
+            </Button>
+            <Button
+              onClick={() => {
+                if (reasonDialog) {
+                  onAction(booking.id, reasonDialog.action, reasonDialog.reason || undefined);
+                  setReasonDialog(null);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {reasonDialog?.action === 'reject' ? 'Reject' : 'Cancel booking'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import EntityListShell from '@/components/entity/EntityListShell';
 import EntityList from '@/components/entity/EntityList';
 import CommercePagination from '@/components/commerce/CommercePagination';
 import BulkActionsBar from '@/components/entity/BulkActionsBar';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useEntityList } from '@/hooks/useEntityList';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { EntityConfig, BaseEntity } from '@/types/entity';
@@ -61,6 +62,7 @@ export default function EntityDashboardPage<T extends BaseEntity>({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [showSelection, setShowSelection] = useState(false);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
 
   const { items, loading, error, page, total, setPage, refresh } = useEntityList<T>({
     apiEndpoint: config.apiEndpoint,
@@ -101,19 +103,13 @@ export default function EntityDashboardPage<T extends BaseEntity>({
   );
 
   // Bulk delete selected items
-  const handleBulkDelete = useCallback(async () => {
-    if (selectedIds.size === 0) {
-      return;
-    }
+  const handleBulkDelete = useCallback(() => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleteConfirm(true);
+  }, [selectedIds.size]);
 
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedIds.size} ${selectedIds.size > 1 ? config.namePlural.toLowerCase() : config.name.toLowerCase()}? This action cannot be undone.`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+  const executeBulkDelete = useCallback(async () => {
+    setBulkDeleteConfirm(false);
     setIsDeleting(true);
     try {
       const deletePromises = Array.from(selectedIds).map(async id => {
@@ -140,6 +136,7 @@ export default function EntityDashboardPage<T extends BaseEntity>({
       setIsDeleting(false);
     }
   }, [selectedIds, config.apiEndpoint, config.name, config.namePlural, clearSelection, refresh]);
+
 
   // Loading state
   if (!hydrated || authLoading) {
@@ -228,6 +225,14 @@ export default function EntityDashboardPage<T extends BaseEntity>({
         }}
         onDelete={handleBulkDelete}
         isDeleting={isDeleting}
+      />
+      <ConfirmDialog
+        isOpen={bulkDeleteConfirm}
+        onClose={() => setBulkDeleteConfirm(false)}
+        onConfirm={executeBulkDelete}
+        title={`Delete ${selectedIds.size} ${selectedIds.size === 1 ? config.name : config.namePlural}?`}
+        description="This action cannot be undone."
+        confirmLabel="Delete"
       />
     </>
   );

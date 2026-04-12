@@ -254,9 +254,9 @@ export function AssetRentalCalendar({
                     isPast && 'text-gray-300 cursor-not-allowed',
                     !isPast && !isAvailable && 'text-gray-300 cursor-not-allowed bg-gray-50',
                     !isPast && isAvailable && !isInRange && 'hover:bg-gray-100 text-gray-700',
-                    isInRange && !isStartDate && !isEndDate && 'bg-sky-100 text-sky-700',
-                    (isStartDate || isEndDate) && 'bg-sky-500 text-white',
-                    isToday && !isInRange && 'border border-sky-500 text-sky-600'
+                    isInRange && !isStartDate && !isEndDate && 'bg-tiffany-100 text-tiffany-700',
+                    (isStartDate || isEndDate) && 'bg-tiffany-500 text-white',
+                    isToday && !isInRange && 'border border-tiffany-500 text-tiffany-600'
                   )}
                 >
                   {date.getDate()}
@@ -270,11 +270,11 @@ export function AssetRentalCalendar({
       {/* Legend */}
       <div className="px-4 py-3 border-t border-gray-200 flex items-center gap-4 text-xs text-gray-500">
         <div className="flex items-center gap-1">
-          <div className="h-3 w-3 rounded bg-sky-500"></div>
+          <div className="h-3 w-3 rounded bg-tiffany-500"></div>
           <span>Selected</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="h-3 w-3 rounded bg-sky-100"></div>
+          <div className="h-3 w-3 rounded bg-tiffany-100"></div>
           <span>In range</span>
         </div>
         <div className="flex items-center gap-1">

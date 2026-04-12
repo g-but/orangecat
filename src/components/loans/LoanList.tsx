@@ -1,6 +1,6 @@
 'use client';
 
-import { Loan } from '@/types/loans';
+import { Loan, LoanOffer } from '@/types/loans';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/Button';
@@ -26,6 +26,7 @@ import { LoanOffersDialog } from './LoanOffersDialog';
 import { toast } from 'sonner';
 import loansService from '@/services/loans';
 import { CreateLoanDialog } from './CreateLoanDialog';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface LoanListProps {
   loans: Loan[];
@@ -37,6 +38,7 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
   const [offersDialogOpen, setOffersDialogOpen] = useState(false);
   const [editLoan, setEditLoan] = useState<Loan | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [confirmDeleteLoan, setConfirmDeleteLoan] = useState<Loan | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -87,11 +89,7 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
     setOffersDialogOpen(true);
   };
 
-  const handleDelete = async (loan: Loan) => {
-    const confirmed = window.confirm('Delete this loan? This cannot be undone.');
-    if (!confirmed) {
-      return;
-    }
+  const executeDelete = async (loan: Loan) => {
     try {
       const result = await loansService.deleteLoan(loan.id);
       if (result.success) {
@@ -146,10 +144,10 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
                   </CardDescription>
                 </div>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(loan)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => setConfirmDeleteLoan(loan)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -243,7 +241,7 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">Offers:</span>
-                    <span className="font-medium">0</span> {/* TODO: Add actual count */}
+                    <span className="font-medium">{(loan.offers as LoanOffer[] | undefined)?.length ?? 0}</span>
                   </div>
                 </div>
               </div>
@@ -275,7 +273,7 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
                   variant="outline"
                   size="sm"
                   className="text-red-600 hover:text-red-700"
-                  onClick={() => handleDelete(loan)}
+                  onClick={() => setConfirmDeleteLoan(loan)}
                 >
                   <Trash2 className="h-4 w-4" />
                   Delete
@@ -310,6 +308,18 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
           onLoanCreated={() => {}}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteLoan}
+        onClose={() => setConfirmDeleteLoan(null)}
+        onConfirm={async () => {
+          if (confirmDeleteLoan) await executeDelete(confirmDeleteLoan);
+          setConfirmDeleteLoan(null);
+        }}
+        title="Delete this loan?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+      />
     </div>
   );
 }

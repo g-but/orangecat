@@ -21,6 +21,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import {
   Card,
   CardHeader,
@@ -75,6 +76,7 @@ export function RecoveryCodes({ onCodesGenerated, onClose, initialCodes }: Recov
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
+  const [regenerateConfirm, setRegenerateConfirm] = useState(false);
 
   // Generate recovery codes
   const handleGenerateCodes = useCallback(async () => {
@@ -126,16 +128,9 @@ export function RecoveryCodes({ onCodesGenerated, onClose, initialCodes }: Recov
   }, [codes]);
 
   // Regenerate codes (requires confirmation)
-  const handleRegenerate = useCallback(async () => {
-    if (
-      !window.confirm(
-        'Are you sure you want to generate new codes? Your old codes will no longer work.'
-      )
-    ) {
-      return;
-    }
-    await handleGenerateCodes();
-  }, [handleGenerateCodes]);
+  const handleRegenerate = useCallback(() => {
+    setRegenerateConfirm(true);
+  }, []);
 
   // Format codes for display
   const formattedCodes = useMemo(() => {
@@ -294,6 +289,17 @@ export function RecoveryCodes({ onCodesGenerated, onClose, initialCodes }: Recov
           Done
         </Button>
       </CardFooter>
+      <ConfirmDialog
+        isOpen={regenerateConfirm}
+        onClose={() => setRegenerateConfirm(false)}
+        onConfirm={async () => {
+          setRegenerateConfirm(false);
+          await handleGenerateCodes();
+        }}
+        title="Generate new recovery codes?"
+        description="Your old codes will no longer work."
+        confirmLabel="Generate New Codes"
+      />
     </Card>
   );
 }
