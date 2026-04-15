@@ -24,6 +24,7 @@ import { ArrowLeft, Upload, PenLine, Cat, FileText, Sparkles } from 'lucide-reac
 import type { DocumentFormData } from '@/lib/validation';
 import { ROUTES } from '@/config/routes';
 import { logger } from '@/utils/logger';
+import { useCreatePrefill } from '@/hooks/useCreatePrefill';
 
 type CreateMode = 'choose' | 'upload' | 'form';
 
@@ -40,6 +41,13 @@ function DocumentPageContent() {
   const searchParams = useSearchParams();
   const editId = searchParams?.get('edit') || null;
 
+  const { initialData: prefillData } = useCreatePrefill<DocumentFormData>({
+    entityType: 'document',
+    enabled: !editId,
+  });
+
+  // If URL params contain prefill data (e.g. from Cat), skip choose mode
+  const hasPrefill = !!(prefillData?.title || prefillData?.content);
   const [mode, setMode] = useState<CreateMode>('choose');
   const [initialValues, setInitialValues] = useState<Partial<DocumentFormData> | undefined>(
     undefined
@@ -47,6 +55,21 @@ function DocumentPageContent() {
   const [isLoadingDocument, setIsLoadingDocument] = useState(!!editId);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+
+  // Auto-enter form mode when prefill data is available from URL params
+  useEffect(() => {
+    if (hasPrefill && mode === 'choose' && !editId) {
+      setInitialValues({
+        title: prefillData?.title ?? '',
+        content: (prefillData as Record<string, unknown>)?.content as string ?? '',
+        document_type: 'notes',
+        visibility: 'cat_visible',
+        tags: [],
+        ...prefillData,
+      });
+      setMode('form');
+    }
+  }, [hasPrefill, mode, editId, prefillData]);
 
   // Fetch existing document if in edit mode
   useEffect(() => {
@@ -225,6 +248,7 @@ function DocumentPageContent() {
                 document_type: 'notes',
                 visibility: 'cat_visible',
                 tags: [],
+                ...prefillData,
               });
               setMode('form');
             }}
@@ -309,6 +333,7 @@ function DocumentPageContent() {
                 document_type: 'notes',
                 visibility: 'cat_visible',
                 tags: [],
+                ...prefillData,
               });
               setMode('form');
             }}

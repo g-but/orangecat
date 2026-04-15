@@ -172,13 +172,14 @@ async function fetchNewMessages(
   userId: string,
   since: Date
 ): Promise<number | undefined> {
+  // Count messages in conversations the user participates in, sent by others
   const { count, error } = await admin
     .from(DATABASE_TABLES.MESSAGES)
-    .select('*', { count: 'exact', head: true })
-    .eq('recipient_id', userId)
+    .select('conversation_participants!inner(user_id)', { count: 'exact', head: true })
+    .eq('conversation_participants.user_id', userId)
+    .neq('sender_id', userId)
     .gte('created_at', since.toISOString());
 
-  // Messages table may use different columns — if this fails, skip gracefully
   if (error || count === null || count === 0) {
     return undefined;
   }
