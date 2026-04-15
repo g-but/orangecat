@@ -66,7 +66,7 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
           // Trigger a re-fetch of project data by updating the component
           // For now, we'll still reload but show a toast first
           toast.success('Balance refreshed successfully');
-          // TODO: Replace with proper state update when project data is available via props/context
+          // FUTURE: Replace window.location.reload() with a targeted state update — requires project data to be lifted into a shared context or passed down via props so a single field can be refreshed without a full page reload
           setTimeout(() => {
             window.location.reload();
           }, 500);

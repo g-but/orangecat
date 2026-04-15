@@ -349,10 +349,8 @@ describe('🎨 Button Component - UI Foundation Tests', () => {
         </Button>
       );
       const button = screen.getByRole('button');
-      expect(button).toHaveStyle({ 
-        backgroundColor: 'red',
-        fontSize: '20px'
-      });
+      expect(button.style.backgroundColor).toBe('red');
+      expect(button.style.fontSize).toBe('20px');
     });
 
     test('should support all standard button attributes', () => {

@@ -208,7 +208,7 @@ export function logTiming(operation: string, startTime: number): void {
 // =====================================================================
 // 🔄 BACKWARD COMPATIBILITY - OLD LOGGER FUNCTIONS
 // =====================================================================
-// TODO: Gradually migrate these to use logger.auth(), logger.supabase(), etc.
+// FUTURE: Migrate call sites to use logger.auth(), logger.supabase(), etc. directly — these wrappers exist only for backward compatibility and should be removed once all callers are updated
 
 /**
  * @deprecated Use logger.auth() instead

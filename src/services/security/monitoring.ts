@@ -129,7 +129,7 @@ export class SecurityMonitor {
 
     // In production, this would trigger alerts to security team
     if (process.env.NODE_ENV === 'production') {
-      // TODO: Integrate with alerting system (email, Slack, PagerDuty, etc.)
+      // FUTURE: Integrate with alerting system (email, Slack, PagerDuty, etc.) — add webhook/notification service calls here once an alerting provider is chosen
     }
   }
 }

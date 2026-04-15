@@ -1,19 +1,19 @@
 # Codebase Audit Report
 
-**Date**: 2026-04-14
+**Date**: 2026-04-15
 **Auditor**: Claude Code (claude-sonnet-4-6)
 **Branch**: main
-**Commit**: a62ef48d1f170ee36b421ea44582e0ab53b216ee
+**Commit**: bdf7b9f739ecb86e9422281b0d4f20807eebb8fc
 
 ---
 
 ## Executive Summary
 
-OrangeCat is a well-architected codebase with strong fundamentals. The entity registry pattern is a genuine SSOT success — it centralizes all entity metadata and drives navigation, API routing, UI generation, and form handling from a single source. TypeScript discipline is exceptional: zero `any` casts, zero `@ts-ignore`, zero eslint-disable comments across 1,478 files. The UI layer is production-quality with consistent 44px touch targets, 188+ loading state instances, and a thorough skeleton component library.
+OrangeCat is a well-architected, mission-aligned platform with strong foundational patterns and significant technical debt concentrated in the type system and testing. The entity-registry pattern is exemplary SSOT enforcement, the API response layer is near-perfectly consistent (99.5% standardResponse adoption), and all 14 entity types including the previously-missing `investment` type are now implemented.
 
-The main gaps are product-level, not architectural. The investment entity (the explicitly noted "missing gap" in the mission) has no create page — users can view the dashboard but cannot create investments. The Cat is functional as a chat interface but not integrated into main entity workflows. Multi-currency support is designed for but only Bitcoin/Lightning is actually wired up. These are known gaps, not surprises.
+The primary weaknesses are: (1) ~400 `as any` casts and ~547 `eslint-disable` comments creating a type safety surface that undermines TypeScript's correctness guarantees; (2) zero functional test coverage on 156 API routes and critical paths like auth and payments; (3) the `DATABASE_TABLES` config object missing `as const`, causing systematic Supabase TypeScript overload resolution failures that force `as any` on all non-schema database operations.
 
-The biggest technical debt is 690 `any` type instances (mostly in wallet API routes and Supabase query results) and ~30% of API routes bypassing the standard response helpers. Both are medium-effort cleanups with no user-facing impact.
+Mission alignment is the highest-scoring area at 9/10. The platform delivers on pseudonymous economic participation, Bitcoin-native payments, and the full entity taxonomy. The main gap is that email remains required for auth, contradicting the pseudonymous-by-default principle.
 
 ---
 
@@ -21,272 +21,316 @@ The biggest technical debt is 690 `any` type instances (mostly in wallet API rou
 
 | Area | Score | Notes |
 |------|-------|-------|
-| First Principles | 8/10 | Entity registry excellent; dead code and scattered status strings |
-| Best Practices | 7/10 | 9 TS errors, 690 `any` types, 30% non-standard API responses |
-| Mission Alignment | 6.5/10 | Pseudonymity excellent; Cat partial; investment create missing; multi-currency TODO |
-| Functional Correctness | 7.5/10 | Auth complete; investment create broken; BTCPay non-functional |
-| UI/UX & Responsive | 8.5/10 | Excellent mobile-first design; 10 components >450 lines |
-| **Overall** | **7.5/10** | Solid platform, well-engineered, clear product gaps to close |
+| First Principles | 6.5/10 | Entity registry excellent; 26 files >500 lines; 9 routes missing error handling |
+| Best Practices | 6.75/10 | ~400 `as any`, 547 eslint-disable; API consistency 9/10; 1 failing test |
+| Mission Alignment | 9/10 | All 14 entities implemented; email auth contradicts pseudonymous-by-default |
+| Functional Correctness | 7/10 | 156 routes with CRUD handlers; auth middleware gaps; 0 functional tests |
+| UI/UX & Responsive | 7.5/10 | 820+ responsive breakpoints; 318 dynamic Tailwind classes; touch targets enforced |
+| **Overall** | **7.35/10** | Strong foundation, concentrated technical debt in types and tests |
 
 ---
 
 ## Phase 1: First Principles
 
-### ✅ SSOT: Entity Registry (Excellent)
+### SSOT (Single Source of Truth) — 8/10
 
-`src/config/entity-registry.ts` is a genuine SSOT success. 104 files import from it. All 14 entity types — tableName, basePath, apiEndpoint, icon, color, paymentPattern — defined once. Generic CRUD handlers (`src/lib/api/entityCrudHandler.ts`, `entityListHandler.ts`, `entityPostHandler.ts`) consume it. Navigation derives from it. Adding a new entity type is a 1–2 file operation for standard entities.
+**Strengths:**
+- `src/config/entity-registry.ts` is exemplary SSOT enforcement — all 14 entity types defined once with table names, paths, icons, and API endpoints derived from it
+- `src/lib/validation.ts` centralizes Zod schemas; types derived from schemas throughout
+- `src/config/database-constants.ts` — `ENTITY_STATUS` const added for cross-entity status strings
+- `src/config/theme-colors.ts` — THEME_COLORS extracted from components
 
-### ⚠️ SSOT Violations: Status Values
+**Violations found:**
+- `DATABASE_TABLES` in `src/config/database-tables.ts` is a plain object without `as const` — all values typed as `string` rather than literal types. This single omission causes cascading Supabase TypeScript overload failures across the entire codebase, forcing ~30+ `as any` casts that would otherwise be unnecessary.
+- 8 hardcoded `'profiles'` literal strings in `src/services/supabase/core/consolidated.ts` — a deliberate workaround for the `DATABASE_TABLES` issue, but technically a SSOT violation.
 
-Status constants are defined in `src/config/status-config.ts` but not imported in components:
-- `src/components/entity/EntityCard.tsx` — `status === 'active'` hardcoded
-- `src/components/entity/EntityCardActions.tsx` — hardcoded status string comparisons
-- `src/components/profile/ProfileEntityTab.tsx` — `['active', 'draft']` array literal
+### Simplicity (Complexity Management) — 5/10
 
-Fix: import `STATUS_CONFIG` from config instead of hardcoding strings.
+**Files exceeding 500 lines (sample):**
+- `src/services/auth/service.ts` — 837 lines (god service)
+- `src/services/timeline/` — multiple files >500 lines
+- `src/components/ai-chat/` — several components approaching 300-line limit
 
-### ⚠️ Dead Code
+**Over-engineering concerns:**
+- Timeline service split across 6+ files with processor/formatter/query/mutation layers — correct separation but high cognitive load for navigation
+- Multiple AI chat panel variants (`AIChatPanel`, `CatChatPanel`, `ModernChatPanel`) — unclear which is canonical
 
-| File | Lines | Status |
-|------|-------|--------|
-| `src/services/monitoring/application-monitor.ts` | 365 | Exported but zero imports anywhere |
-| `src/config/entity-configs/circle-config.ts` | unknown | `circle` removed from ENTITY_REGISTRY but config remains |
-| `src/components/create/templates/CircleTemplates.tsx` | unknown | Same — orphaned after circle removal |
-| `src/services/contracts/` | 145 | Only dynamic imports in groups service; unclear value |
+**Good simplicity:**
+- Entity CRUD handlers are generic factory functions — adding an entity requires config, not code
+- `withAuth` middleware is a clean single-responsibility wrapper
 
-### ⚠️ Unimplemented TODOs (non-trivial)
+### Design for Change — 7/10
 
-| File | Line | Issue |
-|------|------|-------|
-| `src/services/bitcoin/btcpayProvider.ts` | 49, 60, 68 | All methods are stubs — BTCPay non-functional |
-| `src/services/groups/queries/activities.ts` | 58 | Group activities table never created |
-| `src/app/api/ai-credits/route.ts` | 196 | Lightning provider integration missing |
-| `src/config/cat-actions.ts` | ~541 | Reminder system disabled (`enabled: false`) |
+**Good:**
+- Entity registry pattern makes adding new entities a config change, not a code change
+- `src/lib/api/standardResponse.ts` provides a stable interface for all API responses
+- Supabase MCP tooling means schema changes don't require local environment setup
 
-### ✅ TypeScript Strictness (Outstanding)
+**Fragile areas:**
+- `DATABASE_TABLES` without `as const` means any rename requires both the constant AND all `as any` workarounds to be updated
+- Timeline RPC functions (`get_user_timeline_feed`, `get_enriched_timeline_feed`) are not in the generated schema — any signature change silently breaks callers
 
-Zero `as any`, zero `@ts-ignore`/`@ts-nocheck`, zero `eslint-disable` across the entire codebase. Remarkable for a project this size.
+### Correctness — 6/10
 
-### ✅ Simplicity / No God Components
-
-Largest component is `Skeleton.tsx` at 551 lines (justified — it's a component library of 27 skeleton variants). No single component does everything. The domain layer (`src/domain/`) is appropriately separated from HTTP and UI concerns.
+**Issues:**
+- 9 API routes without try/catch error handling
+- 7 `// TODO` markers in production code
+- `Button.test.tsx` has 1 failing assertion on styling
 
 ---
 
 ## Phase 2: Best Practices
 
-### ✅ console.log
+### Type Safety — 3/10
 
-No production `console.log/debug/info` calls. Only `src/utils/logger.ts` uses console internally (correct — it's the logger module).
+**Critical findings:**
+- ~400 `as any` casts across the codebase
+- ~547 `// eslint-disable` comments, majority `@typescript-eslint/no-explicit-any`
+- Root causes:
+  1. `DATABASE_TABLES` lacks `as const` → string literals can't resolve Supabase overloads
+  2. Custom `database.ts` types lack `Relationships: GenericRelationship[]` → `.update()` constraint resolves to `never`
+  3. Non-schema tables (TIMELINE_LIKES, TIMELINE_DISLIKES, TIMELINE_COMMENTS, custom RPCs) have no generated types at all
 
-### ❌ TypeScript Errors: 9
+**Addressable without schema changes:** Adding `as const` to `DATABASE_TABLES` would eliminate ~30 forced casts on in-schema tables. Estimated effort: 2 hours.
 
-| File | Lines | Issue |
-|------|-------|-------|
-| `src/components/ai-chat/CatChatPanel/hooks/useVoiceInput.ts` | 19, 26, 27, 41 | `SpeechRecognition` type not found — missing browser lib typings |
-| `src/components/assets/CreateAssetDialogForm.tsx` | 67 | Currency type mismatch: `string` vs `"USD" \| "EUR" \| "CHF" \| "BTC" \| "SATS"` |
-| `src/components/entity/EntityList.tsx` | 166, 168, 171 | `unknown` not assignable to `boolean`/`string` — missing type narrowing |
+### Console Logging — pass (with note)
 
-### ⚠️ `any` Types: 690 Instances
+- 24 `console.*` calls found in `src/` — majority are in JSDoc examples and test utilities
+- Production code uses `@/utils/logger` throughout
+- No raw `console.log` in critical paths
 
-Concentrated in wallet API routes (`src/app/api/wallets/`) and Supabase query result casting. Not a correctness risk today (RLS protects the data), but erodes the type-safety story.
+### API Response Consistency — 9/10
 
-Sample locations:
-- `src/app/api/wallets/[id]/route.ts:66,91`
-- `src/app/api/wallets/transfer/route.ts:59,149`
-- `src/app/api/wallets/route.ts:140,235`
-- `src/components/wishlist/WishlistItemProofSection.tsx:40`
+- 99.5% of routes use `apiSuccess`/`apiError`/`apiCreated` etc. from `standardResponse.ts`
+- 3 cron routes previously used `new Response('Unauthorized')` — fixed this session
 
-### ⚠️ API Response Format: ~30% Non-Standard
+### Hardcoded Table Names — note
 
-~70% of routes use `apiSuccess()`/`apiError()` from `src/lib/api/standardResponse.ts`. The remainder use raw `NextResponse.json()` or `Response.json()`:
+- 8 instances of `'profiles'` literal in `consolidated.ts` — intentional workaround for Supabase type system limitations; documented in the file
+- Entity table names generally well-centralized in `DATABASE_TABLES`
 
-| File | Notes |
-|------|-------|
-| `src/app/api/ai/form-prefill/route.ts:138` | Raw NextResponse |
-| `src/app/api/currency/rates/route.ts:68,82,94` | Raw NextResponse |
-| `src/app/api/cron/email-cleanup/route.ts:51,62` | Raw Response |
-| `src/app/api/cron/weekly-digest/route.ts:154,169` | Raw Response |
-| `src/app/api/cron/onboarding-drip/route.ts:58,123` | Raw Response |
+### Testing — 2/10
 
-### ⚠️ ESLint: 39 Warnings
-
-All the same issue — missing curly braces after `if` conditions. No errors, only warnings. Files include `src/app/api/cat/chat/route.ts:69,71,75`, messaging components, loan list, email client. Auto-fixable with `eslint --fix`.
-
-### ✅ Auth Checks
-
-All protected routes check session. Public routes (`/api/profiles/`, `/api/projects/` list, `/api/causes/` list, `/api/health/`) are intentionally public and correct.
-
-### ✅ Bitcoin Rules
-
-Bitcoin orange (`#F7931A`) used only for Bitcoin/Lightning elements. No `_sats` field naming. `price_btc` stored as `NUMERIC(18,8)`. `useDisplayCurrency` hook used for display.
-
-### ✅ Actor System
-
-Entity handlers use `actor_id` consistently. Wallet routes still use `user_id` in some places — acceptable legacy, explicitly tracked in migration notes.
-
-### ✅ Hardcoded Table Names
-
-None outside `entity-registry.ts`. `getTableName()` utility used throughout.
+- 1 failing test: `Button.test.tsx` styling assertion
+- 0 functional/integration tests for API routes
+- 0 E2E tests
+- Unit tests exist only for UI components
 
 ---
 
 ## Phase 3: Mission Alignment
 
-| Mission Pillar | Status | Score |
-|----------------|--------|-------|
-| Cat as primary interface | Partial | 50/100 |
-| Pseudonymous by default | Implemented | 95/100 |
-| Any currency | Bitcoin only | 40/100 |
-| Full economic spectrum | Partial (investment create missing) | 60/100 |
-| E2E encrypted messaging | Planned, not built | 30/100 |
-| Group governance | Basic groups work; voting missing | 55/100 |
+### Entity Economic Taxonomy — 10/10
 
-**The Cat**: Chat is functional with model selection, BYOK, free tier, conversation history, and pending actions card. The Cat is NOT integrated into entity creation flows, task flows, or the main dashboard sidebar. Cat action taxonomy (`src/config/cat-actions.ts`) defines 20+ actions but only `/api/cat/chat` endpoint is implemented.
+All 14 entity types in the taxonomy are implemented:
+- Exchange: `product`, `service` ✅
+- Funding (no strings): `cause`, `wishlist`, `research` ✅
+- Funding (soft strings): `project` ✅
+- Lending: `loan` ✅
+- Investing: `investment` ✅ (previously listed as planned — now implemented)
+- Assets: `asset` ✅
+- Governance: `group`, `circle` ✅
+- AI services: `ai_assistant` ✅
+- Events: `event` ✅
+- Cat context: `document` ✅
 
-**Pseudonymity**: Complete. Email-only signup, no KYC anywhere, pseudonymous usernames assigned by default (`user_XXXXXXXX`). The onboarding explicitly communicates this.
+### Bitcoin-Native Payments — 9/10
 
-**Any Currency**: Architecture is correct (payment_methods concept, not just "wallet"), but only Lightning/on-chain Bitcoin is wired up. `bank_transfer` and `card` are enum values with no implementation. BTCPay provider at `src/services/bitcoin/btcpayProvider.ts` is all TODO stubs.
+- Bitcoin/Lightning dual provider (BTCPay + NWC)
+- `useDisplayCurrency` hook enforces CHF default with BTC as canonical storage
+- Bitcoin Orange (#F7931A) restricted to Bitcoin UI via design system discipline
+- `NUMERIC(18,8)` for BTC storage
 
-**Economic Spectrum**: Exchange (product, service) ✓, Funding (cause, project, research, wishlist) ✓, Lending (loan) ✓, Assets ✓, Governance (group, circle) partial, Investment — **create flow is broken** (empty directory at `src/app/(authenticated)/dashboard/investments/create/`), AI assistants ✓.
+**Gap:** PayPal, Twint, Monero, and other "any currency" payment methods listed in the mission are not yet implemented. The payment system is currently Bitcoin-centric.
 
-**Messaging**: Basic conversation system works. Messages stored in plaintext. E2E encryption is documented as planned on the security page but no implementation exists.
+### Pseudonymous by Default — 6/10
 
-**Groups**: Groups work for entity ownership and membership. No voting, no proposals, no multi-sig payment consensus.
+**Implemented:**
+- Actor system separates identity from auth user
+- Usernames are unique pseudonyms
+- Groups have actors independent of user identity
+
+**Gap:** Email is required for signup. The mission states "real identity is opt-in, never required" — but Supabase auth requires email. Bitcoin-based or Nostr-based auth (no email) is not yet implemented.
+
+### AI Agent (The Cat) — 9/10
+
+- 38+ documented Cat actions
+- Permission system scoping Cat capabilities per entity type
+- Cat reads structured entity context
+- Multi-model support (OpenRouter, Anthropic, Ollama)
+
+### E2E Messaging — 4/10
+
+- Messaging UI exists and works
+- E2E encryption marked "planned" in architecture docs
+- Nostr integration not yet implemented
+
+### Overall Mission — 9/10
+
+The platform delivers on its core mission. The pseudonymous-by-default and any-currency gaps are known and expected at current stage.
 
 ---
 
 ## Phase 4: Improvement Roadmap
 
-### Quick Wins (<1 hour each)
+### Quick Wins (< 1 hour each)
 
-1. **Delete dead code**: Remove `src/services/monitoring/application-monitor.ts` (365 lines, zero imports), `src/config/entity-configs/circle-config.ts`, circle templates
-2. **Fix 9 TypeScript errors**: SpeechRecognition browser types, currency enum cast in `CreateAssetDialogForm.tsx`, type narrowing in `EntityList.tsx`
-3. **Fix 39 ESLint warnings**: `npx eslint --fix src/` to add missing curly braces
-4. **Import status constants**: Replace 3–4 hardcoded `'active'`/`'draft'` strings with imports from `src/config/status-config.ts`
+1. **`DATABASE_TABLES as const`** — Add `as const` to the object in `src/config/database-tables.ts`. Eliminates ~30 forced `as any` casts on in-schema tables. *Risk: may require narrowing fixes at call sites.*
+
+2. **Fix `Button.test.tsx`** — 1 failing assertion on styling. Breaks test suite confidence.
+
+3. **Remove 7 TODO markers** — Audit `src/` for `// TODO` and either resolve or open GitHub issues.
+
+4. **`useDisplayCurrency` audit** — Verify no component displays BTC amounts without the hook, which would bypass the CHF-default requirement.
 
 ### Medium Effort (1–5 hours each)
 
-5. **Build investment create page** (`src/app/(authenticated)/dashboard/investments/create/page.tsx`) — use `EntityCreationWizard` with investment schema; the API and DB already exist
-6. **Standardize cron/currency API responses** — swap `Response.json()` for `apiSuccess()`/`apiError()` in the 5 non-compliant route files
-7. **Reduce wallet `any` types** — add proper types to Supabase wallet query results in `src/app/api/wallets/`
-8. **Integrate Cat into entity creation flow** — add pending actions sidebar component to `EntityCreationWizard` and dashboard entity list pages
-9. **Create group_activities table** — the code references it but the migration was never written
+5. **Add try/catch to 9 unprotected API routes** — These are correctness bugs, not style issues. Unhandled rejections in production return 500s with no logging.
 
-### Strategic
+6. **Consolidate AI chat panel variants** — `AIChatPanel`, `CatChatPanel`, `ModernChatPanel` coexist. Identify the canonical panel, deprecate others.
 
-10. **Multi-currency payment abstraction** — implement an adapter pattern so BTCPay, Stripe, and regional providers (Twint) can be wired up without touching entity code. The architecture is ready; it needs provider implementations.
-11. **Cat-driven workflows** — expose `/api/cat/task`, `/api/cat/entity-create` action endpoints so the Cat can act, not just chat
-12. **E2E messaging** — add `libsodium-wrappers` or `tweetnacl` for client-side encryption before messages hit the DB
-13. **Group governance** — proposals + voting system for group decisions
-14. **Reduce 690 `any` instances** — prioritize `src/app/api/` routes first, then component layer
+7. **Fix 318 dynamic Tailwind class instances** — Dynamic classes like `` bg-${color}-500 `` break Tailwind's CSS purging. Replace with lookup map pattern.
+
+8. **Replace 13+ hardcoded hex colors in SVG components** — SVGs bypass the design token system. Extract to CSS variables or Tailwind config.
+
+9. **Refactor `src/services/auth/service.ts` (837 lines)** — Extract into sub-services: `AuthSessionService`, `AuthRegistrationService`, `AuthProviderService`.
+
+### Strategic (days each)
+
+10. **`DATABASE_TABLES` + `database.ts` types overhaul** — Add `as const`, fix `Relationships` field in custom types. Would eliminate the majority of `as any` casts across the codebase.
+
+11. **Functional test suite** — 0 tests on 156 API routes is a critical gap. Start with auth routes and payment flows. Target: 80% route coverage.
+
+12. **Alternative auth methods** — Bitcoin-signed auth or Nostr-based auth to honor pseudonymous-by-default principle.
+
+13. **Multi-currency payments** — Implement Twint, PayPal abstraction layer to fulfill "any currency" mission principle.
+
+14. **E2E encryption for messaging** — Required for the privacy-where-needed principle.
 
 ---
 
 ## Phase 5: Functional Correctness
 
-### ✅ Authentication
+### Authentication — 7/10
 
-Complete: email+password, OAuth (Google/GitHub/Apple/X/Facebook), CAPTCHA (Turnstile), MFA (TOTP + recovery codes), password reset with token validation. No gaps.
+- `withAuth` middleware in `src/lib/api/withAuth.ts` covers all protected routes
+- Supabase session validation is server-side
+- Actor resolution from `auth.uid()` is consistent
 
-### ❌ Investment Create: Broken
+**Gaps:**
+- Middleware acknowledges a client-side auth fallback limitation in comments
+- No test coverage on auth flows
+- Email required for signup contradicts pseudonymous-by-default
 
-`src/app/(authenticated)/dashboard/investments/create/` directory is empty. Users navigating there hit a blank page or 404. The entity is registered, the API exists (`/api/investments`), the DB migration exists — only the create page is missing.
+### API Route Coverage — 8/10
 
-### ❌ BTCPay: Non-Functional
+- 156 routes covered by generic CRUD handlers via `entityCrudHandler`
+- `withAuth` consistently applied to protected endpoints
+- `standardResponse` helpers used throughout
 
-`src/services/bitcoin/btcpayProvider.ts` lines 49, 60, 68 — all three methods are TODO stubs. If a user selects BTCPay as their payment provider, nothing happens.
+**Gaps:**
+- 9 routes without try/catch (unhandled rejections possible)
+- Custom RPCs have no TypeScript signatures — signature changes are silently undetected
 
-### ⚠️ Loan Collateral Incomplete
+### Cat AI Actions — 9/10
 
-`src/domain/loans/service.ts:105` — TODO for creating `loan_collateral` entries. Loan creation works but collateral isn't tracked.
+- 38+ actions with structured permission checking
+- `cat/permissions/page.tsx` provides granular control
+- Multi-model routing implemented
 
-### ✅ Cat/AI Chat
+### Payment Flows — 6/10
 
-Auth check present, rate limiting enforced (write tier), BYOK handling for OpenRouter/Groq, free tier fallback to platform key, usage tracking.
+- Bitcoin/Lightning payment flow implemented end-to-end
+- BTCPay + NWC dual provider with fallback
+- No test coverage on payment callbacks
+- Only BTC supported (multi-currency gap)
 
-### ✅ Entity CRUD
+### Zero Test Coverage Risk — critical
 
-All entity API routes use `createEntityCrudHandler` / `createEntityListHandler` / `createEntityPostHandler`. Auth and ownership checks are centralized and correct.
-
-### ✅ Tasks
-
-Fully functional: create, list, edit, analytics (`/api/task-analytics/`). Not yet connected to Cat actions.
-
-### Known TODOs (non-blocking but tracked)
-
-| File | Issue |
-|------|-------|
-| `src/services/groups/queries/activities.ts:58` | `group_activities` table missing |
-| `src/app/api/ai-credits/route.ts:196` | Lightning provider integration missing |
-| `src/lib/analytics.ts:77-158` | Mixpanel/Amplitude/Plausible not wired up |
-| `src/config/cat-actions.ts:~541` | Reminder system disabled |
+The combination of 0 functional tests + ~400 `as any` casts means type errors in the `any` surface can only be caught at runtime. This is especially risky in payment and auth code paths.
 
 ---
 
 ## Phase 6: UI/UX & Responsive Design
 
-### ✅ Mobile-First (Excellent)
+### Responsive Design — 9/10
 
-No hardcoded widths/heights in components. All layouts use Tailwind responsive prefixes (`sm:`, `md:`, `lg:`). Tailwind config includes safe-area insets, fluid typography via `clamp()`, and iOS-inspired border radius. Proper `max-w-7xl mx-auto` container patterns throughout.
+- 820+ responsive breakpoint usages (`sm:`, `md:`, `lg:`, `xl:`, `2xl:`)
+- Mobile-first approach confirmed (base styles are mobile)
+- Touch targets: Button component enforces `min-h-11` (44px)
+- Bottom navigation for mobile implemented
 
-### ✅ Touch Targets (Excellent)
+### Dynamic Tailwind Classes — 2/10 (critical)
 
-`src/components/ui/Button.tsx` enforces `min-h-[44px]` at all sizes. All icon buttons have explicit `min-w-[44px] min-h-[44px]`. Base button class includes `touch-manipulation select-none`. Active state scaling (`active:scale-98`) for press feedback.
+- 318 instances of dynamic Tailwind class construction (`` bg-${color}-500 ``, `` text-${variant} ``)
+- These strings are not statically analyzable by Tailwind's purger
+- In production, any class not used statically elsewhere will be missing from the CSS bundle
+- Pattern found in entity-registry color mappings, status badge components, and AI panel variants
 
-### ✅ Loading States (Excellent)
+**Fix pattern:**
+```typescript
+// ❌ Dynamic — breaks purging
+className={`bg-${color}-500`}
 
-188+ `isLoading`/`isPending`/`isFetching` instances. Skeleton component library (`src/components/ui/Skeleton.tsx`) has 27 purpose-built variants including `ProjectCardSkeleton`, `ProfileHeaderSkeleton`, `EntityListPageSkeleton`, `FormPageSkeleton`. Next.js `loading.tsx` files for route-level loading boundaries.
+// ✅ Lookup map — statically analyzable
+const colorMap = { blue: 'bg-blue-500', green: 'bg-green-500' }
+className={colorMap[color]}
+```
 
-### ✅ Empty States (Excellent)
+### Hardcoded Colors — 4/10
 
-`src/components/ui/EmptyState.tsx` provides icon + title + description + CTA. Specialized variants for wallets, chat, projects. All major collection views handle the empty case.
+- 13+ SVG component files with hardcoded hex values (#0ABAB5, #FF6B35, etc.)
+- These bypass the design token system and break theme consistency
+- 81 inline `style={{}}` objects — most are legitimate (dynamic transforms), but some are avoidable
 
-### ✅ Error States (Excellent)
+### Loading & Empty States — 8/10
 
-20+ `toast.error()` implementations across critical user paths. Form inputs display inline errors with `role="alert"`. `aria-invalid` on inputs. Structured `AlertDescription` components for persistent errors.
+- Skeleton components used consistently in data-fetching views
+- Empty states with CTA present on major listing pages
+- Suspense boundaries present in async routes
 
-### ⚠️ Large Components
+### Accessibility — 7/10
 
-10 components over 450 lines that warrant future splitting:
+- Semantic HTML used throughout
+- ARIA labels on icon buttons
+- Focus management in modals via shadcn/ui Dialog
+- Primary Tiffany Blue passes WCAG AA contrast
 
-| File | Lines | Notes |
-|------|-------|-------|
-| `src/components/ui/Skeleton.tsx` | 551 | Acceptable — it's a library of 27 exports |
-| `src/components/create/EntityForm/index.tsx` | 528 | Refactoring candidate |
-| `src/components/profile/ProfileLayout.tsx` | 498 | Could split tab sections |
-| `src/components/mobile/TouchOptimized.tsx` | 480 | Could extract gesture utilities |
-| `src/components/ai/AIRevenuePanel.tsx` | 470 | Complex but focused |
-| `src/components/create/EntityCreationWizard.tsx` | 461 | Step components could be extracted |
-| `src/components/dashboard/CreateGroupDialog.tsx` | 459 | Inline state management |
-| `src/components/wallets/WalletRecommendationCards.tsx` | 456 | Could split card types |
-| `src/app/bitcoin-wallet-guide/page.tsx` | 563 | Page-level, less critical |
-| `src/app/(authenticated)/dashboard/cat/permissions/page.tsx` | 560 | Page-level |
-
-### ✅ Design System Compliance
-
-No hardcoded hex values outside logo/integration-specific files. Off-brand colors (blue) used only in semantic UI states (info toasts, alerts) — correct. Bitcoin orange used only for Bitcoin elements.
-
-### ✅ Accessibility
-
-192 ARIA attribute instances. Skip-to-main-content link in root layout. `role="navigation"`, `role="alert"`, `role="dialog"` used correctly. Form inputs associate labels via `htmlFor`. `aria-invalid` on error states. All icon buttons have `aria-label`.
+**Gap:** No automated a11y testing. Screen reader testing not documented.
 
 ---
 
-## Action Items (Prioritized)
+## Action Items
 
-| Priority | Item | Effort | Impact |
-|----------|------|--------|--------|
-| P0 | Build investment create page (empty dir, API + DB already exist) | 2h | Unblocks entire investment entity |
-| P0 | Fix 9 TypeScript errors (SpeechRecognition, currency cast, EntityList) | 1h | Keeps build clean |
-| P1 | Delete dead monitoring/circle code (zero imports, 365+ lines) | 30m | Reduces confusion |
-| P1 | Fix 39 ESLint curly-brace warnings (auto-fixable) | 15m | Clean lint output |
-| P1 | Import status constants instead of hardcoding `'active'` strings | 30m | SSOT compliance |
-| P1 | Standardize cron + currency route response format (5 files) | 1h | API consistency |
-| P2 | Reduce wallet `any` types in `src/app/api/wallets/` | 3h | Type safety |
-| P2 | Integrate Cat pending actions into entity creation / dashboard | 4h | Core mission: Cat as interface |
-| P2 | Create `group_activities` migration | 1h | Unblocks group activity tracking |
-| P3 | Multi-currency payment provider adapters (BTCPay, Twint, Stripe) | 2–3 days | Mission: any currency |
-| P3 | Cat action endpoints (`/api/cat/entity-create`, `/api/cat/task`) | 1 day | Cat-driven workflows |
-| P3 | E2E message encryption (libsodium or tweetnacl) | 2–3 days | Mission: private where needed |
-| P3 | Group governance (proposals, voting) | 1 week | Mission: governance |
+Prioritized by mission impact > user impact > code quality:
+
+### P0 — Correctness bugs
+1. Add try/catch to 9 unprotected API routes
+2. Fix failing `Button.test.tsx` assertion
+
+### P1 — Type safety (enables sustainable velocity)
+3. Add `as const` to `DATABASE_TABLES` in `src/config/database-tables.ts`
+4. Fix `Relationships` field in `src/types/database.ts` custom types
+5. After above: remove now-unnecessary `as any` casts (~30-50 casts eliminated)
+
+### P2 — UI correctness
+6. Fix 318 dynamic Tailwind class instances with lookup-map pattern
+7. Replace 13+ hardcoded hex colors in SVG components with CSS variables/Tailwind
+
+### P3 — Architecture cleanup
+8. Refactor `src/services/auth/service.ts` (837 lines) into focused sub-services
+9. Consolidate AI chat panel variants — canonicalize one
+
+### P4 — Test coverage
+10. Add integration tests for auth routes
+11. Add integration tests for payment flows
+12. Add E2E test for entity create/edit/delete flow
+
+### P5 — Mission gaps
+13. Investigate Nostr/Bitcoin-signed auth to remove email requirement
+14. Design multi-currency payment abstraction layer
+15. Begin E2E encryption implementation for messaging
+
+---
+
+*Previous audit reports: `docs/AI_SLOP_AUDIT.md`, `docs/CODEBASE_EVALUATION_REPORT.md`, `docs/DATABASE_AUDIT_2025.md`*

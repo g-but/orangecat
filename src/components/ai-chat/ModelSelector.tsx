@@ -1,8 +1,7 @@
 /**
  * Inline Model Selector Components
- * 
+ *
  * Simple inline components for model selection and display.
- * Used in CatChatPanel for quick model switching.
  */
 
 'use client';

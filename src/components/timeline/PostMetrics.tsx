@@ -68,8 +68,7 @@ export function PostMetrics({ event }: PostMetricsProps) {
         </div>
       )}
 
-      {/* Placeholder for additional metrics */}
-      {/* TODO: Add bookmark count, quote count, etc. */}
+      {/* FUTURE: Add bookmark count, quote count, and repost count — requires backend event tracking for these interaction types before counts can be surfaced here */}
     </div>
   );
 }

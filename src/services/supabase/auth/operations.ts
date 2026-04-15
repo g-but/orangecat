@@ -161,6 +161,29 @@ export async function updatePassword({
   }
 }
 
+// NOTE: Anonymous sign-in requires "Allow anonymous sign-ins" to be enabled
+// in Supabase Dashboard > Authentication > Providers > Anonymous
+export async function signInAnonymously(): Promise<AuthResponse> {
+  try {
+    logAuth('Attempting anonymous sign-in');
+
+    const { data, error } = await supabase.auth.signInAnonymously();
+
+    if (error) {
+      const enhancedError = handleAuthError(error, 'anonymous sign-in');
+      logAuth('Anonymous sign-in failed', { error: enhancedError.message });
+      return { data: { user: null, session: null }, error: enhancedError };
+    }
+
+    logAuth('Anonymous sign-in successful', { userId: data.user?.id });
+    return { data, error: null };
+  } catch (error) {
+    const enhancedError = handleAuthError(error, 'anonymous sign-in');
+    logger.error('Unexpected error during anonymous sign-in', { error: enhancedError.message }, 'Auth');
+    return { data: { user: null, session: null }, error: enhancedError };
+  }
+}
+
 export async function resendConfirmationEmail(): Promise<{ error: AuthError | null }> {
   try {
     const {

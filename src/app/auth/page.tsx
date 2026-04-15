@@ -125,6 +125,7 @@ export default function AuthPage() {
     handleMFAVerificationComplete,
     handleMFACancelled,
     handleOAuthSignIn,
+    handleAnonymousSignIn,
   } = useAuthForm();
 
   // Only show loading if we have a session and are already hydrated (redirecting to dashboard)
@@ -411,6 +412,41 @@ export default function AuthPage() {
                     <span className="ml-2 text-sm font-medium sm:hidden">{name}</span>
                   </Button>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Anonymous Sign-In */}
+          {mode !== 'forgot' && (
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-gray-50 px-3 text-gray-500">or</span>
+                </div>
+              </div>
+              <div className="mt-4 text-center">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={loading}
+                  onClick={handleAnonymousSignIn}
+                  className="w-full h-11 text-gray-600 hover:text-gray-800 hover:bg-gray-100 border border-gray-200 font-medium"
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Continuing...</span>
+                    </div>
+                  ) : (
+                    'Continue without account'
+                  )}
+                </Button>
+                <p className="mt-2 text-xs text-gray-400">
+                  Anonymous accounts can be upgraded to full accounts anytime.
+                </p>
               </div>
             </div>
           )}

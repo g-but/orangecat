@@ -24,7 +24,7 @@ interface PremiumFeatureResult {
  * profile/subscription data and check against PREMIUM_CONFIG.
  */
 export function usePremiumFeature(feature: PremiumFeature): PremiumFeatureResult {
-  // TODO: Read actual user tier from auth/profile when billing is implemented
+  // FUTURE: Read actual user tier from auth/profile subscription data — requires billing system implementation; all users default to free tier until then
   const currentTier: PremiumTier = 'free';
 
   const featureDef = PREMIUM_FEATURES[feature];

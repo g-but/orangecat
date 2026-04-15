@@ -123,7 +123,7 @@ export async function listEntitiesPage(
   }
 
   // Filter out example/test data after fetching
-  // TODO: Add is_example field to database and filter at query level
+  // FUTURE: Add is_example boolean column to entity tables and filter at query level — requires a DB migration; current title-based filtering is a temporary workaround
   const exampleTitles = ["Assassin's Creed", 'Example Service', 'Test Service', 'Sample Service'];
   const filteredItems = (items || []).filter((item: { title?: string; name?: string }) => {
     const title = item.title || item.name || '';

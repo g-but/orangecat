@@ -111,7 +111,7 @@ export default function ModernProjectCard({
         <button
           type="button"
           onClick={navigateToCreator}
-          className={`flex items-center gap-${showLabel ? '3' : '2'} ${
+          className={`flex items-center ${showLabel ? 'gap-3' : 'gap-2'} ${
             showLabel ? 'hover:opacity-80' : 'text-sm text-gray-600 hover:text-orange-600'
           } transition-colors cursor-pointer`}
         >
@@ -122,7 +122,7 @@ export default function ModernProjectCard({
 
     return (
       <div
-        className={`flex items-center gap-${showLabel ? '3' : '2'} ${!showLabel && 'text-sm text-gray-600'}`}
+        className={`flex items-center ${showLabel ? 'gap-3' : 'gap-2'} ${!showLabel && 'text-sm text-gray-600'}`}
       >
         {content}
       </div>
@@ -138,7 +138,7 @@ export default function ModernProjectCard({
 
   const CreatedBadge = ({ compact = false }: { compact?: boolean }) => (
     <div
-      className={`flex items-center gap-${compact ? '1' : '2'} ${
+      className={`flex items-center ${compact ? 'gap-1' : 'gap-2'} ${
         compact
           ? 'text-xs font-medium text-orange-600'
           : 'rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-600'

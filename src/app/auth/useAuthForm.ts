@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRedirectIfAuthenticated } from '@/hooks/useAuth';
-import { resetPassword, getMFAAssuranceLevel } from '@/services/supabase/auth';
+import { resetPassword, getMFAAssuranceLevel, signInAnonymously } from '@/services/supabase/auth';
 import { registrationEvents, trackEvent } from '@/lib/analytics';
 import { getReadableError } from '@/utils/getReadableError';
 import supabase from '@/lib/supabase/browser';
@@ -308,6 +308,23 @@ export function useAuthForm() {
     }
   };
 
+  const handleAnonymousSignIn = async () => {
+    setLocalLoading(true);
+    setError(null);
+    try {
+      const result = await signInAnonymously();
+      if (result.error) {
+        throw new Error(getReadableError(result.error, 'Anonymous sign-in failed'));
+      }
+      // Redirect will happen automatically via useRedirectIfAuthenticated
+      const redirectUrl = searchParams?.get('from') || '/dashboard';
+      router.replace(redirectUrl);
+    } catch (err) {
+      setError(getReadableError(err, 'Anonymous sign-in failed'));
+      setLocalLoading(false);
+    }
+  };
+
   return {
     // State
     mode,
@@ -345,6 +362,7 @@ export function useAuthForm() {
     handleMFAVerificationComplete,
     handleMFACancelled,
     handleOAuthSignIn,
+    handleAnonymousSignIn,
 
     // Unused but preserved to avoid breaking references
     _isCurrentlyLoading,

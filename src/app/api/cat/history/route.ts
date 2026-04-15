@@ -10,7 +10,7 @@ import {
   getMessagesForDisplay,
   clearDefaultConversation,
 } from '@/services/cat/conversation-history';
-import { apiUnauthorized, apiSuccess } from '@/lib/api/standardResponse';
+import { apiUnauthorized, apiSuccess, handleApiError } from '@/lib/api/standardResponse';
 
 export async function GET() {
   const supabase = await createServerClient();
@@ -23,9 +23,12 @@ export async function GET() {
     return apiUnauthorized('Unauthorized');
   }
 
-  const messages = await getMessagesForDisplay(supabase, user.id);
-
-  return apiSuccess(messages);
+  try {
+    const messages = await getMessagesForDisplay(supabase, user.id);
+    return apiSuccess(messages);
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
 export async function DELETE() {
@@ -39,7 +42,10 @@ export async function DELETE() {
     return apiUnauthorized('Unauthorized');
   }
 
-  await clearDefaultConversation(supabase, user.id);
-
-  return apiSuccess({ success: true });
+  try {
+    await clearDefaultConversation(supabase, user.id);
+    return apiSuccess({ success: true });
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

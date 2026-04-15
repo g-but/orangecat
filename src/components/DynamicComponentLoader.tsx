@@ -44,7 +44,7 @@ export const DynamicAnalyticsDashboard = createDynamicComponent(
 );
 
 // Campaign Management (complex forms and state)
-// TODO: Create CampaignManagement component
+// FUTURE: Create CampaignManagement component and uncomment export below — no campaign entity exists yet; add when campaigns are introduced as a first-class entity type
 // export const DynamicCampaignManagement = createDynamicComponent(
 //   () => import('@/components/dashboard/CampaignManagement'),
 //   <div className="animate-pulse bg-gray-200 h-48 rounded-lg" />

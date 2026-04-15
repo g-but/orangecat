@@ -169,7 +169,7 @@ export function RequestModal({ actionLoading, onClose, onRequest }: RequestModal
                 <Users className="h-4 w-4 inline mr-2" />
                 All Team Members (Broadcast)
               </option>
-              {/* TODO: Load team members here */}
+              {/* FUTURE: Populate with project team members — requires a team members API endpoint scoped to the current project/group actor */}
             </select>
             <p className="text-xs text-gray-500 mt-1">Leave empty to notify all team members</p>
           </div>

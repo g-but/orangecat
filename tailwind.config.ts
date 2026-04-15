@@ -7,6 +7,17 @@ const config: Config = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    {
+      // Initiative color system — values come dynamically from src/data/initiatives/ config
+      pattern: /^(bg|text|border|from|to|ring|hover:bg|hover:border|hover:text)-(purple|blue|green|orange|pink|indigo|red|yellow|teal|amber|violet|sky|emerald|rose|fuchsia|slate|gray|cyan)-(50|100|200|300|400|500|600|700|800|900)$/,
+      variants: ['hover'],
+    },
+    // Opacity variants used in gradients
+    {
+      pattern: /^(bg|from|to)-(purple|blue|green|orange|pink|indigo|red|yellow|teal|amber|violet|sky|emerald|rose|fuchsia|slate|gray|cyan)-(50|100|200|300|400|500|600|700|800|900)\/(50|90)$/,
+    },
+  ],
   theme: {
   	extend: {
   		fontSize: {

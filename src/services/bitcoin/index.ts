@@ -268,7 +268,7 @@ export class BitcoinService {
     try {
       const walletData = await this.fetchBitcoinWalletData(address);
       const confirmed = Number(walletData.balance) || 0;
-      const unconfirmed = 0; // TODO: Add unconfirmed balance tracking
+      const unconfirmed = 0; // FUTURE: Track unconfirmed balance — requires mempool API integration (e.g. mempool.space) to surface pending transactions
       return {
         confirmed,
         unconfirmed,

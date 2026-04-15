@@ -27,6 +27,7 @@ module.exports = {
     '<rootDir>/.next/',
     '<rootDir>/playwright-report/',
     '<rootDir>/test-results/',
+    '<rootDir>/.claude/worktrees/',
     '\\.spec\\.(ts|tsx)$'  // Exclude Playwright spec files
   ],
   // Mock Next.js modules that cause issues in Jest

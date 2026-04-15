@@ -212,8 +212,7 @@ export function PostContent({ event }: PostContentProps) {
           ) : null;
         })()}
 
-      {/* Media Attachments Placeholder */}
-      {/* TODO: Add media rendering (images, videos, etc.) */}
+      {/* FUTURE: Add media rendering (images, videos, embeds) — requires media upload pipeline and storage bucket setup before attachments can be displayed */}
       {(() => {
         const attachments =
           (event.metadata?.attachments as Array<{ type: string; filename: string }>) || [];

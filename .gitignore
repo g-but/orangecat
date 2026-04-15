@@ -140,3 +140,4 @@ __pycache__/
 *.crt
 *.p12
 *.pfx
+.claude/worktrees/

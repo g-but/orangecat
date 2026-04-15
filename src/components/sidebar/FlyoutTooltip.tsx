@@ -94,13 +94,7 @@ export function FlyoutTooltip({ isVisible, children, targetElement }: FlyoutTool
     >
       {/* Tooltip arrow pointing left */}
       <div
-        className="absolute right-full top-1/2 -translate-y-1/2"
-        style={{
-          borderWidth: '6px',
-          borderStyle: 'solid',
-          borderColor: 'transparent',
-          borderRightColor: '#111827', // gray-900
-        }}
+        className="absolute right-full top-1/2 -translate-y-1/2 border-[6px] border-solid border-transparent border-r-gray-900"
       />
       {children}
     </div>
