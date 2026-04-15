@@ -1,4 +1,4 @@
-import { validateAddressOrXpub, detectWalletType } from '@/types/wallet';
+import { validateAddressOrXpub, detectWalletType, type Wallet } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import { handleSupabaseError } from '@/lib/wallets/errorHandling';
 import {
@@ -19,6 +19,11 @@ import { walletUpdateSchema } from '@/lib/validation/finance';
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
+
+type WalletWithRelations = Wallet & {
+  profiles?: { id: string } | null;
+  projects?: { user_id: string } | null;
+};
 
 // PATCH /api/wallets/[id] - Update wallet
 export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
@@ -54,16 +59,12 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     const body = parseResult.data;
 
     // Fetch wallet with ownership info
-    const { data: walletData, error: fetchError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WALLETS) as any
-    )
+    const { data: walletData, error: fetchError } = await supabase
+      .from(DATABASE_TABLES.WALLETS)
       .select('*, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)')
       .eq('id', id)
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const wallet = walletData as any;
+    const wallet = walletData as WalletWithRelations | null;
 
     if (fetchError || !wallet) {
       logger.error('Wallet not found', { walletId: id, error: fetchError?.message });
@@ -71,15 +72,10 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     }
 
     // Check ownership
-    interface WalletWithRelations {
-      profiles?: { id: string } | null;
-      projects?: { user_id: string } | null;
-    }
-    const walletWithRelations = wallet as WalletWithRelations;
     const ownerId = wallet.profile_id
-      ? walletWithRelations.profiles?.id
+      ? wallet.profiles?.id
       : wallet.project_id
-        ? walletWithRelations.projects?.user_id
+        ? wallet.projects?.user_id
         : null;
 
     if (ownerId !== user.id) {
@@ -87,8 +83,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
       return apiForbidden('You do not have permission to update this wallet');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updates: any = {};
+    const updates: Partial<Wallet> = {};
 
     // Build updates from Zod-validated body
     if (body.label !== undefined) {
@@ -142,11 +137,8 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
           : { project_id: wallet.project_id };
 
         // Unset all other wallets as primary
-        await (
-          supabase
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .from(DATABASE_TABLES.WALLETS) as any
-        )
+        await supabase
+          .from(DATABASE_TABLES.WALLETS)
           .update({ is_primary: false })
           .eq('is_active', true)
           .neq('id', id)
@@ -157,11 +149,8 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     updates.updated_at = new Date().toISOString();
 
     // Update wallet
-    const { data: updatedWallet, error: updateError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WALLETS) as any
-    )
+    const { data: updatedWallet, error: updateError } = await supabase
+      .from(DATABASE_TABLES.WALLETS)
       .update(updates)
       .eq('id', id)
       .select()
@@ -211,16 +200,12 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     }
 
     // Fetch wallet with ownership info
-    const { data: walletData2, error: fetchError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WALLETS) as any
-    )
+    const { data: walletData2, error: fetchError } = await supabase
+      .from(DATABASE_TABLES.WALLETS)
       .select('*, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)')
       .eq('id', id)
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const wallet = walletData2 as any;
+    const wallet = walletData2 as WalletWithRelations | null;
 
     if (fetchError || !wallet) {
       logger.error('Wallet not found for deletion', { walletId: id, error: fetchError?.message });
@@ -228,15 +213,10 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     }
 
     // Check ownership
-    interface WalletWithRelations {
-      profiles?: { id: string } | null;
-      projects?: { user_id: string } | null;
-    }
-    const walletWithRelations = wallet as WalletWithRelations;
     const ownerId = wallet.profile_id
-      ? walletWithRelations.profiles?.id
+      ? wallet.profiles?.id
       : wallet.project_id
-        ? walletWithRelations.projects?.user_id
+        ? wallet.projects?.user_id
         : null;
 
     if (ownerId !== user.id) {
@@ -249,11 +229,8 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     }
 
     // Soft delete
-    const { error: deleteError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WALLETS) as any
-    )
+    const { error: deleteError } = await supabase
+      .from(DATABASE_TABLES.WALLETS)
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', id);
 

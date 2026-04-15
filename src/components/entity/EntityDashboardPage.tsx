@@ -104,7 +104,7 @@ export default function EntityDashboardPage<T extends BaseEntity>({
 
   // Bulk delete selected items
   const handleBulkDelete = useCallback(() => {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0) {return;}
     setBulkDeleteConfirm(true);
   }, [selectedIds.size]);
 

@@ -17,8 +17,8 @@ let _placeholderWarned = false;
  */
 export function isEmailConfigured(): boolean {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return false;
-  if (key.startsWith('re_placeholder') || key === 'undefined') return false;
+  if (!key) {return false;}
+  if (key.startsWith('re_placeholder') || key === 'undefined') {return false;}
   return true;
 }
 

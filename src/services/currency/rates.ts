@@ -6,6 +6,7 @@
 
 import type { CurrencyCode } from '@/config/currencies';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 import type { ExchangeRates, RateCache } from './types';
 
 // ==================== RATE CACHE ====================
@@ -67,11 +68,12 @@ export function getRate(from: string, to: string): number {
 
 export async function fetchRates(): Promise<void> {
   try {
-    const response = await fetch('/api/currency/rates');
+    const response = await fetch(API_ROUTES.CURRENCY.RATES);
     if (response.ok) {
-      const data = await response.json();
-      if (data.rates) {
-        updateRates(data.rates);
+      const json = await response.json();
+      const rates = json?.data?.rates ?? json?.rates;
+      if (rates) {
+        updateRates(rates);
       }
     }
   } catch (error) {

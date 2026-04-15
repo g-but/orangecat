@@ -7,8 +7,8 @@
  * Used by useDisplayCurrency hook to show amounts in user's preferred fiat.
  */
 
-import { NextResponse } from 'next/server';
 import { logger } from '@/utils/logger';
+import { apiSuccess } from '@/lib/api/standardResponse';
 
 interface CachedRates {
   rates: Record<string, number>;
@@ -44,7 +44,7 @@ async function fetchFromCoinGecko(): Promise<Record<string, number> | null> {
 
     const data = await resp.json();
     const btc = data.bitcoin;
-    if (!btc) return null;
+    if (!btc) {return null;}
 
     return {
       BTC_USD: btc.usd,
@@ -65,13 +65,9 @@ async function fetchFromCoinGecko(): Promise<Record<string, number> | null> {
 export async function GET() {
   // Return cached if fresh
   if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
-    return NextResponse.json(
+    return apiSuccess(
       { rates: cached.rates, cached: true, fetchedAt: cached.fetchedAt },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
-        },
-      }
+      { cache: 'public, s-maxage=60, stale-while-revalidate=300' }
     );
   }
 
@@ -79,24 +75,17 @@ export async function GET() {
   const fresh = await fetchFromCoinGecko();
   if (fresh) {
     cached = { rates: fresh, fetchedAt: Date.now() };
-    return NextResponse.json(
+    return apiSuccess(
       { rates: fresh, cached: false, fetchedAt: cached.fetchedAt },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
-        },
-      }
+      { cache: 'public, s-maxage=60, stale-while-revalidate=300' }
     );
   }
 
   // Use fallback (or stale cache if we have it)
   const rates = cached?.rates ?? FALLBACK_RATES;
-  return NextResponse.json(
+  return apiSuccess(
     { rates, cached: true, fallback: !cached },
-    {
-      headers: {
-        'Cache-Control': 'public, s-maxage=30',
-      },
-    }
+    { cache: 'public, s-maxage=30' }
   );
 }
+

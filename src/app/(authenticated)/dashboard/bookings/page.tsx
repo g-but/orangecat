@@ -91,7 +91,7 @@ export default function BookingsDashboardPage() {
   };
 
   const filteredBookings = bookings.filter(booking => {
-    if (filterStatus === 'all') return true;
+    if (filterStatus === 'all') {return true;}
     return booking.status === filterStatus;
   });
 

@@ -1,5 +1,6 @@
 'use client';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -28,16 +29,11 @@ import {
   ExternalLink,
   Info,
   Wallet,
-  Package,
-  Briefcase,
-  Heart,
-  Calendar,
-  Coins,
-  Building,
-  Bot,
   Settings,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import type { EntityType } from '@/config/entity-registry';
 import { cn } from '@/lib/utils';
 
 /**
@@ -50,6 +46,35 @@ import { cn } from '@/lib/utils';
  *
  * Replaces PublicProfileClient and UnifiedProfileLayout to eliminate duplication.
  */
+
+// Entity types displayed as generic ProfileEntityTab tabs, in order.
+// Icon and label come from ENTITY_REGISTRY; statsKey maps to the stats prop field.
+const PROFILE_ENTITY_TABS: Array<{
+  entityType: EntityType;
+  statsKey:
+    | 'productCount'
+    | 'serviceCount'
+    | 'causeCount'
+    | 'eventCount'
+    | 'loanCount'
+    | 'assetCount'
+    | 'aiAssistantCount';
+}> = [
+  { entityType: 'product', statsKey: 'productCount' },
+  { entityType: 'service', statsKey: 'serviceCount' },
+  { entityType: 'cause', statsKey: 'causeCount' },
+  { entityType: 'event', statsKey: 'eventCount' },
+  { entityType: 'loan', statsKey: 'loanCount' },
+  { entityType: 'asset', statsKey: 'assetCount' },
+  { entityType: 'ai_assistant', statsKey: 'aiAssistantCount' },
+];
+
+// Tab IDs for registry-driven entity tabs (used in visibility filter)
+const ENTITY_TAB_IDS = new Set(
+  PROFILE_ENTITY_TABS.map(({ entityType }) =>
+    ENTITY_REGISTRY[entityType].namePlural.toLowerCase().replace(/\s+/g, '-')
+  )
+);
 
 interface ProfileLayoutProps {
   profile: ScalableProfile;
@@ -129,7 +154,7 @@ export default function ProfileLayout({
 
     setIsFollowLoading(true);
     try {
-      const endpoint = isFollowing ? '/api/social/unfollow' : '/api/social/follow';
+      const endpoint = isFollowing ? API_ROUTES.SOCIAL.UNFOLLOW : API_ROUTES.SOCIAL.FOLLOW;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -239,67 +264,19 @@ export default function ProfileLayout({
       badge: stats?.projectCount,
       content: <ProfileProjectsTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
-    {
-      id: 'products',
-      label: 'Products',
-      icon: <Package className="w-4 h-4" />,
-      badge: stats?.productCount,
-      content: (
-        <ProfileEntityTab profile={profile} entityType="product" isOwnProfile={isOwnProfile} />
-      ),
-    },
-    {
-      id: 'services',
-      label: 'Services',
-      icon: <Briefcase className="w-4 h-4" />,
-      badge: stats?.serviceCount,
-      content: (
-        <ProfileEntityTab profile={profile} entityType="service" isOwnProfile={isOwnProfile} />
-      ),
-    },
-    {
-      id: 'causes',
-      label: 'Causes',
-      icon: <Heart className="w-4 h-4" />,
-      badge: stats?.causeCount,
-      content: (
-        <ProfileEntityTab profile={profile} entityType="cause" isOwnProfile={isOwnProfile} />
-      ),
-    },
-    {
-      id: 'events',
-      label: 'Events',
-      icon: <Calendar className="w-4 h-4" />,
-      badge: stats?.eventCount,
-      content: (
-        <ProfileEntityTab profile={profile} entityType="event" isOwnProfile={isOwnProfile} />
-      ),
-    },
-    {
-      id: 'loans',
-      label: 'Loans',
-      icon: <Coins className="w-4 h-4" />,
-      badge: stats?.loanCount,
-      content: <ProfileEntityTab profile={profile} entityType="loan" isOwnProfile={isOwnProfile} />,
-    },
-    {
-      id: 'assets',
-      label: 'Assets',
-      icon: <Building className="w-4 h-4" />,
-      badge: stats?.assetCount,
-      content: (
-        <ProfileEntityTab profile={profile} entityType="asset" isOwnProfile={isOwnProfile} />
-      ),
-    },
-    {
-      id: 'ai-assistants',
-      label: 'AI Assistants',
-      icon: <Bot className="w-4 h-4" />,
-      badge: stats?.aiAssistantCount,
-      content: (
-        <ProfileEntityTab profile={profile} entityType="ai_assistant" isOwnProfile={isOwnProfile} />
-      ),
-    },
+    ...PROFILE_ENTITY_TABS.map(({ entityType, statsKey }) => {
+      const meta = ENTITY_REGISTRY[entityType];
+      const Icon = meta.icon;
+      return {
+        id: meta.namePlural.toLowerCase().replace(/\s+/g, '-'),
+        label: meta.namePlural,
+        icon: <Icon className="w-4 h-4" />,
+        badge: stats?.[statsKey],
+        content: (
+          <ProfileEntityTab profile={profile} entityType={entityType} isOwnProfile={isOwnProfile} />
+        ),
+      };
+    }),
     {
       id: 'people',
       label: 'People',
@@ -318,35 +295,19 @@ export default function ProfileLayout({
 
   // For public profiles, hide tabs with no content
   const filteredTabs = tabs.filter(tab => {
-    if (isOwnProfile) {
-      return true;
+    if (isOwnProfile) { return true; }
+    // Entity tabs: show only when there's content
+    if (ENTITY_TAB_IDS.has(tab.id)) { return (tab.badge || 0) > 0; }
+    if (tab.id === 'projects') { return (stats?.projectCount || 0) > 0; }
+    if (tab.id === 'people') {
+      return (stats?.followerCount || 0) + (stats?.followingCount || 0) > 0;
     }
-    switch (tab.id) {
-      case 'projects':
-        return (stats?.projectCount || 0) > 0;
-      case 'products':
-        return (stats?.productCount || 0) > 0;
-      case 'services':
-        return (stats?.serviceCount || 0) > 0;
-      case 'causes':
-        return (stats?.causeCount || 0) > 0;
-      case 'events':
-        return (stats?.eventCount || 0) > 0;
-      case 'loans':
-        return (stats?.loanCount || 0) > 0;
-      case 'assets':
-        return (stats?.assetCount || 0) > 0;
-      case 'ai-assistants':
-        return (stats?.aiAssistantCount || 0) > 0;
-      case 'people':
-        return (stats?.followerCount || 0) + (stats?.followingCount || 0) > 0;
-      case 'wallets':
-        return (
-          (stats?.walletCount || 0) > 0 || !!profile.bitcoin_address || !!profile.lightning_address
-        );
-      default:
-        return true; // overview, info, timeline always visible
+    if (tab.id === 'wallets') {
+      return (
+        (stats?.walletCount || 0) > 0 || !!profile.bitcoin_address || !!profile.lightning_address
+      );
     }
+    return true; // overview, info, timeline always visible
   });
 
   return (

@@ -14,6 +14,7 @@ import Image from 'next/image';
 import { Edit, Share2, MessageCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ROUTES } from '@/config/routes';
+import { API_ROUTES } from '@/config/api-routes';
 import { getUniqueCategories } from '@/utils/project';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
@@ -65,7 +66,7 @@ export default function ProjectHeader({
 
     try {
       // Create or open conversation with project creator
-      const response = await fetch('/api/messages', {
+      const response = await fetch(API_ROUTES.MESSAGES.BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

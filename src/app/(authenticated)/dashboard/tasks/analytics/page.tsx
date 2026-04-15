@@ -16,6 +16,7 @@ import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { TASK_CATEGORY_LABELS } from '@/config/tasks';
+import { API_ROUTES } from '@/config/api-routes';
 import {
   ArrowLeft,
   BarChart3,
@@ -94,9 +95,9 @@ export default function TaskAnalyticsPage() {
 
     try {
       const [statsRes, contributionsRes, fairnessRes] = await Promise.all([
-        fetch('/api/task-analytics'),
-        fetch(`/api/task-analytics/contributions?days=${days}`),
-        fetch(`/api/task-analytics/fairness?days=${days}`),
+        fetch(API_ROUTES.TASKS.ANALYTICS),
+        fetch(`${API_ROUTES.TASKS.ANALYTICS}/contributions?days=${days}`),
+        fetch(`${API_ROUTES.TASKS.ANALYTICS}/fairness?days=${days}`),
       ]);
 
       const [statsData, contributionsData, fairnessDataRes] = await Promise.all([
@@ -221,7 +222,7 @@ export default function TaskAnalyticsPage() {
             Contributions by Person
           </h2>
           {contributions.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No data for the selected period</p>
+            <p className="text-gray-500 text-base text-center py-8">No data for the selected period</p>
           ) : (
             <div className="space-y-4">
               {contributions.map((contribution, index) => (
@@ -282,12 +283,12 @@ export default function TaskAnalyticsPage() {
             <Award className="h-5 w-5" />
             Fairness Overview
           </h2>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-base text-gray-600 mb-4">
             Shows how evenly recurring tasks are distributed. Low values indicate that a task is
             being completed by only a few people.
           </p>
           {fairnessData.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No recurring tasks with completions</p>
+            <p className="text-gray-500 text-base text-center py-8">No recurring tasks with completions</p>
           ) : (
             <div className="space-y-3">
               {fairnessData.slice(0, 10).map(item => (

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Bell,
-  X,
   Check,
   Bitcoin,
   Users,
@@ -22,6 +21,7 @@ import { toast } from 'sonner';
 import MessagePanel from '@/components/messaging/MessagePanel';
 import { useNotifications, type Notification } from '@/hooks/useNotifications';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface NotificationCenterProps {
   isOpen: boolean;
@@ -160,13 +160,11 @@ export default function NotificationCenter({
     }
   };
 
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-20">
-      <Card className={`w-full max-w-md max-h-[80vh] flex flex-col ${className}`}>
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className={`max-w-md max-h-[80vh] flex flex-col p-0 ${className}`}>
+        <DialogTitle className="sr-only">Notifications</DialogTitle>
+        <Card className="w-full max-h-[80vh] flex flex-col border-0 shadow-none">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="flex items-center gap-2">
             <Bell className="w-5 h-5" />
@@ -177,9 +175,6 @@ export default function NotificationCenter({
               </span>
             )}
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
         </CardHeader>
 
         <CardContent className="flex flex-col flex-1 overflow-hidden">
@@ -370,10 +365,11 @@ export default function NotificationCenter({
             </div>
           )}
         </CardContent>
-      </Card>
+        </Card>
 
-      {/* Message Panel */}
-      <MessagePanel isOpen={showMessages} onClose={() => setShowMessages(false)} />
-    </div>
+        {/* Message Panel */}
+        <MessagePanel isOpen={showMessages} onClose={() => setShowMessages(false)} />
+      </DialogContent>
+    </Dialog>
   );
 }

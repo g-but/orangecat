@@ -25,6 +25,7 @@ import {
   TASK_DEFAULTS,
 } from '@/config/tasks';
 import { ArrowLeft, Save } from 'lucide-react';
+import { API_ROUTES } from '@/config/api-routes';
 
 type TaskCategory = (typeof TASK_CATEGORIES)[keyof typeof TASK_CATEGORIES];
 type TaskType = (typeof TASK_TYPES)[keyof typeof TASK_TYPES];
@@ -141,7 +142,7 @@ export default function NewTaskPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch('/api/tasks', {
+      const response = await fetch(API_ROUTES.TASKS.BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -198,7 +199,7 @@ export default function NewTaskPage() {
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <h1 className="text-2xl font-bold text-gray-900">Create Task</h1>
-            <p className="text-gray-600 mt-1">Create a new task for the team</p>
+            <p className="text-base text-gray-600 mt-1">Create a new task for the team</p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-4">

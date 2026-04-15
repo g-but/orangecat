@@ -9,6 +9,7 @@ import { PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import supabase from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
+import { ENTITY_STATUS } from '@/config/database-constants';
 import type { DiscoverTabType } from '@/components/discover/DiscoverTabs';
 import type { Loan } from '@/types/loans';
 
@@ -116,13 +117,13 @@ export function useDiscoverState() {
           supabase
             .from(getTableName('project'))
             .select('*', { count: 'exact', head: true })
-            .eq('status', 'active'),
+            .eq('status', ENTITY_STATUS.ACTIVE),
           supabase.from(DATABASE_TABLES.PROFILES).select('*', { count: 'exact', head: true }),
           supabase
             .from(getTableName('loan'))
             .select('*', { count: 'exact', head: true })
             .eq('is_public', true)
-            .eq('status', 'active'),
+            .eq('status', ENTITY_STATUS.ACTIVE),
         ]);
 
         const projectCount = projectsResult.count ?? 0;
@@ -179,7 +180,7 @@ export function useDiscoverState() {
           .from(getTableName('loan'))
           .select('*')
           .eq('is_public', true)
-          .eq('status', 'active')
+          .eq('status', ENTITY_STATUS.ACTIVE)
           .order('created_at', { ascending: false })
           .limit(activeTab === 'loans' ? 50 : 12);
 

@@ -15,6 +15,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Receipt,
@@ -190,7 +191,7 @@ export function ProofUploadForm({
   const onSubmit = async (data: WishlistFulfillmentProofFormData) => {
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/wishlists/proofs', {
+      const response = await fetch(API_ROUTES.WISHLISTS.PROOFS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

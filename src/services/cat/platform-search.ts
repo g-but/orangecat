@@ -13,6 +13,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { ENTITY_STATUS } from '@/config/database-constants';
 
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 
@@ -118,7 +119,7 @@ async function searchTable(
   const { data } = await supabase
     .from(table)
     .select('id, title, description, slug')
-    .eq('status', 'active')
+    .eq('status', ENTITY_STATUS.ACTIVE)
     .or(`title.ilike.${pattern},description.ilike.${pattern}`)
     .limit(MAX_RESULTS_PER_TYPE);
 

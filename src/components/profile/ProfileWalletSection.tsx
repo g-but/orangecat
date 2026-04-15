@@ -3,6 +3,9 @@
 import { Bitcoin, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import Button from '@/components/ui/Button';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+
+const SATS_PER_BTC = 100_000_000;
 import { QRCodeSVG } from 'qrcode.react';
 import { Wallet, WALLET_CATEGORIES } from '@/types/wallet';
 import BitcoinDonationCard from '@/components/bitcoin/BitcoinDonationCard';
@@ -34,6 +37,8 @@ export default function ProfileWalletSection({
   legacyBalance,
   onEditClick,
 }: ProfileWalletSectionProps) {
+  const { formatAmount } = useDisplayCurrency();
+
   // Show loading skeleton
   if (loading) {
     return <WalletsSkeleton />;
@@ -84,7 +89,7 @@ export default function ProfileWalletSection({
                   <div className="bg-gray-50 rounded-lg p-3 mb-3">
                     <div className="text-sm text-gray-600 mb-1">Current Balance</div>
                     <div className="text-xl font-bold text-orange-600">
-                      {wallet.balance_btc.toFixed(8)} BTC
+                      {formatAmount(Math.round(wallet.balance_btc * SATS_PER_BTC))}
                     </div>
                   </div>
 
@@ -94,8 +99,8 @@ export default function ProfileWalletSection({
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-gray-600">Goal</span>
                         <span className="font-medium">
-                          {wallet.balance_btc.toFixed(4)} / {wallet.goal_amount}{' '}
-                          {wallet.goal_currency}
+                          {formatAmount(Math.round(wallet.balance_btc * SATS_PER_BTC))} /{' '}
+                          {wallet.goal_amount} {wallet.goal_currency}
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">

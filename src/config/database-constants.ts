@@ -30,6 +30,18 @@
  * if (project.status === 'active') { ... }
  * ```
  */
+/**
+ * Generic entity status values shared across multiple entity types.
+ * Use domain-specific STATUS.ENTITY_TYPE when available.
+ */
+export const ENTITY_STATUS = {
+  DRAFT: 'draft',
+  ACTIVE: 'active',
+  PAUSED: 'paused',
+  ARCHIVED: 'archived',
+} as const;
+export type EntityStatus = (typeof ENTITY_STATUS)[keyof typeof ENTITY_STATUS];
+
 export const STATUS = {
   // ProjectStatus lives in config/project-statuses.ts (SSOT)
   PROPOSALS: {

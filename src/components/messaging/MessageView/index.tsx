@@ -1,6 +1,7 @@
 'use client';
 
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 
 /**
  * Message View Component
@@ -170,7 +171,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
   // Opens inline edit — closes context menu first
   const handleEdit = useCallback(() => {
     const msg = menuState.message;
-    if (!msg) return;
+    if (!msg) {return;}
     closeMenu();
     setEditingMessageId(msg.id);
   }, [menuState.message, closeMenu]);
@@ -195,7 +196,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
             .select('*')
             .eq('id', messageId)
             .single();
-          if (full) handleNewMessage(full as Message);
+          if (full) {handleNewMessage(full as Message);}
         }
       } catch {
         toast.error('Network error while editing');
@@ -212,7 +213,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
       return;
     }
     try {
-      const res = await fetch('/api/messages/bulk-delete', {
+      const res = await fetch(API_ROUTES.MESSAGES.BULK_DELETE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',

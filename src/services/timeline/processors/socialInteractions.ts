@@ -13,6 +13,11 @@ import { logger } from '@/utils/logger';
 import { withApiRetry } from '@/utils/retry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
+// TIMELINE_LIKES, TIMELINE_DISLIKES, TIMELINE_COMMENTS are not in the generated DB schema,
+// and custom RPCs (like/unlike/comment) are also absent — cast required.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
+
 /**
  * Get current user ID helper
  */
@@ -44,7 +49,7 @@ export async function toggleLike(
         }
 
         // Check if user already liked this event
-        const { data: existingLike } = await supabase
+        const { data: existingLike } = await db
           .from(DATABASE_TABLES.TIMELINE_LIKES)
           .select('id')
           .eq('event_id', eventId)
@@ -54,8 +59,7 @@ export async function toggleLike(
         if (existingLike) {
           // Unlike the event
           try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data, error } = await (supabase.rpc as any)('unlike_timeline_event', {
+            const { data, error } = await db.rpc('unlike_timeline_event', {
               p_event_id: eventId,
               p_user_id: targetUserId,
             });
@@ -68,8 +72,7 @@ export async function toggleLike(
             return {
               success: true,
               liked: false,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              likeCount: (data as any)?.like_count || 0,
+              likeCount: (data as { like_count?: number })?.like_count || 0,
             };
           } catch (dbError) {
             logger.warn(
@@ -77,7 +80,7 @@ export async function toggleLike(
               dbError,
               'Timeline'
             );
-            const { error: delErr } = await supabase
+            const { error: delErr } = await db
               .from(DATABASE_TABLES.TIMELINE_LIKES)
               .delete()
               .eq('event_id', eventId)
@@ -86,7 +89,7 @@ export async function toggleLike(
               logger.error('Fallback unlike failed', delErr, 'Timeline');
               return { success: false, liked: false, likeCount: 0, error: delErr.message };
             }
-            const { count } = await supabase
+            const { count } = await db
               .from(DATABASE_TABLES.TIMELINE_LIKES)
               .select('*', { count: 'exact', head: true })
               .eq('event_id', eventId);
@@ -95,8 +98,7 @@ export async function toggleLike(
         } else {
           // Like the event
           try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data, error } = await (supabase.rpc as any)('like_timeline_event', {
+            const { data, error } = await db.rpc('like_timeline_event', {
               p_event_id: eventId,
               p_user_id: targetUserId,
             });
@@ -109,8 +111,7 @@ export async function toggleLike(
             return {
               success: true,
               liked: true,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              likeCount: (data as any)?.like_count || 0,
+              likeCount: (data as { like_count?: number })?.like_count || 0,
             };
           } catch (dbError) {
             logger.warn(
@@ -119,15 +120,14 @@ export async function toggleLike(
               'Timeline'
             );
             // Fallback: insert into timeline_likes and return new count
-            const { error: insertErr } = await supabase
+            const { error: insertErr } = await db
               .from(DATABASE_TABLES.TIMELINE_LIKES)
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .insert({ event_id: eventId, user_id: targetUserId } as any);
+              .insert({ event_id: eventId, user_id: targetUserId });
             if (insertErr) {
               logger.error('Fallback like failed', insertErr, 'Timeline');
               return { success: false, liked: false, likeCount: 0, error: insertErr.message };
             }
-            const { count } = await supabase
+            const { count } = await db
               .from(DATABASE_TABLES.TIMELINE_LIKES)
               .select('*', { count: 'exact', head: true })
               .eq('event_id', eventId);
@@ -157,7 +157,7 @@ export async function toggleDislike(
     }
 
     // Check if user already disliked this event
-    const { data: existingDislike } = await supabase
+    const { data: existingDislike } = await db
       .from(DATABASE_TABLES.TIMELINE_DISLIKES)
       .select('id')
       .eq('event_id', eventId)
@@ -167,8 +167,7 @@ export async function toggleDislike(
     if (existingDislike) {
       // Undislike the event
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data, error } = await (supabase.rpc as any)('undislike_timeline_event', {
+        const { data, error } = await db.rpc('undislike_timeline_event', {
           p_event_id: eventId,
           p_user_id: targetUserId,
         });
@@ -181,8 +180,7 @@ export async function toggleDislike(
         return {
           success: true,
           disliked: false,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          dislikeCount: (data as any)?.dislike_count || 0,
+          dislikeCount: (data as { dislike_count?: number })?.dislike_count || 0,
         };
       } catch (dbError) {
         logger.warn(
@@ -190,7 +188,7 @@ export async function toggleDislike(
           dbError,
           'Timeline'
         );
-        const { error: delErr } = await supabase
+        const { error: delErr } = await db
           .from(DATABASE_TABLES.TIMELINE_DISLIKES)
           .delete()
           .eq('event_id', eventId)
@@ -199,7 +197,7 @@ export async function toggleDislike(
           logger.error('Fallback undislike failed', delErr, 'Timeline');
           return { success: false, disliked: false, dislikeCount: 0, error: delErr.message };
         }
-        const { count } = await supabase
+        const { count } = await db
           .from(DATABASE_TABLES.TIMELINE_DISLIKES)
           .select('*', { count: 'exact', head: true })
           .eq('event_id', eventId);
@@ -208,8 +206,7 @@ export async function toggleDislike(
     } else {
       // Dislike the event
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data, error } = await (supabase.rpc as any)('dislike_timeline_event', {
+        const { data, error } = await db.rpc('dislike_timeline_event', {
           p_event_id: eventId,
           p_user_id: targetUserId,
         });
@@ -222,8 +219,7 @@ export async function toggleDislike(
         return {
           success: true,
           disliked: true,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          dislikeCount: (data as any)?.dislike_count || 0,
+          dislikeCount: (data as { dislike_count?: number })?.dislike_count || 0,
         };
       } catch (dbError) {
         logger.warn(
@@ -232,15 +228,14 @@ export async function toggleDislike(
           'Timeline'
         );
         // Fallback: insert into timeline_dislikes and return new count
-        const { error: insertErr } = await supabase
+        const { error: insertErr } = await db
           .from(DATABASE_TABLES.TIMELINE_DISLIKES)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .insert({ event_id: eventId, user_id: targetUserId } as any);
+          .insert({ event_id: eventId, user_id: targetUserId });
         if (insertErr) {
           logger.error('Fallback dislike failed', insertErr, 'Timeline');
           return { success: false, disliked: false, dislikeCount: 0, error: insertErr.message };
         }
-        const { count } = await supabase
+        const { count } = await db
           .from(DATABASE_TABLES.TIMELINE_DISLIKES)
           .select('*', { count: 'exact', head: true })
           .eq('event_id', eventId);
@@ -261,8 +256,7 @@ export async function addComment(
   content: string,
   parentCommentId?: string,
   userId?: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _createEventFn?: (request: any) => Promise<any>
+  _createEventFn?: (request: Record<string, unknown>) => Promise<{ success: boolean; error?: string }>
 ): Promise<{ success: boolean; commentId?: string; commentCount: number; error?: string }> {
   try {
     // Get user ID if not provided
@@ -276,8 +270,7 @@ export async function addComment(
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)('add_timeline_comment', {
+      const { data, error } = await db.rpc('add_timeline_comment', {
         p_event_id: eventId,
         p_user_id: actorUserId,
         p_content: content,
@@ -291,10 +284,8 @@ export async function addComment(
 
       return {
         success: true,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        commentId: (data as any)?.comment_id,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        commentCount: (data as any)?.comment_count || 0,
+        commentId: (data as { comment_id?: string })?.comment_id,
+        commentCount: (data as { comment_count?: number })?.comment_count || 0,
       };
     } catch (dbError) {
       logger.warn(
@@ -303,27 +294,25 @@ export async function addComment(
         'Timeline'
       );
       // Fallback: insert directly into timeline_comments
-      const { data: inserted, error: iErr } = await supabase
+      const { data: inserted, error: iErr } = await db
         .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .insert({
           event_id: eventId,
           user_id: actorUserId,
           content,
           parent_comment_id: parentCommentId,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any)
+        })
         .select('id')
         .single();
       if (iErr || !inserted) {
         logger.error('Fallback add comment failed', iErr, 'Timeline');
         return { success: false, commentCount: 0, error: iErr?.message || 'Add comment failed' };
       }
-      const { count } = await supabase
+      const { count } = await db
         .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .select('*', { count: 'exact', head: true })
         .eq('event_id', eventId);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return { success: true, commentId: (inserted as any).id, commentCount: count || 0 };
+      return { success: true, commentId: (inserted as { id: string }).id, commentCount: count || 0 };
     }
   } catch (error) {
     logger.error('Error adding timeline comment', error, 'Timeline');
@@ -346,8 +335,7 @@ export async function updateComment(
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.rpc as any)('update_timeline_comment', {
+      const { error } = await db.rpc('update_timeline_comment', {
         p_comment_id: commentId,
         p_user_id: targetUserId,
         p_content: content,
@@ -366,8 +354,8 @@ export async function updateComment(
         'Timeline'
       );
       // Fallback: update directly in timeline_comments table
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: updateErr } = await (supabase.from(DATABASE_TABLES.TIMELINE_COMMENTS) as any)
+      const { error: updateErr } = await db
+        .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .update({ content, updated_at: new Date().toISOString() })
         .eq('id', commentId)
         .eq('user_id', targetUserId);
@@ -399,8 +387,7 @@ export async function deleteComment(
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.rpc as any)('delete_timeline_comment', {
+      const { error } = await db.rpc('delete_timeline_comment', {
         p_comment_id: commentId,
         p_user_id: targetUserId,
       });
@@ -424,8 +411,8 @@ export async function deleteComment(
     }
 
     // Fallback: soft delete by updating deleted_at timestamp
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: deleteErr } = await (supabase.from(DATABASE_TABLES.TIMELINE_COMMENTS) as any)
+    const { error: deleteErr } = await db
+      .from(DATABASE_TABLES.TIMELINE_COMMENTS)
       .update({
         deleted_at: new Date().toISOString(),
         content: '[deleted]',
@@ -470,6 +457,22 @@ export async function getEventCounts(
   }
 }
 
+type CommentRow = {
+  id: string;
+  event_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  parent_comment_id: string | null;
+};
+
+type ProfileRow = {
+  id: string;
+  display_name: string;
+  username: string | null;
+  avatar_url: string | null;
+};
+
 /**
  * Get comments for an event
  */
@@ -477,12 +480,10 @@ export async function getEventComments(
   eventId: string,
   limit: number = 50,
   offset: number = 0
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<any[]> {
+): Promise<Record<string, unknown>[]> {
   try {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)('get_event_comments', {
+      const { data, error } = await db.rpc('get_event_comments', {
         p_event_id: eventId,
         p_limit: limit,
         p_offset: offset,
@@ -493,7 +494,7 @@ export async function getEventComments(
         return [];
       }
 
-      return data || [];
+      return (data as Record<string, unknown>[]) || [];
     } catch (dbError) {
       logger.warn(
         'Database function not available for comments, using fallback',
@@ -501,7 +502,7 @@ export async function getEventComments(
         'Timeline'
       );
       // Fallback: query comments table directly and enrich with profile info
-      const { data: comments, error: cErr } = await supabase
+      const { data: comments, error: cErr } = await db
         .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .select('id, event_id, user_id, content, created_at, parent_comment_id')
         .eq('event_id', eventId)
@@ -511,22 +512,20 @@ export async function getEventComments(
         logger.error('Fallback comments query failed', cErr, 'Timeline');
         return [];
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const commentsData = comments as any[];
+      const commentsData = comments as CommentRow[];
       const userIds = Array.from(new Set(commentsData.map(c => c.user_id).filter(Boolean)));
       let profilesMap: Record<
         string,
         { display_name: string; username: string | null; avatar_url: string | null }
       > = {};
       if (userIds.length > 0) {
-        const { data: profiles, error: pErr } = await supabase
+        const { data: profiles, error: pErr } = await db
           .from(DATABASE_TABLES.PROFILES)
           .select('id, display_name, username, avatar_url')
           .in('id', userIds as string[]);
         if (!pErr && profiles) {
           profilesMap = Object.fromEntries(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (profiles as any[]).map((p: any) => [
+            (profiles as ProfileRow[]).map(p => [
               p.id,
               { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url },
             ])
@@ -553,12 +552,10 @@ export async function getEventComments(
 /**
  * Get replies to a comment
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function getCommentReplies(commentId: string, limit: number = 20): Promise<any[]> {
+export async function getCommentReplies(commentId: string, limit: number = 20): Promise<Record<string, unknown>[]> {
   try {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)('get_comment_replies', {
+      const { data, error } = await db.rpc('get_comment_replies', {
         p_comment_id: commentId,
         p_limit: limit,
       });
@@ -568,14 +565,14 @@ export async function getCommentReplies(commentId: string, limit: number = 20): 
         return [];
       }
 
-      return data || [];
+      return (data as Record<string, unknown>[]) || [];
     } catch (dbError) {
       logger.warn(
         'Database function not available for comment replies, using fallback',
         dbError,
         'Timeline'
       );
-      const { data: replies, error: rErr } = await supabase
+      const { data: replies, error: rErr } = await db
         .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .select('id, event_id, user_id, content, created_at, parent_comment_id')
         .eq('parent_comment_id', commentId)
@@ -585,22 +582,20 @@ export async function getCommentReplies(commentId: string, limit: number = 20): 
         logger.error('Fallback replies query failed', rErr, 'Timeline');
         return [];
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const repliesData = replies as any[];
+      const repliesData = replies as CommentRow[];
       const userIds = Array.from(new Set(repliesData.map(c => c.user_id).filter(Boolean)));
       let profilesMap: Record<
         string,
         { display_name: string; username: string | null; avatar_url: string | null }
       > = {};
       if (userIds.length > 0) {
-        const { data: profiles, error: pErr } = await supabase
+        const { data: profiles, error: pErr } = await db
           .from(DATABASE_TABLES.PROFILES)
           .select('id, display_name, username, avatar_url')
           .in('id', userIds as string[]);
         if (!pErr && profiles) {
           profilesMap = Object.fromEntries(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (profiles as any[]).map((p: any) => [
+            (profiles as ProfileRow[]).map(p => [
               p.id,
               { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url },
             ])

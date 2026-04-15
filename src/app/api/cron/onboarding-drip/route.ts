@@ -15,6 +15,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getNextOnboardingEmail } from '@/services/notifications/onboardingEngine';
 import { NotificationEmailService } from '@/services/notifications/emailService';
 import { logger } from '@/utils/logger';
+import { apiSuccess, apiError, apiUnauthorized } from '@/lib/api/standardResponse';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes
@@ -29,7 +30,7 @@ function verifyCronSecret(request: Request): boolean {
 
 export async function GET(request: Request) {
   if (!verifyCronSecret(request)) {
-    return new Response('Unauthorized', { status: 401 });
+    return apiUnauthorized();
   }
 
   const startTime = Date.now();
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
 
     if (fetchError) {
       logger.error('Failed to fetch recent users', { error: fetchError }, LOG_SOURCE);
-      return Response.json({ success: false, error: 'Failed to fetch users' }, { status: 500 });
+      return apiError('Failed to fetch users', 'INTERNAL_ERROR', 500);
     }
 
     const userIds = (recentUsers ?? []).map((row: { id: string }) => row.id);
@@ -120,14 +121,7 @@ export async function GET(request: Request) {
       LOG_SOURCE
     );
 
-    return Response.json({
-      success: true,
-      processed,
-      sent,
-      skipped,
-      failed,
-      durationMs: duration,
-    });
+    return apiSuccess({ processed, sent, skipped, failed, durationMs: duration });
   } catch (error) {
     logger.error(
       'Onboarding drip cron failed',
@@ -135,16 +129,6 @@ export async function GET(request: Request) {
       LOG_SOURCE
     );
 
-    return Response.json(
-      {
-        success: false,
-        error: 'Internal error',
-        processed,
-        sent,
-        skipped,
-        failed,
-      },
-      { status: 500 }
-    );
+    return apiError('Internal error', 'INTERNAL_ERROR', 500);
   }
 }

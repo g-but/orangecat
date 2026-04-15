@@ -64,29 +64,26 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
           created_by: user.id,
           is_group: false,
         };
-        const { data: convIns, error: convErr } = await (
-          supabase
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .from(DATABASE_TABLES.CONVERSATIONS) as any
-        )
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: convIns, error: convErr } = await (supabase as any)
+          .from(DATABASE_TABLES.CONVERSATIONS)
           .insert(conversationInsert)
           .select('id')
           .single();
         if (convErr || !convIns) {
           throw convErr || new Error('conv insert failed');
         }
-        conversationId = convIns.id as string;
+        conversationId = (convIns as { id: string }).id;
         const participantInsert: Database['public']['Tables']['conversation_participants']['Insert'] =
           {
             conversation_id: conversationId,
             user_id: user.id,
             role: 'member',
           };
-        const { error: partErr } = await (
-          supabase
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
-        ).insert(participantInsert);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: partErr } = await (supabase as any)
+          .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+          .insert(participantInsert);
         if (partErr) {
           // Roll back conversation if participant insert fails
           // Use admin client for deletion to bypass RLS
@@ -108,13 +105,11 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
               is_group: false,
             };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: convIns, error: convErr } = await (admin
+            const { data: convIns, error: convErr } = await (admin as any)
               .from(DATABASE_TABLES.CONVERSATIONS)
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .insert(conversationInsert as any)
+              .insert(conversationInsert)
               .select('id')
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .single() as any);
+              .single();
             if (convErr || !convIns || !convIns.id) {
               logger.error(
                 'Failed to create conversation (admin)',
@@ -132,16 +127,14 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
                 role: 'member',
               };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error: partErr } = await (admin
+            const { error: partErr } = await (admin as any)
               .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .insert(participantInsert as any) as any);
+              .insert(participantInsert);
             if (partErr) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await (admin
+              await admin
                 .from(DATABASE_TABLES.CONVERSATIONS)
                 .delete()
-                .eq('id', newConversationId) as any);
+                .eq('id', newConversationId);
               logger.error(
                 'Failed to add participant (admin)',
                 { error: partErr, userId: user.id },

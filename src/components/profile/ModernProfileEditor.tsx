@@ -1,8 +1,7 @@
 'use client';
 
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import { Form } from '@/components/ui/form';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import ProfileWizard from './ProfileWizard';
 import { useProfileEditor } from './hooks/useProfileEditor';
 import { ProfileImagesSection } from './ProfileImagesSection';
@@ -132,28 +131,9 @@ export default function ModernProfileEditor({
 
   // Modal mode (default)
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-      onClick={onCancel}
-    >
-      <div
-        className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold">Edit profile</h2>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onCancel}
-              className="rounded-full w-8 h-8 p-0"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
+    <Dialog open onOpenChange={open => !open && onCancel()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogTitle>Edit profile</DialogTitle>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -211,8 +191,7 @@ export default function ModernProfileEditor({
               />
             </form>
           </Form>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

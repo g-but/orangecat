@@ -3,19 +3,31 @@
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/config/routes';
+import { API_ROUTES } from '@/config/api-routes';
 import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { PlayCircle, Radio, Video, Mic2, Share2, Users, Clock } from 'lucide-react';
 import ProfileShare from '@/components/sharing/ProfileShare';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { toast } from 'sonner';
+
+const waitlistSchema = z.object({
+  email: z.string().email(),
+});
+type WaitlistFormData = z.infer<typeof waitlistSchema>;
 
 export default function ChannelComingSoonPage() {
   const { user, profile } = useAuth();
   const [showShare, setShowShare] = useState(false);
-  const [email, setEmail] = useState(profile?.email || '');
   const [submitting, setSubmitting] = useState(false);
+  const { register, handleSubmit, reset, formState: { errors: formErrors } } = useForm<WaitlistFormData>({
+    resolver: zodResolver(waitlistSchema),
+    defaultValues: { email: profile?.email || '' },
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/40 via-white to-teal-50/40">
@@ -39,10 +51,10 @@ export default function ChannelComingSoonPage() {
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
-                <Video className="w-5 h-5 text-orange-600" />
+                <Video className="w-5 h-5 text-tiffany-600" />
                 <div>
                   <div className="font-semibold">Video uploads</div>
-                  <div className="text-sm text-gray-600">Share long-form and shorts</div>
+                  <div className="text-base text-gray-600">Share long-form and shorts</div>
                 </div>
               </div>
             </CardContent>
@@ -50,10 +62,10 @@ export default function ChannelComingSoonPage() {
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
-                <Mic2 className="w-5 h-5 text-orange-600" />
+                <Mic2 className="w-5 h-5 text-tiffany-600" />
                 <div>
                   <div className="font-semibold">Audio & podcasts</div>
-                  <div className="text-sm text-gray-600">Episodes, clips, and more</div>
+                  <div className="text-base text-gray-600">Episodes, clips, and more</div>
                 </div>
               </div>
             </CardContent>
@@ -61,10 +73,10 @@ export default function ChannelComingSoonPage() {
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
-                <Radio className="w-5 h-5 text-orange-600" />
+                <Radio className="w-5 h-5 text-tiffany-600" />
                 <div>
                   <div className="font-semibold">Live streaming</div>
-                  <div className="text-sm text-gray-600">Connect with your audience</div>
+                  <div className="text-base text-gray-600">Connect with your audience</div>
                 </div>
               </div>
             </CardContent>
@@ -75,7 +87,7 @@ export default function ChannelComingSoonPage() {
         <Card className="mb-8">
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Rights & Safety</h3>
-            <p className="text-sm text-gray-700">
+            <p className="text-base text-gray-700">
               Use original or licensed content, or ensure your use is transformative under fair use.
               We respect artists and owners: we will offer clear licensing metadata, an easy
               takedown process, and fair dispute handling. Our goal is to make direct creator
@@ -90,52 +102,54 @@ export default function ChannelComingSoonPage() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="text-center md:text-left">
                 <h3 className="text-lg font-semibold text-gray-900">Be the first to try it</h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-base text-gray-600">
                   Invite friends, build your audience, and get notified when we launch.
                 </p>
-                <div className="mt-3 flex items-center gap-2">
+                <form
+                  className="mt-3 flex items-center gap-2"
+                  onSubmit={handleSubmit(async (data: WaitlistFormData) => {
+                    try {
+                      setSubmitting(true);
+                      const res = await fetch(API_ROUTES.WAITLIST, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          email: data.email,
+                          source: 'channel_page',
+                          referrer: document.referrer,
+                        }),
+                      });
+                      const json = await res.json();
+                      if (!res.ok || !json.success) {
+                        throw new Error(json.error || 'Failed to subscribe');
+                      }
+                      toast.success('We will notify you when Channel goes live');
+                      reset({ email: profile?.email || '' });
+                    } catch (e) {
+                      toast.error(e instanceof Error ? e.message : 'Failed to subscribe');
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  })}
+                >
                   <div className="relative">
                     <Input
                       type="email"
                       placeholder="your@email.com"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      className="pr-28 w-72 max-w-full"
+                      className={`pr-28 w-72 max-w-full${formErrors.email ? ' border-red-500' : ''}`}
+                      {...register('email')}
                     />
                     <Button
+                      type="submit"
                       className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-3"
-                      disabled={submitting || !email}
-                      onClick={async () => {
-                        try {
-                          setSubmitting(true);
-                          const res = await fetch('/api/waitlist', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              email,
-                              source: 'channel_page',
-                              referrer: document.referrer,
-                            }),
-                          });
-                          const data = await res.json();
-                          if (!res.ok || !data.success) {
-                            throw new Error(data.error || 'Failed to subscribe');
-                          }
-                          toast.success('We will notify you when Channel goes live');
-                          setEmail(profile?.email || '');
-                        } catch (e) {
-                          toast.error(e instanceof Error ? e.message : 'Failed to subscribe');
-                        } finally {
-                          setSubmitting(false);
-                        }
-                      }}
+                      disabled={submitting}
                     >
                       Notify me
                     </Button>
                   </div>
-                </div>
+                </form>
               </div>
-              <div className="flex items-center gap-2 relative">
+              <div className="flex flex-col-reverse sm:flex-row items-center gap-2 relative">
                 <Link href={ROUTES.DASHBOARD.PEOPLE}>
                   <Button variant="outline">
                     <Users className="w-4 h-4 mr-2" /> Discover People
@@ -186,7 +200,7 @@ export default function ChannelComingSoonPage() {
                   <Clock className="w-5 h-5 text-orange-600 mt-0.5" />
                   <div>
                     <div className="font-semibold">{item.title}</div>
-                    <div className="text-sm text-gray-600">{item.desc}</div>
+                    <div className="text-base text-gray-600">{item.desc}</div>
                   </div>
                 </div>
               </CardContent>

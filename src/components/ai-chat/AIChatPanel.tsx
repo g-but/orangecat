@@ -12,6 +12,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface AIAssistant {
   id: string;
@@ -76,7 +77,7 @@ export function AIChatPanel({
         // Fetch conversation and user API key status in parallel
         const [convResponse, keysResponse] = await Promise.all([
           fetch(`/api/ai-assistants/${assistantId}/conversations/${conversationId}`),
-          fetch('/api/user/api-keys'),
+          fetch(API_ROUTES.USER.API_KEYS),
         ]);
 
         if (!convResponse.ok) {
@@ -241,7 +242,7 @@ export function AIChatPanel({
           <div className="flex items-center gap-2 mt-0.5">
             {lastModelUsed && <ModelBadge modelId={lastModelUsed} />}
             {conversation?.title && (
-              <span className="text-sm text-gray-500 truncate">{conversation.title}</span>
+              <span className="text-base text-gray-500 truncate">{conversation.title}</span>
             )}
           </div>
         </div>
@@ -305,12 +306,13 @@ export function AIChatPanel({
               </AvatarFallback>
             </Avatar>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {assistant?.welcome_message ? assistant.title : 'Start a conversation'}
+              {assistant?.welcome_message?.trim() ? assistant.title : 'Start a conversation'}
             </h3>
             <p className="text-gray-600 max-w-md whitespace-pre-wrap">
-              {assistant?.welcome_message ||
-                `Send a message to begin chatting with ${assistant?.title || 'this assistant'}.`}
+              {assistant?.welcome_message?.trim() ||
+                `Send a message to begin chatting with ${assistant?.title || 'your Cat'}.`}
             </p>
+            <p className="text-sm text-gray-400 mt-2">Type a message below to begin</p>
             {!userStatus?.hasByok && (
               <p className="text-sm text-gray-400 mt-4">
                 Using free tier • {userStatus?.freeMessagesRemaining || 0} messages remaining today

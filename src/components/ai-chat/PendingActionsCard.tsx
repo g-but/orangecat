@@ -29,6 +29,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface PendingAction {
   id: string;
@@ -161,7 +162,7 @@ export function PendingActionsCard({ action, onConfirm, onReject }: PendingActio
         </div>
         <div className="flex-1">
           <h4 className="font-medium text-amber-900">Action requires confirmation</h4>
-          <p className="text-sm text-amber-700 mt-1">{action.description}</p>
+          <p className="text-base text-amber-700 mt-1">{action.description}</p>
         </div>
       </div>
 
@@ -238,14 +239,14 @@ export function usePendingActions() {
   const confirmAction = async (
     actionId: string
   ): Promise<{ success: boolean; data?: unknown; error?: string }> => {
-    const res = await fetch(`/api/cat/actions/${actionId}`, {
+    const res = await fetch(`${API_ROUTES.CAT.ACTIONS}/${actionId}`, {
       method: 'POST',
     });
     return res.json();
   };
 
   const rejectAction = async (actionId: string, reason?: string): Promise<{ success: boolean }> => {
-    const res = await fetch(`/api/cat/actions/${actionId}`, {
+    const res = await fetch(`${API_ROUTES.CAT.ACTIONS}/${actionId}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason }),
@@ -254,7 +255,7 @@ export function usePendingActions() {
   };
 
   const getPendingActions = async (): Promise<PendingAction[]> => {
-    const res = await fetch('/api/cat/actions');
+    const res = await fetch(API_ROUTES.CAT.ACTIONS);
     const json = await res.json();
     return json.success ? json.data.pendingActions : [];
   };

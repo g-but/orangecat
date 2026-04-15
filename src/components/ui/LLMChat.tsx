@@ -5,6 +5,7 @@ import { MessageCircle, X, Send, Loader2, Bot, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './Button';
 import { Input } from './Input';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface Message {
   id: string;
@@ -98,7 +99,7 @@ export function LLMChat({
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(API_ROUTES.CHAT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

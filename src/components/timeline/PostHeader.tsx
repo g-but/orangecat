@@ -4,7 +4,7 @@ import React, { useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, Lock, Users, Pencil, Trash2 } from 'lucide-react';
 import { TimelineDisplayEvent } from '@/types/timeline';
-import { formatDistanceToNow } from 'date-fns';
+import { formatRelativeTime } from '@/utils/dates';
 
 interface PostHeaderProps {
   event: TimelineDisplayEvent;
@@ -50,14 +50,6 @@ export function PostHeader({
     };
   }, [showMenu, onMenuToggle]);
 
-  const formatTimestamp = (timestamp: string) => {
-    try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-    } catch {
-      return timestamp;
-    }
-  };
-
   // For simple reposts, show the original author instead of the reposter
   const displayAuthor = isSimpleRepost
     ? {
@@ -101,7 +93,7 @@ export function PostHeader({
         className="text-gray-500 text-sm hover:underline"
         title={timestamp ? new Date(timestamp).toLocaleString() : undefined}
       >
-        {timestamp ? formatTimestamp(timestamp) : ''}
+        {timestamp ? formatRelativeTime(timestamp) : ''}
       </time>
 
       {/* Visibility Indicator */}
@@ -120,7 +112,7 @@ export function PostHeader({
       {isEdited && (
         <span
           className="text-gray-400 text-xs"
-          title={updatedTimestamp ? `Edited ${formatTimestamp(updatedTimestamp)}` : 'Edited'}
+          title={updatedTimestamp ? `Edited ${formatRelativeTime(updatedTimestamp)}` : 'Edited'}
         >
           · edited
         </span>

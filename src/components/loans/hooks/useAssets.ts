@@ -12,6 +12,14 @@ import { useState, useEffect } from 'react';
 import type { AssetOption } from '../types';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
+interface RawAsset {
+  id: string;
+  title: string;
+  estimated_value?: number | null;
+  currency?: string;
+  verification_status?: string;
+}
+
 export function useAssets(enabled: boolean = true) {
   const [assets, setAssets] = useState<AssetOption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -34,7 +42,7 @@ export function useAssets(enabled: boolean = true) {
         }
         const json = await res.json();
         if (!cancelled) {
-          const items = (json.data || []).map((a: any) => ({
+          const items = (json.data || []).map((a: RawAsset) => ({
             id: a.id,
             title: a.title,
             estimated_value: a.estimated_value ?? null,
@@ -43,9 +51,9 @@ export function useAssets(enabled: boolean = true) {
           }));
           setAssets(items);
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!cancelled) {
-          setError(e?.message || 'Failed to load assets');
+          setError(e instanceof Error ? e.message : 'Failed to load assets');
         }
       } finally {
         if (!cancelled) {
@@ -68,7 +76,7 @@ export function useAssets(enabled: boolean = true) {
       const res = await fetch(ENTITY_REGISTRY.asset.apiEndpoint, { credentials: 'include' });
       if (res.ok) {
         const json = await res.json();
-        const items = (json.data || []).map((a: any) => ({
+        const items = (json.data || []).map((a: RawAsset) => ({
           id: a.id,
           title: a.title,
           estimated_value: a.estimated_value ?? null,
@@ -77,8 +85,8 @@ export function useAssets(enabled: boolean = true) {
         }));
         setAssets(items);
       }
-    } catch (e: any) {
-      setError(e?.message || 'Failed to refresh assets');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to refresh assets');
     } finally {
       setLoading(false);
     }

@@ -6,6 +6,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import type { ModelTier } from '@/config/ai-models';
 import type { UserApiKey } from '@/components/ai/AIKeyManager';
+import { API_ROUTES } from '@/config/api-routes';
 
 // ==================== TYPES ====================
 
@@ -113,7 +114,7 @@ export function useAISettings() {
   // Fetch platform usage
   const fetchPlatformUsage = useCallback(async () => {
     try {
-      const response = await fetch('/api/ai/platform-usage');
+      const response = await fetch(API_ROUTES.AI.PLATFORM_USAGE);
       if (response.ok) {
         const data = await response.json();
         setPlatformUsage(data);
@@ -179,7 +180,7 @@ export function useAISettings() {
   // Add API key
   const addKey = useCallback(
     async (params: { provider: string; apiKey: string; keyName: string }) => {
-      const response = await fetch('/api/user/api-keys', {
+      const response = await fetch(API_ROUTES.USER.API_KEYS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
@@ -203,7 +204,7 @@ export function useAISettings() {
   // Delete API key
   const deleteKey = useCallback(
     async (keyId: string) => {
-      const response = await fetch(`/api/user/api-keys/${keyId}`, {
+      const response = await fetch(`${API_ROUTES.USER.API_KEYS}/${keyId}`, {
         method: 'DELETE',
       });
 
@@ -221,7 +222,7 @@ export function useAISettings() {
   // Set primary key
   const setPrimaryKey = useCallback(
     async (keyId: string) => {
-      const response = await fetch(`/api/user/api-keys/${keyId}`, {
+      const response = await fetch(`${API_ROUTES.USER.API_KEYS}/${keyId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isPrimary: true }),

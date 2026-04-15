@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Download, X, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logger } from '@/utils/logger';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface PWAInstallButtonProps {
   className?: string;
@@ -250,17 +251,9 @@ export function PWAInstallButton({
 // iOS Install Instructions Component
 export function IOSInstallInstructions({ onClose }: { onClose: () => void }) {
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg p-6 max-w-sm w-full">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Install OrangeCat</h3>
-          <button
-            onClick={onClose}
-            className="p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogTitle>Install OrangeCat</DialogTitle>
 
         <div className="space-y-4 text-sm">
           <div className="flex items-start space-x-3">
@@ -294,8 +287,8 @@ export function IOSInstallInstructions({ onClose }: { onClose: () => void }) {
         <Button onClick={onClose} className="w-full mt-6" variant="outline">
           Got it
         </Button>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

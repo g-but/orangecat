@@ -6,6 +6,7 @@ import { ReactNode, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { EntityCardActions } from './EntityCardActions';
+import { isPublicStatus } from '@/config/status-config';
 
 /**
  * EntityCard - Modular, reusable card component for displaying entities (services, products, etc.)
@@ -289,7 +290,7 @@ export function EntityCard({
         <Link href={detailHref}>
           <h3
             className={cn(
-              'font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-1',
+              'font-semibold text-gray-900 group-hover:text-orange-600 group-hover:underline transition-colors line-clamp-1',
               compact ? 'text-sm' : 'text-lg'
             )}
           >
@@ -299,12 +300,12 @@ export function EntityCard({
 
         {/* Description - hidden in compact mode */}
         {description && !compact && (
-          <p className="mt-2 text-sm text-gray-600 line-clamp-2">{description}</p>
+          <p className="mt-2 text-base text-gray-600 line-clamp-2">{description}</p>
         )}
 
         {/* Price Label */}
         {priceLabel && (
-          <p className={cn(compact ? 'mt-1' : 'mt-2', 'text-sm font-medium text-orange-600')}>
+          <p className={cn(compact ? 'mt-1' : 'mt-2', 'text-sm font-medium text-gray-900')}>
             {priceLabel}
           </p>
         )}
@@ -317,7 +318,7 @@ export function EntityCard({
           <div className={cn(compact ? 'mt-2' : 'mt-3', 'flex items-center justify-between')}>
             <div className="flex items-center gap-2">
               {status && (
-                <Badge variant={status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                <Badge variant={isPublicStatus(status) ? 'default' : 'secondary'} className="text-xs">
                   {status}
                 </Badge>
               )}
@@ -340,7 +341,7 @@ export function EntityCard({
             </div>
             <div className="mt-1 h-2 w-full rounded-full bg-gray-200">
               <div
-                className="h-2 rounded-full bg-orange-500 transition-all duration-300"
+                className="h-2 rounded-full bg-tiffany-500 transition-all duration-300"
                 style={{ width: `${Math.min(100, fundingProgress)}%` }}
               />
             </div>

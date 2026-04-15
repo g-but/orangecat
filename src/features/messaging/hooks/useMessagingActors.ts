@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 
 export interface MessagingActor {
   actor_id: string;
@@ -42,7 +43,7 @@ export function useMessagingActors(): UseMessagingActorsResult {
       setError(null);
 
       try {
-        const response = await fetch('/api/messages/actors', {
+        const response = await fetch(API_ROUTES.MESSAGES.ACTORS, {
           credentials: 'include',
         });
 

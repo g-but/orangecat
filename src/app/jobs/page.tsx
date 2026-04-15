@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Briefcase, MapPin, Clock, Building2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import { API_ROUTES } from '@/config/api-routes';
 
 export default function JobsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,7 +35,7 @@ export default function JobsPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/jobs?limit=50');
+      const response = await fetch(`${API_ROUTES.JOBS}?limit=50`);
       if (!response.ok) {
         throw new Error('Failed to load job postings');
       }
@@ -92,7 +93,7 @@ export default function JobsPage() {
           <CardContent className="py-12 text-center">
             <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 mb-2">No job postings available</p>
-            <p className="text-sm text-gray-400">Check back later or create a group to post jobs</p>
+            <p className="text-base text-gray-400">Check back later or create a group to post jobs</p>
           </CardContent>
         </Card>
       ) : (

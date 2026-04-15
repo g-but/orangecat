@@ -51,7 +51,7 @@ export default function PeoplePage() {
   )
     .filter(conn => (activeTab === 'all' ? conn.profile.id !== user.id : true))
     .filter(conn => {
-      if (!searchTerm.trim()) return true;
+      if (!searchTerm.trim()) {return true;}
       const q = searchTerm.trim().toLowerCase();
       const p = conn.profile;
       return (

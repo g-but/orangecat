@@ -13,6 +13,9 @@ import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { researchUpdateSchema } from '@/config/entity-configs/research-config';
 
+// Research tables are not in the generated DB schema — as any required
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // GET /api/research/[id] - Get specific research entity
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -22,11 +25,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
     } = await supabase.auth.getUser();
 
     const tableName = getTableName('research');
-    const { data: entity, error } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(tableName) as any
-    )
+    const { data: entity, error } = await (supabase.from(tableName) as any)
       .select('*')
       .eq('id', params.id)
       .single();
@@ -46,26 +45,14 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
     // Get additional data
     const [{ data: progressUpdates }, { data: votes }, { data: contributions }] = await Promise.all(
       [
-        (
-          supabase
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES) as any
-        )
+        (supabase.from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES) as any)
           .select('*')
           .eq('research_entity_id', params.id)
           .order('created_at', { ascending: false }),
-        (
-          supabase
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .from(DATABASE_TABLES.RESEARCH_VOTES) as any
-        )
+        (supabase.from(DATABASE_TABLES.RESEARCH_VOTES) as any)
           .select('*')
           .eq('research_entity_id', params.id),
-        (
-          supabase
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS) as any
-        )
+        (supabase.from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS) as any)
           .select('*')
           .eq('research_entity_id', params.id)
           .order('created_at', { ascending: false }),
@@ -107,11 +94,7 @@ export async function PUT(_request: NextRequest, { params }: { params: { id: str
 
     // Check ownership
     const tableName = getTableName('research');
-    const { data: existing, error: fetchError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(tableName) as any
-    )
+    const { data: existing, error: fetchError } = await (supabase.from(tableName) as any)
       .select('user_id')
       .eq('id', params.id)
       .single();
@@ -128,11 +111,7 @@ export async function PUT(_request: NextRequest, { params }: { params: { id: str
     }
 
     // Update the entity
-    const { data: entity, error: updateError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(tableName) as any
-    )
+    const { data: entity, error: updateError } = await (supabase.from(tableName) as any)
       .update({
         ...updates,
         updated_at: new Date().toISOString(),
@@ -171,11 +150,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
 
     // Check ownership
     const tableName = getTableName('research');
-    const { data: existing, error: fetchError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(tableName) as any
-    )
+    const { data: existing, error: fetchError } = await (supabase.from(tableName) as any)
       .select('user_id, funding_raised_btc')
       .eq('id', params.id)
       .single();
@@ -197,11 +172,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     }
 
     // Delete the entity (cascading deletes will handle related records)
-    const { error: deleteError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(tableName) as any
-    )
+    const { error: deleteError } = await (supabase.from(tableName) as any)
       .delete()
       .eq('id', params.id);
 

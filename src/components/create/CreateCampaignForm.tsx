@@ -5,24 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { CampaignStorageService } from '@/services/projects/projectStorageService';
-import { isValidBitcoinAddress } from '@/utils/validation';
 import { z } from 'zod';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
-
-const projectFormSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters'),
-  description: z.string().optional(),
-  bitcoin_address: z.string().refine(isValidBitcoinAddress, 'Invalid Bitcoin address'),
-  website_url: z.string().url('Invalid URL').optional().or(z.literal('')),
-  goal_amount: z
-    .string()
-    .refine(val => !isNaN(parseFloat(val)), 'Invalid number')
-    .optional()
-    .or(z.literal('')),
-  tags: z.string().optional(),
-  banner_url: z.string().optional(),
-  gallery_images: z.array(z.string()).optional(),
-});
+import { campaignFormSchema } from '@/lib/validation/projects';
 
 export interface CampaignFormData {
   title: string;
@@ -105,7 +90,7 @@ export default function CreateCampaignForm({
     const { name, value } = e.target;
     const newFormData = { ...formData, [name]: value };
     setFormData(newFormData);
-    const result = projectFormSchema.safeParse(newFormData);
+    const result = campaignFormSchema.safeParse(newFormData);
     if (!result.success) {
       setFormErrors(result.error);
     } else {
@@ -208,7 +193,7 @@ export default function CreateCampaignForm({
     setLoading(true);
     setError(null);
 
-    const result = projectFormSchema.safeParse(formData);
+    const result = campaignFormSchema.safeParse(formData);
     if (!result.success) {
       setFormErrors(result.error);
       toast.error('Please fix the errors in the form');

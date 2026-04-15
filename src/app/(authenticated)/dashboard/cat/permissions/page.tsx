@@ -14,6 +14,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/config/routes';
+import { API_ROUTES } from '@/config/api-routes';
 import Link from 'next/link';
 import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
@@ -99,7 +100,7 @@ export default function CatPermissionsPage() {
 
   const fetchPermissions = async () => {
     try {
-      const res = await fetch('/api/cat/permissions');
+      const res = await fetch(API_ROUTES.CAT.PERMISSIONS);
       const json = await res.json();
       if (json.success) {
         setData(json.data);
@@ -145,7 +146,7 @@ export default function CatPermissionsPage() {
 
     try {
       const method = enabled ? 'POST' : 'DELETE';
-      const res = await fetch('/api/cat/permissions', {
+      const res = await fetch(API_ROUTES.CAT.PERMISSIONS, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -176,7 +177,7 @@ export default function CatPermissionsPage() {
     setSaving(actionId);
     try {
       const method = enabled ? 'POST' : 'DELETE';
-      const res = await fetch('/api/cat/permissions', {
+      const res = await fetch(API_ROUTES.CAT.PERMISSIONS, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -291,7 +292,7 @@ export default function CatPermissionsPage() {
               <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-amber-800">High-risk actions enabled</p>
-                <p className="text-sm text-amber-700">
+                <p className="text-base text-amber-700">
                   You have enabled actions that can send Bitcoin or post public content. My Cat will
                   always ask for confirmation before executing these.
                 </p>
@@ -330,7 +331,7 @@ export default function CatPermissionsPage() {
                             {cat.enabledActionCount}/{cat.actionCount}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-500">{cat.description}</p>
+                        <p className="text-base text-gray-500">{cat.description}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -383,7 +384,7 @@ export default function CatPermissionsPage() {
                                       </Badge>
                                     )}
                                   </div>
-                                  <p className="text-xs text-gray-500">{action.description}</p>
+                                  <p className="text-sm text-gray-500">{action.description}</p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -452,7 +453,7 @@ export default function CatPermissionsPage() {
                   <ShieldCheck className="h-5 w-5 text-green-600" />
                   <span className="font-medium text-gray-900">Minimal</span>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm text-gray-500">
                   Only context management. Safest option for new users.
                 </p>
               </button>
@@ -479,7 +480,7 @@ export default function CatPermissionsPage() {
                   <Zap className="h-5 w-5 text-tiffany" />
                   <span className="font-medium text-gray-900">Creator</span>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm text-gray-500">
                   Create content & communicate. Best for most users.
                 </p>
               </button>
@@ -505,7 +506,7 @@ export default function CatPermissionsPage() {
                   <Shield className="h-5 w-5 text-amber-600" />
                   <span className="font-medium text-gray-900">Power User</span>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm text-gray-500">
                   Everything except payments. For experienced users.
                 </p>
               </button>
@@ -534,7 +535,7 @@ export default function CatPermissionsPage() {
           {/* Info */}
           <div className="mt-8 bg-indigo-50 border border-indigo-100 rounded-lg p-4">
             <h4 className="font-medium text-indigo-900 mb-2">How permissions work</h4>
-            <ul className="text-sm text-indigo-700 space-y-1">
+            <ul className="text-base text-indigo-700 space-y-1">
               <li>
                 <strong>Low risk</strong> actions (like adding context) can run without asking.
               </li>

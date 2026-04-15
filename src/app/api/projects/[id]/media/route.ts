@@ -44,8 +44,8 @@ export async function GET(_request: Request, context: RouteContext) {
 
     const supabase = await createServerClient();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from(DATABASE_TABLES.PROJECT_MEDIA) as any)
+    const { data, error } = await supabase
+      .from(DATABASE_TABLES.PROJECT_MEDIA)
       .select('id, storage_path, position, alt_text')
       .eq('project_id', projectId)
       .order('position', { ascending: true });
@@ -55,8 +55,7 @@ export async function GET(_request: Request, context: RouteContext) {
       return apiInternalError('Failed to load media');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const media = (data || []).map((m: any) => {
+    const media = (data || []).map((m: { storage_path: string; id: string; position: number; alt_text?: string }) => {
       const { data: urlData } = supabase.storage.from('project-media').getPublicUrl(m.storage_path);
       return { ...m, url: urlData.publicUrl };
     });
@@ -95,8 +94,8 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { user, supabase } = request;
 
     // Verify project ownership
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: project } = await (supabase.from(getTableName('project')) as any)
+    const { data: project } = await supabase
+      .from(getTableName('project'))
       .select('user_id')
       .eq('id', projectId)
       .single();
@@ -108,8 +107,8 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
       return apiForbidden('You can only delete media from your own projects');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from(DATABASE_TABLES.PROJECT_MEDIA) as any)
+    const { error } = await supabase
+      .from(DATABASE_TABLES.PROJECT_MEDIA)
       .delete()
       .eq('id', mediaId)
       .eq('project_id', projectId);
@@ -145,11 +144,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       return apiBadRequest('Invalid storage path');
     }
 
-    const { data: project } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(getTableName('project')) as any
-    )
+    const { data: project } = await supabase
+      .from(getTableName('project'))
       .select('user_id')
       .eq('id', projectId)
       .single();
@@ -169,11 +165,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     }
 
     // Check current media count - use fresh query to avoid stale data
-    const { count, error: countError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.PROJECT_MEDIA) as any
-    )
+    const { count, error: countError } = await supabase
+      .from(DATABASE_TABLES.PROJECT_MEDIA)
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId);
 
@@ -194,18 +187,14 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Find the first available position (0, 1, or 2)
     // Get all existing positions
-    const { data: existing } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.PROJECT_MEDIA) as any
-    )
+    const { data: existing } = await supabase
+      .from(DATABASE_TABLES.PROJECT_MEDIA)
       .select('position')
       .eq('project_id', projectId);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const existingPositions = (existing || [])
-      .map((m: any) => m.position)
-      .sort((a: number, b: number) => a - b);
+      .map((m: { position: number }) => m.position)
+      .sort((a, b) => a - b);
 
     // Find first available position (0, 1, or 2)
     let nextPosition = 0;
@@ -221,11 +210,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       return apiBadRequest('Maximum 3 images per project');
     }
 
-    const { data: media, error } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.PROJECT_MEDIA) as any
-    )
+    const { data: media, error } = await supabase
+      .from(DATABASE_TABLES.PROJECT_MEDIA)
       .insert({ project_id: projectId, storage_path: path, position: nextPosition, alt_text })
       .select()
       .single();

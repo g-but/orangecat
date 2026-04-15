@@ -3,6 +3,7 @@ import { logger } from '@/utils/logger';
 import { TimelineVisibility } from '@/types/timeline';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { API_ROUTES } from '@/config/api-routes';
 
 const PROFILE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const profileCheckCache = new Map<string, { exists: boolean; timestamp: number }>();
@@ -18,7 +19,7 @@ export async function ensureProfileExists(userId: string): Promise<boolean> {
   }
 
   try {
-    const response = await fetch('/api/profile');
+    const response = await fetch(API_ROUTES.PROFILE);
     const exists = response.ok;
     profileCheckCache.set(userId, { exists, timestamp: Date.now() });
 

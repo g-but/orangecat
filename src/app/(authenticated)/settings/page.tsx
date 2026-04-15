@@ -21,9 +21,11 @@ import {
   Link2,
 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
+import { API_ROUTES } from '@/config/api-routes';
 import { MFASetup, MFAStatus } from '@/components/auth/MFASetup';
 import { RecoveryCodes } from '@/components/auth/RecoveryCodes';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { NostrConnectionCard } from '@/components/nostr/NostrConnectionCard';
 
 interface SettingsFormData {
@@ -155,7 +157,7 @@ export default function SettingsPage() {
     setDeleteAccountConfirm(false);
     setIsDeleting(true);
     try {
-      const response = await fetch('/api/delete-user', { method: 'POST' });
+      const response = await fetch(API_ROUTES.DELETE_USER, { method: 'POST' });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to delete account.');
@@ -200,7 +202,7 @@ export default function SettingsPage() {
               <Lock className="w-8 h-8 mr-4" />
               <div>
                 <h2 className="text-2xl font-semibold">Account & Security</h2>
-                <p className="text-blue-100 text-sm mt-1">
+                <p className="text-blue-100 text-base mt-1">
                   Manage your login credentials and account security
                 </p>
               </div>
@@ -226,7 +228,7 @@ export default function SettingsPage() {
                   className="max-w-md"
                 />
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md">
-                  <p className="text-sm text-blue-800">
+                  <p className="text-base text-blue-800">
                     <strong>Note:</strong> When you update your email, we&apos;ll send a
                     confirmation link to your new address.
                   </p>
@@ -350,7 +352,7 @@ export default function SettingsPage() {
               </h3>
               <div className="bg-red-50 border border-red-200 rounded-lg p-6">
                 <h4 className="text-lg font-medium text-red-800 mb-2">Delete Account</h4>
-                <p className="text-sm text-red-700 mb-4">
+                <p className="text-base text-red-700 mb-4">
                   This will permanently delete your account and all associated data including your
                   profile, projects, and transaction history. This action cannot be undone.
                 </p>
@@ -398,13 +400,11 @@ export default function SettingsPage() {
       )}
 
       {/* Recovery Codes Modal */}
-      {showRecoveryCodes && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="max-w-md w-full">
-            <RecoveryCodes onClose={() => setShowRecoveryCodes(false)} />
-          </div>
-        </div>
-      )}
+      <Dialog open={showRecoveryCodes} onOpenChange={setShowRecoveryCodes}>
+        <DialogContent className="max-w-md p-0 border-0 bg-transparent shadow-none">
+          <RecoveryCodes onClose={() => setShowRecoveryCodes(false)} />
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         isOpen={deleteAccountConfirm}

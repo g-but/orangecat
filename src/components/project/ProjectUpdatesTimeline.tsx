@@ -14,6 +14,9 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Activity, Bitcoin, MessageSquare, Trophy, TrendingUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { logger } from '@/utils/logger';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+
+const SATS_PER_BTC = 100_000_000;
 
 interface ProjectUpdate {
   id: string;
@@ -31,6 +34,7 @@ interface ProjectUpdatesTimelineProps {
 }
 
 export function ProjectUpdatesTimeline({ projectId, className = '' }: ProjectUpdatesTimelineProps) {
+  const { formatAmount } = useDisplayCurrency();
   const [updates, setUpdates] = useState<ProjectUpdate[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -138,7 +142,7 @@ export function ProjectUpdatesTimeline({ projectId, className = '' }: ProjectUpd
                     <p className="font-medium text-gray-900">{update.title}</p>
                     {update.amount_btc && (
                       <span className="text-sm font-semibold text-orange-600 flex-shrink-0">
-                        {update.amount_btc.toFixed(8)} BTC
+                        {formatAmount(Math.round(update.amount_btc * SATS_PER_BTC))}
                       </span>
                     )}
                   </div>

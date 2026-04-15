@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ENTITY_REGISTRY, type EntityType } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { ENTITY_STATUS } from '@/config/database-constants';
 
 const BASE_URL = 'https://orangecat.ch';
 
@@ -134,7 +135,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const { data: entities } = (await supabase
         .from(table)
         .select('id, updated_at')
-        .eq('status', 'active')) as { data: SitemapEntity[] | null };
+        .eq('status', ENTITY_STATUS.ACTIVE)) as { data: SitemapEntity[] | null };
 
       if (entities) {
         const entityPages: MetadataRoute.Sitemap = entities.map(entity => ({

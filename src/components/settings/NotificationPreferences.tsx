@@ -15,6 +15,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { API_ROUTES } from '@/config/api-routes';
 import { Switch } from '@/components/ui/switch';
 import {
   Select,
@@ -108,7 +109,7 @@ export function NotificationPreferences() {
   useEffect(() => {
     async function fetchPrefs() {
       try {
-        const res = await fetch('/api/notifications/preferences');
+        const res = await fetch(API_ROUTES.NOTIFICATIONS.PREFERENCES);
         if (!res.ok) {
           throw new Error('Failed to load preferences');
         }
@@ -127,7 +128,7 @@ export function NotificationPreferences() {
   const saveUpdate = useCallback(async (update: Record<string, unknown>, fieldKey: string) => {
     setSavingField(fieldKey);
     try {
-      const res = await fetch('/api/notifications/preferences', {
+      const res = await fetch(API_ROUTES.NOTIFICATIONS.PREFERENCES, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(update),
@@ -141,7 +142,7 @@ export function NotificationPreferences() {
       toast.error('Failed to save notification preferences');
       // Revert optimistic update by re-fetching
       try {
-        const res = await fetch('/api/notifications/preferences');
+        const res = await fetch(API_ROUTES.NOTIFICATIONS.PREFERENCES);
         if (res.ok) {
           const json = await res.json();
           setPrefs(json.data);

@@ -13,6 +13,8 @@ interface ThreadPostProps {
   onReplyCreated?: (reply: TimelineDisplayEvent) => void;
   showThreadLine?: boolean;
   isInThread?: boolean;
+  index?: number;
+  totalPosts?: number;
   className?: string;
 }
 
@@ -27,10 +29,14 @@ export function ThreadPost({
   onReplyCreated,
   showThreadLine = true,
   isInThread = false,
+  index = 0,
+  totalPosts = 1,
   className,
 }: ThreadPostProps) {
   const threadDepth = event.threadDepth || 0;
   const isQuoteReply = event.isQuoteReply || false;
+  const hasChildren = index < totalPosts - 1;
+  const isLastInThread = index === totalPosts - 1;
 
   return (
     <div className={cn('relative', className)}>
@@ -39,8 +45,8 @@ export function ThreadPost({
         <div className="absolute left-4 top-0 bottom-0 pointer-events-none">
           <ThreadConnector
             depth={threadDepth}
-            hasChildren={false} // TODO: Calculate based on thread structure
-            isLastInThread={false} // TODO: Calculate based on thread structure
+            hasChildren={hasChildren}
+            isLastInThread={isLastInThread}
           />
         </div>
       )}
@@ -106,6 +112,8 @@ export function ThreadView({
           onReplyCreated={onReplyCreated}
           showThreadLine={index > 0} // Don't show thread line for root post
           isInThread={true}
+          index={index}
+          totalPosts={events.length}
         />
       ))}
     </div>

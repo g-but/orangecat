@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 
 const DEFAULT_SUGGESTIONS = [
   'Help me write a product description',
@@ -21,7 +22,7 @@ export function useSuggestions() {
   useEffect(() => {
     const fetchSuggestions = async () => {
       try {
-        const res = await fetch('/api/cat/suggestions');
+        const res = await fetch(API_ROUTES.CAT.SUGGESTIONS);
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.data.suggestions) {

@@ -41,9 +41,7 @@ export async function listLoans() {
 
 export async function createLoan(
   userId: string,
-  input: CreateLoanInput & {
-    collateral?: Array<{ type: string; value: number; description?: string }>;
-  },
+  input: CreateLoanInput,
   supabase?: Awaited<ReturnType<typeof createServerClient>>
 ) {
   const mode = process.env.LOANS_WRITE_MODE || 'db';
@@ -51,8 +49,7 @@ export async function createLoan(
     throw new Error('Mock mode is disabled by policy. Set LOANS_WRITE_MODE=db');
   }
 
-  // Extract collateral (will be handled separately)
-  const { collateral: _collateral, ...loanInput } = input;
+  const loanInput = input;
 
   // Map form fields to database columns
   // original_amount is stored directly as BTC
@@ -98,12 +95,6 @@ export async function createLoan(
       client: supabase,
     }
   );
-
-  // Handle collateral separately if provided
-  if (_collateral && Array.isArray(_collateral) && _collateral.length > 0 && data?.id) {
-    // Collateral will be handled via separate API endpoint
-    // TODO: Create loan_collateral entries via /api/loan-collateral endpoint
-  }
 
   return data;
 }

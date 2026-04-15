@@ -6,6 +6,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { readEventStream } from '@/lib/sse';
+import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 import type { Message, CatAction } from '../types';
 
 const STREAM_TIMEOUT_MS = 60_000;
@@ -27,7 +29,7 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
     let cancelled = false;
     setIsLoadingHistory(true);
 
-    fetch('/api/cat/history')
+    fetch(API_ROUTES.CAT.HISTORY)
       .then(r => (r.ok ? r.json() : null))
       .then(data => {
         if (cancelled || !data?.data?.length) {
@@ -50,8 +52,9 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
         );
         setMessages(historicMessages);
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         // Non-fatal — start fresh if history load fails
+        logger.warn('Chat history load failed', { err }, 'useChatMessages');
       })
       .finally(() => {
         if (!cancelled) {
@@ -108,7 +111,7 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
       const timeout = setTimeout(() => abortController.abort(), STREAM_TIMEOUT_MS);
 
       try {
-        const res = await fetch('/api/cat/chat', {
+        const res = await fetch(API_ROUTES.CAT.CHAT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -195,7 +198,7 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
     setMessages([]);
     setError(null);
     // Delete server-side history (best-effort)
-    fetch('/api/cat/history', { method: 'DELETE' }).catch(() => {});
+    fetch(API_ROUTES.CAT.HISTORY, { method: 'DELETE' }).catch((err: unknown) => { logger.warn('Failed to clear server history', { err }, 'useChatMessages'); });
   }, []);
 
   const setErrorState = useCallback((err: string | null) => {

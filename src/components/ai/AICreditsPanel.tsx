@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface CreditBalance {
   balance_btc: number;
@@ -59,7 +60,7 @@ export function AICreditsPanel() {
   const fetchCredits = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/ai-credits');
+      const response = await fetch(API_ROUTES.AI_CREDITS.BASE);
       if (!response.ok) {
         throw new Error('Failed to fetch credits');
       }
@@ -89,7 +90,7 @@ export function AICreditsPanel() {
     setDepositing(true);
     try {
       // For MVP, use the manual add endpoint
-      const response = await fetch('/api/ai-credits/add', {
+      const response = await fetch(API_ROUTES.AI_CREDITS.ADD, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -229,7 +230,7 @@ export function AICreditsPanel() {
 
           {/* Empty state */}
           {(!data?.transactions || data.transactions.length === 0) && (
-            <div className="text-center py-4 text-gray-500 text-sm">
+            <div className="text-center py-4 text-gray-500 text-base">
               No transactions yet. Add credits to start chatting with AI assistants.
             </div>
           )}
@@ -282,7 +283,7 @@ export function AICreditsPanel() {
 
             {/* Info box */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-800">
+              <p className="text-base text-blue-800">
                 <strong>Development Mode:</strong> Credits are added instantly for testing. In
                 production, this will generate a Lightning invoice for payment.
               </p>

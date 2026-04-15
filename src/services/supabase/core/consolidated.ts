@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * CONSOLIDATED SUPABASE SERVICE LAYER
  *
@@ -12,7 +11,6 @@
 
 import { supabase } from './client';
 import { logger } from '@/utils/logger';
-import { DATABASE_TABLES } from '@/config/database-tables';
 
 // =====================================================================
 // 🎯 UNIFIED TYPES
@@ -64,7 +62,7 @@ export class ProfileService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
+      const { data, error } = await supabase.from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
@@ -111,7 +109,7 @@ export class ProfileService {
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
+      const { data, error } = await (supabase as any).from('profiles')
         .update(updateData)
         .eq('id', userId)
         .select()
@@ -151,9 +149,9 @@ export class ProfileService {
         updated_at: new Date().toISOString(),
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
-        .insert(newProfile)
+      const { data, error } = await supabase.from('profiles')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .insert(newProfile as any)
         .select()
         .single();
 
@@ -182,7 +180,7 @@ export class ProfileService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
+      const { data, error } = await supabase.from('profiles')
         .select('*')
         .eq('username', username.trim())
         .single();
@@ -215,7 +213,7 @@ export class ProfileService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
+      const { data, error } = await supabase.from('profiles')
         .select('*')
         .or(`username.ilike.%${query}%,name.ilike.%${query}%`)
         .limit(limit);
@@ -244,7 +242,7 @@ export class DatabaseService {
   static async testConnection(): Promise<ServiceResponse<boolean>> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: _data, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
+      const { data: _data, error } = await supabase.from('profiles')
         .select('id')
         .limit(1);
 
@@ -267,7 +265,7 @@ export class DatabaseService {
     try {
       // Test expected columns exist
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: _data, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
+      const { data: _data, error } = await supabase.from('profiles')
         .select(
           'id, username, name, bio, avatar_url, banner_url, website, bitcoin_address, lightning_address, created_at, updated_at'
         )

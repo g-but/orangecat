@@ -16,6 +16,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { buildWeeklyDigest } from '@/services/notifications/digestBuilder';
 import { NotificationEmailService } from '@/services/notifications/emailService';
 import { logger } from '@/utils/logger';
+import { apiSuccess, apiError, apiUnauthorized } from '@/lib/api/standardResponse';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes
@@ -33,7 +34,7 @@ function verifyCronSecret(request: Request): boolean {
 
 export async function GET(request: Request) {
   if (!verifyCronSecret(request)) {
-    return new Response('Unauthorized', { status: 401 });
+    return apiUnauthorized();
   }
 
   const startTime = Date.now();
@@ -151,14 +152,7 @@ export async function GET(request: Request) {
       LOG_SOURCE
     );
 
-    return Response.json({
-      success: true,
-      processed,
-      sent,
-      skipped,
-      failed,
-      durationMs: duration,
-    });
+    return apiSuccess({ processed, sent, skipped, failed, durationMs: duration });
   } catch (error) {
     logger.error(
       'Weekly digest cron failed',
@@ -166,16 +160,6 @@ export async function GET(request: Request) {
       LOG_SOURCE
     );
 
-    return Response.json(
-      {
-        success: false,
-        error: 'Internal error',
-        processed,
-        sent,
-        skipped,
-        failed,
-      },
-      { status: 500 }
-    );
+    return apiError('Internal error', 'INTERNAL_ERROR', 500);
   }
 }

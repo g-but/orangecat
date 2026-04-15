@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { Sparkles, Loader2, AlertCircle, Lightbulb, CheckCircle2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 
 import Button from '@/components/ui/Button';
 import type { AIPrefillBarProps, AIPrefillResponse } from './types';
@@ -27,7 +28,7 @@ export function AIPrefillBar({ entityType, onPrefill, disabled, existingData }: 
       setError(null);
 
       try {
-        const response = await fetch('/api/ai/form-prefill', {
+        const response = await fetch(API_ROUTES.AI.FORM_PREFILL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -78,7 +79,7 @@ export function AIPrefillBar({ entityType, onPrefill, disabled, existingData }: 
   }, [description, callAI]);
 
   const handleRefine = useCallback(() => {
-    if (!refineInput.trim()) return;
+    if (!refineInput.trim()) {return;}
     callAI(refineInput, true);
   }, [refineInput, callAI]);
 

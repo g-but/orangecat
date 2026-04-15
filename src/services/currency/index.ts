@@ -15,6 +15,7 @@
 
 import { CURRENCY_METADATA, type CurrencyCode } from '@/config/currencies';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 
 // ==================== TYPES ====================
 
@@ -410,11 +411,12 @@ export function getRate(from: string, to: string): number {
  */
 export async function fetchRates(): Promise<void> {
   try {
-    const response = await fetch('/api/currency/rates');
+    const response = await fetch(API_ROUTES.CURRENCY.RATES);
     if (response.ok) {
-      const data = await response.json();
-      if (data.rates) {
-        updateRates(data.rates);
+      const json = await response.json();
+      const rates = json?.data?.rates ?? json?.rates;
+      if (rates) {
+        updateRates(rates);
       }
     }
   } catch (error) {
@@ -568,7 +570,7 @@ export function formatBTC(amount: number): string {
  */
 export function displayBTC(amount: number | string | null | undefined): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : (amount ?? 0);
-  if (!isFinite(num) || num === 0) return '0 BTC';
+  if (!isFinite(num) || num === 0) {return '0 BTC';}
   return `${parseFloat(num.toFixed(8))} BTC`;
 }
 

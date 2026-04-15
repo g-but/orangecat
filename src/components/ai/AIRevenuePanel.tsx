@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface AssistantRevenue {
   id: string;
@@ -83,7 +84,7 @@ export function AIRevenuePanel() {
   const fetchRevenue = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/ai-credits/revenue');
+      const response = await fetch(API_ROUTES.AI_CREDITS.REVENUE);
       if (!response.ok) {
         throw new Error('Failed to fetch revenue');
       }
@@ -101,7 +102,7 @@ export function AIRevenuePanel() {
 
   const fetchWithdrawals = useCallback(async () => {
     try {
-      const response = await fetch('/api/ai-credits/withdrawals?limit=5');
+      const response = await fetch(`${API_ROUTES.AI_CREDITS.WITHDRAWALS}?limit=5`);
       if (!response.ok) {
         return;
       }
@@ -143,7 +144,7 @@ export function AIRevenuePanel() {
 
     setWithdrawing(true);
     try {
-      const response = await fetch('/api/ai-credits/withdrawals', {
+      const response = await fetch(API_ROUTES.AI_CREDITS.WITHDRAWALS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -233,16 +234,16 @@ export function AIRevenuePanel() {
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
           <div className="text-sm text-green-800 mb-1">Total Earnings</div>
           <div className="text-3xl font-bold text-green-900">
-            {formatAmount(earnings?.total_earned_btc || summary.total_revenue_btc)}
+            {formatAmount(Math.round((earnings?.total_earned_btc || summary.total_revenue_btc) * 100_000_000))}
           </div>
           <div className="text-sm text-green-700 mt-1 space-y-0.5">
             <div>
               Available:{' '}
-              {formatAmount(earnings?.available_balance_btc || summary.available_balance_btc)}
+              {formatAmount(Math.round((earnings?.available_balance_btc || summary.available_balance_btc) * 100_000_000))}
             </div>
             {(earnings?.pending_withdrawal_btc || 0) > 0 && (
               <div className="text-yellow-700">
-                Pending: {formatAmount(earnings?.pending_withdrawal_btc || 0)}
+                Pending: {formatAmount(Math.round((earnings?.pending_withdrawal_btc || 0) * 100_000_000))}
               </div>
             )}
           </div>
@@ -292,7 +293,7 @@ export function AIRevenuePanel() {
                   <div className="flex items-center gap-2">
                     {getStatusIcon(withdrawal.status)}
                     <div>
-                      <div className="font-medium">{formatAmount(withdrawal.amount_btc)}</div>
+                      <div className="font-medium">{formatAmount(Math.round(withdrawal.amount_btc * 100_000_000))}</div>
                       <div className="text-xs text-gray-500">
                         {new Date(withdrawal.created_at).toLocaleDateString()}
                       </div>
@@ -339,7 +340,7 @@ export function AIRevenuePanel() {
                   </div>
                   <div className="text-right flex-shrink-0 ml-2">
                     <div className="font-medium text-green-600">
-                      {formatAmount(assistant.total_revenue_btc)}
+                      {formatAmount(Math.round(assistant.total_revenue_btc * 100_000_000))}
                     </div>
                   </div>
                 </div>
@@ -350,7 +351,7 @@ export function AIRevenuePanel() {
 
         {/* Empty state */}
         {assistants.length === 0 && (
-          <div className="text-center py-4 text-gray-500 text-sm">
+          <div className="text-center py-4 text-gray-500 text-base">
             No AI assistants yet. Create one to start earning!
           </div>
         )}
@@ -375,7 +376,7 @@ export function AIRevenuePanel() {
               <div className="text-sm text-green-800">Available to withdraw</div>
               <div className="text-2xl font-bold text-green-900">
                 {formatAmount(
-                  (earnings?.available_balance_btc || 0) - (earnings?.pending_withdrawal_btc || 0)
+                  Math.round(((earnings?.available_balance_btc || 0) - (earnings?.pending_withdrawal_btc || 0)) * 100_000_000)
                 )}
               </div>
             </div>
@@ -434,7 +435,7 @@ export function AIRevenuePanel() {
 
             {/* Info box */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-800">
+              <p className="text-base text-blue-800">
                 <strong>Note:</strong> Withdrawals are typically processed within a few minutes. You
                 will receive the funds at your Lightning address.
               </p>

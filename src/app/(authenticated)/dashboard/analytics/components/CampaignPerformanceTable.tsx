@@ -19,7 +19,7 @@ interface CampaignPerformanceTableProps {
 }
 
 export default function CampaignPerformanceTable({ campaigns }: CampaignPerformanceTableProps) {
-  if (campaigns.length === 0) return null;
+  if (campaigns.length === 0) {return null;}
 
   return (
     <Card className="mb-8">

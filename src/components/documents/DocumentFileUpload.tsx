@@ -15,6 +15,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Upload, File, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface ExtractedContent {
   title: string;
@@ -80,7 +81,7 @@ export function DocumentFileUpload({
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch('/api/documents/extract', {
+        const response = await fetch(API_ROUTES.DOCUMENTS.EXTRACT, {
           method: 'POST',
           body: formData,
         });
@@ -194,7 +195,7 @@ export function DocumentFileUpload({
               <Upload className="h-8 w-8 text-indigo-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-1">Upload a file</h3>
-            <p className="text-sm text-gray-600 mb-3">Drag & drop or click to browse</p>
+            <p className="text-base text-gray-600 mb-3">Drag & drop or click to browse</p>
             <div className="flex flex-wrap justify-center gap-2">
               {ACCEPTED_EXTENSIONS.map(ext => (
                 <span
@@ -223,7 +224,7 @@ export function DocumentFileUpload({
               <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-1">Processing...</h3>
-            <p className="text-sm text-gray-600">Extracting content from {fileName}</p>
+            <p className="text-base text-gray-600">Extracting content from {fileName}</p>
           </>
         )}
 
@@ -233,7 +234,7 @@ export function DocumentFileUpload({
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
             <h3 className="text-lg font-semibold text-green-900 mb-1">Content extracted!</h3>
-            <p className="text-sm text-green-700 mb-3">{fileName}</p>
+            <p className="text-base text-green-700 mb-3">{fileName}</p>
             <button
               onClick={e => {
                 e.stopPropagation();
@@ -252,8 +253,8 @@ export function DocumentFileUpload({
               <AlertCircle className="h-8 w-8 text-red-600" />
             </div>
             <h3 className="text-lg font-semibold text-red-900 mb-1">Upload failed</h3>
-            <p className="text-sm text-red-600 mb-3">{errorMessage}</p>
-            <p className="text-sm text-gray-600">Click to try again</p>
+            <p className="text-base text-red-600 mb-3">{errorMessage}</p>
+            <p className="text-base text-gray-600">Click to try again</p>
           </>
         )}
       </div>

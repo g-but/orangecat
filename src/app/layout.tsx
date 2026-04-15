@@ -1,8 +1,5 @@
-import { Inter, Playfair_Display } from 'next/font/google';
+import { Inter } from 'next/font/google';
 
-// Font loading with optimized preloading strategy
-// Primary font (Inter) is preloaded for faster FCP
-// Secondary font (Playfair Display) is lazy loaded to reduce initial bundle
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
@@ -15,16 +12,7 @@ const inter = Inter({
     'Roboto',
     'sans-serif',
   ],
-  preload: true, // Enable preload for primary font (critical for FCP)
-  adjustFontFallback: true, // Optimize font fallback rendering
-});
-
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair-display',
-  display: 'swap',
-  fallback: ['Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
-  preload: false, // Keep secondary font lazy loaded (not critical for initial render)
+  preload: true,
   adjustFontFallback: true,
 });
 import './globals.css';
@@ -69,7 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
   return (
-    <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`}>
+    <html lang="en" className={inter.variable}>
       <body className="antialiased">
         {/* Structured data: Organization + WebSite */}
         <script

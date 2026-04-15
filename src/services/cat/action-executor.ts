@@ -349,6 +349,30 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     return { success: true, data };
   },
 
+  // ---------- PRODUCTIVITY ACTIONS ----------
+
+  create_task: async (supabase, userId, _actorId, params) => {
+    const { data, error } = await supabase
+      .from(DATABASE_TABLES.TASKS)
+      .insert({
+        created_by: userId,
+        title: params.title,
+        description: (params.description as string | null) || null,
+        priority: (params.priority as string) || 'medium',
+        due_date: (params.due_date as string | null) || null,
+        status: 'pending',
+        task_type: 'personal',
+        category: 'general',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  },
+
   // ---------- ORGANIZATION ACTIONS ----------
 
   create_organization: async (supabase, userId, _actorId, params) => {
@@ -767,6 +791,11 @@ export class CatActionExecutor {
       }
       case 'add_context':
         return `Add context document: "${parameters.title}"`;
+      case 'create_task': {
+        const priority = parameters.priority ? ` [${parameters.priority}]` : '';
+        const due = parameters.due_date ? ` due ${parameters.due_date}` : '';
+        return `Create task: "${parameters.title}"${priority}${due}`;
+      }
       case 'create_organization':
         return `Create organization "${parameters.name}"`;
       default:

@@ -8,6 +8,7 @@
  */
 
 import { Form } from '@/components/ui/form';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useProfileWizard } from './hooks';
 import {
   BasicsStep,
@@ -55,8 +56,9 @@ export default function ProfileWizard({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <Dialog open onOpenChange={open => !open && onCancel()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 flex flex-col">
+        <DialogTitle className="sr-only">Profile Setup</DialogTitle>
         {/* Header with Progress */}
         <WizardHeader progress={calculateProgress()} onCancel={onCancel} />
 
@@ -80,7 +82,7 @@ export default function ProfileWizard({
           onPrevious={handlePrevious}
           onCancel={onCancel}
         />
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

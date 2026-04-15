@@ -16,6 +16,7 @@ import supabase from '@/lib/supabase/browser';
 import { useAuth } from '@/hooks/useAuth';
 import { useRealtimeSubscription } from '@/features/messaging/hooks/useRealtimeSubscription';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface MessagesUnreadContextType {
   count: number;
@@ -67,7 +68,7 @@ export function MessagesUnreadProvider({ children }: { children: React.ReactNode
 
     try {
       // Try to sync session first if this is the first request and we're getting auth errors
-      let res = await fetch('/api/messages/unread-count', {
+      let res = await fetch(API_ROUTES.MESSAGES.UNREAD_COUNT, {
         credentials: 'same-origin',
         cache: 'no-store',
       });
@@ -81,7 +82,7 @@ export function MessagesUnreadProvider({ children }: { children: React.ReactNode
             data: { session },
           } = await supabase.auth.getSession();
           if (session?.access_token) {
-            const syncRes = await fetch('/api/auth/sync', {
+            const syncRes = await fetch(API_ROUTES.AUTH.SYNC, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

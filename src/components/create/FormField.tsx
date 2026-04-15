@@ -27,6 +27,7 @@ export function FormField({
   error,
   onChange,
   onFocus,
+  onBlur,
   disabled = false,
   onCurrencyChange,
   currency,
@@ -46,6 +47,7 @@ export function FormField({
               value={(value as string) || ''}
               onChange={e => onChange(e.target.value)}
               onFocus={onFocus}
+              onBlur={onBlur}
               placeholder={placeholder}
               rows={rows}
               disabled={disabled}
@@ -69,6 +71,7 @@ export function FormField({
             value={(value as string | number) ?? ''}
             onChange={e => onChange(e.target.value ? parseFloat(e.target.value) : null)}
             onFocus={onFocus}
+            onBlur={onBlur}
             placeholder={placeholder}
             min={min}
             max={max}
@@ -107,6 +110,7 @@ export function FormField({
             value={(value as string) || ''}
             onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
+            onBlur={onBlur}
             disabled={disabled}
             className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:border-transparent transition-colors ${baseInputClass} ${
               disabled ? 'bg-gray-50 cursor-not-allowed' : ''
@@ -172,6 +176,7 @@ export function FormField({
             value={(value as string) || ''}
             onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
+            onBlur={onBlur}
             placeholder={placeholder}
             disabled={disabled}
             className={baseInputClass}
@@ -186,6 +191,7 @@ export function FormField({
             value={(value as string) || ''}
             onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
+            onBlur={onBlur}
             placeholder={placeholder || 'bc1q... or 3... or 1...'}
             disabled={disabled}
             className={`font-mono text-sm ${baseInputClass}`}
@@ -206,6 +212,7 @@ export function FormField({
               onChange(tags);
             }}
             onFocus={onFocus}
+            onBlur={onBlur}
             placeholder={placeholder || 'Enter tags separated by commas'}
             disabled={disabled}
             className={baseInputClass}
@@ -222,6 +229,7 @@ export function FormField({
               value={(value as string) || ''}
               onChange={e => onChange(e.target.value)}
               onFocus={onFocus}
+              onBlur={onBlur}
               placeholder={placeholder}
               disabled={disabled}
               className={baseInputClass}

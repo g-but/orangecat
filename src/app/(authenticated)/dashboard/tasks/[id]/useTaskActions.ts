@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ROUTES } from '@/config/routes';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface UseTaskActionsOptions {
   taskId: string;
@@ -25,7 +26,7 @@ export function useTaskActions({ taskId, onSuccess }: UseTaskActionsOptions) {
   const handleComplete = async (notes: string, durationMinutes: number | '') => {
     setActionLoading(true);
     try {
-      const response = await fetch(`/api/tasks/${taskId}/complete`, {
+      const response = await fetch(`${API_ROUTES.TASKS.BASE}/${taskId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -54,7 +55,7 @@ export function useTaskActions({ taskId, onSuccess }: UseTaskActionsOptions) {
   const handleFlagAttention = async (attentionMessage: string) => {
     setActionLoading(true);
     try {
-      const response = await fetch(`/api/tasks/${taskId}/attention`, {
+      const response = await fetch(`${API_ROUTES.TASKS.BASE}/${taskId}/attention`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: attentionMessage || null }),
@@ -80,7 +81,7 @@ export function useTaskActions({ taskId, onSuccess }: UseTaskActionsOptions) {
   const handleRequest = async (requestUserId: string, requestMessage: string) => {
     setActionLoading(true);
     try {
-      const response = await fetch(`/api/tasks/${taskId}/request`, {
+      const response = await fetch(`${API_ROUTES.TASKS.BASE}/${taskId}/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -111,7 +112,7 @@ export function useTaskActions({ taskId, onSuccess }: UseTaskActionsOptions) {
   const executeArchive = async () => {
     setArchiveConfirmOpen(false);
     try {
-      const response = await fetch(`/api/tasks/${taskId}`, {
+      const response = await fetch(`${API_ROUTES.TASKS.BASE}/${taskId}`, {
         method: 'DELETE',
       });
 

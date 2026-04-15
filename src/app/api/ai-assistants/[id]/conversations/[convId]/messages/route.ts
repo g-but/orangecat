@@ -16,8 +16,6 @@
  * - No API key: Use platform key, free models only, daily limit
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import {
@@ -105,15 +103,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { content, model: requestedModel } = result.data;
 
     // Verify conversation exists and belongs to user
-    const { data: conversationData, error: convError } = await (
-      supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any
-    )
+    const { data: conversationData, error: convError } = await supabase
+      .from(DATABASE_TABLES.AI_CONVERSATIONS)
       .select('id, assistant_id, user_id, status')
       .eq('id', convId)
       .eq('assistant_id', assistantId)
       .eq('user_id', user.id)
       .single();
-    const conversation = conversationData as any;
+    const conversation = conversationData as { id: string; assistant_id: string; user_id: string; status: string } | null;
 
     if (convError || !conversation) {
       return apiNotFound('Conversation not found');
@@ -124,15 +121,29 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get assistant details including all configuration
-    const { data: assistantData, error: assistantError } = await (
-      supabase.from(DATABASE_TABLES.AI_ASSISTANTS) as any
-    )
+    const { data: assistantData, error: assistantError } = await supabase
+      .from(DATABASE_TABLES.AI_ASSISTANTS)
       .select(
         'id, title, system_prompt, welcome_message, pricing_model, price_per_message, price_per_1k_tokens, user_id, model_preference, allowed_models, min_model_tier, temperature, max_tokens_per_response, free_messages_per_day'
       )
       .eq('id', assistantId)
       .single();
-    const assistant = assistantData as any;
+    const assistant = assistantData as {
+      id: string;
+      title: string;
+      system_prompt: string | null;
+      welcome_message: string | null;
+      pricing_model: string;
+      price_per_message: number | null;
+      price_per_1k_tokens: number | null;
+      user_id: string;
+      model_preference: string | null;
+      allowed_models: string[] | null;
+      min_model_tier: string | null;
+      temperature: number | null;
+      max_tokens_per_response: number | null;
+      free_messages_per_day: number | null;
+    } | null;
 
     if (assistantError || !assistant) {
       return apiNotFound('Assistant not found');
@@ -168,12 +179,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get conversation history for context (used by auto-router and AI call)
-    const { data: historyData } = await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any)
+    const { data: historyData } = await supabase
+      .from(DATABASE_TABLES.AI_MESSAGES)
       .select('role, content')
       .eq('conversation_id', convId)
       .order('created_at', { ascending: true })
       .limit(20);
-    const history = historyData as any[] | null;
+    const history = historyData as { role: string; content: string }[] | null;
 
     // Determine which model to use
     let modelToUse: string;
@@ -233,21 +245,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       today.setHours(0, 0, 0, 0);
 
       // Get all user's conversations with this assistant
-      const { data: userConvosData } = await (
-        supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any
-      )
+      const { data: userConvosData } = await supabase
+        .from(DATABASE_TABLES.AI_CONVERSATIONS)
         .select('id')
         .eq('assistant_id', assistantId)
         .eq('user_id', user.id);
-      const userConvos = userConvosData as any[] | null;
+      const userConvos = userConvosData as { id: string }[] | null;
 
-      const convoIds = userConvos?.map((c: any) => c.id) || [];
+      const convoIds = userConvos?.map(c => c.id) || [];
 
       if (convoIds.length > 0) {
         // Count user messages to this assistant today (across all conversations)
-        const { count: todayMessageCount } = await (
-          supabase.from(DATABASE_TABLES.AI_MESSAGES) as any
-        )
+        const { count: todayMessageCount } = await supabase
+          .from(DATABASE_TABLES.AI_MESSAGES)
           .select('id', { count: 'exact', head: true })
           .in('conversation_id', convoIds)
           .eq('role', 'user')
@@ -278,9 +288,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Store user message first
-    const { data: userMessageData, error: userMsgError } = await (
-      supabase.from(DATABASE_TABLES.AI_MESSAGES) as any
-    )
+    const { data: userMessageData, error: userMsgError } = await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any)
       .insert({
         conversation_id: convId,
         role: 'user',
@@ -290,7 +298,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       })
       .select()
       .single();
-    const userMessage = userMessageData as any;
+    const userMessage = userMessageData as Record<string, unknown> | null;
 
     if (userMsgError) {
       logger.error('Error storing user message', userMsgError, 'AIMessagesAPI');
@@ -361,7 +369,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       logger.error('AI API error', aiError, 'AIMessagesAPI');
 
       // Clean up user message on AI failure
-      await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any).delete().eq('id', userMessage.id);
+      await supabase.from(DATABASE_TABLES.AI_MESSAGES).delete().eq('id', (userMessage as { id: string })?.id);
 
       const errorMessage = aiError instanceof Error ? aiError.message : 'AI service error';
       return apiError('Failed to generate AI response', 'AI_ERROR', 502, { message: errorMessage });
@@ -373,9 +381,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const totalCostBtc = apiCostBtc + creatorMarkupBtc;
 
     // Store AI response
-    const { data: assistantMessageData, error: aiMsgError } = await (
-      supabase.from(DATABASE_TABLES.AI_MESSAGES) as any
-    )
+    const { data: assistantMessageData, error: aiMsgError } = await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any)
       .insert({
         conversation_id: convId,
         role: 'assistant',
@@ -395,7 +401,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       })
       .select()
       .single();
-    const assistantMessage = assistantMessageData as any;
+    const assistantMessage = assistantMessageData as Record<string, unknown> | null;
 
     if (aiMsgError) {
       logger.error('Error storing AI message', aiMsgError, 'AIMessagesAPI');
@@ -411,7 +417,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         userId: user.id,
         assistantId,
         conversationId: convId,
-        messageId: assistantMessage.id,
+        messageId: (assistantMessage as { id: string }).id,
         tokenCount: aiResponse.totalTokens,
       });
 

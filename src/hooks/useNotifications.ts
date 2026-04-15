@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 
 export interface Notification {
   id: string;
@@ -127,7 +128,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     }
 
     try {
-      const response = await fetch('/api/notifications/unread');
+      const response = await fetch(API_ROUTES.NOTIFICATIONS.UNREAD);
       const data = await response.json();
 
       if (data.success) {
@@ -225,7 +226,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     try {
       const body = id === 'all' ? { all: true } : Array.isArray(id) ? { ids: id } : { id };
 
-      const response = await fetch('/api/notifications/read', {
+      const response = await fetch(API_ROUTES.NOTIFICATIONS.READ, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -342,7 +343,7 @@ export function useUnreadNotifications() {
     // Initial fetch
     const fetchCount = async () => {
       try {
-        const response = await fetch('/api/notifications/unread');
+        const response = await fetch(API_ROUTES.NOTIFICATIONS.UNREAD);
         const data = await response.json();
         if (data.success) {
           setCount(data.data.count);

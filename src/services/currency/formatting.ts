@@ -133,7 +133,7 @@ export function formatRegionalAlternatives(): string {
  */
 export function displayBTC(amount: number | string | null | undefined): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : (amount ?? 0);
-  if (!isFinite(num) || num === 0) return '0 BTC';
+  if (!isFinite(num) || num === 0) {return '0 BTC';}
   // Show up to 8 decimals but strip trailing zeros
   return `${parseFloat(num.toFixed(8))} BTC`;
 }

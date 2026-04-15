@@ -13,6 +13,7 @@ import { logger } from '@/utils/logger';
 import { PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
+import { ENTITY_STATUS } from '@/config/database-constants';
 import type {
   SearchResult,
   SearchProfile,
@@ -187,7 +188,7 @@ export async function getSearchFacets(): Promise<SearchResponse['facets']> {
         .from(getTableName('loan'))
         .select('id', { count: 'exact', head: true })
         .eq('is_public', true)
-        .eq('status', 'active'),
+        .eq('status', ENTITY_STATUS.ACTIVE),
     ]);
 
     const facets = {

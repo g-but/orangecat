@@ -26,6 +26,7 @@ import {
   Gift,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface CategorySummary {
   category: string;
@@ -63,7 +64,7 @@ export function CatSettingsTab() {
   useEffect(() => {
     async function fetchPermissions() {
       try {
-        const res = await fetch('/api/cat/permissions');
+        const res = await fetch(API_ROUTES.CAT.PERMISSIONS);
         const data = await res.json();
         if (data.success) {
           setPermissions(data.data);
@@ -82,7 +83,7 @@ export function CatSettingsTab() {
   const toggleCategory = async (categoryId: string, enabled: boolean) => {
     setSaving(categoryId);
     try {
-      const res = await fetch('/api/cat/permissions', {
+      const res = await fetch(API_ROUTES.CAT.PERMISSIONS, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category: categoryId, enabled }),
@@ -90,7 +91,7 @@ export function CatSettingsTab() {
       const data = await res.json();
       if (data.success) {
         // Refetch permissions
-        const res2 = await fetch('/api/cat/permissions');
+        const res2 = await fetch(API_ROUTES.CAT.PERMISSIONS);
         const data2 = await res2.json();
         if (data2.success) {
           setPermissions(data2.data);
@@ -149,7 +150,7 @@ export function CatSettingsTab() {
                   >
                     {tier.name}
                   </p>
-                  <p className="text-xs text-gray-500">{tier.description}</p>
+                  <p className="text-sm text-gray-500">{tier.description}</p>
                 </div>
                 {isSelected && <Check className="h-5 w-5 text-indigo-600" />}
               </button>
@@ -222,7 +223,7 @@ export function CatSettingsTab() {
                 <div key={cat.category} className="flex items-center justify-between px-4 py-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">{cat.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{cat.description}</p>
+                    <p className="text-sm text-gray-500 truncate">{cat.description}</p>
                   </div>
                   <div className="flex items-center gap-2 ml-3">
                     {isSaving && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}

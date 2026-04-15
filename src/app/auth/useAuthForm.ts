@@ -5,6 +5,7 @@ import { resetPassword, getMFAAssuranceLevel } from '@/services/supabase/auth';
 import { registrationEvents, trackEvent } from '@/lib/analytics';
 import { getReadableError } from '@/utils/getReadableError';
 import supabase from '@/lib/supabase/browser';
+import { API_ROUTES } from '@/config/api-routes';
 
 export type OAuthProvider = 'google' | 'github' | 'apple' | 'x' | 'facebook';
 
@@ -136,7 +137,7 @@ export function useAuthForm() {
 
         // Verify CAPTCHA token server-side
         if (captchaEnabled && captchaToken) {
-          const captchaResponse = await fetch('/api/auth/verify-captcha', {
+          const captchaResponse = await fetch(API_ROUTES.AUTH.VERIFY_CAPTCHA, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: captchaToken }),

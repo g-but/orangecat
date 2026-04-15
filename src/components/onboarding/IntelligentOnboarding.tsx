@@ -27,6 +27,7 @@ import { ProfileService } from '@/services/profile';
 import { logger } from '@/utils/logger';
 import { ROUTES } from '@/config/routes';
 import { ONBOARDING_METHOD } from './OnboardingFlow/constants';
+import { API_ROUTES } from '@/config/api-routes';
 
 type AnalysisResult = {
   isPersonal: boolean;
@@ -55,7 +56,7 @@ export default function IntelligentOnboarding() {
     setError(null);
     setCurrentStep(1); // move to analyzing step
     try {
-      const res = await fetch('/api/onboarding/analyze', {
+      const res = await fetch(API_ROUTES.ONBOARDING.ANALYZE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description: userDescription }),

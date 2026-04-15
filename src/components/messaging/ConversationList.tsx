@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useConversations } from '@/features/messaging/hooks';
 import type { Conversation } from '@/features/messaging/types';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface ConversationListProps {
   searchQuery: string;
@@ -50,7 +51,7 @@ export default function ConversationList({
   const handleDeleteOne = async (id: string) => {
     removeLocal([id]);
     try {
-      const res = await fetch('/api/messages/bulk-conversations', {
+      const res = await fetch(API_ROUTES.MESSAGES.BULK_CONVERSATIONS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -430,7 +431,7 @@ export default function ConversationList({
       isOpen={!!confirmDeleteId}
       onClose={() => setConfirmDeleteId(null)}
       onConfirm={() => {
-        if (confirmDeleteId) handleDeleteOne(confirmDeleteId);
+        if (confirmDeleteId) {handleDeleteOne(confirmDeleteId);}
         setConfirmDeleteId(null);
       }}
       title="Delete conversation?"

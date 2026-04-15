@@ -17,6 +17,7 @@ import { DATABASE_TABLES, TIMELINE_TABLES } from '@/config/database-tables';
 import type {
   TimelineFeedResponse,
   TimelineDisplayEvent,
+  TimelineEventDb,
   TimelineFilters,
   TimelinePagination,
 } from '@/types/timeline';
@@ -168,11 +169,8 @@ export async function getFollowedUsersFeed(
     const offset = (page - 1) * limit;
 
     // Get list of followed user IDs
-    const { data: follows, error: followsError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.FOLLOWS) as any
-    )
+    const { data: follows, error: followsError } = await supabase
+      .from(DATABASE_TABLES.FOLLOWS)
       .select('followed_user_id')
       .eq('follower_id', currentUserId)
       .eq('is_active', true);
@@ -182,8 +180,8 @@ export async function getFollowedUsersFeed(
       throw followsError;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const followedUserIds = (follows as any[])?.map((f: any) => f.followed_user_id) || [];
+    const followedUserIds =
+      (follows as { followed_user_id: string }[] | null)?.map(f => f.followed_user_id) || [];
 
     if (followedUserIds.length === 0) {
       return {
@@ -285,16 +283,14 @@ export async function getEnrichedUserFeed(
   userId: string,
   filters?: Partial<TimelineFilters>,
   pagination?: Partial<TimelinePagination>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getDemoTimelineEvents?: (userId: string) => any[]
+  getDemoTimelineEvents?: (userId: string) => Record<string, unknown>[]
 ): Promise<TimelineFeedResponse> {
   try {
     const page = pagination?.page || 1;
     const limit = Math.min(pagination?.limit || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = (page - 1) * limit;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let events: any[] = [];
+    let events: Record<string, unknown>[] = [];
     let totalEvents = 0;
 
     try {
@@ -337,8 +333,7 @@ export async function getEnrichedUserFeed(
           totalEvents = 0;
         } else {
           // Convert basic events to enriched format
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          events = ((basicEvents || []) as any[]).map((event: any) => ({
+          events = ((basicEvents || []) as Record<string, unknown>[]).map(event => ({
             ...event,
             like_count: 0,
             share_count: 0,
@@ -367,9 +362,8 @@ export async function getEnrichedUserFeed(
 
     // Transform to display events with social data
     const displayEvents = await Promise.all(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (events || []).map(async (event: any) => {
-        const timelineEvent = mapDbEventToTimelineEvent(event);
+      (events || []).map(async (event: Record<string, unknown>) => {
+        const timelineEvent = mapDbEventToTimelineEvent(event as unknown as TimelineEventDb);
 
         // Enrich with actor info
         const actor = await getActorInfo(timelineEvent.actorId);

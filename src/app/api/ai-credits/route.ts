@@ -18,6 +18,7 @@ import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination } from '@/lib/api/query';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getPaymentProvider } from '@/services/bitcoin/paymentService';
 
 // Schema for deposit request
 const depositRequestSchema = z.object({
@@ -193,17 +194,45 @@ export const POST = compose(
       throw depositError;
     }
 
-    // TODO: Integrate with actual Lightning provider (BTCPay, Strike, Alby, etc.)
+    // Generate payment invoice via configured provider (BTCPay, mock, etc.)
+    let paymentDetails: { invoice: string | null; address?: string; checkoutLink?: string } = {
+      invoice: null,
+    };
+
+    try {
+      const provider = getPaymentProvider();
+      const paymentResult = await provider.createInvoice(
+        amount_btc,
+        `AI Credits deposit — ${amount_btc} BTC`,
+        payment_method as 'lightning' | 'onchain'
+      );
+
+      if (paymentResult.success && paymentResult.invoice) {
+        paymentDetails = {
+          invoice: paymentResult.invoice.invoice ?? null,
+          address: paymentResult.invoice.address,
+        };
+
+        // Update deposit record with payment details
+        await db.from(DATABASE_TABLES.AI_CREDIT_DEPOSITS).update({
+          payment_details: paymentDetails,
+          provider_invoice_id: paymentResult.transactionId,
+        }).eq('id', deposit?.id || depositId);
+      }
+    } catch (providerError) {
+      // Provider not configured or failed — return deposit without invoice
+      logger.warn('Payment provider unavailable, deposit recorded without invoice', {
+        error: providerError instanceof Error ? providerError.message : providerError,
+      });
+    }
+
     return apiSuccess({
       deposit_id: deposit?.id || depositId,
       amount_btc,
       payment_method,
       status: 'pending',
       expires_at: deposit?.expires_at || new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      payment_details: {
-        invoice: null,
-      },
-      message: 'Deposit recorded. Payment provider integration pending.',
+      payment_details: paymentDetails,
     });
   } catch (error) {
     logger.error('Failed to create deposit request', { error });

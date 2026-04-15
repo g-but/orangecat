@@ -3,11 +3,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { X } from 'lucide-react';
 import { TimelineDisplayEvent } from '@/types/timeline';
 import AvatarLink from '@/components/ui/AvatarLink';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 const QUOTE_MAX_LENGTH = 280;
 
@@ -106,17 +106,12 @@ export function RepostModal({
     }
   }, [isOpen]);
 
-  // Global keyboard handling: Esc to close, Ctrl/Cmd+Enter to submit
+  // Global keyboard handling: Ctrl/Cmd+Enter to submit (Escape is handled by Dialog)
   useEffect(() => {
     if (!isOpen) {
       return;
     }
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-        return;
-      }
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         if (quoteText.trim()) {
@@ -131,11 +126,7 @@ export function RepostModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, quoteText]);
 
-  // Early return AFTER all hooks
-  if (!isOpen) {
-    return null;
-  }
-
+  // Compute these unconditionally (hooks-safe: values are derived from props/state, not hooks)
   const timeAgo = formatDistanceToNow(new Date(event.eventTimestamp), { addSuffix: true });
   const remainingCharacters = QUOTE_MAX_LENGTH - quoteText.length;
   const currentActor = {
@@ -147,31 +138,16 @@ export function RepostModal({
   const canQuote = quoteText.trim().length > 0 && remainingCharacters >= 0 && !isReposting;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-opacity"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Modal */}
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-xl p-0">
+        <DialogTitle className="sr-only">Repost</DialogTitle>
         <Card
-          className="w-full max-w-xl bg-white rounded-2xl shadow-2xl pointer-events-auto animate-scale-in"
-          onClick={e => e.stopPropagation()}
+          className="w-full bg-white rounded-2xl shadow-2xl"
         >
           <CardContent className="p-0">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+            <div className="flex items-center px-4 py-3 border-b border-gray-200">
               <div className="text-sm font-semibold text-gray-900">Repost</div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
             </div>
 
             {/* Quote-first layout like X */}
@@ -279,27 +255,7 @@ export function RepostModal({
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        @keyframes scale-in {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        .animate-scale-in {
-          animation: scale-in 0.2s ease-out;
-        }
-      `,
-        }}
-      />
-    </>
+      </DialogContent>
+    </Dialog>
   );
 }

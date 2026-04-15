@@ -203,7 +203,7 @@ export function ModelSelector({
         {/* Tabs */}
         <Tabs
           value={activeTab}
-          onValueChange={(v: any) => setActiveTab(v)}
+          onValueChange={(v: string) => setActiveTab(v as typeof activeTab)}
           className="flex-1 flex flex-col overflow-hidden"
         >
           <TabsList className="grid w-full grid-cols-3">
@@ -234,7 +234,7 @@ export function ModelSelector({
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <Search className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No models found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or filters</p>
+                <p className="text-muted-foreground text-base">Try adjusting your search or filters</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
@@ -260,7 +260,7 @@ export function ModelSelector({
                 <Crown className="h-5 w-5 text-purple-600 dark:text-purple-400 mt-0.5" />
                 <div className="flex-1">
                   <h4 className="font-semibold text-sm mb-1">Unlock Premium Models</h4>
-                  <p className="text-xs text-muted-foreground mb-3">
+                  <p className="text-sm text-muted-foreground mb-3">
                     Add your OpenRouter or provider API key to access GPT-4, Claude, Gemini Pro, and
                     200+ other models.
                   </p>

@@ -6,7 +6,9 @@ import { MessageSquare, Search, Plus, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import Button from '@/components/ui/Button';
+import { API_ROUTES } from '@/config/api-routes';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import ConversationList from './ConversationList';
 import MessageView from './MessageView';
 import { cn } from '@/lib/utils';
@@ -82,7 +84,7 @@ export default function MessagePanel({
   };
 
   const bulkDeleteSelected = () => {
-    if (selectedConvIds.size === 0) return;
+    if (selectedConvIds.size === 0) {return;}
     setBulkDeleteConfirm(true);
   };
 
@@ -90,7 +92,7 @@ export default function MessagePanel({
     const convIds = Array.from(selectedConvIds);
     setBulkDeleteConfirm(false);
     try {
-      const res = await fetch('/api/messages/bulk-conversations', {
+      const res = await fetch(API_ROUTES.MESSAGES.BULK_CONVERSATIONS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
@@ -174,9 +176,12 @@ export default function MessagePanel({
     }
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="w-full max-w-4xl h-[80vh] max-h-[700px]">{loadingContent}</div>
-      </div>
+      <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+        <DialogContent className="max-w-4xl h-[80vh] max-h-[700px] p-0">
+          <DialogTitle className="sr-only">Messages</DialogTitle>
+          <div className="w-full h-full">{loadingContent}</div>
+        </DialogContent>
+      </Dialog>
     );
   }
 
@@ -404,8 +409,11 @@ export default function MessagePanel({
 
   // Modal mode
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-4xl h-[80vh] max-h-[700px]">{content}</div>
-    </div>
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-4xl h-[80vh] max-h-[700px] p-0">
+        <DialogTitle className="sr-only">Messages</DialogTitle>
+        <div className="w-full h-full">{content}</div>
+      </DialogContent>
+    </Dialog>
   );
 }

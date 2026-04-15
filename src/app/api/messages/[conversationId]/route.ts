@@ -40,10 +40,18 @@ const sendMessageSchema = z.object({
   messageType: z
     .enum([MESSAGE_TYPES.TEXT, MESSAGE_TYPES.IMAGE, MESSAGE_TYPES.FILE, MESSAGE_TYPES.SYSTEM])
     .default(MESSAGE_TYPES.TEXT),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
   senderActorId: z.string().uuid().optional(), // Optional: send as specific actor
 });
+
+type ParticipantRow = {
+  user_id: string;
+  role: string;
+  joined_at: string;
+  last_read_at: string | null;
+  is_active: boolean;
+  profiles: { username: string | null; name: string | null; avatar_url: string | null } | null;
+};
 
 /**
  * GET - Fetch messages for a conversation with cursor-based pagination
@@ -71,10 +79,8 @@ export const GET = withAuth(
       const admin = createAdminClient();
 
       // Verify user is a participant
-      const { data: participant, error: partError } = await (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
-      )
+      const { data: participant, error: partError } = await admin
+        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
         .select('user_id, last_read_at, is_active')
         .eq('conversation_id', conversationId)
         .eq('user_id', user.id)
@@ -82,8 +88,8 @@ export const GET = withAuth(
         .maybeSingle();
 
       if (partError || !participant) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: convExists } = await (admin.from(DATABASE_TABLES.CONVERSATIONS) as any)
+        const { data: convExists } = await admin
+          .from(DATABASE_TABLES.CONVERSATIONS)
           .select('id')
           .eq('id', conversationId)
           .maybeSingle();
@@ -103,10 +109,8 @@ export const GET = withAuth(
       );
 
       // Get conversation info
-      const { data: conv, error: convError } = await (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        admin.from(DATABASE_TABLES.CONVERSATIONS) as any
-      )
+      const { data: conv, error: convError } = await admin
+        .from(DATABASE_TABLES.CONVERSATIONS)
         .select('*')
         .eq('id', conversationId)
         .single();
@@ -116,10 +120,8 @@ export const GET = withAuth(
       }
 
       // Fetch participants
-      const { data: participants } = await (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
-      )
+      const { data: participants } = await admin
+        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
         .select(
           `
         user_id,
@@ -133,8 +135,7 @@ export const GET = withAuth(
         .eq('conversation_id', conversationId);
 
       // Format participants
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formattedParticipants = (participants || []).map((p: any) => ({
+      const formattedParticipants = (participants || []).map((p: ParticipantRow) => ({
         user_id: p.user_id,
         username: p.profiles?.username || '',
         name: p.profiles?.name || '',
@@ -146,12 +147,11 @@ export const GET = withAuth(
       }));
 
       // Calculate unread count
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const userParticipant = formattedParticipants.find((p: any) => p.user_id === user.id);
+      const userParticipant = formattedParticipants.find(p => p.user_id === user.id);
       let unreadCount = 0;
       if (userParticipant?.last_read_at) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { count } = await (admin.from(DATABASE_TABLES.MESSAGES) as any)
+        const { count } = await admin
+          .from(DATABASE_TABLES.MESSAGES)
           .select('*', { count: 'exact', head: true })
           .eq('conversation_id', conversationId)
           .neq('sender_id', user.id)
@@ -226,10 +226,8 @@ export const POST = withAuth(
       const admin = createAdminClient();
 
       // Check membership (with auto-reactivation for soft-deleted participants)
-      const { data: participantMaybe, error: partError } = await (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
-      )
+      const { data: participantMaybe, error: partError } = await admin
+        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
         .select('user_id, is_active')
         .eq('conversation_id', conversationId)
         .eq('user_id', user.id)

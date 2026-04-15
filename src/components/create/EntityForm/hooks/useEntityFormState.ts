@@ -220,6 +220,27 @@ export function useEntityFormState<T extends Record<string, unknown>>({
     setFormState(prev => ({ ...prev, errors, isSubmitting: false }));
   }, []);
 
+  // Validate a single field on blur using the schema's safeParse
+  const validateField = useCallback(
+    (fieldName: string) => {
+      if (!config.validationSchema) { return; }
+      const result = config.validationSchema.safeParse({
+        ...config.defaultValues,
+        ...formState.data,
+      });
+      if (!result.success) {
+        const fieldError = result.error.errors.find(e => e.path[0] === fieldName);
+        if (fieldError) {
+          setFormState(prev => ({
+            ...prev,
+            errors: { ...prev.errors, [fieldName]: fieldError.message },
+          }));
+        }
+      }
+    },
+    [config.validationSchema, config.defaultValues, formState.data]
+  );
+
   return {
     formState,
     setFormState,
@@ -233,6 +254,7 @@ export function useEntityFormState<T extends Record<string, unknown>>({
     clearDraft,
     setSubmitting,
     setErrors,
+    validateField,
     formatRelativeTime,
   };
 }

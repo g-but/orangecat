@@ -5,6 +5,24 @@ import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
+type ProjectRow = {
+  id: string;
+  user_id?: string | null;
+  [key: string]: unknown;
+};
+
+type ProfileRow = {
+  id: string;
+  username: string | null;
+  name: string | null;
+  avatar_url: string | null;
+};
+
+type FavoriteRow = {
+  project_id: string;
+  created_at: string;
+};
+
 /**
  * Get user's favorited projects
  * GET /api/projects/favorites
@@ -15,12 +33,11 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
     const user = request.user;
 
     // Get favorited project IDs
-    const { data: favorites, error: favoritesError } =
-      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
-        .select('project_id, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+    const { data: favorites, error: favoritesError } = await supabase
+      .from(DATABASE_TABLES.PROJECT_FAVORITES)
+      .select('project_id, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
 
     if (favoritesError) {
       logger.error('Failed to fetch favorites', {
@@ -35,13 +52,11 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
     }
 
     // Get full project data for favorited projects
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const projectIds = favorites.map((f: any) => f.project_id);
-    const { data: projects, error: projectsError } =
-      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from(getTableName('project')) as any)
-        .select(
-          `
+    const projectIds = (favorites as FavoriteRow[]).map(f => f.project_id);
+    const { data: projects, error: projectsError } = await supabase
+      .from(getTableName('project'))
+      .select(
+        `
         id,
         title,
         description,
@@ -59,9 +74,9 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
         updated_at,
         user_id
       `
-        )
-        .in('id', projectIds)
-        .order('created_at', { ascending: false });
+      )
+      .in('id', projectIds)
+      .order('created_at', { ascending: false });
 
     if (projectsError) {
       logger.error('Failed to fetch favorited projects', {
@@ -73,32 +88,33 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
     }
 
     // Fetch profiles separately for each project creator
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userIds = [...new Set((projects || []).map((p: any) => p.user_id).filter(Boolean))];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const profilesMap = new Map<string, any>();
+    const userIds = [
+      ...new Set(
+        (projects || [])
+          .map((p: ProjectRow) => p.user_id)
+          .filter((id): id is string => Boolean(id))
+      ),
+    ];
+    const profilesMap = new Map<string, ProfileRow>();
 
     if (userIds.length > 0) {
-      const { data: profiles, error: profilesError } =
-        await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase.from(DATABASE_TABLES.PROFILES) as any)
-          .select('id, username, name, avatar_url')
-          .in('id', userIds);
+      const { data: profiles, error: profilesError } = await supabase
+        .from(DATABASE_TABLES.PROFILES)
+        .select('id, username, name, avatar_url')
+        .in('id', userIds);
 
       if (!profilesError && profiles) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        profiles.forEach((profile: any) => {
+        (profiles as ProfileRow[]).forEach(profile => {
           profilesMap.set(profile.id, profile);
         });
       }
     }
 
     // Map projects with favorite metadata and profiles
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const projectsWithFavorite = (projects || []).map((project: any) => ({
+    const projectsWithFavorite = (projects || []).map((project: ProjectRow) => ({
       ...project,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      favorited_at: favorites.find((f: any) => f.project_id === project.id)?.created_at,
+      favorited_at: (favorites as FavoriteRow[]).find(f => f.project_id === project.id)
+        ?.created_at,
       profiles: project.user_id ? profilesMap.get(project.user_id) : null,
     }));
 

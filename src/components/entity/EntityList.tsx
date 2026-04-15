@@ -25,7 +25,7 @@ export interface EntityItem {
   title: string;
   description?: string | null;
   thumbnail_url?: string | null;
-  [key: string]: any; // Allow additional properties
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface EntityListProps<T extends EntityItem> {
@@ -146,11 +146,11 @@ export default function EntityList<T extends EntityItem>({
         const isChangingStatus = changingStatusIds?.has(item.id) || false;
 
         // Normalize title - some entities use 'name' instead of 'title'
-        const title = item.title || (item as any).name || 'Untitled';
-        const description = item.description || (item as any).bio || null;
+        const title = item.title || (item as Record<string, unknown>).name as string | undefined || 'Untitled';
+        const description = item.description || (item as Record<string, unknown>).bio as string | undefined || null;
 
         // Get show_on_profile value (may be on item or in cardProps)
-        const showOnProfile = item.show_on_profile;
+        const showOnProfile = (item.show_on_profile as boolean | null | undefined) ?? undefined;
 
         return (
           <div key={item.id} className="relative">
@@ -168,7 +168,7 @@ export default function EntityList<T extends EntityItem>({
                 onToggleVisibility ? () => onToggleVisibility(item.id, showOnProfile) : undefined
               }
               isTogglingVisibility={isTogglingVisibility}
-              entityStatus={item.status}
+              entityStatus={item.status as string | undefined}
               onStatusChange={
                 onStatusChange
                   ? (newStatus: string) => onStatusChange(item.id, newStatus)

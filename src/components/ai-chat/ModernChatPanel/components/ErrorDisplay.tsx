@@ -23,7 +23,7 @@ export function ErrorDisplay({ error, onRetry, onDismiss }: ErrorDisplayProps) {
       <div className="flex items-start gap-2">
         <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-red-700">{error}</p>
+          <p className="text-base text-red-700">{error}</p>
           <div className="flex items-center gap-3 mt-1">
             {showApiKeyLink && (
               <button
@@ -45,7 +45,11 @@ export function ErrorDisplay({ error, onRetry, onDismiss }: ErrorDisplayProps) {
           </div>
         </div>
         {onDismiss && (
-          <button onClick={onDismiss} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+          <button
+            onClick={onDismiss}
+            aria-label="Dismiss error"
+            className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+          >
             <X className="h-3.5 w-3.5" />
           </button>
         )}

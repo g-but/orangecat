@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { readEventStream } from '@/lib/sse';
 import { OPENROUTER_KEY_HEADER } from '@/config/http-headers';
+import { API_ROUTES } from '@/config/api-routes';
 import type { ChatMessage } from '../types';
 
 interface UseChatStateOptions {
@@ -99,8 +100,8 @@ export function useChatState({
               } catch {}
               throw new Error(msg);
             }
-            await readEventStream(res.body, (evt: any) => {
-              const chunk = evt?.message?.content || '';
+            await readEventStream(res.body, (evt: unknown) => {
+              const chunk = (evt as { message?: { content?: string } })?.message?.content || '';
               if (chunk) {
                 setMessages(prev =>
                   prev.map(m =>
@@ -133,8 +134,13 @@ export function useChatState({
               } catch {}
               throw new Error(msg);
             }
-            await readEventStream(res.body, (evt: any) => {
-              const delta = evt?.choices?.[0]?.delta?.content || '';
+            await readEventStream(res.body, (evt: unknown) => {
+              const delta =
+                (
+                  evt as {
+                    choices?: Array<{ delta?: { content?: string } }>;
+                  }
+                )?.choices?.[0]?.delta?.content || '';
               if (delta) {
                 setMessages(prev =>
                   prev.map(m =>
@@ -147,7 +153,7 @@ export function useChatState({
           }
         } else {
           // Server-side OpenRouter path
-          const res = await fetch('/api/cat/chat', {
+          const res = await fetch(API_ROUTES.CAT.CHAT, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -168,11 +174,12 @@ export function useChatState({
             throw new Error(msg);
           }
 
-          await readEventStream(res.body, (json: any) => {
-            if (json?.content) {
+          await readEventStream(res.body, (json: unknown) => {
+            const content = (json as { content?: string })?.content;
+            if (content) {
               setMessages(prev =>
                 prev.map(m =>
-                  m.id === tempAssistantId ? { ...m, content: (m.content || '') + json.content } : m
+                  m.id === tempAssistantId ? { ...m, content: (m.content || '') + content } : m
                 )
               );
             }

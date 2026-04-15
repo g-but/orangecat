@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import * as z from 'zod';
 import { User, Mail, Lock, Check, Loader2, Sparkles, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -22,37 +21,9 @@ import { Input } from '@/components/ui/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { signIn as authSignIn, signUp as authSignUp } from '@/services/supabase/auth';
-import { passwordSchema } from '@/lib/validation/password';
+import { loginSchema, registerSchema } from '@/lib/validation/auth';
+import type { LoginFormValues, RegisterFormValues } from '@/lib/validation/auth';
 import type { FundingPageFormData } from '@/types/funding';
-
-// Login schema
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-
-// Registration schema - uses centralized password validation
-const registerSchema = z
-  .object({
-    email: z.string().email('Please enter a valid email'),
-    username: z
-      .string()
-      .min(3, 'Username must be at least 3 characters')
-      .max(20, 'Username must be less than 20 characters')
-      .regex(
-        /^[a-zA-Z0-9_-]+$/,
-        'Username can only contain letters, numbers, hyphens, and underscores'
-      ),
-    password: passwordSchema, // Use centralized password schema
-    confirmPassword: z.string(),
-  })
-  .refine(data => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-  });
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-type RegisterFormValues = z.infer<typeof registerSchema>;
 
 interface InlineAuthStepProps {
   onSuccess: (userId: string) => Promise<void>;

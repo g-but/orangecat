@@ -24,6 +24,16 @@ interface Connection {
   bio: string | null;
 }
 
+type FollowWithProfile = {
+  profiles: {
+    id: string;
+    username: string;
+    display_name?: string;
+    bio?: string | null;
+    avatar_url?: string | null;
+  } | null;
+};
+
 /**
  * ProfilePeopleTab Component
  *
@@ -66,12 +76,10 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
             .eq('follower_id', profile.id);
 
           if (!followingError && followingData) {
-            const followingProfiles = followingData
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .map((item: any) => item.profiles)
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .filter((p: any) => p !== null);
-            setFollowing(followingProfiles);
+            const followingProfiles = (followingData as FollowWithProfile[])
+              .map((item) => item.profiles)
+              .filter((p): p is NonNullable<typeof p> => p !== null);
+            setFollowing(followingProfiles as Connection[]);
           }
 
           // Fetch followers
@@ -92,12 +100,10 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
             .eq('following_id', profile.id);
 
           if (!followersError && followersData) {
-            const followerProfiles = followersData
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .map((item: any) => item.profiles)
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .filter((p: any) => p !== null);
-            setFollowers(followerProfiles);
+            const followerProfiles = (followersData as FollowWithProfile[])
+              .map((item) => item.profiles)
+              .filter((p): p is NonNullable<typeof p> => p !== null);
+            setFollowers(followerProfiles as Connection[]);
           }
         } else {
           // For other profiles, use API (will work if public data)
@@ -107,12 +113,10 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
             const followingData = await followingResponse.json();
             if (followingData.success && followingData.data && followingData.data.data) {
               // Extract profiles from nested structure
-              const followingProfiles = followingData.data.data
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .map((item: any) => item.profiles)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .filter((p: any) => p !== null);
-              setFollowing(followingProfiles);
+              const followingProfiles = (followingData.data.data as FollowWithProfile[])
+                .map((item) => item.profiles)
+                .filter((p): p is NonNullable<typeof p> => p !== null);
+              setFollowing(followingProfiles as Connection[]);
             }
           }
 
@@ -122,12 +126,10 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
             const followersData = await followersResponse.json();
             if (followersData.success && followersData.data && followersData.data.data) {
               // Extract profiles from nested structure
-              const followerProfiles = followersData.data.data
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .map((item: any) => item.profiles)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .filter((p: any) => p !== null);
-              setFollowers(followerProfiles);
+              const followerProfiles = (followersData.data.data as FollowWithProfile[])
+                .map((item) => item.profiles)
+                .filter((p): p is NonNullable<typeof p> => p !== null);
+              setFollowers(followerProfiles as Connection[]);
             }
           }
         }

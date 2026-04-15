@@ -74,10 +74,8 @@ export const GET = withAuth(
       const { searchParams } = new URL(req.url);
 
       // Get group by slug
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: group, error: groupError } = (await (
-        supabase.from(DATABASE_TABLES.GROUPS) as any
-      )
+      const { data: group, error: groupError } = (await supabase
+        .from(DATABASE_TABLES.GROUPS)
         .select('id')
         .eq('slug', slug)
         .single()) as { data: GroupRow | null; error: Error | null };
@@ -87,8 +85,8 @@ export const GET = withAuth(
       }
 
       // Check if user is admin/founder
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: membership } = (await (supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as any)
+      const { data: membership } = (await supabase
+        .from(DATABASE_TABLES.GROUP_MEMBERS)
         .select('role')
         .eq('group_id', group.id)
         .eq('user_id', user.id)
@@ -104,8 +102,7 @@ export const GET = withAuth(
       const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
 
       // Build query
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any)
+      let query = supabase.from(DATABASE_TABLES.GROUP_INVITATIONS)
         .select(
           `
         *,
@@ -167,10 +164,8 @@ export const POST = withAuth(
       const supabase = await createServerClient();
 
       // Get group by slug
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: group, error: groupError } = (await (
-        supabase.from(DATABASE_TABLES.GROUPS) as any
-      )
+      const { data: group, error: groupError } = (await supabase
+        .from(DATABASE_TABLES.GROUPS)
         .select('id, name')
         .eq('slug', slug)
         .single()) as { data: GroupRow | null; error: Error | null };
@@ -180,8 +175,8 @@ export const POST = withAuth(
       }
 
       // Check if user is admin/founder
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: membership } = (await (supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as any)
+      const { data: membership } = (await supabase
+        .from(DATABASE_TABLES.GROUP_MEMBERS)
         .select('role')
         .eq('group_id', group.id)
         .eq('user_id', user.id)
@@ -208,10 +203,8 @@ export const POST = withAuth(
 
       // If inviting a specific user, check if already a member
       if (user_id) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: existingMember } = (await (
-          supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as any
-        )
+        const { data: existingMember } = (await supabase
+          .from(DATABASE_TABLES.GROUP_MEMBERS)
           .select('id')
           .eq('group_id', group.id)
           .eq('user_id', user_id)
@@ -222,10 +215,8 @@ export const POST = withAuth(
         }
 
         // Check for existing pending invitation
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: existingInvite } = (await (
-          supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any
-        )
+        const { data: existingInvite } = (await supabase
+          .from(DATABASE_TABLES.GROUP_INVITATIONS)
           .select('id')
           .eq('group_id', group.id)
           .eq('user_id', user_id)
@@ -270,9 +261,8 @@ export const POST = withAuth(
 
       // Create invitation
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: invitation, error: insertError } = (await (
-        supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as any
-      )
+      const { data: invitation, error: insertError } = (await (supabase as any)
+        .from(DATABASE_TABLES.GROUP_INVITATIONS)
         .insert(invitationData)
         .select()
         .single()) as { data: GroupInvitationRow | null; error: Error | null };

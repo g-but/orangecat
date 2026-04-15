@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { ShippingAddress } from '@/domain/payments/types';
+import { API_ROUTES } from '@/config/api-routes';
 
 export function useShippingAddresses() {
   const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
@@ -15,7 +16,7 @@ export function useShippingAddresses() {
   const fetchAddresses = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/shipping-addresses');
+      const res = await fetch(API_ROUTES.SHIPPING_ADDRESSES);
       const json = await res.json();
       if (res.ok && json.success) {
         setAddresses(json.data);
@@ -33,7 +34,7 @@ export function useShippingAddresses() {
 
   const createAddress = useCallback(
     async (address: Omit<ShippingAddress, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      const res = await fetch('/api/shipping-addresses', {
+      const res = await fetch(API_ROUTES.SHIPPING_ADDRESSES, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(address),
@@ -50,7 +51,7 @@ export function useShippingAddresses() {
 
   const deleteAddress = useCallback(
     async (id: string) => {
-      await fetch(`/api/shipping-addresses/${id}`, { method: 'DELETE' });
+      await fetch(`${API_ROUTES.SHIPPING_ADDRESSES}/${id}`, { method: 'DELETE' });
       await fetchAddresses();
     },
     [fetchAddresses]

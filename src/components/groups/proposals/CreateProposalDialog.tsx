@@ -14,7 +14,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { proposalSchema, type ProposalFormData } from '@/lib/validation/proposals';
 import {
   Dialog,
   DialogContent,
@@ -53,25 +53,6 @@ import {
 } from '@/lib/entity-guidance/proposal-guidance';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
-const proposalSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200, 'Title must be 200 characters or less'),
-  description: z.string().max(5000, 'Description must be 5000 characters or less').optional(),
-  proposal_type: z
-    .enum(['general', 'treasury', 'membership', 'governance', 'employment'])
-    .default('general'),
-  voting_threshold: z.number().int().min(1).max(100).optional(),
-  voting_ends_at: z.string().optional(),
-  is_public: z.boolean().optional().default(false),
-  // Treasury proposal fields
-  amount_btc: z.number().int().min(1).optional(),
-  recipient_address: z.string().optional(),
-  wallet_id: z.string().uuid().optional(),
-  // Action type for proposals that execute actions
-  action_type: z.string().optional(),
-  action_data: z.record(z.any()).optional(),
-});
-
-type ProposalFormData = z.input<typeof proposalSchema>;
 
 interface CreateProposalDialogProps {
   open: boolean;

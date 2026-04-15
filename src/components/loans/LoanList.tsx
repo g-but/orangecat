@@ -313,7 +313,7 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
         isOpen={!!confirmDeleteLoan}
         onClose={() => setConfirmDeleteLoan(null)}
         onConfirm={async () => {
-          if (confirmDeleteLoan) await executeDelete(confirmDeleteLoan);
+          if (confirmDeleteLoan) {await executeDelete(confirmDeleteLoan);}
           setConfirmDeleteLoan(null);
         }}
         title="Delete this loan?"

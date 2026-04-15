@@ -44,6 +44,10 @@ import {
 
 // Import lighter components directly (no dynamic import overhead)
 import { MobileDashboardSidebar } from '@/components/dashboard/MobileDashboardSidebar';
+import {
+  PendingActionsCard,
+  usePendingActions,
+} from '@/components/ai-chat/PendingActionsCard';
 
 // Only dynamic import for truly heavy component (Timeline with feed)
 const DashboardTimeline = dynamic(
@@ -69,6 +73,8 @@ export default function DashboardPage() {
   const _router = useRouter();
   const searchParams = useSearchParams();
 
+  const { getPendingActions, confirmAction, rejectAction } = usePendingActions();
+
   // Local state
   const [localLoading, setLocalLoading] = useState(true);
   const [timelineFeed, setTimelineFeed] = useState<TimelineFeedResponse | null>(null);
@@ -76,6 +82,9 @@ export default function DashboardPage() {
   const [timelineError, setTimelineError] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
+  const [pendingActions, setPendingActions] = useState<
+    Awaited<ReturnType<typeof getPendingActions>>
+  >([]);
 
   // Hydration effect
   useEffect(() => {
@@ -83,6 +92,17 @@ export default function DashboardPage() {
       setLocalLoading(false);
     }
   }, [hydrated]);
+
+  // Fetch Cat pending actions when user is available
+  useEffect(() => {
+    if (user?.id && hydrated) {
+      getPendingActions()
+        .then(actions => setPendingActions(actions))
+        .catch(error =>
+          logger.error('Failed to load pending actions', { error }, 'Dashboard')
+        );
+    }
+  }, [user?.id, hydrated, getPendingActions]);
 
   // Load projects when user is available - critical for showing economic activity
   useEffect(() => {
@@ -299,6 +319,26 @@ export default function DashboardPage() {
               }
             }}
           />
+        )}
+
+        {/* Cat Pending Actions - only shown when Cat has queued actions awaiting approval */}
+        {pendingActions.length > 0 && (
+          <div className="space-y-3">
+            {pendingActions.map(action => (
+              <PendingActionsCard
+                key={action.id}
+                action={action}
+                onConfirm={async (actionId) => {
+                  await confirmAction(actionId);
+                  setPendingActions(prev => prev.filter(a => a.id !== actionId));
+                }}
+                onReject={async (actionId) => {
+                  await rejectAction(actionId);
+                  setPendingActions(prev => prev.filter(a => a.id !== actionId));
+                }}
+              />
+            ))}
+          </div>
         )}
 
         {/* Recommended Next Steps - TasksSection handles its own visibility */}

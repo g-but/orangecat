@@ -14,8 +14,7 @@ import { logger } from '@/utils/logger';
 // TYPES
 // =====================================================================
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ApiSuccessResponse<T = any> {
+export interface ApiSuccessResponse<T = unknown> {
   success: true;
   data: T;
   metadata?: {
@@ -31,16 +30,14 @@ export interface ApiErrorResponse {
   error: {
     code: string;
     message: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    details?: any;
+    details?: unknown;
   };
   metadata?: {
     timestamp: string;
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse;
+export type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 // =====================================================================
 // SUCCESS RESPONSES
@@ -161,8 +158,7 @@ export function apiError(
   message: string,
   code: string = 'INTERNAL_ERROR',
   status: number = 500,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  details?: any
+  details?: unknown
 ): NextResponse<ApiErrorResponse> {
   const response: ApiErrorResponse = {
     success: false,
@@ -187,8 +183,7 @@ export function apiError(
  */
 export function apiBadRequest(
   message: string = 'Bad request',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  details?: any
+  details?: unknown
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'BAD_REQUEST', 400, details);
 }
@@ -198,8 +193,7 @@ export function apiBadRequest(
  */
 export function apiUnauthorized(
   message: string = 'Unauthorized',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  details?: any
+  details?: unknown
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'UNAUTHORIZED', 401, details);
 }
@@ -209,8 +203,7 @@ export function apiUnauthorized(
  */
 export function apiForbidden(
   message: string = 'Forbidden',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  details?: any
+  details?: unknown
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'FORBIDDEN', 403, details);
 }
@@ -220,8 +213,7 @@ export function apiForbidden(
  */
 export function apiNotFound(
   message: string = 'Not found',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  details?: any
+  details?: unknown
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'NOT_FOUND', 404, details);
 }
@@ -231,8 +223,7 @@ export function apiNotFound(
  */
 export function apiConflict(
   message: string = 'Conflict',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  details?: any
+  details?: unknown
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'CONFLICT', 409, details);
 }
@@ -242,8 +233,7 @@ export function apiConflict(
  */
 export function apiValidationError(
   message: string = 'Validation failed',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  details?: any
+  details?: unknown
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'VALIDATION_ERROR', 422, details);
 }
@@ -269,8 +259,7 @@ export function apiRateLimited(
  */
 export function apiInternalError(
   message: string = 'Internal server error',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  details?: any
+  details?: unknown
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'INTERNAL_ERROR', 500, details);
 }
@@ -280,8 +269,7 @@ export function apiInternalError(
  */
 export function apiServiceUnavailable(
   message: string = 'Service unavailable',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  details?: any
+  details?: unknown
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'SERVICE_UNAVAILABLE', 503, details);
 }
@@ -290,38 +278,43 @@ export function apiServiceUnavailable(
 // UTILITY FUNCTIONS
 // =====================================================================
 
+type SupabaseError = { code?: string; message?: string; hint?: string };
+type ZodLikeError = { errors?: Array<{ path?: string[]; message?: string }> };
+type ApiLikeError = { name?: string; code?: string; hint?: string; status?: number; message?: string };
+
 /**
  * Handle standard Supabase errors and convert to API responses
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function handleSupabaseError(error: any): NextResponse<ApiErrorResponse> {
+export function handleSupabaseError(error: unknown): NextResponse<ApiErrorResponse> {
   logger.error('Supabase error', error);
 
+  const err = error as SupabaseError;
+
   // Not found
-  if (error.code === 'PGRST116') {
+  if (err.code === 'PGRST116') {
     return apiNotFound('Resource not found');
   }
 
   // Unique constraint violation
-  if (error.code === '23505') {
+  if (err.code === '23505') {
     return apiConflict('Resource already exists');
   }
 
   // Foreign key violation
-  if (error.code === '23503') {
+  if (err.code === '23503') {
     return apiBadRequest('Invalid reference');
   }
 
   // Row level security violation
-  if (error.code === '42501' || error.message?.includes('row-level security')) {
+  if (err.code === '42501' || err.message?.includes('row-level security')) {
     return apiForbidden('Access denied');
   }
 
   // Default to internal error — log details server-side, don't expose to client
   logger.error('Unhandled database error', {
-    code: error.code,
-    hint: error.hint,
-    message: error.message,
+    code: err.code,
+    hint: err.hint,
+    message: err.message,
   });
   return apiInternalError('Database error');
 }
@@ -329,14 +322,13 @@ export function handleSupabaseError(error: any): NextResponse<ApiErrorResponse> 
 /**
  * Handle validation errors (Zod)
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function handleValidationError(error: any): NextResponse<ApiErrorResponse> {
-  if (error.errors && Array.isArray(error.errors)) {
+export function handleValidationError(error: unknown): NextResponse<ApiErrorResponse> {
+  const err = error as ZodLikeError;
+  if (err.errors && Array.isArray(err.errors)) {
     return apiValidationError('Validation failed', {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      fields: error.errors.map((err: any) => ({
-        field: err.path?.join('.'),
-        message: err.message,
+      fields: err.errors.map(e => ({
+        field: e.path?.join('.'),
+        message: e.message,
       })),
     });
   }
@@ -347,21 +339,22 @@ export function handleValidationError(error: any): NextResponse<ApiErrorResponse
 /**
  * Catch-all error handler
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function handleApiError(error: any): NextResponse<ApiErrorResponse> {
+export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
+  const err = error as ApiLikeError;
+
   // Validation errors (Zod)
-  if (error.name === 'ZodError') {
+  if (err.name === 'ZodError') {
     return handleValidationError(error);
   }
 
   // Supabase errors
-  if (error.code || error.hint) {
+  if (err.code || err.hint) {
     return handleSupabaseError(error);
   }
 
   // Custom error with status
-  if (error.status && error.message) {
-    return apiError(error.message, error.code || 'ERROR', error.status);
+  if (err.status && err.message) {
+    return apiError(err.message, err.code || 'ERROR', err.status);
   }
 
   // Unknown error

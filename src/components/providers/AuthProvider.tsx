@@ -6,6 +6,7 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { offlineQueueService } from '@/lib/offline-queue';
+import { API_ROUTES } from '@/config/api-routes';
 
 /**
  * AuthProvider - Syncs Supabase auth state with Zustand store
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Keep server-side auth cookies in sync so API routes can read the session
     const syncSessionToServer = async (event: AuthChangeEvent, session: Session | null) => {
       try {
-        await fetch('/api/auth/callback', {
+        await fetch(API_ROUTES.AUTH.CALLBACK, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

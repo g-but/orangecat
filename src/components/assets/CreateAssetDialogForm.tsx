@@ -59,17 +59,17 @@ export function CreateAssetDialog({
       type: 'other',
       description: '',
       estimated_value: undefined,
-      currency: DEFAULT_CURRENCY,
+      currency: DEFAULT_CURRENCY as QuickAssetFormData['currency'],
     },
   });
 
-  const handleTemplateSelect = (template: any) => {
+  const handleTemplateSelect = (template: Partial<Record<string, unknown>>) => {
     form.reset({
-      title: template.data.title,
-      type: template.data.type,
-      description: template.data.description || '',
-      estimated_value: template.data.estimated_value || undefined,
-      currency: template.data.currency || DEFAULT_CURRENCY,
+      title: (template.title as string) || '',
+      type: (template.type as QuickAssetFormData['type']) || 'other',
+      description: (template.description as string) || '',
+      estimated_value: (template.estimated_value as number) || undefined,
+      currency: ((template.currency as string) || DEFAULT_CURRENCY) as QuickAssetFormData['currency'],
     });
   };
 

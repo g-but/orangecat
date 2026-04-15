@@ -8,7 +8,6 @@ import {
   CheckCircle,
   ArrowRight,
   Edit3,
-  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
@@ -16,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { useProjectStore } from '@/stores/projectStore';
 import { formatDistanceToNow } from 'date-fns';
 import { ROUTES } from '@/config/routes';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface DraftContinueDialogProps {
   isOpen: boolean;
@@ -83,33 +83,26 @@ export default function DraftContinueDialog({
   const completionPercentage = getCompletionPercentage();
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-modal flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl bg-white shadow-2xl border-0">
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-2xl p-0">
+        <DialogTitle className="sr-only">You Have Unfinished Work</DialogTitle>
+      <Card className="w-full bg-white shadow-2xl border-0">
         <CardContent className="p-0">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-200">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-1">
-                    You Have Unfinished Work
-                  </h2>
-                  <p className="text-gray-600">
-                    What would you like to do with your{' '}
-                    {totalDrafts > 1 ? 'draft projects' : 'draft project'}?
-                  </p>
-                </div>
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <FileText className="w-6 h-6 text-blue-600" />
               </div>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-white/50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-1">
+                  You Have Unfinished Work
+                </h2>
+                <p className="text-gray-600">
+                  What would you like to do with your{' '}
+                  {totalDrafts > 1 ? 'draft projects' : 'draft project'}?
+                </p>
+              </div>
             </div>
           </div>
 
@@ -172,7 +165,7 @@ export default function DraftContinueDialog({
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">Continue Where You Left Off</h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-base text-gray-600">
                       {isLocalDraft
                         ? 'Resume your unsaved progress and complete your project'
                         : 'Complete your draft project and publish it'}
@@ -201,7 +194,7 @@ export default function DraftContinueDialog({
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">Start a New Project</h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-base text-gray-600">
                       Create a completely new project from scratch
                     </p>
                   </div>
@@ -240,6 +233,7 @@ export default function DraftContinueDialog({
           </div>
         </CardContent>
       </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

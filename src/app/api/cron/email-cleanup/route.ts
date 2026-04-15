@@ -13,6 +13,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
+import { apiSuccess, apiError, apiUnauthorized } from '@/lib/api/standardResponse';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 1 minute is plenty for cleanup
@@ -27,7 +28,7 @@ function verifyCronSecret(request: Request): boolean {
 
 export async function GET(request: Request) {
   if (!verifyCronSecret(request)) {
-    return new Response('Unauthorized', { status: 401 });
+    return apiUnauthorized();
   }
 
   try {
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
 
     if (error) {
       logger.error('Email log cleanup failed', { error }, LOG_SOURCE);
-      return Response.json({ success: false, error: 'Cleanup query failed' }, { status: 500 });
+      return apiError('Cleanup query failed', 'INTERNAL_ERROR', 500);
     }
 
     const deleted = count ?? 0;
@@ -59,11 +60,7 @@ export async function GET(request: Request) {
       LOG_SOURCE
     );
 
-    return Response.json({
-      success: true,
-      deleted,
-      cutoffDate: cutoffDate.toISOString(),
-    });
+    return apiSuccess({ deleted, cutoffDate: cutoffDate.toISOString() });
   } catch (error) {
     logger.error(
       'Email log cleanup cron failed',
@@ -71,6 +68,6 @@ export async function GET(request: Request) {
       LOG_SOURCE
     );
 
-    return Response.json({ success: false, error: 'Internal error' }, { status: 500 });
+    return apiError('Internal error', 'INTERNAL_ERROR', 500);
   }
 }

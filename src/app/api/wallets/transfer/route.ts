@@ -7,6 +7,7 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
+import { type Wallet } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import {
   apiSuccess,
@@ -55,8 +56,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       .select('id, user_id, label, balance_btc, profile_id, project_id')
       .in('id', [body.from_wallet_id, body.to_wallet_id])
       .eq('is_active', true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const wallets = walletsData as any[] | null;
+    const wallets = walletsData as Wallet[] | null;
 
     if (walletsError) {
       logger.error('Failed to fetch wallets for transfer', {
@@ -145,8 +145,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       })
       .select()
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const transaction = transactionData as any;
+    const transaction = transactionData as { id: string } & Record<string, unknown>;
 
     if (txError) {
       logger.error('Failed to create transaction record', {
@@ -184,8 +183,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     )
       .select('*')
       .in('id', [body.from_wallet_id, body.to_wallet_id]);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updatedWallets = updatedWalletsData as any[] | null;
+    const updatedWallets = updatedWalletsData as Wallet[] | null;
 
     // Audit log wallet transfer
     await auditSuccess(

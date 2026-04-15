@@ -14,6 +14,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Shield, Wallet, Package, CheckCircle2, AlertCircle } from 'lucide-react';
 import { logger } from '@/utils/logger';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+
+const SATS_PER_BTC = 100_000_000;
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +60,7 @@ export function CollateralSelector({
   disabled = false,
 }: CollateralSelectorProps) {
   const { profile } = useAuth();
+  const { formatAmount } = useDisplayCurrency();
   const [assets, setAssets] = useState<any[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -312,10 +316,10 @@ export function CollateralSelector({
           <div className="border border-gray-200 rounded-lg p-4 bg-white">
             <h4 className="text-sm font-semibold text-gray-900 mb-3">Select Asset</h4>
             {loading ? (
-              <p className="text-sm text-gray-500">Loading assets...</p>
+              <p className="text-base text-gray-500">Loading assets...</p>
             ) : assets.length === 0 ? (
               <div className="text-center py-4">
-                <p className="text-sm text-gray-500 mb-2">No assets available</p>
+                <p className="text-base text-gray-500 mb-2">No assets available</p>
                 <a
                   href={ROUTES.DASHBOARD.ASSETS_CREATE}
                   className="text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -357,10 +361,10 @@ export function CollateralSelector({
           <div className="border border-gray-200 rounded-lg p-4 bg-white">
             <h4 className="text-sm font-semibold text-gray-900 mb-3">Select Wallet</h4>
             {loading ? (
-              <p className="text-sm text-gray-500">Loading wallets...</p>
+              <p className="text-base text-gray-500">Loading wallets...</p>
             ) : wallets.length === 0 ? (
               <div className="text-center py-4">
-                <p className="text-sm text-gray-500 mb-2">No wallets available</p>
+                <p className="text-base text-gray-500 mb-2">No wallets available</p>
                 <a
                   href={ROUTES.DASHBOARD.WALLETS_CREATE}
                   className="text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -386,7 +390,7 @@ export function CollateralSelector({
                         <span className="text-sm font-medium text-gray-900">{wallet.label}</span>
                         {wallet.balance_btc && (
                           <span className="text-xs text-gray-500">
-                            {wallet.balance_btc.toFixed(8)} BTC
+                            {formatAmount(Math.round(wallet.balance_btc * SATS_PER_BTC))}
                           </span>
                         )}
                       </div>

@@ -13,6 +13,7 @@ import { Wallet, WalletFormData } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import { parseErrorResponse } from '@/lib/wallets/errorHandling';
 import { toast } from 'sonner';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface UseWalletOperationsOptions {
   userId: string | undefined;
@@ -81,7 +82,7 @@ export function useWalletOperations({
 
       let response;
       try {
-        response = await fetch('/api/wallets', {
+        response = await fetch(API_ROUTES.WALLETS.BASE, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -221,7 +222,7 @@ export function useWalletOperations({
     try {
       let response;
       try {
-        response = await fetch('/api/wallets', {
+        response = await fetch(API_ROUTES.WALLETS.BASE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -300,7 +301,7 @@ export function useWalletOperations({
     try {
       let response;
       try {
-        response = await fetch(`/api/wallets/${walletId}`, {
+        response = await fetch(`${API_ROUTES.WALLETS.BASE}/${walletId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -362,7 +363,7 @@ export function useWalletOperations({
     try {
       let response;
       try {
-        response = await fetch(`/api/wallets/${walletId}`, {
+        response = await fetch(`${API_ROUTES.WALLETS.BASE}/${walletId}`, {
           method: 'DELETE',
         });
       } catch (fetchError) {
@@ -407,7 +408,7 @@ export function useWalletOperations({
     try {
       let response;
       try {
-        response = await fetch(`/api/wallets/${walletId}/refresh`, {
+        response = await fetch(`${API_ROUTES.WALLETS.BASE}/${walletId}/refresh`, {
           method: 'POST',
         });
       } catch (fetchError) {

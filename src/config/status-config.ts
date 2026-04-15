@@ -143,3 +143,22 @@ export const PUBLIC_STATUSES: EntityStatus[] = ['active'];
  * Statuses that owners can see for their own entities
  */
 export const OWNER_VISIBLE_STATUSES: EntityStatus[] = ['draft', 'active', 'paused', 'completed'];
+
+/**
+ * Statuses considered "normal" that don't need special visual emphasis
+ * (e.g., no extra badge needed on entity cards)
+ */
+export const NORMAL_VISIBLE_STATUSES: EntityStatus[] = ['active', 'draft'];
+
+/**
+ * Typed status value constants — use these instead of raw string literals
+ * in comparisons and handlers to maintain SSOT.
+ */
+export const ENTITY_STATUS = {
+  DRAFT: 'draft',
+  ACTIVE: 'active',
+  PAUSED: 'paused',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+  ARCHIVED: 'archived',
+} as const satisfies Record<string, EntityStatus>;

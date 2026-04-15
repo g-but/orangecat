@@ -180,7 +180,7 @@ export function QRScanner({
       const track = streamRef.current.getVideoTracks()[0];
       // Use any[] to avoid conflict with browser's MediaTrackConstraintSet type
       await track.applyConstraints({
-        advanced: [{ torch: !flashEnabled }] as any[],
+        advanced: [{ torch: !flashEnabled }] as unknown as MediaTrackConstraintSet[],
       });
       setFlashEnabled(!flashEnabled);
     } catch {

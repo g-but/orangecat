@@ -5,6 +5,7 @@ import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle, Loader2 } fro
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { STATUS } from '@/config/database-constants';
+import { formatDate, formatTime } from '@/utils/dates';
 import {
   Dialog,
   DialogContent,
@@ -46,16 +47,6 @@ interface BookingCardProps {
   formatAmount: (amount: number) => string;
   onAction: (bookingId: string, action: 'confirm' | 'reject' | 'complete' | 'cancel', reason?: string) => void;
   onViewDetails: (bookingId: string) => void;
-}
-
-function formatDate(dateString: string) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
-function formatTime(dateString: string) {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -103,7 +94,7 @@ export default function BookingCard({
               <p className="font-medium text-gray-900">
                 {booking.customer?.display_name || booking.customer?.username || 'Customer'}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-base text-gray-500">
                 {(booking.metadata?.service_title as string) || 'Service booking'}
               </p>
             </div>
@@ -131,7 +122,7 @@ export default function BookingCard({
           {booking.customer_notes && (
             <div className="bg-gray-50 rounded-md p-3 mb-4">
               <p className="text-xs font-medium text-gray-500 mb-1">Customer notes:</p>
-              <p className="text-sm text-gray-700">{booking.customer_notes}</p>
+              <p className="text-base text-gray-700">{booking.customer_notes}</p>
             </div>
           )}
 
@@ -141,7 +132,7 @@ export default function BookingCard({
               <p className="text-xs font-medium text-red-500 mb-1">
                 {booking.rejection_reason ? 'Rejection' : 'Cancellation'} reason:
               </p>
-              <p className="text-sm text-red-700">
+              <p className="text-base text-red-700">
                 {booking.rejection_reason || booking.cancellation_reason}
               </p>
             </div>

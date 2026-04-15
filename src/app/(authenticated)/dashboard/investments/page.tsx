@@ -57,7 +57,7 @@ export default function InvestmentsPage() {
   });
 
   const handleBulkDelete = () => {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0) {return;}
     setBulkDeleteConfirm(true);
   };
 

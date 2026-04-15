@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Timeline Event Mutations
  *
@@ -20,6 +19,7 @@ import type {
   TimelineEventType,
   TimelineVisibility,
   TimelineEvent,
+  TimelineDisplayEvent,
 } from '@/types/timeline';
 import { validateEventRequest } from '../processors/validation';
 import { mapDbEventToTimelineEvent } from '../formatters';
@@ -141,8 +141,7 @@ export async function createEventWithVisibility(
     }
 
     // Parse the JSONB response
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any;
+    let result: { success?: boolean; error?: string; post_id?: string; data?: { post_id?: string }; id?: string; visibility_count?: number };
     if (typeof data === 'string') {
       try {
         result = JSON.parse(data);
@@ -151,7 +150,7 @@ export async function createEventWithVisibility(
         return { success: false, error: 'Invalid response from server. Please try again.' };
       }
     } else if (typeof data === 'object') {
-      result = data;
+      result = data as typeof result;
     } else {
       logger.error('Unexpected data type from function', { data, type: typeof data }, 'Timeline');
       return { success: false, error: 'Unexpected response format. Please try again.' };
@@ -175,22 +174,18 @@ export async function createEventWithVisibility(
     }
 
     // Fetch the created event
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData, error: fetchError } = await (
-      supabase.from(TIMELINE_TABLES.EVENTS) as any
-    )
+    const { data: eventData, error: fetchError } = await supabase
+      .from(TIMELINE_TABLES.EVENTS)
       .select('*')
       .eq('id', postId)
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const event = eventData as any;
 
     if (fetchError) {
       logger.error('Failed to fetch created post', fetchError, 'Timeline');
       return { success: false, error: 'Post created but could not retrieve details' };
     }
 
-    const timelineEvent = mapDbEventToTimelineEvent(event);
+    const timelineEvent = mapDbEventToTimelineEvent(eventData);
 
     return {
       success: true,
@@ -199,12 +194,13 @@ export async function createEventWithVisibility(
         visibility_count: result.visibility_count || 0,
       },
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Error creating post with visibility', { error, request }, 'Timeline');
 
+    const err = error instanceof Error ? error : null;
+
     // Provide more helpful error messages
-    if (error?.message?.includes('function') && error?.message?.includes('does not exist')) {
+    if (err?.message?.includes('function') && err?.message?.includes('does not exist')) {
       logger.warn(
         'create_post_with_visibility function not found, falling back to legacy method',
         {},
@@ -214,7 +210,7 @@ export async function createEventWithVisibility(
       return createEvent(request);
     }
 
-    if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
+    if (err?.message?.includes('network') || err?.message?.includes('fetch')) {
       return {
         success: false,
         error: 'Network error. Please check your connection and try again.',
@@ -223,7 +219,7 @@ export async function createEventWithVisibility(
 
     return {
       success: false,
-      error: error?.message || 'Failed to create post. Please try again.',
+      error: err?.message || 'Failed to create post. Please try again.',
     };
   }
 }
@@ -298,22 +294,18 @@ export async function createEvent(
     }
 
     // Fetch the created event (only if database function succeeded)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData2, error: fetchError } = await (
-      supabase.from(TIMELINE_TABLES.EVENTS) as any
-    )
+    const { data: eventData2, error: fetchError } = await supabase
+      .from(TIMELINE_TABLES.EVENTS)
       .select('*')
       .eq('id', eventId)
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const event = eventData2 as any;
 
     if (fetchError) {
       logger.error('Failed to fetch created timeline event', fetchError, 'Timeline');
       return { success: false, error: 'Event created but could not retrieve details' };
     }
 
-    const timelineEvent = mapDbEventToTimelineEvent(event);
+    const timelineEvent = mapDbEventToTimelineEvent(eventData2);
 
     // Trigger any post-creation hooks
     await handlePostCreationHooks(timelineEvent);
@@ -336,12 +328,11 @@ export async function createProjectEvent(
 ): Promise<TimelineEventResponse> {
   // Get project details
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: projectData } = await (supabase.from(getTableName('project')) as any)
+  const { data: project } = await (supabase as any)
+    .from(getTableName('project'))
     .select('title, description, goal_amount, currency')
     .eq('id', projectId)
     .single();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const project = projectData as any;
 
   if (!project) {
     return { success: false, error: 'Project not found' };
@@ -380,29 +371,25 @@ export async function createTransactionEvent(
   eventType: 'donation_received' | 'donation_sent' = 'donation_received'
 ): Promise<TimelineEventResponse> {
   // Get transaction and project details
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: transactionData } = await (supabase.from(DATABASE_TABLES.TRANSACTIONS) as any)
+  const { data: transaction } = await supabase
+    .from(DATABASE_TABLES.TRANSACTIONS)
     .select('*')
     .eq('id', transactionId)
     .single();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const transaction = transactionData as any;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: projectData } = await (supabase.from(getTableName('project')) as any)
+  const { data: project } = await (supabase as any)
+    .from(getTableName('project'))
     .select('title')
     .eq('id', projectId)
     .single();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const project = projectData as any;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: donorData } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
+  const { data: donor } = await (supabase as any)
+    .from(DATABASE_TABLES.PROFILES)
     .select('username, display_name')
     .eq('id', donorId)
     .single();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const donor = donorData as any;
 
   if (!transaction || !project) {
     return { success: false, error: 'Transaction or project not found' };
@@ -449,8 +436,7 @@ export async function createQuoteReply(
   content: string,
   quotedContent: string,
   visibility: TimelineVisibility = 'public',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getEventById?: (eventId: string) => Promise<{ success: boolean; event?: any; error?: string }>
+  getEventById?: (eventId: string) => Promise<{ success: boolean; event?: TimelineEvent | TimelineDisplayEvent; error?: string }>
 ): Promise<TimelineEventResponse> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -481,21 +467,17 @@ export async function createQuoteReply(
     }
 
     // Fallback: fetch directly
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData, error: fetchError } = await (
-      supabase.from(TIMELINE_TABLES.EVENTS) as any
-    )
+    const { data: eventData, error: fetchError } = await supabase
+      .from(TIMELINE_TABLES.EVENTS)
       .select('*')
       .eq('id', result.data)
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const event = eventData as any;
 
-    if (fetchError || !event) {
+    if (fetchError || !eventData) {
       return { success: false, error: 'Quote reply created but failed to fetch' };
     }
 
-    const timelineEvent = mapDbEventToTimelineEvent(event);
+    const timelineEvent = mapDbEventToTimelineEvent(eventData);
     return { success: true, event: timelineEvent };
   } catch (error) {
     logger.error('Error creating quote reply', error, 'Timeline');
@@ -512,13 +494,11 @@ export async function updateEvent(
     title?: string;
     description?: string;
     visibility?: TimelineVisibility;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   }
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     if (updates.title !== undefined) {
       updateData.title = updates.title;
@@ -539,7 +519,8 @@ export async function updateEvent(
     updateData.updated_at = new Date().toISOString();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from(TIMELINE_TABLES.EVENTS) as any)
+    const { error } = await (supabase as any)
+      .from(TIMELINE_TABLES.EVENTS)
       .update(updateData)
       .eq('id', eventId);
 
@@ -626,8 +607,8 @@ export async function shareEvent(
     }
 
     // Attempt to count share events referencing this original
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { count } = await (supabase.from(TIMELINE_TABLES.EVENTS) as any)
+    const { count } = await supabase
+      .from(TIMELINE_TABLES.EVENTS)
       .select('id', { count: 'exact', head: true })
       .contains('metadata', { original_event_id: originalEventId });
 

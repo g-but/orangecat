@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { Wallet, getWalletBehaviorInfo, formatCurrency, calculateProgress } from '@/types/wallet';
-import { formatBTC } from '@/services/currency';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+
+const SATS_PER_BTC = 100_000_000;
 
 interface WalletListProps {
   wallets: Wallet[];
@@ -12,21 +14,14 @@ interface WalletListProps {
 
 export function WalletList({ wallets, onRefresh: _onRefresh, onTransfer }: WalletListProps) {
   const [expandedWalletId, setExpandedWalletId] = useState<string | null>(null);
-
-  // Assume BTC price for now (in production, fetch from API)
-  const BTC_PRICE_USD = 62000;
+  const { formatAmount } = useDisplayCurrency();
 
   const toggleExpand = (walletId: string) => {
     setExpandedWalletId(expandedWalletId === walletId ? null : walletId);
   };
 
-  const formatBtc = (amount: number) => formatBTC(amount);
-
-  const formatUsd = (btc: number) => {
-    return formatCurrency(btc * BTC_PRICE_USD, 'USD');
-  };
-
   // Group wallets by behavior type
+
   const generalWallets = wallets.filter(w => w.behavior_type === 'general');
   const budgetWallets = wallets.filter(w => w.behavior_type === 'recurring_budget');
   const goalWallets = wallets.filter(w => w.behavior_type === 'one_time_goal');
@@ -34,7 +29,7 @@ export function WalletList({ wallets, onRefresh: _onRefresh, onTransfer }: Walle
   const renderWalletCard = (wallet: Wallet) => {
     const isExpanded = expandedWalletId === wallet.id;
     const behaviorInfo = getWalletBehaviorInfo(wallet.behavior_type);
-    const _usdValue = wallet.balance_btc * BTC_PRICE_USD;
+    const balanceSats = Math.round(wallet.balance_btc * SATS_PER_BTC);
 
     return (
       <div
@@ -61,8 +56,7 @@ export function WalletList({ wallets, onRefresh: _onRefresh, onTransfer }: Walle
             </div>
           </div>
           <div className="text-right">
-            <p className="font-medium text-gray-900">{formatBtc(wallet.balance_btc)} BTC</p>
-            <p className="text-sm text-gray-600">{formatUsd(wallet.balance_btc)}</p>
+            <p className="font-medium text-gray-900">{formatAmount(balanceSats)}</p>
           </div>
         </div>
 
@@ -71,21 +65,18 @@ export function WalletList({ wallets, onRefresh: _onRefresh, onTransfer }: Walle
           <div className="mt-3">
             <div className="flex justify-between text-sm text-gray-600 mb-1">
               <span>
-                {formatUsd(wallet.balance_btc)} /{' '}
+                {formatAmount(balanceSats)} /{' '}
                 {formatCurrency(wallet.goal_amount, wallet.goal_currency || 'USD')}
               </span>
               <span>
-                {calculateProgress(wallet.balance_btc * BTC_PRICE_USD, wallet.goal_amount).toFixed(
-                  1
-                )}
-                %
+                {calculateProgress(wallet.balance_btc, wallet.goal_amount).toFixed(1)}%
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-blue-600 h-2 rounded-full transition-all"
                 style={{
-                  width: `${Math.min(calculateProgress(wallet.balance_btc * BTC_PRICE_USD, wallet.goal_amount), 100)}%`,
+                  width: `${Math.min(calculateProgress(wallet.balance_btc, wallet.goal_amount), 100)}%`,
                 }}
               />
             </div>
@@ -168,10 +159,7 @@ export function WalletList({ wallets, onRefresh: _onRefresh, onTransfer }: Walle
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
         <p className="text-sm opacity-90">Total Balance Across All Wallets</p>
         <p className="text-3xl font-bold mt-1">
-          {formatBtc(wallets.reduce((sum, w) => sum + w.balance_btc, 0))} BTC
-        </p>
-        <p className="text-lg opacity-90">
-          {formatUsd(wallets.reduce((sum, w) => sum + w.balance_btc, 0))}
+          {formatAmount(Math.round(wallets.reduce((sum, w) => sum + w.balance_btc, 0) * SATS_PER_BTC))}
         </p>
       </div>
 

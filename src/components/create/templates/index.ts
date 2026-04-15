@@ -59,7 +59,6 @@ export {
 } from './template-factory';
 
 // Export custom template components
-export { CircleTemplates } from './CircleTemplates';
 export {
   default as OrganizationTemplates,
   ORGANIZATION_TEMPLATES,

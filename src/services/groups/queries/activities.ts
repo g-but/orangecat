@@ -53,11 +53,6 @@ export async function getGroupActivities(
       }
     }
 
-    // Check if group_activities table exists, otherwise return empty
-    // Note: group_activities table may not exist yet - this is a placeholder
-    // TODO: Create group_activities table or use alternative activity tracking
-    // Note: group_activities table may not exist - check if it does
-    // For now, return empty result if table doesn't exist
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let dbQuery = (sb.from(DATABASE_TABLES.GROUP_ACTIVITIES) as any)
       .select('*', { count: 'exact' })

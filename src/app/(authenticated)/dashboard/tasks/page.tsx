@@ -57,19 +57,19 @@ export default function TasksPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const loadTasks = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {return;}
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (categoryFilter) params.set('category', categoryFilter);
-      if (statusFilter) params.set('status', statusFilter);
-      if (typeFilter) params.set('type', typeFilter);
-      if (showArchived) params.set('archived', 'true');
+      if (categoryFilter) {params.set('category', categoryFilter);}
+      if (statusFilter) {params.set('status', statusFilter);}
+      if (typeFilter) {params.set('type', typeFilter);}
+      if (showArchived) {params.set('archived', 'true');}
 
       const response = await fetch(`/api/tasks?${params.toString()}`);
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to load tasks');
+      if (!response.ok) {throw new Error(data.error || 'Failed to load tasks');}
       setTasks(data.data?.tasks || []);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load tasks';

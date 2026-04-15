@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Key, Plus, Trash2, Star, Check, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 import Button from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import {
@@ -60,7 +61,7 @@ export function ApiKeyManager() {
 
   const loadKeys = useCallback(async () => {
     try {
-      const response = await fetch('/api/user/api-keys');
+      const response = await fetch(API_ROUTES.USER.API_KEYS);
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -89,7 +90,7 @@ export function ApiKeyManager() {
     setValidationResult(null);
 
     try {
-      const response = await fetch('/api/user/api-keys/validate', {
+      const response = await fetch(API_ROUTES.USER.API_KEYS_VALIDATE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey: newKeyValue }),
@@ -115,7 +116,7 @@ export function ApiKeyManager() {
 
     setIsAdding(true);
     try {
-      const response = await fetch('/api/user/api-keys', {
+      const response = await fetch(API_ROUTES.USER.API_KEYS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

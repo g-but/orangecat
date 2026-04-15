@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Bitcoin, Zap, CheckCircle } from 'lucide-react';
+import { Bitcoin, Zap, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
   bitcoinPaymentService,
   PaymentRequest,
@@ -84,21 +85,12 @@ export default function BitcoinPaymentModal({
     setLoading(false);
   };
 
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">Bitcoin Payment</h2>
-          <Button variant="ghost" onClick={onClose}>
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogTitle>Bitcoin Payment</DialogTitle>
 
-        <div className="p-6 space-y-6">
+        <div className="space-y-6">
           {!paymentRequest ? (
             <>
               <div className="text-center">
@@ -154,14 +146,14 @@ export default function BitcoinPaymentModal({
                 label={paymentType === 'lightning' ? 'Lightning Invoice' : 'Bitcoin Address'}
               />
 
-              <div className="text-sm text-gray-600">
+              <div className="text-base text-gray-600">
                 Amount: {formatAmount(paymentRequest.amount)}
               </div>
               {transactionId && <div className="text-xs text-gray-500">Transaction created</div>}
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

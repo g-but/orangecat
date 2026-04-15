@@ -30,6 +30,7 @@ import { LenderInfoSection } from './sections/LenderInfoSection';
 import { PreferencesSection } from './sections/PreferencesSection';
 import { CollateralSection } from './sections/CollateralSection';
 import type { CreateLoanDialogProps } from './types';
+import { API_ROUTES } from '@/config/api-routes';
 
 export function CreateLoanDialog({
   open,
@@ -130,7 +131,7 @@ export function CreateLoanDialog({
               pledged_value: pledgedValue ? Number(pledgedValue) : undefined,
               currency: pledgedCurrency || data.currency,
             };
-            const res = await fetch('/api/loan-collateral', {
+            const res = await fetch(API_ROUTES.LOANS.COLLATERAL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',

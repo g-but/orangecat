@@ -122,7 +122,7 @@ export default function ProjectsDashboardPage() {
   }, [activeTab, myProjects, favorites, searchQuery, statusFilter]);
 
   const handleBulkDelete = () => {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0) {return;}
     setBulkDeleteConfirm(true);
   };
 

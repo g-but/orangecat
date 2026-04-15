@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 import { Calendar, Clock, Tag, Filter } from 'lucide-react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog';
@@ -295,7 +296,7 @@ export default function BlogClientWrapper({ posts, featuredPost, tags }: BlogCli
                   {post.title}
                 </h2>
               </Link>
-              <p className="text-gray-600 mb-4">{post.excerpt}</p>
+              <p className="text-base text-gray-600 mb-4">{post.excerpt}</p>
               <div className="flex flex-wrap gap-2">
                 {post.tags.map(tag => (
                   <span
@@ -318,21 +319,21 @@ export default function BlogClientWrapper({ posts, featuredPost, tags }: BlogCli
       ) : (
         <div className="text-center py-16">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">No posts found</h3>
-          <p className="text-gray-600 mb-8">
+          <p className="text-base text-gray-600 mb-8">
             {selectedTag || selectedTimeFilter !== 'all'
               ? 'Try adjusting your filters or clear them to see all posts.'
               : 'We have more great content in development. Check back soon for our latest insights and updates.'}
           </p>
           {(selectedTag || selectedTimeFilter !== 'all') && (
-            <button
+            <Button
               onClick={() => {
                 setSelectedTag(null);
                 setSelectedTimeFilter('all');
               }}
-              className="px-6 py-3 bg-tiffany-500 text-white rounded-lg hover:bg-tiffany-600 transition-colors"
+              variant="primary"
             >
               View All Posts
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -341,7 +342,7 @@ export default function BlogClientWrapper({ posts, featuredPost, tags }: BlogCli
       <div className="mt-16">
         <Card className="p-8 text-center">
           <h2 className="text-2xl font-semibold mb-4">Stay Updated</h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-base text-gray-600 mb-6">
             Subscribe to our newsletter for the latest updates and insights about Bitcoin funding
           </p>
           <div className="max-w-md mx-auto">
@@ -351,9 +352,9 @@ export default function BlogClientWrapper({ posts, featuredPost, tags }: BlogCli
                 placeholder="Enter your email"
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tiffany-500"
               />
-              <button className="px-6 py-2 bg-tiffany-500 text-white rounded-lg hover:bg-tiffany-600 transition-colors">
+              <Button variant="primary" size="sm">
                 Subscribe
-              </button>
+              </Button>
             </div>
           </div>
         </Card>

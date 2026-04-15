@@ -1,10 +1,10 @@
 'use client';
 
-import { Share2, X as XIcon } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Share2 } from 'lucide-react';
+import { CardContent } from '@/components/ui/Card';
 import { trackEvent } from '@/utils/monitoring';
 import ShareContent from './ShareContent';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface CampaignShareProps {
   projectId: string;
@@ -57,20 +57,13 @@ export default function CampaignShare({
 
   if (variant === 'modal') {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Share2 className="w-5 h-5" />
-              Share Campaign
-            </CardTitle>
-            {onClose && (
-              <Button variant="ghost" size="sm" onClick={handleClose}>
-                <XIcon className="w-4 h-4" />
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <Dialog open onOpenChange={open => !open && handleClose()}>
+        <DialogContent className="max-w-md">
+          <DialogTitle className="flex items-center gap-2">
+            <Share2 className="w-5 h-5" />
+            Share Campaign
+          </DialogTitle>
+          <CardContent className="space-y-4 p-0">
             <div>
               <h4 className="font-medium text-gray-900 mb-1">{projectTitle}</h4>
               <p className="text-sm text-gray-600 line-clamp-2">{projectDescription}</p>
@@ -83,8 +76,8 @@ export default function CampaignShare({
               showTitle={false}
             />
           </CardContent>
-        </Card>
-      </div>
+        </DialogContent>
+      </Dialog>
     );
   }
 

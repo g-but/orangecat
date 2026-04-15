@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { getRouteContext, ROUTE_CONTEXTS, ROUTES } from '@/config/routes';
 import { getContextualCreateAction } from '@/lib/navigation/contextual-create';
 import { MobileCreateSheet } from '@/components/create/MobileCreateSheet';
+import { Z_INDEX } from '@/constants/z-index';
 
 const MobileBottomNav = React.memo(function MobileBottomNav() {
   const pathname = usePathname();
@@ -149,7 +150,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
           isAuthenticated ? 'border-orange-200/50 shadow-lg' : 'border-gray-200/50'
         )}
         style={{
-          zIndex: 50,
+          zIndex: Z_INDEX.MOBILE_BOTTOM_NAV,
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
           transform: shouldBeSmall ? 'scale(0.85) translateY(4px)' : 'scale(1) translateY(0)',
           opacity: shouldBeTransparent ? 0.7 : 1,

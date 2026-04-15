@@ -13,7 +13,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { groupEventSchema, type GroupEventFormData } from '@/lib/validation/groups';
 import {
   Dialog,
   DialogContent,
@@ -45,21 +45,6 @@ import { Loader2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 
-const eventSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200, 'Title must be 200 characters or less'),
-  description: z.string().max(5000, 'Description must be 5000 characters or less').optional(),
-  event_type: z.enum(['general', 'meeting', 'celebration', 'assembly']).default('general'),
-  location_type: z.enum(['online', 'in_person', 'hybrid']).default('online'),
-  location_details: z.string().max(500).optional(),
-  starts_at: z.string().min(1, 'Start date and time are required'),
-  ends_at: z.string().optional(),
-  timezone: z.string().default('UTC'),
-  max_attendees: z.number().int().positive().optional(),
-  is_public: z.boolean().default(true),
-  requires_rsvp: z.boolean().default(false),
-});
-
-type EventFormData = z.input<typeof eventSchema>;
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -78,8 +63,8 @@ export function CreateEventDialog({
 }: CreateEventDialogProps) {
   const [submitting, setSubmitting] = useState(false);
 
-  const form = useForm<EventFormData>({
-    resolver: zodResolver(eventSchema),
+  const form = useForm<GroupEventFormData>({
+    resolver: zodResolver(groupEventSchema),
     defaultValues: {
       title: '',
       description: '',
@@ -95,7 +80,7 @@ export function CreateEventDialog({
     },
   });
 
-  const onSubmit = async (data: EventFormData) => {
+  const onSubmit = async (data: GroupEventFormData) => {
     try {
       setSubmitting(true);
 

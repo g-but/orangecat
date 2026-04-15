@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MoreHorizontal, Edit2, Trash2, Eye, EyeOff, Rocket, Pause } from 'lucide-react';
+import { ENTITY_STATUS } from '@/config/status-config';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -121,9 +122,9 @@ export function EntityCardActions({
               )}
             </DropdownMenuItem>
           )}
-          {onStatusChange && entityStatus === 'draft' && (
+          {onStatusChange && entityStatus === ENTITY_STATUS.DRAFT && (
             <DropdownMenuItem
-              onClick={e => handleStatusClick(e, 'active')}
+              onClick={e => handleStatusClick(e, ENTITY_STATUS.ACTIVE)}
               disabled={isChangingStatus}
               className="text-green-600 focus:text-green-600 focus:bg-green-50"
             >
@@ -131,18 +132,18 @@ export function EntityCardActions({
               {isChangingStatus ? 'Publishing...' : 'Publish'}
             </DropdownMenuItem>
           )}
-          {onStatusChange && entityStatus === 'active' && (
+          {onStatusChange && entityStatus === ENTITY_STATUS.ACTIVE && (
             <DropdownMenuItem
-              onClick={e => handleStatusClick(e, 'paused')}
+              onClick={e => handleStatusClick(e, ENTITY_STATUS.PAUSED)}
               disabled={isChangingStatus}
             >
               <Pause className="mr-2 h-4 w-4" />
               {isChangingStatus ? 'Pausing...' : 'Pause'}
             </DropdownMenuItem>
           )}
-          {onStatusChange && entityStatus === 'paused' && (
+          {onStatusChange && entityStatus === ENTITY_STATUS.PAUSED && (
             <DropdownMenuItem
-              onClick={e => handleStatusClick(e, 'active')}
+              onClick={e => handleStatusClick(e, ENTITY_STATUS.ACTIVE)}
               disabled={isChangingStatus}
               className="text-green-600 focus:text-green-600 focus:bg-green-50"
             >

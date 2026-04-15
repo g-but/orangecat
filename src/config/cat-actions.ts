@@ -519,6 +519,42 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     enabled: true,
   },
 
+  // ---------- PRODUCTIVITY ACTIONS ----------
+
+  create_task: {
+    id: 'create_task',
+    name: 'Create Task',
+    description: 'Create a task or to-do item',
+    category: 'context',
+    icon: FileText,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      { name: 'title', type: 'string', required: true, description: 'Task title' },
+      { name: 'description', type: 'string', required: false, description: 'Task description' },
+      {
+        name: 'priority',
+        type: 'string',
+        required: false,
+        description: 'Priority: low, medium, high, urgent',
+        default: 'medium',
+      },
+      {
+        name: 'due_date',
+        type: 'string',
+        required: false,
+        description: 'Due date (ISO format)',
+      },
+    ],
+    examples: [
+      'Create a task to review my project proposal',
+      'Add a high priority task to follow up with investors',
+      'Remind me to update my service listing by Friday',
+    ],
+    apiEndpoint: '/api/tasks',
+    enabled: true,
+  },
+
   // ---------- NOTIFICATION ACTIONS ----------
 
   set_reminder: {
@@ -538,7 +574,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Set a reminder for the meeting next week',
       'Notify me when funding reaches 50%',
     ],
-    enabled: false, // TODO: Implement reminder system
+    enabled: false, // needs reminder storage system
   },
 };
 

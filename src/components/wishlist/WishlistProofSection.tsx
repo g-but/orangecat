@@ -13,6 +13,7 @@
 import React, { useState } from 'react';
 import { Plus, Receipt, ChevronDown, ChevronUp } from 'lucide-react';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
 import { Button } from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -41,7 +42,7 @@ export function WishlistProofSection({
 
   const handleLike = async (proofId: string) => {
     try {
-      await fetch('/api/wishlists/feedback', {
+      await fetch(API_ROUTES.WISHLISTS.FEEDBACK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -58,7 +59,7 @@ export function WishlistProofSection({
 
   const handleDislike = async (proofId: string, comment: string) => {
     try {
-      await fetch('/api/wishlists/feedback', {
+      await fetch(API_ROUTES.WISHLISTS.FEEDBACK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -80,7 +81,7 @@ export function WishlistProofSection({
     }
 
     try {
-      await fetch(`/api/wishlists/proofs/${proofId}`, {
+      await fetch(`${API_ROUTES.WISHLISTS.PROOFS}/${proofId}`, {
         method: 'DELETE',
       });
       onProofDeleted?.(proofId);

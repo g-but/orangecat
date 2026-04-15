@@ -10,6 +10,7 @@ import {
   signUp as authSignUp,
   signOut as authSignOut,
 } from '@/services/supabase/auth';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface AuthState {
   // data
@@ -160,7 +161,7 @@ export const useAuthStore = create<AuthState>()(
         // Create and store the fetch promise
         inFlightProfileFetch = (async () => {
           try {
-            const response = await fetch('/api/profile');
+            const response = await fetch(API_ROUTES.PROFILE);
             const result = await response.json();
 
             if (!response.ok) {
@@ -320,7 +321,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true });
 
-          const response = await fetch('/api/profile', {
+          const response = await fetch(API_ROUTES.PROFILE, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',

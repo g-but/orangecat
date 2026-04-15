@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/utils/logger';
 
 export default function ConversationPage({
   params,
@@ -18,7 +19,7 @@ export default function ConversationPage({
         }
         router.replace(`/messages?id=${encodeURIComponent(conversationId)}`);
       })
-      .catch(() => {});
+      .catch((err: unknown) => { logger.warn('Legacy conversationId redirect failed', { err }, 'messages/[conversationId]'); });
     return () => {
       active = false;
     };

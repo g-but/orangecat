@@ -7,7 +7,7 @@ import { Share2, X as XIcon, Globe, MessageCircle, Mail, Copy, Check, X } from '
 const Facebook = Globe;
 const Linkedin = Globe;
 import { toast } from 'sonner';
-import { createPortal } from 'react-dom';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 export interface SharePlatform {
   name: string;
@@ -247,26 +247,14 @@ export default function ShareContent({
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
   if (isMobile && onClose) {
-    // Mobile: Full-screen modal
+    // Mobile: Dialog modal
     return (
-      <>
-        {typeof window !== 'undefined' &&
-          createPortal(
-            <>
-              <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-modal-backdrop transition-opacity"
-                onClick={onClose}
-                aria-hidden="true"
-              />
-              <div className="fixed inset-0 z-modal flex items-end justify-center p-4 pointer-events-none sm:items-center">
-                <div className="pointer-events-auto w-full max-w-md animate-slide-up">
-                  {shareContent}
-                </div>
-              </div>
-            </>,
-            document.body
-          )}
-      </>
+      <Dialog open onOpenChange={open => !open && onClose()}>
+        <DialogContent className="max-w-md">
+          <DialogTitle className="sr-only">Share</DialogTitle>
+          {shareContent}
+        </DialogContent>
+      </Dialog>
     );
   }
 

@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ZodError } from 'zod';
 import { toast } from 'sonner';
+import { API_ROUTES } from '@/config/api-routes';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
@@ -31,45 +32,7 @@ import { FormHeader } from './components/FormHeader';
 import { FormInfoBanner } from './components/FormInfoBanner';
 import { FormActions } from './components/FormActions';
 import { AIGeneratedIndicator } from './components/AIGeneratedIndicator';
-
-// Theme colors configuration
-const THEME_COLORS = {
-  orange: {
-    gradient: 'from-orange-600 to-orange-700',
-    focus: 'focus:ring-orange-500',
-    bg: 'from-orange-50/30',
-  },
-  tiffany: {
-    gradient: 'from-tiffany-600 to-tiffany-700',
-    focus: 'focus:ring-tiffany-500',
-    bg: 'from-tiffany-50/30',
-  },
-  rose: {
-    gradient: 'from-rose-600 to-rose-700',
-    focus: 'focus:ring-rose-500',
-    bg: 'from-rose-50/30',
-  },
-  blue: {
-    gradient: 'from-blue-600 to-blue-700',
-    focus: 'focus:ring-blue-500',
-    bg: 'from-blue-50/30',
-  },
-  green: {
-    gradient: 'from-green-600 to-green-700',
-    focus: 'focus:ring-green-500',
-    bg: 'from-green-50/30',
-  },
-  purple: {
-    gradient: 'from-purple-600 to-purple-700',
-    focus: 'focus:ring-purple-500',
-    bg: 'from-purple-50/30',
-  },
-  indigo: {
-    gradient: 'from-indigo-600 to-indigo-700',
-    focus: 'focus:ring-indigo-500',
-    bg: 'from-indigo-50/30',
-  },
-} as const;
+import { FORM_THEME } from '@/config/theme-colors';
 
 interface WizardMode {
   currentStep: number;
@@ -118,6 +81,7 @@ export function EntityForm<T extends Record<string, unknown>>({
     clearDraft,
     setSubmitting,
     setErrors,
+    validateField,
     formatRelativeTime,
   } = useEntityFormState({
     config,
@@ -129,6 +93,13 @@ export function EntityForm<T extends Record<string, unknown>>({
 
   // Track newly created entity for post-creation publish flow
   const [createdEntity, setCreatedEntity] = useState<{ id: string; title: string } | null>(null);
+
+  const handleFieldBlur = useCallback(
+    (fieldName: string) => {
+      validateField(fieldName);
+    },
+    [validateField]
+  );
 
   const { isFieldVisible, isGroupVisible, visibleFieldGroups } = useFieldVisibility({
     formData: formState.data,
@@ -146,7 +117,7 @@ export function EntityForm<T extends Record<string, unknown>>({
       return;
     }
 
-    fetch(`/api/entity-wallets?entity_type=${config.type}&entity_id=${entityId}`, {
+    fetch(`${API_ROUTES.ENTITY_WALLETS}?entity_type=${config.type}&entity_id=${entityId}`, {
       credentials: 'include',
     })
       .then(r => r.json())
@@ -157,10 +128,10 @@ export function EntityForm<T extends Record<string, unknown>>({
           existingWalletLinkIdRef.current = link.id;
         }
       })
-      .catch(() => {}); // Non-blocking; missing wallet isn't a blocker
+      .catch((err: unknown) => { logger.warn('Wallet link failed (non-blocking)', { err }, 'EntityForm'); }); // Non-blocking; missing wallet isn't a blocker
   }, [mode, entityId, config.type, config.fieldGroups, handleFieldChange]);
 
-  const theme = THEME_COLORS[config.colorTheme];
+  const theme = FORM_THEME[config.colorTheme];
 
   // Template selection handler
   const handleTemplateSelect = useCallback(
@@ -230,12 +201,12 @@ export function EntityForm<T extends Record<string, unknown>>({
             try {
               if (mode === 'edit' && existingWalletLinkIdRef.current) {
                 // Replace existing link: delete old, insert new
-                await fetch(`/api/entity-wallets/${existingWalletLinkIdRef.current}`, {
+                await fetch(`${API_ROUTES.ENTITY_WALLETS}/${existingWalletLinkIdRef.current}`, {
                   method: 'DELETE',
                   credentials: 'include',
                 });
               }
-              await fetch('/api/entity-wallets', {
+              await fetch(API_ROUTES.ENTITY_WALLETS, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -418,7 +389,7 @@ export function EntityForm<T extends Record<string, unknown>>({
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">{group.title}</h3>
                         {group.description && (
-                          <p className="text-sm text-gray-600 mt-1">{group.description}</p>
+                          <p className="text-base text-gray-600 mt-1">{group.description}</p>
                         )}
                       </div>
 
@@ -453,6 +424,7 @@ export function EntityForm<T extends Record<string, unknown>>({
                                       handleFieldChange(field.name as keyof T, value)
                                     }
                                     onFocus={() => handleFieldFocus(field.name)}
+                                    onBlur={() => handleFieldBlur(field.name)}
                                     disabled={formState.isSubmitting}
                                     currency={
                                       'currency' in formState.data

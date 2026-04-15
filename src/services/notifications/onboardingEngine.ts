@@ -21,6 +21,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { ENTITY_REGISTRY, ENTITY_TYPES, type EntityType } from '@/config/entity-registry';
+import { ENTITY_STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 
 const LOG_SOURCE = 'OnboardingEngine';
@@ -100,7 +101,7 @@ export async function getOnboardingState(userId: string): Promise<OnboardingStat
 
       if (entities && entities.length > 0) {
         hasEntity = true;
-        if (entities.some((e: { status: string }) => e.status === 'active')) {
+        if (entities.some((e: { status: string }) => e.status === ENTITY_STATUS.ACTIVE)) {
           hasPublishedEntity = true;
         }
       }
@@ -139,7 +140,7 @@ async function fetchExampleEntities(
     const meta = ENTITY_REGISTRY[entityType];
     const { data } = await (admin.from(meta.tableName) as any)
       .select('id, title')
-      .eq('status', 'active')
+      .eq('status', ENTITY_STATUS.ACTIVE)
       .limit(1);
 
     if (data && data.length > 0) {

@@ -10,6 +10,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { NextRequest } from 'next/server';
+import { logger } from '@/utils/logger';
 import {
   apiUnauthorized,
   apiBadRequest,
@@ -65,13 +66,13 @@ const GROQ_KEY_HEADER = 'x-groq-api-key';
  */
 function isAiRateLimitError(error: unknown): boolean {
   if (error instanceof GroqAPIError) {
-    if (error.type === 'rate_limit' || error.statusCode === 429) return true;
+    if (error.type === 'rate_limit' || error.statusCode === 429) {return true;}
     const msg = error.message.toLowerCase();
-    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) return true;
+    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) {return true;}
   }
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
-    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) return true;
+    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) {return true;}
   }
   return false;
 }
@@ -477,7 +478,7 @@ export async function POST(request: NextRequest) {
                   provider,
                   token_count: usage?.totalTokens,
                 },
-              ]).catch(() => {});
+              ]).catch((err: unknown) => { logger.error('Failed to persist streaming messages', { err }, 'cat/chat'); });
             }
 
             // Track platform usage (non-BYOK) best-effort with usage tokens
@@ -585,7 +586,7 @@ export async function POST(request: NextRequest) {
           provider,
           token_count: aiResult.totalTokens,
         },
-      ]).catch(() => {});
+      ]).catch((err: unknown) => { logger.error('Failed to persist messages', { err }, 'cat/chat'); });
     }
 
     const responseJson = apiSuccess({

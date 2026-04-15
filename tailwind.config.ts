@@ -139,9 +139,6 @@ const config: Config = {
   			sans: [
   				'var(--font-inter)'
   			],
-  			display: [
-  				'var(--font-playfair-display)'
-  			]
   		},
   		scale: {
   			'98': '0.98',

@@ -10,7 +10,7 @@ import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { logger } from '@/utils/logger';
 import { EntityType, ENTITY_REGISTRY } from '@/config/entity-registry';
-import { getStatusInfo } from '@/config/status-config';
+import { getStatusInfo, NORMAL_VISIBLE_STATUSES } from '@/config/status-config';
 
 // Format relative time
 const getRelativeTime = (date: string) => {
@@ -125,7 +125,7 @@ export default function ProfileEntityTab({
   const displayName = metadata?.namePlural || entityType;
 
   if (loading) {
-    return <div className="text-gray-500 text-sm py-8 text-center">Loading {displayName}...</div>;
+    return <div className="text-gray-500 text-base py-8 text-center">Loading {displayName}...</div>;
   }
 
   if (entities.length === 0) {
@@ -133,7 +133,7 @@ export default function ProfileEntityTab({
       <div className="text-center py-12">
         <Icon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
         <h3 className="text-lg font-semibold text-gray-700 mb-2">No {displayName} Yet</h3>
-        <p className="text-gray-500 mb-6">
+        <p className="text-gray-500 text-base mb-6">
           {isOwnProfile
             ? `You haven't published any ${displayName.toLowerCase()} yet`
             : `No ${displayName.toLowerCase()} to display`}
@@ -226,7 +226,7 @@ export default function ProfileEntityTab({
           const statusInfo = getStatusInfo(entity.status || '');
           const thumbnail = getThumbnail(entity);
           const showStatusBadge =
-            entity.status && !['active', 'draft'].includes(entity.status.toLowerCase());
+            entity.status && !NORMAL_VISIBLE_STATUSES.includes(entity.status.toLowerCase() as (typeof NORMAL_VISIBLE_STATUSES)[number]);
 
           return (
             <Link
@@ -274,7 +274,7 @@ export default function ProfileEntityTab({
                       {getTitle(entity)}
                     </h4>
                     {entity.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                      <p className="text-base text-gray-600 line-clamp-2 mb-3">
                         {entity.description}
                       </p>
                     )}

@@ -1,6 +1,6 @@
 import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import type { User } from '@supabase/supabase-js';
-import { sanitizeWalletInput, validateAddressOrXpub, detectWalletType } from '@/types/wallet';
+import { sanitizeWalletInput, validateAddressOrXpub, detectWalletType, type Wallet } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import { MAX_WALLETS_PER_ENTITY } from '@/lib/wallets/constants';
 import {
@@ -136,11 +136,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
         return apiForbidden('Forbidden: Profile does not belong to this user');
       }
     } else if (body.project_id) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: project } = await (supabase.from(getTableName('project')) as any)
+      const { data: project } = await supabase
+        .from(getTableName('project'))
         .select('user_id')
         .eq('id', body.project_id)
-        .single();
+        .single() as { data: { user_id: string } | null };
 
       if (!project || project.user_id !== user.id) {
         return apiForbidden();
@@ -231,8 +231,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     // Try to create the wallet in the dedicated wallets table first
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: wallet, error } = await (supabase.from(getTableName('wallet')) as any)
+      const { data: wallet, error } = await supabase
+        .from(getTableName('wallet'))
         .insert({
           profile_id: body.profile_id || null,
           project_id: body.project_id || null,
@@ -253,7 +253,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
           balance_btc: 0,
         })
         .select()
-        .single();
+        .single() as { data: Wallet | null; error: { message: string; code?: string } | null };
 
       if (error) {
         // Check for specific error messages
@@ -270,7 +270,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       }
 
       // Audit log wallet creation
-      await auditSuccess(AUDIT_ACTIONS.WALLET_CREATED, user.id, 'wallet', wallet.id, {
+      await auditSuccess(AUDIT_ACTIONS.WALLET_CREATED, user.id, 'wallet', wallet?.id ?? '', {
         walletType,
         category: sanitized.category,
         entityType,

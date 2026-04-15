@@ -92,7 +92,7 @@ export default function MessageItem({
 
   // Reset draft whenever this message enters edit mode
   useEffect(() => {
-    if (isEditing) setEditDraft(message.content || '');
+    if (isEditing) {setEditDraft(message.content || '');}
   }, [isEditing, message.content]);
 
   const handleEditKeyDown = useCallback(
@@ -100,10 +100,10 @@ export default function MessageItem({
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         const trimmed = editDraft.trim();
-        if (trimmed && trimmed !== message.content) onEditSave?.(trimmed);
-        else onEditCancel?.();
+        if (trimmed && trimmed !== message.content) {onEditSave?.(trimmed);}
+        else {onEditCancel?.();}
       }
-      if (e.key === 'Escape') onEditCancel?.();
+      if (e.key === 'Escape') {onEditCancel?.();}
     },
     [editDraft, message.content, onEditSave, onEditCancel]
   );
@@ -181,8 +181,8 @@ export default function MessageItem({
                     type="button"
                     onClick={() => {
                       const trimmed = editDraft.trim();
-                      if (trimmed && trimmed !== message.content) onEditSave?.(trimmed);
-                      else onEditCancel?.();
+                      if (trimmed && trimmed !== message.content) {onEditSave?.(trimmed);}
+                      else {onEditCancel?.();}
                     }}
                     className="text-xs px-2 py-1 rounded bg-white text-tiffany-600 font-medium hover:bg-white/90"
                   >

@@ -5,6 +5,21 @@
 
 import { useCallback, useRef, useState } from 'react';
 
+// Web Speech API types — not present in all TypeScript DOM lib versions
+interface ISpeechRecognition extends EventTarget {
+  lang: string;
+  interimResults: boolean;
+  onresult: ((ev: ISpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  start(): void;
+  stop(): void;
+}
+
+interface ISpeechRecognitionEvent extends Event {
+  readonly results: { [i: number]: { [j: number]: { transcript: string } } };
+}
+
 interface UseVoiceInputOptions {
   onTranscript: (text: string) => void;
   onError: (error: string) => void;
@@ -16,28 +31,30 @@ export function useVoiceInput({ onTranscript, onError }: UseVoiceInputOptions) {
   const [whisperUrl, setWhisperUrl] = useState('');
   const [whisperLang, setWhisperLang] = useState('en');
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<ISpeechRecognition | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<BlobPart[]>([]);
 
   const startWebSpeech = useCallback(() => {
     try {
-      const SpeechRecognition =
-        (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-      if (!SpeechRecognition) {
+      const SpeechRecognitionCtor = (
+        (window as unknown as Record<string, unknown>).SpeechRecognition ||
+        (window as unknown as Record<string, unknown>).webkitSpeechRecognition
+      ) as (new () => ISpeechRecognition) | undefined;
+      if (!SpeechRecognitionCtor) {
         onError('Speech recognition not supported by this browser.');
         return;
       }
       if (listening) {
-        recognitionRef.current?.stop?.();
+        recognitionRef.current?.stop();
         setListening(false);
         return;
       }
-      const recog = new SpeechRecognition();
+      const recog = new SpeechRecognitionCtor();
       recognitionRef.current = recog;
       recog.lang = 'en-US';
       recog.interimResults = false;
-      recog.onresult = (ev: any) => {
+      recog.onresult = (ev: ISpeechRecognitionEvent) => {
         const transcript = ev.results?.[0]?.[0]?.transcript || '';
         onTranscript(transcript);
       };

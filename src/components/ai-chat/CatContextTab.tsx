@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { ROUTES } from '@/config/routes';
+import { API_ROUTES } from '@/config/api-routes';
 
 const TYPE_ICONS: Record<string, React.ElementType> = {
   goals: Target,
@@ -73,7 +74,7 @@ export function CatContextTab() {
   useEffect(() => {
     async function fetchSummary() {
       try {
-        const res = await fetch('/api/cat/context');
+        const res = await fetch(API_ROUTES.CAT.CONTEXT);
         const data = await res.json();
         if (data.success) {
           setSummary(data.data);
@@ -173,7 +174,7 @@ export function CatContextTab() {
             <FileText className="h-6 w-6 text-gray-400" />
           </div>
           <h3 className="font-semibold text-gray-900 mb-2">No context yet</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-base text-gray-500 mb-4">
             Add documents about your goals, skills, and situation to get personalized advice.
           </p>
         </div>
@@ -200,9 +201,9 @@ export function CatContextTab() {
                       className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-900 truncate">{doc.title}</p>
+                        <p className="text-base font-medium text-gray-900 truncate">{doc.title}</p>
                         {doc.content && (
-                          <p className="text-xs text-gray-500 truncate mt-0.5">
+                          <p className="text-sm text-gray-500 truncate mt-0.5">
                             {doc.content.substring(0, 60)}...
                           </p>
                         )}

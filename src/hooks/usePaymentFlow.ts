@@ -15,6 +15,7 @@ import type {
   PaymentMethod,
 } from '@/domain/payments/types';
 import type { EntityType } from '@/config/entity-registry';
+import { API_ROUTES } from '@/config/api-routes';
 
 // Poll intervals by payment method
 const POLL_INTERVALS: Record<PaymentMethod, number> = {
@@ -59,7 +60,7 @@ export function usePaymentFlow() {
 
       pollRef.current = setInterval(async () => {
         try {
-          const res = await fetch(`/api/payments/${paymentIntentId}`);
+          const res = await fetch(`${API_ROUTES.PAYMENTS.BASE}/${paymentIntentId}`);
           if (!res.ok) {
             return;
           }
@@ -98,7 +99,7 @@ export function usePaymentFlow() {
       setState({ phase: 'initiating' });
 
       try {
-        const res = await fetch('/api/payments', {
+        const res = await fetch(API_ROUTES.PAYMENTS.BASE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(params),
@@ -138,7 +139,7 @@ export function usePaymentFlow() {
     const piId = state.data.payment_intent.id;
 
     try {
-      const res = await fetch(`/api/payments/${piId}`, {
+      const res = await fetch(`${API_ROUTES.PAYMENTS.BASE}/${piId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'buyer_confirm' }),

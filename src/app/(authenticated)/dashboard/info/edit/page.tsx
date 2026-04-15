@@ -20,6 +20,7 @@ import {
 import { Card } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { ROUTES } from '@/config/routes';
+import { API_ROUTES } from '@/config/api-routes';
 import Link from 'next/link';
 
 /**
@@ -170,7 +171,7 @@ export default function DashboardInfoEditPage() {
   // Handle profile save
   const handleSave = async (data: ProfileFormData) => {
     try {
-      const response = await fetch('/api/profile', {
+      const response = await fetch(API_ROUTES.PROFILE, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -226,7 +227,7 @@ export default function DashboardInfoEditPage() {
       }
 
       // Refresh profile data from API
-      const updatedResponse = await fetch('/api/profile');
+      const updatedResponse = await fetch(API_ROUTES.PROFILE);
       if (updatedResponse.ok) {
         const result = await updatedResponse.json();
         // Unwrap the API response structure
@@ -347,7 +348,7 @@ export default function DashboardInfoEditPage() {
                   </div>
                 </div>
                 {completionPercentage < 100 && (
-                  <div className="mt-3 text-sm text-gray-700">
+                  <div className="mt-3 text-base text-gray-700">
                     <div className="font-medium mb-1">To reach 100%, add:</div>
                     <ul className="list-disc list-inside space-y-0.5">
                       {getProfileMissingFields(profile).map(field => (

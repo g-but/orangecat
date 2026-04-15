@@ -11,7 +11,7 @@
 
 import { useState } from 'react';
 import Button from '@/components/ui/Button';
-import SimpleModal from '@/components/ui/SimpleModal';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Users } from 'lucide-react';
 
 // ==================== Complete Modal ====================
@@ -41,38 +41,41 @@ export function CompleteModal({
   };
 
   return (
-    <SimpleModal onClose={onClose} title="Complete Task">
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
-          <input
-            type="number"
-            value={duration}
-            onChange={e => setDuration(e.target.value ? parseInt(e.target.value) : '')}
-            placeholder={estimatedMinutes?.toString() || ''}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
-          />
+    <Dialog open onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogTitle>Complete Task</DialogTitle>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+            <input
+              type="number"
+              value={duration}
+              onChange={e => setDuration(e.target.value ? parseInt(e.target.value) : '')}
+              placeholder={estimatedMinutes?.toString() || ''}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              rows={3}
+              placeholder="Notes about the completion..."
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} isLoading={actionLoading}>
+              Mark as Done
+            </Button>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
-          <textarea
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            rows={3}
-            placeholder="Notes about the completion..."
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
-          />
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} isLoading={actionLoading}>
-            Mark as Done
-          </Button>
-        </div>
-      </div>
-    </SimpleModal>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -95,35 +98,38 @@ export function AttentionModal({ actionLoading, onClose, onFlag }: AttentionModa
   };
 
   return (
-    <SimpleModal onClose={onClose} title="Flag Task">
-      <div className="space-y-4">
-        <p className="text-sm text-gray-600">
-          Flag this task as &quot;needs attention&quot;. All team members will be notified.
-        </p>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Message (optional)</label>
-          <textarea
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            rows={3}
-            placeholder="What is the problem?"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
-          />
+    <Dialog open onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogTitle>Flag Task</DialogTitle>
+        <div className="space-y-4">
+          <p className="text-base text-gray-600">
+            Flag this task as &quot;needs attention&quot;. All team members will be notified.
+          </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Message (optional)</label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              rows={3}
+              placeholder="What is the problem?"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              isLoading={actionLoading}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              Flag
+            </Button>
+          </div>
         </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            isLoading={actionLoading}
-            className="bg-amber-600 hover:bg-amber-700"
-          >
-            Flag
-          </Button>
-        </div>
-      </div>
-    </SimpleModal>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -148,42 +154,45 @@ export function RequestModal({ actionLoading, onClose, onRequest }: RequestModal
   };
 
   return (
-    <SimpleModal onClose={onClose} title="Request Task">
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">To whom?</label>
-          <select
-            value={userId}
-            onChange={e => setUserId(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
-          >
-            <option value="">
-              <Users className="h-4 w-4 inline mr-2" />
-              All Team Members (Broadcast)
-            </option>
-            {/* TODO: Load team members here */}
-          </select>
-          <p className="text-xs text-gray-500 mt-1">Leave empty to notify all team members</p>
+    <Dialog open onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogTitle>Request Task</DialogTitle>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">To whom?</label>
+            <select
+              value={userId}
+              onChange={e => setUserId(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
+            >
+              <option value="">
+                <Users className="h-4 w-4 inline mr-2" />
+                All Team Members (Broadcast)
+              </option>
+              {/* TODO: Load team members here */}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">Leave empty to notify all team members</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Message (optional)</label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              rows={3}
+              placeholder="Could you take care of this task?"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} isLoading={actionLoading}>
+              Send Request
+            </Button>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Message (optional)</label>
-          <textarea
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            rows={3}
-            placeholder="Could you take care of this task?"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tiffany-500"
-          />
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} isLoading={actionLoading}>
-            Send Request
-          </Button>
-        </div>
-      </div>
-    </SimpleModal>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -190,7 +190,6 @@ html {
 
   /* Better typography scaling for mobile */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
     /* Better text wrapping on mobile */
     overflow-wrap: break-word;
     word-wrap: break-word;

@@ -12,6 +12,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Z_INDEX } from '@/constants/z-index';
 
 interface FlyoutTooltipProps {
   isVisible: boolean;
@@ -88,7 +89,7 @@ export function FlyoutTooltip({ isVisible, children, targetElement }: FlyoutTool
         top: `${position.top}px`,
         left: `${position.left}px`,
         transform: 'translateY(-50%)',
-        zIndex: 9999, // Very high z-index to ensure it's above everything
+        zIndex: Z_INDEX.DEBUG,
       }}
     >
       {/* Tooltip arrow pointing left */}
