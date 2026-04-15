@@ -22,10 +22,10 @@ export default function HeroSectionStatic() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm border border-orange-200/50 mb-6">
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 bg-green-500 rounded-full" />
-                <span className="text-sm font-medium text-gray-700">Live projects</span>
+                <span className="text-sm font-medium text-gray-700">Any identity</span>
               </div>
               <span className="text-gray-400">•</span>
-              <span className="text-sm font-medium text-gray-700">Open source</span>
+              <span className="text-sm font-medium text-gray-700">Any currency</span>
               <span className="text-gray-400">•</span>
               <span className="text-sm font-medium text-gray-700">Zero fees</span>
             </div>

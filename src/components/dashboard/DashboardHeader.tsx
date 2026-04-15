@@ -1,10 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowRight, Plus } from 'lucide-react'
+import { ArrowRight, Plus, Clock } from 'lucide-react'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
-import ComingSoonModal from '@/components/ui/ComingSoonModal'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 interface DashboardHeaderProps {
   title: string
@@ -67,13 +73,34 @@ export default function DashboardHeader({
         </div>
       </div>
 
-      <ComingSoonModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        featureName={featureName || title}
-        timeline={timeline || "Coming Soon"}
-        learnMoreUrl={learnMoreUrl}
-      />
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <Clock className="w-6 h-6 text-orange-600" />
+              </div>
+              <DialogTitle>{featureName || title} Coming Soon</DialogTitle>
+            </div>
+            <DialogDescription>
+              This feature is not yet available but is {(timeline || 'coming soon').toLowerCase()}.
+              {learnMoreUrl && (
+                <a
+                  href={learnMoreUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 text-tiffany-600 underline"
+                >
+                  Learn more
+                </a>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => setShowModal(false)} className="w-full mt-2">
+            Got it
+          </Button>
+        </DialogContent>
+      </Dialog>
     </>
   )
 } 

@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
-import HeroSection from '@/components/home/sections/HeroSection';
+import HeroSectionStatic from '@/components/home/sections/HeroSectionStatic';
 
 // Lazy load non-critical sections
 // Hero loads immediately for good FCP, rest loads as user scrolls
@@ -42,7 +42,7 @@ export default function HomePublicClient() {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Above the fold, loads immediately */}
-      <HeroSection />
+      <HeroSectionStatic />
 
       {/* Below-fold sections - lazy loaded */}
       <Suspense fallback={<div className="h-96 bg-gradient-to-br from-gray-50 via-white to-gray-50 animate-pulse" />}>

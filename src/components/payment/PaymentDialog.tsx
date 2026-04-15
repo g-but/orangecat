@@ -76,9 +76,16 @@ export function PaymentDialog({
 
   const amountBtc = isContribution ? contributionAmount : (priceBtc ?? 0);
 
+  // Prevent accidental dismissal while a payment is in flight
+  const isPaymentActive = state.phase === 'initiating' || state.phase === 'awaiting_payment';
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        onPointerDownOutside={isPaymentActive ? e => e.preventDefault() : undefined}
+        onEscapeKeyDown={isPaymentActive ? e => e.preventDefault() : undefined}
+      >
         <DialogHeader>
           <DialogTitle>
             {isContribution ? 'Support' : 'Buy'} {entityTitle}

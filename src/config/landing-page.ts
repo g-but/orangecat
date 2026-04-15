@@ -24,6 +24,7 @@ import {
   Coins,
   Cat,
   TrendingUp,
+  Bot,
 } from 'lucide-react';
 
 // ==================== SUPER-APP CATEGORIES ====================
@@ -88,6 +89,26 @@ export const SUPER_APP_CATEGORIES: SuperAppCategory[] = [
       {
         title: 'Circles & Events',
         description: 'Lighter communities and time-bound coordination',
+      },
+    ],
+  },
+  {
+    id: 'ai',
+    title: 'Your Cat',
+    description: 'An AI agent that acts on your behalf',
+    icon: Bot,
+    color: 'from-tiffany-500 to-tiffany-600',
+    bgColor: 'bg-tiffany-50',
+    features: [
+      {
+        title: 'My Cat',
+        description:
+          'Your personal AI economic agent — sets up entities, manages activity, and acts on your behalf.',
+      },
+      {
+        title: 'AI Assistants',
+        description:
+          'Deploy AI agents for your group or project. They can earn, spend, and govern autonomously.',
       },
     ],
   },
