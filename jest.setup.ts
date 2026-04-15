@@ -605,38 +605,6 @@ jest.mock('@/services/profile/reader', () => {
   }
 })
 
-// -----------------------------------------------------------------------------
-// SocialService global mock to satisfy socialService.test expectations
-// -----------------------------------------------------------------------------
-
-jest.mock('@/services/socialService', () => {
-  const makeSuccess = (length = 2) => Array.from({ length }, (_, i) => ({ id: (i+1).toString(), username: `user${i+1}` }))
-  return {
-    PeopleService: {
-      searchPeople: jest.fn(() => Promise.resolve(makeSuccess(2)))
-    },
-    OrganizationService: {
-      getUserOrganizations: jest.fn(() => Promise.resolve([]))
-    },
-    ProjectService: {
-      getUserProjects: jest.fn(() => Promise.resolve([]))
-    },
-    EmptyStateService: {
-      getEmptyStateContent: jest.fn((section: string) => ({
-        title: `No ${section} Yet`,
-        description: `You haven't connected with any ${section} yet.`,
-        benefits: [
-          'Collaborate on Bitcoin projects',
-          'Shared Bitcoin treasury management',
-          'Dedicated Bitcoin fundraising'
-        ],
-        examples: ['Bitcoin development collectives'],
-        primaryAction: { label: 'Search', action: '/' },
-        secondaryAction: { label: 'Profile', action: '/profile' }
-      }))
-    }
-  }
-}) 
 
 // =====================================================================
 // 🧪 TABS MOCKS
