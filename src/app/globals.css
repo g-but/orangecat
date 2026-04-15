@@ -131,6 +131,10 @@ html {
 @layer base {
   html {
     @apply scroll-smooth;
+    /* Base font size — 17px instead of browser default 16px.
+       All Tailwind rem classes scale from this, so text-sm becomes ~15px,
+       text-base 17px, etc. Noticeably more readable on laptop screens. */
+    font-size: 17px;
     /* Prevent zoom on iOS when focusing inputs */
     -webkit-text-size-adjust: 100%;
     /* Prevent horizontal scrolling on mobile */
