@@ -10,6 +10,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { decrypt } from './encryptionService';
 import type { ResolvedWallet } from './types';
 import { logger } from '@/utils/logger';
@@ -29,9 +30,14 @@ export async function resolveSellerWallet(
   entityType: EntityType,
   entityId: string
 ): Promise<ResolvedWallet | null> {
+  // Use admin client for cross-user seller lookups (actor + wallet tables).
+  // The buyer's JWT cannot see the seller's actor record due to RLS.
+  // Cast to untyped client — queries use dynamic column names from entity registry.
+  const admin = getAdminClient() as unknown as SupabaseClient;
+
   // Step 1: Find the entity's owner (seller)
   const meta = getEntityMetadata(entityType);
-  const { data: entity, error: entityError } = await supabase
+  const { data: entity, error: entityError } = await admin
     .from(meta.tableName)
     .select(`id, ${meta.userIdField}`)
     .eq('id', entityId)
@@ -53,7 +59,7 @@ export async function resolveSellerWallet(
   // Step 2: Resolve the owner to an actor or user ID
   // If userIdField is actor_id, look up the actor to determine if it's a user or group
   if (meta.userIdField === 'actor_id') {
-    const { data: actor } = await supabase
+    const { data: actor } = await admin
       .from(DATABASE_TABLES.ACTORS)
       .select('actor_type, user_id, group_id')
       .eq('id', ownerId)
@@ -66,7 +72,7 @@ export async function resolveSellerWallet(
 
     if (actor.actor_type === 'group' && actor.group_id) {
       // Group actor: resolve wallet from group_wallets table
-      return resolveGroupWallet(supabase, actor.group_id);
+      return resolveGroupWallet(admin, actor.group_id);
     }
 
     if (!actor.user_id) {
@@ -75,11 +81,11 @@ export async function resolveSellerWallet(
     }
 
     // User actor: resolve wallet from wallets table
-    return resolveUserWallet(supabase, actor.user_id);
+    return resolveUserWallet(admin, actor.user_id);
   }
 
   // profile_id or user_id maps directly to auth user id
-  return resolveUserWallet(supabase, ownerId);
+  return resolveUserWallet(admin, ownerId);
 }
 
 /**
@@ -95,8 +101,11 @@ export async function getSellerUserId(
   entityType: EntityType,
   entityId: string
 ): Promise<string | null> {
+  // Use admin client: buyer's JWT cannot see the seller's actor record due to RLS.
+  // Cast to untyped client — queries use dynamic column names from entity registry.
+  const admin = getAdminClient() as unknown as SupabaseClient;
   const meta = getEntityMetadata(entityType);
-  const { data: entity } = await supabase
+  const { data: entity } = await admin
     .from(meta.tableName)
     .select(`id, ${meta.userIdField}`)
     .eq('id', entityId)
@@ -110,7 +119,7 @@ export async function getSellerUserId(
   const ownerId = (entity as any)[meta.userIdField] as string;
 
   if (meta.userIdField === 'actor_id') {
-    const { data: actor } = await supabase
+    const { data: actor } = await admin
       .from(DATABASE_TABLES.ACTORS)
       .select('actor_type, user_id, group_id')
       .eq('id', ownerId)
@@ -127,7 +136,7 @@ export async function getSellerUserId(
 
     // Group actor: return the group founder's user_id for notifications/access control
     if (actor.actor_type === 'group' && actor.group_id) {
-      const { data: group } = await supabase
+      const { data: group } = await admin
         .from(DATABASE_TABLES.GROUPS)
         .select('created_by')
         .eq('id', actor.group_id)

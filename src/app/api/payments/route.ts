@@ -59,6 +59,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       'own entity': 'You cannot pay for your own entity',
       'no price': 'This entity has no price set',
       'Amount is required': 'Payment amount is required for contributions',
+      'owner not found': 'This listing is no longer available.',
+      'LNURL-pay endpoint': 'Seller Lightning Address is unreachable. Try again later.',
+      'outside allowed range': 'Payment amount is outside the allowed range for this seller.',
+      'LNURL callback': 'Lightning Address invoice request failed. Try again later.',
+      'not a pay request': 'Seller Lightning Address is not configured correctly.',
     };
     for (const [pattern, safeMessage] of Object.entries(knownErrors)) {
       if (message.includes(pattern)) {

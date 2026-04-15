@@ -13,6 +13,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { resolveSellerWallet, getSellerUserId } from './walletResolutionService';
 import { generateInvoice } from './invoiceGenerationService';
 import { checkNWCPaymentStatus, checkOnchainPaymentStatus } from './paymentStatusService';
@@ -281,8 +282,10 @@ async function resolveAmount(
     return inputAmount;
   }
 
-  // Fixed price: read from entity's price_btc column
-  const { data: entity } = await supabase
+  // Fixed price: read from entity's price_btc column (use admin to bypass RLS)
+  // Cast to untyped client — queries use dynamic column names from entity registry.
+  const admin = getAdminClient() as unknown as SupabaseClient;
+  const { data: entity } = await admin
     .from(meta.tableName)
     .select('price_btc')
     .eq('id', entityId)
@@ -300,8 +303,11 @@ async function getEntityTitle(
   entityType: EntityType,
   entityId: string
 ): Promise<string> {
+  // Use admin to bypass RLS — entity title is needed for invoice description
+  // Cast to untyped client — queries use dynamic column names from entity registry.
+  const admin = getAdminClient() as unknown as SupabaseClient;
   const meta = getEntityMetadata(entityType);
-  const { data } = await supabase
+  const { data } = await admin
     .from(meta.tableName)
     .select('title, name')
     .eq('id', entityId)
