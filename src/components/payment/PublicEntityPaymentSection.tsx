@@ -44,7 +44,9 @@ export function PublicEntityPaymentSection({
   signInRedirect,
 }: PublicEntityPaymentSectionProps) {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { hasWallet, loading: walletLoading } = useSellerPaymentMethods(sellerProfileId);
+  // Use sellerUserId (auth.users ID) for wallet lookup — wallets are keyed by profile_id = auth user ID
+  // sellerProfileId may be an actor ID for actor-owned entities, which won't match wallet.profile_id
+  const { hasWallet, loading: walletLoading } = useSellerPaymentMethods(sellerUserId);
 
   // Auth still hydrating — show skeleton to avoid flash
   if (authLoading) {

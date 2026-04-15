@@ -250,7 +250,7 @@ export interface WalletContribution {
 export interface WalletFormData {
   label: string;
   description?: string | null;
-  address_or_xpub: string;
+  address_or_xpub?: string | null;
   lightning_address?: string | null;
   category: WalletCategory;
   category_icon?: string;
@@ -407,10 +407,17 @@ export function validateWalletFormData(data: WalletFormData): ValidationResult {
     };
   }
 
-  // Validate address/xpub
-  const addressValidation = validateAddressOrXpub(data.address_or_xpub);
-  if (!addressValidation.valid) {
-    return addressValidation;
+  // Validate address/xpub (optional now — skip if not provided)
+  if (!data.address_or_xpub) {
+    if (!data.lightning_address) {
+      return { valid: false, error: 'Either a Bitcoin address/xpub or a Lightning address is required' };
+    }
+    // Lightning-only wallet — skip address validation
+  } else {
+    const addressValidation = validateAddressOrXpub(data.address_or_xpub);
+    if (!addressValidation.valid) {
+      return addressValidation;
+    }
   }
 
   // Validate category
@@ -455,7 +462,7 @@ export function sanitizeWalletInput(data: WalletFormData): WalletFormData {
     ...data,
     label: data.label.trim().slice(0, MAX_LABEL_LENGTH),
     description: data.description?.trim().slice(0, MAX_DESCRIPTION_LENGTH) || undefined,
-    address_or_xpub: data.address_or_xpub.trim(),
+    address_or_xpub: data.address_or_xpub?.trim() ?? null,
     category_icon: (ALLOWED_CATEGORY_ICONS as readonly string[]).includes(data.category_icon || '')
       ? data.category_icon
       : WALLET_CATEGORIES[data.category].icon,

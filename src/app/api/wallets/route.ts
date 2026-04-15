@@ -150,15 +150,19 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     // Sanitize input
     const sanitized = sanitizeWalletInput(body);
 
-    // Detect wallet type
-    const walletType = detectWalletType(sanitized.address_or_xpub);
+    // Detect wallet type — default to 'lightning' when no on-chain address provided
+    const walletType = sanitized.address_or_xpub
+      ? detectWalletType(sanitized.address_or_xpub)
+      : 'lightning';
 
-    // Double-check validation for security
-    const addressValidation = validateAddressOrXpub(sanitized.address_or_xpub);
-    if (!addressValidation.valid) {
-      return apiError(addressValidation.error || 'Invalid address/xpub', 'INVALID_ADDRESS', 400, {
-        field: 'address_or_xpub',
-      });
+    // Validate address only when one is provided
+    if (sanitized.address_or_xpub) {
+      const addressValidation = validateAddressOrXpub(sanitized.address_or_xpub);
+      if (!addressValidation.valid) {
+        return apiError(addressValidation.error || 'Invalid address/xpub', 'INVALID_ADDRESS', 400, {
+          field: 'address_or_xpub',
+        });
+      }
     }
 
     // Check for duplicate address/xpub for this entity in the wallets table if it exists.
@@ -170,13 +174,19 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     } | null = null;
 
     try {
-      const { data: existingWallet } = await supabase
-        .from(getTableName('wallet'))
-        .select('id')
-        .eq(body.profile_id ? 'profile_id' : 'project_id', entityId)
-        .eq('address_or_xpub', sanitized.address_or_xpub)
-        .eq('is_active', true)
-        .single();
+      // Only check for duplicate address when one is provided
+      const addressToCheck = sanitized.address_or_xpub || null;
+      let existingWallet = null;
+      if (addressToCheck) {
+        const { data } = await supabase
+          .from(getTableName('wallet'))
+          .select('id')
+          .eq(body.profile_id ? 'profile_id' : 'project_id', entityId)
+          .eq('address_or_xpub', addressToCheck)
+          .eq('is_active', true)
+          .single();
+        existingWallet = data;
+      }
 
       const forceDuplicate = body.force_duplicate === true;
 
@@ -186,7 +196,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
           .from(getTableName('wallet'))
           .select('id, label, category')
           .eq(body.profile_id ? 'profile_id' : 'project_id', entityId)
-          .eq('address_or_xpub', sanitized.address_or_xpub)
+          .eq('address_or_xpub', addressToCheck)
           .eq('is_active', true);
 
         duplicateInfo = {
@@ -238,7 +248,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
           project_id: body.project_id || null,
           label: sanitized.label,
           description: sanitized.description || null,
-          address_or_xpub: sanitized.address_or_xpub,
+          address_or_xpub: sanitized.address_or_xpub || null,
           wallet_type: walletType,
           category: sanitized.category,
           category_icon: sanitized.category_icon || '💰',

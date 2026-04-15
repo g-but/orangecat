@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
-const QUICK_AMOUNTS = [1_000, 5_000, 10_000, 50_000, 100_000];
+// Quick-select amounts in BTC (approx $1, $5, $10, $50, $100 at $100k/BTC)
+const QUICK_AMOUNTS = [0.00001, 0.00005, 0.0001, 0.0005, 0.001];
 
 interface ContributionAmountInputProps {
   value: number;
@@ -31,8 +32,8 @@ export function ContributionAmountInput({
   const { formatAmount } = useDisplayCurrency();
 
   const handleCustomBlur = () => {
-    const val = parseInt(customInput, 10);
-    if (!isNaN(val)) {
+    const val = parseFloat(customInput);
+    if (!isNaN(val) && val > 0) {
       const clamped = Math.max(minBtc, Math.min(maxBtc, val));
       setCustomInput(String(clamped));
       onChange(clamped);
@@ -81,7 +82,7 @@ export function ContributionAmountInput({
           value={customInput}
           onChange={e => {
             setCustomInput(e.target.value);
-            const val = parseInt(e.target.value, 10);
+            const val = parseFloat(e.target.value);
             if (!isNaN(val) && val >= minBtc && val <= maxBtc) {
               onChange(val);
             }

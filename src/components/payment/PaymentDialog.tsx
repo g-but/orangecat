@@ -53,14 +53,14 @@ export function PaymentDialog({
   const { state, initiate, confirmPaid, reset, isLoading } = usePaymentFlow();
 
   // Contribution-specific state
-  const [contributionAmount, setContributionAmount] = useState(5_000);
+  const [contributionAmount, setContributionAmount] = useState(0.0001); // ~$10 at $100k/BTC
   const [message, setMessage] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
 
   const handleClose = () => {
     reset();
     setMessage('');
-    setContributionAmount(5_000);
+    setContributionAmount(0.0001);
     onOpenChange(false);
   };
 

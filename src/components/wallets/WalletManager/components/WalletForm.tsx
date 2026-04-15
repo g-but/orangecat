@@ -46,8 +46,9 @@ export function WalletForm({
       return;
     }
 
-    if (!formData.address_or_xpub?.trim()) {
-      setError('Wallet address is required');
+    // Require either an on-chain address/xpub or a Lightning address
+    if (!formData.address_or_xpub?.trim() && !formData.lightning_address?.trim()) {
+      setError('Either a Bitcoin address/xpub or a Lightning address is required');
       return;
     }
 
@@ -61,10 +62,12 @@ export function WalletForm({
       setFormData(prev => ({ ...prev, behavior_type: 'general' }));
     }
 
-    const validation = validateAddressOrXpub(formData.address_or_xpub);
-    if (!validation.valid) {
-      setError(validation.error || 'Invalid address or xpub');
-      return;
+    if (formData.address_or_xpub?.trim()) {
+      const validation = validateAddressOrXpub(formData.address_or_xpub);
+      if (!validation.valid) {
+        setError(validation.error || 'Invalid address or xpub');
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -144,13 +147,13 @@ export function WalletForm({
       {/* Address or xpub */}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2">
-          Bitcoin Address or Extended Public Key *
+          Bitcoin Address or Extended Public Key
           <span className="ml-2 text-xs font-normal text-gray-500">
-            (xpub/ypub/zpub recommended)
+            (optional if Lightning address provided)
           </span>
         </label>
         <Input
-          value={formData.address_or_xpub}
+          value={formData.address_or_xpub ?? ''}
           onChange={e => setFormData({ ...formData, address_or_xpub: e.target.value })}
           onFocus={() => onFieldFocus?.('addressOrXpub')}
           placeholder="zpub... (recommended) or bc1q..."

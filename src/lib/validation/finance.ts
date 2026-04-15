@@ -218,7 +218,7 @@ export const walletCreateSchema = z
       .max(500, 'Description must be 500 characters or less')
       .optional()
       .nullable(),
-    address_or_xpub: z.string().min(1, 'Address or xpub is required').max(200),
+    address_or_xpub: z.string().max(200).optional().nullable(),
     lightning_address: z.string().max(200).optional().nullable(),
 
     // Category
@@ -247,7 +247,16 @@ export const walletCreateSchema = z
   .refine(data => (data.profile_id && !data.project_id) || (!data.profile_id && data.project_id), {
     message: 'Exactly one of profile_id or project_id is required',
     path: ['profile_id'],
-  });
+  })
+  .refine(
+    data =>
+      (data.address_or_xpub && data.address_or_xpub.length > 0) ||
+      (data.lightning_address && data.lightning_address.length > 0),
+    {
+      message: 'Either a Bitcoin address/xpub or a Lightning address is required',
+      path: ['address_or_xpub'],
+    }
+  );
 
 /** Schema for PATCH /api/wallets/[id] — update an existing wallet */
 export const walletUpdateSchema = z
