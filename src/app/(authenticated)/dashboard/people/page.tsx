@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import Loading from '@/components/Loading';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
@@ -71,6 +72,7 @@ export default function PeoplePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-6xl mx-auto px-4 py-8">
+        <Breadcrumb items={[{ label: 'People' }]} className="mb-4" />
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">

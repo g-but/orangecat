@@ -10,6 +10,7 @@
 'use client';
 
 import { Wallet as WalletIcon, Info } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 
 interface WalletsPageHeaderProps {
   isDesktop: boolean;
@@ -18,6 +19,7 @@ interface WalletsPageHeaderProps {
 export function WalletsPageHeader({ isDesktop }: WalletsPageHeaderProps) {
   return (
     <div className="mb-6 lg:mb-8">
+      <Breadcrumb items={[{ label: 'Wallets' }]} className="mb-4" />
       <div className="flex items-center gap-3 mb-2">
         <WalletIcon className="w-8 h-8 text-orange-600" />
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Manage Wallets</h1>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
@@ -98,6 +99,7 @@ export default function ResearchDashboard() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: 'Research' }]} />
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

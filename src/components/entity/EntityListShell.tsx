@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 interface EntityListShellProps {
   title: string
@@ -20,6 +21,7 @@ export default function EntityListShell({
 }: EntityListShellProps) {
   return (
     <div className={cn('min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-20 md:pb-8', className)}>
+      <Breadcrumb items={[{ label: title }]} className="mb-4" />
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{title}</h1>

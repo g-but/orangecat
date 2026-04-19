@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Loader2 } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { toast } from 'sonner';
 import EmptyState from '@/components/ui/EmptyState';
 import { logger } from '@/utils/logger';
@@ -113,6 +114,7 @@ export default function BookingsDashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <Breadcrumb items={[{ label: 'Bookings' }]} className="mb-4" />
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Manage Bookings</h1>
         <p className="text-gray-600 mt-1">Review and manage booking requests for your services</p>
