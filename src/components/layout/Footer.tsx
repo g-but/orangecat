@@ -179,7 +179,7 @@ const Footer = React.memo(function Footer() {
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gradient-to-r from-orange-200/50 to-tiffany-200/50">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <div className="text-sm text-gray-500 text-center sm:text-left">
-              <p>&copy; 2025 OrangeCat. All rights reserved.</p>
+              <p>&copy; 2026 OrangeCat. All rights reserved.</p>
             </div>
 
             {/* Additional Links */}

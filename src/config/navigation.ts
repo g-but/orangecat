@@ -287,7 +287,6 @@ export const footerNavigation = {
   ],
   company: [
     { name: 'About OrangeCat', href: '/about' },
-    { name: 'About OrangeCat', href: '/about' },
     { name: 'Careers', href: '/company/careers' },
     { name: 'Blog', href: '/blog' },
     { name: 'Contact', href: '/contact' },
