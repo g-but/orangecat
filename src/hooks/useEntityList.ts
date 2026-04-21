@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useAuth } from './useAuth';
 
 /**
  * useEntityList - Reusable hook for fetching and managing entity lists
@@ -44,7 +43,6 @@ export interface UseEntityListResult<T> {
 export function useEntityList<T extends { id: string }>(
   options: UseEntityListOptions<T>
 ): UseEntityListResult<T> {
-  const { user } = useAuth();
   const { apiEndpoint, userId, limit = 12, enabled = true, queryParams = {}, transformResponse } = options;
 
   const [items, setItems] = useState<T[]>([]);
