@@ -176,10 +176,13 @@ export function ProjectsSearchAndFilter({
                 return option ? (
                   <Badge key={filter.key} variant="secondary" className="flex items-center gap-1">
                     {filter.label}: {option.label}
-                    <X
-                      className="w-3 h-3 cursor-pointer"
+                    <button
                       onClick={() => filter.onChange('all')}
-                    />
+                      aria-label={`Remove ${filter.label} filter`}
+                      className="rounded focus:outline-none focus:ring-1 focus:ring-current"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </Badge>
                 ) : null
               }
@@ -189,13 +192,16 @@ export function ProjectsSearchAndFilter({
                   return option ? (
                     <Badge key={`${filter.key}-${v}`} variant="secondary" className="flex items-center gap-1">
                       {filter.label}: {option.label}
-                      <X
-                        className="w-3 h-3 cursor-pointer"
+                      <button
                         onClick={() => {
                           const newValues = (filter.value as string[]).filter(val => val !== v)
                           filter.onChange(newValues)
                         }}
-                      />
+                        aria-label={`Remove ${option.label} from ${filter.label} filter`}
+                        className="rounded focus:outline-none focus:ring-1 focus:ring-current"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
                     </Badge>
                   ) : null
                 })
