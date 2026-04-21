@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      return apiBadRequest(error.message);
+      return apiBadRequest('Invalid or expired session tokens.');
     }
 
     if (!data.session) {

@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         },
         'Auth'
       );
-      return apiBadRequest(error.message);
+      return apiBadRequest('Failed to establish session. Please try signing in again.');
     }
 
     logger.debug(
