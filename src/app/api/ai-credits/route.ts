@@ -154,8 +154,8 @@ export const POST = compose(
 
     const { amount_btc, payment_method } = result.data;
 
-    // Generate a deposit request ID
-    const depositId = `dep_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Generate a cryptographically random deposit request ID
+    const depositId = `dep_${crypto.randomUUID()}`;
 
     // For MVP, we'll create a pending deposit record
     // In production, this would integrate with a Lightning provider (BTCPay, Strike, etc.)
