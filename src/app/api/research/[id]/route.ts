@@ -16,8 +16,13 @@ import { researchUpdateSchema } from '@/config/entity-configs/research-config';
 // Research tables are not in the generated DB schema — as any required
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // GET /api/research/[id] - Get specific research entity
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+  if (!UUID_REGEX.test(params.id)) {
+    return apiBadRequest('Invalid research entity ID');
+  }
   try {
     const supabase = await createServerClient();
     const {
@@ -74,6 +79,9 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
 // PUT /api/research/[id] - Update research entity
 export async function PUT(_request: NextRequest, { params }: { params: { id: string } }) {
+  if (!UUID_REGEX.test(params.id)) {
+    return apiBadRequest('Invalid research entity ID');
+  }
   try {
     const supabase = await createServerClient();
     const {
@@ -137,6 +145,9 @@ export async function PUT(_request: NextRequest, { params }: { params: { id: str
 
 // DELETE /api/research/[id] - Delete research entity
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+  if (!UUID_REGEX.test(params.id)) {
+    return apiBadRequest('Invalid research entity ID');
+  }
   try {
     const supabase = await createServerClient();
     const {
