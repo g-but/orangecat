@@ -89,11 +89,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return apiUnauthorized('Unauthorized');
     }
 
-    // Get optional rejection reason from body
+    // Get optional rejection reason from body (max 500 chars)
     let reason: string | undefined;
     try {
       const body = await request.json();
-      reason = body.reason;
+      if (typeof body.reason === 'string') {
+        reason = body.reason.slice(0, 500) || undefined;
+      }
     } catch {
       // Body is optional
     }
