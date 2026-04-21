@@ -35,6 +35,7 @@ export default function CreateLoanPage() {
   const { user, hydrated } = useAuth();
   const [loanData, setLoanData] = useState<Partial<LoanFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const { initialData } = useCreatePrefill<LoanFormData>({
     entityType: 'loan',
@@ -51,10 +52,15 @@ export default function CreateLoanPage() {
             const result = await response.json();
             if (result.success && result.data) {
               setLoanData(result.data);
+            } else {
+              setEditError('Failed to load loan data');
             }
+          } else {
+            setEditError(response.status === 404 ? 'Loan not found' : 'Failed to load loan data');
           }
         } catch (error) {
           logger.error('Failed to fetch loan:', error);
+          setEditError('Failed to load loan data');
         } finally {
           setLoading(false);
         }
@@ -67,6 +73,21 @@ export default function CreateLoanPage() {
 
   if (loading) {
     return <Loading fullScreen message="Loading loan..." />;
+  }
+
+  if (editId && editError) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center">
+        <h3 className="text-lg font-semibold mb-2">{editError}</h3>
+        <p className="text-gray-500 mb-4">Unable to load loan for editing.</p>
+        <button
+          onClick={() => router.push(ROUTES.DASHBOARD.LOANS)}
+          className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+        >
+          Back to loans
+        </button>
+      </div>
+    );
   }
 
   // Edit mode: use EntityForm directly (skip template selection)

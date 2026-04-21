@@ -26,6 +26,7 @@ export default function CreateInvestmentPage() {
   const { user, hydrated } = useAuth();
   const [investmentData, setInvestmentData] = useState<Partial<InvestmentFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const { initialData } = useCreatePrefill<InvestmentFormData>({
     entityType: 'investment',
@@ -42,10 +43,17 @@ export default function CreateInvestmentPage() {
             const result = await response.json();
             if (result.success && result.data) {
               setInvestmentData(result.data);
+            } else {
+              setEditError('Failed to load investment data');
             }
+          } else {
+            setEditError(
+              response.status === 404 ? 'Investment not found' : 'Failed to load investment data'
+            );
           }
         } catch (error) {
           logger.error('Failed to fetch investment:', error);
+          setEditError('Failed to load investment data');
         } finally {
           setLoading(false);
         }
@@ -58,6 +66,21 @@ export default function CreateInvestmentPage() {
 
   if (loading) {
     return <Loading fullScreen message="Loading investment..." />;
+  }
+
+  if (editId && editError) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center">
+        <h3 className="text-lg font-semibold mb-2">{editError}</h3>
+        <p className="text-gray-500 mb-4">Unable to load investment for editing.</p>
+        <button
+          onClick={() => router.push(ROUTES.DASHBOARD.INVESTMENTS)}
+          className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+        >
+          Back to investments
+        </button>
+      </div>
+    );
   }
 
   // Edit mode
