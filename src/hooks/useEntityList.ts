@@ -120,7 +120,8 @@ export function useEntityList<T extends { id: string }>(
   const memoizedItems = useMemo(() => items, [items]);
 
   const refresh = useCallback(async () => {
-    await loadItems();
+    const controller = new AbortController();
+    await loadItems(controller.signal);
   }, [loadItems]);
 
   return {
