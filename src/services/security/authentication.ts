@@ -136,12 +136,12 @@ export class AuthenticationSecurity {
    */
   static generateSecureToken(length: number = 32): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const randomBytes = new Uint32Array(length);
+    crypto.getRandomValues(randomBytes);
     let result = '';
-
     for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+      result += chars.charAt(randomBytes[i] % chars.length);
     }
-
     return result;
   }
 }

@@ -58,12 +58,13 @@ function generateRecoveryCodes(count: number = 10): string[] {
   for (let i = 0; i < count; i++) {
     let code = '';
     // Generate 8 character codes in format XXXX-XXXX
+    const randomBytes = new Uint32Array(8);
+    crypto.getRandomValues(randomBytes);
     for (let j = 0; j < 8; j++) {
       if (j === 4) {
         code += '-';
       }
-      const randomIndex = Math.floor(Math.random() * chars.length);
-      code += chars[randomIndex];
+      code += chars[randomBytes[j] % chars.length];
     }
     codes.push(code);
   }
