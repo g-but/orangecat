@@ -618,7 +618,7 @@ export async function POST(request: NextRequest) {
         429
       );
     }
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    return apiInternalError(message);
+    logger.error('Cat chat unhandled error', error, 'CatChatAPI');
+    return apiInternalError('An unexpected error occurred. Please try again.');
   }
 }

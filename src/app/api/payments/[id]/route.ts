@@ -7,6 +7,8 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   apiSuccess,
   apiBadRequest,
+  apiForbidden,
+  apiNotFound,
   apiInternalError,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
@@ -32,8 +34,11 @@ export const GET = withAuth(
       const message = error instanceof Error ? error.message : 'Status check failed';
       logger.error('Payment status check failed', { error });
 
-      if (message.includes('not found') || message.includes('Access denied')) {
-        return apiBadRequest(message);
+      if (message.includes('not found')) {
+        return apiNotFound('Payment not found');
+      }
+      if (message.includes('Access denied')) {
+        return apiForbidden('Access denied');
       }
 
       return apiInternalError('Failed to check payment status');
