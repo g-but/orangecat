@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from './useAuth';
 
 /**
@@ -56,7 +56,14 @@ export function useEntityList<T extends { id: string }>(
   const offset = useMemo(() => (page - 1) * limit, [page, limit]);
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / Math.max(1, limit))), [total, limit]);
 
-  const loadItems = async () => {
+  // Keep a stable ref to the latest queryParams/transformResponse to avoid
+  // re-triggering the effect when callers pass new object literals each render.
+  const queryParamsRef = useRef(queryParams);
+  const transformResponseRef = useRef(transformResponse);
+  queryParamsRef.current = queryParams;
+  transformResponseRef.current = transformResponse;
+
+  const loadItems = useCallback(async (signal?: AbortSignal) => {
     if (!enabled) {
       setLoading(false);
       return;
@@ -72,12 +79,13 @@ export function useEntityList<T extends { id: string }>(
         limit: limit.toString(),
         offset: offset.toString(),
         ...Object.fromEntries(
-          Object.entries(queryParams).map(([key, value]) => [key, String(value)])
+          Object.entries(queryParamsRef.current).map(([key, value]) => [key, String(value)])
         ),
       });
 
       const response = await fetch(`${apiEndpoint}?${params.toString()}`, {
         cache: 'no-store',
+        signal,
       });
       if (!response.ok) {
         throw new Error(`Failed to load items: ${response.statusText}`);
@@ -86,8 +94,8 @@ export function useEntityList<T extends { id: string }>(
       const data = await response.json();
 
       // Use custom transformer if provided, otherwise use default structure
-      if (transformResponse) {
-        const transformed = transformResponse(data);
+      if (transformResponseRef.current) {
+        const transformed = transformResponseRef.current(data);
         setItems(transformed.items);
         setTotal(transformed.total);
       } else {
@@ -95,24 +103,27 @@ export function useEntityList<T extends { id: string }>(
         setTotal(data.metadata?.total || 0);
       }
     } catch (err) {
+      // Ignore abort errors — they're intentional (component unmounted or deps changed)
+      if (err instanceof Error && err.name === 'AbortError') { return; }
       setError(err instanceof Error ? err.message : 'Failed to load items');
       setItems([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [enabled, userId, limit, offset, apiEndpoint]);
 
   useEffect(() => {
-    loadItems();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, page, limit, enabled, apiEndpoint, offset]);
+    const controller = new AbortController();
+    loadItems(controller.signal);
+    return () => controller.abort();
+  }, [loadItems]);
 
   // Memoize items to prevent unnecessary re-renders
   const memoizedItems = useMemo(() => items, [items]);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     await loadItems();
-  };
+  }, [loadItems]);
 
   return {
     items: memoizedItems,
