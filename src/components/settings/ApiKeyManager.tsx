@@ -50,6 +50,8 @@ export function ApiKeyManager() {
   const [hasByok, setHasByok] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [deletingKeyId, setDeletingKeyId] = useState<string | null>(null);
+  const [settingPrimaryId, setSettingPrimaryId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newKeyValue, setNewKeyValue] = useState('');
   const [newKeyName, setNewKeyName] = useState('Default');
@@ -149,6 +151,7 @@ export function ApiKeyManager() {
       return;
     }
 
+    setDeletingKeyId(keyId);
     try {
       const response = await fetch(`/api/user/api-keys/${keyId}`, {
         method: 'DELETE',
@@ -162,10 +165,13 @@ export function ApiKeyManager() {
       }
     } catch {
       toast.error('Failed to delete API key');
+    } finally {
+      setDeletingKeyId(null);
     }
   };
 
   const setPrimary = async (keyId: string) => {
+    setSettingPrimaryId(keyId);
     try {
       const response = await fetch(`/api/user/api-keys/${keyId}`, {
         method: 'PATCH',
@@ -181,6 +187,8 @@ export function ApiKeyManager() {
       }
     } catch {
       toast.error('Failed to update primary key');
+    } finally {
+      setSettingPrimaryId(null);
     }
   };
 
@@ -299,18 +307,28 @@ export function ApiKeyManager() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setPrimary(key.id)}
+                      disabled={settingPrimaryId === key.id}
                       title="Set as primary"
                     >
-                      <Star className="h-4 w-4" />
+                      {settingPrimaryId === key.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Star className="h-4 w-4" />
+                      )}
                     </Button>
                   )}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => deleteKey(key.id)}
+                    disabled={deletingKeyId === key.id}
                     className="text-red-500 hover:text-red-700 hover:bg-red-50"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {deletingKeyId === key.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
