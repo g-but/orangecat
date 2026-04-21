@@ -162,7 +162,7 @@ export const eventSchema = z
         const date = typeof val === 'string' ? new Date(val) : val;
         return !isNaN(date.getTime());
       }, 'End date must be valid'),
-    timezone: z.string().default('UTC'),
+    timezone: z.string().max(50).default('UTC'),
     is_all_day: z.boolean().default(false),
     is_recurring: z.boolean().default(false),
     recurrence_pattern: recurrencePatternSchema.optional().nullable(),

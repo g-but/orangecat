@@ -10,7 +10,7 @@ export const groupEventSchema = z.object({
   location_details: z.string().max(500).optional(),
   starts_at: z.string().min(1, 'Start date and time are required'),
   ends_at: z.string().optional(),
-  timezone: z.string().default('UTC'),
+  timezone: z.string().max(50).default('UTC'),
   max_attendees: z.number().int().positive().optional(),
   is_public: z.boolean().default(true),
   requires_rsvp: z.boolean().default(false),

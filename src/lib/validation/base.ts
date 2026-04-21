@@ -210,9 +210,9 @@ export const profileSchema = z.object({
     .object({
       links: z.array(
         z.object({
-          platform: z.string(),
-          label: z.string().optional().nullable(),
-          value: z.string().min(1, 'Value is required'),
+          platform: z.string().max(50),
+          label: z.string().max(100).optional().nullable(),
+          value: z.string().min(1, 'Value is required').max(500),
         })
       ),
     })
