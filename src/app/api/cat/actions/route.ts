@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const actionId = searchParams.get('actionId') || undefined;
     const status = searchParams.get('status') || undefined;
 
@@ -113,7 +113,8 @@ export async function POST(request: NextRequest) {
     if (result.success) {
       return apiSuccess(result);
     } else {
-      return result.status === 'denied' ? apiForbidden(result.error) : apiBadRequest(result.error);
+      const safeError = result.status === 'denied' ? 'Action not permitted' : 'Action could not be executed';
+      return result.status === 'denied' ? apiForbidden(safeError) : apiBadRequest(safeError);
     }
   } catch (error) {
     logger.error('Execute cat action error', error, 'CatActionsAPI');

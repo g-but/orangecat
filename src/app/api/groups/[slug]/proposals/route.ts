@@ -26,8 +26,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const status = (searchParams.get('status') || 'all') as any;
     const proposalType = searchParams.get('proposal_type') || undefined;
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+    const offset = Math.max(0, parseInt(searchParams.get('offset') || '0', 10));
 
     const groupResult = await getGroup(slug, true);
     if (!groupResult.success || !groupResult.group) {

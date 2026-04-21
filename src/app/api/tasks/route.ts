@@ -48,8 +48,8 @@ export async function GET(request: NextRequest) {
       search: searchParams.get('search') || undefined,
     };
 
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50', 10)));
+    const offset = Math.max(0, parseInt(searchParams.get('offset') || '0', 10));
 
     // Build query
     // Note: Profile joins removed - created_by/completed_by reference auth.users, not profiles directly

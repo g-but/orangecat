@@ -47,10 +47,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
     };
 
     // Parse pagination
+    const rawLimit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
     const pagination = {
-      page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined,
-      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
-      offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined,
+      page: searchParams.get('page') ? Math.max(1, parseInt(searchParams.get('page')!)) : undefined,
+      limit: rawLimit !== undefined ? Math.min(100, Math.max(1, rawLimit)) : undefined,
+      offset: searchParams.get('offset') ? Math.max(0, parseInt(searchParams.get('offset')!)) : undefined,
     };
 
     // Validate filters and pagination

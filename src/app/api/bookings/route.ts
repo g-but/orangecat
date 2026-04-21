@@ -20,8 +20,8 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     const url = new URL(request.url);
     const role = url.searchParams.get('role') as 'customer' | 'provider' | 'both' | null;
     const statusParam = url.searchParams.get('status');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-    const offset = parseInt(url.searchParams.get('offset') || '0');
+    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20')));
+    const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0'));
 
     const status = statusParam ? (statusParam.split(',') as BookingStatus[]) : undefined;
 
