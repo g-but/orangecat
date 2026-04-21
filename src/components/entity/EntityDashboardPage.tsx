@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, ReactNode } from 'react';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import Button from '@/components/ui/Button';
+import { AlertCircle } from 'lucide-react';
 import Loading from '@/components/Loading';
 import EntityListShell from '@/components/entity/EntityListShell';
 import EntityList from '@/components/entity/EntityList';
@@ -184,7 +185,16 @@ export default function EntityDashboardPage<T extends BaseEntity>({
       >
         {headerContent}
         {error ? (
-          <div className="rounded-xl border bg-white p-6 text-red-600">{error}</div>
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6 flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-red-800">Failed to load</p>
+              <p className="text-sm text-red-600 mt-1">{error}</p>
+              <Button variant="outline" size="sm" onClick={() => refresh()} className="mt-3">
+                Try again
+              </Button>
+            </div>
+          </div>
         ) : (
           <>
             {showSelection && memoizedItems.length > 0 && (

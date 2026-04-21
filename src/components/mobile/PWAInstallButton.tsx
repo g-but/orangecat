@@ -190,6 +190,7 @@ export function PWAInstallButton({
           </div>
           <button
             onClick={handleBannerDismiss}
+            aria-label="Dismiss install prompt"
             className="flex-shrink-0 text-white/80 hover:text-white p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <X className="w-4 h-4" />
