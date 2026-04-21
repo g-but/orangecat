@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     // Parse query params
     const { searchParams } = new URL(request.url);
-    const days = parseInt(searchParams.get('days') || '30', 10);
+    const days = Math.min(365, Math.max(1, parseInt(searchParams.get('days') || '30', 10)));
     const categoryFilter = searchParams.get('category') || undefined;
 
     // Calculate date range
