@@ -13,12 +13,14 @@ import {
   apiUnauthorized,
   apiValidationError,
   apiInternalError,
+  apiRateLimited,
   apiSuccess,
 } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskSchema, type TaskFilter } from '@/lib/schemas/tasks';
 import { TASK_DEFAULTS } from '@/config/tasks';
 import { logger } from '@/utils/logger';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 /**
  * GET /api/tasks
@@ -128,6 +130,12 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return apiUnauthorized('Authentication required');
+    }
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many task creation requests. Please slow down.', retryAfter);
     }
 
     // Parse and validate body
