@@ -19,6 +19,13 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_FOLDERS = ['avatars', 'banners', 'media'] as const;
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
@@ -27,8 +34,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const rawFolder = (formData.get('folder') as string) || 'avatars';
-    const ALLOWED_FOLDERS = ['avatars', 'banners', 'media'];
-    const folder = ALLOWED_FOLDERS.includes(rawFolder) ? rawFolder : 'avatars';
+    const folder = ALLOWED_FOLDERS.includes(rawFolder as (typeof ALLOWED_FOLDERS)[number])
+      ? rawFolder
+      : 'avatars';
 
     if (!file) {
       return apiValidationError('No file provided');
@@ -44,8 +52,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       return apiValidationError('Only image files (JPEG, PNG, WebP, GIF) are allowed');
     }
 
-    // Generate unique filename
-    const fileExt = file.name.split('.').pop();
+    // Generate unique filename using MIME-derived extension (not client-supplied filename)
+    // to prevent extension spoofing
+    const fileExt = MIME_TO_EXT[file.type] || 'bin';
     const fileName = `${user.id}-${Date.now()}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
 
@@ -90,8 +99,9 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest) => {
       return apiValidationError('File path is required');
     }
 
-    // Verify the file belongs to the user
-    if (!filePath.startsWith(`avatars/${user.id}`) && !filePath.startsWith(`banners/${user.id}`)) {
+    // Verify the file belongs to the user (check all allowed folders)
+    const isOwned = ALLOWED_FOLDERS.some(f => filePath.startsWith(`${f}/${user.id}`));
+    if (!isOwned) {
       return apiValidationError('You can only delete your own files');
     }
 
