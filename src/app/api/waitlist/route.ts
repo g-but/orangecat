@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       logger.warn('Waitlist insert failed', { error: error.message });
-      return apiValidationError('Failed to join waitlist', { details: error.message });
+      return apiValidationError('Failed to join waitlist. This email may already be registered.');
     }
 
     return apiSuccess({ ok: true });

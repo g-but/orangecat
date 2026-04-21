@@ -50,6 +50,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Auth sync error:', error);
-    return apiInternalError(error instanceof Error ? error.message : 'Unknown error');
+    return apiInternalError('Authentication sync failed. Please try again.');
   }
 }

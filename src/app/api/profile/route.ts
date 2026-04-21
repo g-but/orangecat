@@ -168,7 +168,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest) => {
         error: error.message,
         code: error.code,
       });
-      return apiValidationError('Failed to update profile', { details: error.message });
+      return apiValidationError('Failed to update profile');
     }
 
     logger.info('Profile updated successfully', { userId: user.id });
