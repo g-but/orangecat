@@ -7,11 +7,8 @@ interface CampaignPerformance {
   totalRaised: number;
   goalAmount: number;
   supporters: number;
-  conversionRate: number;
   avgDonation: number;
   daysActive: number;
-  views: number;
-  shares: number;
 }
 
 interface CampaignPerformanceTableProps {
@@ -38,8 +35,6 @@ export default function CampaignPerformanceTable({ campaigns }: CampaignPerforma
                 <th className="text-left py-3 px-4 font-medium text-gray-900">Progress</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-900">Supporters</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-900">Avg Contribution</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Views</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Conv. Rate</th>
               </tr>
             </thead>
             <tbody>
@@ -77,12 +72,6 @@ export default function CampaignPerformanceTable({ campaigns }: CampaignPerforma
                     <td className="py-3 px-4 font-medium">{project.supporters}</td>
                     <td className="py-3 px-4 text-gray-600">
                       {formatCurrency(project.avgDonation, 'BTC')}
-                    </td>
-                    <td className="py-3 px-4 text-gray-600">{project.views}</td>
-                    <td className="py-3 px-4">
-                      <span className="text-sm font-medium text-green-600">
-                        {project.conversionRate.toFixed(1)}%
-                      </span>
                     </td>
                   </tr>
                 );

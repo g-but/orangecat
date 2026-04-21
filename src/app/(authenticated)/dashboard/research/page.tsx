@@ -53,7 +53,7 @@ export default function ResearchDashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    if (!authLoading && hydrated) fetchResearchEntities();
+    if (!authLoading && hydrated) { fetchResearchEntities(); }
   }, [authLoading, hydrated]);
 
   const fetchResearchEntities = async () => {
@@ -79,7 +79,7 @@ export default function ResearchDashboard() {
     return matchesSearch && matchesField && matchesStatus;
   });
 
-  if (authLoading || !hydrated) return <Loading message="Loading research..." />;
+  if (authLoading || !hydrated) { return <Loading message="Loading research..." />; }
 
   return (
     <EntityListShell

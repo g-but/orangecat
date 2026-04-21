@@ -5,7 +5,7 @@ import { useRequireAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projectStore';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import Loading from '@/components/Loading';
-import { TrendingUp, Users, DollarSign, Target, Zap, Clock } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Target, Zap } from 'lucide-react';
 import AnalyticsMetricsGrid from './components/AnalyticsMetricsGrid';
 import type { AnalyticsMetric } from './components/AnalyticsMetricsGrid';
 import CampaignPerformanceTable from './components/CampaignPerformanceTable';
@@ -41,12 +41,11 @@ export default function AnalyticsPage() {
         : 0;
 
     return [
-      { label: 'Total Raised', value: totalRaised, change: 12.5, changeType: 'increase', icon: DollarSign, color: 'text-green-600' },
-      { label: 'Active Projects', value: activeProjects.length, change: activeProjects.length > 0 ? 2 : 0, changeType: activeProjects.length > 0 ? 'increase' : 'neutral', icon: Target, color: 'text-blue-600' },
-      { label: 'Total Supporters', value: totalSupporters, change: 8.3, changeType: 'increase', icon: Users, color: 'text-purple-600' },
-      { label: 'Avg Contribution', value: avgDonation, change: -2.1, changeType: 'decrease', icon: TrendingUp, color: 'text-orange-600' },
-      { label: 'Success Rate', value: `${successRate.toFixed(1)}%`, change: 5.2, changeType: 'increase', icon: Zap, color: 'text-teal-600' },
-      { label: 'Avg Campaign Duration', value: '23 days', change: -1.5, changeType: 'decrease', icon: Clock, color: 'text-indigo-600' },
+      { label: 'Total Raised', value: totalRaised, icon: DollarSign, color: 'text-green-600' },
+      { label: 'Active Projects', value: activeProjects.length, icon: Target, color: 'text-blue-600' },
+      { label: 'Total Supporters', value: totalSupporters, icon: Users, color: 'text-purple-600' },
+      { label: 'Avg Contribution', value: avgDonation, icon: TrendingUp, color: 'text-orange-600' },
+      { label: 'Success Rate', value: `${successRate.toFixed(1)}%`, icon: Zap, color: 'text-teal-600' },
     ];
   };
 
@@ -57,11 +56,8 @@ export default function AnalyticsPage() {
       totalRaised: project.total_funding || 0,
       goalAmount: project.goal_amount || 0,
       supporters: project.contributor_count || 0,
-      conversionRate: Math.random() * 5 + 1,
       avgDonation: project.contributor_count > 0 ? (project.total_funding || 0) / project.contributor_count : 0,
       daysActive: Math.floor((Date.now() - new Date(project.created_at).getTime()) / (1000 * 60 * 60 * 24)),
-      views: Math.floor(Math.random() * 1000) + 100,
-      shares: Math.floor(Math.random() * 50) + 5,
     }));
   };
 
