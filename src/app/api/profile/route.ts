@@ -3,11 +3,13 @@ import {
   apiSuccess,
   apiNotFound,
   apiValidationError,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { ProfileServerService } from '@/services/profile/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import type { User } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -83,6 +85,12 @@ async function respondWithProfile(
 export const PUT = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many profile update requests. Please slow down.', retryAfter);
+    }
 
     const body = await request.json();
     logger.info('Profile update request', { userId: user.id, fields: Object.keys(body) });
