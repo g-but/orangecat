@@ -5,7 +5,9 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   // Default to dashboard with welcome flag for new users
-  const next = requestUrl.searchParams.get('next') || '/dashboard?welcome=true'
+  // Only allow internal paths (must start with /) to prevent open redirect attacks
+  const rawNext = requestUrl.searchParams.get('next') || '/dashboard?welcome=true'
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard?welcome=true'
 
   if (code) {
     try {
@@ -14,7 +16,7 @@ export async function GET(request: Request) {
 
       if (error) {
         return NextResponse.redirect(
-          `${requestUrl.origin}/auth?error=${encodeURIComponent(error.message)}`
+          `${requestUrl.origin}/auth?error=${encodeURIComponent('Authentication failed. Please try again.')}`
         )
       }
 

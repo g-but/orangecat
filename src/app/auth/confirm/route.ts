@@ -7,7 +7,9 @@ export async function GET(request: Request) {
   const token_hash = requestUrl.searchParams.get('token_hash')
   const type = requestUrl.searchParams.get('type') as EmailOtpType | null
   // Default to dashboard with welcome flag - this is the first experience after email confirmation
-  const next = requestUrl.searchParams.get('next') ?? '/dashboard?welcome=true&confirmed=true'
+  const rawNext = requestUrl.searchParams.get('next') ?? '/dashboard?welcome=true&confirmed=true'
+  // Only allow internal paths (must start with /) to prevent open redirect attacks
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard?welcome=true&confirmed=true'
 
   if (token_hash && type) {
     const supabase = await createServerClient()
