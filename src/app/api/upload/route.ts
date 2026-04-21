@@ -26,7 +26,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const folder = (formData.get('folder') as string) || 'avatars';
+    const rawFolder = (formData.get('folder') as string) || 'avatars';
+    const ALLOWED_FOLDERS = ['avatars', 'banners', 'media'];
+    const folder = ALLOWED_FOLDERS.includes(rawFolder) ? rawFolder : 'avatars';
 
     if (!file) {
       return apiValidationError('No file provided');
@@ -58,7 +60,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     if (uploadError) {
       logger.error('Upload error:', uploadError);
-      return apiInternalError(`Upload failed: ${uploadError.message}`);
+      return apiInternalError('Upload failed. Please try again.');
     }
 
     // Get public URL
@@ -96,7 +98,8 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest) => {
     const { error: deleteError } = await supabase.storage.from('avatars').remove([filePath]);
 
     if (deleteError) {
-      return apiInternalError(`Delete failed: ${deleteError.message}`);
+      logger.error('Delete error:', deleteError);
+      return apiInternalError('Delete failed. Please try again.');
     }
 
     return apiSuccess({ message: 'File deleted successfully' });
