@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
+import { safeJsonLdString } from '@/lib/seo/structured-data';
 
 const GroupDetailClient = dynamic(
   () => import('@/components/groups/GroupDetail').then(mod => ({ default: mod.GroupDetail })),
@@ -97,7 +98,7 @@ export default async function GroupDetailPage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdString(structuredData) }}
       />
       <GroupDetailClient groupSlug={slug} />
     </>

@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import ProfilePageClient from '@/components/profile/ProfilePageClient';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
+import { safeJsonLdString } from '@/lib/seo/structured-data';
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -301,7 +302,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       {/* JSON-LD Structured Data for SEO */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdString(structuredData) }}
       />
       <ProfilePageClient
         profile={profile}

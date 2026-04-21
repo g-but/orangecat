@@ -52,6 +52,16 @@ export function generateEntityJsonLd({
 }
 
 /**
+ * Safely serialize data for use inside a <script> tag.
+ * JSON.stringify alone does not escape `</`, which can allow a user-supplied
+ * string like `foo</script><script>xss` to break out of the script tag.
+ * Replacing `</` with `<\/` is valid JSON and prevents early tag termination.
+ */
+export function safeJsonLdString(data: unknown): string {
+  return JSON.stringify(data).replace(/<\//g, '<\\/');
+}
+
+/**
  * Render a JSON-LD script tag. Use in server components:
  *
  * ```tsx
@@ -60,6 +70,9 @@ export function generateEntityJsonLd({
  */
 export function JsonLdScript({ data }: { data: Record<string, unknown> }) {
   return (
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: safeJsonLdString(data) }}
+    />
   );
 }

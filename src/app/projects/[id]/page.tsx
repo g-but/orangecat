@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { ROUTES } from '@/config/routes';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
+import { safeJsonLdString } from '@/lib/seo/structured-data';
 
 const ProjectPageClient = dynamic(() => import('@/components/project/ProjectPageClient'), {
   loading: () => (
@@ -192,7 +193,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
       {/* JSON-LD Structured Data for SEO */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdString(structuredData) }}
       />
       <ProjectPageClient project={projectWithProfile} />
     </>
