@@ -86,6 +86,6 @@ export async function POST(request: NextRequest) {
       },
       'Auth'
     );
-    return apiInternalError(error instanceof Error ? error.message : 'Unknown error');
+    return apiInternalError('Authentication failed. Please try again.');
   }
 }
