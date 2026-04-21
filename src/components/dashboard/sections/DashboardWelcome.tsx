@@ -93,6 +93,7 @@ export function DashboardWelcome({
     <div className="relative rounded-xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:p-6 shadow-sm">
       <button
         onClick={onDismiss}
+        aria-label="Dismiss"
         className="absolute top-3 right-3 sm:top-4 sm:right-4 text-green-600 hover:text-green-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
       >
         <X className="h-5 w-5" />
