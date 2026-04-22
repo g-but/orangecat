@@ -12,20 +12,19 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import { createActionExecutor } from '@/services/cat';
-import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import {
   apiSuccess,
-  apiUnauthorized,
   apiBadRequest,
-  apiNotFound,
   apiInternalError,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { DATABASE_TABLES } from '@/config/database-tables';
+import { apiNotFound } from '@/lib/api/standardResponse';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -35,21 +34,13 @@ interface RouteParams {
  * POST /api/cat/actions/[id]
  * Confirm and execute a pending action
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  const { id: pendingActionId } = await params;
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteParams) => {
+  const { id: pendingActionId } = await context.params;
   const idValidation = getValidationError(validateUUID(pendingActionId, 'action ID'));
   if (idValidation) {return idValidation;}
+
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized('Unauthorized');
-    }
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
@@ -76,34 +67,26 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     logger.error('Confirm pending action error', error, 'CatActionsAPI');
     return apiInternalError('Failed to confirm action');
   }
-}
+});
 
 /**
  * DELETE /api/cat/actions/[id]
  * Reject a pending action
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  const { id: pendingActionId } = await params;
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteParams) => {
+  const { id: pendingActionId } = await context.params;
   const idValidation = getValidationError(validateUUID(pendingActionId, 'action ID'));
   if (idValidation) {return idValidation;}
+
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized('Unauthorized');
-    }
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     // Get optional rejection reason from body (max 500 chars)
     let reason: string | undefined;
     try {
-      const body = await request.json();
+      const body = await (request as NextRequest).json();
       if (typeof body.reason === 'string') {
         reason = body.reason.slice(0, 500) || undefined;
       }
@@ -119,4 +102,4 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     logger.error('Reject pending action error', error, 'CatActionsAPI');
     return apiInternalError('Failed to reject action');
   }
-}
+});

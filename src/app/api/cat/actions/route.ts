@@ -12,14 +12,12 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import { createActionExecutor } from '@/services/cat';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import {
   apiSuccess,
-  apiUnauthorized,
   apiBadRequest,
   apiNotFound,
   apiForbidden,
@@ -27,6 +25,7 @@ import {
   apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 
 // Validation schema
 const executeActionSchema = z.object({
@@ -40,18 +39,9 @@ const executeActionSchema = z.object({
  * GET /api/cat/actions
  * Get pending actions and recent action history
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized('Unauthorized');
-    }
-
     const { searchParams } = new URL(request.url);
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const actionId = searchParams.get('actionId') || undefined;
@@ -65,39 +55,27 @@ export async function GET(request: NextRequest) {
       executor.getActionHistory(user.id, { limit, actionId, status }),
     ]);
 
-    return apiSuccess({
-      pendingActions,
-      history,
-    });
+    return apiSuccess({ pendingActions, history });
   } catch (error) {
     logger.error('Get cat actions error', error, 'CatActionsAPI');
     return apiInternalError('Failed to get actions');
   }
-}
+});
 
 /**
  * POST /api/cat/actions
  * Execute an action directly (requires permission)
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized('Unauthorized');
-    }
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
       const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
       return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 
-    const body = await request.json();
+    const body = await (request as NextRequest).json();
     const parseResult = executeActionSchema.safeParse(body);
 
     if (!parseResult.success) {
@@ -128,4 +106,4 @@ export async function POST(request: NextRequest) {
     logger.error('Execute cat action error', error, 'CatActionsAPI');
     return apiInternalError('Failed to execute action');
   }
-}
+});

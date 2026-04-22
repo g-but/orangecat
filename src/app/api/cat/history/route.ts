@@ -5,43 +5,26 @@
  * DELETE /api/cat/history - Clear conversation history
  */
 
-import { createServerClient } from '@/lib/supabase/server';
 import {
   getMessagesForDisplay,
   clearDefaultConversation,
 } from '@/services/cat/conversation-history';
-import { apiUnauthorized, apiSuccess, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 
-export async function GET() {
-  const supabase = await createServerClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return apiUnauthorized('Unauthorized');
-  }
-
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
     const messages = await getMessagesForDisplay(supabase, user.id);
     return apiSuccess(messages);
   } catch (error) {
     return handleApiError(error);
   }
-}
+});
 
-export async function DELETE() {
-  const supabase = await createServerClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return apiUnauthorized('Unauthorized');
-  }
+export const DELETE = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
 
   const rl = await rateLimitWriteAsync(user.id);
   if (!rl.success) {
@@ -55,4 +38,4 @@ export async function DELETE() {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});
