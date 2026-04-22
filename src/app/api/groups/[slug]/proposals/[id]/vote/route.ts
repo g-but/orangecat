@@ -28,8 +28,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       return apiRateLimited('Too many vote requests. Please slow down.', retryAfter);
     }
 
+    const { supabase } = request;
     const body = await request.json();
-    const result = await castVote({ proposal_id: id, vote: body.vote });
+    const result = await castVote({ proposal_id: id, vote: body.vote }, supabase);
     if (!result.success) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return apiBadRequest((result as any).error);

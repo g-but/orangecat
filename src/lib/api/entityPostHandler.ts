@@ -150,7 +150,7 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
       } catch (transformError) {
         logger.error(`Error transforming data for ${entityType}`, {
           error: transformError,
-          body: ctx.body,
+          bodyKeys: Object.keys(ctx.body || {}),
           userId: user.id,
         });
         const errorMessage =
@@ -187,7 +187,7 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
           message: error?.message,
           details: error?.details,
           hint: error?.hint,
-          entityData: JSON.stringify(entityData, null, 2),
+          entityDataKeys: Object.keys(entityData),
           // Also log the raw error object
           rawError: JSON.stringify(error, Object.getOwnPropertyNames(error || {}), 2),
         };
