@@ -15,7 +15,9 @@ import {
   apiNotFound,
   apiBadRequest,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
@@ -80,6 +82,13 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
       return idValidation;
     }
 
+    const { user: _rlUser } = request;
+    const rl = await rateLimitWriteAsync(_rlUser.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+
     const url = new URL(request.url);
     const mediaId = url.searchParams.get('mediaId');
     if (!mediaId) {
@@ -137,6 +146,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     }
 
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     const { path, alt_text } = await request.json();
 

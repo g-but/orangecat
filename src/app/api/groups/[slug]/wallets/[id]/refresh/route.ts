@@ -13,7 +13,9 @@ import {
   apiNotFound,
   apiForbidden,
   apiBadRequest,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { logger } from '@/utils/logger';
 import { refreshWalletBalance } from '@/services/groups/mutations/treasury';
@@ -28,6 +30,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   try {
     const { slug, id: walletId } = await context.params;
     const { user } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     // Get group
     const groupResult = await getGroupBySlug(slug);

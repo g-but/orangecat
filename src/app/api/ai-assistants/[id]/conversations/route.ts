@@ -20,7 +20,9 @@ import {
   apiBadRequest,
   apiNotFound,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -66,6 +68,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   try {
     const { id: assistantId } = await context.params;
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many conversation requests. Please slow down.', retryAfter);
+    }
 
     // Verify assistant exists and is active
     const { data: assistant, error: assistantError } = await (

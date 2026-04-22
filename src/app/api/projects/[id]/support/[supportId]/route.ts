@@ -9,7 +9,8 @@
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { apiForbidden, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
+import { apiForbidden, apiInternalError, apiSuccess, apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import projectSupportService from '@/services/projects/support';
 import { logger } from '@/utils/logger';
 
@@ -21,6 +22,13 @@ interface RouteContext {
 export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     const { supportId } = await context.params;
+    const { user } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     // Delete support
     const result = await projectSupportService.deleteProjectSupport(supportId);

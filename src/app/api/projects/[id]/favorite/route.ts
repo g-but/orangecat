@@ -4,8 +4,10 @@ import {
   apiSuccess,
   apiNotFound,
   apiInternalError,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
@@ -32,6 +34,12 @@ async function handleToggleFavorite(
 
     const supabase = await createServerClient();
     const user = request.user;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     // Verify project exists
     const { data: project, error: projectError } = await (
