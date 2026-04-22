@@ -39,6 +39,10 @@ jest.mock('@/lib/api/standardResponse', () => ({
     status: 429,
     json: async () => ({ success: false, error: { message: 'Rate limited' } }),
   })),
+  apiBadRequest: jest.fn((message = 'Bad request') => ({
+    status: 400,
+    json: async () => ({ success: false, error: { message } }),
+  })),
 }));
 
 jest.mock('@/services/actors', () => ({
@@ -118,7 +122,7 @@ describe('Entity [id] CRUD workflows (service/product/cause)', () => {
 
   describe.each(cases)('$name id routes', ({ table, getHandler, putHandler, validUpdate }) => {
     it('GET returns active entity detail', async () => {
-      const entity = { id: 'e1', user_id: 'u1', actor_id: 'a1', title: 'Entity', status: 'active' };
+      const entity = { id: '00000000-0000-0000-0000-000000000001', user_id: 'u1', actor_id: 'a1', title: 'Entity', status: 'active' };
 
       const fetchQuery = {
         select: jest.fn().mockReturnThis(),
@@ -136,16 +140,16 @@ describe('Entity [id] CRUD workflows (service/product/cause)', () => {
 
       (createServerClient as jest.Mock).mockResolvedValue(supabase);
 
-      const response = await getHandler({} as any, { params: { id: 'e1' } });
+      const response = await getHandler({} as any, { params: { id: '00000000-0000-0000-0000-000000000001' } });
       const body = await response.json();
 
       expect(response.status).toBe(200);
       expect(body.success).toBe(true);
-      expect(body.data.id).toBe('e1');
+      expect(body.data.id).toBe('00000000-0000-0000-0000-000000000001');
     });
 
     it('PUT updates own entity', async () => {
-      const existing = { id: 'e1', user_id: 'u1', actor_id: 'a1', title: 'Old Title' };
+      const existing = { id: '00000000-0000-0000-0000-000000000001', user_id: 'u1', actor_id: 'a1', title: 'Old Title' };
       const updated = { ...existing, title: String(validUpdate.title) };
 
       const fetchQuery = {
@@ -174,7 +178,7 @@ describe('Entity [id] CRUD workflows (service/product/cause)', () => {
       (createServerClient as jest.Mock).mockResolvedValue(supabase);
 
       const request = { json: jest.fn().mockResolvedValue(validUpdate) };
-      const response = await putHandler(request as any, { params: { id: 'e1' } });
+      const response = await putHandler(request as any, { params: { id: '00000000-0000-0000-0000-000000000001' } });
       const body = await response.json();
 
       expect(response.status).toBe(200);
@@ -185,7 +189,7 @@ describe('Entity [id] CRUD workflows (service/product/cause)', () => {
     it('PUT rejects update from non-owner', async () => {
       (checkOwnership as jest.Mock).mockResolvedValueOnce(false);
       const existing = {
-        id: 'e1',
+        id: '00000000-0000-0000-0000-000000000001',
         user_id: 'someone-else',
         actor_id: 'other-actor',
         title: 'Locked',
@@ -207,7 +211,7 @@ describe('Entity [id] CRUD workflows (service/product/cause)', () => {
       (createServerClient as jest.Mock).mockResolvedValue(supabase);
 
       const request = { json: jest.fn().mockResolvedValue(validUpdate) };
-      const response = await putHandler(request as any, { params: { id: 'e1' } });
+      const response = await putHandler(request as any, { params: { id: '00000000-0000-0000-0000-000000000001' } });
       const body = await response.json();
 
       expect(response.status).toBe(403);

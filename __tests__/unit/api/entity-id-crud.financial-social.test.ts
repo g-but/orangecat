@@ -48,6 +48,10 @@ jest.mock('@/lib/api/standardResponse', () => ({
     status: 429,
     json: async () => ({ success: false, error: { message: 'Rate limited' } }),
   })),
+  apiBadRequest: jest.fn((message = 'Bad request') => ({
+    status: 400,
+    json: async () => ({ success: false, error: { message } }),
+  })),
 }));
 
 jest.mock('@/lib/rate-limit', () => ({
@@ -141,7 +145,7 @@ describe('Entity [id] CRUD workflows (asset/loan/event/wishlist)', () => {
   describe.each(cases)('$name id routes', c => {
     it('GET returns entity detail', async () => {
       const entity: Record<string, unknown> = {
-        id: 'e1',
+        id: '00000000-0000-0000-0000-000000000001',
         title: 'Entity',
         status: 'draft',
       };
@@ -165,16 +169,16 @@ describe('Entity [id] CRUD workflows (asset/loan/event/wishlist)', () => {
 
       (createServerClient as jest.Mock).mockResolvedValue(supabase);
 
-      const response = await c.getHandler({} as any, { params: { id: 'e1' } });
+      const response = await c.getHandler({} as any, { params: { id: '00000000-0000-0000-0000-000000000001' } });
       const body = await response.json();
 
       expect(response.status).toBe(200);
       expect(body.success).toBe(true);
-      expect(body.data.id).toBe('e1');
+      expect(body.data.id).toBe('00000000-0000-0000-0000-000000000001');
     });
 
     it('PUT updates own entity', async () => {
-      const existing: Record<string, unknown> = { id: 'e1', title: 'Old' };
+      const existing: Record<string, unknown> = { id: '00000000-0000-0000-0000-000000000001', title: 'Old' };
       existing[c.ownerField] = c.ownerField === 'actor_id' ? 'a1' : 'u1';
       const updated = { ...existing, title: String(c.validUpdate.title) };
 
@@ -205,7 +209,7 @@ describe('Entity [id] CRUD workflows (asset/loan/event/wishlist)', () => {
 
       const response = await c.putHandler(
         { json: jest.fn().mockResolvedValue(c.validUpdate) } as any,
-        { params: { id: 'e1' } }
+        { params: { id: '00000000-0000-0000-0000-000000000001' } }
       );
       const body = await response.json();
 
@@ -215,7 +219,7 @@ describe('Entity [id] CRUD workflows (asset/loan/event/wishlist)', () => {
     });
 
     it('PUT rejects non-owner update', async () => {
-      const existing: Record<string, unknown> = { id: 'e1', title: 'Locked' };
+      const existing: Record<string, unknown> = { id: '00000000-0000-0000-0000-000000000001', title: 'Locked' };
       existing[c.ownerField] = c.ownerField === 'actor_id' ? 'a1' : 'someone-else';
 
       if (c.usesActorOwnership) {
@@ -239,7 +243,7 @@ describe('Entity [id] CRUD workflows (asset/loan/event/wishlist)', () => {
 
       const response = await c.putHandler(
         { json: jest.fn().mockResolvedValue(c.validUpdate) } as any,
-        { params: { id: 'e1' } }
+        { params: { id: '00000000-0000-0000-0000-000000000001' } }
       );
       const body = await response.json();
 
