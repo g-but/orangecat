@@ -196,6 +196,7 @@ export const POST = compose(
         .from(tableName) as any
     )
       .insert({
+        user_id: user.id,
         actor_id: actor.id,
         title: validatedData.title,
         description: validatedData.description,

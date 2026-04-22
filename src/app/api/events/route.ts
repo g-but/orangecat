@@ -70,6 +70,7 @@ export const POST = createEntityPostHandler({
     // Normalize empty strings to null for optional fields
     const cleaned: Record<string, unknown> = {
       ...normalized,
+      user_id: userId,
       actor_id: actor.id,
     };
 
