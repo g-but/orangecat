@@ -20,7 +20,9 @@ import {
   apiNotFound,
   apiBadRequest,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ id: string; convId: string }>;
@@ -84,6 +86,12 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     const { id: assistantId, convId } = await context.params;
     const { user, supabase } = request;
 
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+
     const body = await request.json();
     const result = updateConversationSchema.safeParse(body);
 
@@ -125,6 +133,12 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
   try {
     const { id: assistantId, convId } = await context.params;
     const { user, supabase } = request;
+
+    const rl2 = await rateLimitWriteAsync(user.id);
+    if (!rl2.success) {
+      const retryAfter = Math.ceil((rl2.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     // Delete conversation (cascade deletes messages)
     const { error } = await supabase

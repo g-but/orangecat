@@ -49,7 +49,8 @@ export async function searchPlatform(
     return [];
   }
 
-  const pattern = `%${q}%`;
+  const escaped = q.replace(/[%_]/g, '\\$&');
+  const pattern = `%${escaped}%`;
   const results: SearchResult[] = [];
 
   await Promise.all([
