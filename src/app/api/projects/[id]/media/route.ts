@@ -15,12 +15,11 @@ import {
   apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
-import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES, STORAGE_BUCKETS } from '@/config/database-tables';
-import { createServerClient } from '@/lib/supabase/server';
 import { saveProjectMedia } from '@/domain/projects/mediaService';
 import { z } from 'zod';
 
@@ -34,12 +33,12 @@ interface RouteContext {
 }
 
 /** GET - No auth required, media is public */
-export async function GET(_request: Request, context: RouteContext) {
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
   const { id: projectId } = await context.params;
   const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
   if (idValidation) {return idValidation;}
   try {
-    const supabase = await createServerClient();
+    const { supabase } = request;
     const { data, error } = await supabase
       .from(DATABASE_TABLES.PROJECT_MEDIA)
       .select('id, storage_path, position, alt_text')
@@ -61,7 +60,7 @@ export async function GET(_request: Request, context: RouteContext) {
     logger.error('Unexpected error loading media', { error });
     return apiInternalError('Failed to load media');
   }
-}
+});
 
 /** DELETE - Requires auth and project ownership */
 export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {

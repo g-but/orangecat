@@ -5,7 +5,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 import { createBookingService } from '@/services/bookings';
 import { getTableName } from '@/config/entity-registry';
 import { STATUS } from '@/config/database-constants';
@@ -18,18 +18,17 @@ import {
 } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { id: serviceId } = await params;
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
+  const { id: serviceId } = await context.params;
   const idValidation = getValidationError(validateUUID(serviceId, 'service ID'));
   if (idValidation) {return idValidation;}
   try {
-    const supabase = await createServerClient();
-
-    const url = new URL(request.url);
+    const { supabase } = request;
+    const url = new URL((request as NextRequest).url);
     const dateParam = url.searchParams.get('date');
 
     if (!dateParam) {
@@ -43,9 +42,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Verify service exists
     const { data: service, error: serviceError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(getTableName('service')) as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      supabase.from(getTableName('service')) as any
     )
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
@@ -79,4 +77,4 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     logger.error('Get availability error', error, 'ServiceAvailabilityAPI');
     return apiInternalError('Internal server error');
   }
-}
+});

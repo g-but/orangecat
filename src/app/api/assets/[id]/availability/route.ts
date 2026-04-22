@@ -5,7 +5,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 import { createBookingService } from '@/services/bookings';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
@@ -18,18 +18,17 @@ import {
 } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { id: assetId } = await params;
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
+  const { id: assetId } = await context.params;
   const idValidation = getValidationError(validateUUID(assetId, 'asset ID'));
   if (idValidation) {return idValidation;}
   try {
-    const supabase = await createServerClient();
-
-    const url = new URL(request.url);
+    const { supabase } = request;
+    const url = new URL((request as NextRequest).url);
     const startDateParam = url.searchParams.get('start_date');
     const endDateParam = url.searchParams.get('end_date');
 
@@ -53,8 +52,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Verify asset exists and is for rent
     const { data: asset, error: assetError } =
-      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
         .select(
           'id, title, actor_id, is_for_rent, rental_price_btc, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_btc'
         )
@@ -93,4 +92,4 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     logger.error('Get asset availability error', error, 'AssetAvailabilityAPI');
     return apiInternalError('Internal server error');
   }
-}
+});
