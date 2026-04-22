@@ -4,9 +4,6 @@
  * GET /api/ai-assistants/[id]/conversations/[convId] - Get conversation with messages
  * PUT /api/ai-assistants/[id]/conversations/[convId] - Update conversation (title, archive)
  * DELETE /api/ai-assistants/[id]/conversations/[convId] - Delete conversation
- *
- * Last Modified: 2026-01-28
- * Last Modified Summary: Refactored to use withAuth middleware
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -15,13 +12,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
-import {
-  apiSuccess,
-  apiNotFound,
-  apiBadRequest,
-  apiInternalError,
-  apiRateLimited,
-} from '@/lib/api/standardResponse';
+import { apiSuccess, apiNotFound, apiBadRequest, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
@@ -38,43 +29,25 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
     const { id: assistantId, convId } = await context.params;
     const { user, supabase } = request;
 
-    // Get conversation with messages
     const { data: conversation, error: convError } = await supabase
       .from(DATABASE_TABLES.AI_CONVERSATIONS)
       .select('*')
-      .eq('id', convId)
-      .eq('assistant_id', assistantId)
-      .eq('user_id', user.id)
+      .eq('id', convId).eq('assistant_id', assistantId).eq('user_id', user.id)
       .single();
 
-    if (convError || !conversation) {
-      return apiNotFound('Conversation not found');
-    }
+    if (convError || !conversation) return apiNotFound('Conversation not found');
 
-    // Get messages
-    const { data: messages, error: msgError } = await supabase
-      .from(DATABASE_TABLES.AI_MESSAGES)
-      .select('*')
-      .eq('conversation_id', convId)
-      .order('created_at', { ascending: true });
+    const [{ data: messages, error: msgError }, { data: assistant }] = await Promise.all([
+      supabase.from(DATABASE_TABLES.AI_MESSAGES).select('*').eq('conversation_id', convId).order('created_at', { ascending: true }),
+      supabase.from(DATABASE_TABLES.AI_ASSISTANTS).select('id, title, avatar_url, pricing_model, price_per_message, price_per_1k_tokens').eq('id', assistantId).single(),
+    ]);
 
     if (msgError) {
       logger.error('Error fetching messages', msgError, 'AIConversationAPI');
       return apiInternalError('Failed to fetch messages');
     }
 
-    // Get assistant info
-    const { data: assistant } = await supabase
-      .from(DATABASE_TABLES.AI_ASSISTANTS)
-      .select('id, title, avatar_url, pricing_model, price_per_message, price_per_1k_tokens')
-      .eq('id', assistantId)
-      .single();
-
-    return apiSuccess({
-      ...(conversation as Record<string, unknown>),
-      messages: messages || [],
-      assistant,
-    });
+    return apiSuccess({ ...(conversation as Record<string, unknown>), messages: messages || [], assistant });
   } catch (error) {
     logger.error('Get conversation error', error, 'AIConversationAPI');
     return apiInternalError();
@@ -87,40 +60,22 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
-    }
+    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
 
     const body = await request.json();
     const result = updateConversationSchema.safeParse(body);
+    if (!result.success) return apiBadRequest('Validation failed', result.error.flatten());
 
-    if (!result.success) {
-      return apiBadRequest('Validation failed', result.error.flatten());
-    }
-
-    // Update conversation
-    const { data: conversation, error } = await (
-      supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any
-    )
-      .update({
-        ...result.data,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', convId)
-      .eq('assistant_id', assistantId)
-      .eq('user_id', user.id)
-      .select()
-      .single();
+    const { data: conversation, error } = await (supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
+      .update({ ...result.data, updated_at: new Date().toISOString() })
+      .eq('id', convId).eq('assistant_id', assistantId).eq('user_id', user.id)
+      .select().single();
 
     if (error) {
       logger.error('Error updating conversation', error, 'AIConversationAPI');
       return apiInternalError('Failed to update conversation');
     }
-
-    if (!conversation) {
-      return apiNotFound('Conversation not found');
-    }
+    if (!conversation) return apiNotFound('Conversation not found');
 
     return apiSuccess(conversation);
   } catch (error) {
@@ -134,19 +89,13 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { id: assistantId, convId } = await context.params;
     const { user, supabase } = request;
 
-    const rl2 = await rateLimitWriteAsync(user.id);
-    if (!rl2.success) {
-      const retryAfter = Math.ceil((rl2.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
-    }
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
 
-    // Delete conversation (cascade deletes messages)
     const { error } = await supabase
       .from(DATABASE_TABLES.AI_CONVERSATIONS)
       .delete()
-      .eq('id', convId)
-      .eq('assistant_id', assistantId)
-      .eq('user_id', user.id);
+      .eq('id', convId).eq('assistant_id', assistantId).eq('user_id', user.id);
 
     if (error) {
       logger.error('Error deleting conversation', error, 'AIConversationAPI');

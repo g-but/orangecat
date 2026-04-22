@@ -27,85 +27,40 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-// Types for query results
-interface TaskRow {
-  id: string;
-  title: string;
-  created_by: string;
-}
-
-interface ProfileRow {
-  username: string | null;
-  display_name: string | null;
-}
-
-/**
- * POST /api/tasks/[id]/attention
- *
- * Flag a task as needing attention
- */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { id: taskId } = await context.params;
     const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized('Authentication required');
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return apiUnauthorized('Authentication required');
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
-    }
+    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
 
-    // Parse and validate body
     const body = await request.json().catch(() => ({}));
     const result = attentionFlagSchema.safeParse(body);
-
-    if (!result.success) {
-      return apiValidationError('Validation failed', result.error.flatten());
-    }
+    if (!result.success) return apiValidationError('Validation failed', result.error.flatten());
 
     const flagData = result.data;
 
-    // Verify task exists
-    const { data: taskData, error: taskError } = await supabase
+    const { data: task, error: taskError } = await supabase
       .from(DATABASE_TABLES.TASKS)
       .select('id, title, created_by')
       .eq('id', taskId)
       .single();
 
     if (taskError) {
-      if (taskError.code === 'PGRST116') {
-        return apiNotFound('Task not found');
-      }
+      if (taskError.code === 'PGRST116') return apiNotFound('Task not found');
       logger.error('Failed to fetch task', { error: taskError, taskId }, 'TasksAPI');
       return apiInternalError();
     }
 
-    const task = taskData as unknown as TaskRow;
-
-    // Create attention flag
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: flag, error: flagError } = await (supabase as any)
+    const { data: flag, error: flagError } = await db
       .from(DATABASE_TABLES.TASK_ATTENTION_FLAGS)
-      .insert({
-        task_id: taskId,
-        flagged_by: user.id,
-        message: flagData.message || null,
-      })
-      .select(
-        `
-        id,
-        flagged_by,
-        message,
-        created_at
-      `
-      )
+      .insert({ task_id: taskId, flagged_by: user.id, message: flagData.message || null })
+      .select('id, flagged_by, message, created_at')
       .single();
 
     if (flagError) {
@@ -113,28 +68,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return apiInternalError('Failed to flag task');
     }
 
-    // Update task status to needs_attention
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
-      .from(DATABASE_TABLES.TASKS)
-      .update({ current_status: TASK_STATUSES.NEEDS_ATTENTION })
-      .eq('id', taskId);
+    await db.from(DATABASE_TABLES.TASKS).update({ current_status: TASK_STATUSES.NEEDS_ATTENTION }).eq('id', taskId);
 
-    // Send notifications
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notificationService = new NotificationService(supabase as any);
-
-    // Get flagger's name
-    const { data: profileData } = await supabase
+    const { data: profile } = await supabase
       .from(DATABASE_TABLES.PROFILES)
       .select('username, display_name')
       .eq('id', user.id)
       .single();
+    const flaggerName = profile?.display_name || profile?.username || 'Someone';
+    const notificationService = new NotificationService(db);
 
-    const flaggerProfile = profileData as ProfileRow | null;
-    const flaggerName = flaggerProfile?.display_name || flaggerProfile?.username || 'Someone';
-
-    // Notify task creator if different from flagger
     if (task.created_by !== user.id) {
       await notificationService.createNotification({
         recipientUserId: task.created_by,
@@ -147,7 +90,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
       });
     }
 
-    // Broadcast to all other users
     await notificationService.createBroadcastNotification({
       excludeUserId: user.id,
       type: 'task_attention',

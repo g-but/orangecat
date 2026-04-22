@@ -30,82 +30,43 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-// Types for query results
-interface TaskRow {
-  id: string;
-  title: string;
-  task_type: string;
-  is_completed: boolean;
-  created_by: string;
-}
-
-interface ProfileRow {
-  username: string | null;
-  display_name: string | null;
-}
-
-/**
- * POST /api/tasks/[id]/complete
- *
- * Record a task completion
- */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { id: taskId } = await context.params;
     const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized('Authentication required');
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return apiUnauthorized('Authentication required');
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
-    }
+    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
 
-    // Parse and validate body
     const body = await request.json().catch(() => ({}));
     const result = taskCompletionSchema.safeParse(body);
-
-    if (!result.success) {
-      return apiValidationError('Validation failed', result.error.flatten());
-    }
+    if (!result.success) return apiValidationError('Validation failed', result.error.flatten());
 
     const completionData = result.data;
 
-    // Verify task exists and is not already completed (for one-time tasks)
-    const { data: taskData, error: taskError } = await supabase
+    const { data: task, error: taskError } = await supabase
       .from(DATABASE_TABLES.TASKS)
       .select('id, title, task_type, is_completed, created_by')
       .eq('id', taskId)
       .single();
 
     if (taskError) {
-      if (taskError.code === 'PGRST116') {
-        return apiNotFound('Task not found');
-      }
+      if (taskError.code === 'PGRST116') return apiNotFound('Task not found');
       logger.error('Failed to fetch task for completion', { error: taskError, taskId }, 'TasksAPI');
       return apiInternalError();
     }
-
-    const task = taskData as unknown as TaskRow;
 
     if (task.is_completed && task.task_type === 'one_time') {
       return apiBadRequest('This task has already been completed');
     }
 
-    // Create completion record
-    // The database trigger will handle:
-    // - Resetting recurring task status to 'idle'
-    // - Marking one-time tasks as completed
-    // - Resolving attention flags
-    // - Completing pending requests
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: completion, error: completionError } = await (supabase as any)
+    // The database trigger handles: recurring task reset, one-time completion,
+    // attention flag resolution, and pending request completion.
+    const { data: completion, error: completionError } = await db
       .from(DATABASE_TABLES.TASK_COMPLETIONS)
       .insert({
         task_id: taskId,
@@ -114,43 +75,22 @@ export async function POST(request: NextRequest, context: RouteContext) {
         notes: completionData.notes || null,
         duration_minutes: completionData.duration_minutes || null,
       })
-      .select(
-        `
-        id,
-        completed_by,
-        completed_at,
-        notes,
-        duration_minutes
-      `
-      )
+      .select('id, completed_by, completed_at, notes, duration_minutes')
       .single();
 
     if (completionError) {
-      logger.error(
-        'Failed to create task completion',
-        { error: completionError, taskId },
-        'TasksAPI'
-      );
+      logger.error('Failed to create task completion', { error: completionError, taskId }, 'TasksAPI');
       return apiInternalError('Failed to complete task');
     }
 
-    // Notify task creator if they're not the one completing
     if (task.created_by !== user.id) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const notificationService = new NotificationService(supabase as any);
-
-      // Get completer's name
-      const { data: profileData } = await supabase
+      const { data: profile } = await supabase
         .from(DATABASE_TABLES.PROFILES)
         .select('username, display_name')
         .eq('id', user.id)
         .single();
-
-      const completerProfile = profileData as ProfileRow | null;
-      const completerName =
-        completerProfile?.display_name || completerProfile?.username || 'Someone';
-
-      await notificationService.createNotification({
+      const completerName = profile?.display_name || profile?.username || 'Someone';
+      await new NotificationService(db).createNotification({
         recipientUserId: task.created_by,
         type: 'task_completed',
         title: `${completerName} completed "${task.title}"`,

@@ -2,9 +2,6 @@
  * Asset Rental API
  *
  * POST /api/assets/[id]/rent - Request a rental for an asset
- *
- * Last Modified: 2026-01-28
- * Last Modified Summary: Refactored to use withAuth middleware
  */
 
 import { createBookingService } from '@/services/bookings';
@@ -13,13 +10,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
-import {
-  apiCreated,
-  apiBadRequest,
-  apiNotFound,
-  apiInternalError,
-  apiRateLimited,
-} from '@/lib/api/standardResponse';
+import { apiCreated, apiBadRequest, apiNotFound, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
@@ -32,100 +23,58 @@ const rentAssetSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
+// Milliseconds per rental period type
+const PERIOD_MS: Record<string, number> = {
+  hourly: 3_600_000,
+  daily: 86_400_000,
+  weekly: 604_800_000,
+  monthly: 2_592_000_000,
+};
+
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     const { id: assetId } = await context.params;
     const { user, supabase } = request;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many rent requests. Please slow down.', retryAfter);
-    }
+    if (!rl.success) return apiRateLimited('Too many rent requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
 
     const body = await request.json();
     const result = rentAssetSchema.safeParse(body);
-
-    if (!result.success) {
-      return apiBadRequest('Validation failed', result.error.flatten());
-    }
+    if (!result.success) return apiBadRequest('Validation failed', result.error.flatten());
 
     const { starts_at, ends_at, notes } = result.data;
     const startsAt = new Date(starts_at);
     const endsAt = new Date(ends_at);
 
-    // Verify asset exists and is for rent
-    const { data: assetData, error: assetError } =
-      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
-        .select(
-          'id, title, actor_id, is_for_rent, rental_price_btc, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_btc, currency'
-        )
-        .eq('id', assetId)
-        .eq('status', STATUS.ASSETS.ACTIVE)
-        .eq('is_for_rent', true)
-        .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const asset = assetData as any;
-
-    if (assetError || !asset) {
-      return apiNotFound('Asset not found or not available for rent');
-    }
-
-    // Get customer's actor
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: customerActorData } = await (supabase.from(DATABASE_TABLES.ACTORS) as any)
-      .select('id')
-      .eq('user_id', user.id)
+    const { data: asset, error: assetError } = await db
+      .from(DATABASE_TABLES.USER_ASSETS)
+      .select('id, title, actor_id, is_for_rent, rental_price_btc, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_btc, currency')
+      .eq('id', assetId).eq('status', STATUS.ASSETS.ACTIVE).eq('is_for_rent', true)
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const customerActor = customerActorData as any;
 
-    if (!customerActor) {
-      return apiBadRequest('Customer profile not found');
-    }
+    if (assetError || !asset) return apiNotFound('Asset not found or not available for rent');
 
-    // Calculate rental duration and price
-    const durationMs = endsAt.getTime() - startsAt.getTime();
-    let periods = 0;
+    const { data: customerActor } = await db
+      .from(DATABASE_TABLES.ACTORS).select('id').eq('user_id', user.id).single();
+    if (!customerActor) return apiBadRequest('Customer profile not found');
 
-    switch (asset.rental_period_type) {
-      case 'hourly':
-        periods = Math.ceil(durationMs / (1000 * 60 * 60));
-        break;
-      case 'daily':
-        periods = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
-        break;
-      case 'weekly':
-        periods = Math.ceil(durationMs / (1000 * 60 * 60 * 24 * 7));
-        break;
-      case 'monthly':
-        periods = Math.ceil(durationMs / (1000 * 60 * 60 * 24 * 30));
-        break;
-      default:
-        periods = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
-    }
+    const periodMs = PERIOD_MS[asset.rental_period_type] || PERIOD_MS.daily;
+    const periods = Math.ceil((endsAt.getTime() - startsAt.getTime()) / periodMs);
 
-    // Check minimum rental period
     if (asset.min_rental_period && periods < asset.min_rental_period) {
-      return apiBadRequest(
-        `Minimum rental period is ${asset.min_rental_period} ${asset.rental_period_type} periods`
-      );
+      return apiBadRequest(`Minimum rental period is ${asset.min_rental_period} ${asset.rental_period_type} periods`);
     }
-
-    // Check maximum rental period
     if (asset.max_rental_period && periods > asset.max_rental_period) {
-      return apiBadRequest(
-        `Maximum rental period is ${asset.max_rental_period} ${asset.rental_period_type} periods`
-      );
+      return apiBadRequest(`Maximum rental period is ${asset.max_rental_period} ${asset.rental_period_type} periods`);
     }
 
     const priceBtc = (asset.rental_price_btc || 0) * periods;
     const depositBtc = asset.requires_deposit ? asset.deposit_amount_btc || 0 : 0;
 
-    // Create the booking
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bookingService = createBookingService(supabase as any);
+    const bookingService = createBookingService(db);
     const bookingResult = await bookingService.createBooking({
       bookableType: 'asset',
       bookableId: assetId,
@@ -137,18 +86,10 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       priceBtc,
       depositBtc,
       customerNotes: notes,
-      metadata: {
-        asset_title: asset.title,
-        rental_period_type: asset.rental_period_type,
-        rental_periods: periods,
-        currency: asset.currency,
-      },
+      metadata: { asset_title: asset.title, rental_period_type: asset.rental_period_type, rental_periods: periods, currency: asset.currency },
     });
 
-    if (!bookingResult.success) {
-      return apiBadRequest(bookingResult.error);
-    }
-
+    if (!bookingResult.success) return apiBadRequest(bookingResult.error);
     return apiCreated(bookingResult.booking);
   } catch (error) {
     logger.error('Rent asset error', error, 'AssetRentAPI');

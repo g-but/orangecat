@@ -2,9 +2,6 @@
  * Project Balance Refresh API
  *
  * POST /api/projects/[id]/refresh-balance - Refresh project Bitcoin balance
- *
- * Last Modified: 2026-01-28
- * Last Modified Summary: Refactored to use withAuth middleware
  */
 
 import { fetchBitcoinBalance } from '@/services/blockchain';
@@ -30,137 +27,63 @@ interface RouteContext {
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     const { id: projectId } = await context.params;
-
-    // Validate project ID
     const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
-    if (idValidation) {
-      return idValidation;
-    }
+    if (idValidation) return idValidation;
 
     const { user, supabase } = request;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
-    }
+    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
 
-    const { data: project, error } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(getTableName('project')) as any
-    )
-      .select(
-        'id, user_id, bitcoin_address, bitcoin_balance_btc, bitcoin_balance_updated_at, title'
-      )
+    const { data: project, error } = await db
+      .from(getTableName('project'))
+      .select('id, user_id, bitcoin_address, bitcoin_balance_btc, bitcoin_balance_updated_at, title')
       .eq('id', projectId)
       .single();
 
-    if (error || !project) {
-      logger.error('Project not found for balance refresh', { projectId, userId: user.id });
-      return apiNotFound('Project not found');
-    }
+    if (error || !project) return apiNotFound('Project not found');
+    if (user.id !== project.user_id) return apiForbidden('You can only refresh balance for your own projects');
+    if (!project.bitcoin_address) return apiBadRequest('No Bitcoin address configured for this project');
 
-    if (user.id !== project.user_id) {
-      logger.warn('Unauthorized balance refresh attempt', {
-        projectId,
-        userId: user.id,
-        ownerId: project.user_id,
-      });
-      return apiForbidden('You can only refresh balance for your own projects');
-    }
-
-    if (!project.bitcoin_address) {
-      logger.info('No Bitcoin address configured for project', { projectId, userId: user.id });
-      return apiBadRequest('No Bitcoin address configured for this project');
-    }
-
-    // Check cooldown - return cached if very recent (<1 second)
     if (project.bitcoin_balance_updated_at) {
-      const last = new Date(project.bitcoin_balance_updated_at);
-      const secondsAgo = (Date.now() - last.getTime()) / 1000;
-
+      const secondsAgo = (Date.now() - new Date(project.bitcoin_balance_updated_at).getTime()) / 1000;
       if (secondsAgo < 1) {
-        logger.info('Returning cached balance (updated <1s ago)', { projectId, userId: user.id });
-        return apiSuccess(
-          {
-            balance_btc: project.bitcoin_balance_btc,
-            updated_at: project.bitcoin_balance_updated_at,
-            cached: true,
-          },
-          { status: 202 }
-        );
+        return apiSuccess({ balance_btc: project.bitcoin_balance_btc, updated_at: project.bitcoin_balance_updated_at, cached: true }, { status: 202 });
       }
-
       const minutesAgo = secondsAgo / 60;
       if (minutesAgo < 5) {
         const wait = Math.ceil(5 - minutesAgo);
-        logger.info('Balance refresh rate limited', {
-          projectId,
-          userId: user.id,
-          minutesAgo,
-          waitMinutes: wait,
-        });
         return apiRateLimited(`Please wait ${wait} more minute${wait > 1 ? 's' : ''}`, wait * 60);
       }
     }
 
-    // Fetch balance from blockchain
     let balance;
     try {
       balance = await fetchBitcoinBalance(project.bitcoin_address);
-    } catch (error) {
-      logger.error('Failed to fetch Bitcoin balance', {
-        projectId,
-        userId: user.id,
-        address: project.bitcoin_address,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+    } catch (err) {
+      logger.error('Failed to fetch Bitcoin balance', { projectId, error: err instanceof Error ? err.message : err });
       return apiInternalError('Failed to fetch balance from blockchain');
     }
 
-    // Update project balance
-    const { error: updateError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(getTableName('project')) as any
-    )
-      .update({
-        bitcoin_balance_btc: balance.balance_btc,
-        bitcoin_balance_updated_at: balance.updated_at,
-      })
+    const { error: updateError } = await db
+      .from(getTableName('project'))
+      .update({ bitcoin_balance_btc: balance.balance_btc, bitcoin_balance_updated_at: balance.updated_at })
       .eq('id', projectId);
 
     if (updateError) {
-      logger.error('Failed to update project balance', {
-        projectId,
-        userId: user.id,
-        error: updateError.message,
-      });
+      logger.error('Failed to update project balance', { projectId, error: updateError.message });
       return apiInternalError('Failed to update project balance');
     }
 
-    // Audit log balance refresh
     await auditSuccess(AUDIT_ACTIONS.PROJECT_CREATED, user.id, 'project', projectId, {
       action: 'balance_refresh',
       previousBalance: project.bitcoin_balance_btc,
       newBalance: balance.balance_btc,
-      address: project.bitcoin_address,
-      txCount: balance.tx_count,
     });
 
-    logger.info('Project balance refreshed successfully', {
-      projectId,
-      userId: user.id,
-      balance: balance.balance_btc,
-      txCount: balance.tx_count,
-    });
-
-    return apiSuccess({
-      balance_btc: balance.balance_btc,
-      tx_count: balance.tx_count,
-      updated_at: balance.updated_at,
-    });
+    return apiSuccess({ balance_btc: balance.balance_btc, tx_count: balance.tx_count, updated_at: balance.updated_at });
   } catch (error) {
     logger.error('Unexpected error refreshing project balance', { error });
     return apiInternalError('Failed to refresh balance');

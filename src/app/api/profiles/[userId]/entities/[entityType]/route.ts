@@ -115,21 +115,11 @@ export async function GET(
     const { data, error } = await query;
 
     if (error) {
-      logger.error('Failed to fetch profile entities', {
-        userId,
-        entityType,
-        error: error.message,
-      });
+      logger.error('Failed to fetch profile entities', { userId, entityType, error: error.message });
       return apiInternalError(`Failed to fetch ${entityType}s`);
     }
 
     const metadata = getEntityMetadata(entityType as EntityType);
-
-    logger.info('Fetched profile entities successfully', {
-      userId,
-      entityType,
-      count: data?.length || 0,
-    });
 
     return apiSuccess(
       {
