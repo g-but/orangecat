@@ -20,8 +20,6 @@ import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { createServerClient } from '@/lib/supabase/server';
-
 interface RouteContext { params: Promise<{ id: string }> }
 
 export const GET = withAuth(async (request: AuthenticatedRequest, { params }: RouteContext) => {
@@ -29,7 +27,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, { params }: Ro
   const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
   if (idValidation) {return idValidation;}
   try {
-    const supabase = await createServerClient();
+    const { supabase } = request;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: favorite, error } = await (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
       .select('id').eq('user_id', request.user.id).eq('project_id', projectId).maybeSingle();
@@ -45,11 +43,10 @@ export const POST = withAuth(async (request: AuthenticatedRequest, { params }: R
   const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
   if (idValidation) {return idValidation;}
   try {
-    const { user } = request;
+    const { user, supabase } = request;
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
-    const supabase = await createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: project } = await (supabase.from(getTableName('project')) as any)
       .select('id, title').eq('id', projectId).single();
@@ -78,11 +75,10 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, { params }:
   const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
   if (idValidation) {return idValidation;}
   try {
-    const { user } = request;
+    const { user, supabase } = request;
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
-    const supabase = await createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: project } = await (supabase.from(getTableName('project')) as any)
       .select('id, title').eq('id', projectId).single();

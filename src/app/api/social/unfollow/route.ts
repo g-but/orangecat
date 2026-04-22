@@ -1,5 +1,4 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
@@ -10,8 +9,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 
 async function handleUnfollow(request: AuthenticatedRequest) {
   try {
-    const supabase = await createServerClient();
-    const user = request.user;
+    const { supabase, user } = request;
 
     // Rate limiting check - 10 unfollows per minute
     let rateLimitResult: RateLimitResult;

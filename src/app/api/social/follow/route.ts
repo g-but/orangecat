@@ -1,5 +1,4 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import {
   apiSuccess,
@@ -17,8 +16,7 @@ import { NotificationDispatcher } from '@/services/notifications/dispatcher';
 
 async function handleFollow(request: AuthenticatedRequest) {
   try {
-    const supabase = await createServerClient();
-    const user = request.user;
+    const { supabase, user } = request;
 
     // Rate limiting check - 10 follows per minute
     let rateLimitResult: RateLimitResult;
