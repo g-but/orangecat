@@ -16,17 +16,16 @@ import { checkPaymentStatus, buyerConfirmPayment } from '@/domain/payments';
 import { paymentActionSchema } from '@/lib/validation/finance';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 // GET /api/payments/[id]
 export const GET = withAuth(
   async (request: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
+    const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'payment ID'));
+    if (idValidation) {return idValidation;}
     try {
       const { user, supabase } = request;
-      const { id } = await context.params;
-
-      if (!id) {
-        return apiBadRequest('Payment ID is required');
-      }
 
       const result = await checkPaymentStatus(supabase, id, user.id);
       return apiSuccess(result);
@@ -49,9 +48,11 @@ export const GET = withAuth(
 // POST /api/payments/[id] with body { action: 'buyer_confirm' | 'cancel' | 'expire' }
 export const POST = withAuth(
   async (request: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
+    const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'payment ID'));
+    if (idValidation) {return idValidation;}
     try {
       const { user, supabase } = request;
-      const { id } = await context.params;
 
       // Rate limiting
       const rl = await rateLimitWriteAsync(user.id);
@@ -66,10 +67,6 @@ export const POST = withAuth(
       const parsed = paymentActionSchema.safeParse(body);
       if (!parsed.success) {
         return apiBadRequest('Invalid input', parsed.error.errors);
-      }
-
-      if (!id) {
-        return apiBadRequest('Payment ID is required');
       }
 
       const result = await buyerConfirmPayment(supabase, id, user.id);

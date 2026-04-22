@@ -23,6 +23,7 @@ import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 // Schema for editing a message
 const editMessageSchema = z.object({
@@ -33,8 +34,10 @@ export const PATCH = withAuth(async (
   req: AuthenticatedRequest,
   { params }: { params: Promise<{ messageId: string }> }
 ) => {
+  const { messageId } = await params;
+  const idValidation = getValidationError(validateUUID(messageId, 'message ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { messageId } = await params;
     const { user } = req;
     const supabase = await createServerClient();
 

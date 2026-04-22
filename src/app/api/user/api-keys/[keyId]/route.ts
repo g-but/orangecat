@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiBadRequest, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext {
   params: Promise<{ keyId: string }>;
@@ -28,8 +29,10 @@ const updateKeySchema = z.object({
  * Delete an API key
  */
 export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { keyId } = await context.params;
+  const idValidation = getValidationError(validateUUID(keyId, 'key ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { keyId } = await context.params;
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
@@ -57,8 +60,10 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
  * Update an API key (e.g., set as primary)
  */
 export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { keyId } = await context.params;
+  const idValidation = getValidationError(validateUUID(keyId, 'key ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { keyId } = await context.params;
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);

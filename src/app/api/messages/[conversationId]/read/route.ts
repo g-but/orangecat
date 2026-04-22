@@ -10,13 +10,16 @@ import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 export const POST = withAuth(async (
   req: AuthenticatedRequest,
   { params }: { params: Promise<{ conversationId: string }> }
 ) => {
+  const { conversationId } = await params;
+  const idValidation = getValidationError(validateUUID(conversationId, 'conversation ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { conversationId } = await params;
     const { user } = req;
 
     const rl = await rateLimitWriteAsync(user.id);

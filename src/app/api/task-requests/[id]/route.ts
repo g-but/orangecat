@@ -20,12 +20,15 @@ import { requestResponseSchema } from '@/lib/schemas/tasks';
 import { TASK_STATUSES, REQUEST_STATUSES } from '@/config/tasks';
 import { NotificationService } from '@/lib/services/notifications';
 import { logger } from '@/utils/logger';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext { params: Promise<{ id: string }> }
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
+  const { id: requestId } = await context.params;
+  const idValidation = getValidationError(validateUUID(requestId, 'request ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: requestId } = await context.params;
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {return apiUnauthorized('Authentication required');}

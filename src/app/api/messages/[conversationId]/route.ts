@@ -34,6 +34,7 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 const sendMessageSchema = z.object({
   content: z.string().min(VALIDATION.MESSAGE_MIN_LENGTH).max(VALIDATION.MESSAGE_MAX_LENGTH),
@@ -48,6 +49,8 @@ const sendMessageSchema = z.object({
 export const GET = withAuth(
   async (req: AuthenticatedRequest, { params }: { params: Promise<{ conversationId: string }> }) => {
     const { conversationId } = await params;
+    const idValidation = getValidationError(validateUUID(conversationId, 'conversation ID'));
+    if (idValidation) {return idValidation;}
     try {
       const { user } = req;
       const { searchParams } = new URL(req.url);
@@ -101,6 +104,8 @@ export const GET = withAuth(
 export const POST = withAuth(
   async (req: AuthenticatedRequest, { params }: { params: Promise<{ conversationId: string }> }) => {
     const { conversationId } = await params;
+    const idValidation = getValidationError(validateUUID(conversationId, 'conversation ID'));
+    if (idValidation) {return idValidation;}
     try {
       const { user } = req;
 

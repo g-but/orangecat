@@ -14,12 +14,15 @@ import {
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 export const PUT = withAuth(
   async (request: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
+    const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'address ID'));
+    if (idValidation) {return idValidation;}
     try {
       const { user, supabase } = request;
-      const { id } = await context.params;
 
       const rl = await rateLimitWriteAsync(user.id);
       if (!rl.success) {
@@ -88,9 +91,11 @@ export const PUT = withAuth(
 
 export const DELETE = withAuth(
   async (request: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
+    const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'address ID'));
+    if (idValidation) {return idValidation;}
     try {
       const { user, supabase } = request;
-      const { id } = await context.params;
 
       const rl = await rateLimitWriteAsync(user.id);
       if (!rl.success) {
