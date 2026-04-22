@@ -37,7 +37,7 @@ export function WishlistItemProofSection({ itemId, canAddProof }: WishlistItemPr
       const data = await response.json();
 
       // Transform the API response to match FulfillmentProof type
-      const transformedProofs: FulfillmentProof[] = data.proofs.map((proof: any) => ({
+      const transformedProofs: FulfillmentProof[] = (data.data?.proofs ?? []).map((proof: any) => ({
         id: proof.id,
         wishlist_item_id: proof.wishlist_item_id,
         user_id: proof.user_id,

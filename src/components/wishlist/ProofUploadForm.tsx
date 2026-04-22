@@ -204,7 +204,7 @@ export function ProofUploadForm({
       const result = await response.json();
       reset();
       setSelectedType(null);
-      onSuccess?.(result.proof);
+      onSuccess?.(result.data);
     } catch (error) {
       logger.error('Error uploading proof', error, 'Wishlist');
     } finally {

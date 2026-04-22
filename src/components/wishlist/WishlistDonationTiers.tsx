@@ -54,7 +54,7 @@ export function WishlistDonationTiers({
         const response = await fetch(`/api/profiles/${userId}/wishlist-tiers`);
         if (response.ok) {
           const data = await response.json();
-          setItems(data.items || []);
+          setItems(data.data?.items || []);
         }
       } catch (error) {
         logger.error('Failed to fetch wishlist tiers', error, 'Wishlist');
