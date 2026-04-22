@@ -22,7 +22,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   try {
     const { id } = await context.params;
     const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) { return idValidation; }
     const { user } = request;
 
     const rl = await rateLimitWriteAsync(user.id);

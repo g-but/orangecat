@@ -20,7 +20,7 @@ export async function GET(
     const supabase = await createServerClient();
     const { id } = params;
     const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) { return idValidation; }
     const result = await getProposal(id, supabase);
     if (!result.success) {
       return apiNotFound(result.error);
@@ -48,7 +48,7 @@ export async function PUT(
 
     const { id } = params;
     const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) { return idValidation; }
     const payload = await request.json();
     const result = await updateProposal(id, payload, supabase);
     if (!result.success) {
@@ -77,7 +77,7 @@ export async function DELETE(
 
     const { id } = params;
     const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) { return idValidation; }
     const result = await deleteProposal(id, supabase);
     if (!result.success) {
       return apiBadRequest(result.error);

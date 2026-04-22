@@ -23,7 +23,7 @@ export const GET = withAuth(
       const { user, supabase } = request;
       const { id } = await context.params;
       const idValidation = getValidationError(validateUUID(id, 'order ID'));
-      if (idValidation) return idValidation;
+      if (idValidation) { return idValidation; }
 
       const { data: order, error } = await supabase
         .from(DATABASE_TABLES.ORDERS)
@@ -60,7 +60,7 @@ export const PUT = withAuth(
       }
       const { id } = await context.params;
       const idValidation2 = getValidationError(validateUUID(id, 'order ID'));
-      if (idValidation2) return idValidation2;
+      if (idValidation2) { return idValidation2; }
       const body = await request.json();
 
       // Fetch order

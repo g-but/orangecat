@@ -64,7 +64,7 @@ export const POST = withAuth(
     try {
       const { id: invitationId } = await params;
       const idValidation = getValidationError(validateUUID(invitationId, 'invitation ID'));
-      if (idValidation) return idValidation;
+      if (idValidation) { return idValidation; }
       const { user } = req;
 
       const rl = await rateLimitWriteAsync(user.id);
@@ -191,7 +191,7 @@ export const DELETE = withAuth(
     try {
       const { id: invitationId } = await params;
       const idValidation = getValidationError(validateUUID(invitationId, 'invitation ID'));
-      if (idValidation) return idValidation;
+      if (idValidation) { return idValidation; }
       const { user } = req;
 
       const rl = await rateLimitWriteAsync(user.id);

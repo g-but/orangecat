@@ -41,7 +41,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const idValidation = getValidationError(validateUUID(id, 'project ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) { return idValidation; }
     const supabase = await createServerClient();
     const {
       data: { user },
@@ -95,7 +95,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const idValidation = getValidationError(validateUUID(id, 'project ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) { return idValidation; }
     const supabase = await createServerClient();
     const {
       data: { user },
@@ -185,7 +185,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const idValidation = getValidationError(validateUUID(id, 'project ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) { return idValidation; }
     const supabase = await createServerClient();
     const {
       data: { user },

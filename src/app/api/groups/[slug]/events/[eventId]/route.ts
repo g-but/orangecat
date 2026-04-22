@@ -74,7 +74,7 @@ export const GET = withAuth(
     try {
       const { slug, eventId } = await params;
       const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
-      if (idValidation) return idValidation;
+      if (idValidation) { return idValidation; }
       const { user } = req;
       const supabase = await createServerClient();
 
@@ -167,7 +167,7 @@ export const PUT = withAuth(
     try {
       const { slug, eventId } = await params;
       const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
-      if (idValidation) return idValidation;
+      if (idValidation) { return idValidation; }
       const { user } = req;
       const supabase = await createServerClient();
 
@@ -268,7 +268,7 @@ export const DELETE = withAuth(
     try {
       const { slug, eventId } = await params;
       const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
-      if (idValidation) return idValidation;
+      if (idValidation) { return idValidation; }
       const { user } = req;
       const supabase = await createServerClient();
 

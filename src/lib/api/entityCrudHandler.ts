@@ -139,7 +139,7 @@ export function createGetHandler(config: EntityHandlerConfig) {
 
   return async function GET(request: NextRequest, { params }: EntityRouteParams) {
     const uuidCheck = validateUUID(params.id, `${meta.name} ID`);
-    if (!uuidCheck.valid) return uuidCheck.error!;
+    if (!uuidCheck.valid) { return uuidCheck.error!; }
 
     try {
       // Rate limiting check
@@ -253,7 +253,7 @@ export function createPutHandler(config: EntityHandlerConfig) {
 
   return async function PUT(request: NextRequest, { params }: EntityRouteParams) {
     const uuidCheck = validateUUID(params.id, `${meta.name} ID`);
-    if (!uuidCheck.valid) return uuidCheck.error!;
+    if (!uuidCheck.valid) { return uuidCheck.error!; }
 
     try {
       const supabase = await createServerClient();
@@ -374,7 +374,7 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
 
   return async function DELETE(_request: NextRequest, { params }: EntityRouteParams) {
     const uuidCheck = validateUUID(params.id, `${meta.name} ID`);
-    if (!uuidCheck.valid) return uuidCheck.error!;
+    if (!uuidCheck.valid) { return uuidCheck.error!; }
 
     try {
       const supabase = await createServerClient();
