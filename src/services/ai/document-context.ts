@@ -75,6 +75,9 @@ export interface FullUserContext {
     totalCauses: number;
     totalEvents: number;
     totalAssets: number;
+    totalLoans: number;
+    totalResearch: number;
+    totalWishlists: number;
     totalWallets: number;
   };
 }
@@ -230,6 +233,9 @@ export async function fetchEntitiesForCat(
     totalCauses: 0,
     totalEvents: 0,
     totalAssets: 0,
+    totalLoans: 0,
+    totalResearch: 0,
+    totalWishlists: 0,
     totalWallets: 0,
   };
   const entities: EntitySummary[] = [];
@@ -426,6 +432,79 @@ export async function fetchEntitiesForCat(
       });
     }
 
+    // Fetch loans (peer-to-peer lending)
+    const { data: loans, error: loansError } = await supabase
+      .from(ENTITY_REGISTRY.loan.tableName)
+      .select('id, title, description, status, amount, currency, interest_rate, duration_months')
+      .eq('actor_id', actorId)
+      .in('status', ['active', 'draft', 'paused', 'pending'])
+      .limit(20);
+
+    if (loansError) {
+      logger.warn('Failed to fetch loans for cat', { error: loansError.message }, 'DocumentContext');
+    } else if (loans) {
+      stats.totalLoans = loans.length;
+      loans.forEach(l => {
+        entities.push({
+          id: l.id,
+          type: 'loan',
+          title: l.title,
+          description: l.description?.substring(0, 300),
+          status: l.status,
+          price_btc: l.amount,
+          category: l.interest_rate != null ? `${l.interest_rate}% interest` : undefined,
+        });
+      });
+    }
+
+    // Fetch research entities (DeSci funding)
+    const { data: research, error: researchError } = await supabase
+      .from(ENTITY_REGISTRY.research.tableName)
+      .select('id, title, description, status, field, funding_goal_btc, funding_raised_btc')
+      .eq('actor_id', actorId)
+      .in('status', ['active', 'draft', 'paused'])
+      .limit(20);
+
+    if (researchError) {
+      logger.warn('Failed to fetch research for cat', { error: researchError.message }, 'DocumentContext');
+    } else if (research) {
+      stats.totalResearch = research.length;
+      research.forEach(r => {
+        entities.push({
+          id: r.id,
+          type: 'research',
+          title: r.title,
+          description: r.description?.substring(0, 300),
+          status: r.status,
+          price_btc: r.funding_goal_btc,
+          category: r.field,
+        });
+      });
+    }
+
+    // Fetch wishlists
+    const { data: wishlists, error: wishlistsError } = await supabase
+      .from(ENTITY_REGISTRY.wishlist.tableName)
+      .select('id, title, description, status')
+      .eq('actor_id', actorId)
+      .in('status', ['active', 'draft', 'paused'])
+      .limit(20);
+
+    if (wishlistsError) {
+      logger.warn('Failed to fetch wishlists for cat', { error: wishlistsError.message }, 'DocumentContext');
+    } else if (wishlists) {
+      stats.totalWishlists = wishlists.length;
+      wishlists.forEach(w => {
+        entities.push({
+          id: w.id,
+          type: 'wishlist',
+          title: w.title,
+          description: w.description?.substring(0, 300),
+          status: w.status,
+        });
+      });
+    }
+
     logger.info(
       'Fetched entities for cat',
       {
@@ -574,6 +653,9 @@ export function buildFullContextString(context: FullUserContext): string {
       cause: 'Causes',
       event: 'Events',
       asset: 'Assets',
+      loan: 'Loans',
+      research: 'Research',
+      wishlist: 'Wishlists',
     };
 
     for (const [type, items] of Object.entries(entityGroups)) {
@@ -645,7 +727,10 @@ export function buildFullContextString(context: FullUserContext): string {
       stats.totalProjects +
       stats.totalCauses +
       stats.totalEvents +
-      stats.totalAssets >
+      stats.totalAssets +
+      stats.totalLoans +
+      stats.totalResearch +
+      stats.totalWishlists >
     0;
 
   if (hasAnyEntities) {
@@ -667,6 +752,15 @@ export function buildFullContextString(context: FullUserContext): string {
     }
     if (stats.totalAssets > 0) {
       statParts.push(`${stats.totalAssets} asset${stats.totalAssets > 1 ? 's' : ''}`);
+    }
+    if (stats.totalLoans > 0) {
+      statParts.push(`${stats.totalLoans} loan${stats.totalLoans > 1 ? 's' : ''}`);
+    }
+    if (stats.totalResearch > 0) {
+      statParts.push(`${stats.totalResearch} research ${stats.totalResearch > 1 ? 'entities' : 'entity'}`);
+    }
+    if (stats.totalWishlists > 0) {
+      statParts.push(`${stats.totalWishlists} wishlist${stats.totalWishlists > 1 ? 's' : ''}`);
     }
     if (stats.totalWallets > 0) {
       statParts.push(`${stats.totalWallets} wallet${stats.totalWallets > 1 ? 's' : ''}`);

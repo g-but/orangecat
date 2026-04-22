@@ -92,10 +92,13 @@ export function generateKnowledgeItems(context: FullUserContext): ContextSummary
 
   // Entities
   const entityGroups: Array<{ stat: number; type: string; category: string; icon: string }> = [
-    { stat: context.stats.totalProducts, type: 'product', category: 'Your Products', icon: 'package'  },
-    { stat: context.stats.totalServices, type: 'service', category: 'Your Services', icon: 'briefcase' },
-    { stat: context.stats.totalProjects, type: 'project', category: 'Your Projects', icon: 'rocket'   },
-    { stat: context.stats.totalCauses,   type: 'cause',   category: 'Your Causes',   icon: 'heart'    },
+    { stat: context.stats.totalProducts,  type: 'product',  category: 'Your Products',  icon: 'package'   },
+    { stat: context.stats.totalServices,  type: 'service',  category: 'Your Services',  icon: 'briefcase' },
+    { stat: context.stats.totalProjects,  type: 'project',  category: 'Your Projects',  icon: 'rocket'    },
+    { stat: context.stats.totalCauses,    type: 'cause',    category: 'Your Causes',    icon: 'heart'     },
+    { stat: context.stats.totalLoans,     type: 'loan',     category: 'Your Loans',     icon: 'trending-up' },
+    { stat: context.stats.totalResearch,  type: 'research', category: 'Your Research',  icon: 'flask'     },
+    { stat: context.stats.totalWishlists, type: 'wishlist', category: 'Your Wishlists', icon: 'gift'      },
   ];
   for (const { stat, type, category, icon } of entityGroups) {
     if (stat > 0) {
@@ -147,10 +150,17 @@ export function calculateCompleteness(context: FullUserContext): number {
   if (context.documents.some(d => d.document_type === 'goals'))               score += 10;
   if (context.documents.some(d => d.document_type === 'skills'))              score += 10;
 
-  // Entities (30 pts)
-  if (context.stats.totalProducts > 0) score += 10;
-  if (context.stats.totalServices > 0) score += 10;
-  if (context.stats.totalProjects > 0) score += 10;
+  // Entities (30 pts — any 3 distinct entity types counts as full score)
+  const entityTypeCount = [
+    context.stats.totalProducts,
+    context.stats.totalServices,
+    context.stats.totalProjects,
+    context.stats.totalCauses,
+    context.stats.totalLoans,
+    context.stats.totalResearch,
+    context.stats.totalWishlists,
+  ].filter(n => n > 0).length;
+  score += Math.min(entityTypeCount * 10, 30);
 
   return Math.min(score, 100);
 }
