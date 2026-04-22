@@ -31,7 +31,7 @@ async function getActorIds(supabase: any, userId: string): Promise<string[]> {
 async function tryProviderAction(actorIds: string[], fn: (id: string) => Promise<any>): Promise<any> {
   for (const actorId of actorIds) {
     const result = await fn(actorId);
-    if (result.success) return result;
+    if (result.success) {return result;}
   }
   return undefined;
 }
@@ -42,12 +42,12 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
     const { user, supabase } = request;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const booking = await createBookingService(supabase as any).getBooking(id);
-    if (!booking) return apiNotFound('Booking not found');
+    if (!booking) {return apiNotFound('Booking not found');}
 
     const actorIds = await getActorIds(supabase, user.id);
     const isCustomer = booking.customer_user_id === user.id;
     const isProvider = actorIds.includes(booking.provider_actor_id);
-    if (!isCustomer && !isProvider) return apiForbidden('Access denied');
+    if (!isCustomer && !isProvider) {return apiForbidden('Access denied');}
 
     return apiSuccess({ ...booking, role: isProvider ? 'provider' : 'customer' });
   } catch (error) {
@@ -62,11 +62,11 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const body = await request.json();
     const result = updateBookingSchema.safeParse(body);
-    if (!result.success) return apiBadRequest('Validation failed', result.error.flatten());
+    if (!result.success) {return apiBadRequest('Validation failed', result.error.flatten());}
 
     const { action, reason } = result.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,7 +85,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
       bookingResult = await tryProviderAction(actorIds, actionMap[action]);
     }
 
-    if (!bookingResult?.success) return apiBadRequest(bookingResult?.error || 'Action failed');
+    if (!bookingResult?.success) {return apiBadRequest(bookingResult?.error || 'Action failed');}
     return apiSuccess(bookingResult.booking);
   } catch (error) {
     logger.error('Update booking error', error, 'BookingsAPI');
@@ -99,11 +99,11 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await createBookingService(supabase as any).cancelBooking(id, user.id, new URL(request.url).searchParams.get('reason') || undefined);
-    if (!result.success) return apiBadRequest(result.error || 'Cancel failed');
+    if (!result.success) {return apiBadRequest(result.error || 'Cancel failed');}
     return apiSuccess({ success: true });
   } catch (error) {
     logger.error('Cancel booking error', error, 'BookingsAPI');

@@ -23,26 +23,26 @@ export const POST = withAuth(
       const { user } = req;
 
       const rl = await rateLimitWriteAsync(user.id);
-      if (!rl.success) return apiRateLimited('Too many RSVP requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+      if (!rl.success) {return apiRateLimited('Too many RSVP requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
       const supabase = await createServerClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
 
       const { data: group, error: groupError } = await db.from(DATABASE_TABLES.GROUPS).select('id').eq('slug', slug).single();
-      if (groupError || !group) return apiNotFound('Group not found');
+      if (groupError || !group) {return apiNotFound('Group not found');}
 
       const { data: event, error: eventError } = await db
         .from(DATABASE_TABLES.GROUP_EVENTS)
         .select('id, group_id, is_public, requires_rsvp')
         .eq('id', eventId).eq('group_id', group.id)
         .single();
-      if (eventError || !event) return apiNotFound('Event not found');
+      if (eventError || !event) {return apiNotFound('Event not found');}
 
       if (!event.is_public) {
         const { data: membership } = await db
           .from(DATABASE_TABLES.GROUP_MEMBERS).select('id').eq('group_id', group.id).eq('user_id', user.id).maybeSingle();
-        if (!membership) return apiForbidden('You do not have access to this event');
+        if (!membership) {return apiForbidden('You do not have access to this event');}
       }
 
       const body = await req.json();

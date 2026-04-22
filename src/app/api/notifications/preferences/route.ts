@@ -23,7 +23,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
 
     const { data, error } = await admin.from(TABLE).select('*').eq('user_id', user.id).maybeSingle();
     if (error) { logger.error('Failed to fetch notification preferences', { error, userId: user.id }, 'NotificationPrefs'); throw error; }
-    if (data) return apiSuccess(data as NotificationPreferences);
+    if (data) {return apiSuccess(data as NotificationPreferences);}
 
     // First time: create default preferences
     const defaults = createDefaultPreferences(user.id);
@@ -51,14 +51,14 @@ export const PUT = withAuth(async (req: AuthenticatedRequest) => {
     const { user } = req;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const body = (await req.json()) as NotificationPreferencesUpdate;
     const updateData: Record<string, unknown> = {};
 
     for (const key of CATEGORY_TOGGLE_KEYS) {
       if (key in body) {
-        if (typeof body[key] !== 'boolean') return apiBadRequest(`${key} must be a boolean`);
+        if (typeof body[key] !== 'boolean') {return apiBadRequest(`${key} must be a boolean`);}
         updateData[key] = body[key];
       }
     }
@@ -76,12 +76,12 @@ export const PUT = withAuth(async (req: AuthenticatedRequest) => {
         return apiBadRequest('type_overrides must be an object mapping type names to booleans');
       }
       for (const [key, value] of Object.entries(overrides)) {
-        if (typeof value !== 'boolean') return apiBadRequest(`type_overrides values must be booleans, got non-boolean for "${key}"`);
+        if (typeof value !== 'boolean') {return apiBadRequest(`type_overrides values must be booleans, got non-boolean for "${key}"`);}
       }
       updateData.type_overrides = overrides;
     }
 
-    if (Object.keys(updateData).length === 0) return apiBadRequest('No valid fields provided to update');
+    if (Object.keys(updateData).length === 0) {return apiBadRequest('No valid fields provided to update');}
     updateData.updated_at = new Date().toISOString();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

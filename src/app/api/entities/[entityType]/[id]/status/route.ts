@@ -45,7 +45,7 @@ interface RouteContext {
 export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     const { entityType, id } = await context.params;
-    if (!isValidEntityType(entityType)) return apiBadRequest(`Invalid entity type: ${entityType}`);
+    if (!isValidEntityType(entityType)) {return apiBadRequest(`Invalid entity type: ${entityType}`);}
 
     const rateLimitResult = await rateLimit(request);
     if (!rateLimitResult.success) {
@@ -69,12 +69,12 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
       .eq('id', id)
       .single();
 
-    if (fetchError || !existing) return apiNotFound(`${entityType} not found`);
+    if (fetchError || !existing) {return apiNotFound(`${entityType} not found`);}
 
     const hasAccess = userIdField === 'actor_id'
       ? await checkOwnership(existing as { actor_id: string }, user.id)
       : existing[userIdField] === user.id;
-    if (!hasAccess) return apiNotFound(`${entityType} not found`);
+    if (!hasAccess) {return apiNotFound(`${entityType} not found`);}
 
     const currentStatus = (existing.status || 'draft').toLowerCase();
     const allowedTransitions = VALID_TRANSITIONS[currentStatus] || [];
@@ -89,7 +89,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq('id', id).select().single();
 
-    if (updateError) return handleSupabaseError(updateError);
+    if (updateError) {return handleSupabaseError(updateError);}
 
     logger.info(`Entity status changed: ${entityType} ${id}`, { userId: user.id, oldStatus: currentStatus, newStatus });
     return applyRateLimitHeaders(apiSuccess(updated), rateLimitResult);

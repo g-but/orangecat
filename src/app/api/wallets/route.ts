@@ -33,7 +33,7 @@ export const GET = withOptionalAuth(async request => {
       'profile_id or project_id is required'
     );
     const validationError = getValidationError(idValidation);
-    if (validationError) return validationError;
+    if (validationError) {return validationError;}
 
     const isOwner = user ? isProfileOwner(user, profileId) : false;
     const selectFields = isOwner ? '*' : PUBLIC_WALLET_FIELDS;
@@ -85,7 +85,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       rateLimitResult = await enforceUserWriteLimit(user.id);
     } catch (e) {
       const limited = handleRateLimitError(e, 'Too many wallet creation requests. Please slow down.');
-      if (limited) return limited;
+      if (limited) {return limited;}
       throw e;
     }
 

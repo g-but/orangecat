@@ -19,16 +19,16 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const { user } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many extraction requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many extraction requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    if (!file) return apiValidationError('No file provided');
+    if (!file) {return apiValidationError('No file provided');}
 
     const fileName = file.name;
     const extension = '.' + fileName.split('.').pop()?.toLowerCase();
 
-    if (file.size > MAX_FILE_SIZE) return apiValidationError(`File size must be less than ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+    if (file.size > MAX_FILE_SIZE) {return apiValidationError(`File size must be less than ${MAX_FILE_SIZE / 1024 / 1024}MB`);}
 
     if (PDF_DOCX_EXTENSIONS.includes(extension)) {
       return apiValidationError(`${extension.toUpperCase()} files are not yet supported. Please copy and paste the text content, or convert to .txt first. We're working on adding support for more file types!`);
@@ -46,8 +46,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     }
 
     content = content.trim();
-    if (!content) return apiValidationError('File is empty. Please upload a file with content.');
-    if (content.length > 50000) content = content.substring(0, 50000);
+    if (!content) {return apiValidationError('File is empty. Please upload a file with content.');}
+    if (content.length > 50000) {content = content.substring(0, 50000);}
 
     return apiSuccess({
       title: generateTitle(fileName),

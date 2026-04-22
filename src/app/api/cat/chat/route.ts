@@ -43,13 +43,13 @@ const bodySchema = z.object({
 
 function isAiRateLimitError(error: unknown): boolean {
   if (error instanceof GroqAPIError) {
-    if (error.type === 'rate_limit' || error.statusCode === 429) return true;
+    if (error.type === 'rate_limit' || error.statusCode === 429) {return true;}
     const msg = error.message.toLowerCase();
-    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) return true;
+    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) {return true;}
   }
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
-    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) return true;
+    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) {return true;}
   }
   return false;
 }
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     // Rate limit (write-tier reused for chat to prevent abuse)
     let rl: RateLimitResult;
@@ -79,13 +79,13 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const parsed = bodySchema.safeParse(body);
-    if (!parsed.success) return apiBadRequest('Invalid request', parsed.error.flatten());
+    if (!parsed.success) {return apiBadRequest('Invalid request', parsed.error.flatten());}
 
     const { message, model: requestedModel, stream } = parsed.data;
 
     // Resolve provider, BYOK keys, model, and platform limits
     const resolved = await resolveProvider(supabase, user.id, request.headers, { requestedModel, message });
-    if (resolved instanceof Response) return resolved;
+    if (resolved instanceof Response) {return resolved;}
     const { provider, hasByok, modelToUse, aiService, platformUsage, keyService, userGroqKey } = resolved;
 
     // Build context + history
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ model: modelToUse, provider })}\n\n`));
 
             for await (const chunk of aiService.streamChatCompletion({ model: modelToUse, messages, temperature: 0.7 })) {
-              if (chunk.usage) usage = chunk.usage;
+              if (chunk.usage) {usage = chunk.usage;}
               if (chunk.content) {
                 fullContent += chunk.content;
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk.content })}\n\n`));

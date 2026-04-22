@@ -39,11 +39,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const db = supabase as any;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many rent requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many rent requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const body = await request.json();
     const result = rentAssetSchema.safeParse(body);
-    if (!result.success) return apiBadRequest('Validation failed', result.error.flatten());
+    if (!result.success) {return apiBadRequest('Validation failed', result.error.flatten());}
 
     const { starts_at, ends_at, notes } = result.data;
     const startsAt = new Date(starts_at);
@@ -55,11 +55,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       .eq('id', assetId).eq('status', STATUS.ASSETS.ACTIVE).eq('is_for_rent', true)
       .single();
 
-    if (assetError || !asset) return apiNotFound('Asset not found or not available for rent');
+    if (assetError || !asset) {return apiNotFound('Asset not found or not available for rent');}
 
     const { data: customerActor } = await db
       .from(DATABASE_TABLES.ACTORS).select('id').eq('user_id', user.id).single();
-    if (!customerActor) return apiBadRequest('Customer profile not found');
+    if (!customerActor) {return apiBadRequest('Customer profile not found');}
 
     const periodMs = PERIOD_MS[asset.rental_period_type] || PERIOD_MS.daily;
     const periods = Math.ceil((endsAt.getTime() - startsAt.getTime()) / periodMs);
@@ -89,7 +89,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       metadata: { asset_title: asset.title, rental_period_type: asset.rental_period_type, rental_periods: periods, currency: asset.currency },
     });
 
-    if (!bookingResult.success) return apiBadRequest(bookingResult.error);
+    if (!bookingResult.success) {return apiBadRequest(bookingResult.error);}
     return apiCreated(bookingResult.booking);
   } catch (error) {
     logger.error('Rent asset error', error, 'AssetRentAPI');

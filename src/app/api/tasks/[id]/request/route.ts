@@ -31,24 +31,24 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { id: taskId } = await context.params;
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const body = await request.json().catch(() => ({}));
     const result = taskRequestSchema.safeParse(body);
-    if (!result.success) return apiValidationError('Validation failed', result.error.flatten());
+    if (!result.success) {return apiValidationError('Validation failed', result.error.flatten());}
     const d = result.data;
 
     // Verify task exists
     const { data: task, error: taskError } = await supabase.from(DATABASE_TABLES.TASKS).select('id, title').eq('id', taskId).single();
-    if (taskError) return taskError.code === 'PGRST116' ? apiNotFound('Task not found') : apiInternalError();
+    if (taskError) {return taskError.code === 'PGRST116' ? apiNotFound('Task not found') : apiInternalError();}
 
     // If specific user, verify they exist
     if (d.requested_user_id) {
       const { data: target, error: userError } = await supabase.from(DATABASE_TABLES.PROFILES).select('id').eq('id', d.requested_user_id).single();
-      if (userError || !target) return apiNotFound('Requested user not found');
+      if (userError || !target) {return apiNotFound('Requested user not found');}
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

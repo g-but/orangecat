@@ -29,11 +29,11 @@ interface RouteContext {
 export async function GET(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'project ID'));
-  if (idValidation) return idValidation;
+  if (idValidation) {return idValidation;}
   try {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const { data: project, error } = await supabase
       .from(DATABASE_TABLES.TASK_PROJECTS)
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') return apiNotFound('Project not found');
+      if (error.code === 'PGRST116') {return apiNotFound('Project not found');}
       logger.error('Failed to fetch task project', { error, id }, 'TaskProjectsAPI');
       return apiInternalError('Failed to fetch project');
     }
@@ -57,19 +57,19 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'project ID'));
-  if (idValidation) return idValidation;
+  if (idValidation) {return idValidation;}
   try {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const ownership = await verifyTaskProjectOwner(supabase, id, user.id);
-    if (ownership === 'not_found') return apiNotFound('Project not found');
-    if (ownership === 'forbidden') return apiForbidden('Only the creator can edit this project');
+    if (ownership === 'not_found') {return apiNotFound('Project not found');}
+    if (ownership === 'forbidden') {return apiForbidden('Only the creator can edit this project');}
 
     const body = await request.json();
     const result = taskProjectUpdateSchema.safeParse(body);
-    if (!result.success) return apiValidationError('Validation failed', result.error.flatten());
+    if (!result.success) {return apiValidationError('Validation failed', result.error.flatten());}
 
     const updates = buildTaskProjectUpdates(result.data);
 
@@ -96,15 +96,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'project ID'));
-  if (idValidation) return idValidation;
+  if (idValidation) {return idValidation;}
   try {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const ownership = await verifyTaskProjectOwner(supabase, id, user.id);
-    if (ownership === 'not_found') return apiNotFound('Project not found');
-    if (ownership === 'forbidden') return apiForbidden('Only the creator can delete this project');
+    if (ownership === 'not_found') {return apiNotFound('Project not found');}
+    if (ownership === 'forbidden') {return apiForbidden('Only the creator can delete this project');}
 
     const { error } = await supabase.from(DATABASE_TABLES.TASK_PROJECTS).delete().eq('id', id);
     if (error) {

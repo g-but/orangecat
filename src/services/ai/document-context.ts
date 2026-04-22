@@ -753,9 +753,9 @@ export function buildFullContextString(context: FullUserContext): string {
     const taskLines = context.tasks.map(t => {
       const parts = [`- **${t.title}**`];
       parts.push(` [${t.category}]`);
-      if (t.priority !== 'normal') parts.push(` priority:${t.priority}`);
-      if (t.current_status !== 'idle') parts.push(` status:${t.current_status}`);
-      if (t.task_type !== 'one_time' && t.schedule_human) parts.push(` — ${t.schedule_human}`);
+      if (t.priority !== 'normal') {parts.push(` priority:${t.priority}`);}
+      if (t.current_status !== 'idle') {parts.push(` status:${t.current_status}`);}
+      if (t.task_type !== 'one_time' && t.schedule_human) {parts.push(` — ${t.schedule_human}`);}
       return parts.join('');
     });
     const urgentNote = urgent.length > 0

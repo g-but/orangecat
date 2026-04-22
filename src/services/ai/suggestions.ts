@@ -14,8 +14,8 @@ const DOCUMENT_TYPE_SUGGESTIONS: Record<string, (doc: DocumentContext) => string
       `Help me make progress on my goal: "${truncate(doc.title, 40)}"`,
       `What's a good first step for achieving "${truncate(doc.title, 35)}"?`,
     ];
-    if (doc.content.toLowerCase().includes('bitcoin')) s.push('How can I accelerate my Bitcoin journey?');
-    if (doc.content.toLowerCase().includes('learn')) s.push('Create a learning plan based on my goals');
+    if (doc.content.toLowerCase().includes('bitcoin')) {s.push('How can I accelerate my Bitcoin journey?');}
+    if (doc.content.toLowerCase().includes('learn')) {s.push('Create a learning plan based on my goals');}
     return s;
   },
   skills: doc => {
@@ -24,8 +24,8 @@ const DOCUMENT_TYPE_SUGGESTIONS: Record<string, (doc: DocumentContext) => string
       `What products could I create with my skills?`,
     ];
     const lc = doc.content.toLowerCase();
-    if (lc.includes('development') || lc.includes('coding')) s.push('What digital products should a developer sell?');
-    if (lc.includes('design')) s.push('How can I sell design services on OrangeCat?');
+    if (lc.includes('development') || lc.includes('coding')) {s.push('What digital products should a developer sell?');}
+    if (lc.includes('design')) {s.push('How can I sell design services on OrangeCat?');}
     return s;
   },
   background: _doc => [
@@ -63,7 +63,7 @@ const CONTEXT_AWARE_GENERIC = [
 ];
 
 export function generateSuggestions(documents: DocumentContext[]): string[] {
-  if (documents.length === 0) return DEFAULT_SUGGESTIONS;
+  if (documents.length === 0) {return DEFAULT_SUGGESTIONS;}
 
   const suggestions: string[] = [];
   const used = new Set<string>();

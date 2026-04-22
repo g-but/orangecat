@@ -40,7 +40,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const supabase = await createServerClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     let rateLimitResult: RateLimitResult;
     try {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const body = await request.json();
     const parsed = sendMessageSchema.safeParse(body);
-    if (!parsed.success) return apiBadRequest('Validation failed', parsed.error.flatten());
+    if (!parsed.success) {return apiBadRequest('Validation failed', parsed.error.flatten());}
 
     const result = await sendAiMessage(
       supabase,

@@ -31,7 +31,7 @@ interface RouteContext {
 export async function GET(_request: Request, context: RouteContext) {
   const { id: projectId } = await context.params;
   const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
-  if (idValidation) return idValidation;
+  if (idValidation) {return idValidation;}
   try {
     const supabase = await createServerClient();
     const { data, error } = await supabase
@@ -61,7 +61,7 @@ export async function GET(_request: Request, context: RouteContext) {
 export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   const { id: projectId } = await context.params;
   const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
-  if (idValidation) return idValidation;
+  if (idValidation) {return idValidation;}
   try {
     const { user, supabase } = request;
     const rl = await rateLimitWriteAsync(user.id);
@@ -70,13 +70,13 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     }
 
     const mediaId = new URL(request.url).searchParams.get('mediaId');
-    if (!mediaId) return apiBadRequest('mediaId query parameter is required');
+    if (!mediaId) {return apiBadRequest('mediaId query parameter is required');}
     const mediaIdValidation = getValidationError(validateUUID(mediaId, 'media ID'));
-    if (mediaIdValidation) return mediaIdValidation;
+    if (mediaIdValidation) {return mediaIdValidation;}
 
     const { data: project } = await supabase.from(getTableName('project')).select('user_id').eq('id', projectId).single();
-    if (!project) return apiNotFound('Project not found');
-    if (user.id !== project.user_id) return apiForbidden('You can only delete media from your own projects');
+    if (!project) {return apiNotFound('Project not found');}
+    if (user.id !== project.user_id) {return apiForbidden('You can only delete media from your own projects');}
 
     const { error } = await supabase
       .from(DATABASE_TABLES.PROJECT_MEDIA)
@@ -101,7 +101,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   const { id: projectId } = await context.params;
   const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
-  if (idValidation) return idValidation;
+  if (idValidation) {return idValidation;}
   try {
     const { user, supabase } = request;
     const rl = await rateLimitWriteAsync(user.id);

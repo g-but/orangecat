@@ -32,22 +32,22 @@ export async function createResearchContribution(
     .single();
 
   if (entityError) {
-    if (entityError.code === 'PGRST116') return { ok: false, code: 'NOT_FOUND', message: 'Research entity not found' };
+    if (entityError.code === 'PGRST116') {return { ok: false, code: 'NOT_FOUND', message: 'Research entity not found' };}
     throw entityError;
   }
 
-  if (!entity.is_public) return { ok: false, code: 'NOT_ACCEPTING', message: 'Cannot contribute to private research entities' };
+  if (!entity.is_public) {return { ok: false, code: 'NOT_ACCEPTING', message: 'Cannot contribute to private research entities' };}
   if (entity.status === PROJECT_STATUS.COMPLETED || entity.status === PROJECT_STATUS.CANCELLED) {
     return { ok: false, code: 'NOT_ACCEPTING', message: 'This research entity is no longer accepting contributions' };
   }
 
   const { amount, currency, funding_model, message, anonymous } = body;
 
-  if (!amount || amount <= 0) return { ok: false, code: 'INVALID_AMOUNT', message: 'Valid contribution amount is required' };
+  if (!amount || amount <= 0) {return { ok: false, code: 'INVALID_AMOUNT', message: 'Valid contribution amount is required' };}
 
   const amountBtc = convertToBtc(amount, currency || 'BTC');
-  if (amountBtc < MIN_AMOUNT_BTC) return { ok: false, code: 'INVALID_AMOUNT', message: 'Minimum contribution is 0.00001 BTC' };
-  if (!VALID_FUNDING_MODELS.includes(funding_model)) return { ok: false, code: 'INVALID_MODEL', message: 'Invalid funding model' };
+  if (amountBtc < MIN_AMOUNT_BTC) {return { ok: false, code: 'INVALID_AMOUNT', message: 'Minimum contribution is 0.00001 BTC' };}
+  if (!VALID_FUNDING_MODELS.includes(funding_model)) {return { ok: false, code: 'INVALID_MODEL', message: 'Invalid funding model' };}
 
   const satsAmount = Math.round(amountBtc * 100_000_000);
   const invoice = `lnbc${satsAmount}...`; // Placeholder

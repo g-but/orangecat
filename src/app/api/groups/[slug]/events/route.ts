@@ -47,7 +47,7 @@ export const GET = withAuth(
       const { searchParams } = new URL(req.url);
 
       const group = await resolveGroupBySlug(supabase, slug);
-      if (!group) return apiNotFound('Group not found');
+      if (!group) {return apiNotFound('Group not found');}
 
       const status = searchParams.get('status') || 'upcoming';
       const event_type = searchParams.get('event_type');
@@ -67,9 +67,9 @@ export const GET = withAuth(
         .order('starts_at', { ascending: true })
         .range(offset, offset + limit - 1);
 
-      if (status === 'upcoming') query = query.gte('starts_at', new Date().toISOString());
-      else if (status === 'past') query = query.lt('starts_at', new Date().toISOString());
-      if (event_type) query = query.eq('event_type', event_type);
+      if (status === 'upcoming') {query = query.gte('starts_at', new Date().toISOString());}
+      else if (status === 'past') {query = query.lt('starts_at', new Date().toISOString());}
+      if (event_type) {query = query.eq('event_type', event_type);}
 
       const { data: events, count, error } = await query;
 
@@ -100,10 +100,10 @@ export const POST = withAuth(
       const supabase = await createServerClient();
 
       const group = await resolveGroupBySlug(supabase, slug);
-      if (!group) return apiNotFound('Group not found');
+      if (!group) {return apiNotFound('Group not found');}
 
       const isMember = await checkGroupMember(supabase, group.id, user.id);
-      if (!isMember) return apiForbidden('Only group members can create events');
+      if (!isMember) {return apiForbidden('Only group members can create events');}
 
       const body = await req.json();
       const validation = createEventSchema.safeParse(body);

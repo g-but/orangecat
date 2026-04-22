@@ -180,7 +180,7 @@ export function handleRateLimitError(
   e: unknown,
   message: string = 'Too many requests. Please slow down.'
 ): ReturnType<typeof apiRateLimited> | null {
-  if (!(e instanceof RateLimitError)) return null
+  if (!(e instanceof RateLimitError)) {return null}
   const retryAfter = (e.details as { retryAfter?: number } | undefined)?.retryAfter || 60
   return apiRateLimited(message, retryAfter)
 }

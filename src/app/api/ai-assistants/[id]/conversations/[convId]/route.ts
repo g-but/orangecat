@@ -35,7 +35,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
       .eq('id', convId).eq('assistant_id', assistantId).eq('user_id', user.id)
       .single();
 
-    if (convError || !conversation) return apiNotFound('Conversation not found');
+    if (convError || !conversation) {return apiNotFound('Conversation not found');}
 
     const [{ data: messages, error: msgError }, { data: assistant }] = await Promise.all([
       supabase.from(DATABASE_TABLES.AI_MESSAGES).select('*').eq('conversation_id', convId).order('created_at', { ascending: true }),
@@ -60,11 +60,11 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const body = await request.json();
     const result = updateConversationSchema.safeParse(body);
-    if (!result.success) return apiBadRequest('Validation failed', result.error.flatten());
+    if (!result.success) {return apiBadRequest('Validation failed', result.error.flatten());}
 
     const { data: conversation, error } = await (supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
       .update({ ...result.data, updated_at: new Date().toISOString() })
@@ -75,7 +75,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
       logger.error('Error updating conversation', error, 'AIConversationAPI');
       return apiInternalError('Failed to update conversation');
     }
-    if (!conversation) return apiNotFound('Conversation not found');
+    if (!conversation) {return apiNotFound('Conversation not found');}
 
     return apiSuccess(conversation);
   } catch (error) {
@@ -90,7 +90,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const { error } = await supabase
       .from(DATABASE_TABLES.AI_CONVERSATIONS)

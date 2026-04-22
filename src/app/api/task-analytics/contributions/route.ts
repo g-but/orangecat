@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const { searchParams } = new URL(request.url);
     const days = Math.min(365, Math.max(1, parseInt(searchParams.get('days') || '30', 10)));
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     if (uniqueUserIds.length > 0) {
       const { data: profiles } = await supabase.from(DATABASE_TABLES.PROFILES).select('id, username, display_name, avatar_url').in('id', uniqueUserIds);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      for (const p of (profiles || []) as any[]) profilesMap.set(p.id, p);
+      for (const p of (profiles || []) as any[]) {profilesMap.set(p.id, p);}
     }
 
     const contributions = aggregateContributions(completions, profilesMap, categoryFilter);

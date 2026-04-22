@@ -32,12 +32,12 @@ export function aggregateVotes(votes: VoteRow[], userId: string | null): VoteSum
   const summary: VoteSummary = { total_votes: votes.length, by_type: {}, user_vote: null };
 
   for (const vote of votes) {
-    if (!summary.by_type[vote.vote_type]) summary.by_type[vote.vote_type] = {};
+    if (!summary.by_type[vote.vote_type]) {summary.by_type[vote.vote_type] = {};}
     summary.by_type[vote.vote_type][vote.choice] =
       (summary.by_type[vote.vote_type][vote.choice] || 0) + vote.weight;
 
     if (userId && vote.user_id === userId) {
-      if (!summary.user_vote) summary.user_vote = {};
+      if (!summary.user_vote) {summary.user_vote = {};}
       summary.user_vote[vote.vote_type] = vote.choice;
     }
   }

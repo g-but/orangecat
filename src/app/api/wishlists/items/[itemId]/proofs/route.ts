@@ -60,7 +60,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', itemId).single();
 
-    if (itemError || !wishlistItem) return apiNotFound('Wishlist item not found');
+    if (itemError || !wishlistItem) {return apiNotFound('Wishlist item not found');}
 
     const { data: proofsData, error: proofsError } = await supabase
       .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS)
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         .from(DATABASE_TABLES.WISHLIST_FEEDBACK)
         .select('id, fulfillment_proof_id, user_id, feedback_type, comment, created_at, profiles:user_id(id, username, display_name, avatar_url)')
         .in('fulfillment_proof_id', proofs.map(p => p.id));
-      if (feedbackData) feedbackMap = groupFeedbackByProof(feedbackData as Row[]);
+      if (feedbackData) {feedbackMap = groupFeedbackByProof(feedbackData as Row[]);}
     }
 
     const wishlists = wishlistItem.wishlists as Row | Row[];

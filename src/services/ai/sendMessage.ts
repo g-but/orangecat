@@ -91,11 +91,11 @@ export async function sendAiMessage(
 ): Promise<SendMessageResult | SendMessageError> {
   // 1. Verify conversation
   const convResult = await verifyConversation(supabase, convId, assistantId, userId);
-  if ('error' in convResult) return convResult.error;
+  if ('error' in convResult) {return convResult.error;}
 
   // 2. Fetch assistant
   const assistantResult = await fetchAssistant(supabase, assistantId);
-  if ('error' in assistantResult) return assistantResult.error;
+  if ('error' in assistantResult) {return assistantResult.error;}
   const assistant = assistantResult.assistant;
 
   // 3. Determine provider + BYOK
@@ -104,7 +104,7 @@ export async function sendAiMessage(
   const hasByok = !!userOpenRouterKey;
 
   const provider = resolveProvider(hasByok, userOpenRouterKey);
-  if (!provider) return { code: 'SERVICE_UNAVAILABLE' };
+  if (!provider) {return { code: 'SERVICE_UNAVAILABLE' };}
 
   // 4. Check platform usage limits (non-BYOK users)
   if (!hasByok) {
@@ -158,7 +158,7 @@ export async function sendAiMessage(
 
   // 9. Store user message
   const userMsgResult = await storeUserMessage(supabase, convId, content);
-  if ('error' in userMsgResult) return userMsgResult.error;
+  if ('error' in userMsgResult) {return userMsgResult.error;}
   const userMessage = userMsgResult.message;
 
   // 10. Generate AI response
@@ -175,7 +175,7 @@ export async function sendAiMessage(
   const apiCostBtc = aiResponse.costBtc;
   const totalCostBtc = apiCostBtc + creatorCharge;
   const aiMsgResult = await storeAssistantMessage(supabase, convId, aiResponse, assistant, creatorCharge, apiCostBtc, hasByok);
-  if ('error' in aiMsgResult) return aiMsgResult.error;
+  if ('error' in aiMsgResult) {return aiMsgResult.error;}
   const assistantMessage = aiMsgResult.message;
 
   // 12. Post-message side effects
@@ -248,9 +248,9 @@ async function verifyConversation(
     .eq('user_id', userId)
     .single();
 
-  if (error || !data) return { error: { code: 'NOT_FOUND', message: 'Conversation not found' } };
+  if (error || !data) {return { error: { code: 'NOT_FOUND', message: 'Conversation not found' } };}
   const conv = data as { id: string; status: string };
-  if (conv.status !== STATUS.AI_ASSISTANTS.ACTIVE) return { error: { code: 'ARCHIVED' } };
+  if (conv.status !== STATUS.AI_ASSISTANTS.ACTIVE) {return { error: { code: 'ARCHIVED' } };}
   return { ok: true };
 }
 
@@ -264,14 +264,14 @@ async function fetchAssistant(
     .eq('id', assistantId)
     .single();
 
-  if (error || !data) return { error: { code: 'NOT_FOUND', message: 'Assistant not found' } };
+  if (error || !data) {return { error: { code: 'NOT_FOUND', message: 'Assistant not found' } };}
   return { assistant: data as AssistantRecord };
 }
 
 function resolveProvider(hasByok: boolean, userKey: string | null): AIProvider | null {
-  if (userKey) return 'openrouter';
-  if (process.env.OPENROUTER_API_KEY) return 'openrouter';
-  if (isGroqAvailable()) return 'groq';
+  if (userKey) {return 'openrouter';}
+  if (process.env.OPENROUTER_API_KEY) {return 'openrouter';}
+  if (isGroqAvailable()) {return 'groq';}
   return null;
 }
 
@@ -283,7 +283,7 @@ function selectModel(
   history: { role: string; content: string }[],
   content: string
 ): string {
-  if (provider === 'groq') return DEFAULT_GROQ_MODEL;
+  if (provider === 'groq') {return DEFAULT_GROQ_MODEL;}
 
   let modelToUse = requestedModel || assistant.model_preference || 'auto';
   const historyMapped = history.map(m => ({ role: m.role, content: m.content }));
@@ -307,7 +307,7 @@ async function checkFreeMessageUsage(
   assistantId: string,
   freeMessagesPerDay: number
 ): Promise<{ usesFreeMessage: boolean; freeMessagesRemaining: number }> {
-  if (freeMessagesPerDay <= 0) return { usesFreeMessage: false, freeMessagesRemaining: 0 };
+  if (freeMessagesPerDay <= 0) {return { usesFreeMessage: false, freeMessagesRemaining: 0 };}
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const { searchParams } = new URL(request.url);
     const filters: TaskFilter = {
@@ -45,12 +45,12 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (!filters.is_archived) query = query.eq('is_archived', false);
-    if (filters.category) query = query.eq('category', filters.category);
-    if (filters.status) query = query.eq('current_status', filters.status);
-    if (filters.task_type) query = query.eq('task_type', filters.task_type);
-    if (filters.priority) query = query.eq('priority', filters.priority);
-    if (filters.project_id) query = query.eq('project_id', filters.project_id);
+    if (!filters.is_archived) {query = query.eq('is_archived', false);}
+    if (filters.category) {query = query.eq('category', filters.category);}
+    if (filters.status) {query = query.eq('current_status', filters.status);}
+    if (filters.task_type) {query = query.eq('task_type', filters.task_type);}
+    if (filters.priority) {query = query.eq('priority', filters.priority);}
+    if (filters.project_id) {query = query.eq('project_id', filters.project_id);}
     if (filters.search) {
       const escaped = filters.search.replace(/[%_]/g, '\\$&');
       query = query.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`);
@@ -70,14 +70,14 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many task creation requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many task creation requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const body = await request.json();
     const result = taskSchema.safeParse(body);
-    if (!result.success) return apiValidationError('Validation failed', result.error.flatten());
+    if (!result.success) {return apiValidationError('Validation failed', result.error.flatten());}
 
     const d = result.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

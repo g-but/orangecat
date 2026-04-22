@@ -15,7 +15,7 @@ export async function GET(_request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -47,7 +47,7 @@ export async function GET(_request: NextRequest) {
     if (completerIds.length > 0) {
       const { data: profiles } = await supabase.from(DATABASE_TABLES.PROFILES).select('id, username, display_name, avatar_url').in('id', completerIds);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      for (const p of (profiles || []) as any[]) profilesMap[p.id] = p;
+      for (const p of (profiles || []) as any[]) {profilesMap[p.id] = p;}
     }
 
     const { data: urgentTasks } = await supabase

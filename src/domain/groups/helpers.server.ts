@@ -21,7 +21,7 @@ export async function resolveGroupBySlug(
     .select('id, name')
     .eq('slug', slug)
     .single();
-  if (error || !data) return null;
+  if (error || !data) {return null;}
   return data as { id: string; name?: string };
 }
 
@@ -40,7 +40,7 @@ export async function checkGroupAdmin(
     .eq('group_id', groupId)
     .eq('user_id', userId)
     .maybeSingle();
-  if (!data || !['founder', 'admin'].includes(data.role)) return null;
+  if (!data || !['founder', 'admin'].includes(data.role)) {return null;}
   return data.role as string;
 }
 
@@ -53,7 +53,7 @@ export async function canEditEvent(
   userId: string,
   creatorId: string
 ): Promise<boolean> {
-  if (creatorId === userId) return true;
+  if (creatorId === userId) {return true;}
   const role = await checkGroupAdmin(supabase, groupId, userId);
   return role !== null;
 }

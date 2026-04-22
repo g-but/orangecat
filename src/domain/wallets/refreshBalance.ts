@@ -26,7 +26,7 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
     return res;
   } catch (error) {
     clearTimeout(id);
-    if (error instanceof Error && error.name === 'AbortError') throw new Error('TIMEOUT');
+    if (error instanceof Error && error.name === 'AbortError') {throw new Error('TIMEOUT');}
     throw new Error('NETWORK_ERROR');
   }
 }
@@ -37,9 +37,9 @@ async function fetchXpubBalance(xpub: string): Promise<number> {
     { headers: { Accept: 'application/json' } },
     API_TIMEOUT_MS
   );
-  if (res.status === 429) throw new Error('RATE_LIMITED');
-  if (res.status === 404) return 0;
-  if (!res.ok) throw new Error(`API_ERROR_${res.status}`);
+  if (res.status === 429) {throw new Error('RATE_LIMITED');}
+  if (res.status === 404) {return 0;}
+  if (!res.ok) {throw new Error(`API_ERROR_${res.status}`);}
   const data = await res.json();
   const funded: number = data?.chain_stats?.funded_txo_sum ?? 0;
   const spent: number = data?.chain_stats?.spent_txo_sum ?? 0;
@@ -84,9 +84,9 @@ export async function refreshWalletBalance(
     }
   } catch (error) {
     const msg = error instanceof Error ? error.message : '';
-    if (msg === 'TIMEOUT') return { ok: false, code: 'TIMEOUT' };
-    if (msg === 'RATE_LIMITED') return { ok: false, code: 'RATE_LIMITED' };
-    if (msg.startsWith('API_ERROR')) return { ok: false, code: 'API_ERROR' };
+    if (msg === 'TIMEOUT') {return { ok: false, code: 'TIMEOUT' };}
+    if (msg === 'RATE_LIMITED') {return { ok: false, code: 'RATE_LIMITED' };}
+    if (msg.startsWith('API_ERROR')) {return { ok: false, code: 'API_ERROR' };}
     return { ok: false, code: 'NETWORK_ERROR' };
   }
 

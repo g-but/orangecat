@@ -38,8 +38,8 @@ const DOC_TYPE_LABELS: Record<string, { label: string; icon: string }> = {
 
 function timeOfDayGreeting(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
+  if (hour < 12) {return 'Good morning';}
+  if (hour < 17) {return 'Good afternoon';}
   return 'Good evening';
 }
 
@@ -48,18 +48,18 @@ function timeOfDayGreeting(): string {
 export function generateGreeting(context: FullUserContext): string {
   const greeting = timeOfDayGreeting();
   const name = context.profile?.name || context.profile?.username;
-  if (!name) return `${greeting}! I'm your personal AI assistant on OrangeCat.`;
+  if (!name) {return `${greeting}! I'm your personal AI assistant on OrangeCat.`;}
 
   const candidates: string[] = [];
   if (context.stats.totalProjects > 0)
-    candidates.push(`${greeting}, ${name}! Ready to work on your projects?`);
+    {candidates.push(`${greeting}, ${name}! Ready to work on your projects?`);}
   if (context.stats.totalProducts > 0)
-    candidates.push(`${greeting}, ${name}! How's your store doing?`);
+    {candidates.push(`${greeting}, ${name}! How's your store doing?`);}
   if (context.documents.some(d => d.document_type === 'goals'))
-    candidates.push(`${greeting}, ${name}! Let's make progress on your goals today.`);
+    {candidates.push(`${greeting}, ${name}! Let's make progress on your goals today.`);}
 
   if (candidates.length === 0)
-    candidates.push(`${greeting}, ${name}! How can I help you today?`);
+    {candidates.push(`${greeting}, ${name}! How can I help you today?`);}
 
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
@@ -70,10 +70,10 @@ export function generateKnowledgeItems(context: FullUserContext): ContextSummary
   // Profile
   if (context.profile) {
     const profileItems: string[] = [];
-    if (context.profile.name)          profileItems.push(`Name: ${context.profile.name}`);
-    if (context.profile.location_city) profileItems.push(`Location: ${context.profile.location_city}`);
-    if (context.profile.bio)           profileItems.push('Your bio');
-    if (context.profile.background)    profileItems.push('Your background');
+    if (context.profile.name)          {profileItems.push(`Name: ${context.profile.name}`);}
+    if (context.profile.location_city) {profileItems.push(`Location: ${context.profile.location_city}`);}
+    if (context.profile.bio)           {profileItems.push('Your bio');}
+    if (context.profile.background)    {profileItems.push('Your background');}
     if (profileItems.length > 0) {
       items.push({ category: 'Your Profile', icon: 'user', items: profileItems, count: profileItems.length });
     }
@@ -136,9 +136,9 @@ export function generateSuggestions(context: FullUserContext): ContextSummary['s
   }
   if (context.entities.length > 0 && context.documents.length > 0) {
     const firstProduct = context.entities.find(e => e.type === 'product');
-    if (firstProduct) suggestions.push({ text: `Ask me how to market "${firstProduct.title}" better` });
+    if (firstProduct) {suggestions.push({ text: `Ask me how to market "${firstProduct.title}" better` });}
     const firstProject = context.entities.find(e => e.type === 'project');
-    if (firstProject) suggestions.push({ text: `Ask me for ideas to promote "${firstProject.title}"` });
+    if (firstProject) {suggestions.push({ text: `Ask me for ideas to promote "${firstProject.title}"` });}
   }
   if (suggestions.length < 3) {
     suggestions.push({ text: 'Ask me anything about Bitcoin, building projects, or growing on OrangeCat' });
@@ -151,16 +151,16 @@ export function calculateCompleteness(context: FullUserContext): number {
   let score = 0;
 
   // Profile completeness (30 pts)
-  if (context.profile?.name)          score += 5;
-  if (context.profile?.bio)           score += 10;
-  if (context.profile?.location_city) score += 5;
-  if (context.profile?.background)    score += 10;
+  if (context.profile?.name)          {score += 5;}
+  if (context.profile?.bio)           {score += 10;}
+  if (context.profile?.location_city) {score += 5;}
+  if (context.profile?.background)    {score += 10;}
 
   // Documents (40 pts)
-  if (context.documents.length >= 1)                                          score += 10;
-  if (context.documents.length >= 3)                                          score += 10;
-  if (context.documents.some(d => d.document_type === 'goals'))               score += 10;
-  if (context.documents.some(d => d.document_type === 'skills'))              score += 10;
+  if (context.documents.length >= 1)                                          {score += 10;}
+  if (context.documents.length >= 3)                                          {score += 10;}
+  if (context.documents.some(d => d.document_type === 'goals'))               {score += 10;}
+  if (context.documents.some(d => d.document_type === 'skills'))              {score += 10;}
 
   // Entities (30 pts — any 3 distinct entity types counts as full score)
   const entityTypeCount = [
@@ -179,11 +179,11 @@ export function calculateCompleteness(context: FullUserContext): number {
 
 export function generateTips(context: FullUserContext, completeness: number): string[] {
   const tips: string[] = [];
-  if (completeness < 30)                                               tips.push('Add more context about yourself to get better personalized advice');
-  if (!context.profile?.bio)                                           tips.push('Add a bio to your profile');
-  if (!context.documents.some(d => d.document_type === 'goals'))       tips.push('Share your goals so I can help you achieve them');
-  if (!context.documents.some(d => d.document_type === 'skills'))      tips.push('Tell me about your skills so I can suggest opportunities');
-  if (context.stats.totalProducts === 0 && context.stats.totalServices === 0) tips.push('Create a product or service to start earning Bitcoin');
+  if (completeness < 30)                                               {tips.push('Add more context about yourself to get better personalized advice');}
+  if (!context.profile?.bio)                                           {tips.push('Add a bio to your profile');}
+  if (!context.documents.some(d => d.document_type === 'goals'))       {tips.push('Share your goals so I can help you achieve them');}
+  if (!context.documents.some(d => d.document_type === 'skills'))      {tips.push('Tell me about your skills so I can suggest opportunities');}
+  if (context.stats.totalProducts === 0 && context.stats.totalServices === 0) {tips.push('Create a product or service to start earning Bitcoin');}
   return tips.slice(0, 2);
 }
 

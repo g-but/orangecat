@@ -29,7 +29,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
   try {
     const { id } = await context.params;
     const idValidation = getValidationError(validateUUID(id, 'wallet ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) {return idValidation;}
 
     const { user, supabase } = request;
 
@@ -37,20 +37,20 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
       await enforceUserWriteLimit(user.id);
     } catch (e) {
       const limited = handleRateLimitError(e, 'Too many wallet update requests. Please slow down.');
-      if (limited) return limited;
+      if (limited) {return limited;}
       throw e;
     }
 
     const rawBody = await request.json();
     const parseResult = walletUpdateSchema.safeParse(rawBody);
-    if (!parseResult.success) return apiBadRequest('Invalid input', parseResult.error.errors);
+    if (!parseResult.success) {return apiBadRequest('Invalid input', parseResult.error.errors);}
 
     const result = await fetchWalletAndVerifyOwner(supabase, id, user.id, 'update');
-    if (result.error) return result.error;
+    if (result.error) {return result.error;}
     const { wallet } = result;
 
     const updateResult = buildWalletUpdates(parseResult.data);
-    if (updateResult.error) return updateResult.error;
+    if (updateResult.error) {return updateResult.error;}
     const { updates } = updateResult;
 
     if (parseResult.data.is_primary === true) {
@@ -87,7 +87,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
   try {
     const { id } = await context.params;
     const idValidation = getValidationError(validateUUID(id, 'wallet ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) {return idValidation;}
 
     const { user, supabase } = request;
 
@@ -95,12 +95,12 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
       await enforceUserWriteLimit(user.id);
     } catch (e) {
       const limited = handleRateLimitError(e);
-      if (limited) return limited;
+      if (limited) {return limited;}
       throw e;
     }
 
     const result = await fetchWalletAndVerifyOwner(supabase, id, user.id, 'delete');
-    if (result.error) return result.error;
+    if (result.error) {return result.error;}
     const { wallet } = result;
 
     const { error: deleteError } = await supabase

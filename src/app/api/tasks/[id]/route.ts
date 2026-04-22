@@ -32,11 +32,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const idValidation = getValidationError(validateUUID(id, 'task ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) {return idValidation;}
 
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const { data: task, error } = await supabase
       .from(DATABASE_TABLES.TASKS)
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') return apiNotFound('Task not found');
+      if (error.code === 'PGRST116') {return apiNotFound('Task not found');}
       logger.error('Failed to fetch task', { error, id }, 'TasksAPI');
       return apiInternalError('Failed to fetch task');
     }
@@ -68,11 +68,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const idValidation = getValidationError(validateUUID(id, 'task ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) {return idValidation;}
 
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
@@ -82,7 +82,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const body = await request.json();
     const result = taskUpdateSchema.safeParse(body);
-    if (!result.success) return apiValidationError('Validation failed', result.error.flatten());
+    if (!result.success) {return apiValidationError('Validation failed', result.error.flatten());}
 
     const updates = buildTaskUpdates(result.data);
     return await updateTask(supabase, id, updates);
@@ -97,11 +97,11 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const idValidation = getValidationError(validateUUID(id, 'task ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) {return idValidation;}
 
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {

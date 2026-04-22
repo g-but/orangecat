@@ -81,14 +81,14 @@ export function buildWalletUpdates(
 ): { updates: Partial<Wallet>; error: null } | { updates: null; error: AnyResponse } {
   const updates: Partial<Wallet> = {};
 
-  if (body.label !== undefined)           updates.label = body.label.trim();
-  if (body.description !== undefined)     updates.description = body.description?.trim() || null;
-  if (body.category !== undefined)        updates.category = body.category;
-  if (body.category_icon !== undefined)   updates.category_icon = body.category_icon;
-  if (body.goal_amount !== undefined)     updates.goal_amount = body.goal_amount || null;
-  if (body.goal_currency !== undefined)   updates.goal_currency = body.goal_currency || null;
-  if (body.goal_deadline !== undefined)   updates.goal_deadline = body.goal_deadline || null;
-  if (body.is_primary !== undefined)      updates.is_primary = body.is_primary;
+  if (body.label !== undefined)           {updates.label = body.label.trim();}
+  if (body.description !== undefined)     {updates.description = body.description?.trim() || null;}
+  if (body.category !== undefined)        {updates.category = body.category;}
+  if (body.category_icon !== undefined)   {updates.category_icon = body.category_icon;}
+  if (body.goal_amount !== undefined)     {updates.goal_amount = body.goal_amount || null;}
+  if (body.goal_currency !== undefined)   {updates.goal_currency = body.goal_currency || null;}
+  if (body.goal_deadline !== undefined)   {updates.goal_deadline = body.goal_deadline || null;}
+  if (body.is_primary !== undefined)      {updates.is_primary = body.is_primary;}
 
   if (body.address_or_xpub !== undefined) {
     const validation = validateAddressOrXpub(body.address_or_xpub);

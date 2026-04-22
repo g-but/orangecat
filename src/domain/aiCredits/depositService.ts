@@ -53,7 +53,7 @@ export async function createCreditDeposit(
     };
   }
 
-  if (depositError) throw depositError;
+  if (depositError) {throw depositError;}
 
   let paymentDetails: { invoice: string | null; address?: string } = { invoice: null };
 

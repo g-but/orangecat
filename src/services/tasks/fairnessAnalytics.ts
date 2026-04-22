@@ -49,7 +49,7 @@ export function computeFairnessMetrics(
 
     for (const completion of taskCompletions) {
       const profile = profilesMap.get(completion.completed_by);
-      if (!profile) continue;
+      if (!profile) {continue;}
       const existing = uniqueCompleters.get(profile.id);
       if (existing) {
         existing.count += 1;

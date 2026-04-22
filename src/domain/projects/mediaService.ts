@@ -31,8 +31,8 @@ export async function saveProjectMedia(
     .eq('id', projectId)
     .single();
 
-  if (!project) return { ok: false, code: 'NOT_FOUND', message: 'Project not found' };
-  if (project.user_id !== userId) return { ok: false, code: 'FORBIDDEN', message: 'You can only upload media to your own projects' };
+  if (!project) {return { ok: false, code: 'NOT_FOUND', message: 'Project not found' };}
+  if (project.user_id !== userId) {return { ok: false, code: 'FORBIDDEN', message: 'You can only upload media to your own projects' };}
 
   const { count, error: countError } = await supabase
     .from(DATABASE_TABLES.PROJECT_MEDIA)

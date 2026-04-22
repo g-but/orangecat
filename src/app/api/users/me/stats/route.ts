@@ -28,7 +28,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     const { user, supabase } = request;
 
     const stats = await fetchUserStats(supabase, user.id);
-    if (!stats) return apiUnauthorized('Profile not found');
+    if (!stats) {return apiUnauthorized('Profile not found');}
 
     const { profile, entityCounts, hasWallet, daysSinceLastActivity, hasPublishedEntities, wishlistItemCount } = stats;
 

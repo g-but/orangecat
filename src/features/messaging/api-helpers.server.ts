@@ -53,7 +53,7 @@ export async function fetchConversationContext(
       .eq('conversation_id', conversationId),
   ]);
 
-  if (convResult.error || !convResult.data) return null;
+  if (convResult.error || !convResult.data) {return null;}
 
   const formattedParticipants = ((participantsResult.data || []) as ParticipantRow[]).map(p => ({
     user_id: p.user_id,
@@ -98,7 +98,7 @@ export async function verifyParticipantAndReactivate(
     .eq('user_id', userId)
     .maybeSingle();
 
-  if (error || !data) return 'not_found';
+  if (error || !data) {return 'not_found';}
 
   const participant = data as { is_active?: boolean };
   if (participant.is_active === false) {

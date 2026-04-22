@@ -49,7 +49,7 @@ export function analyzeDescription(description: string): AnalysisResponse {
   Object.entries(KEYWORDS).forEach(([category, keywords]) => {
     keywords.forEach(keyword => {
       const match = keyword.length <= 3 ? new RegExp(`\\b${keyword}\\b`).test(text) : text.includes(keyword);
-      if (match) scores[category as keyof typeof scores]++;
+      if (match) {scores[category as keyof typeof scores]++;}
     });
   });
 
@@ -61,9 +61,9 @@ export function analyzeDescription(description: string): AnalysisResponse {
 
   let confidence = Math.min(scores.personal, 30) + Math.min(scores.charity, 20) +
     Math.min(scores.business, 20) + Math.min(scores.community, 20) + Math.min(scores.openSource, 20);
-  if (description.length > 100) confidence += 15;
-  if (description.length > 200) confidence += 10;
-  if (description.split('\n').length > 2) confidence += 10;
+  if (description.length > 100) {confidence += 15;}
+  if (description.length > 200) {confidence += 10;}
+  if (description.split('\n').length > 2) {confidence += 10;}
   confidence = Math.min(confidence, 100);
 
   let recommendation = "A personal project is the ideal fit for your needs. It's quick to set up and gives you direct control over your Bitcoin fundraising.";

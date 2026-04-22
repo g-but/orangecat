@@ -25,7 +25,7 @@ interface RouteContext {
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'wallet ID'));
-  if (idValidation) return idValidation;
+  if (idValidation) {return idValidation;}
 
   try {
     const { user, supabase } = request;

@@ -49,7 +49,7 @@ async function handleAccept(
   const { error: memberError } = await (supabase.from(DATABASE_TABLES.GROUP_MEMBERS) as UntypedTable).insert({
     group_id: inv.group_id, user_id: userId, role: inv.role, invited_by: inv.invited_by,
   });
-  if (memberError) return handleApiError(memberError);
+  if (memberError) {return handleApiError(memberError);}
 
   await updateInvite();
   return apiSuccess({ message: 'Successfully joined the group', group_slug: inv.groups?.slug });
@@ -59,7 +59,7 @@ export const POST = withAuth(
   async (req: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
     const { id: invitationId } = await params;
     const idValidation = getValidationError(validateUUID(invitationId, 'invitation ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) {return idValidation;}
     try {
       const { user } = req;
 
@@ -84,16 +84,16 @@ export const POST = withAuth(
         supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable
       ).select('*, groups(slug)').eq('id', invitationId).single();
 
-      if (inviteError || !inv) return apiNotFound('Invitation not found');
-      if (inv.user_id && inv.user_id !== user.id) return apiForbidden('This invitation is for another user');
-      if (inv.status !== STATUS.GROUP_INVITATIONS.PENDING) return apiValidationError('Invitation has already been responded to');
+      if (inviteError || !inv) {return apiNotFound('Invitation not found');}
+      if (inv.user_id && inv.user_id !== user.id) {return apiForbidden('This invitation is for another user');}
+      if (inv.status !== STATUS.GROUP_INVITATIONS.PENDING) {return apiValidationError('Invitation has already been responded to');}
 
       if (new Date(inv.expires_at) < new Date()) {
         await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable).update({ status: 'expired' }).eq('id', invitationId);
         return apiValidationError('Invitation has expired');
       }
 
-      if (action === 'accept') return handleAccept(supabase, inv, invitationId, user.id);
+      if (action === 'accept') {return handleAccept(supabase, inv, invitationId, user.id);}
 
       await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable)
         .update({ status: 'declined', responded_at: new Date().toISOString() }).eq('id', invitationId);
@@ -110,7 +110,7 @@ export const DELETE = withAuth(
   async (req: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
     const { id: invitationId } = await params;
     const idValidation = getValidationError(validateUUID(invitationId, 'invitation ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) {return idValidation;}
     try {
       const { user } = req;
 
@@ -125,12 +125,12 @@ export const DELETE = withAuth(
         supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable
       ).select('group_id, status').eq('id', invitationId).single();
 
-      if (inviteError || !invitation) return apiNotFound('Invitation not found');
+      if (inviteError || !invitation) {return apiNotFound('Invitation not found');}
 
       const adminRole = await checkGroupAdmin(supabase, invitation.group_id, user.id);
-      if (!adminRole) return apiForbidden('Only admins can revoke invitations');
+      if (!adminRole) {return apiForbidden('Only admins can revoke invitations');}
 
-      if (invitation.status !== STATUS.GROUP_INVITATIONS.PENDING) return apiValidationError('Can only revoke pending invitations');
+      if (invitation.status !== STATUS.GROUP_INVITATIONS.PENDING) {return apiValidationError('Can only revoke pending invitations');}
 
       const { error } = await (supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable)
         .update({ status: 'revoked' }).eq('id', invitationId);

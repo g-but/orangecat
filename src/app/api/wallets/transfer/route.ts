@@ -25,13 +25,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       await enforceUserWriteLimit(user.id);
     } catch (e) {
       const limited = handleRateLimitError(e, 'Too many transfer requests. Please slow down.');
-      if (limited) return limited;
+      if (limited) {return limited;}
       throw e;
     }
 
     const rawBody = await request.json();
     const parseResult = walletTransferSchema.safeParse(rawBody);
-    if (!parseResult.success) return apiBadRequest('Invalid input', parseResult.error.errors);
+    if (!parseResult.success) {return apiBadRequest('Invalid input', parseResult.error.errors);}
     const body = parseResult.data;
 
     const result = await executeWalletTransfer(

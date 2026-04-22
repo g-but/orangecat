@@ -50,7 +50,7 @@ export async function fetchUserStats(
   ]);
 
   const profile = profileResult.data as ProfileRecord | null;
-  if (profileResult.error || !profile) return null;
+  if (profileResult.error || !profile) {return null;}
 
   const actorId = (actorResult.data as { id: string } | null)?.id;
 

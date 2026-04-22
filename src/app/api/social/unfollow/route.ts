@@ -19,7 +19,7 @@ async function handleUnfollow(request: AuthenticatedRequest) {
       rateLimitResult = await enforceUserSocialLimit(user.id);
     } catch (e) {
       const limited = handleRateLimitError(e, 'Too many unfollow requests. Please slow down.');
-      if (limited) return limited;
+      if (limited) {return limited;}
       throw e;
     }
 

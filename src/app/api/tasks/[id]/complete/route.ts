@@ -37,14 +37,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const body = await request.json().catch(() => ({}));
     const result = taskCompletionSchema.safeParse(body);
-    if (!result.success) return apiValidationError('Validation failed', result.error.flatten());
+    if (!result.success) {return apiValidationError('Validation failed', result.error.flatten());}
 
     const completionData = result.data;
 
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       .single();
 
     if (taskError) {
-      if (taskError.code === 'PGRST116') return apiNotFound('Task not found');
+      if (taskError.code === 'PGRST116') {return apiNotFound('Task not found');}
       logger.error('Failed to fetch task for completion', { error: taskError, taskId }, 'TasksAPI');
       return apiInternalError();
     }

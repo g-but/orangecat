@@ -16,7 +16,7 @@ async function insertConversationAndParticipant(
     .insert({ created_by: userId, is_group: false })
     .select('id')
     .single();
-  if (convErr || !convIns?.id) throw convErr || new Error('conv insert failed');
+  if (convErr || !convIns?.id) {throw convErr || new Error('conv insert failed');}
   const conversationId = convIns.id as string;
   const { error: partErr } = await client
     .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
@@ -45,11 +45,11 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
     if (Array.isArray(convs)) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const selfConv = (convs as any[]).find(c => {
-        if (c.is_group) return false;
+        if (c.is_group) {return false;}
         const parts = Array.isArray(c.participants) ? c.participants : [];
         return parts.length === 1 && parts[0]?.user_id === user.id;
       });
-      if (selfConv) conversationId = selfConv.id;
+      if (selfConv) {conversationId = selfConv.id;}
     }
 
     if (!conversationId) {

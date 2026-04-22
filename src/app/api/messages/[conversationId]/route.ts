@@ -83,7 +83,7 @@ export const GET = withAuth(
         fetchConversationContext(admin, conversationId, user.id),
       ]);
 
-      if (!ctx) return apiNotFound('Conversation not found');
+      if (!ctx) {return apiNotFound('Conversation not found');}
 
       return apiSuccess({
         conversation: { ...ctx.conversation, participants: ctx.formattedParticipants, unread_count: ctx.unreadCount },
@@ -126,7 +126,7 @@ export const POST = withAuth(
       const admin = createAdminClient();
 
       const membership = await verifyParticipantAndReactivate(admin, conversationId, user.id);
-      if (membership === 'not_found') return apiForbidden('Not a participant in this conversation');
+      if (membership === 'not_found') {return apiForbidden('Not a participant in this conversation');}
 
       const newId = await svcSendMessage(conversationId, user.id, content, messageType, metadata || null, senderActorId || null);
       return apiCreated({ id: newId }, { headers: getRateLimitHeaders(rateLimitResult) });

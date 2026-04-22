@@ -26,7 +26,7 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
   try {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized();
+    if (!user) {return apiUnauthorized();}
 
     const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,7 +35,7 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
     const { data: credits, error: creditsError } = await db
       .from(DATABASE_TABLES.AI_USER_CREDITS).select('*').eq('user_id', user.id).single();
 
-    if (creditsError && creditsError.code !== 'PGRST116') throw creditsError;
+    if (creditsError && creditsError.code !== 'PGRST116') {throw creditsError;}
 
     const balance = credits
       ? { balance_btc: credits.balance_btc || 0, total_deposited_btc: credits.total_deposited_btc || 0, total_spent_btc: credits.total_spent_btc || 0 }
@@ -48,7 +48,7 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (txError) logger.warn('Failed to fetch transactions', { error: txError });
+    if (txError) {logger.warn('Failed to fetch transactions', { error: txError });}
 
     const { count } = await db
       .from(DATABASE_TABLES.AI_CREDIT_TRANSACTIONS)
@@ -70,11 +70,11 @@ export const POST = compose(withRequestId(), withRateLimit('write'))(async (requ
   try {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized();
+    if (!user) {return apiUnauthorized();}
 
     const body = await request.json();
     const result = depositRequestSchema.safeParse(body);
-    if (!result.success) return handleApiError({ message: 'Invalid request', details: result.error.flatten() });
+    if (!result.success) {return handleApiError({ message: 'Invalid request', details: result.error.flatten() });}
 
     const deposit = await createCreditDeposit(supabase, user.id, result.data.amount_btc, result.data.payment_method);
     return apiSuccess(deposit);

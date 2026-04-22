@@ -31,16 +31,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const { data: assistant, error: assistantError } = await db
       .from(DATABASE_TABLES.AI_ASSISTANTS).select('id, average_rating, total_ratings').eq('id', assistantId).single();
-    if (assistantError || !assistant) return apiNotFound('Assistant not found');
+    if (assistantError || !assistant) {return apiNotFound('Assistant not found');}
 
     let query = db
       .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS)
       .select(`id, rating, review, created_at, updated_at, user:profiles!ai_assistant_ratings_user_id_fkey(id, username, name, avatar_url)`, { count: 'exact' })
       .eq('assistant_id', assistantId);
 
-    if (sortBy === 'rating_high') query = query.order('rating', { ascending: false });
-    else if (sortBy === 'rating_low') query = query.order('rating', { ascending: true });
-    else query = query.order('created_at', { ascending: false });
+    if (sortBy === 'rating_high') {query = query.order('rating', { ascending: false });}
+    else if (sortBy === 'rating_low') {query = query.order('rating', { ascending: true });}
+    else {query = query.order('created_at', { ascending: false });}
 
     query = query.range(offset, offset + limit - 1);
 
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     distribution?.forEach((r: { rating: number }) => {
-      if (r.rating >= 1 && r.rating <= 5) ratingDistribution[r.rating as keyof typeof ratingDistribution]++;
+      if (r.rating >= 1 && r.rating <= 5) {ratingDistribution[r.rating as keyof typeof ratingDistribution]++;}
     });
 
     return apiSuccess({

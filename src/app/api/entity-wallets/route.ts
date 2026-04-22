@@ -77,7 +77,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     await enforceUserWriteLimit(user.id);
   } catch (e) {
     const limited = handleRateLimitError(e, 'Too many requests. Please slow down.');
-    if (limited) return limited;
+    if (limited) {return limited;}
     throw e;
   }
 

@@ -50,7 +50,7 @@ export async function createWallet(
 
   // Verify ownership
   const ownershipError = await verifyOwnership(supabase, user, body);
-  if (ownershipError) return { response: ownershipError };
+  if (ownershipError) {return { response: ownershipError };}
 
   // Sanitize and validate address
   const sanitized = sanitizeWalletInput(body);

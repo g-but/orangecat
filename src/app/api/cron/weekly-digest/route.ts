@@ -42,7 +42,7 @@ async function getUserIdsForDigest(admin: any): Promise<string[]> {
 }
 
 export async function GET(request: Request) {
-  if (!verifyCronSecret(request)) return apiUnauthorized();
+  if (!verifyCronSecret(request)) {return apiUnauthorized();}
 
   const startTime = Date.now();
   const admin = createAdminClient();

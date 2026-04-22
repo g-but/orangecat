@@ -36,7 +36,7 @@ export function aggregateContributions(
 
   for (const c of filtered) {
     const profile = profilesMap.get(c.completed_by);
-    if (!profile) continue;
+    if (!profile) {continue;}
 
     if (!byUser.has(c.completed_by)) {
       byUser.set(c.completed_by, { user: profile, totalCompletions: 0, totalMinutes: 0, byCategory: {} });

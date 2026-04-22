@@ -34,7 +34,7 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
       .single();
 
     if (entityError) {
-      if (entityError.code === 'PGRST116') return apiNotFound('Research entity not found');
+      if (entityError.code === 'PGRST116') {return apiNotFound('Research entity not found');}
       throw entityError;
     }
 
@@ -49,7 +49,7 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
       .eq('research_entity_id', id)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {throw error;}
     return apiSuccess(updates || []);
   } catch (error) {
     return handleApiError(error);
@@ -64,7 +64,7 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     const { data: entity, error: entityError } = await db
       .from(DATABASE_TABLES.RESEARCH_ENTITIES)
@@ -73,7 +73,7 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
       .single();
 
     if (entityError) {
-      if (entityError.code === 'PGRST116') return apiNotFound('Research entity not found');
+      if (entityError.code === 'PGRST116') {return apiNotFound('Research entity not found');}
       throw entityError;
     }
     if (entity.user_id !== user.id) {
@@ -81,10 +81,10 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
     }
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many updates. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many updates. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const { title, description, milestone_achieved, funding_released, attachments } = await request.json();
-    if (!title || !description) return apiBadRequest('Title and description are required');
+    if (!title || !description) {return apiBadRequest('Title and description are required');}
 
     const { data: update, error } = await db
       .from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES)
@@ -100,7 +100,7 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {throw error;}
 
     if (milestone_achieved) {
       await db.rpc('increment_research_completion', {

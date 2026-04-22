@@ -16,7 +16,7 @@ export async function GET(_request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     const context = await fetchFullContextForCat(supabase, user.id);
     return apiSuccess(buildContextSummary(context));

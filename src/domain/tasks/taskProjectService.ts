@@ -26,7 +26,7 @@ export async function verifyTaskProjectOwner(
     .single();
 
   if (error) {
-    if (error.code === 'PGRST116') return 'not_found';
+    if (error.code === 'PGRST116') {return 'not_found';}
     logger.error('Failed to fetch task project for ownership check', { error, id }, 'TaskProjectsAPI');
     return 'not_found';
   }
@@ -44,9 +44,9 @@ export function buildTaskProjectUpdates(updateData: {
   target_date?: string | null;
 }): Record<string, unknown> {
   const updates: Record<string, unknown> = {};
-  if (updateData.title !== undefined) updates.title = updateData.title;
-  if (updateData.description !== undefined) updates.description = updateData.description || null;
-  if (updateData.status !== undefined) updates.status = updateData.status;
-  if (updateData.target_date !== undefined) updates.target_date = updateData.target_date || null;
+  if (updateData.title !== undefined) {updates.title = updateData.title;}
+  if (updateData.description !== undefined) {updates.description = updateData.description || null;}
+  if (updateData.status !== undefined) {updates.status = updateData.status;}
+  if (updateData.target_date !== undefined) {updates.target_date = updateData.target_date || null;}
   return updates;
 }

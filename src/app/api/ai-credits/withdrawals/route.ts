@@ -28,7 +28,7 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized();
+    if (!user) {return apiUnauthorized();}
 
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
@@ -39,7 +39,7 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
       db.from(DATABASE_TABLES.AI_CREATOR_WITHDRAWALS).select('*', { count: 'exact' }).eq('user_id', user.id).order('created_at', { ascending: false }).range(offset, offset + limit - 1),
     ]);
 
-    if (withdrawalsError) throw withdrawalsError;
+    if (withdrawalsError) {throw withdrawalsError;}
 
     return apiSuccess({
       earnings: earnings || { total_earned_btc: 0, total_withdrawn_btc: 0, available_balance_btc: 0, pending_withdrawal_btc: 0 },
@@ -58,11 +58,11 @@ export const POST = compose(withRequestId(), withRateLimit('write'))(async (requ
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized();
+    if (!user) {return apiUnauthorized();}
 
     const body = await request.json();
     const result = withdrawalRequestSchema.safeParse(body);
-    if (!result.success) return apiValidationError('Invalid request', result.error.flatten().fieldErrors);
+    if (!result.success) {return apiValidationError('Invalid request', result.error.flatten().fieldErrors);}
 
     const { amount_btc, lightning_address } = result.data;
 
@@ -71,7 +71,7 @@ export const POST = compose(withRequestId(), withRateLimit('write'))(async (requ
     });
 
     if (error) {
-      if (error.message.includes('Insufficient balance')) return apiError('Insufficient balance for withdrawal', 'BAD_REQUEST', 400);
+      if (error.message.includes('Insufficient balance')) {return apiError('Insufficient balance for withdrawal', 'BAD_REQUEST', 400);}
       throw error;
     }
 

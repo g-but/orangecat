@@ -36,8 +36,8 @@ export const GET = withAuth(
       const { searchParams } = new URL(req.url);
 
       const group = await resolveGroupBySlug(supabase, slug);
-      if (!group) return apiNotFound('Group not found');
-      if (!await checkGroupAdmin(supabase, group.id, user.id)) return apiForbidden('Only admins can view invitations');
+      if (!group) {return apiNotFound('Group not found');}
+      if (!await checkGroupAdmin(supabase, group.id, user.id)) {return apiForbidden('Only admins can view invitations');}
 
       const status = searchParams.get('status') || 'pending';
       const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10) || 20, 100);
@@ -49,7 +49,7 @@ export const GET = withAuth(
         .select(`*, inviter:profiles!group_invitations_invited_by_fkey (name, avatar_url), invitee:profiles!group_invitations_user_id_fkey (name, avatar_url)`, { count: 'exact' })
         .eq('group_id', group.id).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
-      if (status !== 'all') query = query.eq('status', status);
+      if (status !== 'all') {query = query.eq('status', status);}
       const { data: invitations, count, error } = await query;
       if (error) { logger.error('Failed to fetch invitations', { error, groupId: group.id }, 'Groups'); return handleApiError(error); }
 
@@ -69,15 +69,15 @@ export const POST = withAuth(
       const supabase = await createServerClient();
 
       const rl = await rateLimitWriteAsync(user.id);
-      if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+      if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
       const group = await resolveGroupBySlug(supabase, slug);
-      if (!group) return apiNotFound('Group not found');
-      if (!await checkGroupAdmin(supabase, group.id, user.id)) return apiForbidden('Only admins can create invitations');
+      if (!group) {return apiNotFound('Group not found');}
+      if (!await checkGroupAdmin(supabase, group.id, user.id)) {return apiForbidden('Only admins can create invitations');}
 
       const body = await req.json();
       const validation = createInvitationSchema.safeParse(body);
-      if (!validation.success) return apiValidationError('Invalid request data', validation.error.flatten());
+      if (!validation.success) {return apiValidationError('Invalid request data', validation.error.flatten());}
 
       const { user_id, email, create_link, role, message, expires_in_days } = validation.data;
 
@@ -86,8 +86,8 @@ export const POST = withAuth(
           supabase.from(DATABASE_TABLES.GROUP_MEMBERS).select('id').eq('group_id', group.id).eq('user_id', user_id).maybeSingle(),
           supabase.from(DATABASE_TABLES.GROUP_INVITATIONS).select('id').eq('group_id', group.id).eq('user_id', user_id).eq('status', 'pending').maybeSingle(),
         ]);
-        if (existingMember) return apiValidationError('User is already a member of this group');
-        if (existingInvite) return apiValidationError('User already has a pending invitation');
+        if (existingMember) {return apiValidationError('User is already a member of this group');}
+        if (existingInvite) {return apiValidationError('User already has a pending invitation');}
       }
 
       const expiresAt = new Date();

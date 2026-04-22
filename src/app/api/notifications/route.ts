@@ -30,8 +30,8 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (filter === 'unread') query = query.eq('read', false);
-    else if (filter !== 'all') query = query.eq('type', filter);
+    if (filter === 'unread') {query = query.eq('read', false);}
+    else if (filter !== 'all') {query = query.eq('type', filter);}
 
     const { data: notifications, error, count } = await query;
     if (error) {
@@ -57,7 +57,7 @@ export const DELETE = withAuth(async (req: AuthenticatedRequest) => {
   try {
     const { user } = req;
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const { searchParams } = new URL(req.url);
     const notificationId = searchParams.get('id');
@@ -75,7 +75,7 @@ export const DELETE = withAuth(async (req: AuthenticatedRequest) => {
     }
 
     const { error, count } = await deleteQuery;
-    if (error) throw error;
+    if (error) {throw error;}
 
     return apiSuccess({ deleted: notificationId ? 1 : (count || 0) });
   } catch (error) {

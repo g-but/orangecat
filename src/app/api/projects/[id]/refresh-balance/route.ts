@@ -28,14 +28,14 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   try {
     const { id: projectId } = await context.params;
     const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
-    if (idValidation) return idValidation;
+    if (idValidation) {return idValidation;}
 
     const { user, supabase } = request;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const { data: project, error } = await db
       .from(getTableName('project'))
@@ -43,9 +43,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       .eq('id', projectId)
       .single();
 
-    if (error || !project) return apiNotFound('Project not found');
-    if (user.id !== project.user_id) return apiForbidden('You can only refresh balance for your own projects');
-    if (!project.bitcoin_address) return apiBadRequest('No Bitcoin address configured for this project');
+    if (error || !project) {return apiNotFound('Project not found');}
+    if (user.id !== project.user_id) {return apiForbidden('You can only refresh balance for your own projects');}
+    if (!project.bitcoin_address) {return apiBadRequest('No Bitcoin address configured for this project');}
 
     if (project.bitcoin_balance_updated_at) {
       const secondsAgo = (Date.now() - new Date(project.bitcoin_balance_updated_at).getTime()) / 1000;

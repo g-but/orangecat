@@ -54,7 +54,7 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
     let countQuery = (supabase.from(tableName) as any).select('*', { count: 'exact', head: true });
 
     let actorId: string | null = null;
-    if (userId) actorId = (await getOrCreateUserActor(userId)).id;
+    if (userId) {actorId = (await getOrCreateUserActor(userId)).id;}
 
     if (userId && includeOwnDrafts && actorId) {
       itemsQuery = itemsQuery.eq('actor_id', actorId);
@@ -76,8 +76,8 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
     itemsQuery = applySortOrder(itemsQuery, sortBy);
 
     const [{ data: items, error: itemsError }, { count, error: countError }] = await Promise.all([itemsQuery, countQuery]);
-    if (itemsError) throw itemsError;
-    if (countError) throw countError;
+    if (itemsError) {throw itemsError;}
+    if (countError) {throw countError;}
 
     return apiSuccess(items || [], {
       page: calculatePage(offset, limit),
@@ -94,14 +94,14 @@ export const POST = compose(withRequestId(), withZodBody(aiAssistantSchema))(asy
   try {
     const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     let rl: RateLimitResult;
     try {
       rl = await enforceUserWriteLimit(user.id);
     } catch (e) {
       const limited = handleRateLimitError(e, 'Too many creation requests. Please slow down.');
-      if (limited) return limited;
+      if (limited) {return limited;}
       throw e;
     }
 

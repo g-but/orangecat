@@ -34,7 +34,7 @@ export async function GET() {
   try {
     const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     const permissionService = createPermissionService(supabase);
     const summary = await permissionService.getPermissionSummary(user.id);
@@ -54,21 +54,21 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const body = await request.json();
     const parseResult = grantPermissionSchema.safeParse(body);
-    if (!parseResult.success) return apiBadRequest('Invalid request', parseResult.error.errors);
+    if (!parseResult.success) {return apiBadRequest('Invalid request', parseResult.error.errors);}
 
     const { actionId, category, requiresConfirmation, dailyLimit, maxSatsPerAction } = parseResult.data;
 
     if (actionId !== '*') {
       const action = CAT_ACTIONS[actionId];
-      if (!action) return apiBadRequest(`Unknown action: ${actionId}`);
-      if (action.category !== category) return apiBadRequest(`Action ${actionId} is not in category ${category}`);
+      if (!action) {return apiBadRequest(`Unknown action: ${actionId}`);}
+      if (action.category !== category) {return apiBadRequest(`Action ${actionId} is not in category ${category}`);}
     }
 
     const permissionService = createPermissionService(supabase);
@@ -89,14 +89,14 @@ export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const body = await request.json();
     const parseResult = revokePermissionSchema.safeParse(body);
-    if (!parseResult.success) return apiBadRequest('Invalid request', parseResult.error.errors);
+    if (!parseResult.success) {return apiBadRequest('Invalid request', parseResult.error.errors);}
 
     const { actionId, category } = parseResult.data;
     const permissionService = createPermissionService(supabase);

@@ -27,13 +27,13 @@ interface RouteContext { params: Promise<{ id: string }> }
 export const GET = withAuth(async (request: AuthenticatedRequest, { params }: RouteContext) => {
   const { id: projectId } = await params;
   const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
-  if (idValidation) return idValidation;
+  if (idValidation) {return idValidation;}
   try {
     const supabase = await createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: favorite, error } = await (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
       .select('id').eq('user_id', request.user.id).eq('project_id', projectId).maybeSingle();
-    if (error) return apiInternalError('Failed to check favorite status');
+    if (error) {return apiInternalError('Failed to check favorite status');}
     return apiSuccess({ isFavorited: !!favorite });
   } catch (error) {
     return handleApiError(error);
@@ -43,27 +43,27 @@ export const GET = withAuth(async (request: AuthenticatedRequest, { params }: Ro
 export const POST = withAuth(async (request: AuthenticatedRequest, { params }: RouteContext) => {
   const { id: projectId } = await params;
   const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
-  if (idValidation) return idValidation;
+  if (idValidation) {return idValidation;}
   try {
     const { user } = request;
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const supabase = await createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: project } = await (supabase.from(getTableName('project')) as any)
       .select('id, title').eq('id', projectId).single();
-    if (!project) return apiNotFound('Project not found');
+    if (!project) {return apiNotFound('Project not found');}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
       .select('id').eq('user_id', user.id).eq('project_id', projectId).maybeSingle();
-    if (existing) return apiSuccess({ isFavorited: true, message: 'Project already in favorites' });
+    if (existing) {return apiSuccess({ isFavorited: true, message: 'Project already in favorites' });}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
       .insert({ user_id: user.id, project_id: projectId });
-    if (error) return apiInternalError('Failed to add favorite');
+    if (error) {return apiInternalError('Failed to add favorite');}
 
     await auditSuccess(AUDIT_ACTIONS.PROJECT_CREATED, user.id, 'project', projectId, { action: 'favorite', projectTitle: project.title });
     logger.info('Project added to favorites', { userId: user.id, projectId });
@@ -76,27 +76,27 @@ export const POST = withAuth(async (request: AuthenticatedRequest, { params }: R
 export const DELETE = withAuth(async (request: AuthenticatedRequest, { params }: RouteContext) => {
   const { id: projectId } = await params;
   const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
-  if (idValidation) return idValidation;
+  if (idValidation) {return idValidation;}
   try {
     const { user } = request;
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const supabase = await createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: project } = await (supabase.from(getTableName('project')) as any)
       .select('id, title').eq('id', projectId).single();
-    if (!project) return apiNotFound('Project not found');
+    if (!project) {return apiNotFound('Project not found');}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
       .select('id').eq('user_id', user.id).eq('project_id', projectId).maybeSingle();
-    if (!existing) return apiSuccess({ isFavorited: false, message: 'Project not in favorites' });
+    if (!existing) {return apiSuccess({ isFavorited: false, message: 'Project not in favorites' });}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
       .delete().eq('user_id', user.id).eq('project_id', projectId);
-    if (error) return apiInternalError('Failed to remove favorite');
+    if (error) {return apiInternalError('Failed to remove favorite');}
 
     await auditSuccess(AUDIT_ACTIONS.PROJECT_CREATED, user.id, 'project', projectId, { action: 'unfavorite', projectTitle: project.title });
     logger.info('Project removed from favorites', { userId: user.id, projectId });

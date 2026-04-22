@@ -31,7 +31,7 @@ export async function createResearch(
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId);
 
-  if (countError) throw countError;
+  if (countError) {throw countError;}
 
   if (count && count >= MAX_RESEARCH_PER_USER) {
     return {

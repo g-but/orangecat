@@ -73,8 +73,8 @@ export const GET = compose(
       countQuery,
     ]);
 
-    if (itemsError) throw itemsError;
-    if (countError) throw countError;
+    if (itemsError) {throw itemsError;}
+    if (countError) {throw countError;}
 
     return apiSuccess(items || [], {
       page: calculatePage(offset, limit),
@@ -101,14 +101,14 @@ export const POST = compose(
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return apiUnauthorized();
+    if (!user) {return apiUnauthorized();}
 
     let rl: RateLimitResult;
     try {
       rl = await enforceUserWriteLimit(user.id);
     } catch (e) {
       const limited = handleRateLimitError(e, 'Too many creation requests. Please slow down.');
-      if (limited) return limited;
+      if (limited) {return limited;}
       throw e;
     }
 

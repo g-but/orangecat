@@ -65,13 +65,13 @@ export async function maybeEnrichWithSearchResults(
   groqKey: string | null,
   modelToUse: string
 ): Promise<any[]> {
-  if (provider !== 'groq') return messages;
+  if (provider !== 'groq') {return messages;}
 
   const mightNeedSearch = SEARCH_KEYWORDS.some(kw => userMessage.toLowerCase().includes(kw));
-  if (!mightNeedSearch) return messages;
+  if (!mightNeedSearch) {return messages;}
 
   const key = groqKey ?? process.env.GROQ_API_KEY;
-  if (!key) return messages;
+  if (!key) {return messages;}
 
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -87,7 +87,7 @@ export async function maybeEnrichWithSearchResults(
       }),
     });
 
-    if (!res.ok) return messages;
+    if (!res.ok) {return messages;}
 
     const data = await res.json();
     const choice = data.choices?.[0];
@@ -98,7 +98,7 @@ export async function maybeEnrichWithSearchResults(
     const enriched = [...messages, choice.message];
 
     for (const toolCall of choice.message.tool_calls as any[]) {
-      if (toolCall.function?.name !== 'search_platform') continue;
+      if (toolCall.function?.name !== 'search_platform') {continue;}
       let content: string;
       try {
         const args = JSON.parse(toolCall.function.arguments ?? '{}');

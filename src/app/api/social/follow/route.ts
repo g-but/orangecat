@@ -26,7 +26,7 @@ async function handleFollow(request: AuthenticatedRequest) {
       rateLimitResult = await enforceUserSocialLimit(user.id);
     } catch (e) {
       const limited = handleRateLimitError(e, 'Too many follow requests. Please slow down.');
-      if (limited) return limited;
+      if (limited) {return limited;}
       throw e;
     }
 

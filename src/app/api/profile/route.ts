@@ -44,7 +44,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
 
     if (profileError || !profile) {
       const { data: bootstrapped, error: ensureError } = await ProfileServerService.ensureProfile(supabase, user.id, user.email, user.user_metadata);
-      if (ensureError || !bootstrapped) return apiNotFound('Profile not found');
+      if (ensureError || !bootstrapped) {return apiNotFound('Profile not found');}
       return respondWithProfile(supabase, user, bootstrapped, request);
     }
 

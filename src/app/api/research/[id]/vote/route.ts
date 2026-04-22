@@ -37,19 +37,19 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
       .single();
 
     if (entityError) {
-      if (entityError.code === 'PGRST116') return apiNotFound('Research entity not found');
+      if (entityError.code === 'PGRST116') {return apiNotFound('Research entity not found');}
       throw entityError;
     }
-    if (!entity?.voting_enabled) return apiUnauthorized('Voting is not enabled for this research entity');
+    if (!entity?.voting_enabled) {return apiUnauthorized('Voting is not enabled for this research entity');}
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!entity.is_public && !user) return apiUnauthorized('This research entity is private');
+    if (!entity.is_public && !user) {return apiUnauthorized('This research entity is private');}
 
     const { data: votesData, error } = await supabase
       .from(DATABASE_TABLES.RESEARCH_VOTES)
       .select('*')
       .eq('research_entity_id', id);
-    if (error) throw error;
+    if (error) {throw error;}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return apiSuccess(aggregateVotes((votesData ?? []) as any[], user?.id ?? null));
@@ -63,7 +63,7 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
   try {
     const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: entity, error: entityError } = await (supabase.from(DATABASE_TABLES.RESEARCH_ENTITIES) as any)
@@ -72,21 +72,21 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
       .single();
 
     if (entityError) {
-      if (entityError.code === 'PGRST116') return apiNotFound('Research entity not found');
+      if (entityError.code === 'PGRST116') {return apiNotFound('Research entity not found');}
       throw entityError;
     }
-    if (!entity?.voting_enabled) return apiUnauthorized('Voting is not enabled for this research entity');
-    if (!entity.is_public) return apiUnauthorized('Cannot vote on private research entities');
+    if (!entity?.voting_enabled) {return apiUnauthorized('Voting is not enabled for this research entity');}
+    if (!entity.is_public) {return apiUnauthorized('Cannot vote on private research entities');}
 
     const { vote_type, choice } = await request.json();
-    if (!vote_type || !choice) return apiBadRequest('Vote type and choice are required');
+    if (!vote_type || !choice) {return apiBadRequest('Vote type and choice are required');}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const contributorIds = (entity.contributions ?? []).map((c: any) => c.user_id as string);
     const result = await castVote(supabase, id, user.id, vote_type, choice, contributorIds);
 
     if (!result.ok) {
-      if (result.code === 'INVALID_TYPE') return apiBadRequest(result.message);
+      if (result.code === 'INVALID_TYPE') {return apiBadRequest(result.message);}
       return handleApiError(new Error(result.message));
     }
 

@@ -28,11 +28,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const { id: requestId } = await context.params;
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return apiUnauthorized('Authentication required');
+    if (!user) {return apiUnauthorized('Authentication required');}
 
     const body = await request.json();
     const result = requestResponseSchema.safeParse(body);
-    if (!result.success) return apiValidationError('Validation failed', result.error.flatten());
+    if (!result.success) {return apiValidationError('Validation failed', result.error.flatten());}
     const d = result.data;
 
     // Fetch the request with task info
@@ -42,7 +42,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       .eq('id', requestId).single();
 
     if (fetchError) {
-      if (fetchError.code === 'PGRST116') return apiNotFound('Request not found');
+      if (fetchError.code === 'PGRST116') {return apiNotFound('Request not found');}
       logger.error('Failed to fetch task request', { error: fetchError, requestId }, 'TaskRequestsAPI');
       return apiInternalError();
     }
@@ -50,8 +50,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tr = taskRequest as any;
     const canRespond = tr.requested_user_id === user.id || tr.requested_user_id === null;
-    if (!canRespond) return apiForbidden('You cannot respond to this request');
-    if (tr.status !== REQUEST_STATUSES.PENDING) return apiBadRequest('This request has already been answered');
+    if (!canRespond) {return apiForbidden('You cannot respond to this request');}
+    if (tr.status !== REQUEST_STATUSES.PENDING) {return apiBadRequest('This request has already been answered');}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: updatedRequest, error: updateError } = await (supabase as any)

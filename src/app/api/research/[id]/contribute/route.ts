@@ -11,7 +11,6 @@ import {
   apiSuccess,
   apiNotFound,
   apiUnauthorized,
-  apiBadRequest,
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { compose } from '@/lib/api/compose';
@@ -37,7 +36,7 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
       .single();
 
     if (entityError) {
-      if (entityError.code === 'PGRST116') return apiNotFound('Research entity not found');
+      if (entityError.code === 'PGRST116') {return apiNotFound('Research entity not found');}
       throw entityError;
     }
 
@@ -57,10 +56,10 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
       .eq('research_entity_id', id)
       .order('created_at', { ascending: false });
 
-    if (!canSeeDetails) query = query.eq('anonymous', false);
+    if (!canSeeDetails) {query = query.eq('anonymous', false);}
 
     const { data: contributionsData, error } = await query;
-    if (error) throw error;
+    if (error) {throw error;}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const contributions = (contributionsData ?? []) as any[];

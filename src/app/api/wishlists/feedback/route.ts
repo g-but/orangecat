@@ -27,11 +27,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const db = supabase as any;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const body = await request.json();
     const v = wishlistFeedbackSchema.safeParse(body);
-    if (!v.success) return apiBadRequest('Invalid request', v.error.errors);
+    if (!v.success) {return apiBadRequest('Invalid request', v.error.errors);}
     const d = v.data;
 
     // Verify wishlist item and ownership
@@ -39,17 +39,17 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       .from(DATABASE_TABLES.WISHLIST_ITEMS)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', d.wishlist_item_id).single();
-    if (itemError || !wishlistItem) return apiNotFound('Wishlist item not found');
+    if (itemError || !wishlistItem) {return apiNotFound('Wishlist item not found');}
 
     const wishlist = Array.isArray(wishlistItem.wishlists) ? wishlistItem.wishlists[0] : wishlistItem.wishlists;
-    if (wishlist?.actor_id === user.id) return apiForbidden('You cannot provide feedback on your own wishlist items');
+    if (wishlist?.actor_id === user.id) {return apiForbidden('You cannot provide feedback on your own wishlist items');}
 
     // Verify proof exists if provided
     if (d.fulfillment_proof_id) {
       const { data: proof, error: proofError } = await db
         .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS)
         .select('id').eq('id', d.fulfillment_proof_id).eq('wishlist_item_id', d.wishlist_item_id).single();
-      if (proofError || !proof) return apiNotFound('Fulfillment proof not found or does not match wishlist item');
+      if (proofError || !proof) {return apiNotFound('Fulfillment proof not found or does not match wishlist item');}
     }
 
     // Check for existing feedback
@@ -69,7 +69,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     if (existingFeedback?.length > 0) {
       const existing = existingFeedback[0];
-      if (existing.feedback_type === d.feedback_type) return apiConflict('You have already provided this type of feedback');
+      if (existing.feedback_type === d.feedback_type) {return apiConflict('You have already provided this type of feedback');}
 
       // Update existing feedback (toggle like ↔ dislike)
       const { data: updated, error: updateError } = await db
