@@ -6,8 +6,10 @@ import {
   apiInternalError,
   apiBadRequest,
   apiCreated,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getGroup } from '@/services/groups/queries/groups';
 import { getGroupProposals } from '@/services/groups/queries/proposals';
@@ -67,6 +69,13 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     const { slug } = await context.params;
+    const { user } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many proposal requests. Please slow down.', retryAfter);
+    }
 
     const groupResult = await getGroup(slug, true);
     if (!groupResult.success || !groupResult.group) {

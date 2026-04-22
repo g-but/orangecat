@@ -17,7 +17,9 @@ import {
   apiCreated,
   apiBadRequest,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 const addKeySchema = z.object({
   provider: z
@@ -60,6 +62,12 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many API key requests. Please slow down.', retryAfter);
+    }
 
     const body = await request.json();
     const result = addKeySchema.safeParse(body);

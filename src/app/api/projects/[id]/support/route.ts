@@ -22,7 +22,9 @@ import {
   apiBadRequest,
   apiInternalError,
   apiCreated,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -80,6 +82,13 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     const { id: projectId } = await context.params;
+    const { user } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many support requests. Please slow down.', retryAfter);
+    }
 
     const body = await request.json();
 

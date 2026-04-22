@@ -3,8 +3,10 @@ import { timelineService } from '@/services/timeline';
 import {
   apiSuccess,
   apiValidationError,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
 
@@ -18,6 +20,13 @@ const quoteReplySchema = z.object({
 export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
     const { user } = req;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+
     const body = await req.json();
     const validation = quoteReplySchema.safeParse(body);
 

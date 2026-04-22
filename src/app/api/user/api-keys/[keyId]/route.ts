@@ -12,7 +12,8 @@ import { createApiKeyService } from '@/services/ai/api-key-service';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
-import { apiSuccess, apiBadRequest, apiInternalError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiBadRequest, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ keyId: string }>;
@@ -30,6 +31,12 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
   try {
     const { keyId } = await context.params;
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     const keyService = createApiKeyService(supabase);
     const success = await keyService.deleteKey(user.id, keyId);
@@ -53,6 +60,12 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
   try {
     const { keyId } = await context.params;
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     const body = await request.json();
     const result = updateKeySchema.safeParse(body);

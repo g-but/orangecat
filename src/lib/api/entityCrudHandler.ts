@@ -42,6 +42,7 @@ import { type EntityType, getEntityMetadata } from '@/config/entity-registry';
 import { ENTITY_STATUS } from '@/config/database-constants';
 import { checkOwnership } from '@/services/actors';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
+import { validateUUID } from '@/lib/api/validation';
 
 // ==================== TYPES ====================
 
@@ -137,6 +138,9 @@ export function createGetHandler(config: EntityHandlerConfig) {
   const table = tableName ?? meta.tableName;
 
   return async function GET(request: NextRequest, { params }: EntityRouteParams) {
+    const uuidCheck = validateUUID(params.id, `${meta.name} ID`);
+    if (!uuidCheck.valid) return uuidCheck.error!;
+
     try {
       // Rate limiting check
       const rateLimitResult = await rateLimit(request);
@@ -248,6 +252,9 @@ export function createPutHandler(config: EntityHandlerConfig) {
   }
 
   return async function PUT(request: NextRequest, { params }: EntityRouteParams) {
+    const uuidCheck = validateUUID(params.id, `${meta.name} ID`);
+    if (!uuidCheck.valid) return uuidCheck.error!;
+
     try {
       const supabase = await createServerClient();
       const {
@@ -366,6 +373,9 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
   const table = tableName ?? meta.tableName;
 
   return async function DELETE(_request: NextRequest, { params }: EntityRouteParams) {
+    const uuidCheck = validateUUID(params.id, `${meta.name} ID`);
+    if (!uuidCheck.valid) return uuidCheck.error!;
+
     try {
       const supabase = await createServerClient();
       const {
