@@ -50,6 +50,16 @@ export interface EntitySummary {
   location?: string;
 }
 
+export interface TaskSummary {
+  id: string;
+  title: string;
+  category: string;
+  priority: string;
+  current_status: string;
+  task_type: string;
+  schedule_human?: string | null;
+}
+
 export interface WalletSummary {
   label: string;
   description: string | null;
@@ -67,6 +77,7 @@ export interface FullUserContext {
   profile: ProfileContext | null;
   documents: DocumentContext[];
   entities: EntitySummary[];
+  tasks: TaskSummary[];
   wallets: WalletSummary[];
   stats: {
     totalProducts: number;
@@ -78,6 +89,8 @@ export interface FullUserContext {
     totalLoans: number;
     totalResearch: number;
     totalWishlists: number;
+    totalTasks: number;
+    urgentTasks: number;
     totalWallets: number;
   };
 }
@@ -236,6 +249,8 @@ export async function fetchEntitiesForCat(
     totalLoans: 0,
     totalResearch: 0,
     totalWishlists: 0,
+    totalTasks: 0,
+    urgentTasks: 0,
     totalWallets: 0,
   };
   const entities: EntitySummary[] = [];
@@ -564,26 +579,64 @@ export async function fetchWalletsForCat(
 }
 
 /**
+ * Fetch user's active tasks for My Cat context.
+ * Returns non-archived tasks ordered by priority (urgent first).
+ */
+export async function fetchTasksForCat(
+  supabase: AnySupabaseClient,
+  userId: string
+): Promise<TaskSummary[]> {
+  try {
+    const { data: tasks, error } = await supabase
+      .from(DATABASE_TABLES.TASKS)
+      .select('id, title, category, priority, current_status, task_type, schedule_human')
+      .eq('created_by', userId)
+      .eq('is_archived', false)
+      .eq('is_completed', false)
+      .order('priority', { ascending: false })
+      .limit(30);
+
+    if (error) {
+      logger.warn('Failed to fetch tasks for cat', { error: error.message }, 'DocumentContext');
+      return [];
+    }
+
+    return (tasks || []) as TaskSummary[];
+  } catch (error) {
+    logger.error('Exception fetching tasks for cat', error, 'DocumentContext');
+    return [];
+  }
+}
+
+/**
  * Fetch all context for My Cat
  */
 export async function fetchFullContextForCat(
   supabase: AnySupabaseClient,
   userId: string
 ): Promise<FullUserContext> {
-  const [profile, documents, { entities, stats }, wallets] = await Promise.all([
+  const [profile, documents, { entities, stats }, tasks, wallets] = await Promise.all([
     fetchProfileForCat(supabase, userId),
     fetchDocumentsForCat(supabase, userId),
     fetchEntitiesForCat(supabase, userId),
+    fetchTasksForCat(supabase, userId),
     fetchWalletsForCat(supabase, userId),
   ]);
+
+  const urgentTasks = tasks.filter(
+    t => t.priority === 'urgent' || t.current_status === 'needs_attention'
+  ).length;
 
   return {
     profile,
     documents,
     entities,
+    tasks,
     wallets,
     stats: {
       ...stats,
+      totalTasks: tasks.length,
+      urgentTasks,
       totalWallets: wallets.length,
     },
   };
@@ -692,6 +745,25 @@ export function buildFullContextString(context: FullUserContext): string {
     }
   }
 
+  // Tasks section
+  if (context.tasks.length > 0) {
+    const urgent = context.tasks.filter(
+      t => t.priority === 'urgent' || t.current_status === 'needs_attention'
+    );
+    const taskLines = context.tasks.map(t => {
+      const parts = [`- **${t.title}**`];
+      parts.push(` [${t.category}]`);
+      if (t.priority !== 'normal') parts.push(` priority:${t.priority}`);
+      if (t.current_status !== 'idle') parts.push(` status:${t.current_status}`);
+      if (t.task_type !== 'one_time' && t.schedule_human) parts.push(` — ${t.schedule_human}`);
+      return parts.join('');
+    });
+    const urgentNote = urgent.length > 0
+      ? `\n⚠️ ${urgent.length} task${urgent.length > 1 ? 's' : ''} need${urgent.length === 1 ? 's' : ''} attention.`
+      : '';
+    sections.push(`## Active Tasks${urgentNote}\n${taskLines.join('\n')}`);
+  }
+
   // Wallets section
   if (context.wallets.length > 0) {
     const walletLines = context.wallets.map(w => {
@@ -761,6 +833,10 @@ export function buildFullContextString(context: FullUserContext): string {
     }
     if (stats.totalWishlists > 0) {
       statParts.push(`${stats.totalWishlists} wishlist${stats.totalWishlists > 1 ? 's' : ''}`);
+    }
+    if (stats.totalTasks > 0) {
+      const taskStat = `${stats.totalTasks} active task${stats.totalTasks > 1 ? 's' : ''}`;
+      statParts.push(stats.urgentTasks > 0 ? `${taskStat} (${stats.urgentTasks} urgent)` : taskStat);
     }
     if (stats.totalWallets > 0) {
       statParts.push(`${stats.totalWallets} wallet${stats.totalWallets > 1 ? 's' : ''}`);

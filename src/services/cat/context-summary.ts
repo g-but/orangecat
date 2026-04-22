@@ -107,6 +107,18 @@ export function generateKnowledgeItems(context: FullUserContext): ContextSummary
     }
   }
 
+  // Tasks
+  if (context.stats.totalTasks > 0) {
+    const taskTitles = context.tasks.slice(0, 3).map(t => {
+      const prefix = t.priority === 'urgent' || t.current_status === 'needs_attention' ? '⚠️ ' : '';
+      return `${prefix}${t.title}`;
+    });
+    const label = context.stats.urgentTasks > 0
+      ? `Active Tasks (${context.stats.urgentTasks} urgent)`
+      : 'Active Tasks';
+    items.push({ category: label, icon: 'check-square', items: taskTitles, count: context.stats.totalTasks });
+  }
+
   return items;
 }
 
