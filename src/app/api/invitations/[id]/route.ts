@@ -14,8 +14,10 @@ import {
   apiForbidden,
   apiNotFound,
   apiValidationError,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
@@ -61,6 +63,12 @@ export const POST = withAuth(
     try {
       const { id: invitationId } = await params;
       const { user } = req;
+
+      const rl = await rateLimitWriteAsync(user.id);
+      if (!rl.success) {
+        const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+        return apiRateLimited('Too many invitation requests. Please slow down.', retryAfter);
+      }
       const supabase = await createServerClient();
 
       // Parse request body
@@ -180,6 +188,13 @@ export const DELETE = withAuth(
     try {
       const { id: invitationId } = await params;
       const { user } = req;
+
+      const rl = await rateLimitWriteAsync(user.id);
+      if (!rl.success) {
+        const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+        return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+      }
+
       const supabase = await createServerClient();
 
       // Get invitation

@@ -9,7 +9,9 @@ import {
   apiNotFound,
   apiNoContent,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
@@ -18,6 +20,13 @@ export const PUT = withAuth(
     try {
       const { user, supabase } = request;
       const { id } = await context.params;
+
+      const rl = await rateLimitWriteAsync(user.id);
+      if (!rl.success) {
+        const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+        return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+      }
+
       const body = await request.json();
 
       // If setting as default, unset existing defaults first
@@ -82,6 +91,12 @@ export const DELETE = withAuth(
     try {
       const { user, supabase } = request;
       const { id } = await context.params;
+
+      const rl = await rateLimitWriteAsync(user.id);
+      if (!rl.success) {
+        const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+        return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+      }
 
       const { error } = await supabase
         .from(DATABASE_TABLES.SHIPPING_ADDRESSES)
