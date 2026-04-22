@@ -17,7 +17,9 @@ import {
   apiValidationError,
   apiInternalError,
   apiSuccess,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskUpdateSchema } from '@/lib/schemas/tasks';
 import { logger } from '@/utils/logger';
@@ -117,6 +119,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return apiUnauthorized('Authentication required');
     }
 
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many task update requests. Please slow down.', retryAfter);
+    }
+
     // Parse and validate body
     const body = await request.json();
     const result = taskUpdateSchema.safeParse(body);
@@ -214,6 +222,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     if (!user) {
       return apiUnauthorized('Authentication required');
+    }
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 
     // Check if user is the creator

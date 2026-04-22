@@ -19,7 +19,9 @@ import {
   apiNotFound,
   apiCreated,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -35,6 +37,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   try {
     const { id: serviceId } = await context.params;
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many booking requests. Please slow down.', retryAfter);
+    }
 
     const body = await request.json();
     const result = bookServiceSchema.safeParse(body);

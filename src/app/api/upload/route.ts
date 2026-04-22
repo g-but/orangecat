@@ -13,8 +13,10 @@ import {
   apiSuccess,
   apiValidationError,
   apiInternalError,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -30,6 +32,12 @@ const MIME_TO_EXT: Record<string, string> = {
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many upload requests. Please slow down.', retryAfter);
+    }
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
