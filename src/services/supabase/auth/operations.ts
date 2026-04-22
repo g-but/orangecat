@@ -3,7 +3,7 @@
  */
 
 import supabase from '@/lib/supabase/browser';
-import { logger, logAuth } from '@/utils/logger';
+import { logger } from '@/utils/logger';
 import type {
   AuthResponse,
   SignInRequest,
@@ -16,7 +16,7 @@ import { handleAuthError } from './errors';
 
 export async function signIn({ email, password }: SignInRequest): Promise<AuthResponse> {
   try {
-    logAuth('Attempting to sign in user', { email });
+    logger.auth('Attempting to sign in user', { email });
 
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Authentication request timed out')), 20000);
@@ -27,11 +27,11 @@ export async function signIn({ email, password }: SignInRequest): Promise<AuthRe
 
     if (error) {
       const enhancedError = handleAuthError(error, 'sign in');
-      logAuth('Sign in failed', { email, error: enhancedError.message });
+      logger.auth('Sign in failed', { email, error: enhancedError.message });
       return { data: { user: null, session: null }, error: enhancedError };
     }
 
-    logAuth('Sign in successful', { email, userId: data.user?.id, hasSession: !!data.session });
+    logger.auth('Sign in successful', { email, userId: data.user?.id, hasSession: !!data.session });
     return { data, error: null };
   } catch (error) {
     const enhancedError = handleAuthError(error, 'sign in');
@@ -50,7 +50,7 @@ export async function signUp({
   emailRedirectTo,
 }: SignUpRequest): Promise<AuthResponse> {
   try {
-    logAuth('Attempting to sign up user', { email });
+    logger.auth('Attempting to sign up user', { email });
 
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Registration request timed out')), 25000);
@@ -70,11 +70,11 @@ export async function signUp({
 
     if (error) {
       const enhancedError = handleAuthError(error, 'sign up');
-      logAuth('Sign up failed', { email, error: enhancedError.message });
+      logger.auth('Sign up failed', { email, error: enhancedError.message });
       return { data: { user: null, session: null }, error: enhancedError };
     }
 
-    logAuth('Sign up successful', {
+    logger.auth('Sign up successful', {
       email,
       userId: data.user?.id,
       needsConfirmation: !data.session,
@@ -93,15 +93,15 @@ export async function signUp({
 
 export async function signOut(): Promise<{ error: AuthError | null }> {
   try {
-    logAuth('Attempting to sign out user');
+    logger.auth('Attempting to sign out user');
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      logAuth('Sign out failed', { error: error.message });
+      logger.auth('Sign out failed', { error: error.message });
       return { error: error as AuthError };
     }
 
-    logAuth('Sign out successful');
+    logger.auth('Sign out successful');
     return { error: null };
   } catch (error) {
     const authError = error as AuthError;
@@ -114,23 +114,23 @@ export async function resetPassword({
   email,
 }: PasswordResetRequest): Promise<{ error: AuthError | null }> {
   try {
-    logAuth('Attempting password reset', { email });
+    logger.auth('Attempting password reset', { email });
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.orangecat.ch';
     const redirectUrl = `${siteUrl}/auth/reset-password`;
 
-    logAuth('Using redirect URL for password reset', { redirectUrl });
+    logger.auth('Using redirect URL for password reset', { redirectUrl });
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });
 
     if (error) {
-      logAuth('Password reset failed', { email, error: error.message });
+      logger.auth('Password reset failed', { email, error: error.message });
       return { error };
     }
 
-    logAuth('Password reset email sent successfully', { email, redirectUrl });
+    logger.auth('Password reset email sent successfully', { email, redirectUrl });
     return { error: null };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -143,16 +143,16 @@ export async function updatePassword({
   newPassword,
 }: PasswordUpdateRequest): Promise<{ error: AuthError | null }> {
   try {
-    logAuth('Attempting password update');
+    logger.auth('Attempting password update');
 
     const { error } = await supabase.auth.updateUser({ password: newPassword });
 
     if (error) {
-      logAuth('Password update failed', { error: error.message });
+      logger.auth('Password update failed', { error: error.message });
       return { error: error as AuthError };
     }
 
-    logAuth('Password updated successfully');
+    logger.auth('Password updated successfully');
     return { error: null };
   } catch (error) {
     const authError = error as AuthError;
@@ -165,17 +165,17 @@ export async function updatePassword({
 // in Supabase Dashboard > Authentication > Providers > Anonymous
 export async function signInAnonymously(): Promise<AuthResponse> {
   try {
-    logAuth('Attempting anonymous sign-in');
+    logger.auth('Attempting anonymous sign-in');
 
     const { data, error } = await supabase.auth.signInAnonymously();
 
     if (error) {
       const enhancedError = handleAuthError(error, 'anonymous sign-in');
-      logAuth('Anonymous sign-in failed', { error: enhancedError.message });
+      logger.auth('Anonymous sign-in failed', { error: enhancedError.message });
       return { data: { user: null, session: null }, error: enhancedError };
     }
 
-    logAuth('Anonymous sign-in successful', { userId: data.user?.id });
+    logger.auth('Anonymous sign-in successful', { userId: data.user?.id });
     return { data, error: null };
   } catch (error) {
     const enhancedError = handleAuthError(error, 'anonymous sign-in');
@@ -192,11 +192,11 @@ export async function resendConfirmationEmail(): Promise<{ error: AuthError | nu
     } = await supabase.auth.getUser();
 
     if (userError || !user?.email) {
-      logAuth('Cannot resend confirmation - no user email', { error: userError?.message });
+      logger.auth('Cannot resend confirmation - no user email', { error: userError?.message });
       return { error: { message: 'No user email found', name: 'ResendError' } as AuthError };
     }
 
-    logAuth('Attempting to resend confirmation email', { email: user.email });
+    logger.auth('Attempting to resend confirmation email', { email: user.email });
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.orangecat.ch';
 
@@ -209,11 +209,11 @@ export async function resendConfirmationEmail(): Promise<{ error: AuthError | nu
     });
 
     if (error) {
-      logAuth('Resend confirmation failed', { email: user.email, error: error.message });
+      logger.auth('Resend confirmation failed', { email: user.email, error: error.message });
       return { error: error as AuthError };
     }
 
-    logAuth('Confirmation email resent successfully', { email: user.email });
+    logger.auth('Confirmation email resent successfully', { email: user.email });
     return { error: null };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

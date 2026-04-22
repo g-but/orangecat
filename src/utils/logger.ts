@@ -205,38 +205,3 @@ export function logTiming(operation: string, startTime: number): void {
   logger.performance(`${operation} completed in ${duration}ms`)
 }
 
-// =====================================================================
-// 🔄 BACKWARD COMPATIBILITY - OLD LOGGER FUNCTIONS
-// =====================================================================
-// FUTURE: Migrate call sites to use logger.auth(), logger.supabase(), etc. directly — these wrappers exist only for backward compatibility and should be removed once all callers are updated
-
-/**
- * @deprecated Use logger.auth() instead
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function logAuth(message: string, data?: any): void {
-  logger.auth(message, data)
-}
-
-/**
- * @deprecated Use logger.supabase() instead
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function logSupabase(message: string, data?: any): void {
-  logger.supabase(message, data)
-}
-
-/**
- * @deprecated Use logger.info() or logger.debug() instead
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function logProfile(message: string, data?: any): void {
-  logger.info(`[Profile] ${message}`, data)
-}
-
-/**
- * @deprecated Use logger.performance() instead
- */
-export function logPerformance(metricName: string, value: number): void {
-  logger.performance(`${metricName}: ${value}ms`)
-} 

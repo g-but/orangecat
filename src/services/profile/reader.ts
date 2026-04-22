@@ -7,7 +7,7 @@
  */
 
 import supabase from '@/lib/supabase/browser'
-import { logger, logProfile } from '@/utils/logger'
+import { logger } from '@/utils/logger'
 import { ProfileMapper } from './mapper'
 import type { ScalableProfile } from './types'
 import { DATABASE_TABLES } from '@/config/database-tables'
@@ -28,7 +28,7 @@ export class ProfileReader {
     }
 
     try {
-      logProfile('getProfile', { userId })
+      logger.info('[Profile] getProfile', { userId })
 
       const { data, error } = await (supabase
         .from(DATABASE_TABLES.PROFILES) as any)
@@ -50,7 +50,7 @@ export class ProfileReader {
       }
 
       const profile = ProfileMapper.mapDatabaseToProfile(data);
-      logProfile('getProfile success', { userId, hasProfile: true })
+      logger.info('[Profile] getProfile success', { userId, hasProfile: true })
       return profile
 
     } catch (err) {

@@ -7,7 +7,7 @@
  */
 
 import supabase from '@/lib/supabase/browser';
-import { logger, logProfile } from '@/utils/logger';
+import { logger } from '@/utils/logger';
 import { ProfileMapper } from './mapper';
 import type { ScalableProfile, ScalableProfileFormData, ProfileServiceResponse } from './types';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -53,7 +53,7 @@ export class ProfileWriter {
     }
 
     try {
-      logProfile('updateProfile', { userId, formData });
+      logger.info('[Profile] updateProfile', { userId, formData });
 
       // Check username uniqueness if username is being updated
       if (formData.username) {
@@ -96,7 +96,7 @@ export class ProfileWriter {
       }
 
       const updatedProfile = ProfileMapper.mapDatabaseToProfile(data);
-      logProfile('updateProfile success', { userId, profile: updatedProfile });
+      logger.info('[Profile] updateProfile success', { userId, profile: updatedProfile });
 
       return { success: true, data: updatedProfile ?? undefined };
     } catch (err) {
@@ -121,7 +121,7 @@ export class ProfileWriter {
     }
 
     try {
-      logProfile('createProfile', { userId, formData });
+      logger.info('[Profile] createProfile', { userId, formData });
 
       // Prepare profile data
       const profileData: Partial<ScalableProfile> = {
@@ -155,7 +155,7 @@ export class ProfileWriter {
       }
 
       const newProfile = ProfileMapper.mapDatabaseToProfile(data);
-      logProfile('createProfile success', { userId, profile: newProfile });
+      logger.info('[Profile] createProfile success', { userId, profile: newProfile });
 
       return { success: true, data: newProfile ?? undefined };
     } catch (err) {
@@ -187,7 +187,7 @@ export class ProfileWriter {
         return { success: false, error: 'Permission denied: Can only delete your own profile' };
       }
 
-      logProfile('deleteProfile', { userId });
+      logger.info('[Profile] deleteProfile', { userId });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
@@ -199,7 +199,7 @@ export class ProfileWriter {
         return { success: false, error: 'Failed to delete profile' };
       }
 
-      logProfile('deleteProfile success', { userId });
+      logger.info('[Profile] deleteProfile success', { userId });
       return { success: true };
     } catch (err) {
       logger.error('ProfileWriter.deleteProfile unexpected error:', err);

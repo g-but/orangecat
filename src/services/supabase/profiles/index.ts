@@ -11,7 +11,7 @@
  */
 
 import { supabase } from '../core/client';
-import { logger, logProfile } from '@/utils/logger';
+import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import type { Profile, ProfileUpdateData, ProfileResponse, ProfileUpdateResponse } from '../types';
 import { isValidProfile } from '../types';
@@ -32,7 +32,7 @@ import { isValidProfile } from '../types';
  */
 export async function getProfile(userId: string): Promise<ProfileResponse> {
   try {
-    logProfile('Fetching profile', { userId });
+    logger.info('[Profile] Fetching profile', { userId });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
@@ -41,22 +41,22 @@ export async function getProfile(userId: string): Promise<ProfileResponse> {
       .single();
 
     if (error) {
-      logProfile('Failed to fetch profile', { userId, error: error.message });
+      logger.info('[Profile] Failed to fetch profile', { userId, error: error.message });
       return { data: null, error };
     }
 
     if (!data) {
-      logProfile('Profile not found', { userId });
+      logger.info('[Profile] Profile not found', { userId });
       return { data: null, error: new Error('Profile not found') };
     }
 
     // Validate the profile data
     if (!isValidProfile(data)) {
-      logProfile('Invalid profile data structure', { userId, data });
+      logger.info('[Profile] Invalid profile data structure', { userId, data });
       return { data: null, error: new Error('Invalid profile data structure') };
     }
 
-    logProfile('Profile fetched successfully', {
+    logger.info('[Profile] Profile fetched successfully', {
       userId,
       username: data.username,
       hasAvatar: !!data.avatar_url,
@@ -102,7 +102,7 @@ export async function updateProfile(
   updates: ProfileUpdateData
 ): Promise<ProfileUpdateResponse> {
   try {
-    logProfile('Updating profile', { userId, updates: Object.keys(updates) });
+    logger.info('[Profile] Updating profile', { userId, updates: Object.keys(updates) });
 
     // Add timestamp
     const updateData = {
@@ -118,7 +118,7 @@ export async function updateProfile(
       .single();
 
     if (error) {
-      logProfile('Failed to update profile', {
+      logger.info('[Profile] Failed to update profile', {
         userId,
         error: error.message,
         code: error.code,
@@ -127,7 +127,7 @@ export async function updateProfile(
     }
 
     if (!data) {
-      logProfile('No profile returned after update', { userId });
+      logger.info('[Profile] No profile returned after update', { userId });
       return {
         data: null,
         error: new Error('Profile update returned no data'),
@@ -137,7 +137,7 @@ export async function updateProfile(
 
     // Validate the updated profile data
     if (!isValidProfile(data)) {
-      logProfile('Invalid updated profile data structure', { userId, data });
+      logger.info('[Profile] Invalid updated profile data structure', { userId, data });
       return {
         data: null,
         error: new Error('Invalid updated profile data structure'),
@@ -145,7 +145,7 @@ export async function updateProfile(
       };
     }
 
-    logProfile('Profile updated successfully', {
+    logger.info('[Profile] Profile updated successfully', {
       userId,
       username: data.username,
       updatedFields: Object.keys(updates),
@@ -192,7 +192,7 @@ export async function createProfile(
   profileData: Partial<ProfileUpdateData> = {}
 ): Promise<ProfileResponse> {
   try {
-    logProfile('Creating new profile', { userId });
+    logger.info('[Profile] Creating new profile', { userId });
 
     const newProfile = {
       id: userId,
@@ -208,7 +208,7 @@ export async function createProfile(
       .single();
 
     if (error) {
-      logProfile('Failed to create profile', {
+      logger.info('[Profile] Failed to create profile', {
         userId,
         error: error.message,
         code: error.code,
@@ -217,17 +217,17 @@ export async function createProfile(
     }
 
     if (!data) {
-      logProfile('No profile returned after creation', { userId });
+      logger.info('[Profile] No profile returned after creation', { userId });
       return { data: null, error: new Error('Profile creation returned no data') };
     }
 
     // Validate the created profile data
     if (!isValidProfile(data)) {
-      logProfile('Invalid created profile data structure', { userId, data });
+      logger.info('[Profile] Invalid created profile data structure', { userId, data });
       return { data: null, error: new Error('Invalid created profile data structure') };
     }
 
-    logProfile('Profile created successfully', {
+    logger.info('[Profile] Profile created successfully', {
       userId,
       username: data.username,
     });
@@ -263,7 +263,7 @@ export async function createProfile(
  */
 export async function isUsernameAvailable(username: string): Promise<boolean> {
   try {
-    logProfile('Checking username availability', { username });
+    logger.info('[Profile] Checking username availability', { username });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: _data, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
@@ -273,12 +273,12 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
 
     if (error && error.code === 'PGRST116') {
       // No rows returned - username is available
-      logProfile('Username is available', { username });
+      logger.info('[Profile] Username is available', { username });
       return true;
     }
 
     if (error) {
-      logProfile('Error checking username availability', {
+      logger.info('[Profile] Error checking username availability', {
         username,
         error: error.message,
       });
@@ -286,7 +286,7 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
     }
 
     // Username exists
-    logProfile('Username is not available', { username });
+    logger.info('[Profile] Username is not available', { username });
     return false;
   } catch (error) {
     logger.error(
@@ -318,7 +318,7 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
  */
 export async function getProfileByUsername(username: string): Promise<ProfileResponse> {
   try {
-    logProfile('Fetching profile by username', { username });
+    logger.info('[Profile] Fetching profile by username', { username });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
@@ -327,7 +327,7 @@ export async function getProfileByUsername(username: string): Promise<ProfileRes
       .single();
 
     if (error) {
-      logProfile('Failed to fetch profile by username', {
+      logger.info('[Profile] Failed to fetch profile by username', {
         username,
         error: error.message,
       });
@@ -335,17 +335,17 @@ export async function getProfileByUsername(username: string): Promise<ProfileRes
     }
 
     if (!data) {
-      logProfile('Profile not found by username', { username });
+      logger.info('[Profile] Profile not found by username', { username });
       return { data: null, error: new Error('Profile not found') };
     }
 
     // Validate the profile data
     if (!isValidProfile(data)) {
-      logProfile('Invalid profile data structure', { username, data });
+      logger.info('[Profile] Invalid profile data structure', { username, data });
       return { data: null, error: new Error('Invalid profile data structure') };
     }
 
-    logProfile('Profile fetched by username successfully', {
+    logger.info('[Profile] Profile fetched by username successfully', {
       username,
       userId: data.id,
     });
@@ -383,7 +383,7 @@ export async function searchProfiles(
   limit: number = 10
 ): Promise<{ data: Profile[]; error: Error | null }> {
   try {
-    logProfile('Searching profiles', { query, limit });
+    logger.info('[Profile] Searching profiles', { query, limit });
 
     const escapedQuery = query.replace(/[%_]/g, '\\$&');
     const { data, error } = await supabase
@@ -393,7 +393,7 @@ export async function searchProfiles(
       .limit(limit);
 
     if (error) {
-      logProfile('Failed to search profiles', {
+      logger.info('[Profile] Failed to search profiles', {
         query,
         error: error.message,
       });
@@ -402,7 +402,7 @@ export async function searchProfiles(
 
     const profiles = data || [];
 
-    logProfile('Profile search completed', {
+    logger.info('[Profile] Profile search completed', {
       query,
       resultsCount: profiles.length,
     });
