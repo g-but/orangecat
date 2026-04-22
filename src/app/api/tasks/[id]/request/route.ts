@@ -7,10 +7,8 @@
  * If omitted, broadcasts to ALL team members.
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
-  apiUnauthorized,
   apiNotFound,
   apiValidationError,
   apiInternalError,
@@ -27,15 +25,12 @@ import { logger } from '@/utils/logger';
 
 interface RouteContext { params: Promise<{ id: string }> }
 
-export async function POST(request: NextRequest, context: RouteContext) {
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   const { id: taskId } = await context.params;
   const idValidation = getValidationError(validateUUID(taskId, 'task ID'));
   if (idValidation) {return idValidation;}
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
@@ -75,8 +70,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const notifBase = { title: '', message: d.message || null, actionUrl: `/dashboard/tasks/${taskId}`, sourceEntityType: 'task' as const, sourceEntityId: taskId };
 
     if (!d.requested_user_id) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await notificationService.createBroadcastNotification({ ...notifBase, excludeUserId: user.id, type: 'task_broadcast', title: `${requesterName} is asking for help: "${(task as any).title}"` });
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await notificationService.createNotification({ ...notifBase, recipientUserId: d.requested_user_id, type: 'task_request', title: `${requesterName} is asking you: "${(task as any).title}"` });
     }
 
@@ -85,4 +82,4 @@ export async function POST(request: NextRequest, context: RouteContext) {
     logger.error('Exception in POST /api/tasks/[id]/request', { error: err }, 'TasksAPI');
     return apiInternalError();
   }
-}
+});

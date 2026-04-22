@@ -6,9 +6,8 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
-  apiUnauthorized,
   apiValidationError,
   apiInternalError,
   apiRateLimited,
@@ -20,12 +19,9 @@ import { TASK_DEFAULTS } from '@/config/tasks';
 import { logger } from '@/utils/logger';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
+  const { supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const { searchParams } = new URL(request.url);
     const filters: TaskFilter = {
       category: searchParams.get('category') || undefined,
@@ -64,18 +60,15 @@ export async function GET(request: NextRequest) {
     logger.error('Exception in GET /api/tasks', { error: err }, 'TasksAPI');
     return apiInternalError();
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many task creation requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
-    const body = await request.json();
+    const body = await (request as NextRequest).json();
     const result = taskSchema.safeParse(body);
     if (!result.success) {return apiValidationError('Validation failed', result.error.flatten());}
 
@@ -100,4 +93,4 @@ export async function POST(request: NextRequest) {
     logger.error('Exception in POST /api/tasks', { error: err }, 'TasksAPI');
     return apiInternalError();
   }
-}
+});
