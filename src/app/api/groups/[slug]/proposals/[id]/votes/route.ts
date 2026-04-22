@@ -6,6 +6,7 @@
 
 import { NextRequest } from 'next/server';
 import { handleApiError, apiSuccess, apiNotFound } from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 import { getProposalVotes } from '@/services/groups/queries/proposals';
 import { createServerClient } from '@/lib/supabase/server';
@@ -14,6 +15,9 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
+  const { id } = await params;
+  const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
+  if (idValidation) {return idValidation;}
   try {
     const supabase = await createServerClient();
     const {
@@ -22,7 +26,6 @@ export async function GET(
 
     // Optional auth - public proposals can be viewed by anyone
     // But votes are only visible to members
-    const { id } = await params;
     const result = await getProposalVotes(id, supabase);
     if (!result.success) {
       return apiNotFound(result.error);
