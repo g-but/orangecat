@@ -4,13 +4,9 @@
  * GET /api/ai-credits/revenue - Get creator's revenue from their AI assistants
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { apiSuccess, apiUnauthorized, handleApiError } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
-import { compose } from '@/lib/api/compose';
-import { withRateLimit } from '@/lib/api/withRateLimit';
-import { withRequestId } from '@/lib/api/withRequestId';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface AssistantRevenue {
@@ -28,26 +24,15 @@ interface AssistantRevenue {
  * GET /api/ai-credits/revenue
  * Returns creator's total revenue and per-assistant breakdown
  */
-export const GET = compose(
-  withRequestId(),
-  withRateLimit('read')
-)(async (_request: NextRequest) => {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
   try {
-    const supabase = await createServerClient();
-    const db = supabase as any;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
-    }
-
     // Get all assistants owned by this user with revenue stats
     const { data: assistants, error: assistantsError } = await db
       .from(DATABASE_TABLES.AI_ASSISTANTS)
-      .select(
-        `
+      .select(`
         id,
         name,
         avatar_url,
@@ -56,41 +41,28 @@ export const GET = compose(
         total_messages,
         pricing_model,
         price_per_message
-      `
-      )
+      `)
       .eq('user_id', user.id)
       .order('total_revenue_btc', { ascending: false });
 
-    if (assistantsError) {
-      throw assistantsError;
-    }
+    if (assistantsError) {throw assistantsError;}
 
-    // Calculate totals from assistants
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const assistantRows = (assistants || []) as any[];
 
-    const totalRevenueBtc = assistantRows.reduce(
-      (sum: number, a: any) => sum + (a.total_revenue_btc || 0),
-      0
-    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const totalRevenueBtc = assistantRows.reduce((sum: number, a: any) => sum + (a.total_revenue_btc || 0), 0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const totalConversations = assistantRows.reduce((sum: number, a: any) => sum + (a.total_conversations || 0), 0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const totalMessages = assistantRows.reduce((sum: number, a: any) => sum + (a.total_messages || 0), 0);
 
-    const totalConversations = assistantRows.reduce(
-      (sum: number, a: any) => sum + (a.total_conversations || 0),
-      0
-    );
-
-    const totalMessages = assistantRows.reduce(
-      (sum: number, a: any) => sum + (a.total_messages || 0),
-      0
-    );
-
-    // Get creator earnings with withdrawal tracking
     const { data: earnings } = await db
       .from(DATABASE_TABLES.AI_CREATOR_EARNINGS)
       .select('*')
       .eq('user_id', user.id)
       .single();
 
-    // Calculate available balance (from earnings table if exists, otherwise total revenue)
     const availableBalanceBtc = earnings?.available_balance_btc ?? totalRevenueBtc;
 
     return apiSuccess({
@@ -101,18 +73,17 @@ export const GET = compose(
         total_messages: totalMessages,
         total_assistants: assistants?.length || 0,
       },
-      assistants: assistantRows.map(
-        (a: any): AssistantRevenue => ({
-          id: a.id,
-          name: a.name,
-          avatar_url: a.avatar_url,
-          total_revenue_btc: a.total_revenue_btc || 0,
-          total_conversations: a.total_conversations || 0,
-          total_messages: a.total_messages || 0,
-          pricing_model: a.pricing_model || 'free',
-          price_per_message: a.price_per_message || 0,
-        })
-      ),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      assistants: assistantRows.map((a: any): AssistantRevenue => ({
+        id: a.id,
+        name: a.name,
+        avatar_url: a.avatar_url,
+        total_revenue_btc: a.total_revenue_btc || 0,
+        total_conversations: a.total_conversations || 0,
+        total_messages: a.total_messages || 0,
+        pricing_model: a.pricing_model || 'free',
+        price_per_message: a.price_per_message || 0,
+      })),
     });
   } catch (error) {
     logger.error('Failed to get revenue', { error });

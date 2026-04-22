@@ -5,20 +5,16 @@
  * DELETE /api/ai-credits/withdrawals/[id] - Cancel a pending withdrawal
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   apiSuccess,
   apiBadRequest,
   apiForbidden,
-  apiUnauthorized,
   apiNotFound,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
-import { compose } from '@/lib/api/compose';
-import { withRateLimit } from '@/lib/api/withRateLimit';
-import { withRequestId } from '@/lib/api/withRequestId';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 
@@ -30,25 +26,14 @@ interface RouteContext {
  * GET /api/ai-credits/withdrawals/[id]
  * Get withdrawal details
  */
-export const GET = compose(
-  withRequestId(),
-  withRateLimit('read')
-)(async (_request: NextRequest, context: RouteContext) => {
+export const GET = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'withdrawal ID'));
+  if (idValidation) {return idValidation;}
+  const { user, supabase } = request;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
   try {
-    const supabase = await createServerClient();
-    const db = supabase as any;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
-    }
-
-    const { id } = await context.params;
-    const idValidation = getValidationError(validateUUID(id, 'withdrawal ID'));
-    if (idValidation) {return idValidation;}
-
     const { data: withdrawal, error } = await db
       .from(DATABASE_TABLES.AI_CREATOR_WITHDRAWALS)
       .select('*')
@@ -71,52 +56,34 @@ export const GET = compose(
  * DELETE /api/ai-credits/withdrawals/[id]
  * Cancel a pending withdrawal
  */
-export const DELETE = compose(
-  withRequestId(),
-  withRateLimit('write')
-)(async (_request: NextRequest, context: RouteContext) => {
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'withdrawal ID'));
+  if (idValidation) {return idValidation;}
+  const { user, supabase } = request;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
   try {
-    const supabase = await createServerClient();
-    const db = supabase as any;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return handleApiError({ message: `Rate limit exceeded. Retry after ${retryAfter}s.` });
     }
 
-    const { id } = await context.params;
-    const idValidation = getValidationError(validateUUID(id, 'withdrawal ID'));
-    if (idValidation) {return idValidation;}
-
-    // Call cancel RPC
     const { error } = await db.rpc('cancel_ai_withdrawal', {
       p_withdrawal_id: id,
       p_user_id: user.id,
     });
 
     if (error) {
-      if (error.message.includes('not found')) {
-        return apiNotFound('Withdrawal');
-      }
-      if (error.message.includes('Unauthorized')) {
-        return apiForbidden('Unauthorized');
-      }
-      if (error.message.includes('Only pending')) {
-        return apiBadRequest('Only pending withdrawals can be cancelled');
-      }
+      if (error.message.includes('not found')) {return apiNotFound('Withdrawal');}
+      if (error.message.includes('Unauthorized')) {return apiForbidden('Unauthorized');}
+      if (error.message.includes('Only pending')) {return apiBadRequest('Only pending withdrawals can be cancelled');}
       throw error;
     }
 
-    logger.info('Withdrawal cancelled', {
-      userId: user.id,
-      withdrawalId: id,
-    });
-
-    return apiSuccess({
-      message: 'Withdrawal cancelled successfully',
-    });
+    logger.info('Withdrawal cancelled', { userId: user.id, withdrawalId: id });
+    return apiSuccess({ message: 'Withdrawal cancelled successfully' });
   } catch (error) {
     logger.error('Failed to cancel withdrawal', { error });
     return handleApiError(error);

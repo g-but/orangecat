@@ -7,12 +7,10 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { createServerClient } from '@/lib/supabase/server';
-import { apiSuccess, apiUnauthorized, handleApiError } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
-import { compose } from '@/lib/api/compose';
-import { withRateLimit } from '@/lib/api/withRateLimit';
-import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination } from '@/lib/api/query';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { createCreditDeposit } from '@/domain/aiCredits/depositService';
@@ -22,12 +20,9 @@ const depositRequestSchema = z.object({
   payment_method: z.enum(['lightning', 'onchain']).default('lightning'),
 });
 
-export const GET = compose(withRequestId(), withRateLimit('read'))(async (request: NextRequest) => {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized();}
-
     const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
@@ -66,13 +61,16 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
   }
 });
 
-export const POST = compose(withRequestId(), withRateLimit('write'))(async (request: NextRequest) => {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized();}
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return handleApiError({ message: `Rate limit exceeded. Retry after ${retryAfter}s.` });
+    }
 
-    const body = await request.json();
+    const body = await (request as NextRequest).json();
     const result = depositRequestSchema.safeParse(body);
     if (!result.success) {return handleApiError({ message: 'Invalid request', details: result.error.flatten() });}
 
