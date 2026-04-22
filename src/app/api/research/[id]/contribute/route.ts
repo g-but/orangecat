@@ -1,87 +1,54 @@
+/**
+ * Research Contribution API
+ *
+ * GET  /api/research/[id]/contribute - Get contribution history
+ * POST /api/research/[id]/contribute - Make a contribution
+ */
+
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import {
   apiSuccess,
   apiNotFound,
   apiUnauthorized,
+  apiBadRequest,
   handleApiError,
 } from '@/lib/api/standardResponse';
-import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
-import { convertToBtc } from '@/services/currency';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { PROJECT_STATUS } from '@/config/project-statuses';
+import { createResearchContribution, computeContributionStats } from '@/domain/research/contributionService';
 
-interface ResearchEntity {
-  id: string;
-  is_public: boolean;
-  user_id: string;
-  funding_goal?: number;
-  funding_goal_currency?: string;
-  funding_raised_btc?: number;
-  status?: string;
-}
-
-interface Contribution {
-  id: string;
-  research_entity_id: string;
-  user_id: string | null;
-  amount_btc: number;
-  funding_model: string;
-  message?: string;
-  anonymous: boolean;
-  lightning_invoice?: string;
-  status: string;
-  created_at: string;
-}
-
-// Helper to extract ID from URL
 function extractIdFromUrl(url: string): string {
   const segments = new URL(url).pathname.split('/');
   const idx = segments.findIndex(s => s === 'research');
   return segments[idx + 1] || '';
 }
 
-// GET /api/research/[id]/contribute - Get contribution history
 export const GET = compose(withRateLimit('read'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
 
-    // Check if research entity exists
-    const { data: entityData, error: entityError } = await supabase
-      .from(DATABASE_TABLES.RESEARCH_ENTITIES)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: entity, error: entityError } = await (supabase.from(DATABASE_TABLES.RESEARCH_ENTITIES) as any)
       .select('id, is_public, user_id')
       .eq('id', id)
       .single();
-    const entity = entityData as ResearchEntity | null;
 
     if (entityError) {
-      if (entityError.code === 'PGRST116') {
-        return apiNotFound('Research entity not found');
-      }
+      if (entityError.code === 'PGRST116') return apiNotFound('Research entity not found');
       throw entityError;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Only owners and contributors can see full contribution details
-    let canSeeDetails = false;
-    if (user && entity) {
-      if (user.id === entity.user_id) {
-        canSeeDetails = true;
-      } else {
-        const { data: userContributions } = await supabase
-          .from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS)
-          .select('id')
-          .eq('research_entity_id', id)
-          .eq('user_id', user.id)
-          .limit(1);
-        canSeeDetails = !!(userContributions && userContributions.length > 0);
-      }
+    let canSeeDetails = user?.id === entity?.user_id;
+    if (!canSeeDetails && user) {
+      const { data: myContribs } = await supabase
+        .from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS)
+        .select('id').eq('research_entity_id', id).eq('user_id', user.id).limit(1);
+      canSeeDetails = !!(myContribs?.length);
     }
 
     let query = supabase
@@ -90,146 +57,40 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
       .eq('research_entity_id', id)
       .order('created_at', { ascending: false });
 
-    // Hide anonymous contributor details unless owner
-    if (!canSeeDetails) {
-      query = query.eq('anonymous', false);
-    }
+    if (!canSeeDetails) query = query.eq('anonymous', false);
 
     const { data: contributionsData, error } = await query;
-    const contributions = (contributionsData ?? []) as Contribution[];
+    if (error) throw error;
 
-    if (error) {
-      throw error;
-    }
-
-    // Calculate contribution statistics
-    const stats = {
-      total_contributors: contributions.length,
-      total_amount_btc: contributions.reduce((sum, c) => sum + c.amount_btc, 0),
-      average_contribution: contributions.length
-        ? contributions.reduce((sum, c) => sum + c.amount_btc, 0) / contributions.length
-        : 0,
-      funding_sources: {} as Record<string, number>,
-    };
-
-    // Count funding sources
-    contributions.forEach(contribution => {
-      stats.funding_sources[contribution.funding_model] =
-        (stats.funding_sources[contribution.funding_model] || 0) + contribution.amount_btc;
-    });
-
-    return apiSuccess({
-      contributions: contributions || [],
-      statistics: stats,
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const contributions = (contributionsData ?? []) as any[];
+    return apiSuccess({ contributions, statistics: computeContributionStats(contributions) });
   } catch (error) {
     return handleApiError(error);
   }
 });
 
-// POST /api/research/[id]/contribute - Make a contribution
 export const POST = compose(withRateLimit('write'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Check if research entity exists and accepts contributions
-    const { data: entityData2, error: entityError } = await supabase
-      .from(DATABASE_TABLES.RESEARCH_ENTITIES)
-      .select('id, is_public, funding_goal, funding_goal_currency, funding_raised_btc, status')
-      .eq('id', id)
-      .single();
-    const entity = entityData2 as ResearchEntity | null;
+    const body = await request.json();
+    const result = await createResearchContribution(supabase, id, user?.id ?? null, body);
 
-    if (entityError) {
-      if (entityError.code === 'PGRST116') {
-        return apiNotFound('Research entity not found');
+    if (!result.ok) {
+      switch (result.code) {
+        case 'NOT_FOUND': return apiNotFound(result.message);
+        case 'NOT_ACCEPTING': return apiUnauthorized(result.message);
+        case 'INVALID_AMOUNT': return apiUnauthorized(result.message);
+        case 'INVALID_MODEL': return apiUnauthorized(result.message);
+        case 'DB_ERROR': return handleApiError(new Error(result.message));
       }
-      throw entityError;
     }
-
-    if (!entity || !entity.is_public) {
-      return apiUnauthorized('Cannot contribute to private research entities');
-    }
-
-    if (entity.status === PROJECT_STATUS.COMPLETED || entity.status === PROJECT_STATUS.CANCELLED) {
-      return apiUnauthorized('This research entity is no longer accepting contributions');
-    }
-
-    const { amount, currency, funding_model, message, anonymous } = await request.json();
-
-    if (!amount || amount <= 0) {
-      return apiUnauthorized('Valid contribution amount is required');
-    }
-
-    // Convert amount to BTC for storage
-    const amountBtc = convertToBtc(amount, currency || 'BTC');
-
-    if (amountBtc < 0.00001) {
-      // Minimum ~500 sats at current rates
-      return apiUnauthorized('Minimum contribution is 0.00001 BTC');
-    }
-
-    const validModels = ['donation', 'subscription', 'milestone', 'royalty'];
-    if (!validModels.includes(funding_model)) {
-      return apiUnauthorized('Invalid funding model');
-    }
-
-    // Generate Lightning invoice (simplified - would integrate with real wallet)
-    const satsAmount = Math.round(amountBtc * 100_000_000);
-    const invoice = `lnbc${satsAmount}...`; // Placeholder
-
-    // Create contribution record
-    const contributionData = {
-      research_entity_id: id,
-      user_id: anonymous ? null : user?.id || null,
-      amount_btc: amountBtc,
-      funding_model,
-      message,
-      anonymous: anonymous || false,
-      lightning_invoice: invoice,
-      status: 'pending',
-    };
-
-    const { data: contribution, error } = await (
-      supabase.from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS) as ReturnType<typeof supabase.from>
-    )
-      .insert(contributionData)
-      .select()
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    const contributionResult = contribution as Contribution | null;
-
-    // Update research entity funding total
-    await (
-      supabase.rpc as unknown as (name: string, params: Record<string, unknown>) => Promise<unknown>
-    )('update_research_funding', {
-      research_entity_id: id,
-      amount_btc: amountBtc,
-    });
-
-    logger.info('Research contribution created', {
-      researchEntityId: id,
-      contributionId: contributionResult?.id,
-      amountBtc,
-      anonymous,
-      userId: user?.id,
-    });
 
     return apiSuccess(
-      {
-        contribution: contributionResult,
-        lightning_invoice: invoice,
-        message:
-          'Contribution recorded. Please pay the Lightning invoice to complete the transaction.',
-      },
+      { contribution: result.contribution, lightning_invoice: result.invoice, message: 'Contribution recorded. Please pay the Lightning invoice to complete the transaction.' },
       { status: 201 }
     );
   } catch (error) {
