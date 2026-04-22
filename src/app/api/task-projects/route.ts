@@ -10,9 +10,8 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
-  apiUnauthorized,
   apiValidationError,
   apiInternalError,
   apiSuccess,
@@ -29,18 +28,9 @@ import { logger } from '@/utils/logger';
  *
  * List task projects
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
+  const { supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized('Authentication required');
-    }
-
-    // Parse query params
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || undefined;
 
@@ -70,32 +60,23 @@ export async function GET(request: NextRequest) {
     logger.error('Exception in GET /api/task-projects', { error: err }, 'TaskProjectsAPI');
     return apiInternalError();
   }
-}
+});
 
 /**
  * POST /api/task-projects
  *
  * Create a new task project
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized('Authentication required');
-    }
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
       const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
       return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 
-    // Parse and validate body
-    const body = await request.json();
+    const body = await (request as NextRequest).json();
     const result = taskProjectSchema.safeParse(body);
 
     if (!result.success) {
@@ -104,7 +85,6 @@ export async function POST(request: NextRequest) {
 
     const projectData = result.data;
 
-    // Create project
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: project, error } = await (supabase as any)
       .from(DATABASE_TABLES.TASK_PROJECTS)
@@ -128,4 +108,4 @@ export async function POST(request: NextRequest) {
     logger.error('Exception in POST /api/task-projects', { error: err }, 'TaskProjectsAPI');
     return apiInternalError();
   }
-}
+});

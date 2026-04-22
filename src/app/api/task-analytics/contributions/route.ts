@@ -4,19 +4,15 @@
  * GET /api/task-analytics/contributions - Get completions per person
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { apiUnauthorized, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { aggregateContributions } from '@/services/tasks/contributionAnalytics';
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
+  const { supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const { searchParams } = new URL(request.url);
     const days = Math.min(365, Math.max(1, parseInt(searchParams.get('days') || '30', 10)));
     const categoryFilter = searchParams.get('category') || undefined;
@@ -65,4 +61,4 @@ export async function GET(request: NextRequest) {
     logger.error('Exception in GET /api/task-analytics/contributions', { error: err }, 'TaskAnalyticsAPI');
     return apiInternalError();
   }
-}
+});

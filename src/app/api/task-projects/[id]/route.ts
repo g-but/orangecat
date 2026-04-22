@@ -7,9 +7,8 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
-  apiUnauthorized,
   apiForbidden,
   apiNotFound,
   apiValidationError,
@@ -28,15 +27,12 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(request: NextRequest, context: RouteContext) {
+export const GET = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'project ID'));
   if (idValidation) {return idValidation;}
+  const { supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const { data: project, error } = await supabase
       .from(DATABASE_TABLES.TASK_PROJECTS)
       .select(`*, tasks:tasks(id, title, category, priority, current_status, task_type, is_completed)`)
@@ -54,17 +50,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
     logger.error('Exception in GET /api/task-projects/[id]', { error: err }, 'TaskProjectsAPI');
     return apiInternalError();
   }
-}
+});
 
-export async function PATCH(request: NextRequest, context: RouteContext) {
+export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'project ID'));
   if (idValidation) {return idValidation;}
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
@@ -72,7 +65,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (ownership === 'not_found') {return apiNotFound('Project not found');}
     if (ownership === 'forbidden') {return apiForbidden('Only the creator can edit this project');}
 
-    const body = await request.json();
+    const body = await (request as NextRequest).json();
     const result = taskProjectUpdateSchema.safeParse(body);
     if (!result.success) {return apiValidationError('Validation failed', result.error.flatten());}
 
@@ -96,17 +89,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     logger.error('Exception in PATCH /api/task-projects/[id]', { error: err }, 'TaskProjectsAPI');
     return apiInternalError();
   }
-}
+});
 
-export async function DELETE(request: NextRequest, context: RouteContext) {
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'project ID'));
   if (idValidation) {return idValidation;}
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
@@ -125,4 +115,4 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     logger.error('Exception in DELETE /api/task-projects/[id]', { error: err }, 'TaskProjectsAPI');
     return apiInternalError();
   }
-}
+});

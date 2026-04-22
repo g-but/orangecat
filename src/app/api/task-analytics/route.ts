@@ -4,19 +4,15 @@
  * GET /api/task-analytics - Get dashboard stats
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { apiUnauthorized, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { TASK_STATUSES } from '@/config/tasks';
 import { logger } from '@/utils/logger';
 
-export async function GET(_request: NextRequest) {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
     const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
@@ -76,4 +72,4 @@ export async function GET(_request: NextRequest) {
     logger.error('Exception in GET /api/task-analytics', { error: err }, 'TaskAnalyticsAPI');
     return apiInternalError();
   }
-}
+});
