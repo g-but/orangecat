@@ -1,27 +1,29 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 import { apiSuccess, apiNotFound, handleApiError } from '@/lib/api/standardResponse';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 /**
  * GET /api/profile/[identifier] - Get profile by username or email
  *
  * Supports both username and email lookups for viewing other users' profiles
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ identifier: string }> }
-) {
+
+interface RouteContext {
+  params: Promise<{ identifier: string }>;
+}
+
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
   try {
-    const { identifier } = await params;
+    const { identifier } = await context.params;
 
     if (!identifier?.trim()) {
       return apiNotFound('Profile identifier is required');
     }
 
-    const supabase = await createServerClient();
+    const { supabase } = request;
     const trimmedIdentifier = identifier.trim();
     const isEmail = trimmedIdentifier.includes('@');
 
@@ -118,22 +120,24 @@ export async function GET(
       return apiNotFound('Profile not found');
     }
 
-    // Calculate project count
-    const { count: projectCount } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('project')) as any)
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId || profile.id)
-      .neq('status', 'draft'); // Exclude drafts from public view
+    // Calculate project count via actor_id (consistent with actor system)
+    const resolvedUserId = userId || profile.id;
+    let projectCount = 0;
+    try {
+      const actor = await getOrCreateUserActor(resolvedUserId);
+      const { count } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('project')) as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('actor_id', actor.id)
+        .neq('status', 'draft'); // Exclude drafts from public view
+      projectCount = count || 0;
+    } catch {
+      // Non-fatal: profile still returned without count
+    }
 
-    // Add computed project_count to profile
-    const profileWithCounts = {
-      ...profile,
-      project_count: projectCount || 0,
-    };
-
-    return apiSuccess(profileWithCounts);
+    return apiSuccess({ ...profile, project_count: projectCount });
   } catch (error) {
     return handleApiError(error);
   }
-}
+});
