@@ -7,10 +7,13 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { getTableName } from '@/config/entity-registry';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const { id: projectId } = await params;
+    const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
+    if (idValidation) {return idValidation;}
     const supabase = await createServerClient();
 
     // Get project details

@@ -18,6 +18,7 @@ import {
   apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskRequestSchema } from '@/lib/schemas/tasks';
 import { TASK_STATUSES } from '@/config/tasks';
@@ -27,8 +28,10 @@ import { logger } from '@/utils/logger';
 interface RouteContext { params: Promise<{ id: string }> }
 
 export async function POST(request: NextRequest, context: RouteContext) {
+  const { id: taskId } = await context.params;
+  const idValidation = getValidationError(validateUUID(taskId, 'task ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: taskId } = await context.params;
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {return apiUnauthorized('Authentication required');}

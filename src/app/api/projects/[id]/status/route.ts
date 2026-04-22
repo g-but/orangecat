@@ -21,6 +21,7 @@ import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { VALID_PROJECT_STATUSES, type ProjectStatus } from '@/config/project-statuses';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 // Valid status transitions
 const VALID_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> = {
@@ -48,6 +49,8 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     }
 
     const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'project ID'));
+    if (idValidation) {return idValidation;}
     const body = await request.json();
     const { status } = body;
 

@@ -25,6 +25,7 @@ import {
   apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -35,9 +36,10 @@ interface RouteParams {
  * Confirm and execute a pending action
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
+  const { id: pendingActionId } = await params;
+  const idValidation = getValidationError(validateUUID(pendingActionId, 'action ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: pendingActionId } = await params;
-
     const supabase = await createServerClient();
     const {
       data: { user },
@@ -81,9 +83,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
  * Reject a pending action
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const { id: pendingActionId } = await params;
+  const idValidation = getValidationError(validateUUID(pendingActionId, 'action ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: pendingActionId } = await params;
-
     const supabase = await createServerClient();
     const {
       data: { user },

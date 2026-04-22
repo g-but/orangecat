@@ -22,6 +22,7 @@ import {
   apiValidationError,
 } from '@/lib/api/standardResponse';
 import { getDocument, updateDocument, deleteDocument } from '@/domain/documents/service';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -34,6 +35,8 @@ export const GET = compose(
 )(async (_request: NextRequest, context: RouteContext) => {
   try {
     const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'document ID'));
+    if (idValidation) {return idValidation;}
 
     const document = await getDocument(id);
     if (!document) {
@@ -63,6 +66,8 @@ export const PUT = compose(
     }
 
     const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'document ID'));
+    if (idValidation) {return idValidation;}
     const body = await request.json();
 
     // Validate input (partial schema)
@@ -95,6 +100,8 @@ export const DELETE = compose(
     }
 
     const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'document ID'));
+    if (idValidation) {return idValidation;}
 
     await deleteDocument(id, user.id);
     return apiSuccess({ deleted: true });

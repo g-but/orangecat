@@ -21,6 +21,7 @@ import {
   apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskCompletionSchema } from '@/lib/schemas/tasks';
 import { NotificationService } from '@/lib/services/notifications';
@@ -31,8 +32,10 @@ interface RouteContext {
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
+  const { id: taskId } = await context.params;
+  const idValidation = getValidationError(validateUUID(taskId, 'task ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: taskId } = await context.params;
     const supabase = await createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;

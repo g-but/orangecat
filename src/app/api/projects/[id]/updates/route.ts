@@ -11,13 +11,13 @@ import { createServerClient } from '@/lib/supabase/server';
 import {
   apiSuccess,
   apiNotFound,
-  apiValidationError,
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { PROJECT_STATUS } from '@/config/project-statuses';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteParams {
   params: Promise<{
@@ -34,10 +34,8 @@ interface RouteParams {
 export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
   try {
     const { id: projectId } = await params;
-
-    if (!projectId) {
-      return apiValidationError('Project ID is required');
-    }
+    const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
+    if (idValidation) {return idValidation;}
 
     const supabase = await createServerClient();
 

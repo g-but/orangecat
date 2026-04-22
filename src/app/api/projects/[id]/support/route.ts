@@ -25,6 +25,7 @@ import {
   apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -32,8 +33,10 @@ interface RouteContext {
 
 // GET /api/projects/[id]/support - Get project support list
 export async function GET(request: NextRequest, context: RouteContext) {
+  const { id: projectId } = await context.params;
+  const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: projectId } = await context.params;
     const searchParams = request.nextUrl.searchParams;
 
     // Parse filters
@@ -80,8 +83,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
 // POST /api/projects/[id]/support - Create project support
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id: projectId } = await context.params;
+  const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: projectId } = await context.params;
     const { user } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
