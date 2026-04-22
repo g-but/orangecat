@@ -2,7 +2,7 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { TimelineVisibility } from '@/types/timeline';
 import { getTableName } from '@/config/entity-registry';
-import { DATABASE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, STORAGE_BUCKETS } from '@/config/database-tables';
 import { API_ROUTES } from '@/config/api-routes';
 
 const PROFILE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -252,7 +252,7 @@ export async function fetchUserProjects(userId: string): Promise<any[]> {
         )[0];
         if (firstMedia?.storage_path) {
           const { data: urlData } = supabase.storage
-            .from('project-media')
+            .from(STORAGE_BUCKETS.PROJECT_MEDIA)
             .getPublicUrl(firstMedia.storage_path);
           thumbnail_url = urlData.publicUrl;
         }

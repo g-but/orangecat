@@ -6,6 +6,7 @@ import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
+import { STORAGE_BUCKETS } from '@/config/database-tables';
 
 export async function GET(
   request: NextRequest,
@@ -76,7 +77,7 @@ export async function GET(
           (a: { position: number }, b: { position: number }) => a.position - b.position
         )[0];
         const { data: urlData } = supabaseStorage.storage
-          .from('project-media')
+          .from(STORAGE_BUCKETS.PROJECT_MEDIA)
           .getPublicUrl(firstMedia.storage_path);
         return {
           ...project,

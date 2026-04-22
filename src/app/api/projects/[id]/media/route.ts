@@ -19,7 +19,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
-import { DATABASE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, STORAGE_BUCKETS } from '@/config/database-tables';
 import { createServerClient } from '@/lib/supabase/server';
 import { saveProjectMedia } from '@/domain/projects/mediaService';
 import { z } from 'zod';
@@ -52,7 +52,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
 
     const media = (data || []).map((m: { storage_path: string; id: string; position: number; alt_text?: string }) => {
-      const { data: urlData } = supabase.storage.from('project-media').getPublicUrl(m.storage_path);
+      const { data: urlData } = supabase.storage.from(STORAGE_BUCKETS.PROJECT_MEDIA).getPublicUrl(m.storage_path);
       return { ...m, url: urlData.publicUrl };
     });
 

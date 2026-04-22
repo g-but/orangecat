@@ -46,8 +46,10 @@ export interface ProjectMedia {
   created_at: string;
 }
 
+import { STORAGE_BUCKETS } from '@/config/database-tables';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getMediaUrl(supabase: any, storagePath: string): string {
-  const { data } = supabase.storage.from('project-media').getPublicUrl(storagePath);
+  const { data } = supabase.storage.from(STORAGE_BUCKETS.PROJECT_MEDIA).getPublicUrl(storagePath);
   return data.publicUrl;
 }

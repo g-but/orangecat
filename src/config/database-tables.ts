@@ -162,3 +162,14 @@ export const TIMELINE_TABLES = {
 
 // Type for table names
 export type DatabaseTableName = (typeof DATABASE_TABLES)[keyof typeof DATABASE_TABLES];
+
+/**
+ * Supabase Storage Bucket Names
+ *
+ * SSOT for all storage bucket identifiers. Use these instead of
+ * hardcoded strings in supabase.storage.from('...') calls.
+ */
+export const STORAGE_BUCKETS = {
+  AVATARS: 'avatars',
+  PROJECT_MEDIA: 'project-media',
+} as const;

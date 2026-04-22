@@ -20,7 +20,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
-import { DATABASE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, STORAGE_BUCKETS } from '@/config/database-tables';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -106,7 +106,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const filePath = `${projectId}/${crypto.randomUUID()}.${ext}`;
 
     const { data, error } = await supabase.storage
-      .from('project-media')
+      .from(STORAGE_BUCKETS.PROJECT_MEDIA)
       .createSignedUploadUrl(filePath);
 
     if (error) {

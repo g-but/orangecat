@@ -18,6 +18,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { STORAGE_BUCKETS } from '@/config/database-tables';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -69,7 +70,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     // Upload to Supabase Storage
     const fileBuffer = await file.arrayBuffer();
     const { data: _data, error: uploadError } = await supabase.storage
-      .from('avatars') // Use the existing avatars bucket
+      .from(STORAGE_BUCKETS.AVATARS)
       .upload(filePath, fileBuffer, {
         contentType: file.type,
         upsert: false,
@@ -83,7 +84,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from('avatars').getPublicUrl(filePath);
+    } = supabase.storage.from(STORAGE_BUCKETS.AVATARS).getPublicUrl(filePath);
 
     return apiSuccess({
       url: publicUrl,
@@ -113,7 +114,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest) => {
       return apiValidationError('You can only delete your own files');
     }
 
-    const { error: deleteError } = await supabase.storage.from('avatars').remove([filePath]);
+    const { error: deleteError } = await supabase.storage.from(STORAGE_BUCKETS.AVATARS).remove([filePath]);
 
     if (deleteError) {
       logger.error('Delete error:', deleteError);

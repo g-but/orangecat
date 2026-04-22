@@ -9,6 +9,7 @@
 
 import supabase from '@/lib/supabase/browser'
 import { logger } from '@/utils/logger'
+import { STORAGE_BUCKETS } from '@/config/database-tables'
 
 export interface FileUploadResult {
   success: boolean
@@ -23,7 +24,7 @@ export interface FileUploadProgress {
 }
 
 export class ProfileStorageService {
-  private static readonly BUCKET_NAME = 'avatars'
+  private static readonly BUCKET_NAME = STORAGE_BUCKETS.AVATARS
   private static readonly MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB for profile images
   private static readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
 

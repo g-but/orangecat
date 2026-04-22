@@ -19,7 +19,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import supabaseBrowser from '@/lib/supabase/browser';
-import { DATABASE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, STORAGE_BUCKETS } from '@/config/database-tables';
 import Image from 'next/image';
 
 interface MediaItem {
@@ -83,7 +83,7 @@ export default function ProjectMediaGallery({
 
   const publicUrls = useMemo(() => {
     return media.map(m => {
-      const { data } = supabaseBrowser.storage.from('project-media').getPublicUrl(m.storage_path);
+      const { data } = supabaseBrowser.storage.from(STORAGE_BUCKETS.PROJECT_MEDIA).getPublicUrl(m.storage_path);
       return { ...m, url: data.publicUrl as string };
     });
   }, [media]);
