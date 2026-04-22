@@ -1,5 +1,4 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
@@ -29,8 +28,7 @@ type FavoriteRow = {
  */
 async function handleGetFavorites(request: AuthenticatedRequest) {
   try {
-    const supabase = await createServerClient();
-    const user = request.user;
+    const { supabase, user } = request;
 
     // Get favorited project IDs
     const { data: favorites, error: favoritesError } = await supabase

@@ -10,7 +10,6 @@
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { createServerClient } from '@/lib/supabase/server';
 import {
   apiSuccess,
   apiNotFound,
@@ -38,8 +37,7 @@ export const PATCH = withAuth(async (
   const idValidation = getValidationError(validateUUID(messageId, 'message ID'));
   if (idValidation) {return idValidation;}
   try {
-    const { user } = req;
-    const supabase = await createServerClient();
+    const { user, supabase } = req;
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {

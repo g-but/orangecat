@@ -1,5 +1,4 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { apiSuccess, apiInternalError, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
@@ -30,8 +29,7 @@ async function insertConversationAndParticipant(
 
 export const GET = withAuth(async (_req: AuthenticatedRequest) => {
   try {
-    const { user } = _req;
-    const supabase = await createServerClient();
+    const { user, supabase } = _req;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 

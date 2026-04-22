@@ -1,5 +1,4 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth'
-import { createServerClient } from '@/lib/supabase/server'
 import {
   apiSuccess,
   apiValidationError,
@@ -19,8 +18,7 @@ const bulkDeleteSchema = z.object({
 
 export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
-    const { user } = req
-    const supabase = await createServerClient()
+    const { user, supabase } = req
 
     const rl = await rateLimitWriteAsync(user.id)
     if (!rl.success) {
