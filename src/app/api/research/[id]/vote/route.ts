@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   apiSuccess,
   apiNotFound,
@@ -15,8 +15,6 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
-import { compose } from '@/lib/api/compose';
-import { withRateLimit } from '@/lib/api/withRateLimit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { aggregateVotes, castVote } from '@/domain/research/voteService';
 import { z } from 'zod';
@@ -26,18 +24,16 @@ const castVoteSchema = z.object({
   choice: z.string().min(1, 'Choice is required').max(200),
 });
 
-function extractIdFromUrl(url: string): string {
-  const segments = new URL(url).pathname.split('/');
-  const idx = segments.findIndex(s => s === 'research');
-  return segments[idx + 1] || '';
+interface RouteContext {
+  params: Promise<{ id: string }>;
 }
 
-export const GET = compose(withRateLimit('read'))(async (request: NextRequest) => {
-  const id = extractIdFromUrl(request.url);
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
+  const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'research ID'));
   if (idValidation) {return idValidation;}
   try {
-    const supabase = await createServerClient();
+    const { user, supabase } = request;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: entity, error: entityError } = await (supabase.from(DATABASE_TABLES.RESEARCH_ENTITIES) as any)
@@ -51,7 +47,6 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
     }
     if (!entity?.voting_enabled) {return apiUnauthorized('Voting is not enabled for this research entity');}
 
-    const { data: { user } } = await supabase.auth.getUser();
     if (!entity.is_public && !user) {return apiUnauthorized('This research entity is private');}
 
     const { data: votesData, error } = await supabase
@@ -67,15 +62,12 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
   }
 });
 
-export const POST = compose(withRateLimit('write'))(async (request: NextRequest) => {
-  const id = extractIdFromUrl(request.url);
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'research ID'));
   if (idValidation) {return idValidation;}
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {return apiUnauthorized();}
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: entity, error: entityError } = await (supabase.from(DATABASE_TABLES.RESEARCH_ENTITIES) as any)
       .select('id, is_public, voting_enabled, contributions')
@@ -89,7 +81,7 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
     if (!entity?.voting_enabled) {return apiUnauthorized('Voting is not enabled for this research entity');}
     if (!entity.is_public) {return apiUnauthorized('Cannot vote on private research entities');}
 
-    const rawBody = await request.json();
+    const rawBody = await (request as NextRequest).json();
     const parsed = castVoteSchema.safeParse(rawBody);
     if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid vote data');}
     const { vote_type, choice } = parsed.data;

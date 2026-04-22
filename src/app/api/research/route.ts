@@ -9,11 +9,10 @@ import { createServerClient } from '@/lib/supabase/server';
 import { researchConfig } from '@/config/entity-configs/research-config';
 import {
   apiSuccess,
-  apiUnauthorized,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { compose } from '@/lib/api/compose';
-import { withZodBody } from '@/lib/api/withZod';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination, getString } from '@/lib/api/query';
@@ -24,8 +23,9 @@ import { getTableName } from '@/config/entity-registry';
 import type { ResearchEntityCreate } from '@/types/research';
 import { NextRequest } from 'next/server';
 import { createResearch } from '@/domain/research/createResearch';
+import type { ZodType } from 'zod';
 
-// GET /api/research - List research topics
+// GET /api/research - List research topics (public, no auth required)
 export const GET = compose(
   withRequestId(),
   withRateLimit('read')
@@ -88,21 +88,9 @@ export const GET = compose(
 });
 
 // POST /api/research - Create new research entity
-export const POST = compose(
-  withRequestId(),
-  ...(researchConfig.schema
-    ? [withZodBody(researchConfig.schema as Parameters<typeof withZodBody>[0])]
-    : []),
-  withRateLimit('write')
-)(async (request: NextRequest, ctx) => {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {return apiUnauthorized();}
-
     let rl: RateLimitResult;
     try {
       rl = await enforceUserWriteLimit(user.id);
@@ -112,7 +100,14 @@ export const POST = compose(
       throw e;
     }
 
-    const { response } = await createResearch(supabase, user.id, ctx.body as ResearchEntityCreate);
+    const body = await (request as NextRequest).json();
+    const schema = researchConfig.schema as ZodType | undefined;
+    if (schema) {
+      const parsed = schema.safeParse(body);
+      if (!parsed.success) {return handleApiError({ message: 'Invalid request body' });}
+    }
+
+    const { response } = await createResearch(supabase, user.id, body as ResearchEntityCreate);
     return applyRateLimitHeaders(response, rl);
   } catch (error) {
     return handleApiError(error);

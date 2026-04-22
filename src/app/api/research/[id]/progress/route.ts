@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   apiSuccess,
   apiNotFound,
@@ -11,8 +11,6 @@ import {
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { compose } from '@/lib/api/compose';
-import { withRateLimit } from '@/lib/api/withRateLimit';
 import { z } from 'zod';
 
 const progressUpdateSchema = z.object({
@@ -23,19 +21,17 @@ const progressUpdateSchema = z.object({
   attachments: z.array(z.string().url()).max(10).optional(),
 });
 
-function extractIdFromUrl(url: string): string {
-  const segments = new URL(url).pathname.split('/');
-  const idx = segments.findIndex(s => s === 'research');
-  return segments[idx + 1] || '';
+interface RouteContext {
+  params: Promise<{ id: string }>;
 }
 
 // GET /api/research/[id]/progress - Get progress updates
-export const GET = compose(withRateLimit('read'))(async (request: NextRequest) => {
-  const id = extractIdFromUrl(request.url);
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
+  const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'research ID'));
   if (idValidation) {return idValidation;}
   try {
-    const supabase = await createServerClient();
+    const { user, supabase } = request;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
@@ -50,7 +46,6 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
       throw entityError;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
     if (!entity.is_public && (!user || user.id !== entity.user_id)) {
       return apiUnauthorized('This research entity is private');
     }
@@ -69,16 +64,14 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
 });
 
 // POST /api/research/[id]/progress - Create progress update
-export const POST = compose(withRateLimit('write'))(async (request: NextRequest) => {
-  const id = extractIdFromUrl(request.url);
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'research ID'));
   if (idValidation) {return idValidation;}
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {return apiUnauthorized();}
 
     const { data: entity, error: entityError } = await db
       .from(DATABASE_TABLES.RESEARCH_ENTITIES)
@@ -97,7 +90,7 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many updates. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
-    const rawBody = await request.json();
+    const rawBody = await (request as NextRequest).json();
     const parsed = progressUpdateSchema.safeParse(rawBody);
     if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid progress update data');}
     const { title, description, milestone_achieved, funding_released, attachments } = parsed.data;
