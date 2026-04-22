@@ -1,13 +1,7 @@
 /**
- * Wishlist Item Proofs API Route
- *
- * Handles fetching proofs for a wishlist item.
+ * Wishlist Item Proofs API
  *
  * GET /api/wishlists/items/[itemId]/proofs - Get all proofs for a wishlist item
- *
- * Created: 2026-01-07
- * Last Modified: 2026-01-07
- * Last Modified Summary: Created API endpoint to fetch wishlist item proofs
  */
 
 import { NextRequest } from 'next/server';
@@ -16,182 +10,85 @@ import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { apiSuccess, apiNotFound, apiInternalError } from '@/lib/api/standardResponse';
 
-interface RouteParams {
-  params: Promise<{ itemId: string }>;
+interface RouteParams { params: Promise<{ itemId: string }> }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Row = Record<string, any>;
+
+function groupFeedbackByProof(feedback: Row[]): Record<string, Row[]> {
+  return feedback.reduce((acc: Record<string, Row[]>, f: Row) => {
+    if (f.fulfillment_proof_id) {
+      acc[f.fulfillment_proof_id] = [...(acc[f.fulfillment_proof_id] || []), f];
+    }
+    return acc;
+  }, {});
 }
 
-interface WishlistItem {
-  id: string;
-  wishlist_id: string;
-  wishlists: { actor_id: string } | { actor_id: string }[];
+function enrichProof(proof: Row, feedbackMap: Record<string, Row[]>, userId: string | undefined): Row {
+  const proofFeedback = feedbackMap[proof.id] || [];
+  return {
+    id: proof.id,
+    wishlist_item_id: proof.wishlist_item_id,
+    user_id: proof.user_id,
+    proof_type: proof.proof_type,
+    description: proof.description,
+    image_url: proof.image_url,
+    transaction_id: proof.transaction_id,
+    created_at: proof.created_at,
+    creator: proof.profiles,
+    feedback: {
+      likes: proofFeedback.filter((f: Row) => f.feedback_type === 'like').length,
+      dislikes: proofFeedback.filter((f: Row) => f.feedback_type === 'dislike').length,
+      user_feedback: userId
+        ? proofFeedback.find((f: Row) => f.user_id === userId)
+          ? { type: proofFeedback.find((f: Row) => f.user_id === userId)!.feedback_type, comment: proofFeedback.find((f: Row) => f.user_id === userId)!.comment }
+          : null
+        : null,
+    },
+  };
 }
 
-interface ProofCreatorProfile {
-  id: string;
-  username: string | null;
-  display_name: string | null;
-  avatar_url: string | null;
-}
-
-interface Proof {
-  id: string;
-  wishlist_item_id: string;
-  user_id: string;
-  proof_type: string;
-  description: string | null;
-  image_url: string | null;
-  transaction_id: string | null;
-  created_at: string;
-  profiles: ProofCreatorProfile | null;
-}
-
-interface Feedback {
-  id: string;
-  fulfillment_proof_id: string;
-  user_id: string;
-  feedback_type: string;
-  comment: string | null;
-  created_at: string;
-  profiles: ProofCreatorProfile | null;
-}
-
-// GET /api/wishlists/items/[itemId]/proofs - Get all proofs for a wishlist item
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { itemId } = await params;
-
     const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Verify the wishlist item exists
-    const { data: wishlistItemData, error: itemError } = await supabase
+    const { data: wishlistItem, error: itemError } = await supabase
       .from(DATABASE_TABLES.WISHLIST_ITEMS)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
-      .eq('id', itemId)
-      .single();
-    const wishlistItem = wishlistItemData as WishlistItem | null;
+      .eq('id', itemId).single();
 
-    if (itemError || !wishlistItem) {
-      return apiNotFound('Wishlist item not found');
-    }
+    if (itemError || !wishlistItem) return apiNotFound('Wishlist item not found');
 
-    // Get all proofs for this item
     const { data: proofsData, error: proofsError } = await supabase
       .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS)
-      .select(
-        `
-        id,
-        wishlist_item_id,
-        user_id,
-        proof_type,
-        description,
-        image_url,
-        transaction_id,
-        created_at,
-        profiles:user_id (
-          id,
-          username,
-          display_name,
-          avatar_url
-        )
-      `
-      )
+      .select('id, wishlist_item_id, user_id, proof_type, description, image_url, transaction_id, created_at, profiles:user_id(id, username, display_name, avatar_url)')
       .eq('wishlist_item_id', itemId)
       .order('created_at', { ascending: false });
-    const proofs = (proofsData ?? []) as Proof[];
 
     if (proofsError) {
-      logger.error('Failed to fetch wishlist proofs', {
-        error: proofsError.message,
-        itemId,
-      });
+      logger.error('Failed to fetch wishlist proofs', { error: proofsError.message, itemId });
       return apiInternalError('Failed to fetch proofs');
     }
 
-    // Get feedback for each proof
-    const proofIds = proofs.map(p => p.id);
-    let feedbackMap: Record<string, Feedback[]> = {};
+    const proofs = (proofsData ?? []) as Row[];
+    let feedbackMap: Record<string, Row[]> = {};
 
-    if (proofIds.length > 0) {
-      const { data: feedbackData, error: feedbackError } = await supabase
+    if (proofs.length > 0) {
+      const { data: feedbackData } = await supabase
         .from(DATABASE_TABLES.WISHLIST_FEEDBACK)
-        .select(
-          `
-          id,
-          fulfillment_proof_id,
-          user_id,
-          feedback_type,
-          comment,
-          created_at,
-          profiles:user_id (
-            id,
-            username,
-            display_name,
-            avatar_url
-          )
-        `
-        )
-        .in('fulfillment_proof_id', proofIds);
-      const feedback = (feedbackData ?? []) as Feedback[];
-
-      if (!feedbackError && feedback) {
-        // Group feedback by proof_id
-        feedbackMap = feedback.reduce(
-          (acc: Record<string, Feedback[]>, f: Feedback) => {
-            if (f.fulfillment_proof_id) {
-              if (!acc[f.fulfillment_proof_id]) {
-                acc[f.fulfillment_proof_id] = [];
-              }
-              acc[f.fulfillment_proof_id].push(f);
-            }
-            return acc;
-          },
-          {} as Record<string, Feedback[]>
-        );
-      }
+        .select('id, fulfillment_proof_id, user_id, feedback_type, comment, created_at, profiles:user_id(id, username, display_name, avatar_url)')
+        .in('fulfillment_proof_id', proofs.map(p => p.id));
+      if (feedbackData) feedbackMap = groupFeedbackByProof(feedbackData as Row[]);
     }
 
-    // Combine proofs with their feedback
-    const proofsWithFeedback = proofs.map(proof => {
-      const proofFeedback = feedbackMap[proof.id] || [];
-      const likes = proofFeedback.filter(f => f.feedback_type === 'like').length;
-      const dislikes = proofFeedback.filter(f => f.feedback_type === 'dislike').length;
-      const userFeedback = user ? proofFeedback.find(f => f.user_id === user.id) : null;
-
-      return {
-        id: proof.id,
-        wishlist_item_id: proof.wishlist_item_id,
-        user_id: proof.user_id,
-        proof_type: proof.proof_type,
-        description: proof.description,
-        image_url: proof.image_url,
-        transaction_id: proof.transaction_id,
-        created_at: proof.created_at,
-        creator: proof.profiles,
-        feedback: {
-          likes,
-          dislikes,
-          user_feedback: userFeedback
-            ? {
-                type: userFeedback.feedback_type,
-                comment: userFeedback.comment,
-              }
-            : null,
-        },
-      };
-    });
-
-    // Check if current user can add proofs (must be wishlist owner)
-    const wishlist = Array.isArray(wishlistItem.wishlists)
-      ? wishlistItem.wishlists[0]
-      : wishlistItem.wishlists;
-    const canAddProof = user && wishlist && wishlist.actor_id === user.id;
+    const wishlists = wishlistItem.wishlists as Row | Row[];
+    const wishlist = Array.isArray(wishlists) ? wishlists[0] : wishlists;
 
     return apiSuccess({
-      proofs: proofsWithFeedback,
-      can_add_proof: canAddProof || false,
+      proofs: proofs.map(proof => enrichProof(proof, feedbackMap, user?.id)),
+      can_add_proof: !!(user && wishlist?.actor_id === user.id),
     });
   } catch (error) {
     logger.error('Error in GET /api/wishlists/items/[itemId]/proofs:', error);

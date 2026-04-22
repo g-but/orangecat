@@ -1,13 +1,7 @@
 /**
- * Wishlist Feedback API Route
- *
- * Handles wishlist feedback operations (likes/dislikes).
+ * Wishlist Feedback API
  *
  * POST /api/wishlists/feedback - Submit like/dislike feedback
- *
- * Created: 2026-01-06
- * Last Modified: 2026-01-28
- * Last Modified Summary: Refactored to use withAuth middleware
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
@@ -26,161 +20,80 @@ import {
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
-// POST /api/wishlists/feedback - Submit like/dislike feedback
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
-    }
+    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
 
     const body = await request.json();
+    const v = wishlistFeedbackSchema.safeParse(body);
+    if (!v.success) return apiBadRequest('Invalid request', v.error.errors);
+    const d = v.data;
 
-    // Validate request
-    const validationResult = wishlistFeedbackSchema.safeParse(body);
-    if (!validationResult.success) {
-      return apiBadRequest('Invalid request', validationResult.error.errors);
-    }
-
-    // Verify the wishlist item exists
-    const { data: wishlistItem, error: itemError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WISHLIST_ITEMS) as any
-    )
+    // Verify wishlist item and ownership
+    const { data: wishlistItem, error: itemError } = await db
+      .from(DATABASE_TABLES.WISHLIST_ITEMS)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
-      .eq('id', validationResult.data.wishlist_item_id)
-      .single();
+      .eq('id', d.wishlist_item_id).single();
+    if (itemError || !wishlistItem) return apiNotFound('Wishlist item not found');
 
-    if (itemError || !wishlistItem) {
-      return apiNotFound('Wishlist item not found');
+    const wishlist = Array.isArray(wishlistItem.wishlists) ? wishlistItem.wishlists[0] : wishlistItem.wishlists;
+    if (wishlist?.actor_id === user.id) return apiForbidden('You cannot provide feedback on your own wishlist items');
+
+    // Verify proof exists if provided
+    if (d.fulfillment_proof_id) {
+      const { data: proof, error: proofError } = await db
+        .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS)
+        .select('id').eq('id', d.fulfillment_proof_id).eq('wishlist_item_id', d.wishlist_item_id).single();
+      if (proofError || !proof) return apiNotFound('Fulfillment proof not found or does not match wishlist item');
     }
 
-    // Users cannot feedback on their own wishlist items
-    const wishlist = Array.isArray(wishlistItem.wishlists)
-      ? wishlistItem.wishlists[0]
-      : wishlistItem.wishlists;
-    if (wishlist && wishlist.actor_id === user.id) {
-      return apiForbidden('You cannot provide feedback on your own wishlist items');
-    }
-
-    // If feedback is associated with a proof, verify it exists
-    if (validationResult.data.fulfillment_proof_id) {
-      const { data: proof, error: proofError } = await (
-        supabase
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS) as any
-      )
-        .select('id, wishlist_item_id')
-        .eq('id', validationResult.data.fulfillment_proof_id)
-        .eq('wishlist_item_id', validationResult.data.wishlist_item_id)
-        .single();
-
-      if (proofError || !proof) {
-        return apiNotFound('Fulfillment proof not found or does not match wishlist item');
-      }
-    }
-
-    // Check if user already provided feedback for this proof/item combination
-    const existingFeedbackQuery = (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WISHLIST_FEEDBACK) as any
-    )
-      .select('id, feedback_type')
-      .eq('user_id', user.id)
-      .eq('wishlist_item_id', validationResult.data.wishlist_item_id);
-
-    if (validationResult.data.fulfillment_proof_id) {
-      existingFeedbackQuery.eq('fulfillment_proof_id', validationResult.data.fulfillment_proof_id);
+    // Check for existing feedback
+    let existingQuery = db.from(DATABASE_TABLES.WISHLIST_FEEDBACK)
+      .select('id, feedback_type').eq('user_id', user.id).eq('wishlist_item_id', d.wishlist_item_id);
+    if (d.fulfillment_proof_id) {
+      existingQuery = existingQuery.eq('fulfillment_proof_id', d.fulfillment_proof_id);
     } else {
-      existingFeedbackQuery.is('fulfillment_proof_id', null);
+      existingQuery = existingQuery.is('fulfillment_proof_id', null);
     }
+    const { data: existingFeedback, error: checkError } = await existingQuery;
 
-    const { data: existingFeedback, error: feedbackCheckError } = await existingFeedbackQuery;
-
-    if (feedbackCheckError) {
-      logger.error('Failed to check existing feedback', {
-        error: feedbackCheckError.message,
-        userId: user.id,
-        wishlistItemId: validationResult.data.wishlist_item_id,
-      });
+    if (checkError) {
+      logger.error('Failed to check existing feedback', { error: checkError.message, userId: user.id });
       return apiInternalError('Failed to check existing feedback');
     }
 
-    if (existingFeedback && existingFeedback.length > 0) {
+    if (existingFeedback?.length > 0) {
       const existing = existingFeedback[0];
-      if (existing.feedback_type === validationResult.data.feedback_type) {
-        return apiConflict('You have already provided this type of feedback');
-      } else {
-        // Update existing feedback (allow changing like to dislike or vice versa)
-        const { data: updatedFeedback, error: updateError } = await (
-          supabase
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .from(DATABASE_TABLES.WISHLIST_FEEDBACK) as any
-        )
-          .update({
-            feedback_type: validationResult.data.feedback_type,
-            comment: validationResult.data.comment,
-          })
-          .eq('id', existing.id)
-          .select()
-          .single();
+      if (existing.feedback_type === d.feedback_type) return apiConflict('You have already provided this type of feedback');
 
-        if (updateError) {
-          logger.error('Failed to update wishlist feedback', {
-            error: updateError.message,
-            feedbackId: existing.id,
-            userId: user.id,
-          });
-          return apiInternalError('Failed to update feedback');
-        }
+      // Update existing feedback (toggle like ↔ dislike)
+      const { data: updated, error: updateError } = await db
+        .from(DATABASE_TABLES.WISHLIST_FEEDBACK)
+        .update({ feedback_type: d.feedback_type, comment: d.comment })
+        .eq('id', existing.id).select().single();
 
-        logger.info('Updated wishlist feedback successfully', {
-          feedbackId: updatedFeedback.id,
-          userId: user.id,
-          wishlistItemId: validationResult.data.wishlist_item_id,
-          feedbackType: validationResult.data.feedback_type,
-        });
-
-        return apiSuccess(updatedFeedback);
+      if (updateError) {
+        logger.error('Failed to update wishlist feedback', { error: updateError.message, feedbackId: existing.id, userId: user.id });
+        return apiInternalError('Failed to update feedback');
       }
+      return apiSuccess(updated);
     }
 
     // Create new feedback
-    const { data: feedback, error: feedbackError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WISHLIST_FEEDBACK) as any
-    )
-      .insert({
-        wishlist_item_id: validationResult.data.wishlist_item_id,
-        fulfillment_proof_id: validationResult.data.fulfillment_proof_id,
-        user_id: user.id,
-        feedback_type: validationResult.data.feedback_type,
-        comment: validationResult.data.comment,
-      })
-      .select()
-      .single();
+    const { data: feedback, error: feedbackError } = await db
+      .from(DATABASE_TABLES.WISHLIST_FEEDBACK)
+      .insert({ wishlist_item_id: d.wishlist_item_id, fulfillment_proof_id: d.fulfillment_proof_id, user_id: user.id, feedback_type: d.feedback_type, comment: d.comment })
+      .select().single();
 
     if (feedbackError) {
-      logger.error('Failed to create wishlist feedback', {
-        error: feedbackError.message,
-        userId: user.id,
-        wishlistItemId: validationResult.data.wishlist_item_id,
-      });
+      logger.error('Failed to create wishlist feedback', { error: feedbackError.message, userId: user.id });
       return apiInternalError('Failed to create feedback');
     }
-
-    logger.info('Created wishlist feedback successfully', {
-      feedbackId: feedback.id,
-      userId: user.id,
-      wishlistItemId: validationResult.data.wishlist_item_id,
-      feedbackType: validationResult.data.feedback_type,
-    });
 
     return apiCreated(feedback);
   } catch (error) {

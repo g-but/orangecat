@@ -2,8 +2,6 @@
  * Task Analytics API
  *
  * GET /api/task-analytics - Get dashboard stats
- *
- * Created: 2026-02-05
  */
 
 import { NextRequest } from 'next/server';
@@ -13,179 +11,65 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { TASK_STATUSES } from '@/config/tasks';
 import { logger } from '@/utils/logger';
 
-/**
- * GET /api/task-analytics
- *
- * Get dashboard statistics
- */
 export async function GET(_request: NextRequest) {
   try {
     const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return apiUnauthorized('Authentication required');
 
-    if (!user) {
-      return apiUnauthorized('Authentication required');
-    }
-
-    // Get counts for various task states
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
     const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
 
-    // Run queries in parallel
-    const [
-      totalTasksResult,
-      pendingTasksResult,
-      needsAttentionResult,
-      inProgressResult,
-      completedTodayResult,
-      completedWeekResult,
-      myCompletedTodayResult,
-      openRequestsResult,
-    ] = await Promise.all([
-      // Total active tasks
-      supabase
-        .from(DATABASE_TABLES.TASKS)
-        .select('*', { count: 'exact', head: true })
-        .eq('is_archived', false)
-        .not('task_type', 'eq', 'one_time'),
-
-      // Pending (idle) tasks
-      supabase
-        .from(DATABASE_TABLES.TASKS)
-        .select('*', { count: 'exact', head: true })
-        .eq('is_archived', false)
-        .eq('current_status', TASK_STATUSES.IDLE),
-
-      // Tasks needing attention
-      supabase
-        .from(DATABASE_TABLES.TASKS)
-        .select('*', { count: 'exact', head: true })
-        .eq('is_archived', false)
-        .eq('current_status', TASK_STATUSES.NEEDS_ATTENTION),
-
-      // Tasks in progress
-      supabase
-        .from(DATABASE_TABLES.TASKS)
-        .select('*', { count: 'exact', head: true })
-        .eq('is_archived', false)
-        .eq('current_status', TASK_STATUSES.IN_PROGRESS),
-
-      // Completed today (all users)
-      supabase
-        .from(DATABASE_TABLES.TASK_COMPLETIONS)
-        .select('*', { count: 'exact', head: true })
-        .gte('completed_at', todayStart),
-
-      // Completed this week (all users)
-      supabase
-        .from(DATABASE_TABLES.TASK_COMPLETIONS)
-        .select('*', { count: 'exact', head: true })
-        .gte('completed_at', weekStart),
-
-      // My completions today
-      supabase
-        .from(DATABASE_TABLES.TASK_COMPLETIONS)
-        .select('*', { count: 'exact', head: true })
-        .eq('completed_by', user.id)
-        .gte('completed_at', todayStart),
-
-      // Open requests (pending requests for me or broadcasts)
-      supabase
-        .from(DATABASE_TABLES.TASK_REQUESTS)
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending')
-        .or(`requested_user_id.eq.${user.id},requested_user_id.is.null`)
-        .neq('requested_by', user.id),
+    const [total, pending, needsAttn, inProgress, completedToday, completedWeek, myToday, openRequests] = await Promise.all([
+      supabase.from(DATABASE_TABLES.TASKS).select('*', { count: 'exact', head: true }).eq('is_archived', false).not('task_type', 'eq', 'one_time'),
+      supabase.from(DATABASE_TABLES.TASKS).select('*', { count: 'exact', head: true }).eq('is_archived', false).eq('current_status', TASK_STATUSES.IDLE),
+      supabase.from(DATABASE_TABLES.TASKS).select('*', { count: 'exact', head: true }).eq('is_archived', false).eq('current_status', TASK_STATUSES.NEEDS_ATTENTION),
+      supabase.from(DATABASE_TABLES.TASKS).select('*', { count: 'exact', head: true }).eq('is_archived', false).eq('current_status', TASK_STATUSES.IN_PROGRESS),
+      supabase.from(DATABASE_TABLES.TASK_COMPLETIONS).select('*', { count: 'exact', head: true }).gte('completed_at', todayStart),
+      supabase.from(DATABASE_TABLES.TASK_COMPLETIONS).select('*', { count: 'exact', head: true }).gte('completed_at', weekStart),
+      supabase.from(DATABASE_TABLES.TASK_COMPLETIONS).select('*', { count: 'exact', head: true }).eq('completed_by', user.id).gte('completed_at', todayStart),
+      supabase.from(DATABASE_TABLES.TASK_REQUESTS).select('*', { count: 'exact', head: true }).eq('status', 'pending').or(`requested_user_id.eq.${user.id},requested_user_id.is.null`).neq('requested_by', user.id),
     ]);
 
-    // Get recent completions for the feed (no profile join - FK goes to auth.users not profiles)
     const { data: rawCompletions } = await supabase
       .from(DATABASE_TABLES.TASK_COMPLETIONS)
-      .select(
-        `
-        id,
-        completed_at,
-        completed_by,
-        notes,
-        task:tasks!task_completions_task_id_fkey(id, title, category)
-      `
-      )
+      .select('id, completed_at, completed_by, notes, task:tasks!task_completions_task_id_fkey(id, title, category)')
       .order('completed_at', { ascending: false })
       .limit(5);
 
     // Fetch profiles for recent completers
-    const completerIds = [
-      ...new Set((rawCompletions || []).map((c: { completed_by: string }) => c.completed_by)),
-    ];
-    const completionProfiles: Record<
-      string,
-      { id: string; username: string; display_name: string | null; avatar_url: string | null }
-    > = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const completions = (rawCompletions || []) as any[];
+    const completerIds = [...new Set(completions.map(c => c.completed_by))];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const profilesMap: Record<string, any> = {};
     if (completerIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
-        .select('id, username, display_name, avatar_url')
-        .in('id', completerIds);
-      for (const p of profiles || []) {
-        completionProfiles[(p as { id: string }).id] = p as {
-          id: string;
-          username: string;
-          display_name: string | null;
-          avatar_url: string | null;
-        };
-      }
+      const { data: profiles } = await supabase.from(DATABASE_TABLES.PROFILES).select('id, username, display_name, avatar_url').in('id', completerIds);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const p of (profiles || []) as any[]) profilesMap[p.id] = p;
     }
 
-    const recentCompletions = (rawCompletions || []).map(
-      (c: {
-        id: string;
-        completed_at: string;
-        completed_by: string;
-        notes: string | null;
-        task: unknown;
-      }) => ({
-        id: c.id,
-        completed_at: c.completed_at,
-        notes: c.notes,
-        task: c.task,
-        completer: completionProfiles[c.completed_by] || null,
-      })
-    );
-
-    // Get tasks needing attention
     const { data: urgentTasks } = await supabase
       .from(DATABASE_TABLES.TASKS)
-      .select(
-        `
-        id,
-        title,
-        category,
-        priority,
-        current_status
-      `
-      )
+      .select('id, title, category, priority, current_status')
       .eq('is_archived', false)
       .or(`current_status.eq.${TASK_STATUSES.NEEDS_ATTENTION},priority.eq.urgent`)
       .order('created_at', { ascending: false })
       .limit(5);
 
-    const stats = {
-      total: totalTasksResult.count || 0,
-      pending: pendingTasksResult.count || 0,
-      needsAttention: needsAttentionResult.count || 0,
-      inProgress: inProgressResult.count || 0,
-      completedToday: completedTodayResult.count || 0,
-      completedThisWeek: completedWeekResult.count || 0,
-      myCompletedToday: myCompletedTodayResult.count || 0,
-      openRequests: openRequestsResult.count || 0,
-    };
-
     return apiSuccess({
-      stats,
-      recentCompletions: recentCompletions || [],
+      stats: {
+        total: total.count || 0,
+        pending: pending.count || 0,
+        needsAttention: needsAttn.count || 0,
+        inProgress: inProgress.count || 0,
+        completedToday: completedToday.count || 0,
+        completedThisWeek: completedWeek.count || 0,
+        myCompletedToday: myToday.count || 0,
+        openRequests: openRequests.count || 0,
+      },
+      recentCompletions: completions.map(c => ({ id: c.id, completed_at: c.completed_at, notes: c.notes, task: c.task, completer: profilesMap[c.completed_by] || null })),
       urgentTasks: urgentTasks || [],
     });
   } catch (err) {
