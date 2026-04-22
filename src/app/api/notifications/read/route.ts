@@ -1,5 +1,6 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { apiSuccess, handleApiError, apiValidationError } from '@/lib/api/standardResponse';
+import { apiSuccess, handleApiError, apiValidationError, apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
@@ -20,6 +21,13 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
     const { user, supabase } = req;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+
     const body = await req.json();
 
     const { id, ids, all } = body as {

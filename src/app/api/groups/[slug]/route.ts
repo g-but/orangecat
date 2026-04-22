@@ -21,7 +21,9 @@ import {
   apiBadRequest,
   apiForbidden,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ slug: string }>;
@@ -51,6 +53,13 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 export const PUT = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     const { user } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+
     const { slug } = await context.params;
     const body = await request.json();
 
@@ -97,6 +106,13 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
 export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     const { user } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+
     const { slug } = await context.params;
 
     // Get group first to check permissions

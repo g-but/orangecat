@@ -14,7 +14,8 @@ import { createServerClient } from '@/lib/supabase/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import groupsService from '@/services/groups';
 import { logger } from '@/utils/logger';
-import { apiSuccess, apiCreated, apiNotFound, apiInternalError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiCreated, apiNotFound, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ slug: string }>;
@@ -55,6 +56,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     const { slug } = await context.params;
+    const { user } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+
     const _body = await request.json();
 
     // Get group first
