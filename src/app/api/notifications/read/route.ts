@@ -1,8 +1,15 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { apiSuccess, handleApiError, apiValidationError, apiRateLimited } from '@/lib/api/standardResponse';
+import { apiSuccess, handleApiError, apiRateLimited, apiBadRequest } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { z } from 'zod';
+
+const markReadSchema = z.union([
+  z.object({ all: z.literal(true) }),
+  z.object({ id: z.string().uuid('Invalid notification ID') }),
+  z.object({ ids: z.array(z.string().uuid('Invalid notification ID')).min(1).max(100) }),
+]);
 
 /**
  * POST /api/notifications/read
@@ -30,15 +37,13 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     const body = await req.json();
 
-    const { id, ids, all } = body as {
-      id?: string;
-      ids?: string[];
-      all?: boolean;
-    };
+    const parsed = markReadSchema.safeParse(body);
+    if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid request body');}
+    const data = parsed.data;
 
     const now = new Date().toISOString();
 
-    if (all) {
+    if ('all' in data && data.all) {
       const { error, count } = await supabase
         .from(DATABASE_TABLES.NOTIFICATIONS)
         .update({ is_read: true, read_at: now })
@@ -51,11 +56,11 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       return apiSuccess({ marked: count || 0 });
     }
 
-    if (id) {
+    if ('id' in data) {
       const { error, count } = await supabase
         .from(DATABASE_TABLES.NOTIFICATIONS)
         .update({ is_read: true, read_at: now })
-        .eq('id', id)
+        .eq('id', data.id)
         .eq('user_id', user.id)
         .eq('is_read', false);
 
@@ -65,11 +70,11 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       return apiSuccess({ marked: count || 0 });
     }
 
-    if (ids && Array.isArray(ids) && ids.length > 0) {
+    if ('ids' in data) {
       const { error, count } = await supabase
         .from(DATABASE_TABLES.NOTIFICATIONS)
         .update({ is_read: true, read_at: now })
-        .in('id', ids)
+        .in('id', data.ids)
         .eq('user_id', user.id)
         .eq('is_read', false);
 
@@ -79,7 +84,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       return apiSuccess({ marked: count || 0 });
     }
 
-    return apiValidationError('Must provide id, ids, or all parameter');
+    // Unreachable: Zod union above covers all valid shapes
+    return apiBadRequest('Must provide id, ids, or all parameter');
   } catch (error) {
     logger.error('Mark notifications read error', { error }, 'Notifications');
     return handleApiError(error);

@@ -1,9 +1,16 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { apiSuccess, apiValidationError, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiValidationError, apiRateLimited, handleApiError, apiBadRequest } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { rateLimit } from '@/lib/rate-limit';
+import { z } from 'zod';
+
+const waitlistSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  source: z.string().max(100).optional(),
+  referrer: z.string().max(500).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,13 +19,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createServerClient();
     const body = await request.json().catch(() => ({}));
-    const email = (body.email || '').trim();
-    const source = (body.source || 'channel_page').toString();
-    const referrer = (body.referrer || '').toString();
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return apiValidationError('Please enter a valid email address', { field: 'email' });
-    }
+    const parsed = waitlistSchema.safeParse(body);
+    if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid request data');}
+    const { email, source, referrer } = parsed.data;
 
     const {
       data: { user },
@@ -28,8 +32,8 @@ export async function POST(request: NextRequest) {
     const { error } = await (supabase.from(DATABASE_TABLES.CHANNEL_WAITLIST) as any).insert({
       email,
       user_id: user?.id || null,
-      source,
-      referrer: referrer || request.headers.get('referer') || null,
+      source: source ?? 'channel_page',
+      referrer: referrer ?? request.headers.get('referer') ?? null,
     });
 
     if (error) {

@@ -22,6 +22,12 @@ import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { createServerClient } from '@/lib/supabase/server';
 import { saveProjectMedia } from '@/domain/projects/mediaService';
+import { z } from 'zod';
+
+const mediaMetadataSchema = z.object({
+  path: z.string().min(1).max(500),
+  alt_text: z.string().max(200).optional(),
+});
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -109,8 +115,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
     }
 
-    const { path, alt_text } = await request.json();
-    if (!path || typeof path !== 'string' || !path.startsWith(`${projectId}/`)) {
+    const rawBody = await request.json();
+    const parsedBody = mediaMetadataSchema.safeParse(rawBody);
+    if (!parsedBody.success) {return apiBadRequest(parsedBody.error.errors[0]?.message || 'Invalid media metadata');}
+    const { path, alt_text } = parsedBody.data;
+    if (!path.startsWith(`${projectId}/`)) {
       return apiBadRequest('Invalid storage path');
     }
 
