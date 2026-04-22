@@ -51,12 +51,6 @@ const nextConfig = {
         port: '',
         pathname: '/storage/v1/object/public/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'ohkueislstxomdjavyhs.supabase.co',
-        port: '',
-        pathname: '/storage/v1/object/public/**',
-      },
     ],
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -149,6 +143,15 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
+          // HSTS: tell browsers to always use HTTPS (production only)
+          ...(!isDevelopment
+            ? [
+                {
+                  key: 'Strict-Transport-Security',
+                  value: 'max-age=63072000; includeSubDomains; preload',
+                },
+              ]
+            : []),
           // Disable caching in development
           ...(isDevelopment
             ? [
