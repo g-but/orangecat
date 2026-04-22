@@ -1,6 +1,7 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { apiSuccess, apiBadRequest, handleApiError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiBadRequest, handleApiError, apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import {
@@ -106,6 +107,13 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
 export const PUT = withAuth(async (req: AuthenticatedRequest) => {
   try {
     const { user } = req;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+
     const body = (await req.json()) as NotificationPreferencesUpdate;
 
     // Validate the update payload

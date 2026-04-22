@@ -4,8 +4,10 @@ import {
   apiSuccess,
   apiValidationError,
   apiForbidden,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse'
+import { rateLimitWriteAsync } from '@/lib/rate-limit'
 import { logger } from '@/utils/logger'
 import { z } from 'zod'
 import { DATABASE_TABLES } from '@/config/database-tables'
@@ -19,6 +21,12 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
     const { user } = req
     const supabase = await createServerClient()
+
+    const rl = await rateLimitWriteAsync(user.id)
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000)
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter)
+    }
 
     const body = await req.json().catch(() => ({}))
     const validation = bulkDeleteSchema.safeParse(body)

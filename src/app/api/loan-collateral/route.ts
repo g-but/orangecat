@@ -9,7 +9,8 @@
 
 import { z } from 'zod';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { apiSuccess, apiForbidden, apiValidationError, apiError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiForbidden, apiValidationError, apiError, apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getTableName } from '@/config/entity-registry';
@@ -26,6 +27,12 @@ const CollateralSchema = z.object({
 export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
     const { user, supabase } = req;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     let body: unknown;
     try {

@@ -20,7 +20,9 @@ import {
   apiNotFound,
   apiForbidden,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ proofId: string }>;
@@ -37,6 +39,12 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     }
 
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     // Get the proof and verify ownership
     const { data: proof, error: proofError } = await (

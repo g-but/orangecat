@@ -10,7 +10,9 @@ import {
   apiNotFound,
   apiForbidden,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
@@ -47,6 +49,12 @@ export const PUT = withAuth(
   async (request: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
     try {
       const { user, supabase } = request;
+
+      const rl = await rateLimitWriteAsync(user.id);
+      if (!rl.success) {
+        const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+        return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+      }
       const { id } = await context.params;
       const body = await request.json();
 

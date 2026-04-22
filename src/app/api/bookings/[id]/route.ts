@@ -20,7 +20,9 @@ import {
   apiForbidden,
   apiBadRequest,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -72,6 +74,12 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
   try {
     const { id } = await context.params;
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     const body = await request.json();
     const result = updateBookingSchema.safeParse(body);
@@ -149,6 +157,12 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
   try {
     const { id } = await context.params;
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     const url = new URL(request.url);
     const reason = url.searchParams.get('reason') || undefined;
