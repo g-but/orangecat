@@ -11,9 +11,9 @@ import { ProfileServerService } from '@/services/profile/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import type { User } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { createServerClient } from '@/lib/supabase/server';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
@@ -26,7 +26,8 @@ const PROFILE_ALLOWED_FIELDS = [
   'phone', 'bitcoin_address', 'lightning_address',
 ];
 
-type SupabaseServer = Awaited<ReturnType<typeof createServerClient>>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseServer = SupabaseClient<any, any, any>;
 
 async function respondWithProfile(supabase: SupabaseServer, user: User, profile: ProfileRow, request: AuthenticatedRequest) {
   const includeStats = request.nextUrl.searchParams.get('include_stats') === 'true';

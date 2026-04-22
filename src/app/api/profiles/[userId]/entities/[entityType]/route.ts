@@ -8,9 +8,8 @@
  */
 
 import { logger } from '@/utils/logger';
-import { createServerClient } from '@/lib/supabase/server';
-import { NextRequest } from 'next/server';
 import { apiSuccess, apiInternalError, apiBadRequest } from '@/lib/api/standardResponse';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import {
   getTableName,
@@ -66,12 +65,13 @@ const USER_ID_FIELD: Record<EntityType, string> = {
 // Entities that shouldn't appear on profile (e.g., groups have their own pages, documents are personal)
 const EXCLUDED_ENTITY_TYPES: EntityType[] = ['wallet', 'group', 'document'];
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ userId: string; entityType: string }> }
-) {
+interface RouteContext {
+  params: Promise<{ userId: string; entityType: string }>;
+}
+
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
   try {
-    const { userId, entityType } = await params;
+    const { userId, entityType } = await context.params;
 
     // Validate user ID
     const idValidation = getValidationError(validateUUID(userId, 'user ID'));
@@ -89,7 +89,7 @@ export async function GET(
       return apiBadRequest(`Entity type ${entityType} is not displayed on profiles`);
     }
 
-    const supabase = await createServerClient();
+    const { supabase } = request;
     const tableName = getTableName(entityType as EntityType);
     const columns = ENTITY_COLUMNS[entityType as EntityType];
     const userIdField = USER_ID_FIELD[entityType as EntityType];
@@ -141,4 +141,4 @@ export async function GET(
     logger.error('Unexpected error fetching profile entities', { error });
     return apiInternalError('Failed to fetch entities');
   }
-}
+});

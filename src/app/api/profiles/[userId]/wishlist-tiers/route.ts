@@ -8,23 +8,22 @@
  * Last Modified Summary: Created API to fetch wishlist items as donation tiers
  */
 
-import { NextRequest } from 'next/server';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
-import { createServerClient } from '@/lib/supabase/server';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ userId: string }>;
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { userId } = await params;
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
+  const { userId } = await context.params;
   const idValidation = getValidationError(validateUUID(userId, 'user ID'));
   if (idValidation) {return idValidation;}
   try {
-    const supabase = await createServerClient();
+    const { supabase } = request;
 
     // Fetch active wishlists for this user
     // We filter items that are not fully funded and not fulfilled
@@ -55,4 +54,4 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     logger.error('Error in wishlist-tiers API:', error);
     return apiInternalError();
   }
-}
+});

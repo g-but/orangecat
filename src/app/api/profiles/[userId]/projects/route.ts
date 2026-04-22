@@ -1,19 +1,18 @@
 import { logger } from '@/utils/logger';
-import { createServerClient } from '@/lib/supabase/server';
-import { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 import { getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 import { STORAGE_BUCKETS } from '@/config/database-tables';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
-) {
+interface RouteContext {
+  params: Promise<{ userId: string }>;
+}
+
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
   try {
-    const { userId } = await params;
+    const { userId } = await context.params;
 
     // Validate user ID
     const idValidation = getValidationError(validateUUID(userId, 'user ID'));
@@ -21,14 +20,7 @@ export async function GET(
       return idValidation;
     }
 
-    const supabase = await createServerClient();
-    // Create a client for storage operations
-    const supabaseStorage = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY ||
-        process.env.SUPABASE_SECRET_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-    );
+    const { supabase } = request;
 
     // Get user's projects (simplified MVP - no organizations)
     // Exclude draft projects from public profiles - drafts should only show in dashboards
@@ -76,7 +68,7 @@ export async function GET(
         const firstMedia = project.project_media.sort(
           (a: { position: number }, b: { position: number }) => a.position - b.position
         )[0];
-        const { data: urlData } = supabaseStorage.storage
+        const { data: urlData } = supabase.storage
           .from(STORAGE_BUCKETS.PROJECT_MEDIA)
           .getPublicUrl(firstMedia.storage_path);
         return {
@@ -111,4 +103,4 @@ export async function GET(
     logger.error('Unexpected error fetching user projects', { error });
     return apiInternalError('Failed to fetch projects');
   }
-}
+});
