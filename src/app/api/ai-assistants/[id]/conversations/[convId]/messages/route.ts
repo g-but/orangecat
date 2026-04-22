@@ -8,10 +8,8 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import {
   apiSuccess,
-  apiUnauthorized,
   apiBadRequest,
   apiNotFound,
   apiInternalError,
@@ -25,8 +23,9 @@ import { logger } from '@/utils/logger';
 import { z } from 'zod';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { sendAiMessage } from '@/services/ai/sendMessage';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ id: string; convId: string }>;
 }
 
@@ -35,17 +34,14 @@ const sendMessageSchema = z.object({
   model: z.string().optional(),
 });
 
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  const { id: assistantId, convId } = await params;
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id: assistantId, convId } = await context.params;
   const aIdV = getValidationError(validateUUID(assistantId, 'assistant ID'));
   if (aIdV) {return aIdV;}
   const cIdV = getValidationError(validateUUID(convId, 'conversation ID'));
   if (cIdV) {return cIdV;}
   try {
-    const supabase = await createServerClient();
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {return apiUnauthorized();}
+    const { user, supabase } = request;
 
     let rateLimitResult: RateLimitResult;
     try {
@@ -62,7 +58,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       throw e;
     }
 
-    const body = await request.json();
+    const body = await (request as NextRequest).json();
     const parsed = sendMessageSchema.safeParse(body);
     if (!parsed.success) {return apiBadRequest('Validation failed', parsed.error.flatten());}
 
@@ -98,4 +94,4 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     logger.error('Send message error', error, 'AIMessagesAPI');
     return apiInternalError();
   }
-}
+});

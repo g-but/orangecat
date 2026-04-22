@@ -6,15 +6,11 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import { aiAssistantSchema } from '@/lib/validation';
-import { apiSuccess, apiUnauthorized, handleApiError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiBadRequest, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
-import { compose } from '@/lib/api/compose';
-import { withZodBody } from '@/lib/api/withZod';
-import { withRateLimit } from '@/lib/api/withRateLimit';
+import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { STATUS } from '@/config/database-constants';
-import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination, getString } from '@/lib/api/query';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
@@ -33,16 +29,15 @@ function applySortOrder(query: any, sortBy: string) {
   }
 }
 
-export const GET = compose(withRequestId(), withRateLimit('read'))(async (request: NextRequest) => {
+export const GET = withOptionalAuth(async (request) => {
   try {
-    const supabase = await createServerClient();
+    const { user, supabase } = request;
     const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
     const category = getString(request.url, 'category');
     const userId = getString(request.url, 'user_id');
     const searchQuery = getString(request.url, 'q');
     const sortBy = getString(request.url, 'sort') || 'popular';
 
-    const { data: { user } } = await supabase.auth.getUser();
     const includeOwnDrafts = Boolean(userId && user && userId === user.id);
     const tableName = getTableName('ai_assistant');
 
@@ -90,12 +85,9 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
   }
 });
 
-export const POST = compose(withRequestId(), withZodBody(aiAssistantSchema))(async (request: NextRequest, ctx) => {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {return apiUnauthorized();}
-
     let rl: RateLimitResult;
     try {
       rl = await enforceUserWriteLimit(user.id);
@@ -105,7 +97,11 @@ export const POST = compose(withRequestId(), withZodBody(aiAssistantSchema))(asy
       throw e;
     }
 
-    const d = ctx.body;
+    const body = await (request as NextRequest).json();
+    const parsed = aiAssistantSchema.safeParse(body);
+    if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid request data');}
+    const d = parsed.data;
+
     const actor = await getOrCreateUserActor(user.id);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
