@@ -41,10 +41,10 @@ export default function AnalyticsPage() {
         : 0;
 
     return [
-      { label: 'Total Raised', value: totalRaised, icon: DollarSign, color: 'text-green-600' },
+      { label: 'Total Raised', value: totalRaised, format: 'currency', icon: DollarSign, color: 'text-green-600' },
       { label: 'Active Projects', value: activeProjects.length, icon: Target, color: 'text-blue-600' },
       { label: 'Total Supporters', value: totalSupporters, icon: Users, color: 'text-purple-600' },
-      { label: 'Avg Contribution', value: avgDonation, icon: TrendingUp, color: 'text-orange-600' },
+      { label: 'Avg Contribution', value: avgDonation, format: 'currency', icon: TrendingUp, color: 'text-orange-600' },
       { label: 'Success Rate', value: `${successRate.toFixed(1)}%`, icon: Zap, color: 'text-teal-600' },
     ];
   };

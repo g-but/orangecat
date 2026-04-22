@@ -5,6 +5,7 @@ import { formatCurrency } from '@/services/currency';
 interface AnalyticsMetric {
   label: string;
   value: string | number;
+  format?: 'currency';
   change?: number;
   changeType?: 'increase' | 'decrease' | 'neutral';
   icon: React.ComponentType<{ className?: string }>;
@@ -53,11 +54,9 @@ export default function AnalyticsMetricsGrid({ metrics }: AnalyticsMetricsGridPr
                   <div>
                     <p className="text-sm font-medium text-gray-600">{metric.label}</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {typeof metric.value === 'number' && metric.label === 'Total Raised'
+                      {metric.format === 'currency' && typeof metric.value === 'number'
                         ? formatCurrency(metric.value, 'BTC')
-                        : typeof metric.value === 'number' && metric.label === 'Avg Donation'
-                          ? formatCurrency(metric.value, 'BTC')
-                          : metric.value}
+                        : metric.value}
                     </p>
                   </div>
                 </div>
