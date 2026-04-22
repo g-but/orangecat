@@ -385,10 +385,11 @@ export async function searchProfiles(
   try {
     logProfile('Searching profiles', { query, limit });
 
+    const escapedQuery = query.replace(/[%_]/g, '\\$&');
     const { data, error } = await supabase
       .from(DATABASE_TABLES.PROFILES)
       .select('*')
-      .or(`username.ilike.%${query}%,name.ilike.%${query}%`)
+      .or(`username.ilike.%${escapedQuery}%,name.ilike.%${escapedQuery}%`)
       .limit(limit);
 
     if (error) {

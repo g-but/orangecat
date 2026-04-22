@@ -213,9 +213,10 @@ export class ProfileService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const escapedQuery = query.replace(/[%_]/g, '\\$&');
       const { data, error } = await supabase.from('profiles')
         .select('*')
-        .or(`username.ilike.%${query}%,name.ilike.%${query}%`)
+        .or(`username.ilike.%${escapedQuery}%,name.ilike.%${escapedQuery}%`)
         .limit(limit);
 
       if (error) {

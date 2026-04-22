@@ -144,12 +144,13 @@ export async function searchPosts(
 
     // Search in enriched_timeline_events view
     // Using ilike for case-insensitive search
+    const escapedSearch = searchQuery.replace(/[%_]/g, '\\$&');
     const { data: events, error, count } = await supabase
       .from(TIMELINE_TABLES.ENRICHED_VIEW)
       .select('*', { count: 'exact' })
       .eq('visibility', 'public')
       .eq('is_deleted', false)
-      .or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
+      .or(`title.ilike.%${escapedSearch}%,description.ilike.%${escapedSearch}%`)
       .order('event_timestamp', { ascending: false })
       .range(offset, offset + limit - 1);
 

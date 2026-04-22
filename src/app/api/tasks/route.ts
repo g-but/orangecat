@@ -93,7 +93,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (filters.search) {
-      query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      const escapedSearch = filters.search.replace(/[%_]/g, '\\$&');
+      query = query.or(`title.ilike.%${escapedSearch}%,description.ilike.%${escapedSearch}%`);
     }
 
     const { data: tasks, error, count } = await query;

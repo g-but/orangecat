@@ -108,10 +108,11 @@ export class ProfileReader {
     }
 
     try {
+      const escapedTerm = searchTerm.replace(/[%_]/g, '\\$&');
       const { data, error } = await supabase
         .from(DATABASE_TABLES.PROFILES)
         .select('*')
-        .or(`username.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`)
+        .or(`username.ilike.%${escapedTerm}%,name.ilike.%${escapedTerm}%`)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 

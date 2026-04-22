@@ -99,7 +99,8 @@ export const GET = compose(
 
     // Apply search filter
     if (searchQuery) {
-      const searchFilter = `title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`;
+      const escapedSearch = searchQuery.replace(/[%_]/g, '\\$&');
+      const searchFilter = `title.ilike.%${escapedSearch}%,description.ilike.%${escapedSearch}%`;
       itemsQuery = itemsQuery.or(searchFilter);
       countQuery = countQuery.or(searchFilter);
     }

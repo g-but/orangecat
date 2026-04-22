@@ -261,9 +261,10 @@ export async function searchGroups(
     const _userId = await getCurrentUserId(sb);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const escapedSearchQuery = searchQuery.replace(/[%_]/g, '\\$&');
     let dbQuery = (sb.from(TABLES.groups) as any)
       .select('*', { count: 'exact' })
-      .or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      .or(`name.ilike.%${escapedSearchQuery}%,description.ilike.%${escapedSearchQuery}%`);
 
     // Apply filters
     if (filters?.type) {

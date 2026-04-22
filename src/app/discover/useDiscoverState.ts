@@ -186,7 +186,8 @@ export function useDiscoverState() {
 
         // Apply search term filter if present
         if (searchTerm) {
-          query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+          const escapedTerm = searchTerm.replace(/[%_]/g, '\\$&');
+          query = query.or(`title.ilike.%${escapedTerm}%,description.ilike.%${escapedTerm}%`);
         }
 
         const { data, error } = await query;
