@@ -4,10 +4,8 @@
  * PATCH /api/task-requests/[id] - Respond to a task request (accept/decline)
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
-  apiUnauthorized,
   apiForbidden,
   apiNotFound,
   apiBadRequest,
@@ -24,15 +22,12 @@ import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext { params: Promise<{ id: string }> }
 
-export async function PATCH(request: NextRequest, context: RouteContext) {
+export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   const { id: requestId } = await context.params;
   const idValidation = getValidationError(validateUUID(requestId, 'request ID'));
   if (idValidation) {return idValidation;}
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const body = await request.json();
     const result = requestResponseSchema.safeParse(body);
     if (!result.success) {return apiValidationError('Validation failed', result.error.flatten());}
@@ -97,4 +92,4 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     logger.error('Exception in PATCH /api/task-requests/[id]', { error: err }, 'TaskRequestsAPI');
     return apiInternalError();
   }
-}
+});

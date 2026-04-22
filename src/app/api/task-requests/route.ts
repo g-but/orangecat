@@ -8,9 +8,8 @@
  * Created: 2026-02-05
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { apiUnauthorized, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
@@ -19,17 +18,9 @@ import { logger } from '@/utils/logger';
  *
  * Get all pending task requests for the current user
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized('Authentication required');
-    }
-
     // Parse query params
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'pending';
@@ -83,4 +74,4 @@ export async function GET(request: NextRequest) {
     logger.error('Exception in GET /api/task-requests', { error: err }, 'TaskRequestsAPI');
     return apiInternalError();
   }
-}
+});

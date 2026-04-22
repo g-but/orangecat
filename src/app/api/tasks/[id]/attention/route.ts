@@ -6,10 +6,8 @@
  * Created: 2026-02-05
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
-  apiUnauthorized,
   apiNotFound,
   apiValidationError,
   apiInternalError,
@@ -28,17 +26,14 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function POST(request: NextRequest, context: RouteContext) {
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   const { id: taskId } = await context.params;
   const idValidation = getValidationError(validateUUID(taskId, 'task ID'));
   if (idValidation) {return idValidation;}
+  const { user, supabase } = request;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
   try {
-    const supabase = await createServerClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
@@ -108,4 +103,4 @@ export async function POST(request: NextRequest, context: RouteContext) {
     logger.error('Exception in POST /api/tasks/[id]/attention', { error: err }, 'TasksAPI');
     return apiInternalError();
   }
-}
+});

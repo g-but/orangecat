@@ -7,9 +7,8 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
-  apiUnauthorized,
   apiNotFound,
   apiValidationError,
   apiInternalError,
@@ -28,16 +27,12 @@ interface RouteContext {
 }
 
 /** GET /api/tasks/[id] — Get a single task with completion history and relations. */
-export async function GET(request: NextRequest, context: RouteContext) {
+export const GET = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'task ID'));
+  if (idValidation) {return idValidation;}
+  const { supabase } = request;
   try {
-    const { id } = await context.params;
-    const idValidation = getValidationError(validateUUID(id, 'task ID'));
-    if (idValidation) {return idValidation;}
-
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const { data: task, error } = await supabase
       .from(DATABASE_TABLES.TASKS)
       .select(`
@@ -61,26 +56,22 @@ export async function GET(request: NextRequest, context: RouteContext) {
     logger.error('Exception in GET /api/tasks/[id]', { error: err }, 'TasksAPI');
     return apiInternalError();
   }
-}
+});
 
 /** PATCH /api/tasks/[id] — Update a task's fields. */
-export async function PATCH(request: NextRequest, context: RouteContext) {
+export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'task ID'));
+  if (idValidation) {return idValidation;}
+  const { user, supabase } = request;
   try {
-    const { id } = await context.params;
-    const idValidation = getValidationError(validateUUID(id, 'task ID'));
-    if (idValidation) {return idValidation;}
-
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
       const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
       return apiRateLimited('Too many task update requests. Please slow down.', retryAfter);
     }
 
-    const body = await request.json();
+    const body = await (request as NextRequest).json();
     const result = taskUpdateSchema.safeParse(body);
     if (!result.success) {return apiValidationError('Validation failed', result.error.flatten());}
 
@@ -90,19 +81,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     logger.error('Exception in PATCH /api/tasks/[id]', { error: err }, 'TasksAPI');
     return apiInternalError();
   }
-}
+});
 
 /** DELETE /api/tasks/[id] — Archive a task (soft delete). */
-export async function DELETE(request: NextRequest, context: RouteContext) {
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'task ID'));
+  if (idValidation) {return idValidation;}
+  const { user, supabase } = request;
   try {
-    const { id } = await context.params;
-    const idValidation = getValidationError(validateUUID(id, 'task ID'));
-    if (idValidation) {return idValidation;}
-
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {return apiUnauthorized('Authentication required');}
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
       const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
@@ -114,4 +101,4 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     logger.error('Exception in DELETE /api/tasks/[id]', { error: err }, 'TasksAPI');
     return apiInternalError();
   }
-}
+});
