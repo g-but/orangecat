@@ -10,7 +10,6 @@
 import { createBookingService } from '@/services/bookings';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getTableName } from '@/config/entity-registry';
-import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
@@ -23,6 +22,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { getUserActorId } from '@/domain/actors';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -74,16 +74,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     }
 
     // Get customer's actor
-    const { data: customerActor } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.ACTORS) as any
-    )
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!customerActor) {
+    const customerActorId = await getUserActorId(supabase, user.id);
+    if (!customerActorId) {
       return apiBadRequest('Customer profile not found');
     }
 
@@ -103,7 +95,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       bookableType: 'service',
       bookableId: serviceId,
       providerActorId: service.actor_id,
-      customerActorId: customerActor.id,
+      customerActorId: customerActorId,
       customerUserId: user.id,
       startsAt,
       endsAt,

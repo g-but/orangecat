@@ -13,6 +13,7 @@ import { logger } from '@/utils/logger';
 import { apiCreated, apiBadRequest, apiNotFound, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { getUserActorId } from '@/domain/actors';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -60,9 +61,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     if (assetError || !asset) {return apiNotFound('Asset not found or not available for rent');}
 
-    const { data: customerActor } = await db
-      .from(DATABASE_TABLES.ACTORS).select('id').eq('user_id', user.id).single();
-    if (!customerActor) {return apiBadRequest('Customer profile not found');}
+    const customerActorId = await getUserActorId(supabase, user.id);
+    if (!customerActorId) {return apiBadRequest('Customer profile not found');}
 
     const periodMs = PERIOD_MS[asset.rental_period_type] || PERIOD_MS.daily;
     const periods = Math.ceil((endsAt.getTime() - startsAt.getTime()) / periodMs);
@@ -82,7 +82,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       bookableType: 'asset',
       bookableId: assetId,
       providerActorId: asset.actor_id,
-      customerActorId: customerActor.id,
+      customerActorId: customerActorId,
       customerUserId: user.id,
       startsAt,
       endsAt,

@@ -13,7 +13,6 @@
 
 import { NextRequest } from 'next/server';
 import { createActionExecutor } from '@/services/cat';
-import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import {
@@ -26,6 +25,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { getUserActorId } from '@/domain/actors';
 
 // Validation schema
 const executeActionSchema = z.object({
@@ -83,18 +83,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     }
 
     // Get user's actor ID
-    const { data: actor, error: actorError } = (await supabase
-      .from(DATABASE_TABLES.ACTORS)
-      .select('id')
-      .eq('user_id', user.id)
-      .single()) as { data: { id: string } | null; error: unknown };
-
-    if (actorError || !actor) {
+    const actorId = await getUserActorId(supabase, user.id);
+    if (!actorId) {
       return apiNotFound('Actor not found');
     }
 
     const executor = createActionExecutor(supabase);
-    const result = await executor.executeAction(user.id, actor.id, parseResult.data);
+    const result = await executor.executeAction(user.id, actorId, parseResult.data);
 
     if (result.success) {
       return apiSuccess(result);

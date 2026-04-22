@@ -23,8 +23,8 @@ import {
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
-import { DATABASE_TABLES } from '@/config/database-tables';
 import { apiNotFound } from '@/lib/api/standardResponse';
+import { getUserActorId } from '@/domain/actors';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -45,18 +45,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     // Get user's actor ID
-    const { data: actor, error: actorError } = (await supabase
-      .from(DATABASE_TABLES.ACTORS)
-      .select('id')
-      .eq('user_id', user.id)
-      .single()) as { data: { id: string } | null; error: unknown };
-
-    if (actorError || !actor) {
+    const actorId = await getUserActorId(supabase, user.id);
+    if (!actorId) {
       return apiNotFound('Actor not found');
     }
 
     const executor = createActionExecutor(supabase);
-    const result = await executor.confirmPendingAction(user.id, actor.id, pendingActionId);
+    const result = await executor.confirmPendingAction(user.id, actorId, pendingActionId);
 
     if (result.success) {
       return apiSuccess(result);
