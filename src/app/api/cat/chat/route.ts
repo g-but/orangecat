@@ -14,38 +14,15 @@ import { logger } from '@/utils/logger';
 import {
   apiUnauthorized,
   apiBadRequest,
-  apiServiceUnavailable,
-  apiRateLimited,
-  apiInternalError,
   apiError,
   apiSuccess,
+  apiInternalError,
 } from '@/lib/api/standardResponse';
 import { createServerClient } from '@/lib/supabase/server';
-import { ROUTES } from '@/config/routes';
 import { z } from 'zod';
-import {
-  createOpenRouterService,
-  createOpenRouterServiceWithByok,
-  createGroqService,
-  createGroqServiceWithByok,
-  isGroqAvailable,
-  DEFAULT_GROQ_MODEL,
-  GroqAPIError,
-  type OpenRouterMessage,
-  type GroqMessage,
-} from '@/services/ai';
-import {
-  isModelFree,
-  getModelMetadata,
-  getFreeModels,
-  DEFAULT_FREE_MODEL_ID,
-} from '@/config/ai-models';
-import { createAutoRouter } from '@/services/ai/auto-router';
-import { createApiKeyService } from '@/services/ai/api-key-service';
-import { fetchFullContextForCat, buildFullContextString } from '@/services/ai/document-context';
+import { GroqAPIError } from '@/services/ai';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
-import { OPENROUTER_KEY_HEADER } from '@/config/http-headers';
 import { buildCatSystemPrompt } from '@/services/cat/system-prompt';
 import { getCatFewShotExamples } from '@/services/cat/few-shot-examples';
 import { parseActionsFromResponse } from '@/services/cat/response-parser';
@@ -54,50 +31,36 @@ import {
   getMessagesForContext,
   saveMessages,
 } from '@/services/cat/conversation-history';
-import { searchPlatform, type SearchType } from '@/services/cat/platform-search';
+import { resolveProvider } from '@/services/cat/provider-resolver';
+import { maybeEnrichWithSearchResults } from '@/services/cat/tool-use';
+import { fetchFullContextForCat, buildFullContextString } from '@/services/ai/document-context';
 
-// Header for Groq API key (BYOK)
-const GROQ_KEY_HEADER = 'x-groq-api-key';
+const bodySchema = z.object({
+  message: z.string().min(1).max(10000),
+  model: z.string().optional(),
+  stream: z.boolean().optional(),
+});
 
-/**
- * Check if an error is a Groq TPM/rate-limit error.
- * Groq sometimes returns these as 413 "Request too large" rather than HTTP 429,
- * so we check the error message text as well as the status code and type.
- */
 function isAiRateLimitError(error: unknown): boolean {
   if (error instanceof GroqAPIError) {
-    if (error.type === 'rate_limit' || error.statusCode === 429) {return true;}
+    if (error.type === 'rate_limit' || error.statusCode === 429) return true;
     const msg = error.message.toLowerCase();
-    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) {return true;}
+    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) return true;
   }
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
-    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) {return true;}
+    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) return true;
   }
   return false;
 }
 
-// Supported AI providers
-type AIProvider = 'groq' | 'openrouter';
-
-const bodySchema = z.object({
-  message: z.string().min(1).max(10000),
-  model: z.string().optional(), // 'auto' | model id
-  stream: z.boolean().optional(),
-});
-
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return apiUnauthorized();
 
-    // Rate limit per user (write-tier limits reused for chat to prevent abuse)
+    // Rate limit (write-tier reused for chat to prevent abuse)
     let rl: RateLimitResult;
     try {
       rl = await enforceUserWriteLimit(user.id);
@@ -107,24 +70,8 @@ export async function POST(request: NextRequest) {
         const limit = e.details?.limit || 30;
         const resetTime = Date.now() + retryAfter * 1000;
         return new Response(
-          JSON.stringify({
-            error: 'Rate limit exceeded',
-            code: 'RATE_LIMIT_EXCEEDED',
-            limit,
-            remaining: 0,
-            resetTime,
-            resetDate: new Date(resetTime).toUTCString(),
-          }),
-          {
-            status: 429,
-            headers: {
-              'Content-Type': 'application/json',
-              'X-RateLimit-Limit': String(limit),
-              'X-RateLimit-Remaining': '0',
-              'X-RateLimit-Reset': String(resetTime),
-              'Retry-After': String(retryAfter),
-            },
-          }
+          JSON.stringify({ error: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED', limit, remaining: 0, resetTime, resetDate: new Date(resetTime).toUTCString() }),
+          { status: 429, headers: { 'Content-Type': 'application/json', 'X-RateLimit-Limit': String(limit), 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': String(resetTime), 'Retry-After': String(retryAfter) } }
         );
       }
       throw e;
@@ -132,491 +79,117 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const parsed = bodySchema.safeParse(body);
-    if (!parsed.success) {
-      return apiBadRequest('Invalid request', parsed.error.flatten());
-    }
+    if (!parsed.success) return apiBadRequest('Invalid request', parsed.error.flatten());
 
     const { message, model: requestedModel, stream } = parsed.data;
 
-    // Check BYOK for both providers
-    const clientOpenRouterKey = request.headers.get(OPENROUTER_KEY_HEADER);
-    const clientGroqKey = request.headers.get(GROQ_KEY_HEADER);
-    const keyService = createApiKeyService(supabase);
+    // Resolve provider, BYOK keys, model, and platform limits
+    const resolved = await resolveProvider(supabase, user.id, request.headers, { requestedModel, message });
+    if (resolved instanceof Response) return resolved;
+    const { provider, hasByok, modelToUse, aiService, platformUsage, keyService, userGroqKey } = resolved;
 
-    // Get stored keys if no client-provided keys
-    const storedOpenRouterKey = clientOpenRouterKey
-      ? null
-      : await keyService.getDecryptedKey(user.id, 'openrouter');
-    const storedGroqKey = clientGroqKey ? null : await keyService.getDecryptedKey(user.id, 'groq');
-
-    const userOpenRouterKey = clientOpenRouterKey || storedOpenRouterKey;
-    const userGroqKey = clientGroqKey || storedGroqKey;
-
-    // Determine which provider to use
-    // Priority: User's Groq key > User's OpenRouter key > Platform Groq > Platform OpenRouter
-    let provider: AIProvider;
-    let hasByok = false;
-
-    if (userGroqKey) {
-      provider = 'groq';
-      hasByok = true;
-    } else if (userOpenRouterKey) {
-      provider = 'openrouter';
-      hasByok = true;
-    } else if (isGroqAvailable()) {
-      provider = 'groq';
-    } else if (process.env.OPENROUTER_API_KEY) {
-      provider = 'openrouter';
-    } else {
-      // No AI provider available
-      return apiServiceUnavailable('AI chat not configured', {
-        code: 'NO_API_KEY',
-        message:
-          'To use My Cat AI chat, you need to add your own API key in Settings → API Keys. Get a free Groq key at console.groq.com/keys',
-        hasByok: false,
-        helpUrl: `${ROUTES.DASHBOARD.SETTINGS}?tab=api-keys`,
-      });
-    }
-
-    // Platform usage for non-BYOK
-    let platformUsage: { daily_limit: number; requests_remaining: number } | null = null;
-    if (!hasByok) {
-      const usage = await keyService.checkPlatformUsage(user.id);
-      if (!usage.can_use_platform) {
-        return apiRateLimited('Daily limit reached');
-      }
-      platformUsage = {
-        daily_limit: usage.daily_limit,
-        requests_remaining: usage.requests_remaining,
-      };
-    }
-
-    // Choose model based on provider
-    let modelToUse: string;
-
-    if (provider === 'groq') {
-      // Groq uses its own model names
-      modelToUse =
-        requestedModel?.startsWith('llama') ||
-        requestedModel?.startsWith('mixtral') ||
-        requestedModel?.startsWith('gemma')
-          ? requestedModel
-          : DEFAULT_GROQ_MODEL;
-    } else {
-      // OpenRouter model selection
-      modelToUse = requestedModel || DEFAULT_FREE_MODEL_ID;
-
-      if (!hasByok) {
-        // Non-technical users: restrict to free models only
-        if (modelToUse === 'auto' || modelToUse === 'any' || !isModelFree(modelToUse)) {
-          const freeModelIds = getFreeModels().map(m => m.id);
-          const auto = createAutoRouter();
-          const route = auto.selectModel({
-            message,
-            conversationHistory: [],
-            allowedModels: freeModelIds,
-          });
-          modelToUse = route.model;
-        }
-      } else {
-        // Power users with BYOK: can use any model
-        if (modelToUse === 'auto' || modelToUse === 'any') {
-          const auto = createAutoRouter();
-          const route = auto.selectModel({ message, conversationHistory: [] });
-          modelToUse = route.model;
-        }
-      }
-
-      // Safety: ensure model exists, fallback to free default
-      const meta = getModelMetadata(modelToUse);
-      if (!meta) {
-        modelToUse = DEFAULT_FREE_MODEL_ID;
-      }
-    }
-
-    // Fetch comprehensive user context for personalized advice
+    // Build context + history
     const userContext = await fetchFullContextForCat(supabase, user.id);
     const contextString = buildFullContextString(userContext);
+    const systemPrompt = buildCatSystemPrompt({ userContext: contextString || undefined });
 
-    // Build system prompt with full user context if available
-    const systemPromptWithContext = buildCatSystemPrompt({
-      userContext: contextString || undefined,
-    });
-
-    // Fetch conversation history and get/create the conversation record (best-effort)
     let conversationId: string | null = null;
     let historyMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
     try {
       conversationId = await getOrCreateDefaultConversation(supabase, user.id);
       historyMessages = await getMessagesForContext(supabase, user.id);
-    } catch {
-      // Non-fatal — continue without history if DB call fails
-    }
+    } catch { /* Non-fatal — continue without history */ }
 
-    // Build request: system + few-shots (format anchor) + history + current message
-    const messages: (OpenRouterMessage | GroqMessage)[] = [
-      { role: 'system', content: systemPromptWithContext },
+    // Build message array: system + few-shots + history + user message
+    let messages: any[] = [
+      { role: 'system', content: systemPrompt },
       ...getCatFewShotExamples(),
-      ...(historyMessages as (OpenRouterMessage | GroqMessage)[]),
+      ...historyMessages,
       { role: 'user', content: message },
     ];
 
-    // ─── Tool Use: platform search (Groq only) ────────────────────────────────
-    // Cat can call search_platform() to find users and entities.
-    // We do a quick non-streaming call with tools defined, execute any tool calls,
-    // then enrich the messages array before the streaming response.
-    // Only triggered when the message looks like a discovery query (saves API calls).
-    const SEARCH_KEYWORDS = [
-      'find',
-      'look',
-      'search',
-      'who ',
-      'anyone',
-      'connect',
-      'similar',
-      'recommend',
-      'discover',
-      'help me find',
-      'know of',
-      'looking for',
-      'does anyone',
-    ];
-    const mightNeedSearch = SEARCH_KEYWORDS.some(kw => message.toLowerCase().includes(kw));
+    // Tool use: optionally enrich with platform search results (Groq only)
+    messages = await maybeEnrichWithSearchResults(supabase, messages, message, provider, userGroqKey, modelToUse);
 
-    if (provider === 'groq' && mightNeedSearch) {
-      const groqKey = userGroqKey ?? process.env.GROQ_API_KEY;
-      const platformTools = [
-        {
-          type: 'function',
-          function: {
-            name: 'search_platform',
-            description:
-              'Search OrangeCat for people, projects, products, services, events, or causes. Use when the user wants to find, connect with, or discover someone or something on the platform.',
-            parameters: {
-              type: 'object',
-              properties: {
-                query: { type: 'string', description: 'What to search for' },
-                type: {
-                  type: 'string',
-                  enum: ['all', 'people', 'projects', 'products', 'services', 'events', 'causes'],
-                  description: 'Type of content to search. Use "all" when unsure.',
-                },
-              },
-              required: ['query'],
-            },
-          },
-        },
-      ];
-
-      try {
-        const toolCheckRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${groqKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: modelToUse,
-            messages,
-            tools: platformTools,
-            tool_choice: 'auto',
-            stream: false,
-            max_tokens: 500, // Keep fast — we only care about tool_calls
-          }),
-        });
-
-        if (toolCheckRes.ok) {
-          const toolCheckData = await toolCheckRes.json();
-          const choice = toolCheckData.choices?.[0];
-
-          if (choice?.finish_reason === 'tool_calls' && choice.message?.tool_calls?.length) {
-            // Append the assistant tool-call message
-            (messages as any[]).push(choice.message);
-
-            // Execute each tool call
-            for (const toolCall of choice.message.tool_calls as any[]) {
-              if (toolCall.function?.name === 'search_platform') {
-                let toolResultContent: string;
-                try {
-                  const args = JSON.parse(toolCall.function.arguments ?? '{}');
-                  const searchResults = await searchPlatform(
-                    supabase,
-                    args.query ?? '',
-                    (args.type ?? 'all') as SearchType
-                  );
-                  toolResultContent =
-                    searchResults.length > 0
-                      ? JSON.stringify(searchResults, null, 2)
-                      : 'No results found for this search query.';
-                } catch {
-                  toolResultContent = 'Search failed. Please try a different query.';
-                }
-
-                (messages as any[]).push({
-                  role: 'tool',
-                  tool_call_id: toolCall.id,
-                  content: toolResultContent,
-                });
-              }
-            }
-            // messages now includes tool call + results — the streaming call below uses them
-          }
-          // If finish_reason === 'stop': no tool needed, proceed with original messages
-        }
-      } catch {
-        // Non-fatal — if tool detection fails, skip it and proceed without search
-      }
-    }
-    // ─── End tool use ─────────────────────────────────────────────────────────
-
-    // Create the appropriate service based on provider
-    let aiService: {
-      provider: AIProvider;
-      groq?: ReturnType<typeof createGroqService>;
-      openrouter?: ReturnType<typeof createOpenRouterService>;
-    };
-
-    if (provider === 'groq') {
-      const groq = hasByok ? createGroqServiceWithByok(userGroqKey as string) : createGroqService();
-      aiService = { provider: 'groq', groq };
-    } else {
-      const openrouter = hasByok
-        ? createOpenRouterServiceWithByok(userOpenRouterKey as string)
-        : createOpenRouterService();
-      aiService = { provider: 'openrouter', openrouter };
-    }
-
-    // Streaming mode (SSE)
+    // ── Streaming ──────────────────────────────────────────────────────────────
     if (stream) {
       const encoder = new TextEncoder();
       const readable = new ReadableStream({
         async start(controller) {
           try {
-            let usage:
-              | { inputTokens?: number; outputTokens?: number; totalTokens?: number }
-              | undefined;
-            let fullContent = ''; // Accumulate for action parsing
+            let usage: { inputTokens?: number; outputTokens?: number; totalTokens?: number } | undefined;
+            let fullContent = '';
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ model: modelToUse, provider })}\n\n`));
 
-            // Send model and provider info at the start of the stream
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ model: modelToUse, provider })}\n\n`)
-            );
-
-            // Use the appropriate streaming method based on provider
-            if (aiService.provider === 'groq' && aiService.groq) {
-              for await (const chunk of aiService.groq.streamChatCompletion({
-                model: modelToUse,
-                messages: messages as GroqMessage[],
-                temperature: 0.7,
-              })) {
-                if (chunk.usage) {
-                  usage = chunk.usage;
-                }
-                if (chunk.content) {
-                  fullContent += chunk.content;
-                  controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify({ content: chunk.content })}\n\n`)
-                  );
-                }
-                if (chunk.done) {
-                  const { actions } = parseActionsFromResponse(fullContent);
-                  controller.enqueue(
-                    encoder.encode(
-                      `data: ${JSON.stringify({
-                        done: true,
-                        usage,
-                        model: modelToUse,
-                        provider,
-                        actions: actions.length > 0 ? actions : undefined,
-                      })}\n\n`
-                    )
-                  );
-                  break;
-                }
+            for await (const chunk of aiService.streamChatCompletion({ model: modelToUse, messages, temperature: 0.7 })) {
+              if (chunk.usage) usage = chunk.usage;
+              if (chunk.content) {
+                fullContent += chunk.content;
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk.content })}\n\n`));
               }
-            } else if (aiService.provider === 'openrouter' && aiService.openrouter) {
-              for await (const chunk of aiService.openrouter.streamChatCompletion({
-                model: modelToUse,
-                messages: messages as OpenRouterMessage[],
-                temperature: 0.7,
-              })) {
-                if (chunk.usage) {
-                  usage = chunk.usage;
-                }
-                if (chunk.content) {
-                  fullContent += chunk.content;
-                  controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify({ content: chunk.content })}\n\n`)
-                  );
-                }
-                if (chunk.done) {
-                  const { actions } = parseActionsFromResponse(fullContent);
-                  controller.enqueue(
-                    encoder.encode(
-                      `data: ${JSON.stringify({
-                        done: true,
-                        usage,
-                        model: modelToUse,
-                        provider,
-                        actions: actions.length > 0 ? actions : undefined,
-                      })}\n\n`
-                    )
-                  );
-                  break;
-                }
+              if (chunk.done) {
+                const { actions } = parseActionsFromResponse(fullContent);
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, usage, model: modelToUse, provider, actions: actions.length > 0 ? actions : undefined })}\n\n`));
+                break;
               }
             }
 
-            // Persist conversation history (best-effort, non-blocking on errors)
             if (conversationId && fullContent) {
               saveMessages(supabase, conversationId, user.id, [
                 { role: 'user', content: message },
-                {
-                  role: 'assistant',
-                  content: fullContent,
-                  model_used: modelToUse,
-                  provider,
-                  token_count: usage?.totalTokens,
-                },
+                { role: 'assistant', content: fullContent, model_used: modelToUse, provider, token_count: usage?.totalTokens },
               ]).catch((err: unknown) => { logger.error('Failed to persist streaming messages', { err }, 'cat/chat'); });
             }
-
-            // Track platform usage (non-BYOK) best-effort with usage tokens
             if (!hasByok && usage?.totalTokens) {
               await keyService.incrementPlatformUsage(user.id, 1, usage.totalTokens);
             }
           } catch (err) {
-            if (isAiRateLimitError(err)) {
-              controller.enqueue(encoder.encode(`event: error\n`));
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({ error: 'AI is temporarily busy. Please try again in a minute.', code: 'AI_RATE_LIMITED' })}\n\n`
-                )
-              );
-            } else {
-              const errorMessage = err instanceof Error ? err.message : 'stream_error';
-              controller.enqueue(encoder.encode(`event: error\n`));
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ error: errorMessage })}\n\n`)
-              );
-            }
+            const errPayload = isAiRateLimitError(err)
+              ? { error: 'AI is temporarily busy. Please try again in a minute.', code: 'AI_RATE_LIMITED' }
+              : { error: err instanceof Error ? err.message : 'stream_error' };
+            controller.enqueue(encoder.encode(`event: error\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(errPayload)}\n\n`));
           } finally {
             controller.close();
           }
         },
       });
-
-      const resp = new Response(readable, {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache, no-transform',
-          Connection: 'keep-alive',
-          'X-Accel-Buffering': 'no',
-        },
-      });
-      // Apply rate limit headers for observability
-      return applyRateLimitHeaders(resp, rl);
+      return applyRateLimitHeaders(
+        new Response(readable, { status: 200, headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' } }),
+        rl
+      );
     }
 
-    // Non-streaming
-    let aiResult: {
-      content: string;
-      model: string;
-      inputTokens: number;
-      outputTokens: number;
-      totalTokens: number;
-      isFreeModel: boolean;
-      usedByok: boolean;
-      costBtc?: number;
-    };
+    // ── Non-streaming ──────────────────────────────────────────────────────────
+    const result = await aiService.chatCompletion({ model: modelToUse, messages, temperature: 0.7 });
 
-    if (aiService.provider === 'groq' && aiService.groq) {
-      const result = await aiService.groq.chatCompletion({
-        model: modelToUse,
-        messages: messages as GroqMessage[],
-        temperature: 0.7,
-      });
-      aiResult = {
-        content: result.content,
-        model: result.model,
-        inputTokens: result.inputTokens,
-        outputTokens: result.outputTokens,
-        totalTokens: result.totalTokens,
-        isFreeModel: result.isFreeModel,
-        usedByok: result.usedByok,
-        costBtc: 0, // Groq is free
-      };
-    } else if (aiService.provider === 'openrouter' && aiService.openrouter) {
-      const result = await aiService.openrouter.chatCompletion({
-        model: modelToUse,
-        messages: messages as OpenRouterMessage[],
-        temperature: 0.7,
-      });
-      aiResult = {
-        content: result.content,
-        model: result.model,
-        inputTokens: result.inputTokens,
-        outputTokens: result.outputTokens,
-        totalTokens: result.totalTokens,
-        isFreeModel: result.isFreeModel,
-        usedByok: result.usedByok,
-        costBtc: result.costBtc,
-      };
-    } else {
-      return apiInternalError('No AI service available');
-    }
-
-    // Track platform usage (non-BYOK)
     if (!hasByok) {
-      await keyService.incrementPlatformUsage(user.id, 1, aiResult.totalTokens);
+      await keyService.incrementPlatformUsage(user.id, 1, result.totalTokens);
     }
 
-    // Parse actions from AI response
-    const { message: cleanedMessage, actions } = parseActionsFromResponse(aiResult.content);
+    const { message: cleanedMessage, actions } = parseActionsFromResponse(result.content);
 
-    // Persist conversation history (best-effort)
     if (conversationId) {
       saveMessages(supabase, conversationId, user.id, [
         { role: 'user', content: message },
-        {
-          role: 'assistant',
-          content: cleanedMessage,
-          model_used: aiResult.model,
-          provider,
-          token_count: aiResult.totalTokens,
-        },
+        { role: 'assistant', content: cleanedMessage, model_used: result.model, provider, token_count: result.totalTokens },
       ]).catch((err: unknown) => { logger.error('Failed to persist messages', { err }, 'cat/chat'); });
     }
 
-    const responseJson = apiSuccess({
-      message: cleanedMessage,
-      actions: actions.length > 0 ? actions : undefined,
-      modelUsed: aiResult.model,
-      provider,
-      usage: {
-        inputTokens: aiResult.inputTokens,
-        outputTokens: aiResult.outputTokens,
-        totalTokens: aiResult.totalTokens,
-        apiCostBtc: aiResult.costBtc || 0,
-        isFreeModel: aiResult.isFreeModel,
-        usedByok: aiResult.usedByok,
-      },
-      userStatus: {
-        hasByok,
-        freeMessagesPerDay: platformUsage?.daily_limit ?? 0,
-        freeMessagesRemaining: platformUsage?.requests_remaining ?? 0,
-      },
-    });
-    return applyRateLimitHeaders(responseJson, rl);
+    return applyRateLimitHeaders(
+      apiSuccess({
+        message: cleanedMessage,
+        actions: actions.length > 0 ? actions : undefined,
+        modelUsed: result.model,
+        provider,
+        usage: { inputTokens: result.inputTokens, outputTokens: result.outputTokens, totalTokens: result.totalTokens, apiCostBtc: result.costBtc || 0, isFreeModel: result.isFreeModel, usedByok: result.usedByok },
+        userStatus: { hasByok, freeMessagesPerDay: platformUsage?.daily_limit ?? 0, freeMessagesRemaining: platformUsage?.requests_remaining ?? 0 },
+      }),
+      rl
+    );
   } catch (error) {
-    // Groq TPM / rate-limit errors should return 429, not 500
     if (isAiRateLimitError(error)) {
-      return apiError(
-        'AI is temporarily busy. Please try again in a minute.',
-        'AI_RATE_LIMITED',
-        429
-      );
+      return apiError('AI is temporarily busy. Please try again in a minute.', 'AI_RATE_LIMITED', 429);
     }
     logger.error('Cat chat unhandled error', error, 'CatChatAPI');
     return apiInternalError('An unexpected error occurred. Please try again.');
