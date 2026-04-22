@@ -34,15 +34,19 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
   const goalCurrency = project.goal_currency || project.currency || PLATFORM_DEFAULT_CURRENCY;
   const [amountRaised, setAmountRaised] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [bitcoinBalanceBtc, setBitcoinBalanceBtc] = useState<number>(project.bitcoin_balance_btc || 0);
+  const [bitcoinBalanceUpdatedAt, setBitcoinBalanceUpdatedAt] = useState<string | null>(
+    project.bitcoin_balance_updated_at || null
+  );
 
   useEffect(() => {
     const init = async () => {
-      const btc = project.bitcoin_balance_btc || 0;
+      const btc = bitcoinBalanceBtc;
       const amt = await computeAmountRaised(btc, goalCurrency);
       setAmountRaised(amt);
     };
     init();
-  }, [project.bitcoin_balance_btc, goalCurrency]);
+  }, [bitcoinBalanceBtc, goalCurrency]);
 
   const progress = useMemo(() => {
     const goal = project.goal_amount || 0;
@@ -61,15 +65,10 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
       const res = await fetch(`/api/projects/${project.id}/refresh-balance`, { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
-        // Update local state instead of full page reload
-        if (data.bitcoin_balance_btc !== undefined) {
-          // Trigger a re-fetch of project data by updating the component
-          // For now, we'll still reload but show a toast first
+        if (data.balance_btc !== undefined) {
+          setBitcoinBalanceBtc(data.balance_btc);
+          setBitcoinBalanceUpdatedAt(data.updated_at || new Date().toISOString());
           toast.success('Balance refreshed successfully');
-          // FUTURE: Replace window.location.reload() with a targeted state update — requires project data to be lifted into a shared context or passed down via props so a single field can be refreshed without a full page reload
-          setTimeout(() => {
-            window.location.reload();
-          }, 500);
         }
       } else {
         toast.error(data.error || 'Failed to refresh balance');
@@ -109,12 +108,12 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
               </span>
             </div>
             <div className="text-base font-semibold text-gray-900">
-              {formatAmount(Math.round((project.bitcoin_balance_btc || 0) * SATS_PER_BTC))}
+              {formatAmount(Math.round(bitcoinBalanceBtc * SATS_PER_BTC))}
             </div>
-            {project.bitcoin_balance_updated_at && (
+            {bitcoinBalanceUpdatedAt && (
               <div className="text-xs text-gray-500 mt-1">
                 Updated{' '}
-                {formatDistanceToNow(new Date(project.bitcoin_balance_updated_at), {
+                {formatDistanceToNow(new Date(bitcoinBalanceUpdatedAt), {
                   addSuffix: true,
                 })}
               </div>
