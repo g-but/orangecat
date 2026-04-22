@@ -68,7 +68,7 @@ export function ProjectDonationSection({
         const response = await fetch(`/api/projects/${projectId}/favorite`);
         if (response.ok) {
           const result = await response.json();
-          setIsFavorited(result.isFavorited || false);
+          setIsFavorited(result.data?.isFavorited || false);
         }
       } catch (error) {
         // Silently fail - favorite status is optional
@@ -105,9 +105,9 @@ export function ProjectDonationSection({
       }
 
       const result = await response.json();
-      setIsFavorited(result.isFavorited);
+      setIsFavorited(result.data?.isFavorited ?? !previousState);
 
-      toast.success(result.isFavorited ? 'Added to favorites' : 'Removed from favorites');
+      toast.success(result.data?.isFavorited ? 'Added to favorites' : 'Removed from favorites');
     } catch (error) {
       // Revert optimistic update on error
       setIsFavorited(previousState);

@@ -205,7 +205,8 @@ export default function ProjectMediaUpload({
         throw new Error(error.error || 'Failed to get upload URL');
       }
 
-      const { upload_url, path } = await urlResponse.json();
+      const { data: uploadUrlData } = await urlResponse.json();
+      const { upload_url, path } = uploadUrlData;
 
       // Step 2: Upload compressed file directly to storage
       const uploadResponse = await fetch(upload_url, {

@@ -46,7 +46,7 @@ export function ProjectUpdatesTimeline({ projectId, className = '' }: ProjectUpd
 
         if (response.ok) {
           const data = await response.json();
-          setUpdates(data.updates || []);
+          setUpdates(data.data?.updates || []);
         } else {
           logger.warn('Failed to fetch project updates', { projectId }, 'ProjectUpdatesTimeline');
           setUpdates([]);

@@ -56,7 +56,7 @@ export function TransparencyScore({
         }
 
         const data = await response.json();
-        setScoreData(data);
+        setScoreData(data.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load transparency score');
       } finally {

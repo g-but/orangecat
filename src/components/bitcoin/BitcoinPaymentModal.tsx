@@ -57,8 +57,8 @@ export default function BitcoinPaymentModal({
       if (res.ok) {
         try {
           const data = await res.json();
-          if (data?.id) {
-            setTransactionId(data.id);
+          if (data?.data?.id) {
+            setTransactionId(data.data.id);
           }
         } catch {
           /* ignore */

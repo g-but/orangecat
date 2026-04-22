@@ -66,7 +66,7 @@ export default function IntelligentOnboarding() {
         throw new Error(data?.error || 'Failed to analyze');
       }
 
-      setAnalysis(data as AnalysisResult);
+      setAnalysis(data.data as AnalysisResult);
       // brief delay for UX polish
       setTimeout(() => {
         setIsAnalyzing(false);
