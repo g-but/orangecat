@@ -13,6 +13,15 @@ import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
+import { z } from 'zod';
+
+const progressUpdateSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200),
+  description: z.string().min(1, 'Description is required').max(5000),
+  milestone_achieved: z.boolean().optional(),
+  funding_released: z.number().min(0).optional(),
+  attachments: z.array(z.string().url()).max(10).optional(),
+});
 
 function extractIdFromUrl(url: string): string {
   const segments = new URL(url).pathname.split('/');
@@ -88,8 +97,10 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many updates. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
-    const { title, description, milestone_achieved, funding_released, attachments } = await request.json();
-    if (!title || !description) {return apiBadRequest('Title and description are required');}
+    const rawBody = await request.json();
+    const parsed = progressUpdateSchema.safeParse(rawBody);
+    if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid progress update data');}
+    const { title, description, milestone_achieved, funding_released, attachments } = parsed.data;
 
     const { data: update, error } = await db
       .from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES)
@@ -98,9 +109,9 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
         user_id: user.id,
         title,
         description,
-        milestone_achieved: milestone_achieved || false,
-        funding_released: funding_released || 0,
-        attachments: attachments || [],
+        milestone_achieved: milestone_achieved ?? false,
+        funding_released: funding_released ?? 0,
+        attachments: attachments ?? [],
       })
       .select()
       .single();

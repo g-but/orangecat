@@ -16,6 +16,14 @@ import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { z } from 'zod';
+
+const orderUpdateSchema = z.object({
+  action: z.enum(['ship', 'complete']),
+  tracking_number: z.string().max(200).optional(),
+  tracking_url: z.string().url().max(500).optional(),
+  seller_note: z.string().max(500).optional(),
+});
 
 export const GET = withAuth(
   async (request: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
@@ -61,7 +69,10 @@ export const PUT = withAuth(
       const { id } = await context.params;
       const idValidation2 = getValidationError(validateUUID(id, 'order ID'));
       if (idValidation2) { return idValidation2; }
-      const body = await request.json();
+      const rawBody = await request.json();
+      const parsed = orderUpdateSchema.safeParse(rawBody);
+      if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid order update data');}
+      const body = parsed.data;
 
       // Fetch order
       const { data: order } = await supabase

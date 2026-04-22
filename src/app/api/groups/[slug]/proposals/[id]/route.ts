@@ -13,6 +13,19 @@ import { updateProposal, deleteProposal } from '@/services/groups/mutations/prop
 import { createServerClient } from '@/lib/supabase/server';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { z } from 'zod';
+
+const updateProposalSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(5000).optional(),
+  proposal_type: z.string().max(50).optional(),
+  action_type: z.string().max(50).optional(),
+  action_data: z.record(z.unknown()).optional(),
+  voting_threshold: z.number().int().min(1).max(100).optional(),
+  voting_starts_at: z.string().datetime({ offset: true }).optional(),
+  voting_ends_at: z.string().datetime({ offset: true }).optional(),
+  is_public: z.boolean().optional(),
+});
 
 export async function GET(
   _request: NextRequest,
@@ -54,8 +67,10 @@ export async function PUT(
     const { id } = params;
     const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
     if (idValidation) { return idValidation; }
-    const payload = await request.json();
-    const result = await updateProposal(id, payload, supabase);
+    const body = await request.json();
+    const parsed = updateProposalSchema.safeParse(body);
+    if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid proposal data');}
+    const result = await updateProposal(id, parsed.data, supabase);
     if (!result.success) {
       return apiBadRequest(result.error);
     }

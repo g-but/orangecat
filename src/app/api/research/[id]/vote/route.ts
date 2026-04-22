@@ -19,6 +19,12 @@ import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { aggregateVotes, castVote } from '@/domain/research/voteService';
+import { z } from 'zod';
+
+const castVoteSchema = z.object({
+  vote_type: z.enum(['direction', 'priority', 'impact', 'continuation']),
+  choice: z.string().min(1, 'Choice is required').max(200),
+});
 
 function extractIdFromUrl(url: string): string {
   const segments = new URL(url).pathname.split('/');
@@ -83,8 +89,10 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
     if (!entity?.voting_enabled) {return apiUnauthorized('Voting is not enabled for this research entity');}
     if (!entity.is_public) {return apiUnauthorized('Cannot vote on private research entities');}
 
-    const { vote_type, choice } = await request.json();
-    if (!vote_type || !choice) {return apiBadRequest('Vote type and choice are required');}
+    const rawBody = await request.json();
+    const parsed = castVoteSchema.safeParse(rawBody);
+    if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid vote data');}
+    const { vote_type, choice } = parsed.data;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const contributorIds = (entity.contributions ?? []).map((c: any) => c.user_id as string);
