@@ -1,10 +1,8 @@
 /**
  * Conversation Messages API Route
  *
- * GET /api/messages/[conversationId] - Fetch messages with pagination
+ * GET  /api/messages/[conversationId] - Fetch messages with pagination
  * POST /api/messages/[conversationId] - Send a new message
- *
- * @module api/messages/[conversationId]
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
@@ -23,6 +21,10 @@ import {
   MESSAGE_TYPES,
 } from '@/features/messaging/lib';
 import {
+  fetchConversationContext,
+  verifyParticipantAndReactivate,
+} from '@/features/messaging/api-helpers.server';
+import {
   apiSuccess,
   apiCreated,
   apiNotFound,
@@ -32,53 +34,33 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
-import type { Database } from '@/types/database';
 
-// Schema for sending a message
 const sendMessageSchema = z.object({
   content: z.string().min(VALIDATION.MESSAGE_MIN_LENGTH).max(VALIDATION.MESSAGE_MAX_LENGTH),
   messageType: z
     .enum([MESSAGE_TYPES.TEXT, MESSAGE_TYPES.IMAGE, MESSAGE_TYPES.FILE, MESSAGE_TYPES.SYSTEM])
     .default(MESSAGE_TYPES.TEXT),
   metadata: z.record(z.unknown()).optional(),
-  senderActorId: z.string().uuid().optional(), // Optional: send as specific actor
+  senderActorId: z.string().uuid().optional(),
 });
 
-type ParticipantRow = {
-  user_id: string;
-  role: string;
-  joined_at: string;
-  last_read_at: string | null;
-  is_active: boolean;
-  profiles: { username: string | null; name: string | null; avatar_url: string | null } | null;
-};
-
-/**
- * GET - Fetch messages for a conversation with cursor-based pagination
- */
+/** GET - Fetch messages for a conversation with cursor-based pagination */
 export const GET = withAuth(
-  async (
-    req: AuthenticatedRequest,
-    { params }: { params: Promise<{ conversationId: string }> }
-  ) => {
+  async (req: AuthenticatedRequest, { params }: { params: Promise<{ conversationId: string }> }) => {
     const { conversationId } = await params;
     try {
-      const { searchParams } = new URL(req.url);
       const { user } = req;
-
-      // Parse pagination params
+      const { searchParams } = new URL(req.url);
       const cursor = searchParams.get('cursor');
       const limitParam = searchParams.get('limit');
       const limit = Math.min(
-        parseInt(limitParam || String(PAGINATION.MESSAGES_DEFAULT), 10) ||
-          PAGINATION.MESSAGES_DEFAULT,
+        parseInt(limitParam || String(PAGINATION.MESSAGES_DEFAULT), 10) || PAGINATION.MESSAGES_DEFAULT,
         PAGINATION.MESSAGES_MAX
       );
 
-      // Use admin client for participant check to bypass RLS
       const admin = createAdminClient();
 
-      // Verify user is a participant
+      // Verify participant access
       const { data: participant, error: partError } = await admin
         .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
         .select('user_id, last_read_at, is_active')
@@ -93,191 +75,63 @@ export const GET = withAuth(
           .select('id')
           .eq('id', conversationId)
           .maybeSingle();
-
-        if (!convExists) {
-          return apiNotFound('Conversation not found');
-        }
-        return apiForbidden('Access denied');
+        return convExists ? apiForbidden('Access denied') : apiNotFound('Conversation not found');
       }
 
-      // Fetch messages using service
-      const { messages, pagination } = await svcFetchMessages(
-        conversationId,
-        user.id,
-        cursor || undefined,
-        limit
-      );
+      const [{ messages, pagination }, ctx] = await Promise.all([
+        svcFetchMessages(conversationId, user.id, cursor || undefined, limit),
+        fetchConversationContext(admin, conversationId, user.id),
+      ]);
 
-      // Get conversation info
-      const { data: conv, error: convError } = await admin
-        .from(DATABASE_TABLES.CONVERSATIONS)
-        .select('*')
-        .eq('id', conversationId)
-        .single();
-
-      if (convError || !conv) {
-        return apiNotFound('Conversation not found');
-      }
-
-      // Fetch participants
-      const { data: participants } = await admin
-        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
-        .select(
-          `
-        user_id,
-        role,
-        joined_at,
-        last_read_at,
-        is_active,
-        profiles:user_id (id, username, name, avatar_url)
-      `
-        )
-        .eq('conversation_id', conversationId);
-
-      // Format participants
-      const formattedParticipants = (participants || []).map((p: ParticipantRow) => ({
-        user_id: p.user_id,
-        username: p.profiles?.username || '',
-        name: p.profiles?.name || '',
-        avatar_url: p.profiles?.avatar_url || '',
-        role: p.role,
-        joined_at: p.joined_at,
-        last_read_at: p.last_read_at,
-        is_active: p.is_active,
-      }));
-
-      // Calculate unread count
-      const userParticipant = formattedParticipants.find(p => p.user_id === user.id);
-      let unreadCount = 0;
-      if (userParticipant?.last_read_at) {
-        const { count } = await admin
-          .from(DATABASE_TABLES.MESSAGES)
-          .select('*', { count: 'exact', head: true })
-          .eq('conversation_id', conversationId)
-          .neq('sender_id', user.id)
-          .gt('created_at', userParticipant.last_read_at)
-          .eq('is_deleted', false);
-        unreadCount = count || 0;
-      }
+      if (!ctx) return apiNotFound('Conversation not found');
 
       return apiSuccess({
-        conversation: {
-          ...(conv as Record<string, unknown>),
-          participants: formattedParticipants,
-          unread_count: unreadCount,
-        },
+        conversation: { ...ctx.conversation, participants: ctx.formattedParticipants, unread_count: ctx.unreadCount },
         messages,
         pagination,
       });
     } catch (error) {
-      logger.error(
-        'Messages GET error',
-        { error, conversationId, userId: req.user.id },
-        'Messages'
-      );
+      logger.error('Messages GET error', { error, conversationId, userId: req.user.id }, 'Messages');
       return handleApiError(error);
     }
   }
 );
 
-/**
- * POST - Send a new message to the conversation
- */
+/** POST - Send a new message to the conversation */
 export const POST = withAuth(
-  async (
-    req: AuthenticatedRequest,
-    { params }: { params: Promise<{ conversationId: string }> }
-  ) => {
+  async (req: AuthenticatedRequest, { params }: { params: Promise<{ conversationId: string }> }) => {
     const { conversationId } = await params;
     try {
       const { user } = req;
 
-      // Rate limiting
       const rateLimitResult = enforceRateLimit('MESSAGE_SEND', user.id);
       if (!rateLimitResult.allowed) {
         const retryAfter = rateLimitResult.retryAfterMs
           ? Math.ceil(rateLimitResult.retryAfterMs / 1000)
           : undefined;
         const response = apiRateLimited('Rate limit exceeded. Please slow down.', retryAfter);
-        // Add rate limit headers
-        const headers = getRateLimitHeaders(rateLimitResult);
-        Object.entries(headers).forEach(([key, value]) => {
-          response.headers.set(key, value);
-        });
+        Object.entries(getRateLimitHeaders(rateLimitResult)).forEach(([k, v]) => response.headers.set(k, v));
         return response;
       }
 
-      // Parse and validate body
       const body = await req.json();
       const validation = sendMessageSchema.safeParse(body);
-
       if (!validation.success) {
         return apiValidationError('Invalid request data', {
-          fields: validation.error.issues.map(issue => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-          })),
+          fields: validation.error.issues.map(i => ({ field: i.path.join('.'), message: i.message })),
         });
       }
 
       const { content, messageType, metadata, senderActorId } = validation.data;
-
-      // Use admin client to bypass RLS for participant check
       const admin = createAdminClient();
 
-      // Check membership (with auto-reactivation for soft-deleted participants)
-      const { data: participantMaybe, error: partError } = await admin
-        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
-        .select('user_id, is_active')
-        .eq('conversation_id', conversationId)
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const membership = await verifyParticipantAndReactivate(admin, conversationId, user.id);
+      if (membership === 'not_found') return apiForbidden('Not a participant in this conversation');
 
-      if (partError || !participantMaybe) {
-        // Not a participant - cannot send
-        return apiForbidden('Not a participant in this conversation');
-      }
-
-      // Reactivate if soft-deleted
-      if (
-        participantMaybe &&
-        typeof participantMaybe === 'object' &&
-        'is_active' in participantMaybe &&
-        (participantMaybe as { is_active?: boolean }).is_active === false
-      ) {
-        const updateData: Database['public']['Tables']['conversation_participants']['Update'] = {
-          is_active: true,
-          last_read_at: new Date().toISOString(),
-        };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
-          .update(updateData)
-          .eq('conversation_id', conversationId)
-          .eq('user_id', user.id);
-      }
-
-      // Send message (optionally as a specific actor)
-      const newId = await svcSendMessage(
-        conversationId,
-        user.id,
-        content,
-        messageType,
-        metadata || null,
-        senderActorId || null
-      );
-
-      return apiCreated(
-        { id: newId },
-        {
-          headers: getRateLimitHeaders(rateLimitResult),
-        }
-      );
+      const newId = await svcSendMessage(conversationId, user.id, content, messageType, metadata || null, senderActorId || null);
+      return apiCreated({ id: newId }, { headers: getRateLimitHeaders(rateLimitResult) });
     } catch (error) {
-      logger.error(
-        'Messages POST error',
-        { error, conversationId, userId: req.user.id },
-        'Messages'
-      );
+      logger.error('Messages POST error', { error, conversationId, userId: req.user.id }, 'Messages');
       return handleApiError(error);
     }
   }
