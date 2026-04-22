@@ -37,6 +37,10 @@ jest.mock('@/lib/api/standardResponse', () => ({
     status: 429,
     json: async () => ({ success: false, error: { message: 'Rate limited' } }),
   })),
+  apiBadRequest: jest.fn((message = 'Bad request') => ({
+    status: 400,
+    json: async () => ({ success: false, error: { message } }),
+  })),
 }));
 
 jest.mock('@/lib/rate-limit', () => ({
@@ -78,7 +82,7 @@ describe('Project [id] API workflow', () => {
 
   it('GET returns project detail with profile mapping', async () => {
     const project = {
-      id: 'p1',
+      id: '00000000-0000-0000-0000-000000000001',
       user_id: 'u1',
       title: 'Project One',
       raised_amount: null,
@@ -117,19 +121,19 @@ describe('Project [id] API workflow', () => {
     (createServerClient as jest.Mock).mockResolvedValue(supabase);
 
     const request = {};
-    const response = await GET(request as any, { params: { id: 'p1' } });
+    const response = await GET(request as any, { params: { id: '00000000-0000-0000-0000-000000000001' } });
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
-    expect(body.data.id).toBe('p1');
+    expect(body.data.id).toBe('00000000-0000-0000-0000-000000000001');
     expect(body.data.raised_amount).toBe(0);
     expect(body.data.profiles.username).toBe('alice');
   });
 
   it('PUT updates own project', async () => {
     const existing = {
-      id: 'p1',
+      id: '00000000-0000-0000-0000-000000000001',
       user_id: 'u1',
       actor_id: 'a1',
       title: 'Old Title',
@@ -172,7 +176,7 @@ describe('Project [id] API workflow', () => {
       }),
     };
 
-    const response = await PUT(request as any, { params: { id: 'p1' } });
+    const response = await PUT(request as any, { params: { id: '00000000-0000-0000-0000-000000000001' } });
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -183,7 +187,7 @@ describe('Project [id] API workflow', () => {
   it('PUT rejects updates to project owned by another user', async () => {
     (checkOwnership as jest.Mock).mockResolvedValueOnce(false);
     const existing = {
-      id: 'p1',
+      id: '00000000-0000-0000-0000-000000000001',
       user_id: 'someone-else',
       actor_id: 'other-actor',
       title: 'Locked Project',
@@ -208,7 +212,7 @@ describe('Project [id] API workflow', () => {
       json: jest.fn().mockResolvedValue({ title: 'Should Not Update' }),
     };
 
-    const response = await PUT(request as any, { params: { id: 'p1' } });
+    const response = await PUT(request as any, { params: { id: '00000000-0000-0000-0000-000000000001' } });
     const body = await response.json();
 
     expect(response.status).toBe(403);
