@@ -8,6 +8,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiForbidden, apiNotFound, apiValidationError, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
@@ -18,8 +19,10 @@ const rsvpSchema = z.object({
 
 export const POST = withAuth(
   async (req: AuthenticatedRequest, { params }: { params: Promise<{ slug: string; eventId: string }> }) => {
+    const { slug, eventId } = await params;
+    const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
+    if (idValidation) {return idValidation;}
     try {
-      const { slug, eventId } = await params;
       const { user } = req;
 
       const rl = await rateLimitWriteAsync(user.id);

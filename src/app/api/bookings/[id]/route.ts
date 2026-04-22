@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiNotFound, apiForbidden, apiBadRequest, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext { params: Promise<{ id: string }> }
 
@@ -37,8 +38,10 @@ async function tryProviderAction(actorIds: string[], fn: (id: string) => Promise
 }
 
 export const GET = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'booking ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id } = await context.params;
     const { user, supabase } = request;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const booking = await createBookingService(supabase as any).getBooking(id);
@@ -57,8 +60,10 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
 });
 
 export const PUT = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'booking ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id } = await context.params;
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
@@ -94,8 +99,10 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
 });
 
 export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'booking ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id } = await context.params;
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);

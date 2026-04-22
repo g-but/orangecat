@@ -9,14 +9,17 @@ import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { apiNotFound, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const { id: assistantId } = await params;
+  const idValidation = getValidationError(validateUUID(assistantId, 'assistant ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: assistantId } = await params;
     const supabase = await createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;

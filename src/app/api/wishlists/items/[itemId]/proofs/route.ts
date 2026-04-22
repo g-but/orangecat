@@ -9,6 +9,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { apiSuccess, apiNotFound, apiInternalError } from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteParams { params: Promise<{ itemId: string }> }
 
@@ -49,8 +50,10 @@ function enrichProof(proof: Row, feedbackMap: Record<string, Row[]>, userId: str
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const { itemId } = await params;
+  const idValidation = getValidationError(validateUUID(itemId, 'item ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { itemId } = await params;
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 

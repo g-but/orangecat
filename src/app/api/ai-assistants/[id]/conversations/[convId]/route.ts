@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiNotFound, apiBadRequest, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext {
   params: Promise<{ id: string; convId: string }>;
@@ -25,8 +26,12 @@ const updateConversationSchema = z.object({
 });
 
 export const GET = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id: assistantId, convId } = await context.params;
+  const aIdV = getValidationError(validateUUID(assistantId, 'assistant ID'));
+  if (aIdV) {return aIdV;}
+  const cIdV = getValidationError(validateUUID(convId, 'conversation ID'));
+  if (cIdV) {return cIdV;}
   try {
-    const { id: assistantId, convId } = await context.params;
     const { user, supabase } = request;
 
     const { data: conversation, error: convError } = await supabase
@@ -55,8 +60,12 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
 });
 
 export const PUT = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id: assistantId, convId } = await context.params;
+  const aIdV = getValidationError(validateUUID(assistantId, 'assistant ID'));
+  if (aIdV) {return aIdV;}
+  const cIdV = getValidationError(validateUUID(convId, 'conversation ID'));
+  if (cIdV) {return cIdV;}
   try {
-    const { id: assistantId, convId } = await context.params;
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
@@ -85,8 +94,12 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
 });
 
 export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id: assistantId, convId } = await context.params;
+  const aIdV = getValidationError(validateUUID(assistantId, 'assistant ID'));
+  if (aIdV) {return aIdV;}
+  const cIdV = getValidationError(validateUUID(convId, 'conversation ID'));
+  if (cIdV) {return cIdV;}
   try {
-    const { id: assistantId, convId } = await context.params;
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);

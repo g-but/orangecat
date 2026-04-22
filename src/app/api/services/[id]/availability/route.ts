@@ -16,14 +16,17 @@ import {
   apiSuccess,
   apiInternalError,
 } from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const { id: serviceId } = await params;
+  const idValidation = getValidationError(validateUUID(serviceId, 'service ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: serviceId } = await params;
     const supabase = await createServerClient();
 
     const url = new URL(request.url);

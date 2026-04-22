@@ -23,14 +23,17 @@ import {
   apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
 export const GET = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id: assistantId } = await context.params;
+  const idValidation = getValidationError(validateUUID(assistantId, 'assistant ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: assistantId } = await context.params;
     const { user, supabase } = request;
 
     // Verify assistant exists
@@ -65,8 +68,10 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
 });
 
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id: assistantId } = await context.params;
+  const idValidation = getValidationError(validateUUID(assistantId, 'assistant ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: assistantId } = await context.params;
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);

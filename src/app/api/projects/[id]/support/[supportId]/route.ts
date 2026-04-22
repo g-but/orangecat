@@ -11,6 +11,7 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { apiForbidden, apiInternalError, apiSuccess, apiRateLimited } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import projectSupportService from '@/services/projects/support';
 import { logger } from '@/utils/logger';
 
@@ -20,8 +21,10 @@ interface RouteContext {
 
 // DELETE /api/projects/[id]/support/[supportId] - Delete project support
 export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { supportId } = await context.params;
+  const idValidation = getValidationError(validateUUID(supportId, 'support ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { supportId } = await context.params;
     const { user } = request;
 
     const rl = await rateLimitWriteAsync(user.id);

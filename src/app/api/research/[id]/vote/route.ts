@@ -14,6 +14,7 @@ import {
   apiBadRequest,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -27,6 +28,8 @@ function extractIdFromUrl(url: string): string {
 
 export const GET = compose(withRateLimit('read'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
+  const idValidation = getValidationError(validateUUID(id, 'research ID'));
+  if (idValidation) {return idValidation;}
   try {
     const supabase = await createServerClient();
 
@@ -60,6 +63,8 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
 
 export const POST = compose(withRateLimit('write'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
+  const idValidation = getValidationError(validateUUID(id, 'research ID'));
+  if (idValidation) {return idValidation;}
   try {
     const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();

@@ -23,6 +23,7 @@ import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { sendAiMessage } from '@/services/ai/sendMessage';
 
 interface RouteParams {
@@ -35,8 +36,12 @@ const sendMessageSchema = z.object({
 });
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
+  const { id: assistantId, convId } = await params;
+  const aIdV = getValidationError(validateUUID(assistantId, 'assistant ID'));
+  if (aIdV) {return aIdV;}
+  const cIdV = getValidationError(validateUUID(convId, 'conversation ID'));
+  if (cIdV) {return cIdV;}
   try {
-    const { id: assistantId, convId } = await params;
     const supabase = await createServerClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();

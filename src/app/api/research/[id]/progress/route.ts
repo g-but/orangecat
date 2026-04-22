@@ -8,6 +8,7 @@ import {
   apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { compose } from '@/lib/api/compose';
@@ -22,6 +23,8 @@ function extractIdFromUrl(url: string): string {
 // GET /api/research/[id]/progress - Get progress updates
 export const GET = compose(withRateLimit('read'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
+  const idValidation = getValidationError(validateUUID(id, 'research ID'));
+  if (idValidation) {return idValidation;}
   try {
     const supabase = await createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,6 +62,8 @@ export const GET = compose(withRateLimit('read'))(async (request: NextRequest) =
 // POST /api/research/[id]/progress - Create progress update
 export const POST = compose(withRateLimit('write'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
+  const idValidation = getValidationError(validateUUID(id, 'research ID'));
+  if (idValidation) {return idValidation;}
   try {
     const supabase = await createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

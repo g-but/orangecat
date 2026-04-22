@@ -10,6 +10,7 @@
 
 import { NextRequest } from 'next/server';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -19,8 +20,10 @@ interface RouteParams {
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const { userId } = await params;
+  const idValidation = getValidationError(validateUUID(userId, 'user ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { userId } = await params;
     const supabase = await createServerClient();
 
     // Fetch active wishlists for this user

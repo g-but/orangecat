@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import { apiCreated, apiBadRequest, apiNotFound, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -32,8 +33,10 @@ const PERIOD_MS: Record<string, number> = {
 };
 
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id: assetId } = await context.params;
+  const idValidation = getValidationError(validateUUID(assetId, 'asset ID'));
+  if (idValidation) {return idValidation;}
   try {
-    const { id: assetId } = await context.params;
     const { user, supabase } = request;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;

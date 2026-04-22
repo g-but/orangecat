@@ -22,6 +22,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { rateLimit, applyRateLimitHeaders } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { isValidEntityType, getTableName, getUserIdField, type EntityType } from '@/config/entity-registry';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { z } from 'zod';
 import { checkOwnership } from '@/services/actors';
 
@@ -46,6 +47,8 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
   try {
     const { entityType, id } = await context.params;
     if (!isValidEntityType(entityType)) {return apiBadRequest(`Invalid entity type: ${entityType}`);}
+    const idValidation = getValidationError(validateUUID(id, 'entity ID'));
+    if (idValidation) {return idValidation;}
 
     const rateLimitResult = await rateLimit(request);
     if (!rateLimitResult.success) {

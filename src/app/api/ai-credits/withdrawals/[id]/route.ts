@@ -20,6 +20,7 @@ import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -45,6 +46,8 @@ export const GET = compose(
     }
 
     const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'withdrawal ID'));
+    if (idValidation) {return idValidation;}
 
     const { data: withdrawal, error } = await db
       .from(DATABASE_TABLES.AI_CREATOR_WITHDRAWALS)
@@ -84,6 +87,8 @@ export const DELETE = compose(
     }
 
     const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'withdrawal ID'));
+    if (idValidation) {return idValidation;}
 
     // Call cancel RPC
     const { error } = await db.rpc('cancel_ai_withdrawal', {
