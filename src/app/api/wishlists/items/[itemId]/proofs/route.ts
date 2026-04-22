@@ -4,8 +4,7 @@
  * GET /api/wishlists/items/[itemId]/proofs - Get all proofs for a wishlist item
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { apiSuccess, apiNotFound, apiInternalError } from '@/lib/api/standardResponse';
@@ -49,13 +48,12 @@ function enrichProof(proof: Row, feedbackMap: Record<string, Row[]>, userId: str
   };
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export const GET = withOptionalAuth(async (request, { params }: RouteParams) => {
   const { itemId } = await params;
   const idValidation = getValidationError(validateUUID(itemId, 'item ID'));
   if (idValidation) {return idValidation;}
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { user, supabase } = request;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: wishlistItem, error: itemError } = await (supabase as any)
@@ -98,4 +96,4 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     logger.error('Error in GET /api/wishlists/items/[itemId]/proofs:', error);
     return apiInternalError();
   }
-}
+});

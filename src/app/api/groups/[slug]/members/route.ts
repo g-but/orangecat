@@ -9,9 +9,7 @@
  * Last Modified Summary: Refactored POST to use withAuth middleware
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import groupsService from '@/services/groups';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiCreated, apiNotFound, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
@@ -21,13 +19,9 @@ interface RouteContext {
   params: Promise<{ slug: string }>;
 }
 
-export async function GET(request: NextRequest, context: RouteContext) {
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const { user } = request;
     const { slug } = await context.params;
 
     // Get group first
@@ -51,7 +45,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     logger.error('Error in GET /api/groups/[slug]/members:', error);
     return apiInternalError('Internal server error');
   }
-}
+});
 
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {

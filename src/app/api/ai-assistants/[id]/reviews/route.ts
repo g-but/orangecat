@@ -4,8 +4,7 @@
  * GET /api/ai-assistants/[id]/reviews - Get reviews for an assistant
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { apiNotFound, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
@@ -15,12 +14,12 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export const GET = withOptionalAuth(async (request, { params }: RouteParams) => {
   const { id: assistantId } = await params;
   const idValidation = getValidationError(validateUUID(assistantId, 'assistant ID'));
   if (idValidation) {return idValidation;}
   try {
-    const supabase = await createServerClient();
+    const { user, supabase } = request;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const url = new URL(request.url);
@@ -29,8 +28,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 50);
     const offset = (page - 1) * limit;
     const sortBy = url.searchParams.get('sort') || 'recent';
-
-    const { data: { user } } = await supabase.auth.getUser();
 
     const { data: assistant, error: assistantError } = await db
       .from(DATABASE_TABLES.AI_ASSISTANTS).select('id, average_rating, total_ratings').eq('id', assistantId).single();
@@ -73,4 +70,4 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     logger.error('Fetch reviews error', error, 'AIAssistantReviewsAPI');
     return apiInternalError('Internal server error');
   }
-}
+});
