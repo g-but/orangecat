@@ -7,7 +7,6 @@
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiForbidden, apiNotFound, apiValidationError, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -36,8 +35,7 @@ export const GET = withAuth(
     const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
     if (idValidation) {return idValidation;}
     try {
-      const { user } = req;
-      const supabase = await createServerClient();
+      const { user, supabase } = req;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
 
@@ -68,8 +66,7 @@ export const PUT = withAuth(
     const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
     if (idValidation) {return idValidation;}
     try {
-      const { user } = req;
-      const supabase = await createServerClient();
+      const { user, supabase } = req;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
 
@@ -106,8 +103,7 @@ export const DELETE = withAuth(
     const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
     if (idValidation) {return idValidation;}
     try {
-      const { user } = req;
-      const supabase = await createServerClient();
+      const { user, supabase } = req;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
 

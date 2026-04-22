@@ -6,7 +6,6 @@
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiCreated, apiForbidden, apiNotFound, apiValidationError, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -31,8 +30,7 @@ export const GET = withAuth(
   async (req: AuthenticatedRequest, { params }: { params: Promise<{ slug: string }> }) => {
     const { slug } = await params;
     try {
-      const { user } = req;
-      const supabase = await createServerClient();
+      const { user, supabase } = req;
       const { searchParams } = new URL(req.url);
 
       const group = await resolveGroupBySlug(supabase, slug);
@@ -65,8 +63,7 @@ export const POST = withAuth(
   async (req: AuthenticatedRequest, { params }: { params: Promise<{ slug: string }> }) => {
     const { slug } = await params;
     try {
-      const { user } = req;
-      const supabase = await createServerClient();
+      const { user, supabase } = req;
 
       const rl = await rateLimitWriteAsync(user.id);
       if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}

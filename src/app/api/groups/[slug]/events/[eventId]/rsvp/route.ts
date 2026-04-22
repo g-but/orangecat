@@ -5,7 +5,6 @@
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiForbidden, apiNotFound, apiValidationError, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
@@ -28,7 +27,7 @@ export const POST = withAuth(
       const rl = await rateLimitWriteAsync(user.id);
       if (!rl.success) {return apiRateLimited('Too many RSVP requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
-      const supabase = await createServerClient();
+      const { supabase } = req;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
 

@@ -6,7 +6,6 @@
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { createServerClient } from '@/lib/supabase/server';
 import {
   apiSuccess,
   apiForbidden,
@@ -61,14 +60,12 @@ export const POST = withAuth(
     const idValidation = getValidationError(validateUUID(invitationId, 'invitation ID'));
     if (idValidation) {return idValidation;}
     try {
-      const { user } = req;
+      const { user, supabase } = req;
 
       const rl = await rateLimitWriteAsync(user.id);
       if (!rl.success) {
         return apiRateLimited('Too many invitation requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
       }
-
-      const supabase = await createServerClient();
 
       const body = await req.json();
       const validation = responseSchema.safeParse(body);
@@ -112,14 +109,12 @@ export const DELETE = withAuth(
     const idValidation = getValidationError(validateUUID(invitationId, 'invitation ID'));
     if (idValidation) {return idValidation;}
     try {
-      const { user } = req;
+      const { user, supabase } = req;
 
       const rl = await rateLimitWriteAsync(user.id);
       if (!rl.success) {
         return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
       }
-
-      const supabase = await createServerClient();
 
       const { data: invitation, error: inviteError } = await (
         supabase.from(DATABASE_TABLES.GROUP_INVITATIONS) as UntypedTable

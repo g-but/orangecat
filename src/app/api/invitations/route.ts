@@ -7,7 +7,6 @@
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
@@ -18,8 +17,7 @@ import { logger } from '@/utils/logger';
  */
 export const GET = withAuth(async (req: AuthenticatedRequest) => {
   try {
-    const { user } = req;
-    const supabase = await createServerClient();
+    const { user, supabase } = req;
 
     // Get pending invitations with group details
     const { data, error } = await supabase
