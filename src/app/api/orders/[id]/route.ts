@@ -15,12 +15,15 @@ import {
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 export const GET = withAuth(
   async (request: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
     try {
       const { user, supabase } = request;
       const { id } = await context.params;
+      const idValidation = getValidationError(validateUUID(id, 'order ID'));
+      if (idValidation) return idValidation;
 
       const { data: order, error } = await supabase
         .from(DATABASE_TABLES.ORDERS)
@@ -56,6 +59,8 @@ export const PUT = withAuth(
         return apiRateLimited('Too many requests. Please slow down.', retryAfter);
       }
       const { id } = await context.params;
+      const idValidation2 = getValidationError(validateUUID(id, 'order ID'));
+      if (idValidation2) return idValidation2;
       const body = await request.json();
 
       // Fetch order

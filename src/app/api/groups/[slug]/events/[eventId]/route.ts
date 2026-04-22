@@ -22,6 +22,7 @@ import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 // Local types for database query results (not in generated types)
 interface GroupRecord {
@@ -72,6 +73,8 @@ export const GET = withAuth(
   ) => {
     try {
       const { slug, eventId } = await params;
+      const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
+      if (idValidation) return idValidation;
       const { user } = req;
       const supabase = await createServerClient();
 
@@ -163,6 +166,8 @@ export const PUT = withAuth(
   ) => {
     try {
       const { slug, eventId } = await params;
+      const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
+      if (idValidation) return idValidation;
       const { user } = req;
       const supabase = await createServerClient();
 
@@ -262,6 +267,8 @@ export const DELETE = withAuth(
   ) => {
     try {
       const { slug, eventId } = await params;
+      const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
+      if (idValidation) return idValidation;
       const { user } = req;
       const supabase = await createServerClient();
 

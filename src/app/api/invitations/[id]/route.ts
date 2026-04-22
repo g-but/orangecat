@@ -22,6 +22,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 // Local types for database query results (not in generated types)
 interface InvitationRecord {
@@ -62,6 +63,8 @@ export const POST = withAuth(
   async (req: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id: invitationId } = await params;
+      const idValidation = getValidationError(validateUUID(invitationId, 'invitation ID'));
+      if (idValidation) return idValidation;
       const { user } = req;
 
       const rl = await rateLimitWriteAsync(user.id);
@@ -187,6 +190,8 @@ export const DELETE = withAuth(
   async (req: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id: invitationId } = await params;
+      const idValidation = getValidationError(validateUUID(invitationId, 'invitation ID'));
+      if (idValidation) return idValidation;
       const { user } = req;
 
       const rl = await rateLimitWriteAsync(user.id);

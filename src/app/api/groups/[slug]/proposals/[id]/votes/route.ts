@@ -23,7 +23,7 @@ export async function GET(
     // Optional auth - public proposals can be viewed by anyone
     // But votes are only visible to members
     const { id } = await params;
-    const result = await getProposalVotes(id);
+    const result = await getProposalVotes(id, supabase);
     if (!result.success) {
       return apiNotFound(result.error);
     }

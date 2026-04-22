@@ -29,7 +29,7 @@ interface RouteContext {
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     const { slug, id: walletId } = await context.params;
-    const { user } = request;
+    const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
@@ -38,19 +38,19 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     }
 
     // Get group
-    const groupResult = await getGroupBySlug(slug);
+    const groupResult = await getGroupBySlug(slug, supabase);
     if (!groupResult.success || !groupResult.group) {
       return apiNotFound('Group not found');
     }
 
     // Check permissions
-    const canView = await checkGroupPermission(groupResult.group.id, user.id, 'canView');
+    const canView = await checkGroupPermission(groupResult.group.id, user.id, 'canView', supabase);
     if (!canView) {
       return apiForbidden('Insufficient permissions');
     }
 
     // Refresh balance
-    const result = await refreshWalletBalance(walletId);
+    const result = await refreshWalletBalance(walletId, supabase);
 
     if (!result.success) {
       return apiBadRequest(result.error);

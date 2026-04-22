@@ -10,14 +10,18 @@ import { logger } from '@/utils/logger';
 import { getProposal } from '@/services/groups/queries/proposals';
 import { updateProposal, deleteProposal } from '@/services/groups/mutations/proposals';
 import { createServerClient } from '@/lib/supabase/server';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: { slug: string; id: string } }
 ) {
   try {
+    const supabase = await createServerClient();
     const { id } = params;
-    const result = await getProposal(id);
+    const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
+    if (idValidation) return idValidation;
+    const result = await getProposal(id, supabase);
     if (!result.success) {
       return apiNotFound(result.error);
     }
@@ -43,6 +47,8 @@ export async function PUT(
     }
 
     const { id } = params;
+    const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
+    if (idValidation) return idValidation;
     const payload = await request.json();
     const result = await updateProposal(id, payload, supabase);
     if (!result.success) {
@@ -70,6 +76,8 @@ export async function DELETE(
     }
 
     const { id } = params;
+    const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
+    if (idValidation) return idValidation;
     const result = await deleteProposal(id, supabase);
     if (!result.success) {
       return apiBadRequest(result.error);

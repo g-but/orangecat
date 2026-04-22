@@ -8,6 +8,7 @@
  */
 
 import { handleApiError, apiSuccess, apiBadRequest, apiRateLimited } from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { logger } from '@/utils/logger';
@@ -20,6 +21,8 @@ interface RouteContext {
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
+    if (idValidation) return idValidation;
     const { user } = request;
 
     const rl = await rateLimitWriteAsync(user.id);

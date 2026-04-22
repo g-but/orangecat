@@ -21,6 +21,7 @@ import {
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskProjectUpdateSchema } from '@/lib/schemas/tasks';
 import { logger } from '@/utils/logger';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -39,6 +40,8 @@ interface ProjectOwnership {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'project ID'));
+    if (idValidation) return idValidation;
     const supabase = await createServerClient();
     const {
       data: { user },
@@ -91,6 +94,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'project ID'));
+    if (idValidation) return idValidation;
     const supabase = await createServerClient();
     const {
       data: { user },
@@ -179,6 +184,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
+    const idValidation = getValidationError(validateUUID(id, 'project ID'));
+    if (idValidation) return idValidation;
     const supabase = await createServerClient();
     const {
       data: { user },
