@@ -19,6 +19,7 @@ export interface UpdateCauseInput extends Partial<CreateCauseInput> {
 
 export async function createCause(userId: string, input: CreateCauseInput) {
   return createEntity('cause', userId, {
+    user_id: userId,
     title: input.title,
     description: input.description ?? null,
     cause_category: input.cause_category,

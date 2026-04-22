@@ -186,6 +186,7 @@ export async function createProduct(
     'product',
     userId,
     {
+      user_id: userId,
       status: STATUS.PRODUCTS.DRAFT as typeof STATUS.PRODUCTS.DRAFT,
       currency: input.currency ?? 'SATS',
       product_type: input.product_type ?? 'physical',
@@ -214,6 +215,7 @@ export async function createService(
     'service',
     userId,
     {
+      user_id: userId,
       title: input.title,
       description: input.description ?? null,
       category: input.category,
@@ -265,6 +267,7 @@ export async function createCause(userId: string, input: CreateCauseInput): Prom
     'cause',
     userId,
     {
+      user_id: userId,
       title: input.title,
       description: input.description ?? null,
       cause_category: input.cause_category,

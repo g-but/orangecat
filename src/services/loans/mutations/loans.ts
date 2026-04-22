@@ -61,6 +61,7 @@ export async function createLoan(request: CreateLoanRequest): Promise<LoanRespon
       .insert({
         ...request,
         currency: isSupportedCurrency(request.currency) ? request.currency : DEFAULT_CURRENCY,
+        user_id: user.id,
         actor_id: actorId,
       })
       .select()

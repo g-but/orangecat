@@ -51,13 +51,6 @@ export async function createLoan(
 
   const loanInput = input;
 
-  // Map form fields to database columns
-  // original_amount is stored directly as BTC
-  const amountBtc =
-    loanInput.original_amount && loanInput.original_amount > 0
-      ? loanInput.original_amount
-      : 0.01; // Default to 0.01 BTC if no amount provided (shouldn't happen due to validation)
-
   // Normalize empty strings to null for UUID and optional fields
   const normalizeToNull = <T>(value: T): T | null => {
     if (value === '' || value === undefined) {
@@ -70,6 +63,7 @@ export async function createLoan(
     'loan',
     userId,
     {
+      user_id: userId,
       title: loanInput.title,
       description: loanInput.description || '',
       loan_type: loanInput.loan_type || 'new_request',
@@ -87,8 +81,6 @@ export async function createLoan(
       current_interest_rate: normalizeToNull(loanInput.current_interest_rate),
       monthly_payment: normalizeToNull(loanInput.monthly_payment),
       desired_rate: normalizeToNull(loanInput.desired_rate),
-      // Legacy fields (for backward compatibility) - required by schema
-      amount_btc: amountBtc,
       status: STATUS.LOANS.ACTIVE,
     },
     {

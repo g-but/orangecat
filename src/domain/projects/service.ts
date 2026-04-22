@@ -25,6 +25,7 @@ export async function listProjectsPage(limit: number, offset: number, userId?: s
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProject(userId: string, payload: any) {
   return createEntity('project', userId, {
+    user_id: userId,
     title: payload.title,
     description: payload.description,
     goal_amount: payload.goal_amount ?? null,
