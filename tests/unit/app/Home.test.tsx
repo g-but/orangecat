@@ -17,8 +17,8 @@ jest.mock('next/dynamic', () => {
   };
 });
 
-// Mock the HeroSection component
-jest.mock('@/components/home/sections/HeroSection', () => {
+// Mock the HeroSection component (file is HeroSectionStatic, no separate HeroSection)
+jest.mock('@/components/home/sections/HeroSectionStatic', () => {
   return function MockHeroSection() {
     return (
       <section data-testid="hero-section">

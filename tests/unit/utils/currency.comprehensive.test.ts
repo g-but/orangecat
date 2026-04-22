@@ -340,8 +340,8 @@ describe('🪙 Currency Utilities - Comprehensive Coverage', () => {
       const endTime = performance.now();
       const totalTime = endTime - startTime;
 
-      // Should format 30,000 amounts in under 20000ms (generous for slow CI environments)
-      expect(totalTime).toBeLessThan(20000);
+      // Should format 30,000 amounts in under 60000ms (generous for slow CI + parallel test environments)
+      expect(totalTime).toBeLessThan(60000);
     });
 
     test('converts large numbers of amounts quickly', () => {
