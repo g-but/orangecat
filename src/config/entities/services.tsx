@@ -109,7 +109,7 @@ export const serviceEntityConfig: EntityConfig<UserService> = {
     description: 'Start offering your expertise to the community by creating your first service.',
     action: (
       <Link href={ROUTES.DASHBOARD.SERVICES_CREATE}>
-        <Button className="bg-gradient-to-r from-orange-600 to-orange-700">Add Service</Button>
+        <Button className="bg-gradient-to-r from-orange-600 to-orange-700">Create Service</Button>
       </Link>
     ),
   },

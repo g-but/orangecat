@@ -85,10 +85,10 @@ export const assetEntityConfig: EntityConfig<Asset> = {
 
   emptyState: {
     title: 'No assets yet',
-    description: 'Add your assets to use as collateral for loans or to track your portfolio.',
+    description: 'Create your first asset to use as collateral for loans or to track your portfolio.',
     action: (
       <Link href={ROUTES.DASHBOARD.ASSETS_CREATE}>
-        <Button className="bg-gradient-to-r from-green-600 to-green-700">Add Asset</Button>
+        <Button className="bg-gradient-to-r from-green-600 to-green-700">Create Asset</Button>
       </Link>
     ),
   },
