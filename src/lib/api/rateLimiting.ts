@@ -26,6 +26,7 @@
 import { Redis } from '@upstash/redis'
 // Canonical limiter import (adapter for unification)
 import { rateLimitWriteAsync, rateLimitSocial, applyRateLimitHeaders, type RateLimitResult as CanonicalRateLimitResult } from '@/lib/rate-limit'
+import { apiRateLimited } from '@/lib/api/standardResponse'
 import { logger } from '@/utils/logger'
 import { ApiError, ErrorCode } from '@/lib/api/errorHandling'
 
@@ -169,6 +170,19 @@ export async function enforceUserSocialLimit(userId: string): Promise<CanonicalR
     throw new RateLimitError(adapterConfig, `social:${userId}`, retryAfter)
   }
   return result
+}
+
+/**
+ * If `e` is a RateLimitError, returns an apiRateLimited Response.
+ * Otherwise returns null (caller should rethrow).
+ */
+export function handleRateLimitError(
+  e: unknown,
+  message: string = 'Too many requests. Please slow down.'
+): ReturnType<typeof apiRateLimited> | null {
+  if (!(e instanceof RateLimitError)) return null
+  const retryAfter = (e.details as { retryAfter?: number } | undefined)?.retryAfter || 60
+  return apiRateLimited(message, retryAfter)
 }
 
 /**

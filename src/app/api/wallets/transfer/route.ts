@@ -14,13 +14,12 @@ import {
   apiForbidden,
   apiNotFound,
   apiBadRequest,
-  apiRateLimited,
   apiInternalError,
 } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
+import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
 import { walletTransferSchema } from '@/lib/validation/finance';
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
@@ -31,11 +30,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     try {
       await enforceUserWriteLimit(user.id);
     } catch (e) {
-      if (e instanceof RateLimitError) {
-        const retryAfter = e.details?.retryAfter || 60;
-        logger.info('Wallet transfer rate limit exceeded', { userId: user.id });
-        return apiRateLimited('Too many transfer requests. Please slow down.', retryAfter);
-      }
+      const limited = handleRateLimitError(e, 'Too many transfer requests. Please slow down.');
+      if (limited) return limited;
       throw e;
     }
 

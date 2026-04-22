@@ -1,9 +1,9 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
-import { apiSuccess, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
+import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
-import { enforceUserSocialLimit, RateLimitError } from '@/lib/api/rateLimiting';
+import { enforceUserSocialLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -18,11 +18,8 @@ async function handleUnfollow(request: AuthenticatedRequest) {
     try {
       rateLimitResult = await enforceUserSocialLimit(user.id);
     } catch (e) {
-      if (e instanceof RateLimitError) {
-        const retryAfter = e.details?.retryAfter || 60;
-        logger.warn('Unfollow rate limit exceeded', { userId: user.id });
-        return apiRateLimited('Too many unfollow requests. Please slow down.', retryAfter);
-      }
+      const limited = handleRateLimitError(e, 'Too many unfollow requests. Please slow down.');
+      if (limited) return limited;
       throw e;
     }
 

@@ -4,7 +4,6 @@ import {
   apiSuccess,
   apiNotFound,
   apiUnauthorized,
-  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
@@ -12,7 +11,7 @@ import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
+import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
 
 // Helper to extract ID from URL
 function extractIdFromUrl(url: string): string {
@@ -113,10 +112,8 @@ export const POST = compose(withRateLimit('write'))(async (request: NextRequest)
     try {
       rl = await enforceUserWriteLimit(user.id);
     } catch (e) {
-      if (e instanceof RateLimitError) {
-        const retryAfter = e.details?.retryAfter || 60;
-        return apiRateLimited('Too many updates. Please slow down.', retryAfter);
-      }
+      const limited = handleRateLimitError(e, 'Too many updates. Please slow down.');
+      if (limited) return limited;
       throw e;
     }
 

@@ -9,9 +9,8 @@ import {
   isTableNotFoundError,
 } from '@/lib/wallets/errorHandling';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
-import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
+import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
 import {
-  apiRateLimited,
   apiSuccess,
   apiError,
   apiCreated,
@@ -105,11 +104,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     try {
       rateLimitResult = await enforceUserWriteLimit(user.id);
     } catch (e) {
-      if (e instanceof RateLimitError) {
-        const retryAfter = e.details?.retryAfter || 60;
-        logger.info('Wallet creation rate limit exceeded', { userId: user.id });
-        return apiRateLimited('Too many wallet creation requests. Please slow down.', retryAfter);
-      }
+      const limited = handleRateLimitError(e, 'Too many wallet creation requests. Please slow down.');
+      if (limited) return limited;
       throw e;
     }
 

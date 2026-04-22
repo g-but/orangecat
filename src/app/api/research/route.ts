@@ -13,7 +13,7 @@ import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination, getString } from '@/lib/api/query';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
-import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
+import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
 import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -118,11 +118,8 @@ export const POST = compose(
     try {
       rl = await enforceUserWriteLimit(user.id);
     } catch (e) {
-      if (e instanceof RateLimitError) {
-        const retryAfter = e.details?.retryAfter || 60;
-        logger.warn('Research entity creation rate limit exceeded', { userId: user.id });
-        return apiRateLimited('Too many creation requests. Please slow down.', retryAfter);
-      }
+      const limited = handleRateLimitError(e, 'Too many creation requests. Please slow down.');
+      if (limited) return limited;
       throw e;
     }
 

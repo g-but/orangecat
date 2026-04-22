@@ -6,14 +6,13 @@ import {
   apiForbidden,
   apiNotFound,
   apiBadRequest,
-  apiRateLimited,
   apiInternalError,
 } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
+import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
 import { walletUpdateSchema } from '@/lib/validation/finance';
 
 interface RouteContext {
@@ -42,11 +41,8 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     try {
       await enforceUserWriteLimit(user.id);
     } catch (e) {
-      if (e instanceof RateLimitError) {
-        const retryAfter = e.details?.retryAfter || 60;
-        logger.info('Wallet update rate limit exceeded', { userId: user.id });
-        return apiRateLimited('Too many wallet update requests. Please slow down.', retryAfter);
-      }
+      const limited = handleRateLimitError(e, 'Too many wallet update requests. Please slow down.');
+      if (limited) return limited;
       throw e;
     }
 
@@ -193,9 +189,8 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     try {
       await enforceUserWriteLimit(user.id);
     } catch (e) {
-      if (e instanceof RateLimitError) {
-        return apiRateLimited();
-      }
+      const limited = handleRateLimitError(e);
+      if (limited) return limited;
       throw e;
     }
 

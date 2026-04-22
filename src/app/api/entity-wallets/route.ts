@@ -4,12 +4,11 @@ import {
   apiError,
   apiCreated,
   apiBadRequest,
-  apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { entityWalletLinkSchema } from '@/lib/validation/finance';
-import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
+import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
 import { ENTITY_TYPES } from '@/config/entity-registry';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -77,10 +76,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     await enforceUserWriteLimit(user.id);
   } catch (e) {
-    if (e instanceof RateLimitError) {
-      const retryAfter = e.details?.retryAfter || 60;
-      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
-    }
+    const limited = handleRateLimitError(e, 'Too many requests. Please slow down.');
+    if (limited) return limited;
     throw e;
   }
 
