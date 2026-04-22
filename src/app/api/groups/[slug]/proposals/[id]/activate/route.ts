@@ -4,10 +4,12 @@ import {
   apiUnauthorized,
   apiSuccess,
   apiBadRequest,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { activateProposal } from '@/services/groups/mutations/proposals';
 import { createServerClient } from '@/lib/supabase/server';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 export async function POST(
   _request: NextRequest,
@@ -21,6 +23,12 @@ export async function POST(
     } = await supabase.auth.getUser();
     if (authError || !user) {
       return apiUnauthorized();
+    }
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 
     const { id } = params;

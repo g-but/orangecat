@@ -3,8 +3,10 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import {
   apiSuccess,
   apiForbidden,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -16,6 +18,12 @@ export const POST = withAuth(async (
   try {
     const { conversationId } = await params;
     const { user } = req;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     // Use admin client to bypass RLS for both verification and update
     const admin = createAdminClient();

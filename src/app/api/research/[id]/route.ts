@@ -6,8 +6,10 @@ import {
   apiUnauthorized,
   apiForbidden,
   apiBadRequest,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
@@ -93,6 +95,12 @@ export async function PUT(_request: NextRequest, { params }: { params: { id: str
       return apiUnauthorized();
     }
 
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+
     const body = await _request.json();
     const parsed = researchUpdateSchema.safeParse(body);
     if (!parsed.success) {
@@ -157,6 +165,12 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
 
     if (authError || !user) {
       return apiUnauthorized();
+    }
+
+    const rl2 = await rateLimitWriteAsync(user.id);
+    if (!rl2.success) {
+      const retryAfter = Math.ceil((rl2.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 
     // Check ownership

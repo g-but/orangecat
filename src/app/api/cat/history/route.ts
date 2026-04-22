@@ -10,7 +10,8 @@ import {
   getMessagesForDisplay,
   clearDefaultConversation,
 } from '@/services/cat/conversation-history';
-import { apiUnauthorized, apiSuccess, handleApiError } from '@/lib/api/standardResponse';
+import { apiUnauthorized, apiSuccess, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 export async function GET() {
   const supabase = await createServerClient();
@@ -40,6 +41,12 @@ export async function DELETE() {
 
   if (authError || !user) {
     return apiUnauthorized('Unauthorized');
+  }
+
+  const rl = await rateLimitWriteAsync(user.id);
+  if (!rl.success) {
+    const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+    return apiRateLimited('Too many requests. Please slow down.', retryAfter);
   }
 
   try {

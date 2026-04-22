@@ -17,7 +17,7 @@ import {
   handleSupabaseError,
 } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { rateLimit, applyRateLimitHeaders } from '@/lib/rate-limit';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { VALID_PROJECT_STATUSES, type ProjectStatus } from '@/config/project-statuses';
@@ -38,18 +38,14 @@ interface RouteContext {
 // PATCH /api/projects/[id]/status - Update project status
 export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    // Rate limiting check
-    const rateLimitResult = await rateLimit(request);
-    if (!rateLimitResult.success) {
-      return apiRateLimited(
-        'Too many requests',
-        rateLimitResult.resetTime
-          ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
-          : undefined
-      );
-    }
-
     const { user, supabase } = request;
+
+    // Rate limiting check (user-based)
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     const { id } = await context.params;
     const body = await request.json();
@@ -122,13 +118,10 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
       newStatus: normalizedStatus,
     });
 
-    return applyRateLimitHeaders(
-      apiSuccess({
-        ...project,
-        status: normalizedStatus,
-      }),
-      rateLimitResult
-    );
+    return apiSuccess({
+      ...project,
+      status: normalizedStatus,
+    });
   } catch (error) {
     return handleApiError(error);
   }

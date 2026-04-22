@@ -4,7 +4,8 @@ import {
   type TransparencyData,
 } from '@/services/transparency';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { apiSuccess, apiError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiError, apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 const TRANSPARENCY_KEYS: (keyof TransparencyData)[] = [
   'isOpenSource',
@@ -28,6 +29,14 @@ const TRANSPARENCY_KEYS: (keyof TransparencyData)[] = [
  */
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
+    const { user } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+
     const body = await request.json();
 
     // Build TransparencyData from request body, defaulting missing keys to false

@@ -11,7 +11,8 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { apiSuccess, apiError, apiBadRequest } from '@/lib/api/standardResponse';
+import { apiSuccess, apiError, apiBadRequest, apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   isValidEntityType,
@@ -43,6 +44,12 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     }
 
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     // Parse request body
     const body = await request.json();

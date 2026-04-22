@@ -15,8 +15,10 @@ import {
   apiForbidden,
   apiNotFound,
   apiValidationError,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
@@ -162,6 +164,12 @@ export const POST = withAuth(
       const { slug } = await params;
       const { user } = req;
       const supabase = await createServerClient();
+
+      const rl = await rateLimitWriteAsync(user.id);
+      if (!rl.success) {
+        const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+        return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+      }
 
       // Get group by slug
       const { data: group, error: groupError } = (await supabase

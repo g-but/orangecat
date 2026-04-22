@@ -20,7 +20,9 @@ import {
   apiForbidden,
   apiNotFound,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -35,6 +37,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   try {
     const { id: assistantId } = await context.params;
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     const body = await request.json();
     const result = ratingSchema.safeParse(body);
@@ -105,6 +113,12 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
   try {
     const { id: assistantId } = await context.params;
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     const { error: deleteError } = await (
       supabase.from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any

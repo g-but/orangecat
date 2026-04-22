@@ -15,8 +15,10 @@ import {
   apiForbidden,
   apiNotFound,
   apiValidationError,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
@@ -164,6 +166,12 @@ export const PUT = withAuth(
       const { user } = req;
       const supabase = await createServerClient();
 
+      const rl = await rateLimitWriteAsync(user.id);
+      if (!rl.success) {
+        const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+        return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+      }
+
       // Get group by slug
       const { data: groupData2, error: groupError } = await (
         supabase.from(DATABASE_TABLES.GROUPS) as UntypedTable
@@ -256,6 +264,12 @@ export const DELETE = withAuth(
       const { slug, eventId } = await params;
       const { user } = req;
       const supabase = await createServerClient();
+
+      const rl2 = await rateLimitWriteAsync(user.id);
+      if (!rl2.success) {
+        const retryAfter = Math.ceil((rl2.resetTime - Date.now()) / 1000);
+        return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+      }
 
       // Get group by slug
       const { data: groupData3, error: groupError } = await (

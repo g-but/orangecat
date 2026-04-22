@@ -8,7 +8,8 @@
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { apiBadRequest, apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
+import { apiBadRequest, apiSuccess, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { createApiKeyService } from '@/services/ai/api-key-service';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
@@ -23,7 +24,13 @@ const validateSchema = z.object({
  */
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const { supabase } = request;
+    const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
 
     const body = await request.json();
     const result = validateSchema.safeParse(body);

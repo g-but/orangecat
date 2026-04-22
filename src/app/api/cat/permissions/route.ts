@@ -28,7 +28,9 @@ import {
   apiUnauthorized,
   apiBadRequest,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 // Validation schemas - category enum derived from ACTION_CATEGORIES (DRY)
 const categorySchema = z.enum(ACTION_CATEGORY_KEYS);
@@ -109,6 +111,12 @@ export async function POST(request: NextRequest) {
       return apiUnauthorized();
     }
 
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
+    }
+
     const body = await request.json();
     const parseResult = grantPermissionSchema.safeParse(body);
 
@@ -171,6 +179,12 @@ export async function DELETE(request: NextRequest) {
 
     if (authError || !user) {
       return apiUnauthorized();
+    }
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 
     const body = await request.json();

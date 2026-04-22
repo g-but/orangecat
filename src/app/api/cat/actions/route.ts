@@ -24,7 +24,9 @@ import {
   apiNotFound,
   apiForbidden,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 // Validation schema
 const executeActionSchema = z.object({
@@ -87,6 +89,12 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return apiUnauthorized('Unauthorized');
+    }
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 
     const body = await request.json();
