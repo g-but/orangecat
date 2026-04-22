@@ -13,6 +13,11 @@ import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { logger } from '@/utils/logger';
 import { castVote } from '@/services/groups/mutations/votes';
+import { z } from 'zod';
+
+const voteBodySchema = z.object({
+  vote: z.enum(['yes', 'no', 'abstain']),
+});
 
 interface RouteContext {
   params: Promise<{ slug: string; id: string }>;
@@ -33,7 +38,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     const { supabase } = request;
     const body = await request.json();
-    const result = await castVote({ proposal_id: id, vote: body.vote }, supabase);
+    const parsed = voteBodySchema.safeParse(body);
+    if (!parsed.success) {return apiBadRequest('vote must be one of: yes, no, abstain');}
+    const result = await castVote({ proposal_id: id, vote: parsed.data.vote }, supabase);
     if (!result.success) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return apiBadRequest((result as any).error);
