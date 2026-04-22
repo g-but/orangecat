@@ -22,7 +22,9 @@ import {
   apiBadRequest,
   apiNotFound,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -45,6 +47,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (authError || !user) {
       return apiUnauthorized('Unauthorized');
     }
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     // Get user's actor ID
     const { data: actor, error: actorError } = (await supabase
@@ -88,6 +93,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     if (authError || !user) {
       return apiUnauthorized('Unauthorized');
     }
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     // Get optional rejection reason from body (max 500 chars)
     let reason: string | undefined;

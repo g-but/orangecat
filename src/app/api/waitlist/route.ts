@@ -1,11 +1,15 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { apiSuccess, apiValidationError, handleApiError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiValidationError, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await rateLimit(request);
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+
     const supabase = await createServerClient();
     const body = await request.json().catch(() => ({}));
     const email = (body.email || '').trim();

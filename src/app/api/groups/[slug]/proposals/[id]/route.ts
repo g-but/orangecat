@@ -5,12 +5,14 @@ import {
   apiSuccess,
   apiNotFound,
   apiBadRequest,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getProposal } from '@/services/groups/queries/proposals';
 import { updateProposal, deleteProposal } from '@/services/groups/mutations/proposals';
 import { createServerClient } from '@/lib/supabase/server';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 export async function GET(
   _request: NextRequest,
@@ -46,6 +48,9 @@ export async function PUT(
       return apiUnauthorized();
     }
 
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+
     const { id } = params;
     const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
     if (idValidation) { return idValidation; }
@@ -74,6 +79,9 @@ export async function DELETE(
     if (authError || !user) {
       return apiUnauthorized();
     }
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const { id } = params;
     const idValidation = getValidationError(validateUUID(id, 'proposal ID'));

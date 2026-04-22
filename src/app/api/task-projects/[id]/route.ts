@@ -15,7 +15,9 @@ import {
   apiValidationError,
   apiInternalError,
   apiSuccess,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskProjectUpdateSchema } from '@/lib/schemas/tasks';
 import { logger } from '@/utils/logger';
@@ -63,6 +65,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {return apiUnauthorized('Authentication required');}
 
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+
     const ownership = await verifyTaskProjectOwner(supabase, id, user.id);
     if (ownership === 'not_found') {return apiNotFound('Project not found');}
     if (ownership === 'forbidden') {return apiForbidden('Only the creator can edit this project');}
@@ -101,6 +106,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {return apiUnauthorized('Authentication required');}
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
     const ownership = await verifyTaskProjectOwner(supabase, id, user.id);
     if (ownership === 'not_found') {return apiNotFound('Project not found');}
