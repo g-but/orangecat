@@ -1,5 +1,4 @@
 import { logger } from '@/utils/logger';
-import { createServerClient } from '@/lib/supabase/server';
 import { withOptionalAuth } from '@/lib/api/withAuth';
 import {
   apiSuccess,
@@ -14,7 +13,7 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
     const { id: projectId } = await params;
     const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
     if (idValidation) {return idValidation;}
-    const supabase = await createServerClient();
+    const { supabase } = req;
 
     // Get project details
     const { data: projectData, error: projectError } = await (supabase

@@ -7,7 +7,6 @@
  */
 
 import { withOptionalAuth } from '@/lib/api/withAuth';
-import { createServerClient } from '@/lib/supabase/server';
 import {
   apiSuccess,
   apiNotFound,
@@ -37,7 +36,7 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
     const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
     if (idValidation) {return idValidation;}
 
-    const supabase = await createServerClient();
+    const { supabase } = req;
 
     // Fetch project to ensure it exists and is viewable
     const { data: project, error: projectError } = await (
