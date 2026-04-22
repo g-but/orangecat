@@ -8,6 +8,7 @@ import {
   apiSuccess,
   apiNotFound,
   apiNoContent,
+  apiBadRequest,
   apiInternalError,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
@@ -15,6 +16,7 @@ import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { shippingAddressSchema } from '../route';
 
 export const PUT = withAuth(
   async (request: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
@@ -32,8 +34,15 @@ export const PUT = withAuth(
 
       const body = await request.json();
 
+      const parsed = shippingAddressSchema.partial().safeParse(body);
+      if (!parsed.success) {
+        const first = parsed.error.errors[0];
+        return apiBadRequest(first?.message || 'Invalid address data');
+      }
+      const addr = parsed.data;
+
       // If setting as default, unset existing defaults first
-      if (body.is_default) {
+      if (addr.is_default) {
         await supabase
           .from(DATABASE_TABLES.SHIPPING_ADDRESSES)
           .update({ is_default: false })
@@ -41,33 +50,15 @@ export const PUT = withAuth(
       }
 
       const updates: Record<string, unknown> = {};
-      if (body.label !== undefined) {
-        updates.label = body.label;
-      }
-      if (body.full_name !== undefined) {
-        updates.full_name = body.full_name;
-      }
-      if (body.street !== undefined) {
-        updates.street = body.street;
-      }
-      if (body.street2 !== undefined) {
-        updates.street2 = body.street2;
-      }
-      if (body.city !== undefined) {
-        updates.city = body.city;
-      }
-      if (body.state !== undefined) {
-        updates.state = body.state;
-      }
-      if (body.postal_code !== undefined) {
-        updates.postal_code = body.postal_code;
-      }
-      if (body.country_code !== undefined) {
-        updates.country_code = body.country_code;
-      }
-      if (body.is_default !== undefined) {
-        updates.is_default = body.is_default;
-      }
+      if (addr.label !== undefined) { updates.label = addr.label; }
+      if (addr.full_name !== undefined) { updates.full_name = addr.full_name; }
+      if (addr.street !== undefined) { updates.street = addr.street; }
+      if (addr.street2 !== undefined) { updates.street2 = addr.street2; }
+      if (addr.city !== undefined) { updates.city = addr.city; }
+      if (addr.state !== undefined) { updates.state = addr.state; }
+      if (addr.postal_code !== undefined) { updates.postal_code = addr.postal_code; }
+      if (addr.country_code !== undefined) { updates.country_code = addr.country_code; }
+      if (addr.is_default !== undefined) { updates.is_default = addr.is_default; }
 
       const { data, error } = await supabase
         .from(DATABASE_TABLES.SHIPPING_ADDRESSES)

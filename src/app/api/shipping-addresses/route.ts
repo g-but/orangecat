@@ -14,6 +14,19 @@ import {
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
+import { z } from 'zod';
+
+export const shippingAddressSchema = z.object({
+  label: z.string().max(100).optional().nullable(),
+  full_name: z.string().min(1, 'Full name is required').max(100),
+  street: z.string().min(1, 'Street is required').max(200),
+  street2: z.string().max(200).optional().nullable(),
+  city: z.string().min(1, 'City is required').max(100),
+  state: z.string().max(100).optional().nullable(),
+  postal_code: z.string().min(1, 'Postal code is required').max(20),
+  country_code: z.string().length(2).default('CH'),
+  is_default: z.boolean().default(false),
+});
 
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
@@ -50,13 +63,15 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     const body = await request.json();
 
-    // Basic validation
-    if (!body.full_name || !body.street || !body.city || !body.postal_code) {
-      return apiBadRequest('full_name, street, city, and postal_code are required');
+    const parsed = shippingAddressSchema.safeParse(body);
+    if (!parsed.success) {
+      const first = parsed.error.errors[0];
+      return apiBadRequest(first?.message || 'Invalid address data');
     }
+    const addr = parsed.data;
 
     // If this is the first address or marked as default, unset existing defaults
-    if (body.is_default) {
+    if (addr.is_default) {
       await supabase
         .from(DATABASE_TABLES.SHIPPING_ADDRESSES)
         .update({ is_default: false })
@@ -67,15 +82,15 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       .from(DATABASE_TABLES.SHIPPING_ADDRESSES)
       .insert({
         user_id: user.id,
-        label: body.label || null,
-        full_name: body.full_name,
-        street: body.street,
-        street2: body.street2 || null,
-        city: body.city,
-        state: body.state || null,
-        postal_code: body.postal_code,
-        country_code: body.country_code || 'CH',
-        is_default: body.is_default ?? false,
+        label: addr.label ?? null,
+        full_name: addr.full_name,
+        street: addr.street,
+        street2: addr.street2 ?? null,
+        city: addr.city,
+        state: addr.state ?? null,
+        postal_code: addr.postal_code,
+        country_code: addr.country_code,
+        is_default: addr.is_default,
       })
       .select()
       .single();
