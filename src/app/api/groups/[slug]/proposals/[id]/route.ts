@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import {
   handleApiError,
-  apiUnauthorized,
   apiSuccess,
   apiNotFound,
   apiBadRequest,
@@ -10,7 +9,7 @@ import {
 import { logger } from '@/utils/logger';
 import { getProposal } from '@/services/groups/queries/proposals';
 import { updateProposal, deleteProposal } from '@/services/groups/mutations/proposals';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { z } from 'zod';
@@ -27,16 +26,16 @@ const updateProposalSchema = z.object({
   is_public: z.boolean().optional(),
 });
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { slug: string; id: string } }
-) {
+interface RouteContext {
+  params: Promise<{ slug: string; id: string }>;
+}
+
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
+  if (idValidation) { return idValidation; }
   try {
-    const supabase = await createServerClient();
-    const { id } = params;
-    const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
-    if (idValidation) { return idValidation; }
-    const result = await getProposal(id, supabase);
+    const result = await getProposal(id, request.supabase);
     if (!result.success) {
       return apiNotFound(result.error);
     }
@@ -45,29 +44,18 @@ export async function GET(
     logger.error('Error in GET /api/groups/[slug]/proposals/[id]', error, 'API');
     return handleApiError(error);
   }
-}
+});
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { slug: string; id: string } }
-) {
+export const PUT = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
+  if (idValidation) { return idValidation; }
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
-    const { id } = params;
-    const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
-    if (idValidation) { return idValidation; }
-    const body = await request.json();
+    const body = await (request as NextRequest).json();
     const parsed = updateProposalSchema.safeParse(body);
     if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid proposal data');}
     const result = await updateProposal(id, parsed.data, supabase);
@@ -79,28 +67,17 @@ export async function PUT(
     logger.error('Error in PUT /api/groups/[slug]/proposals/[id]', error, 'API');
     return handleApiError(error);
   }
-}
+});
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { slug: string; id: string } }
-) {
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
+  if (idValidation) { return idValidation; }
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
-
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
-    const { id } = params;
-    const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
-    if (idValidation) { return idValidation; }
     const result = await deleteProposal(id, supabase);
     if (!result.success) {
       return apiBadRequest(result.error);
@@ -110,4 +87,4 @@ export async function DELETE(
     logger.error('Error in DELETE /api/groups/[slug]/proposals/[id]', error, 'API');
     return handleApiError(error);
   }
-}
+});

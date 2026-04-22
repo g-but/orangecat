@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server';
 import {
   apiSuccess,
   apiUnauthorized,
@@ -10,12 +9,11 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
-import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getGroup } from '@/services/groups/queries/groups';
 import { getGroupProposals } from '@/services/groups/queries/proposals';
 import { createProposal } from '@/services/groups/mutations/proposals';
 import { logger } from '@/utils/logger';
-import { createServerClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 const createProposalSchema = z.object({
@@ -34,9 +32,10 @@ interface RouteContext {
   params: Promise<{ slug: string }>;
 }
 
-export async function GET(request: NextRequest, context: RouteContext) {
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
   try {
     const { slug } = await context.params;
+    const { user } = request;
     const { searchParams } = request.nextUrl;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const status = (searchParams.get('status') || 'all') as any;
@@ -50,15 +49,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     // Access control: If not public, require auth+membership
-    if (!groupResult.group.is_public) {
-      const supabase = await createServerClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        return apiUnauthorized();
-      }
-      // membership is enforced in service queries as well; this guards early
+    if (!groupResult.group.is_public && !user) {
+      return apiUnauthorized();
     }
 
     const result = await getGroupProposals(groupResult.group.id, {
@@ -77,7 +69,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     logger.error('Error in GET /api/groups/[slug]/proposals', error, 'API');
     return handleApiError(error);
   }
-}
+});
 
 export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {

@@ -1,37 +1,28 @@
-import { NextRequest } from 'next/server';
 import {
   handleApiError,
-  apiUnauthorized,
   apiSuccess,
   apiBadRequest,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { cancelProposal } from '@/services/groups/mutations/proposals';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
-export async function POST(
-  _request: NextRequest,
-  { params }: { params: { slug: string; id: string } }
-) {
-  try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
+interface RouteContext {
+  params: Promise<{ slug: string; id: string }>;
+}
 
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const { user, supabase } = request;
+  try {
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
       const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
       return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 
-    const { id } = params;
     const result = await cancelProposal(id, supabase);
     if (!result.success) {
       return apiBadRequest(result.error);
@@ -41,4 +32,4 @@ export async function POST(
     logger.error('Error in POST /api/groups/[slug]/proposals/[id]/cancel', error, 'API');
     return handleApiError(error);
   }
-}
+});

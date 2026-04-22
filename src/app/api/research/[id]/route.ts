@@ -3,7 +3,6 @@ import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api
 import {
   apiSuccess,
   apiNotFound,
-  apiUnauthorized,
   apiForbidden,
   apiBadRequest,
   apiRateLimited,

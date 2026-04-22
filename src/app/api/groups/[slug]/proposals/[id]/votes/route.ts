@@ -4,38 +4,31 @@
  * GET /api/groups/[slug]/proposals/[id]/votes - Get all votes for a proposal
  */
 
-import { NextRequest } from 'next/server';
 import { handleApiError, apiSuccess, apiNotFound } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 import { getProposalVotes } from '@/services/groups/queries/proposals';
-import { createServerClient } from '@/lib/supabase/server';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ slug: string; id: string }> }
-) {
-  const { id } = await params;
+interface RouteContext {
+  params: Promise<{ slug: string; id: string }>;
+}
+
+export const GET = withOptionalAuth(async (request, context: RouteContext) => {
+  const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'proposal ID'));
   if (idValidation) {return idValidation;}
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user: _user },
-    } = await supabase.auth.getUser();
-
     // Optional auth - public proposals can be viewed by anyone
-    // But votes are only visible to members
-    const result = await getProposalVotes(id, supabase);
+    // But votes are only visible to members (RLS handles access via request.supabase)
+    const result = await getProposalVotes(id, request.supabase);
     if (!result.success) {
       return apiNotFound(result.error);
     }
 
-    // Filter votes if not authenticated or not a member
-    // For now, return all votes (RLS should handle this)
     return apiSuccess({ votes: result.votes || [] });
   } catch (error) {
     logger.error('Error in GET /api/groups/[slug]/proposals/[id]/votes', error, 'API');
     return handleApiError(error);
   }
-}
+});

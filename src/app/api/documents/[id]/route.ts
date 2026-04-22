@@ -9,7 +9,6 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
@@ -18,9 +17,9 @@ import {
   handleApiError,
   apiSuccess,
   apiNotFound,
-  apiUnauthorized,
   apiValidationError,
 } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getDocument, updateDocument, deleteDocument } from '@/domain/documents/service';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 
@@ -28,7 +27,7 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-// GET /api/documents/[id] - Get a single document
+// GET /api/documents/[id] - Get a single document (public, no auth required)
 export const GET = compose(
   withRequestId(),
   withRateLimit('read')
@@ -50,25 +49,13 @@ export const GET = compose(
 });
 
 // PUT /api/documents/[id] - Update a document
-export const PUT = compose(
-  withRequestId(),
-  withRateLimit('write')
-)(async (request: NextRequest, context: RouteContext) => {
+export const PUT = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'document ID'));
+  if (idValidation) {return idValidation;}
+  const { user } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
-
-    const { id } = await context.params;
-    const idValidation = getValidationError(validateUUID(id, 'document ID'));
-    if (idValidation) {return idValidation;}
-    const body = await request.json();
+    const body = await (request as NextRequest).json();
 
     // Validate input (partial schema)
     const result = documentSchema.partial().safeParse(body);
@@ -84,25 +71,12 @@ export const PUT = compose(
 });
 
 // DELETE /api/documents/[id] - Delete a document
-export const DELETE = compose(
-  withRequestId(),
-  withRateLimit('write')
-)(async (_request: NextRequest, context: RouteContext) => {
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  const { id } = await context.params;
+  const idValidation = getValidationError(validateUUID(id, 'document ID'));
+  if (idValidation) {return idValidation;}
+  const { user } = request;
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
-
-    const { id } = await context.params;
-    const idValidation = getValidationError(validateUUID(id, 'document ID'));
-    if (idValidation) {return idValidation;}
-
     await deleteDocument(id, user.id);
     return apiSuccess({ deleted: true });
   } catch (error) {
