@@ -22,35 +22,7 @@ import { generateFormPrefill } from '@/lib/ai/form-prefill-service';
 import { getEntityConfig } from '@/config/entity-configs/get-config';
 import { isValidEntityType, type EntityType } from '@/config/entity-registry';
 import { logger } from '@/utils/logger';
-
-// Rate limiting - track requests per user
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT = 5; // 5 requests per minute
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in ms
-
-/**
- * Check and update rate limit for a user
- */
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const userLimit = rateLimitMap.get(userId);
-
-  if (!userLimit || now > userLimit.resetTime) {
-    // Reset or initialize rate limit
-    rateLimitMap.set(userId, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW,
-    });
-    return true;
-  }
-
-  if (userLimit.count >= RATE_LIMIT) {
-    return false;
-  }
-
-  userLimit.count++;
-  return true;
-}
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 
 /**
  * Request validation schema
@@ -67,12 +39,13 @@ const requestSchema = z.object({
  * Generate form field values from a natural language description.
  */
 export const POST = withAuth(async (req: AuthenticatedRequest) => {
-  const userId = req.user.id;
+  const { user } = req;
 
-  // Check rate limit
-  if (!checkRateLimit(userId)) {
-    logger.warn('Rate limit exceeded for AI form prefill', { userId }, 'AI');
-    return apiRateLimited('Too many AI requests. Please wait a minute before trying again.');
+  const rl = await rateLimitWriteAsync(user.id);
+  if (!rl.success) {
+    const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+    logger.warn('Rate limit exceeded for AI form prefill', { userId: user.id }, 'AI');
+    return apiRateLimited('Too many requests. Please slow down.', retryAfter);
   }
 
   try {
@@ -100,7 +73,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     logger.info(
       'AI form prefill request',
       {
-        userId,
+        userId: user.id,
         entityType,
         descriptionLength: description.length,
       },
@@ -114,7 +87,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       logger.warn(
         'AI form prefill failed',
         {
-          userId,
+          userId: user.id,
           entityType,
           error: result.error,
         },
@@ -127,7 +100,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     logger.info(
       'AI form prefill success',
       {
-        userId,
+        userId: user.id,
         entityType,
         fieldsGenerated: Object.keys(result.data).length,
       },
