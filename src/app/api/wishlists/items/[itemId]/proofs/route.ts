@@ -54,7 +54,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { data: wishlistItem, error: itemError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: wishlistItem, error: itemError } = await (supabase as any)
       .from(DATABASE_TABLES.WISHLIST_ITEMS)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', itemId).single();

@@ -45,7 +45,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const flagData = result.data;
 
-    const { data: task, error: taskError } = await supabase
+    const { data: task, error: taskError } = await db
       .from(DATABASE_TABLES.TASKS)
       .select('id, title, created_by')
       .eq('id', taskId)
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     await db.from(DATABASE_TABLES.TASKS).update({ current_status: TASK_STATUSES.NEEDS_ATTENTION }).eq('id', taskId);
 
-    const { data: profile } = await supabase
+    const { data: profile } = await db
       .from(DATABASE_TABLES.PROFILES)
       .select('username, display_name')
       .eq('id', user.id)

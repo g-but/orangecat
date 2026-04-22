@@ -48,7 +48,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const completionData = result.data;
 
-    const { data: task, error: taskError } = await supabase
+    const { data: task, error: taskError } = await db
       .from(DATABASE_TABLES.TASKS)
       .select('id, title, task_type, is_completed, created_by')
       .eq('id', taskId)
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     if (task.created_by !== user.id) {
-      const { data: profile } = await supabase
+      const { data: profile } = await db
         .from(DATABASE_TABLES.PROFILES)
         .select('username, display_name')
         .eq('id', user.id)
