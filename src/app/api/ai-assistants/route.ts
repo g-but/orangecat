@@ -8,11 +8,7 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { aiAssistantSchema } from '@/lib/validation';
-import {
-  apiSuccess,
-  apiUnauthorized,
-  handleApiError,
-} from '@/lib/api/standardResponse';
+import { apiSuccess, apiUnauthorized, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withZodBody } from '@/lib/api/withZod';
@@ -26,11 +22,18 @@ import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
-// GET /api/ai-assistants - List AI assistants
-export const GET = compose(
-  withRequestId(),
-  withRateLimit('read')
-)(async (request: NextRequest) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applySortOrder(query: any, sortBy: string) {
+  switch (sortBy) {
+    case 'rating': return query.order('average_rating', { ascending: false, nullsFirst: false });
+    case 'recent': return query.order('created_at', { ascending: false });
+    case 'price_low': return query.order('price_per_message', { ascending: true, nullsFirst: false });
+    case 'price_high': return query.order('price_per_message', { ascending: false, nullsFirst: false });
+    default: return query.order('total_conversations', { ascending: false, nullsFirst: false });
+  }
+}
+
+export const GET = compose(withRequestId(), withRateLimit('read'))(async (request: NextRequest) => {
   try {
     const supabase = await createServerClient();
     const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
@@ -39,137 +42,60 @@ export const GET = compose(
     const searchQuery = getString(request.url, 'q');
     const sortBy = getString(request.url, 'sort') || 'popular';
 
-    // Check auth for showing drafts
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     const includeOwnDrafts = Boolean(userId && user && userId === user.id);
-
-    // Build query with user info for discovery page
     const tableName = getTableName('ai_assistant');
-    let itemsQuery = (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(tableName) as any
-    )
-      .select(
-        `
-        *,
-        user:profiles!ai_assistants_user_id_fkey(
-          id,
-          username,
-          name,
-          avatar_url
-        )
-      `
-      )
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let itemsQuery = (supabase.from(tableName) as any)
+      .select('*, user:profiles!ai_assistants_user_id_fkey(id, username, name, avatar_url)')
       .range(offset, offset + limit - 1);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let countQuery = (supabase.from(tableName) as any).select('*', { count: 'exact', head: true });
 
-    let countQuery = (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(tableName) as any
-    ).select('*', { count: 'exact', head: true });
-
-    // Resolve user_id to actor_id for filtering
     let actorId: string | null = null;
-    if (userId) {
-      const actor = await getOrCreateUserActor(userId);
-      actorId = actor.id;
-    }
+    if (userId) actorId = (await getOrCreateUserActor(userId)).id;
 
     if (userId && includeOwnDrafts && actorId) {
-      // Show all user's assistants including drafts
       itemsQuery = itemsQuery.eq('actor_id', actorId);
       countQuery = countQuery.eq('actor_id', actorId);
     } else {
-      // Public listing: only active, public assistants
       itemsQuery = itemsQuery.eq('status', STATUS.AI_ASSISTANTS.ACTIVE).eq('is_public', true);
       countQuery = countQuery.eq('status', STATUS.AI_ASSISTANTS.ACTIVE).eq('is_public', true);
-      if (actorId) {
-        itemsQuery = itemsQuery.eq('actor_id', actorId);
-        countQuery = countQuery.eq('actor_id', actorId);
-      }
-      if (category) {
-        itemsQuery = itemsQuery.eq('category', category);
-        countQuery = countQuery.eq('category', category);
-      }
+      if (actorId) { itemsQuery = itemsQuery.eq('actor_id', actorId); countQuery = countQuery.eq('actor_id', actorId); }
+      if (category) { itemsQuery = itemsQuery.eq('category', category); countQuery = countQuery.eq('category', category); }
     }
 
-    // Apply search filter
     if (searchQuery) {
-      const escapedSearch = searchQuery.replace(/[%_]/g, '\\$&');
-      const searchFilter = `title.ilike.%${escapedSearch}%,description.ilike.%${escapedSearch}%`;
-      itemsQuery = itemsQuery.or(searchFilter);
-      countQuery = countQuery.or(searchFilter);
+      const escaped = searchQuery.replace(/[%_]/g, '\\$&');
+      const filter = `title.ilike.%${escaped}%,description.ilike.%${escaped}%`;
+      itemsQuery = itemsQuery.or(filter);
+      countQuery = countQuery.or(filter);
     }
 
-    // Apply sorting
-    switch (sortBy) {
-      case 'rating':
-        itemsQuery = itemsQuery.order('average_rating', { ascending: false, nullsFirst: false });
-        break;
-      case 'recent':
-        itemsQuery = itemsQuery.order('created_at', { ascending: false });
-        break;
-      case 'price_low':
-        itemsQuery = itemsQuery.order('price_per_message', { ascending: true, nullsFirst: false });
-        break;
-      case 'price_high':
-        itemsQuery = itemsQuery.order('price_per_message', { ascending: false, nullsFirst: false });
-        break;
-      case 'popular':
-      default:
-        itemsQuery = itemsQuery.order('total_conversations', {
-          ascending: false,
-          nullsFirst: false,
-        });
-        break;
-    }
+    itemsQuery = applySortOrder(itemsQuery, sortBy);
 
-    const [{ data: items, error: itemsError }, { count, error: countError }] = await Promise.all([
-      itemsQuery,
-      countQuery,
-    ]);
-
-    if (itemsError) {
-      throw itemsError;
-    }
-    if (countError) {
-      throw countError;
-    }
-
-    // Cache control based on query type
-    const cacheControl = getCacheControl(Boolean(userId));
+    const [{ data: items, error: itemsError }, { count, error: countError }] = await Promise.all([itemsQuery, countQuery]);
+    if (itemsError) throw itemsError;
+    if (countError) throw countError;
 
     return apiSuccess(items || [], {
       page: calculatePage(offset, limit),
       limit,
       total: count || 0,
-      headers: { 'Cache-Control': cacheControl },
+      headers: { 'Cache-Control': getCacheControl(Boolean(userId)) },
     });
   } catch (error) {
     return handleApiError(error);
   }
 });
 
-// POST /api/ai-assistants - Create new AI assistant
-export const POST = compose(
-  withRequestId(),
-  withZodBody(aiAssistantSchema)
-)(async (request: NextRequest, ctx) => {
+export const POST = compose(withRequestId(), withZodBody(aiAssistantSchema))(async (request: NextRequest, ctx) => {
   try {
     const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return apiUnauthorized();
 
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
-
-    // Rate limit check
     let rl: RateLimitResult;
     try {
       rl = await enforceUserWriteLimit(user.id);
@@ -179,59 +105,38 @@ export const POST = compose(
       throw e;
     }
 
-    const validatedData = ctx.body;
-
-    // Resolve user to actor for ownership
+    const d = ctx.body;
     const actor = await getOrCreateUserActor(user.id);
 
-    // Create the AI assistant
-    const tableName = getTableName('ai_assistant');
-    const { data: assistant, error } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(tableName) as any
-    )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: assistant, error } = await (supabase.from(getTableName('ai_assistant')) as any)
       .insert({
-        user_id: user.id,
-        actor_id: actor.id,
-        title: validatedData.title,
-        description: validatedData.description,
-        category: validatedData.category,
-        tags: validatedData.tags || [],
-        avatar_url: validatedData.avatar_url,
-        system_prompt: validatedData.system_prompt,
-        welcome_message: validatedData.welcome_message,
-        personality_traits: validatedData.personality_traits || [],
-        knowledge_base_urls: validatedData.knowledge_base_urls || [],
-        model_preference: validatedData.model_preference || 'any',
-        max_tokens_per_response: validatedData.max_tokens_per_response || 1000,
-        temperature: validatedData.temperature || 0.7,
-        compute_provider_type: validatedData.compute_provider_type || 'api',
-        compute_provider_id: validatedData.compute_provider_id,
-        api_provider: validatedData.api_provider,
-        pricing_model: validatedData.pricing_model || 'per_message',
-        price_per_message: validatedData.price_per_message || 0,
-        price_per_1k_tokens: validatedData.price_per_1k_tokens || 0,
-        subscription_price: validatedData.subscription_price || 0,
-        free_messages_per_day: validatedData.free_messages_per_day || 0,
-        status: 'draft', // Always start as draft
-        is_public: false, // Start as private
-        is_featured: false,
-        lightning_address: validatedData.lightning_address,
-        bitcoin_address: validatedData.bitcoin_address,
+        user_id: user.id, actor_id: actor.id,
+        title: d.title, description: d.description, category: d.category,
+        tags: d.tags || [], avatar_url: d.avatar_url, system_prompt: d.system_prompt,
+        welcome_message: d.welcome_message, personality_traits: d.personality_traits || [],
+        knowledge_base_urls: d.knowledge_base_urls || [],
+        model_preference: d.model_preference || 'any',
+        max_tokens_per_response: d.max_tokens_per_response || 1000,
+        temperature: d.temperature || 0.7,
+        compute_provider_type: d.compute_provider_type || 'api',
+        compute_provider_id: d.compute_provider_id, api_provider: d.api_provider,
+        pricing_model: d.pricing_model || 'per_message',
+        price_per_message: d.price_per_message || 0,
+        price_per_1k_tokens: d.price_per_1k_tokens || 0,
+        subscription_price: d.subscription_price || 0,
+        free_messages_per_day: d.free_messages_per_day || 0,
+        status: 'draft', is_public: false, is_featured: false,
+        lightning_address: d.lightning_address, bitcoin_address: d.bitcoin_address,
       })
-      .select()
-      .single();
+      .select().single();
 
     if (error) {
       logger.error('AI Assistant creation failed', { userId: user.id, error: error.message });
       throw error;
     }
 
-    logger.info('AI Assistant created successfully', {
-      assistantId: assistant.id,
-      userId: user.id,
-    });
+    logger.info('AI Assistant created successfully', { assistantId: assistant.id, userId: user.id });
     return applyRateLimitHeaders(apiSuccess(assistant, { status: 201 }), rl);
   } catch (error) {
     return handleApiError(error);

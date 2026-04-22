@@ -15,203 +15,88 @@ import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { researchUpdateSchema } from '@/config/entity-configs/research-config';
 
-// Research tables are not in the generated DB schema — as any required
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// GET /api/research/[id] - Get specific research entity
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
-  if (!UUID_REGEX.test(params.id)) {
-    return apiBadRequest('Invalid research entity ID');
-  }
-  try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const tableName = getTableName('research');
-    const { data: entity, error } = await (supabase.from(tableName) as any)
-      .select('*')
-      .eq('id', params.id)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return apiNotFound('Research entity not found');
-      }
-      throw error;
-    }
-
-    // Check if user can view this entity
-    if (!entity.is_public && (!user || user.id !== entity.user_id)) {
-      return apiForbidden('This research entity is private');
-    }
-
-    // Get additional data
-    const [{ data: progressUpdates }, { data: votes }, { data: contributions }] = await Promise.all(
-      [
-        (supabase.from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES) as any)
-          .select('*')
-          .eq('research_entity_id', params.id)
-          .order('created_at', { ascending: false }),
-        (supabase.from(DATABASE_TABLES.RESEARCH_VOTES) as any)
-          .select('*')
-          .eq('research_entity_id', params.id),
-        (supabase.from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS) as any)
-          .select('*')
-          .eq('research_entity_id', params.id)
-          .order('created_at', { ascending: false }),
-      ]
-    );
-
-    const enrichedEntity = {
-      ...entity,
-      progress_updates: progressUpdates || [],
-      votes: votes || [],
-      contributions: contributions || [],
-    };
-
-    return apiSuccess(enrichedEntity);
-  } catch (error) {
-    return handleApiError(error);
-  }
+async function verifyResearchOwner(supabase: any, id: string, userId: string, extraFields = '') {
+  const { data, error } = await (supabase.from(getTableName('research')) as any)
+    .select(`user_id${extraFields ? ', ' + extraFields : ''}`)
+    .eq('id', id).single();
+  if (error) return error.code === 'PGRST116' ? 'not_found' : ('error' as const);
+  if (data.user_id !== userId) return 'forbidden' as const;
+  return data;
 }
 
-// PUT /api/research/[id] - Update research entity
-export async function PUT(_request: NextRequest, { params }: { params: { id: string } }) {
-  if (!UUID_REGEX.test(params.id)) {
-    return apiBadRequest('Invalid research entity ID');
-  }
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+  if (!UUID_REGEX.test(params.id)) return apiBadRequest('Invalid research entity ID');
   try {
     const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
+    const { data: entity, error } = await (supabase.from(getTableName('research')) as any)
+      .select('*').eq('id', params.id).single();
+    if (error) return error.code === 'PGRST116' ? apiNotFound('Research entity not found') : handleApiError(error);
+    if (!entity.is_public && (!user || user.id !== entity.user_id)) return apiForbidden('This research entity is private');
+
+    const [{ data: progressUpdates }, { data: votes }, { data: contributions }] = await Promise.all([
+      (supabase.from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES) as any).select('*').eq('research_entity_id', params.id).order('created_at', { ascending: false }),
+      (supabase.from(DATABASE_TABLES.RESEARCH_VOTES) as any).select('*').eq('research_entity_id', params.id),
+      (supabase.from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS) as any).select('*').eq('research_entity_id', params.id).order('created_at', { ascending: false }),
+    ]);
+
+    return apiSuccess({ ...entity, progress_updates: progressUpdates || [], votes: votes || [], contributions: contributions || [] });
+  } catch (error) { return handleApiError(error); }
+}
+
+export async function PUT(_request: NextRequest, { params }: { params: { id: string } }) {
+  if (!UUID_REGEX.test(params.id)) return apiBadRequest('Invalid research entity ID');
+  try {
+    const supabase = await createServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return apiUnauthorized();
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
-    }
+    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
 
     const body = await _request.json();
     const parsed = researchUpdateSchema.safeParse(body);
-    if (!parsed.success) {
-      return apiBadRequest('Invalid request body', parsed.error.flatten().fieldErrors);
-    }
-    const updates = parsed.data;
+    if (!parsed.success) return apiBadRequest('Invalid request body', parsed.error.flatten().fieldErrors);
 
-    // Check ownership
-    const tableName = getTableName('research');
-    const { data: existing, error: fetchError } = await (supabase.from(tableName) as any)
-      .select('user_id')
-      .eq('id', params.id)
-      .single();
+    const ownership = await verifyResearchOwner(supabase, params.id, user.id);
+    if (ownership === 'not_found') return apiNotFound('Research entity not found');
+    if (ownership === 'forbidden') return apiForbidden('You can only update your own research entities');
+    if (ownership === 'error') return handleApiError(new Error('DB error'));
 
-    if (fetchError) {
-      if (fetchError.code === 'PGRST116') {
-        return apiNotFound('Research entity not found');
-      }
-      throw fetchError;
-    }
+    const { data: entity, error: updateError } = await (supabase.from(getTableName('research')) as any)
+      .update({ ...parsed.data, updated_at: new Date().toISOString() }).eq('id', params.id).select().single();
+    if (updateError) throw updateError;
 
-    if (existing.user_id !== user.id) {
-      return apiForbidden('You can only update your own research entities');
-    }
-
-    // Update the entity
-    const { data: entity, error: updateError } = await (supabase.from(tableName) as any)
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', params.id)
-      .select()
-      .single();
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    logger.info('Research entity updated', {
-      researchEntityId: params.id,
-      userId: user.id,
-    });
-
+    logger.info('Research entity updated', { researchEntityId: params.id, userId: user.id });
     return apiSuccess(entity);
-  } catch (error) {
-    return handleApiError(error);
-  }
+  } catch (error) { return handleApiError(error); }
 }
 
-// DELETE /api/research/[id] - Delete research entity
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
-  if (!UUID_REGEX.test(params.id)) {
-    return apiBadRequest('Invalid research entity ID');
-  }
+  if (!UUID_REGEX.test(params.id)) return apiBadRequest('Invalid research entity ID');
   try {
     const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return apiUnauthorized();
 
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
 
-    const rl2 = await rateLimitWriteAsync(user.id);
-    if (!rl2.success) {
-      const retryAfter = Math.ceil((rl2.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many requests. Please slow down.', retryAfter);
-    }
+    const ownership = await verifyResearchOwner(supabase, params.id, user.id, 'funding_raised_btc');
+    if (ownership === 'not_found') return apiNotFound('Research entity not found');
+    if (ownership === 'forbidden') return apiForbidden('You can only delete your own research entities');
+    if (ownership === 'error') return handleApiError(new Error('DB error'));
+    if ((ownership as any).funding_raised_btc > 0) return apiForbidden('Cannot delete research entity with funding. Archive instead.');
 
-    // Check ownership
-    const tableName = getTableName('research');
-    const { data: existing, error: fetchError } = await (supabase.from(tableName) as any)
-      .select('user_id, funding_raised_btc')
-      .eq('id', params.id)
-      .single();
+    const { error: deleteError } = await (supabase.from(getTableName('research')) as any).delete().eq('id', params.id);
+    if (deleteError) throw deleteError;
 
-    if (fetchError) {
-      if (fetchError.code === 'PGRST116') {
-        return apiNotFound('Research entity not found');
-      }
-      throw fetchError;
-    }
-
-    if (existing.user_id !== user.id) {
-      return apiForbidden('You can only delete your own research entities');
-    }
-
-    // Prevent deletion if funding has been raised (protect contributors)
-    if (existing.funding_raised_btc > 0) {
-      return apiForbidden('Cannot delete research entity with funding. Archive instead.');
-    }
-
-    // Delete the entity (cascading deletes will handle related records)
-    const { error: deleteError } = await (supabase.from(tableName) as any)
-      .delete()
-      .eq('id', params.id);
-
-    if (deleteError) {
-      throw deleteError;
-    }
-
-    logger.info('Research entity deleted', {
-      researchEntityId: params.id,
-      userId: user.id,
-    });
-
+    logger.info('Research entity deleted', { researchEntityId: params.id, userId: user.id });
     return apiSuccess({ deleted: true });
-  } catch (error) {
-    return handleApiError(error);
-  }
+  } catch (error) { return handleApiError(error); }
 }

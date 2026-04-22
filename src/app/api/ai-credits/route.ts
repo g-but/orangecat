@@ -3,9 +3,6 @@
  *
  * GET  /api/ai-credits - Get user's current credit balance and transaction history
  * POST /api/ai-credits - Request a deposit (generates payment details)
- *
- * Last Modified: 2026-01-28
- * Last Modified Summary: Refactored to use withAuth middleware
  */
 
 import { NextRequest } from 'next/server';
@@ -18,90 +15,41 @@ import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination } from '@/lib/api/query';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { getPaymentProvider } from '@/services/bitcoin/paymentService';
+import { createCreditDeposit } from '@/domain/aiCredits/depositService';
 
-// Schema for deposit request
 const depositRequestSchema = z.object({
   amount_btc: z.number().positive().min(0.000001).max(10),
   payment_method: z.enum(['lightning', 'onchain']).default('lightning'),
 });
 
-/**
- * GET /api/ai-credits
- * Returns user's credit balance and recent transactions
- */
-export const GET = compose(
-  withRequestId(),
-  withRateLimit('read')
-)(async (request: NextRequest) => {
+export const GET = compose(withRequestId(), withRateLimit('read'))(async (request: NextRequest) => {
   try {
     const supabase = await createServerClient();
-    const db = supabase as any;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return apiUnauthorized();
 
     const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
 
-    // Get user's credit balance
     const { data: credits, error: creditsError } = await db
-      .from(DATABASE_TABLES.AI_USER_CREDITS)
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
+      .from(DATABASE_TABLES.AI_USER_CREDITS).select('*').eq('user_id', user.id).single();
 
-    // If no credits record exists, create one
-    let balance = {
-      balance_btc: 0,
-      total_deposited_btc: 0,
-      total_spent_btc: 0,
-    };
+    if (creditsError && creditsError.code !== 'PGRST116') throw creditsError;
 
-    if (creditsError && creditsError.code === 'PGRST116') {
-      // No record found - user has 0 credits
-      balance = {
-        balance_btc: 0,
-        total_deposited_btc: 0,
-        total_spent_btc: 0,
-      };
-    } else if (creditsError) {
-      throw creditsError;
-    } else if (credits) {
-      balance = {
-        balance_btc: credits.balance_btc || 0,
-        total_deposited_btc: credits.total_deposited_btc || 0,
-        total_spent_btc: credits.total_spent_btc || 0,
-      };
-    }
+    const balance = credits
+      ? { balance_btc: credits.balance_btc || 0, total_deposited_btc: credits.total_deposited_btc || 0, total_spent_btc: credits.total_spent_btc || 0 }
+      : { balance_btc: 0, total_deposited_btc: 0, total_spent_btc: 0 };
 
-    // Get recent transactions
-    const { data: transactions, error: transactionsError } = await db
+    const { data: transactions, error: txError } = await db
       .from(DATABASE_TABLES.AI_CREDIT_TRANSACTIONS)
-      .select(
-        `
-        id,
-        transaction_type,
-        amount_btc,
-        balance_before,
-        balance_after,
-        description,
-        created_at,
-        assistant:ai_assistants(id, name, avatar_url)
-      `
-      )
+      .select('id, transaction_type, amount_btc, balance_before, balance_after, description, created_at, assistant:ai_assistants(id, name, avatar_url)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (transactionsError) {
-      logger.warn('Failed to fetch transactions', { error: transactionsError });
-    }
+    if (txError) logger.warn('Failed to fetch transactions', { error: txError });
 
-    // Get total transaction count
     const { count } = await db
       .from(DATABASE_TABLES.AI_CREDIT_TRANSACTIONS)
       .select('id', { count: 'exact', head: true })
@@ -110,12 +58,7 @@ export const GET = compose(
     return apiSuccess({
       balance,
       transactions: transactions || [],
-      pagination: {
-        total: count || 0,
-        limit,
-        offset,
-        hasMore: (count || 0) > offset + limit,
-      },
+      pagination: { total: count || 0, limit, offset, hasMore: (count || 0) > offset + limit },
     });
   } catch (error) {
     logger.error('Failed to get AI credits', { error });
@@ -123,117 +66,18 @@ export const GET = compose(
   }
 });
 
-/**
- * POST /api/ai-credits
- * Request a deposit - generates payment details
- */
-export const POST = compose(
-  withRequestId(),
-  withRateLimit('write')
-)(async (request: NextRequest) => {
+export const POST = compose(withRequestId(), withRateLimit('write'))(async (request: NextRequest) => {
   try {
     const supabase = await createServerClient();
-    const db = supabase as any;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return apiUnauthorized();
 
     const body = await request.json();
     const result = depositRequestSchema.safeParse(body);
+    if (!result.success) return handleApiError({ message: 'Invalid request', details: result.error.flatten() });
 
-    if (!result.success) {
-      return handleApiError({
-        message: 'Invalid request',
-        details: result.error.flatten(),
-      });
-    }
-
-    const { amount_btc, payment_method } = result.data;
-
-    // Generate a cryptographically random deposit request ID
-    const depositId = `dep_${crypto.randomUUID()}`;
-
-    // For MVP, we'll create a pending deposit record
-    // In production, this would integrate with a Lightning provider (BTCPay, Strike, etc.)
-    const { data: deposit, error: depositError } = await db
-      .from(DATABASE_TABLES.AI_CREDIT_DEPOSITS)
-      .insert({
-        id: depositId,
-        user_id: user.id,
-        amount_btc,
-        payment_method,
-        status: 'pending',
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutes
-      })
-      .select()
-      .single();
-
-    // If table doesn't exist, return mock payment details for development
-    if (depositError && depositError.code === '42P01') {
-      logger.info('ai_credit_deposits table does not exist, returning mock data');
-
-      return apiSuccess({
-        deposit_id: depositId,
-        amount_btc,
-        payment_method,
-        status: 'pending',
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-        payment_details: {
-          invoice: null,
-        },
-        development_mode: true,
-        message: 'Payment integration not configured. Use manual credits for testing.',
-      });
-    }
-
-    if (depositError) {
-      throw depositError;
-    }
-
-    // Generate payment invoice via configured provider (BTCPay, mock, etc.)
-    let paymentDetails: { invoice: string | null; address?: string; checkoutLink?: string } = {
-      invoice: null,
-    };
-
-    try {
-      const provider = getPaymentProvider();
-      const paymentResult = await provider.createInvoice(
-        amount_btc,
-        `AI Credits deposit — ${amount_btc} BTC`,
-        payment_method as 'lightning' | 'onchain'
-      );
-
-      if (paymentResult.success && paymentResult.invoice) {
-        paymentDetails = {
-          invoice: paymentResult.invoice.invoice ?? null,
-          address: paymentResult.invoice.address,
-        };
-
-        // Update deposit record with payment details
-        await db.from(DATABASE_TABLES.AI_CREDIT_DEPOSITS).update({
-          payment_details: paymentDetails,
-          provider_invoice_id: paymentResult.transactionId,
-        }).eq('id', deposit?.id || depositId);
-      }
-    } catch (providerError) {
-      // Provider not configured or failed — return deposit without invoice
-      logger.warn('Payment provider unavailable, deposit recorded without invoice', {
-        error: providerError instanceof Error ? providerError.message : providerError,
-      });
-    }
-
-    return apiSuccess({
-      deposit_id: deposit?.id || depositId,
-      amount_btc,
-      payment_method,
-      status: 'pending',
-      expires_at: deposit?.expires_at || new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      payment_details: paymentDetails,
-    });
+    const deposit = await createCreditDeposit(supabase, user.id, result.data.amount_btc, result.data.payment_method);
+    return apiSuccess(deposit);
   } catch (error) {
     logger.error('Failed to create deposit request', { error });
     return handleApiError(error);
