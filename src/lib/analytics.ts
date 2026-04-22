@@ -35,6 +35,9 @@ export type AnalyticsEvent =
   | 'first_donation_received'
   | 'profile_updated'
   | 'timeline_post_created'
+  // Entity lifecycle
+  | 'entity_created'
+  | 'entity_published'
   // Retention events
   | 'session_started'
   | 'feature_used'
@@ -133,6 +136,14 @@ export const userActions = {
   profileUpdated: (fields: string[], userId?: string) =>
     trackEvent('profile_updated', { fields: fields.join(','), userId }),
   postCreated: (userId?: string) => trackEvent('timeline_post_created', { userId }),
+};
+
+/** Track entity lifecycle events (covers all entity types generically) */
+export const entityEvents = {
+  created: (entityType: string, entityId: string, userId?: string) =>
+    trackEvent('entity_created', { entityType, entityId, userId }),
+  published: (entityType: string, entityId: string, userId?: string) =>
+    trackEvent('entity_published', { entityType, entityId, userId }),
 };
 
 /** Debug: view stored analytics events */

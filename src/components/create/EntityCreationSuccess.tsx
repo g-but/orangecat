@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { logger } from '@/utils/logger';
+import { entityEvents } from '@/lib/analytics';
 
 interface EntityCreationSuccessProps {
   /** Entity type identifier (e.g. 'product', 'service') */
@@ -58,6 +59,7 @@ export function EntityCreationSuccess({
         throw new Error(errorData.error || 'Failed to publish');
       }
 
+      entityEvents.published(entityType, entityId);
       toast.success(`${entityTypeName} published!`, {
         description: `"${entityTitle}" is now live and visible to others.`,
         duration: 4000,

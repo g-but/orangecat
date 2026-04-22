@@ -24,6 +24,7 @@ import { TemplatePicker } from '../templates/TemplatePicker';
 import { AIPrefillBar } from '../AIPrefillBar';
 import type { EntityConfig, EntityTemplate } from '../types';
 import { logger } from '@/utils/logger';
+import { entityEvents } from '@/lib/analytics';
 
 import { EntityCreationSuccess } from '../EntityCreationSuccess';
 import { useEntityFormState } from './hooks/useEntityFormState';
@@ -190,6 +191,9 @@ export function EntityForm<T extends Record<string, unknown>>({
 
         if (mode === 'create') {
           clearDraft();
+          if (result.data?.id) {
+            entityEvents.created(config.type, result.data.id, user?.id);
+          }
         }
 
         // Link wallet to entity (non-blocking fire-and-forget)
@@ -295,6 +299,7 @@ export function EntityForm<T extends Record<string, unknown>>({
       clearDraft,
       setSubmitting,
       setErrors,
+      user,
     ]
   );
 
