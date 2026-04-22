@@ -8,27 +8,13 @@
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
-import {
-  apiSuccess,
-  apiForbidden,
-  apiNotFound,
-  apiValidationError,
-  apiRateLimited,
-  handleApiError,
-} from '@/lib/api/standardResponse';
+import { apiSuccess, apiForbidden, apiNotFound, apiValidationError, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
-import {
-  resolveGroupBySlug,
-  canEditEvent,
-  checkGroupMember,
-} from '@/domain/groups/helpers.server';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type UntypedTable = any;
+import { resolveGroupBySlug, canEditEvent, checkGroupMember } from '@/domain/groups/helpers.server';
 
 const updateEventSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -45,42 +31,28 @@ const updateEventSchema = z.object({
 });
 
 export const GET = withAuth(
-  async (
-    req: AuthenticatedRequest,
-    { params }: { params: Promise<{ slug: string; eventId: string }> }
-  ) => {
+  async (req: AuthenticatedRequest, { params }: { params: Promise<{ slug: string; eventId: string }> }) => {
     const { slug, eventId } = await params;
     const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
     if (idValidation) return idValidation;
     try {
       const { user } = req;
       const supabase = await createServerClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
 
       const group = await resolveGroupBySlug(supabase, slug);
       if (!group) return apiNotFound('Group not found');
 
-      const { data: event, error: eventError } = await (
-        supabase.from(DATABASE_TABLES.GROUP_EVENTS) as UntypedTable
-      )
-        .select(`
-          *,
-          creator:profiles!group_events_creator_id_fkey (id, name, avatar_url),
+      const { data: event, error: eventError } = await db
+        .from(DATABASE_TABLES.GROUP_EVENTS)
+        .select(`*, creator:profiles!group_events_creator_id_fkey (id, name, avatar_url),
           group:groups!group_events_group_id_fkey (id, name, slug, avatar_url),
-          rsvps:group_event_rsvps (
-            id, user_id, status, created_at,
-            user:profiles!group_event_rsvps_user_id_fkey (id, name, avatar_url)
-          )
-        `)
-        .eq('id', eventId)
-        .eq('group_id', group.id)
-        .single();
+          rsvps:group_event_rsvps (id, user_id, status, created_at, user:profiles!group_event_rsvps_user_id_fkey (id, name, avatar_url))`)
+        .eq('id', eventId).eq('group_id', group.id).single();
 
       if (eventError || !event) return apiNotFound('Event not found');
-
-      if (!event.is_public) {
-        const isMember = await checkGroupMember(supabase, group.id, user.id);
-        if (!isMember) return apiForbidden('This event is private');
-      }
+      if (!event.is_public && !await checkGroupMember(supabase, group.id, user.id)) return apiForbidden('This event is private');
 
       return apiSuccess({ event });
     } catch (error) {
@@ -91,58 +63,34 @@ export const GET = withAuth(
 );
 
 export const PUT = withAuth(
-  async (
-    req: AuthenticatedRequest,
-    { params }: { params: Promise<{ slug: string; eventId: string }> }
-  ) => {
+  async (req: AuthenticatedRequest, { params }: { params: Promise<{ slug: string; eventId: string }> }) => {
     const { slug, eventId } = await params;
     const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
     if (idValidation) return idValidation;
     try {
       const { user } = req;
       const supabase = await createServerClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
 
       const rl = await rateLimitWriteAsync(user.id);
-      if (!rl.success) {
-        return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
-      }
+      if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
 
       const group = await resolveGroupBySlug(supabase, slug);
       if (!group) return apiNotFound('Group not found');
 
-      const { data: event, error: eventError } = await (
-        supabase.from(DATABASE_TABLES.GROUP_EVENTS) as UntypedTable
-      )
-        .select('id, group_id, creator_id')
-        .eq('id', eventId)
-        .eq('group_id', group.id)
-        .single();
-
+      const { data: event, error: eventError } = await db
+        .from(DATABASE_TABLES.GROUP_EVENTS).select('id, group_id, creator_id').eq('id', eventId).eq('group_id', group.id).single();
       if (eventError || !event) return apiNotFound('Event not found');
-
-      const allowed = await canEditEvent(supabase, group.id, user.id, event.creator_id);
-      if (!allowed) return apiForbidden('Only event creator or group admins can update events');
+      if (!await canEditEvent(supabase, group.id, user.id, event.creator_id)) return apiForbidden('Only event creator or group admins can update events');
 
       const body = await req.json();
       const validation = updateEventSchema.safeParse(body);
-      if (!validation.success) {
-        return apiValidationError('Invalid request data', {
-          fields: validation.error.issues.map(i => ({ field: i.path.join('.'), message: i.message })),
-        });
-      }
+      if (!validation.success) return apiValidationError('Invalid request data', validation.error.flatten());
 
-      const { data: updatedEvent, error: updateError } = await (
-        supabase.from(DATABASE_TABLES.GROUP_EVENTS) as UntypedTable
-      )
-        .update(validation.data)
-        .eq('id', eventId)
-        .select()
-        .single();
-
-      if (updateError) {
-        logger.error('Failed to update event', { error: updateError, eventId }, 'Groups');
-        return handleApiError(updateError);
-      }
+      const { data: updatedEvent, error: updateError } = await db
+        .from(DATABASE_TABLES.GROUP_EVENTS).update(validation.data).eq('id', eventId).select().single();
+      if (updateError) { logger.error('Failed to update event', { error: updateError, eventId }, 'Groups'); return handleApiError(updateError); }
 
       return apiSuccess({ event: updatedEvent });
     } catch (error) {
@@ -153,48 +101,29 @@ export const PUT = withAuth(
 );
 
 export const DELETE = withAuth(
-  async (
-    req: AuthenticatedRequest,
-    { params }: { params: Promise<{ slug: string; eventId: string }> }
-  ) => {
+  async (req: AuthenticatedRequest, { params }: { params: Promise<{ slug: string; eventId: string }> }) => {
     const { slug, eventId } = await params;
     const idValidation = getValidationError(validateUUID(eventId, 'event ID'));
     if (idValidation) return idValidation;
     try {
       const { user } = req;
       const supabase = await createServerClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
 
       const rl = await rateLimitWriteAsync(user.id);
-      if (!rl.success) {
-        return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
-      }
+      if (!rl.success) return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
 
       const group = await resolveGroupBySlug(supabase, slug);
       if (!group) return apiNotFound('Group not found');
 
-      const { data: event, error: eventError } = await (
-        supabase.from(DATABASE_TABLES.GROUP_EVENTS) as UntypedTable
-      )
-        .select('id, group_id, creator_id')
-        .eq('id', eventId)
-        .eq('group_id', group.id)
-        .single();
-
+      const { data: event, error: eventError } = await db
+        .from(DATABASE_TABLES.GROUP_EVENTS).select('id, group_id, creator_id').eq('id', eventId).eq('group_id', group.id).single();
       if (eventError || !event) return apiNotFound('Event not found');
+      if (!await canEditEvent(supabase, group.id, user.id, event.creator_id)) return apiForbidden('Only event creator or group admins can delete events');
 
-      const allowed = await canEditEvent(supabase, group.id, user.id, event.creator_id);
-      if (!allowed) return apiForbidden('Only event creator or group admins can delete events');
-
-      const { error: deleteError } = await (
-        supabase.from(DATABASE_TABLES.GROUP_EVENTS) as UntypedTable
-      )
-        .delete()
-        .eq('id', eventId);
-
-      if (deleteError) {
-        logger.error('Failed to delete event', { error: deleteError, eventId }, 'Groups');
-        return handleApiError(deleteError);
-      }
+      const { error: deleteError } = await db.from(DATABASE_TABLES.GROUP_EVENTS).delete().eq('id', eventId);
+      if (deleteError) { logger.error('Failed to delete event', { error: deleteError, eventId }, 'Groups'); return handleApiError(deleteError); }
 
       return apiSuccess({ message: 'Event deleted successfully' });
     } catch (error) {
