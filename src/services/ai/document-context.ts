@@ -467,7 +467,7 @@ export async function fetchEntitiesForCat(
           description: l.description?.substring(0, 300),
           status: l.status,
           price_btc: l.amount,
-          category: l.interest_rate != null ? `${l.interest_rate}% interest` : undefined,
+          category: l.interest_rate !== null ? `${l.interest_rate}% interest` : undefined,
         });
       });
     }
