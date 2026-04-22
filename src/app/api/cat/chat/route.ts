@@ -12,13 +12,12 @@
 import { NextRequest } from 'next/server';
 import { logger } from '@/utils/logger';
 import {
-  apiUnauthorized,
   apiBadRequest,
   apiError,
   apiSuccess,
   apiInternalError,
 } from '@/lib/api/standardResponse';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { GroqAPIError } from '@/services/ai';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
@@ -54,12 +53,9 @@ function isAiRateLimitError(error: unknown): boolean {
   return false;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
+  const { user, supabase } = request;
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {return apiUnauthorized();}
-
     // Rate limit (write-tier reused for chat to prevent abuse)
     let rl: RateLimitResult;
     try {
@@ -77,7 +73,7 @@ export async function POST(request: NextRequest) {
       throw e;
     }
 
-    const body = await request.json();
+    const body = await (request as NextRequest).json();
     const parsed = bodySchema.safeParse(body);
     if (!parsed.success) {return apiBadRequest('Invalid request', parsed.error.flatten());}
 
@@ -155,7 +151,8 @@ export async function POST(request: NextRequest) {
         },
       });
       return applyRateLimitHeaders(
-        new Response(readable, { status: 200, headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' } }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        new Response(readable, { status: 200, headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' } }) as any,
         rl
       );
     }
@@ -194,4 +191,4 @@ export async function POST(request: NextRequest) {
     logger.error('Cat chat unhandled error', error, 'CatChatAPI');
     return apiInternalError('An unexpected error occurred. Please try again.');
   }
-}
+});

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 import { apiSuccess, apiValidationError, apiRateLimited, handleApiError, apiBadRequest } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
@@ -12,21 +12,17 @@ const waitlistSchema = z.object({
   referrer: z.string().max(500).optional(),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = withOptionalAuth(async (request) => {
   try {
-    const rl = await rateLimit(request);
+    const rl = await rateLimit(request as NextRequest);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
 
-    const supabase = await createServerClient();
-    const body = await request.json().catch(() => ({}));
+    const { user, supabase } = request;
+    const body = await (request as NextRequest).json().catch(() => ({}));
 
     const parsed = waitlistSchema.safeParse(body);
     if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid request data');}
     const { email, source, referrer } = parsed.data;
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from(DATABASE_TABLES.CHANNEL_WAITLIST) as any).insert({
@@ -45,4 +41,4 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});

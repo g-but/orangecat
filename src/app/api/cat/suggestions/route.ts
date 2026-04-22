@@ -6,17 +6,16 @@
  */
 
 import { apiSuccess } from '@/lib/api/standardResponse';
-import { createServerClient } from '@/lib/supabase/server';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 import { fetchDocumentsForCat } from '@/services/ai/document-context';
 import { generateSuggestions, DEFAULT_SUGGESTIONS } from '@/services/ai/suggestions';
 import { logger } from '@/utils/logger';
 
-export async function GET() {
+export const GET = withOptionalAuth(async (request) => {
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { user, supabase } = request;
 
-    if (authError || !user) {
+    if (!user) {
       return apiSuccess({ suggestions: DEFAULT_SUGGESTIONS, hasContext: false });
     }
 
@@ -28,4 +27,4 @@ export async function GET() {
     logger.error('Cat Suggestions error', error, 'CatSuggestionsAPI');
     return apiSuccess({ suggestions: DEFAULT_SUGGESTIONS, hasContext: false });
   }
-}
+});
