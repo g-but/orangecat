@@ -17,7 +17,7 @@
 1. **The Cat is the interface** — "My Cat" is the primary AI agent for every user and group. Entities provide structured context the Cat reads and operates on. Build for the Cat first.
 2. **Pseudonymous by default** — real identity is opt-in, never required. Any pseudonymous actor is a full economic participant.
 3. **Any currency** — Bitcoin/Lightning is native and preferred, but any payment method — local or global (Twint, PayPal, Venmo, Monero, and regional equivalents worldwide) — is a first-class citizen. Meet users where they are.
-4. **Full economic spectrum** — from gift (no strings) to loan (some strings) to investment (more strings). All forms of value coordination belong on this platform. Investments are the current gap.
+4. **Full economic spectrum** — from gift (no strings) to loan (some strings) to investment (more strings). All forms of value coordination belong on this platform.
 5. **Private where needed, transparent where chosen** — E2E encrypted messaging, Nostr as the censorship-resistant layer, Bitcoin's on-chain transparency available when appropriate.
 6. **Entities are the Cat's world model** — every entity type represents a form of economic or governance activity. The richer the entity structure, the smarter the Cat can be.
 
@@ -29,7 +29,7 @@
 | Funding (no strings)   | cause, wishlist, research | Donation/gift              |
 | Funding (soft strings) | project                   | Milestone accountability   |
 | Lending                | loan                      | Repayment expected         |
-| Investing              | _(missing — to be built)_ | Return/equity expected     |
+| Investing              | investment                | Return/equity expected     |
 | Assets                 | asset                     | Collateral, rental         |
 | Governance             | group, circle             | Collective decisions       |
 | AI services            | ai_assistant              | Automated economic actor   |
@@ -42,7 +42,7 @@
 - Payment fields should support any payment method, not just Bitcoin addresses.
 - "Wallet" is a subset of "payment methods" — a user may have Lightning, Monero, PayPal, and Twint all as valid receiving options.
 - Messaging should be built with E2E encryption and Nostr integration in mind, even if not yet implemented.
-- Entities missing from the registry (`investment`) should be added as the platform matures.
+- All entity types in the taxonomy are in the registry. When the Cat creates an entity, it uses the registry to find the API endpoint and schema.
 
 ---
 
@@ -119,7 +119,7 @@ const path = meta.basePath; // NOT '/dashboard/store'
 - `group` - Organizations with shared wallets and governance
 - `circle` - Lighter community structures
 - `document` - Structured context for the Cat
-- `investment` - _(planned)_ Equity/revenue-share investing
+- `investment` - Equity/revenue-share investing
 
 **Adding New Entity**:
 
@@ -266,4 +266,4 @@ export async function POST(request: Request) {
 
 ---
 
-**Last Updated**: 2026-01-23
+**Last Updated**: 2026-04-23
