@@ -613,4 +613,135 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.role).toBe('member');
     });
   });
+
+  // ── create_research ──────────────────────────────────────────────────────────
+  describe('create_research', () => {
+    it('uses user_id (not actor_id) as ownership column', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'create_research', {
+        title: 'Decentralized AI Safety Research',
+        field: 'artificial_intelligence',
+        funding_goal_btc: 0.5,
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.research.tableName);
+      expect(insert).toBeDefined();
+
+      // research_entities uses user_id (profiles FK), NOT actor_id
+      expect(insert!.user_id).toBe(USER_ID);
+      expect((insert as Record<string, unknown>).actor_id).toBeUndefined();
+    });
+
+    it('uses funding_goal_btc column name (not funding_goal_sats or goal_btc)', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_research', {
+        title: 'Climate Study',
+        funding_goal_btc: 0.25,
+      });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.research.tableName);
+
+      expect(insert!.funding_goal_btc).toBe(0.25);
+      expect((insert as Record<string, unknown>).funding_goal_sats).toBeUndefined();
+      expect((insert as Record<string, unknown>).goal_btc).toBeUndefined();
+    });
+
+    it('defaults funding_goal_btc to 0.001 when omitted', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_research', { title: 'Minimal Research' });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.research.tableName);
+      expect(insert!.funding_goal_btc).toBe(0.001);
+    });
+
+    it('sets funding_raised_btc to 0 and wallet_address to null on creation', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_research', {
+        title: 'Blockchain Cryptography Study',
+        funding_goal_btc: 0.1,
+      });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.research.tableName);
+      expect(insert!.funding_raised_btc).toBe(0);
+      expect(insert!.wallet_address).toBeNull();
+    });
+
+    it('applies sensible defaults for required NOT NULL enum fields', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_research', { title: 'Quick Study' });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.research.tableName);
+
+      expect(insert!.field).toBe('other');
+      expect(insert!.methodology).toBe('experimental');
+      expect(insert!.timeline).toBe('medium_term');
+      expect(insert!.funding_model).toBe('donation');
+      expect(insert!.progress_frequency).toBe('monthly');
+      expect(insert!.transparency_level).toBe('progress');
+    });
+
+    it('passes through provided field and methodology values', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_research', {
+        title: 'Advanced Study',
+        field: 'neuroscience',
+        methodology: 'computational',
+      });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.research.tableName);
+      expect(insert!.field).toBe('neuroscience');
+      expect(insert!.methodology).toBe('computational');
+    });
+
+    it('sets is_public=true and status=draft by default', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_research', { title: 'Open Science' });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.research.tableName);
+      expect(insert!.is_public).toBe(true);
+      expect(insert!.status).toBe('draft');
+    });
+  });
+
+  // ── create_wishlist ──────────────────────────────────────────────────────────
+  describe('create_wishlist', () => {
+    it('uses actor_id (not user_id) as ownership column', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'create_wishlist', { title: 'My Birthday List' });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.wishlist.tableName);
+      expect(insert).toBeDefined();
+
+      expect(insert!.actor_id).toBe(ACTOR_ID);
+      expect((insert as Record<string, unknown>).user_id).toBeUndefined();
+    });
+
+    it('defaults type to general and visibility to public', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_wishlist', { title: 'My List' });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.wishlist.tableName);
+
+      expect(insert!.type).toBe('general');
+      expect(insert!.visibility).toBe('public');
+      expect(insert!.is_active).toBe(true);
+    });
+
+    it('passes through type and visibility when provided', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_wishlist', {
+        title: 'Wedding Registry',
+        type: 'wedding',
+        visibility: 'unlisted',
+        event_date: '2026-09-15',
+      });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.wishlist.tableName);
+
+      expect(insert!.type).toBe('wedding');
+      expect(insert!.visibility).toBe('unlisted');
+      expect(insert!.event_date).toBe('2026-09-15');
+    });
+
+    it('sets event_date to null when not provided', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_wishlist', { title: 'General Wishlist' });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.wishlist.tableName);
+      expect(insert!.event_date).toBeNull();
+    });
+  });
 });

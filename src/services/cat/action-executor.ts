@@ -496,6 +496,78 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     return { success: true, data };
   },
 
+  create_wishlist: async (supabase, _userId, actorId, params) => {
+    const { data, error } = await supabase
+      .from(ENTITY_REGISTRY.wishlist.tableName)
+      .insert({
+        actor_id: actorId,
+        title: params.title,
+        description: (params.description as string | null) || null,
+        type: (params.type as string) || 'general',
+        visibility: (params.visibility as string) || 'public',
+        is_active: true,
+        event_date: (params.event_date as string | null) || null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  },
+
+  create_research: async (supabase, userId, _actorId, params) => {
+    // research_entities uses user_id (references profiles), NOT actor_id
+    // Many NOT NULL fields require sensible defaults when the Cat caller omits them.
+    const fundingGoalBtc =
+      (params.funding_goal_btc as number | null) ?? (params.funding_goal as number | null) ?? 0.001;
+
+    const { data, error } = await supabase
+      .from(ENTITY_REGISTRY.research.tableName)
+      .insert({
+        user_id: userId,
+        title: params.title,
+        description: params.description || null,
+        field: (params.field as string) || 'other',
+        methodology: (params.methodology as string) || 'experimental',
+        expected_outcome: (params.expected_outcome as string) || (params.description as string) || '',
+        timeline: (params.timeline as string) || 'medium_term',
+        funding_goal_btc: fundingGoalBtc,
+        funding_raised_btc: 0,
+        funding_model: (params.funding_model as string) || 'donation',
+        wallet_address: null,
+        lead_researcher: (params.lead_researcher as string) || '',
+        team_members: [],
+        open_collaboration: true,
+        resource_needs: [],
+        progress_frequency: (params.progress_frequency as string) || 'monthly',
+        transparency_level: (params.transparency_level as string) || 'progress',
+        voting_enabled: true,
+        impact_areas: [],
+        target_audience: [],
+        sdg_alignment: [],
+        status: 'draft',
+        is_public: true,
+        is_featured: false,
+        completion_percentage: 0,
+        days_active: 0,
+        funding_velocity: 0,
+        follower_count: 0,
+        share_count: 0,
+        citation_count: 0,
+        total_votes: 0,
+        total_contributors: 0,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  },
+
   // ---------- ORGANIZATION ACTIONS ----------
 
   create_organization: async (supabase, userId, _actorId, params) => {
@@ -916,6 +988,15 @@ export class CatActionExecutor {
         const amount = parameters.amount_btc ?? 'unspecified';
         const rate = parameters.interest_rate ? ` at ${parameters.interest_rate}% interest` : '';
         return `Create loan request "${parameters.title}" for ${amount} BTC${rate}`;
+      }
+      case 'create_research': {
+        const goal = parameters.funding_goal_btc ?? 0.001;
+        const field = parameters.field ? ` [${parameters.field}]` : '';
+        return `Create research entity "${parameters.title}"${field} with ${goal} BTC funding goal`;
+      }
+      case 'create_wishlist': {
+        const type = parameters.type ? ` (${parameters.type})` : '';
+        return `Create wishlist "${parameters.title}"${type}`;
       }
       case 'create_event':
         return `Create event "${parameters.title}" at ${parameters.location}`;
