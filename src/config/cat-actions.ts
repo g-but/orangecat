@@ -148,7 +148,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
   create_project: {
     id: 'create_project',
     name: 'Create Project',
-    description: 'Create a crowdfunding project with a funding goal',
+    description: 'Create a community-funded project with a funding goal',
     category: 'entities',
     icon: Rocket,
     riskLevel: 'medium',
@@ -172,7 +172,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       },
     ],
     examples: [
-      'Start a crowdfunding project',
+      'Start a funded project',
       'Launch my network state project',
       'Create a funding campaign for my book',
     ],
@@ -609,7 +609,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     examples: [
       'Fund that network state project with 0.001 BTC',
       'Support the Bitcoin education project',
-      'Contribute to their crowdfunding',
+      'Contribute to their project',
     ],
     enabled: false, // needs Lightning payment infrastructure — no handler implemented yet
   },

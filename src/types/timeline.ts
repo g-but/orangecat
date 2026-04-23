@@ -461,7 +461,7 @@ export const TIMELINE_EVENT_CONFIGS: Partial<Record<TimelineEventType, TimelineE
   // Project events would be defined here
   project_created: {
     label: 'Project Created',
-    description: 'A new crowdfunding project was launched',
+    description: 'A new project was launched',
     icon: {} as LucideIcon, // Placeholder - actual icon should be imported from lucide-react
     color: 'blue',
     category: 'project',

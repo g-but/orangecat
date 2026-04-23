@@ -10,7 +10,7 @@ import { API_ROUTES } from '@/config/api-routes';
 const DEFAULT_SUGGESTIONS = [
   'Help me write a product description',
   'Explain Bitcoin Lightning Network',
-  'Give me ideas for my crowdfunding project',
+  'Give me ideas for my project',
   'How can I improve my service offering?',
 ];
 

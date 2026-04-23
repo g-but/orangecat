@@ -975,7 +975,7 @@ export class CatActionExecutor {
       }
       case 'create_project': {
         const goal = parameters.goal_btc ?? parameters.goal_amount ?? 'open-ended';
-        return `Create crowdfunding project "${parameters.title}" with goal of ${goal} BTC`;
+        return `Create project "${parameters.title}" with goal of ${goal} BTC`;
       }
       case 'create_cause':
         return `Create cause "${parameters.title}"`;

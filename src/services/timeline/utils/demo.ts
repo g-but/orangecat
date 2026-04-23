@@ -62,7 +62,7 @@ export function getDemoTimelineEvents(userId: string): any[] {
             subject_id: userId,
             title: 'First Bitcoin Transaction!',
             description:
-              'Just made my first Bitcoin transaction on OrangeCat. The future of crowdfunding is here! ₿',
+              'Just made my first Bitcoin transaction on OrangeCat. The future of peer-to-peer finance is here! ₿',
             content: null,
             amount_btc: 0.0001,
             quantity: null,
@@ -99,7 +99,7 @@ export function getDemoTimelineEvents(userId: string): any[] {
             created_at: new Date(now.getTime() - 1000 * 60 * 60 * 24).toISOString(),
             updated_at: new Date(now.getTime() - 1000 * 60 * 60 * 24).toISOString(),
             metadata: {},
-            tags: ['bitcoin', 'crowdfunding', 'reflection'],
+            tags: ['bitcoin', 'finance', 'reflection'],
             like_count: 7,
             share_count: 2,
             comment_count: 4,
