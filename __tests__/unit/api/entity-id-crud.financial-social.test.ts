@@ -2,6 +2,7 @@ import { GET as getAsset, PUT as putAsset } from '@/app/api/assets/[id]/route';
 import { GET as getLoan, PUT as putLoan } from '@/app/api/loans/[id]/route';
 import { GET as getEvent, PUT as putEvent } from '@/app/api/events/[id]/route';
 import { GET as getWishlist, PUT as putWishlist } from '@/app/api/wishlists/[id]/route';
+import { GET as getInvestment, PUT as putInvestment } from '@/app/api/investments/[id]/route';
 
 jest.mock('@/lib/supabase/server', () => ({
   createServerClient: jest.fn(),
@@ -129,9 +130,24 @@ const cases: Case[] = [
     },
     usesActorOwnership: true,
   },
+  {
+    name: 'investment',
+    table: 'investments',
+    ownerField: 'actor_id',
+    getHandler: getInvestment as any,
+    putHandler: putInvestment as any,
+    validUpdate: {
+      title: 'Updated Investment',
+      description: 'Revenue-share investment for community solar farm expansion.',
+      investment_type: 'revenue_share',
+      target_amount: 0.5,
+      minimum_investment: 0.001,
+    },
+    usesActorOwnership: true,
+  },
 ];
 
-describe('Entity [id] CRUD workflows (asset/loan/event/wishlist)', () => {
+describe('Entity [id] CRUD workflows (asset/loan/event/wishlist/investment)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (rateLimit as jest.Mock).mockResolvedValue({ success: true });
