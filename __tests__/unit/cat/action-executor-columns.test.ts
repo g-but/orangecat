@@ -359,6 +359,23 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.priority).toBe('normal');           // not 'medium'
       expect(insert!.created_by).toBe(USER_ID);
     });
+
+    it('maps priority=medium to normal (medium is not a valid DB enum value)', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_task', { title: 'Task', priority: 'medium' });
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+      // 'medium' must never reach the DB — only 'normal' is valid
+      expect(insert!.priority).toBe('normal');
+    });
+
+    it('passes valid priority values through unchanged', async () => {
+      for (const priority of ['low', 'normal', 'high', 'urgent']) {
+        const supabase = buildMockSupabase();
+        await run(supabase, 'create_task', { title: 'Task', priority });
+        const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+        expect(insert!.priority).toBe(priority);
+      }
+    });
   });
 
   // ── create_organization ─────────────────────────────────────────────────────

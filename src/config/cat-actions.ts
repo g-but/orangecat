@@ -536,8 +536,8 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
         name: 'priority',
         type: 'string',
         required: false,
-        description: 'Priority: low, medium, high, urgent',
-        default: 'medium',
+        description: 'Priority: low, normal, high, urgent (not medium — DB enum uses normal)',
+        default: 'normal',
       },
       {
         name: 'due_date',

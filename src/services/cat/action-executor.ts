@@ -410,14 +410,17 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   create_task: async (supabase, userId, _actorId, params) => {
     // DB columns: current_status (not status), task_type enum: one_time|recurring_scheduled|recurring_as_needed,
     // category enum: cleaning|maintenance|admin|inventory|it|kitchen|workshop|logistics|other,
-    // priority enum: low|normal|high|urgent (not medium)
+    // priority enum: low|normal|high|urgent (not medium — map 'medium' defensively)
+    const rawPriority = (params.priority as string) || 'normal';
+    const priority = rawPriority === 'medium' ? 'normal' : rawPriority;
+
     const { data, error } = await supabase
       .from(DATABASE_TABLES.TASKS)
       .insert({
         created_by: userId,
         title: params.title,
         description: (params.description as string | null) || null,
-        priority: (params.priority as string) || 'normal',
+        priority,
         task_type: 'one_time',
         category: 'other',
         current_status: 'idle',
