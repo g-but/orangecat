@@ -87,6 +87,7 @@ export interface FullUserContext {
     totalEvents: number;
     totalAssets: number;
     totalLoans: number;
+    totalInvestments: number;
     totalResearch: number;
     totalWishlists: number;
     totalTasks: number;
@@ -247,6 +248,7 @@ export async function fetchEntitiesForCat(
     totalEvents: 0,
     totalAssets: 0,
     totalLoans: 0,
+    totalInvestments: 0,
     totalResearch: 0,
     totalWishlists: 0,
     totalTasks: 0,
@@ -448,9 +450,10 @@ export async function fetchEntitiesForCat(
     }
 
     // Fetch loans (peer-to-peer lending)
+    // Column is original_amount (not amount); loans also have actor_id via migration
     const { data: loans, error: loansError } = await supabase
       .from(ENTITY_REGISTRY.loan.tableName)
-      .select('id, title, description, status, amount, currency, interest_rate, duration_months')
+      .select('id, title, description, status, original_amount, currency, interest_rate')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused', 'pending'])
       .limit(20);
@@ -466,17 +469,43 @@ export async function fetchEntitiesForCat(
           title: l.title,
           description: l.description?.substring(0, 300),
           status: l.status,
-          price_btc: l.amount,
+          price_btc: l.original_amount,
           category: l.interest_rate !== null ? `${l.interest_rate}% interest` : undefined,
         });
       });
     }
 
+    // Fetch investments (equity/revenue-share opportunities)
+    const { data: investments, error: investmentsError } = await supabase
+      .from(ENTITY_REGISTRY.investment.tableName)
+      .select('id, title, description, status, investment_type, target_amount, currency')
+      .eq('actor_id', actorId)
+      .in('status', ['draft', 'open', 'active', 'funded'])
+      .limit(20);
+
+    if (investmentsError) {
+      logger.warn('Failed to fetch investments for cat', { error: investmentsError.message }, 'DocumentContext');
+    } else if (investments) {
+      stats.totalInvestments = investments.length;
+      investments.forEach(i => {
+        entities.push({
+          id: i.id,
+          type: 'investment',
+          title: i.title,
+          description: i.description?.substring(0, 300),
+          status: i.status,
+          price_btc: i.target_amount,
+          category: i.investment_type,
+        });
+      });
+    }
+
     // Fetch research entities (DeSci funding)
+    // research_entities uses user_id (references profiles), NOT actor_id
     const { data: research, error: researchError } = await supabase
       .from(ENTITY_REGISTRY.research.tableName)
       .select('id, title, description, status, field, funding_goal_btc, funding_raised_btc')
-      .eq('actor_id', actorId)
+      .eq('user_id', userId)
       .in('status', ['active', 'draft', 'paused'])
       .limit(20);
 
@@ -498,11 +527,12 @@ export async function fetchEntitiesForCat(
     }
 
     // Fetch wishlists
+    // wishlists have no status column — they use is_active (boolean) + visibility
     const { data: wishlists, error: wishlistsError } = await supabase
       .from(ENTITY_REGISTRY.wishlist.tableName)
-      .select('id, title, description, status')
+      .select('id, title, description, type, visibility, is_active')
       .eq('actor_id', actorId)
-      .in('status', ['active', 'draft', 'paused'])
+      .eq('is_active', true)
       .limit(20);
 
     if (wishlistsError) {
@@ -515,7 +545,8 @@ export async function fetchEntitiesForCat(
           type: 'wishlist',
           title: w.title,
           description: w.description?.substring(0, 300),
-          status: w.status,
+          status: w.visibility, // wishlists surface visibility (public/unlisted/private) as their "status"
+          category: w.type,    // wishlist type (birthday, wedding, general, etc.)
         });
       });
     }
@@ -707,6 +738,7 @@ export function buildFullContextString(context: FullUserContext): string {
       event: 'Events',
       asset: 'Assets',
       loan: 'Loans',
+      investment: 'Investments',
       research: 'Research',
       wishlist: 'Wishlists',
     };
