@@ -39,7 +39,7 @@ export const researchEntitySchema = z.object({
   ]),
   expected_outcome: z.string().min(1).max(1000),
   timeline: z.enum(['short_term', 'medium_term', 'long_term', 'ongoing', 'indefinite']),
-  funding_goal_btc: z.number().min(1000),
+  funding_goal_btc: z.number().positive('Funding goal must be greater than 0'),
   funding_model: z.enum(['donation', 'subscription', 'milestone', 'royalty', 'hybrid']),
   resource_needs: z
     .array(
