@@ -63,7 +63,8 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   // ---------- ENTITY ACTIONS ----------
 
   create_product: async (supabase, _userId, actorId, params) => {
-    const priceBtc = (params.price_btc as number | null) ?? null;
+    // DB column is `price` (numeric), not `price_btc`
+    const price = (params.price_btc as number | null) ?? (params.price as number | null) ?? null;
 
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.product.tableName)
@@ -71,7 +72,11 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
         actor_id: actorId,
         title: params.title,
         description: params.description || null,
-        price_btc: priceBtc,
+        price,
+        currency: 'BTC',
+        product_type: 'physical',
+        images: [],
+        fulfillment_type: 'manual',
         category: params.category || null,
         status: params.publish ? 'active' : 'draft',
       })
@@ -85,13 +90,14 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   },
 
   create_service: async (supabase, _userId, actorId, params) => {
+    // DB columns are `hourly_rate` and `fixed_price` (no _btc suffix)
     const priceField = params.hourly_rate
-      ? { hourly_rate_btc: params.hourly_rate as number }
+      ? { hourly_rate: params.hourly_rate as number }
       : params.fixed_price
-        ? { fixed_price_btc: params.fixed_price as number }
+        ? { fixed_price: params.fixed_price as number }
         : params.hourly_rate_btc
-          ? { hourly_rate_btc: params.hourly_rate_btc }
-          : { fixed_price_btc: params.fixed_price_btc ?? params.price_btc ?? null };
+          ? { hourly_rate: params.hourly_rate_btc }
+          : { fixed_price: params.fixed_price_btc ?? params.price_btc ?? null };
 
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.service.tableName)
@@ -100,7 +106,11 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
         title: params.title,
         description: params.description || null,
         ...priceField,
+        currency: 'BTC',
         duration_minutes: params.duration_minutes || null,
+        service_location_type: 'remote',
+        images: [],
+        portfolio_links: [],
         status: params.publish ? 'active' : 'draft',
       })
       .select()
@@ -113,7 +123,8 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   },
 
   create_project: async (supabase, _userId, actorId, params) => {
-    const goalBtc = (params.goal_btc as number | null) ?? null;
+    // DB columns are `goal_amount` + `currency`, not `goal_btc`
+    const goalAmount = (params.goal_btc as number | null) ?? (params.goal_amount as number | null) ?? null;
 
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.project.tableName)
@@ -121,7 +132,8 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
         actor_id: actorId,
         title: params.title,
         description: params.description || null,
-        goal_btc: goalBtc,
+        goal_amount: goalAmount,
+        currency: 'BTC',
         category: params.category || null,
         status: params.publish ? 'active' : 'draft',
       })
@@ -760,7 +772,7 @@ export class CatActionExecutor {
     // Generate human-readable description of what will happen
     switch (action.id) {
       case 'create_product': {
-        const price = parameters.price_btc ?? 'unpriced';
+        const price = parameters.price_btc ?? parameters.price ?? 'unpriced';
         return `Create product "${parameters.title}" priced at ${price} BTC`;
       }
       case 'create_service': {
@@ -768,7 +780,7 @@ export class CatActionExecutor {
         return `Create service "${parameters.title}"${rate ? ` at ${rate} BTC` : ''}`;
       }
       case 'create_project': {
-        const goal = parameters.goal_btc ?? 'open-ended';
+        const goal = parameters.goal_btc ?? parameters.goal_amount ?? 'open-ended';
         return `Create crowdfunding project "${parameters.title}" with goal of ${goal} BTC`;
       }
       case 'create_cause':
@@ -821,9 +833,9 @@ export class CatActionExecutor {
   }
 
   private extractBtcAmount(action: CatAction, parameters: Record<string, unknown>): number | null {
-    // Extract BTC amount from payment-related actions
+    // Extract BTC amount from payment-related actions for the action log
     if (action.category === 'payments') {
-      return (parameters.amount_btc as number) || (parameters.price_btc as number) || null;
+      return (parameters.amount_btc as number) || (parameters.price_btc as number) || (parameters.price as number) || null;
     }
     return null;
   }
