@@ -42,9 +42,9 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
     if (!entity.is_public && (!user || user.id !== entity.user_id)) {return apiForbidden('This research entity is private');}
 
     const [{ data: progressUpdates }, { data: votes }, { data: contributions }] = await Promise.all([
-      (supabase.from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES) as any).select('*').eq('research_entity_id', id).order('created_at', { ascending: false }),
-      (supabase.from(DATABASE_TABLES.RESEARCH_VOTES) as any).select('*').eq('research_entity_id', id),
-      (supabase.from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS) as any).select('*').eq('research_entity_id', id).order('created_at', { ascending: false }),
+      supabase.from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES).select('*').eq('research_entity_id', id).order('created_at', { ascending: false }),
+      supabase.from(DATABASE_TABLES.RESEARCH_VOTES).select('*').eq('research_entity_id', id),
+      supabase.from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS).select('*').eq('research_entity_id', id).order('created_at', { ascending: false }),
     ]);
 
     return apiSuccess({ ...entity, progress_updates: progressUpdates || [], votes: votes || [], contributions: contributions || [] });

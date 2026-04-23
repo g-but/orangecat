@@ -32,7 +32,6 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
       const rpcArgs: Database['public']['Functions']['get_total_unread_count']['Args'] = {
         p_user_id: user.id,
       };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: totalCount, error: rpcError } = await (admin.rpc(
         'get_total_unread_count',
         rpcArgs as any

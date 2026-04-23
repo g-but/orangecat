@@ -60,11 +60,9 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
     }
 
     // Process projects to get first media URL
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const projectsWithMedia = (projects || []).map((project: any) => {
       if (project.project_media && project.project_media.length > 0) {
         // Get first media item (sorted by position)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const firstMedia = project.project_media.sort(
           (a: { position: number }, b: { position: number }) => a.position - b.position
         )[0];

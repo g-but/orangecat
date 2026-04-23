@@ -79,8 +79,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     }
 
     // Insert collateral link
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: created, error } = await (supabase.from(DATABASE_TABLES.LOAN_COLLATERAL) as any)
+    const { data: created, error } = await supabase.from(DATABASE_TABLES.LOAN_COLLATERAL)
       .insert({
         loan_id: data.loan_id,
         asset_id: data.asset_id,

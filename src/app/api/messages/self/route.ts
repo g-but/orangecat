@@ -6,7 +6,6 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 
 /** Insert a conversation row + participant row using the given Supabase client. */
 async function insertConversationAndParticipant(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   client: any,
   userId: string
 ): Promise<string> {

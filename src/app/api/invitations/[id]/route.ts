@@ -22,13 +22,11 @@ import { z } from 'zod';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { checkGroupAdmin } from '@/domain/groups/helpers.server';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UntypedTable = any;
 
 const responseSchema = z.object({ action: z.enum(['accept', 'decline']) });
 
 async function handleAccept(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   inv: { group_id: string; role: string; invited_by: string; groups: { slug: string } | null },
   invitationId: string,

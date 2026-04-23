@@ -32,9 +32,8 @@ export const POST = withAuth(async (
     const admin = createAdminClient();
 
     // Verify user is a participant
-    const { data: participant, error: partError } = await (admin
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: participant, error: partError } = await (admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
       .select('*')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
@@ -50,9 +49,8 @@ export const POST = withAuth(async (
     const updateData: Database['public']['Tables']['conversation_participants']['Update'] = {
       last_read_at: new Date().toISOString(),
     };
-    const { error: readError } = await (admin
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: readError } = await (admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
       .update(updateData)
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)

@@ -30,8 +30,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   try {
     const { user, supabase } = request;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: wallet, error: fetchError } = await (supabase.from(DATABASE_TABLES.WALLETS) as any)
+    const { data: wallet, error: fetchError } = await supabase.from(DATABASE_TABLES.WALLETS)
       .select('*')
       .eq('id', id)
       .eq('user_id', user.id)

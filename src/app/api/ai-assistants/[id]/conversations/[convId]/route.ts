@@ -75,7 +75,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     const result = updateConversationSchema.safeParse(body);
     if (!result.success) {return apiBadRequest('Validation failed', result.error.flatten());}
 
-    const { data: conversation, error } = await (supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
+    const { data: conversation, error } = await supabase.from(DATABASE_TABLES.AI_CONVERSATIONS)
       .update({ ...result.data, updated_at: new Date().toISOString() })
       .eq('id', convId).eq('assistant_id', assistantId).eq('user_id', user.id)
       .select().single();

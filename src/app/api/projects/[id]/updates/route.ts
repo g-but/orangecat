@@ -61,8 +61,7 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
     // Fetch recent updates (limit to 10 most recent)
     const { data: updates, error: updatesError } = await (
       supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.PROJECT_UPDATES) as any
+        .from(DATABASE_TABLES.PROJECT_UPDATES)
     )
       .select('id, project_id, type, title, content, amount_btc, created_at')
       .eq('project_id', projectId)

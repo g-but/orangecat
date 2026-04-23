@@ -27,7 +27,6 @@ function verifyCronSecret(request: Request): boolean {
 }
 
 /** Returns IDs of users who should receive a weekly digest (explicit weekly pref, or no pref row = default weekly). */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getUserIdsForDigest(admin: any): Promise<string[]> {
   const [{ data: explicitWeekly }, { data: allPrefs }, { data: allProfiles }] = await Promise.all([
     admin.from(DATABASE_TABLES.NOTIFICATION_PREFERENCES).select('user_id').eq('digest_frequency', 'weekly').eq('progress_emails', true),

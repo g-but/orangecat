@@ -28,8 +28,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, { params }: Ro
   if (idValidation) {return idValidation;}
   try {
     const { supabase } = request;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: favorite, error } = await (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
+    const { data: favorite, error } = await supabase.from(DATABASE_TABLES.PROJECT_FAVORITES)
       .select('id').eq('user_id', request.user.id).eq('project_id', projectId).maybeSingle();
     if (error) {return apiInternalError('Failed to check favorite status');}
     return apiSuccess({ isFavorited: !!favorite });
@@ -52,13 +51,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest, { params }: R
       .select('id, title').eq('id', projectId).single();
     if (!project) {return apiNotFound('Project not found');}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: existing } = await (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
+    const { data: existing } = await supabase.from(DATABASE_TABLES.PROJECT_FAVORITES)
       .select('id').eq('user_id', user.id).eq('project_id', projectId).maybeSingle();
     if (existing) {return apiSuccess({ isFavorited: true, message: 'Project already in favorites' });}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
+    const { error } = await supabase.from(DATABASE_TABLES.PROJECT_FAVORITES)
       .insert({ user_id: user.id, project_id: projectId });
     if (error) {return apiInternalError('Failed to add favorite');}
 
@@ -84,13 +81,11 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, { params }:
       .select('id, title').eq('id', projectId).single();
     if (!project) {return apiNotFound('Project not found');}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: existing } = await (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
+    const { data: existing } = await supabase.from(DATABASE_TABLES.PROJECT_FAVORITES)
       .select('id').eq('user_id', user.id).eq('project_id', projectId).maybeSingle();
     if (!existing) {return apiSuccess({ isFavorited: false, message: 'Project not in favorites' });}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from(DATABASE_TABLES.PROJECT_FAVORITES) as any)
+    const { error } = await supabase.from(DATABASE_TABLES.PROJECT_FAVORITES)
       .delete().eq('user_id', user.id).eq('project_id', projectId);
     if (error) {return apiInternalError('Failed to remove favorite');}
 

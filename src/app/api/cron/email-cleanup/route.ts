@@ -36,14 +36,12 @@ export async function GET(request: Request) {
     const cutoffDate = new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
     // Count entries to be deleted (for reporting)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { count } = await (admin.from(DATABASE_TABLES.NOTIFICATION_EMAIL_LOG) as any)
+    const { count } = await (admin.from(DATABASE_TABLES.NOTIFICATION_EMAIL_LOG))
       .select('*', { count: 'exact', head: true })
       .lt('sent_at', cutoffDate.toISOString());
 
     // Delete old log entries
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (admin.from(DATABASE_TABLES.NOTIFICATION_EMAIL_LOG) as any)
+    const { error } = await (admin.from(DATABASE_TABLES.NOTIFICATION_EMAIL_LOG))
       .delete()
       .lt('sent_at', cutoffDate.toISOString());
 

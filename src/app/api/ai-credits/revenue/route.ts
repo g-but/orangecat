@@ -50,11 +50,8 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const assistantRows = (assistants || []) as any[];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const totalRevenueBtc = assistantRows.reduce((sum: number, a: any) => sum + (a.total_revenue_btc || 0), 0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const totalConversations = assistantRows.reduce((sum: number, a: any) => sum + (a.total_conversations || 0), 0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const totalMessages = assistantRows.reduce((sum: number, a: any) => sum + (a.total_messages || 0), 0);
 
     const { data: earnings } = await db
@@ -73,7 +70,6 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
         total_messages: totalMessages,
         total_assistants: assistants?.length || 0,
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       assistants: assistantRows.map((a: any): AssistantRevenue => ({
         id: a.id,
         name: a.name,

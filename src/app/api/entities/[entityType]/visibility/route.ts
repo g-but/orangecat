@@ -70,8 +70,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     // Update entities - RLS ensures user can only update their own
     const { data, error } = await (
       supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(tableName) as any
+        .from(tableName)
     )
       .update({ show_on_profile, updated_at: new Date().toISOString() })
       .in('id', ids)

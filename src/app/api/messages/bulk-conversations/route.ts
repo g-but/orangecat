@@ -42,8 +42,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     // Default behavior: leave conversations (soft remove for this user)
     // PURE RLS: relies on 'Users can update their own participation' policy
     const { error: updErr, data } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS))
       .update({ is_active: false })
       .in('conversation_id', ids)
       .eq('user_id', user.id)

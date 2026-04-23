@@ -46,8 +46,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     // Verify the wishlist item exists and user has access
     const { data: wishlistItem, error: itemError } = await (
       supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WISHLIST_ITEMS) as any
+        .from(DATABASE_TABLES.WISHLIST_ITEMS)
     )
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', validationResult.data.wishlist_item_id)
@@ -68,8 +67,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     // Create the proof
     const { data: proof, error: proofError } = await (
       supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS) as any
+        .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS)
     )
       .insert({
         wishlist_item_id: validationResult.data.wishlist_item_id,

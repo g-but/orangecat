@@ -38,7 +38,6 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completions = (rawCompletions || []) as any[];
     const completerIds = [...new Set(completions.map(c => c.completed_by))];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profilesMap: Record<string, any> = {};
     if (completerIds.length > 0) {
       const { data: profiles } = await supabase.from(DATABASE_TABLES.PROFILES).select('id, username, display_name, avatar_url').in('id', completerIds);

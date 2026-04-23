@@ -45,11 +45,8 @@ export const POST = createEntityPostHandler({
   transformData: async (data, userId, supabase) => {
     // Get user's preferred currency from profile (SSOT)
     let userCurrency = PLATFORM_DEFAULT_CURRENCY;
-    const { data: profile } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.PROFILES) as any
-    )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: profile } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
       .select('currency')
       .eq('id', userId)
       .single();

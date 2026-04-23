@@ -49,8 +49,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     // Get the proof and verify ownership
     const { data: proof, error: proofError } = await (
       supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS) as any
+        .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS)
     )
       .select('id, user_id, wishlist_item_id')
       .eq('id', proofId)
@@ -68,8 +67,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     // Delete the proof
     const { error: deleteError } = await (
       supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS) as any
+        .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS)
     )
       .delete()
       .eq('id', proofId);
@@ -86,8 +84,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     // Also delete any associated feedback
     const { error: feedbackDeleteError } = await (
       supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.WISHLIST_FEEDBACK) as any
+        .from(DATABASE_TABLES.WISHLIST_FEEDBACK)
     )
       .delete()
       .eq('fulfillment_proof_id', proofId);

@@ -34,7 +34,6 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completions = (data || []) as any[];
     const uniqueUserIds = [...new Set(completions.map(c => c.completed_by as string))];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profilesMap = new Map<string, any>();
 
     if (uniqueUserIds.length > 0) {

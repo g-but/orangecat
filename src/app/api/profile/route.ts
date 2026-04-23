@@ -78,8 +78,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest) => {
       Object.entries(validatedData as Record<string, unknown>).filter(([key]) => PROFILE_ALLOWED_FIELDS.includes(key))
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: profile, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
+    const { data: profile, error } = await supabase.from(DATABASE_TABLES.PROFILES)
       .update({ ...dataToSave, updated_at: new Date().toISOString() })
       .eq('id', user.id).select().single();
 

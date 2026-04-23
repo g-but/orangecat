@@ -20,8 +20,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
     // Get transparency score for the profile
     const { data: transparencyScore, error } = await (
       supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.TRANSPARENCY_SCORES) as any
+        .from(DATABASE_TABLES.TRANSPARENCY_SCORES)
     )
       .select('*')
       .eq('entity_type', 'profile')
@@ -37,8 +36,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
       // Calculate transparency score if it doesn't exist
       const { data: _profile, error: profileError } = await (
         supabase
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from(DATABASE_TABLES.PROFILES) as any
+          .from(DATABASE_TABLES.PROFILES)
       )
         .select('*')
         .eq('id', profileId)
@@ -62,8 +60,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
       // Fetch the newly calculated score
       const { data: newScore, error: fetchError } = await (
         supabase
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from(DATABASE_TABLES.TRANSPARENCY_SCORES) as any
+          .from(DATABASE_TABLES.TRANSPARENCY_SCORES)
       )
         .select('*')
         .eq('entity_type', 'profile')

@@ -82,7 +82,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Verify assistant exists and is active
     const { data: assistant, error: assistantError } = await (
-      supabase.from(DATABASE_TABLES.AI_ASSISTANTS) as any
+      supabase.from(DATABASE_TABLES.AI_ASSISTANTS)
     )
       .select('id, title, status, system_prompt, welcome_message')
       .eq('id', assistantId)
@@ -98,7 +98,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Create new conversation
     const { data: conversation, error: createError } = await (
-      supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any
+      supabase.from(DATABASE_TABLES.AI_CONVERSATIONS)
     )
       .insert({
         assistant_id: assistantId,
@@ -115,7 +115,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Add system prompt as first message if exists
     if (assistant.system_prompt) {
-      await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any).insert({
+      await supabase.from(DATABASE_TABLES.AI_MESSAGES).insert({
         conversation_id: conversation.id,
         role: 'system',
         content: assistant.system_prompt,
@@ -124,7 +124,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Add welcome message if exists
     if (assistant.welcome_message) {
-      await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any).insert({
+      await supabase.from(DATABASE_TABLES.AI_MESSAGES).insert({
         conversation_id: conversation.id,
         role: 'assistant',
         content: assistant.welcome_message,

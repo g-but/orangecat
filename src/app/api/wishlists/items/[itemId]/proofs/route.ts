@@ -12,7 +12,6 @@ import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteParams { params: Promise<{ itemId: string }> }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
 
 function groupFeedbackByProof(feedback: Row[]): Record<string, Row[]> {

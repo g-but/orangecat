@@ -52,8 +52,7 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
 
     // Verify asset exists and is for rent
     const { data: asset, error: assetError } =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
+      await supabase.from(DATABASE_TABLES.USER_ASSETS)
         .select(
           'id, title, actor_id, is_for_rent, rental_price_btc, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_btc'
         )

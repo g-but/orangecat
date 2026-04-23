@@ -22,13 +22,11 @@ const updateBookingSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getActorIds(supabase: any, userId: string): Promise<string[]> {
-  const { data: actors } = await (supabase.from(DATABASE_TABLES.ACTORS) as any).select('id').eq('user_id', userId);
+  const { data: actors } = await supabase.from(DATABASE_TABLES.ACTORS).select('id').eq('user_id', userId);
   return actors?.map((a: { id: string }) => a.id) || [];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function tryProviderAction(actorIds: string[], fn: (id: string) => Promise<any>): Promise<any> {
   for (const actorId of actorIds) {
     const result = await fn(actorId);

@@ -17,7 +17,6 @@ import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function applySortOrder(query: any, sortBy: string) {
   switch (sortBy) {
     case 'rating': return query.order('average_rating', { ascending: false, nullsFirst: false });
@@ -40,12 +39,10 @@ export const GET = withOptionalAuth(async (request) => {
     const includeOwnDrafts = Boolean(userId && user && userId === user.id);
     const tableName = getTableName('ai_assistant');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let itemsQuery = (supabase.from(tableName) as any)
+    let itemsQuery = supabase.from(tableName)
       .select('*, user:profiles!ai_assistants_user_id_fkey(id, username, name, avatar_url)')
       .range(offset, offset + limit - 1);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let countQuery = (supabase.from(tableName) as any).select('*', { count: 'exact', head: true });
+    let countQuery = supabase.from(tableName).select('*', { count: 'exact', head: true });
 
     let actorId: string | null = null;
     if (userId) {actorId = (await getOrCreateUserActor(userId)).id;}

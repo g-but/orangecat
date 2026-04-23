@@ -21,7 +21,6 @@ import { z } from 'zod';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { resolveGroupBySlug, checkGroupMember } from '@/domain/groups/helpers.server';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UntypedTable = any;
 
 const createEventSchema = z.object({

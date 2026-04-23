@@ -59,8 +59,7 @@ async function handleFollow(request: AuthenticatedRequest) {
     }
 
     // Create follow relationship
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: followError } = await (supabase.from(DATABASE_TABLES.FOLLOWS) as any).insert({
+    const { error: followError } = await supabase.from(DATABASE_TABLES.FOLLOWS).insert({
       follower_id: user.id,
       following_id: following_id,
     });
@@ -78,8 +77,7 @@ async function handleFollow(request: AuthenticatedRequest) {
     await auditSuccess(AUDIT_ACTIONS.USER_FOLLOWED, user.id, 'profile', following_id);
 
     // Notify the followed user (fire-and-forget)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: followerProfile } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
+    const { data: followerProfile } = await supabase.from(DATABASE_TABLES.PROFILES)
       .select('name, username')
       .eq('id', user.id)
       .maybeSingle();

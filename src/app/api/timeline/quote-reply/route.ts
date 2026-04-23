@@ -66,6 +66,3 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
   }
 });
 
-
-
-

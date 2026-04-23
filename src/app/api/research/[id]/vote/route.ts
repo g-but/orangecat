@@ -35,8 +35,7 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
   try {
     const { user, supabase } = request;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: entity, error: entityError } = await (supabase.from(DATABASE_TABLES.RESEARCH_ENTITIES) as any)
+    const { data: entity, error: entityError } = await supabase.from(DATABASE_TABLES.RESEARCH_ENTITIES)
       .select('id, is_public, voting_enabled')
       .eq('id', id)
       .single();
@@ -68,8 +67,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   if (idValidation) {return idValidation;}
   const { user, supabase } = request;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: entity, error: entityError } = await (supabase.from(DATABASE_TABLES.RESEARCH_ENTITIES) as any)
+    const { data: entity, error: entityError } = await supabase.from(DATABASE_TABLES.RESEARCH_ENTITIES)
       .select('id, is_public, voting_enabled, contributions')
       .eq('id', id)
       .single();
@@ -86,7 +84,6 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid vote data');}
     const { vote_type, choice } = parsed.data;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const contributorIds = (entity.contributions ?? []).map((c: any) => c.user_id as string);
     const result = await castVote(supabase, id, user.id, vote_type, choice, contributorIds);
 

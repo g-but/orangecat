@@ -58,7 +58,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Verify assistant exists and is active
     const { data: assistant, error: assistantError } = await (
-      supabase.from(DATABASE_TABLES.AI_ASSISTANTS) as any
+      supabase.from(DATABASE_TABLES.AI_ASSISTANTS)
     )
       .select('id, status')
       .eq('id', assistantId)
@@ -70,7 +70,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Check if user has used this assistant (has conversations)
     const { data: conversations, error: convError } = await (
-      supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any
+      supabase.from(DATABASE_TABLES.AI_CONVERSATIONS)
     )
       .select('id')
       .eq('assistant_id', assistantId)
@@ -83,7 +83,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Upsert rating (insert or update)
     const { data: ratingData, error: ratingError } = await (
-      supabase.from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any
+      supabase.from(DATABASE_TABLES.AI_ASSISTANT_RATINGS)
     )
       .upsert(
         {
@@ -126,7 +126,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     }
 
     const { error: deleteError } = await (
-      supabase.from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any
+      supabase.from(DATABASE_TABLES.AI_ASSISTANT_RATINGS)
     )
       .delete()
       .eq('assistant_id', assistantId)

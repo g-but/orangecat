@@ -24,8 +24,7 @@ export const POST = withOptionalAuth(async (request) => {
     if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid request data');}
     const { email, source, referrer } = parsed.data;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from(DATABASE_TABLES.CHANNEL_WAITLIST) as any).insert({
+    const { error } = await supabase.from(DATABASE_TABLES.CHANNEL_WAITLIST).insert({
       email,
       user_id: user?.id || null,
       source: source ?? 'channel_page',

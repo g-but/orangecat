@@ -38,8 +38,7 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
   try {
     const { user, supabase } = request;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: entity, error: entityError } = await (supabase.from(DATABASE_TABLES.RESEARCH_ENTITIES) as any)
+    const { data: entity, error: entityError } = await supabase.from(DATABASE_TABLES.RESEARCH_ENTITIES)
       .select('id, is_public, user_id')
       .eq('id', id)
       .single();

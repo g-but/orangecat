@@ -70,8 +70,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     // Check current media count - use fresh query to avoid stale data
     const { count, error: countError } = await (
       supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.PROJECT_MEDIA) as any
+        .from(DATABASE_TABLES.PROJECT_MEDIA)
     )
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId);

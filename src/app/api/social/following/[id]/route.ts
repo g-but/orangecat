@@ -21,8 +21,7 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error, count } = await (supabase.from(DATABASE_TABLES.FOLLOWS) as any)
+    const { data, error, count } = await supabase.from(DATABASE_TABLES.FOLLOWS)
       .select(
         'following_id, created_at, profile:profiles!follows_following_id_fkey(id, username, name, avatar_url, bio, bitcoin_address, lightning_address)',
         { count: 'exact' }
