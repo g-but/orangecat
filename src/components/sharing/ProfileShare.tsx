@@ -36,7 +36,7 @@ export default function ProfileShare({
   // Create optimized share text
   const shareTitle = `${profileName} on OrangeCat`;
   const shareDescription =
-    profileBio || `Check out ${profileName}'s profile on OrangeCat - Bitcoin fundraising platform`;
+    profileBio || `Check out ${profileName}'s profile on OrangeCat — your AI economic agent`;
 
   return (
     <ShareContent

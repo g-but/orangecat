@@ -177,7 +177,7 @@ export default function BitBaumAboutPage() {
                 <div>
                   <h4 className="font-semibold text-gray-900">OrangeCat Launch</h4>
                   <p className="text-gray-600 text-sm">
-                    Released our flagship AI economic agent platform with threaded conversations.
+                    Released our flagship AI economic agent platform — OrangeCat.
                   </p>
                 </div>
               </div>

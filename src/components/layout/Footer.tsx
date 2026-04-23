@@ -163,7 +163,7 @@ const Footer = React.memo(function Footer() {
             </h3>
             <div className="space-y-4">
               <p className="text-sm text-gray-600 leading-relaxed">
-                Get the latest updates on Bitcoin fundraising and community building.
+                Get the latest updates on economic freedom, Bitcoin, and building on OrangeCat.
               </p>
               <Link
                 href="/auth?mode=register"

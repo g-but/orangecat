@@ -219,7 +219,7 @@ export default function DemoPage({ initiative }: DemoPageProps) {
           {
             id: 'create-project',
             title: 'Create Project',
-            description: 'Launch your Bitcoin fundraising project',
+            description: 'Launch your project with milestone-based funding',
             action: 'Creating "Open Source Lightning Tools"...',
             mockData: { title: 'Open Source Lightning Tools', goal: '10 BTC', duration: '30 days' },
           },

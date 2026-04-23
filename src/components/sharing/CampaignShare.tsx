@@ -41,7 +41,7 @@ export default function CampaignShare({
   // Create optimized share text
   const shareTitle = `Support: ${projectTitle}`;
   const shareDescription =
-    projectDescription || `Check out this amazing Bitcoin fundraising project: ${projectTitle}`;
+    projectDescription || `Check out this community-funded project on OrangeCat: ${projectTitle}`;
 
   // Track share events for analytics
   const _trackShareEvent = (platform: string) => {

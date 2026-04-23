@@ -265,7 +265,7 @@ export default function IntelligentOnboarding() {
             </h2>
             <p className="text-gray-600">
               {analysis.recommendation ||
-                'Based on your description, a personal project is the perfect fit for your Bitcoin fundraising needs.'}
+                'Based on your description, a personal project is the perfect fit for your goals.'}
             </p>
           </div>
 
@@ -281,7 +281,7 @@ export default function IntelligentOnboarding() {
                   'You have full control over your project',
                   'A personal page to share your story',
                   'Directly connect with your supporters',
-                  'Transparent Bitcoin fundraising',
+                  'Transparent, milestone-based funding',
                   'Easy project management and updates',
                 ].map((b, i) => (
                   <li key={i} className="text-sm text-green-700 flex items-center gap-2">
@@ -330,7 +330,7 @@ export default function IntelligentOnboarding() {
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-2">Ready to Get Started?</h2>
         <p className="text-gray-600">
-          Create your personal Bitcoin fundraising project and start making an impact.
+          Create your personal project and start making an impact.
         </p>
       </div>
 
@@ -347,8 +347,8 @@ export default function IntelligentOnboarding() {
             <h3 className="text-lg font-semibold text-orange-800">Create Your Personal Project</h3>
           </div>
           <p className="text-orange-700 mb-4">
-            Start your Bitcoin fundraising journey with a personal project. Full control,
-            transparency, and direct connection with supporters.
+            Launch your personal project with full control, transparent funding, and direct
+            connection with supporters.
           </p>
           <Button
             data-testid="onboarding-create-personal"
@@ -370,7 +370,7 @@ export default function IntelligentOnboarding() {
             <h3 className="text-lg font-semibold text-gray-800">Explore Existing Projects</h3>
           </div>
           <p className="text-sm text-gray-600">
-            See how others are using OrangeCat for Bitcoin fundraising.
+            See how others are using OrangeCat to fund, lend, invest, and connect.
           </p>
         </Card>
 

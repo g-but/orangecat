@@ -48,7 +48,7 @@ export default function EventsPage() {
     {
       icon: Globe,
       title: 'Global Reach',
-      description: 'Connect with attendees worldwide through Bitcoin-powered event discovery',
+      description: 'Connect with attendees worldwide through open, borderless event discovery',
     },
     {
       icon: Camera,
@@ -253,8 +253,8 @@ export default function EventsPage() {
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-6">Ready to Organize Your Event?</h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Join event organizers worldwide who have created amazing experiences with
-            Bitcoin-powered event management
+            Join event organizers worldwide who use OrangeCat to create amazing experiences with
+            seamless ticketing and Bitcoin-native payments.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button

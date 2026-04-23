@@ -37,7 +37,7 @@ export function DashboardProjects({ projects }: DashboardProjectsProps) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>My Projects</CardTitle>
-              <CardDescription>Your Bitcoin fundraising projects</CardDescription>
+              <CardDescription>Your projects</CardDescription>
             </div>
             <Link href={ENTITY_REGISTRY.project.createPath}>
               <Button size="sm" className="bg-gradient-to-r from-orange-500 to-orange-600">
@@ -72,7 +72,7 @@ export function DashboardProjects({ projects }: DashboardProjectsProps) {
           <div>
             <CardTitle>My Projects</CardTitle>
             <CardDescription>
-              Your Bitcoin fundraising projects ({projects.length}{' '}
+              Your projects ({projects.length}{' '}
               {projects.length === 1 ? 'project' : 'projects'})
             </CardDescription>
           </div>
