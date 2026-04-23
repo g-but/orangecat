@@ -27,7 +27,7 @@ export default function WalletsPage() {
       <div className="mt-10 p-6 rounded-lg bg-orange-50 border border-orange-200">
         <h4 className="font-semibold text-gray-900 mb-2">What is a wallet?</h4>
         <p className="text-sm text-gray-700 mb-3">
-          A Bitcoin wallet lets you receive funding. It gives you a Bitcoin address (looks like
+          A Bitcoin wallet lets you receive payments. It gives you a Bitcoin address (looks like
           bc1...) and often a Lightning address (looks like email). You control it. We don't keep
           your funds.
         </p>
@@ -44,7 +44,7 @@ export default function WalletsPage() {
       {/* CTA */}
       <div className="mt-6 text-center">
         <Link href="/create">
-          <Button>Done — Create my project</Button>
+          <Button>Get started</Button>
         </Link>
       </div>
     </div>
