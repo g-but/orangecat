@@ -52,7 +52,7 @@ export function DashboardProjects({ projects }: DashboardProjectsProps) {
             <BarChart3 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
             <p className="text-sm mb-2">No projects yet</p>
             <p className="text-xs text-gray-400 mb-4">
-              Start your Bitcoin crowdfunding journey by creating your first project
+              Start your fundraising journey by creating your first project
             </p>
             <Link href={ENTITY_REGISTRY.project.createPath}>
               <Button variant="outline" size="sm">

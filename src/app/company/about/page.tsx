@@ -88,8 +88,7 @@ export default function BitBaumAboutPage() {
               </div>
               <h4 className="text-xl font-semibold text-gray-900 mb-3">OrangeCat</h4>
               <p className="text-gray-600 mb-4">
-                Our flagship consumer product - the friendly Bitcoin crowdfunding platform where
-                users create, connect, and transact in a threaded conversation ecosystem.
+                Our flagship consumer product - the AI economic agent platform where users fund, invest, lend, and transact with any identity, any currency.
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
@@ -178,7 +177,7 @@ export default function BitBaumAboutPage() {
                 <div>
                   <h4 className="font-semibold text-gray-900">OrangeCat Launch</h4>
                   <p className="text-gray-600 text-sm">
-                    Released our flagship Bitcoin crowdfunding platform with threaded conversations.
+                    Released our flagship AI economic agent platform with threaded conversations.
                   </p>
                 </div>
               </div>

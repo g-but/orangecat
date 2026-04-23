@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Success Stories | OrangeCat',
     description:
-      'Real stories from real people using Bitcoin crowdfunding. No fees, no middlemen, just direct support.',
+      'Real stories from real people using OrangeCat. No fees, no middlemen, just direct support.',
     type: 'website',
   },
 };

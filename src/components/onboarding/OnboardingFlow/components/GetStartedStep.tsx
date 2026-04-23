@@ -25,8 +25,8 @@ export function GetStartedStep({ hasWallet = false, hasProjects = false }: GetSt
   // Dynamic messaging based on user state
   const ctaTitle = hasProjects ? 'Create Another Project' : 'Create Your First Project';
   const ctaDescription = hasProjects
-    ? 'Launch another Bitcoin crowdfunding campaign'
-    : 'Launch a Bitcoin crowdfunding campaign and start receiving support';
+    ? 'Launch another project and grow your portfolio'
+    : 'Launch a project and start receiving support from your community';
   const headerText = hasProjects
     ? 'Ready to grow your portfolio?'
     : 'The most important thing you can do now is create your first project.';

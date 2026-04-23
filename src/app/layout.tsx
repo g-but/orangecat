@@ -29,27 +29,27 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://orangecat.ch';
 
 export const metadata: Metadata = {
   title: {
-    default: 'OrangeCat - The Bitcoin Super-App',
+    default: 'OrangeCat - Your AI Economic Agent',
     template: '%s | OrangeCat',
   },
   description:
-    'Commerce, finance, community, and AI—all powered by Bitcoin. Sell products, offer services, fund projects, build communities, and deploy AI in one unified platform.',
+    'Fund, lend, invest, trade, and govern with any identity, any currency. OrangeCat is your AI economic agent — the platform where economic participation is open to everyone.',
   keywords:
-    'bitcoin, super-app, commerce, finance, community, AI, products, services, crowdfunding, cryptocurrency, blockchain, lightning network, peer-to-peer',
+    'AI economic agent, bitcoin, finance, community, fund, invest, lend, products, services, crowdfunding, cryptocurrency, lightning network, peer-to-peer',
   metadataBase: new URL(SITE_URL),
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: SITE_URL,
     siteName: 'OrangeCat',
-    title: 'OrangeCat - The Bitcoin Super-App',
+    title: 'OrangeCat - Your AI Economic Agent',
     description:
-      'Commerce, finance, community, and AI—all powered by Bitcoin. Sell products, offer services, fund projects, build communities, and deploy AI in one unified platform.',
+      'Fund, lend, invest, trade, and govern with any identity, any currency. OrangeCat is your AI economic agent — the platform where economic participation is open to everyone.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'OrangeCat - The Bitcoin Super-App',
-    description: 'Commerce, finance, community, and AI—all powered by Bitcoin.',
+    title: 'OrangeCat - Your AI Economic Agent',
+    description: 'Fund, lend, invest, trade, and govern with any identity, any currency.',
   },
 };
 
@@ -71,7 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   name: 'OrangeCat',
                   url: SITE_URL,
                   logo: `${SITE_URL}/images/orange-cat-logo.svg`,
-                  description: 'Commerce, finance, community, and AI—all powered by Bitcoin.',
+                  description: 'Fund, lend, invest, trade, and govern with any identity, any currency.',
                   sameAs: [],
                 },
                 {

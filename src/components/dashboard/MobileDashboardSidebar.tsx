@@ -67,7 +67,7 @@ export function MobileDashboardSidebar({ stats }: MobileDashboardSidebarProps) {
             </div>
             <h3 className="font-semibold text-gray-900 mb-3">Ready to Start Fundraising?</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Create your first Bitcoin crowdfunding project in minutes.
+              Create your first project and start receiving support in minutes.
             </p>
             <Button
               className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"

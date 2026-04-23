@@ -44,7 +44,7 @@ export function DashboardWelcome({
       return {
         priority: 'project',
         title: 'Create your first project',
-        description: 'Launch a Bitcoin crowdfunding campaign and start receiving support.',
+        description: 'Launch a project and start receiving support from your community.',
         href: ENTITY_REGISTRY.project.createPath,
         icon: Target,
         iconColor: 'text-orange-600',

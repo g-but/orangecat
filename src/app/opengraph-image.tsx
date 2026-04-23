@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'OrangeCat - The Bitcoin Super-App';
+export const alt = 'OrangeCat - Your AI Economic Agent';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -58,7 +58,7 @@ export default function Image() {
           marginBottom: 48,
         }}
       >
-        The Bitcoin Super-App
+        Your AI Economic Agent
       </div>
       {/* Features */}
       <div
@@ -67,7 +67,7 @@ export default function Image() {
           gap: 24,
         }}
       >
-        {['Commerce', 'Finance', 'Community', 'AI'].map(feature => (
+        {['Fund', 'Invest', 'Lend', 'Govern'].map(feature => (
           <div
             key={feature}
             style={{

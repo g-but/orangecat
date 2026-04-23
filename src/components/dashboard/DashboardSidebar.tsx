@@ -164,8 +164,7 @@ export function DashboardSidebar({ stats, profileCompletion }: DashboardSidebarP
               </div>
               <h3 className="font-semibold text-gray-900 mb-3">Create Your First Project</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Launch your Bitcoin crowdfunding campaign in minutes. It's free and takes less than
-                5 minutes.
+                Launch your first project in minutes. It's free and takes less than 5 minutes.
               </p>
               <Button
                 className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"

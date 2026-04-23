@@ -35,7 +35,7 @@ export function getDemoTimelineEvents(userId: string): any[] {
             subject_id: userId,
             title: 'Welcome to My Journey!',
             description:
-              'Just set up my personal timeline on OrangeCat. Excited to share my Bitcoin crowdfunding journey!',
+              'Just set up my personal timeline on OrangeCat. Excited to share my economic journey!',
             content: null,
             amount_btc: null,
             quantity: null,
@@ -87,9 +87,9 @@ export function getDemoTimelineEvents(userId: string): any[] {
             actor_type: 'user',
             subject_type: 'profile',
             subject_id: userId,
-            title: 'Thoughts on Bitcoin Crowdfunding',
+            title: 'Thoughts on Peer-to-Peer Finance',
             description:
-              'Bitcoin crowdfunding eliminates middlemen and gives creators direct access to supporters. No fees, no delays, just pure value exchange. This is the future! 🚀',
+              'Direct peer-to-peer finance eliminates middlemen and gives creators direct access to supporters. No fees, no delays, just pure value exchange. This is the future! 🚀',
             content: null,
             amount_btc: null,
             quantity: null,
