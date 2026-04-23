@@ -242,6 +242,38 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     return { success: true, data };
   },
 
+  create_loan: async (supabase, userId, actorId, params) => {
+    // Loans table has both actor_id (added by migration) and user_id (original).
+    // amount_btc → original_amount + remaining_balance (BTC decimal columns).
+    // amount_sats is the legacy satoshi column; kept in sync via conversion.
+    const amountBtc = (params.amount_btc as number) ?? 0;
+    const amountSats = Math.round(amountBtc * 100_000_000);
+
+    const { data, error } = await supabase
+      .from(ENTITY_REGISTRY.loan.tableName)
+      .insert({
+        actor_id: actorId,
+        user_id: userId,
+        title: params.title,
+        description: params.description || null,
+        loan_type: (params.loan_type as string) || 'new_request',
+        original_amount: amountBtc,
+        remaining_balance: amountBtc,
+        amount_sats: amountSats,
+        currency: 'BTC',
+        interest_rate: (params.interest_rate as number | undefined) ?? null,
+        fulfillment_type: 'manual',
+        status: 'active',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  },
+
   // ---------- ENTITY MANAGEMENT ACTIONS ----------
 
   update_entity: async (supabase, _userId, actorId, params) => {
@@ -879,6 +911,11 @@ export class CatActionExecutor {
         const target = parameters.target_amount_btc ?? parameters.target_amount ?? 'open-ended';
         const type = parameters.investment_type || 'revenue_share';
         return `Create ${type} investment "${parameters.title}" targeting ${target} BTC`;
+      }
+      case 'create_loan': {
+        const amount = parameters.amount_btc ?? 'unspecified';
+        const rate = parameters.interest_rate ? ` at ${parameters.interest_rate}% interest` : '';
+        return `Create loan request "${parameters.title}" for ${amount} BTC${rate}`;
       }
       case 'create_event':
         return `Create event "${parameters.title}" at ${parameters.location}`;

@@ -25,6 +25,7 @@ import {
   Bell,
   Building2,
   TrendingUp,
+  Coins,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -317,6 +318,46 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Launch a Bitcoin-denominated investment opportunity',
     ],
     apiEndpoint: '/api/investments',
+    enabled: true,
+  },
+
+  create_loan: {
+    id: 'create_loan',
+    name: 'Create Loan Request',
+    description: 'Create a peer-to-peer Bitcoin loan request',
+    category: 'entities',
+    icon: Coins,
+    riskLevel: 'high',
+    requiresConfirmation: true,
+    parameters: [
+      { name: 'title', type: 'string', required: true, description: 'Loan request title' },
+      { name: 'description', type: 'string', required: false, description: 'Loan purpose and details' },
+      {
+        name: 'amount_btc',
+        type: 'btc',
+        required: true,
+        description: 'Loan amount in BTC (e.g., 0.1)',
+      },
+      {
+        name: 'interest_rate',
+        type: 'number',
+        required: false,
+        description: 'Desired interest rate as a percentage (e.g., 5 for 5%)',
+      },
+      {
+        name: 'loan_type',
+        type: 'string',
+        required: false,
+        description: 'Type: new_request (default) or existing_refinance',
+        default: 'new_request',
+      },
+    ],
+    examples: [
+      'Request a Bitcoin loan for my project',
+      'Borrow 0.05 BTC for equipment at 5% interest',
+      'Refinance my existing loan at a lower rate',
+    ],
+    apiEndpoint: '/api/loans',
     enabled: true,
   },
 

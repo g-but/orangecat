@@ -496,6 +496,69 @@ describe('Cat action-executor — correct DB column names', () => {
     });
   });
 
+  // ── create_loan ──────────────────────────────────────────────────────────────
+  describe('create_loan', () => {
+    it('uses original_amount and remaining_balance (not amount_btc) and computes amount_sats', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'create_loan', {
+        title: 'Equipment loan',
+        description: 'Buy welding gear',
+        amount_btc: 0.05,
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.loan.tableName);
+      expect(insert).toBeDefined();
+
+      // BTC decimal columns (not amount_btc)
+      expect(insert!.original_amount).toBe(0.05);
+      expect(insert!.remaining_balance).toBe(0.05);
+      expect((insert as Record<string, unknown>).amount_btc).toBeUndefined();
+
+      // amount_sats is computed (0.05 BTC = 5_000_000 sats)
+      expect(insert!.amount_sats).toBe(5_000_000);
+
+      // Ownership: both actor_id and user_id
+      expect(insert!.actor_id).toBe(ACTOR_ID);
+      expect(insert!.user_id).toBe(USER_ID);
+
+      // Required defaults
+      expect(insert!.currency).toBe('BTC');
+      expect(insert!.status).toBe('active');
+      expect(insert!.loan_type).toBe('new_request');
+      expect(insert!.fulfillment_type).toBe('manual');
+    });
+
+    it('passes interest_rate through when provided', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_loan', {
+        title: 'Loan',
+        amount_btc: 0.1,
+        interest_rate: 5,
+      });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.loan.tableName);
+      expect(insert!.interest_rate).toBe(5);
+    });
+
+    it('sets interest_rate to null when not provided', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_loan', { title: 'Loan', amount_btc: 0.01 });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.loan.tableName);
+      expect(insert!.interest_rate).toBeNull();
+    });
+
+    it('accepts existing_refinance loan_type', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_loan', {
+        title: 'Refi',
+        amount_btc: 0.2,
+        loan_type: 'existing_refinance',
+      });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.loan.tableName);
+      expect(insert!.loan_type).toBe('existing_refinance');
+    });
+  });
+
   // ── reply_to_message ─────────────────────────────────────────────────────────
   describe('reply_to_message', () => {
     it('inserts into messages table with conversation_id, sender_id (userId), and content', async () => {
