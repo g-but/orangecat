@@ -184,8 +184,8 @@ Only include relevant prefill fields for the entity type:
 - **project/cause**: goal_amount (BTC), category
 - **event**: location, start_date (ISO date string)
 - **asset**: asset_type, location
-- **loan**: amount_btc (the requested amount), interest_rate (percentage, optional), loan_type ("new_request" or "existing_refinance")
-- **investment**: target_amount_btc, investment_type ("revenue_share"|"equity"|"debt"|"convertible_note"), minimum_investment_btc
+- **loan**: original_amount (BTC amount requested), interest_rate (percentage, optional), loan_type ("new_request" or "existing_refinance")
+- **investment**: target_amount (BTC), investment_type ("revenue_share"|"equity"|"debt"|"convertible_note"), minimum_investment (BTC)
 - **research**: field (e.g., "computer_science", "biology", "artificial_intelligence", "economics", "other"), funding_goal_btc, methodology ("experimental"|"theoretical"|"computational"|"mixed_methods")
 - **wishlist**: type ("general"|"birthday"|"wedding"|"baby_shower"|"graduation"|"personal"), visibility ("public"|"unlisted"|"private"), event_date (ISO date, optional)
 

@@ -22,21 +22,31 @@ interface BasePrefillFields {
   title?: string;
   description?: string;
   category?: string;
+  // Numeric fields (all parsed as float to preserve BTC decimals)
   price_btc?: number;
   goal_amount?: number;
   hourly_rate?: number;
   fixed_price?: number;
+  original_amount?: number;   // loan
+  interest_rate?: number;     // loan (percentage)
+  target_amount?: number;     // investment
+  minimum_investment?: number; // investment
+  funding_goal_btc?: number;  // research
+  // String fields
   goal_deadline?: string;
   location?: string;
   start_date?: string;
   end_date?: string;
-  // Entity-specific string fields parsed from URL params
+  event_date?: string;        // wishlist
   name?: string;
   label?: string;
   field?: string;
   type?: string;
   loan_type?: string;
   cause_category?: string;
+  investment_type?: string;   // investment
+  methodology?: string;       // research
+  visibility?: string;        // wishlist
 }
 
 interface UseCreatePrefillOptions {
@@ -104,17 +114,27 @@ export function useCreatePrefill<T extends Record<string, unknown>>({
       }
 
       // Parse additional fields from URL params
-      const numericFields = ['price_btc', 'goal_amount', 'hourly_rate', 'fixed_price'] as const;
+      // Use parseFloat (not parseInt) so BTC decimals (e.g., 0.001) survive
+      const numericFields = [
+        'price_btc', 'goal_amount', 'hourly_rate', 'fixed_price',
+        'original_amount', 'interest_rate',         // loan
+        'target_amount', 'minimum_investment',       // investment
+        'funding_goal_btc',                          // research
+      ] as const;
       for (const field of numericFields) {
         const val = searchParams?.get(field);
         if (val) {
-          const parsed = parseInt(val, 10);
+          const parsed = parseFloat(val);
           if (!isNaN(parsed)) {
             prefillData[field] = parsed;
           }
         }
       }
-      const stringFields = ['goal_deadline', 'location', 'start_date', 'end_date', 'label', 'field', 'type', 'loan_type', 'cause_category'] as const;
+      const stringFields = [
+        'goal_deadline', 'location', 'start_date', 'end_date', 'event_date',
+        'label', 'field', 'type', 'loan_type', 'cause_category',
+        'investment_type', 'methodology', 'visibility',  // new entity types
+      ] as const;
       for (const field of stringFields) {
         const val = searchParams?.get(field);
         if (val) {
