@@ -22,7 +22,7 @@ export default function CategoriesPage() {
 
   const handleCreatePage = () => {
     if (session) {
-      router.push('/projects/create');
+      router.push('/create');
     } else {
       router.push('/auth?mode=register');
     }
@@ -82,7 +82,7 @@ export default function CategoriesPage() {
             onClick={handleCreatePage}
             className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-tiffany-600 hover:bg-tiffany-700 transition-colors"
           >
-            {session ? 'Create Your Funding Page' : 'Get Started'}
+            {session ? 'Start Creating' : 'Get Started'}
           </button>
           {!session && (
             <p className="mt-4 text-sm text-gray-600">
