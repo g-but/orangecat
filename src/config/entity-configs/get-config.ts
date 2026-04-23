@@ -21,6 +21,7 @@ import { aiAssistantConfig } from './ai-assistant-config';
 import { eventConfig } from './event-config';
 import { groupConfig } from './group-config';
 import { wishlistConfig } from './wishlist-config';
+import { researchWizardConfig } from './research-wizard-config';
 
 /**
  * Map of entity types to their configurations
@@ -42,7 +43,7 @@ const ENTITY_CONFIGS: Partial<Record<EntityType, EntityConfig<any>>> = {
   event: eventConfig,
   group: groupConfig,
   wishlist: wishlistConfig,
-  // Note: 'wallet' and 'research' don't have form configs as they use different flows
+  research: researchWizardConfig,
 };
 
 /**

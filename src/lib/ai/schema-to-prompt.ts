@@ -218,7 +218,7 @@ export function getSpecialFieldInstructions(entityType: EntityType): string {
       break;
     case 'research':
       instructions.push(
-        'For research: funding_goal_btc is the target in BTC. field must be one of: computer_science, biology, artificial_intelligence, economics, other.'
+        'For research: funding_goal_btc is the funding target. field and methodology must use the exact option values shown above (not labels).'
       );
       break;
     case 'wishlist':
