@@ -10,7 +10,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { ArrowUpDown, Loader2, Target, Users, DollarSign } from 'lucide-react';
+import { ArrowUpDown, Loader2, Target, Users, DollarSign, TrendingUp } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ProjectCard } from '@/components/entity/variants/ProjectCard';
 import ProfileCard from '@/components/ui/ProfileCard';
@@ -21,9 +21,11 @@ import {
 } from '@/components/ui/Skeleton';
 import ResultsSection from '@/components/discover/ResultsSection';
 import { LoanCard } from '@/components/entity/variants/LoanCard';
+import { InvestmentCard } from '@/components/entity/variants/InvestmentCard';
 import type { SearchFundingPage, SearchProfile } from '@/services/search';
 import type { DiscoverTabType } from '@/components/discover/DiscoverTabs';
 import type { Loan } from '@/types/loans';
+import type { Investment } from '@/types/investments';
 
 type ViewMode = 'grid' | 'list';
 
@@ -33,6 +35,7 @@ interface DiscoverResultsProps {
   projects: SearchFundingPage[];
   profiles: SearchProfile[];
   loans?: Loan[];
+  investments?: Investment[];
   totalResults: number;
   loading: boolean;
   hasMore: boolean;
@@ -47,6 +50,7 @@ export default function DiscoverResults({
   projects,
   profiles,
   loans = [],
+  investments = [],
   totalResults,
   loading,
   hasMore,
@@ -70,20 +74,16 @@ export default function DiscoverResults({
           }`}
         >
           {activeTab === 'profiles' ? (
-            // Show profile skeletons
             Array.from({ length: 6 }).map((_, index) => (
               <ProfileCardSkeleton key={index} viewMode={viewMode} />
             ))
           ) : activeTab === 'projects' ? (
-            // Show project skeletons
             Array.from({ length: 6 }).map((_, index) => <ProjectCardSkeleton key={index} />)
-          ) : activeTab === 'loans' ? (
-            // Show loan skeletons
+          ) : activeTab === 'loans' || activeTab === 'investments' ? (
             Array.from({ length: 6 }).map((_, index) => (
               <LoanCardSkeleton key={index} viewMode={viewMode} />
             ))
           ) : (
-            // All tab - show mix of projects, profiles, and loans
             <>
               {Array.from({ length: 2 }).map((_, index) => (
                 <ProjectCardSkeleton key={`project-${index}`} />
@@ -101,8 +101,8 @@ export default function DiscoverResults({
     );
   }
 
-  // Calculate displayed count including loans
-  const displayedCount = projects.length + profiles.length + loans.length;
+  // Calculate displayed count including loans and investments
+  const displayedCount = projects.length + profiles.length + loans.length + investments.length;
 
   // Results Header
   const resultsHeader = (
@@ -174,6 +174,26 @@ export default function DiscoverResults({
     </div>
   );
 
+  // Investments Grid Component
+  const InvestmentsGrid = ({ items }: { items: Investment[] }) => (
+    <div
+      className={`grid gap-6 ${
+        viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'
+      }`}
+    >
+      {items.map((investment, index) => (
+        <motion.div
+          key={investment.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: index * 0.05 }}
+        >
+          <InvestmentCard investment={investment} viewMode={viewMode} />
+        </motion.div>
+      ))}
+    </div>
+  );
+
   // Load More Button
   const LoadMoreButton = ({ label }: { label: string }) => (
     <div className="mt-8 flex justify-center">
@@ -201,13 +221,11 @@ export default function DiscoverResults({
 
   // Tab-Specific Content
   if (activeTab === 'all') {
-    // ALL TAB: Separated sections for projects, profiles, and loans
     const hasMultipleSections =
-      [projects.length, profiles.length, loans.length].filter(n => n > 0).length > 1;
+      [projects.length, profiles.length, loans.length, investments.length].filter(n => n > 0).length > 1;
     return (
       <div className="space-y-8">
         {resultsHeader}
-        {/* Projects Section */}
         {projects.length > 0 && (
           <ResultsSection
             title="Projects"
@@ -221,21 +239,19 @@ export default function DiscoverResults({
           </ResultsSection>
         )}
 
-        {/* People Section */}
-        {profiles.length > 0 && (
+        {investments.length > 0 && (
           <ResultsSection
-            title="People"
-            count={profiles.length}
-            icon={<Users className="w-5 h-5" />}
-            onViewAll={() => onTabChange('profiles')}
+            title="Investments"
+            count={investments.length}
+            icon={<TrendingUp className="w-5 h-5" />}
+            onViewAll={() => onTabChange('investments')}
             showViewAll={hasMultipleSections}
-            viewAllLabel="View All People"
+            viewAllLabel="View All Investments"
           >
-            <ResultsGrid items={profiles.slice(0, 6)} type="profile" />
+            <InvestmentsGrid items={investments.slice(0, 6)} />
           </ResultsSection>
         )}
 
-        {/* Loans Section */}
         {loans.length > 0 && (
           <ResultsSection
             title="Loans"
@@ -248,12 +264,34 @@ export default function DiscoverResults({
             <LoansGrid items={loans.slice(0, 6)} />
           </ResultsSection>
         )}
+
+        {profiles.length > 0 && (
+          <ResultsSection
+            title="People"
+            count={profiles.length}
+            icon={<Users className="w-5 h-5" />}
+            onViewAll={() => onTabChange('profiles')}
+            showViewAll={hasMultipleSections}
+            viewAllLabel="View All People"
+          >
+            <ResultsGrid items={profiles.slice(0, 6)} type="profile" />
+          </ResultsSection>
+        )}
       </div>
     );
   }
 
+  if (activeTab === 'investments') {
+    return (
+      <>
+        {resultsHeader}
+        <InvestmentsGrid items={investments} />
+        {hasMore && <LoadMoreButton label="Load More Investments" />}
+      </>
+    );
+  }
+
   if (activeTab === 'projects') {
-    // PROJECTS TAB: Only projects
     return (
       <>
         {resultsHeader}
@@ -264,7 +302,6 @@ export default function DiscoverResults({
   }
 
   if (activeTab === 'profiles') {
-    // PEOPLE TAB: Only profiles
     return (
       <>
         {resultsHeader}
@@ -274,12 +311,12 @@ export default function DiscoverResults({
     );
   }
 
-  // LOANS TAB: Only loans
+  // LOANS TAB (and any other tab that falls through)
   return (
     <>
       {resultsHeader}
       <LoansGrid items={loans} />
-      {hasMore && <LoadMoreButton label="Load More Loans" />}
+      {hasMore && <LoadMoreButton label="Load More" />}
     </>
   );
 }

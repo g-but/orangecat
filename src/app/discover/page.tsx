@@ -28,6 +28,9 @@ export default function DiscoverPage() {
     projects,
     profiles,
     loans,
+    investments,
+    investmentsLoading,
+    totalInvestmentsCount,
     stats,
 
     // UI state
@@ -125,7 +128,8 @@ export default function DiscoverPage() {
               projectCount={projects.length}
               profileCount={profiles.length}
               loanCount={loans.length}
-              loading={loading || loansLoading}
+              investmentCount={investments.length || totalInvestmentsCount}
+              loading={loading || loansLoading || investmentsLoading}
             />
 
             <div className="bg-white/70 backdrop-blur-sm rounded-b-2xl border border-gray-200/60 border-t-0 p-6">
@@ -169,7 +173,7 @@ export default function DiscoverPage() {
               )}
 
               {/* Empty State */}
-              {!loading && !loansLoading && !searchError && isEmpty && (
+              {!loading && !loansLoading && !investmentsLoading && !searchError && isEmpty && (
                 <DiscoverEmptyState
                   activeTab={activeTab}
                   hasFilters={hasFilters}
@@ -178,15 +182,16 @@ export default function DiscoverPage() {
               )}
 
               {/* Results */}
-              {!loading && !loansLoading && !searchError && !isEmpty && (
+              {!loading && !loansLoading && !investmentsLoading && !searchError && !isEmpty && (
                 <DiscoverResults
                   activeTab={activeTab}
                   viewMode={viewMode}
                   projects={projects}
                   profiles={profiles}
                   loans={loans}
-                  totalResults={totalResults + loans.length}
-                  loading={loading || loansLoading}
+                  investments={investments}
+                  totalResults={totalResults + loans.length + investments.length}
+                  loading={loading || loansLoading || investmentsLoading}
                   hasMore={hasMore}
                   isLoadingMore={isLoadingMore}
                   onLoadMore={handleLoadMore}

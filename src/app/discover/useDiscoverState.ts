@@ -12,6 +12,7 @@ import { getTableName } from '@/config/entity-registry';
 import { ENTITY_STATUS } from '@/config/database-constants';
 import type { DiscoverTabType } from '@/components/discover/DiscoverTabs';
 import type { Loan } from '@/types/loans';
+import type { Investment } from '@/types/investments';
 
 export type ViewMode = 'grid' | 'list';
 
@@ -31,7 +32,8 @@ export function useDiscoverState() {
     | 'relevance'
     | 'recent';
   const urlType = (searchParams?.get('type') || 'all') as DiscoverTabType;
-  const initialType = ['all', 'projects', 'profiles', 'loans'].includes(urlType) ? urlType : 'all';
+  const validTabTypes: DiscoverTabType[] = ['all', 'projects', 'profiles', 'loans', 'investments', 'causes', 'events', 'products', 'services', 'groups'];
+  const initialType = validTabTypes.includes(urlType) ? urlType : 'all';
   const initialCountry = searchParams?.get('country') || '';
   const initialCity = searchParams?.get('city') || '';
   const initialPostal = searchParams?.get('postal') || '';
@@ -88,10 +90,15 @@ export function useDiscoverState() {
   const [totalProjectsCount, setTotalProjectsCount] = useState(0);
   const [totalProfilesCount, setTotalProfilesCount] = useState(0);
   const [_totalLoansCount, setTotalLoansCount] = useState(0);
+  const [totalInvestmentsCount, setTotalInvestmentsCount] = useState(0);
 
   // Loans data (fetched separately since useSearch doesn't support loans yet)
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loansLoading, setLoansLoading] = useState(false);
+
+  // Investments data (fetched separately)
+  const [investments, setInvestments] = useState<Investment[]>([]);
+  const [investmentsLoading, setInvestmentsLoading] = useState(false);
 
   // Fetch total counts from database with client-side caching
   useEffect(() => {
@@ -103,17 +110,18 @@ export function useDiscoverState() {
         // Check cache first
         const cached = localStorage.getItem(CACHE_KEY);
         if (cached) {
-          const { projects, profiles, loans: loansCount, timestamp } = JSON.parse(cached);
+          const { projects, profiles, loans: loansCount, investments: investmentsCount, timestamp } = JSON.parse(cached);
           if (Date.now() - timestamp < CACHE_DURATION) {
             setTotalProjectsCount(projects);
             setTotalProfilesCount(profiles);
             setTotalLoansCount(loansCount || 0);
+            setTotalInvestmentsCount(investmentsCount || 0);
             return; // Use cached data
           }
         }
 
         // Fetch fresh data
-        const [projectsResult, profilesResult, loansResult] = await Promise.all([
+        const [projectsResult, profilesResult, loansResult, investmentsResult] = await Promise.all([
           supabase
             .from(getTableName('project'))
             .select('*', { count: 'exact', head: true })
@@ -124,15 +132,21 @@ export function useDiscoverState() {
             .select('*', { count: 'exact', head: true })
             .eq('is_public', true)
             .eq('status', ENTITY_STATUS.ACTIVE),
+          supabase
+            .from(getTableName('investment'))
+            .select('*', { count: 'exact', head: true })
+            .eq('is_public', true),
         ]);
 
         const projectCount = projectsResult.count ?? 0;
         const profileCount = profilesResult.count ?? 0;
         const loanCount = loansResult.count ?? 0;
+        const investmentCount = investmentsResult.count ?? 0;
 
         setTotalProjectsCount(projectCount);
         setTotalProfilesCount(profileCount);
         setTotalLoansCount(loanCount);
+        setTotalInvestmentsCount(investmentCount);
 
         // Cache the results
         localStorage.setItem(
@@ -141,6 +155,7 @@ export function useDiscoverState() {
             projects: projectCount,
             profiles: profileCount,
             loans: loanCount,
+            investments: investmentCount,
             timestamp: Date.now(),
           })
         );
@@ -207,6 +222,47 @@ export function useDiscoverState() {
     };
 
     fetchLoans();
+  }, [activeTab, searchTerm]);
+
+  // Fetch investments when needed (for 'all' or 'investments' tab)
+  useEffect(() => {
+    const fetchInvestments = async () => {
+      if (activeTab !== 'all' && activeTab !== 'investments') {
+        setInvestments([]);
+        return;
+      }
+
+      setInvestmentsLoading(true);
+      try {
+        let query = supabase
+          .from(getTableName('investment'))
+          .select('*')
+          .eq('is_public', true)
+          .order('created_at', { ascending: false })
+          .limit(activeTab === 'investments' ? 50 : 12);
+
+        if (searchTerm) {
+          const escapedTerm = searchTerm.replace(/[%_]/g, '\\$&');
+          query = query.or(`title.ilike.%${escapedTerm}%,description.ilike.%${escapedTerm}%`);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          logger.error('Error fetching investments', error, 'Discover');
+          setInvestments([]);
+        } else {
+          setInvestments(data || []);
+        }
+      } catch (error) {
+        logger.error('Error fetching investments', error, 'Discover');
+        setInvestments([]);
+      } finally {
+        setInvestmentsLoading(false);
+      }
+    };
+
+    fetchInvestments();
   }, [activeTab, searchTerm]);
 
   // Update search filters when local filter state changes
@@ -380,7 +436,13 @@ export function useDiscoverState() {
     (activeTab === 'projects' && projects.length === 0) ||
     (activeTab === 'profiles' && profiles.length === 0) ||
     (activeTab === 'loans' && loans.length === 0) ||
-    (activeTab === 'all' && projects.length === 0 && profiles.length === 0 && loans.length === 0);
+    (activeTab === 'investments' && investments.length === 0) ||
+    (activeTab === 'causes' && projects.length === 0) ||
+    (activeTab === 'events' && projects.length === 0) ||
+    (activeTab === 'products' && projects.length === 0) ||
+    (activeTab === 'services' && projects.length === 0) ||
+    (activeTab === 'groups' && projects.length === 0) ||
+    (activeTab === 'all' && projects.length === 0 && profiles.length === 0 && loans.length === 0 && investments.length === 0);
 
   const hasFilters = !!(searchTerm || selectedCategories.length > 0);
 
@@ -390,6 +452,7 @@ export function useDiscoverState() {
     searchError,
     loading,
     loansLoading,
+    investmentsLoading,
     totalResults,
     hasMore,
     isLoadingMore,
@@ -398,6 +461,8 @@ export function useDiscoverState() {
     projects,
     profiles,
     loans,
+    investments,
+    totalInvestmentsCount,
     stats,
 
     // UI state

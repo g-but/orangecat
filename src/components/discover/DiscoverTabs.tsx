@@ -1,9 +1,21 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Target, Users, Grid3X3, DollarSign } from 'lucide-react';
+import { Target, Users, Grid3X3, DollarSign, TrendingUp, Heart, Package, Briefcase, Calendar, Building2 } from 'lucide-react';
 
-export type DiscoverTabType = 'all' | 'projects' | 'profiles' | 'loans';
+export type DiscoverTabType = 'all' | 'projects' | 'profiles' | 'loans' | 'investments' | 'causes' | 'events' | 'products' | 'services' | 'groups';
+
+interface TabCounts {
+  projects: number;
+  profiles: number;
+  loans: number;
+  investments: number;
+  causes: number;
+  events: number;
+  products: number;
+  services: number;
+  groups: number;
+}
 
 interface DiscoverTabsProps {
   activeTab: DiscoverTabType;
@@ -11,6 +23,12 @@ interface DiscoverTabsProps {
   projectCount: number;
   profileCount: number;
   loanCount?: number;
+  investmentCount?: number;
+  causeCount?: number;
+  eventCount?: number;
+  productCount?: number;
+  serviceCount?: number;
+  groupCount?: number;
   loading?: boolean;
 }
 
@@ -18,7 +36,7 @@ interface TabConfig {
   id: DiscoverTabType;
   label: string;
   icon: React.ReactNode;
-  getCount: (projectCount: number, profileCount: number, loanCount: number) => number;
+  getCount: (counts: TabCounts) => number;
 }
 
 const tabs: TabConfig[] = [
@@ -26,25 +44,61 @@ const tabs: TabConfig[] = [
     id: 'all',
     label: 'All',
     icon: <Grid3X3 className="w-4 h-4" />,
-    getCount: (p, pr, l) => p + pr + l,
+    getCount: (c) => c.projects + c.profiles + c.loans + c.investments + c.causes + c.events + c.products + c.services + c.groups,
   },
   {
     id: 'projects',
     label: 'Projects',
     icon: <Target className="w-4 h-4" />,
-    getCount: (p) => p,
+    getCount: (c) => c.projects,
   },
   {
-    id: 'profiles',
-    label: 'People',
-    icon: <Users className="w-4 h-4" />,
-    getCount: (_, pr) => pr,
+    id: 'causes',
+    label: 'Causes',
+    icon: <Heart className="w-4 h-4" />,
+    getCount: (c) => c.causes,
+  },
+  {
+    id: 'investments',
+    label: 'Investments',
+    icon: <TrendingUp className="w-4 h-4" />,
+    getCount: (c) => c.investments,
   },
   {
     id: 'loans',
     label: 'Loans',
     icon: <DollarSign className="w-4 h-4" />,
-    getCount: (_, __, l) => l,
+    getCount: (c) => c.loans,
+  },
+  {
+    id: 'products',
+    label: 'Products',
+    icon: <Package className="w-4 h-4" />,
+    getCount: (c) => c.products,
+  },
+  {
+    id: 'services',
+    label: 'Services',
+    icon: <Briefcase className="w-4 h-4" />,
+    getCount: (c) => c.services,
+  },
+  {
+    id: 'events',
+    label: 'Events',
+    icon: <Calendar className="w-4 h-4" />,
+    getCount: (c) => c.events,
+  },
+  {
+    id: 'groups',
+    label: 'Groups',
+    icon: <Building2 className="w-4 h-4" />,
+    getCount: (c) => c.groups,
+  },
+  {
+    id: 'profiles',
+    label: 'People',
+    icon: <Users className="w-4 h-4" />,
+    getCount: (c) => c.profiles,
   },
 ];
 
@@ -54,14 +108,32 @@ export default function DiscoverTabs({
   projectCount,
   profileCount,
   loanCount = 0,
+  investmentCount = 0,
+  causeCount = 0,
+  eventCount = 0,
+  productCount = 0,
+  serviceCount = 0,
+  groupCount = 0,
   loading = false,
 }: DiscoverTabsProps) {
+  const counts: TabCounts = {
+    projects: projectCount,
+    profiles: profileCount,
+    loans: loanCount,
+    investments: investmentCount,
+    causes: causeCount,
+    events: eventCount,
+    products: productCount,
+    services: serviceCount,
+    groups: groupCount,
+  };
+
   return (
-    <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm rounded-t-2xl sticky top-0 z-10">
-      <nav className="-mb-px flex space-x-8 px-6 pt-4" aria-label="Tabs">
+    <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm rounded-t-2xl sticky top-0 z-10 overflow-x-auto">
+      <nav className="-mb-px flex space-x-6 px-6 pt-4 min-w-max" aria-label="Tabs">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
-          const count = tab.getCount(projectCount, profileCount, loanCount);
+          const count = tab.getCount(counts);
 
           return (
             <button
