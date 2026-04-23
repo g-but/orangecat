@@ -20,6 +20,7 @@ import { getPagination, getString } from '@/lib/api/query';
 import { applyRateLimitHeaders, rateLimitWriteAsync } from '@/lib/rate-limit';
 import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 import type { ResearchEntityCreate } from '@/types/research';
 import { NextRequest } from 'next/server';
 import { createResearch } from '@/domain/research/createResearch';
@@ -38,6 +39,13 @@ export const GET = compose(
     const field = getString(request.url, 'field');
     const status = getString(request.url, 'status');
 
+    // Resolve userId → actorId so we query by actor_id (the canonical ownership column)
+    let actorId: string | null = null;
+    if (userId) {
+      const actor = await getOrCreateUserActor(userId);
+      actorId = actor.id;
+    }
+
     const tableName = getTableName('research');
     let itemsQuery = supabase
       .from(tableName)
@@ -47,9 +55,9 @@ export const GET = compose(
 
     let countQuery = supabase.from(tableName).select('*', { count: 'exact', head: true });
 
-    if (userId) {
-      itemsQuery = itemsQuery.eq('user_id', userId);
-      countQuery = countQuery.eq('user_id', userId);
+    if (actorId) {
+      itemsQuery = itemsQuery.eq('actor_id', actorId);
+      countQuery = countQuery.eq('actor_id', actorId);
     } else {
       itemsQuery = itemsQuery.eq('is_public', true);
       countQuery = countQuery.eq('is_public', true);
