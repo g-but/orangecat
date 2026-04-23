@@ -46,7 +46,6 @@ export const POST = withAuth(async (request: AuthenticatedRequest, { params }: R
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: project } = await supabase.from(getTableName('project'))
       .select('id, title').eq('id', projectId).single();
     if (!project) {return apiNotFound('Project not found');}
@@ -76,7 +75,6 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, { params }:
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: project } = await supabase.from(getTableName('project'))
       .select('id, title').eq('id', projectId).single();
     if (!project) {return apiNotFound('Project not found');}

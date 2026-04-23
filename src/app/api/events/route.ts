@@ -15,6 +15,7 @@ import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 import { normalizeDates } from '@/lib/api/helpers';
 import { CURRENCY_CODES, PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 
 // Event status values
@@ -45,8 +46,8 @@ export const POST = createEntityPostHandler({
   transformData: async (data, userId, supabase) => {
     // Get user's preferred currency from profile (SSOT)
     let userCurrency = PLATFORM_DEFAULT_CURRENCY;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: profile } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
+    const { data: profile } = await (supabase as AnySupabaseClient)
+      .from(DATABASE_TABLES.PROFILES)
       .select('currency')
       .eq('id', userId)
       .single();

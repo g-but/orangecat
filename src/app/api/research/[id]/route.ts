@@ -15,7 +15,6 @@ import { getTableName } from '@/config/entity-registry';
 import { researchUpdateSchema } from '@/config/entity-configs/research-config';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 interface RouteContext {
   params: Promise<{ id: string }>;

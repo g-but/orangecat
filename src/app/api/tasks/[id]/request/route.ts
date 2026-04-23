@@ -61,17 +61,14 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // Send notification
     const { data: profile } = await supabase.from(DATABASE_TABLES.PROFILES).select('username, display_name').eq('id', user.id).single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const requesterName = profile?.display_name || profile?.username || 'Someone';
     const notificationService = new NotificationService(supabase);
     const notifBase = { title: '', message: d.message || null, actionUrl: `/dashboard/tasks/${taskId}`, sourceEntityType: 'task' as const, sourceEntityId: taskId };
 
     if (!d.requested_user_id) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await notificationService.createBroadcastNotification({ ...notifBase, excludeUserId: user.id, type: 'task_broadcast', title: `${requesterName} is asking for help: "${task.title}"` });
+        await notificationService.createBroadcastNotification({ ...notifBase, excludeUserId: user.id, type: 'task_broadcast', title: `${requesterName} is asking for help: "${task.title}"` });
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await notificationService.createNotification({ ...notifBase, recipientUserId: d.requested_user_id, type: 'task_request', title: `${requesterName} is asking you: "${task.title}"` });
+        await notificationService.createNotification({ ...notifBase, recipientUserId: d.requested_user_id, type: 'task_request', title: `${requesterName} is asking you: "${task.title}"` });
     }
 
     return apiSuccess({ request: taskRequest }, { status: 201 });

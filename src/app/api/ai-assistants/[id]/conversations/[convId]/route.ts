@@ -6,7 +6,6 @@
  * DELETE /api/ai-assistants/[id]/conversations/[convId] - Delete conversation
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';

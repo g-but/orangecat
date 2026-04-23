@@ -7,6 +7,7 @@
 
 import { investmentSchema } from '@/lib/validation';
 import { createInvestment } from '@/domain/investments/service';
+import type { CreateInvestmentRequest } from '@/types/investments';
 import { createEntityListHandler } from '@/lib/api/entityListHandler';
 import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 
@@ -24,7 +25,6 @@ export const POST = createEntityPostHandler({
   schema: investmentSchema,
   useActorOwnership: true,
   createEntity: async (userId, data, supabase) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return await createInvestment(userId, data as any, supabase);
+    return await createInvestment(userId, data as unknown as CreateInvestmentRequest, supabase);
   },
 });

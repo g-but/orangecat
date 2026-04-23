@@ -54,7 +54,6 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
       .eq('research_entity_id', id);
     if (error) {throw error;}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return apiSuccess(aggregateVotes(votesData ?? [], user?.id ?? null));
   } catch (error) {
     return handleApiError(error);

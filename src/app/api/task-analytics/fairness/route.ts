@@ -35,7 +35,6 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
       return apiInternalError('Failed to fetch tasks');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const recurringTasks = tasksData || [];
     const period = { days, startDate: startDate.toISOString(), endDate: new Date().toISOString() };
 
@@ -60,7 +59,6 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
       return apiInternalError('Failed to fetch completions');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completions = completionsResult.data || [];
     const uniqueUserIds = [...new Set(completions.map((c: { completed_by: string }) => c.completed_by))];
     const profilesMap = new Map<string, any>();
@@ -70,8 +68,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
         .from(DATABASE_TABLES.PROFILES)
         .select('id, username, display_name')
         .in('id', uniqueUserIds);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      for (const p of profiles || []) {profilesMap.set(p.id, p);}
+        for (const p of profiles || []) {profilesMap.set(p.id, p);}
     }
 
     const taskMetrics = computeFairnessMetrics(recurringTasks, completions, profilesMap);

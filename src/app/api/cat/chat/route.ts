@@ -7,8 +7,6 @@
  * - Does not persist any conversation content
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { NextRequest } from 'next/server';
 import { logger } from '@/utils/logger';
 import {

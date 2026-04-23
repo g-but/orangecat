@@ -8,7 +8,6 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';

@@ -45,7 +45,6 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
       return apiInternalError();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tr = taskRequest;
     const canRespond = tr.requested_user_id === user.id || tr.requested_user_id === null;
     if (!canRespond) {return apiForbidden('You cannot respond to this request');}
@@ -68,7 +67,6 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
 
     // Notify the requester
     const { data: profile } = await supabase.from(DATABASE_TABLES.PROFILES).select('username, display_name').eq('id', user.id).single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const responderName = profile?.display_name || profile?.username || 'Someone';
     const taskTitle = tr.task?.title || 'Task';
     const taskId = tr.task?.id || tr.task_id;

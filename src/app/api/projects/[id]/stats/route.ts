@@ -38,7 +38,6 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
       )
       .eq('id', projectId)
       .single();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const project = projectData;
 
     if (projectError || !project) {
@@ -82,7 +81,6 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
       .eq('category', project.category || '')
       .neq('id', projectId)
       .limit(5);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const relatedProjects = relatedProjectsData;
 
     const categoryRank = relatedProjects?.length || 0;

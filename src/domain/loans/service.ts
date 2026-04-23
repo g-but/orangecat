@@ -5,7 +5,7 @@ import { getTableName } from '@/config/entity-registry';
 import { STATUS } from '@/config/database-constants';
 import { createEntity } from '@/domain/base/entityService';
 
-interface CreateLoanInput {
+export interface CreateLoanInput {
   loan_type?: 'new_request' | 'existing_refinance';
   title: string;
   description: string;

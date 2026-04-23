@@ -94,7 +94,6 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     const actor = await getOrCreateUserActor(user.id);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: assistant, error } = await supabase.from(getTableName('ai_assistant'))
       .insert({
         user_id: user.id, actor_id: actor.id,

@@ -6,7 +6,7 @@
  */
 
 import { loanSchema } from '@/lib/validation';
-import { createLoan } from '@/domain/loans/service';
+import { createLoan, type CreateLoanInput } from '@/domain/loans/service';
 import { createEntityListHandler } from '@/lib/api/entityListHandler';
 import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 
@@ -25,7 +25,6 @@ export const POST = createEntityPostHandler({
   schema: loanSchema,
   useActorOwnership: true,
   createEntity: async (userId, data, supabase) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return await createLoan(userId, data as any, supabase);
+    return await createLoan(userId, data as unknown as CreateLoanInput, supabase);
   },
 });
