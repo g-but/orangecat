@@ -357,13 +357,19 @@ export function useDiscoverState() {
             : Promise.resolve({ data: null, error: null }),
         ]);
 
-        if (shouldFetch('causes')) { setCauses((causesRes.data ?? []).map(r => ({ ...r }))); }
-        if (shouldFetch('events')) { setEvents((eventsRes.data ?? []).map(r => ({ ...r }))); }
-        if (shouldFetch('products')) { setProducts((productsRes.data ?? []).map(r => ({ ...r }))); }
-        if (shouldFetch('services')) { setServices((servicesRes.data ?? []).map(r => ({ ...r }))); }
+        if (shouldFetch('causes')) { setCauses((causesRes.data ?? []) as unknown as GenericPublicEntity[]); }
+        if (shouldFetch('events')) { setEvents((eventsRes.data ?? []) as unknown as GenericPublicEntity[]); }
+        if (shouldFetch('products')) { setProducts((productsRes.data ?? []) as unknown as GenericPublicEntity[]); }
+        if (shouldFetch('services')) { setServices((servicesRes.data ?? []) as unknown as GenericPublicEntity[]); }
         if (shouldFetch('groups')) {
           setGroups(
-            (groupsRes.data ?? []).map(r => ({ ...r, title: (r as { name: string }).name }))
+            ((groupsRes.data ?? []) as unknown as Array<{ id: string; name: string; description?: string | null; created_at: string; slug?: string | null }>).map(r => ({
+              id: r.id,
+              title: r.name,
+              description: r.description ?? null,
+              created_at: r.created_at,
+              slug: r.slug ?? null,
+            } satisfies GenericPublicEntity))
           );
         }
       } catch (error) {

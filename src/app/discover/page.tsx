@@ -135,7 +135,12 @@ export default function DiscoverPage() {
               profileCount={profiles.length}
               loanCount={loans.length}
               investmentCount={investments.length || totalInvestmentsCount}
-              loading={loading || loansLoading || investmentsLoading}
+              causeCount={causes.length}
+              eventCount={events.length}
+              productCount={products.length}
+              serviceCount={services.length}
+              groupCount={groups.length}
+              loading={loading || loansLoading || investmentsLoading || genericLoading}
             />
 
             <div className="bg-white/70 backdrop-blur-sm rounded-b-2xl border border-gray-200/60 border-t-0 p-6">
