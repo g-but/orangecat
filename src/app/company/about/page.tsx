@@ -5,9 +5,9 @@ import { Users, Heart, Zap, TreePine, Target, Award } from 'lucide-react';
 import BitBaumLogo from '@/components/layout/BitBaumLogo';
 
 export const metadata: Metadata = {
-  title: 'About BitBaum - Growing Bitcoin Communities',
+  title: 'About BitBaum | OrangeCat',
   description:
-    'Learn about BitBaum, the corporate parent of OrangeCat, and our mission to build the future of Bitcoin commerce through threaded conversations and transparent transactions.',
+    'Learn about BitBaum AG, the Swiss company behind OrangeCat — building open economic infrastructure for the Bitcoin era.',
 };
 
 export default function BitBaumAboutPage() {
@@ -24,8 +24,8 @@ export default function BitBaumAboutPage() {
               About <span className="text-orange-600">BitBaum</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Growing Bitcoin communities through transparent commerce and threaded conversations.
-              The corporate parent of OrangeCat.
+              Building open economic infrastructure for the Bitcoin era. The corporate parent of
+              OrangeCat.
             </p>
           </div>
         </div>
@@ -39,9 +39,9 @@ export default function BitBaumAboutPage() {
           </div>
           <h2 className="text-2xl font-semibold text-gray-900 mb-6">Our Mission</h2>
           <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
-            To inspire creativity, enrich lives, and grow interconnected communities through
-            Bitcoin-powered platforms that make commerce transparent, conversations meaningful, and
-            value creation accessible to everyone.
+            Enable anyone — any person, pseudonym, or organization — to participate in the full
+            spectrum of economic activity: exchanging, funding, lending, investing, and governing,
+            with any counterparty, in any currency, without gatekeepers.
           </p>
         </div>
 
@@ -201,17 +201,18 @@ export default function BitBaumAboutPage() {
             <h3 className="text-2xl font-bold text-gray-900 mb-6">Our Vision</h3>
             <div className="space-y-4">
               <div className="p-4 bg-orange-50 rounded-lg">
-                <h4 className="font-semibold text-orange-900 mb-2">Bitcoin Commerce Ecosystem</h4>
+                <h4 className="font-semibold text-orange-900 mb-2">Open Economic Infrastructure</h4>
                 <p className="text-orange-700 text-sm">
-                  Build a suite of Bitcoin-native platforms for every aspect of commerce and
-                  community.
+                  Build Bitcoin-native platforms for every form of economic activity — exchange,
+                  funding, lending, investing, and collective governance.
                 </p>
               </div>
 
               <div className="p-4 bg-tiffany-50 rounded-lg">
-                <h4 className="font-semibold text-tiffany-900 mb-2">Threaded Intelligence</h4>
+                <h4 className="font-semibold text-tiffany-900 mb-2">AI-Native Economics</h4>
                 <p className="text-tiffany-700 text-sm">
-                  Create AI systems that understand conversation trees and community knowledge.
+                  Build AI agents that act as economic participants — creating entities, finding
+                  opportunities, and coordinating on behalf of users.
                 </p>
               </div>
 

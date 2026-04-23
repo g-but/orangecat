@@ -52,7 +52,7 @@ const fadeInUp = {
 };
 
 export default function HowItWorksPage() {
-  const { howItWorks } = SECTION_HEADERS;
+  const { howItWorks, whatCanYouDo } = SECTION_HEADERS;
 
   return (
     <div className="min-h-screen pt-20 pb-16">
@@ -131,11 +131,8 @@ export default function HowItWorksPage() {
         {/* What You Can Do Section */}
         <motion.div className="mb-20" {...fadeInUp}>
           <div className="text-center mb-12">
-            <h2 className="text-2xl font-semibold mb-4">What You Can Do</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              OrangeCat combines commerce, funding, community, and AI—all in one Bitcoin-powered
-              platform.
-            </p>
+            <h2 className="text-2xl font-semibold mb-4">{whatCanYouDo.title}</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">{whatCanYouDo.subtitle}</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
@@ -220,7 +217,8 @@ export default function HowItWorksPage() {
           <Card className="p-12 bg-gradient-to-br from-tiffany-50 via-white to-orange-50 border-2 border-tiffany-100">
             <h2 className="text-2xl font-semibold mb-4">Ready to Get Started?</h2>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Join OrangeCat for commerce, funding, community, and AI—all powered by Bitcoin.
+              Exchange, fund, lend, invest, and govern — with your AI agent, under any identity, in
+              any currency.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button
