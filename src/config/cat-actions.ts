@@ -404,7 +404,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Tip a small amount to that creator',
     ],
     apiEndpoint: '/api/payments/send',
-    enabled: true,
+    enabled: false, // needs Lightning payment infrastructure — no handler implemented yet
   },
 
   fund_project: {
@@ -430,7 +430,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Support the Bitcoin education project',
       'Contribute to their crowdfunding',
     ],
-    enabled: true,
+    enabled: false, // needs Lightning payment infrastructure — no handler implemented yet
   },
 
   // ---------- ORGANIZATION ACTIONS ----------

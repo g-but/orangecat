@@ -348,6 +348,42 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     return { success: true, data: { ...data, conversation_id: conversationId } };
   },
 
+  reply_to_message: async (supabase, userId, _actorId, params) => {
+    const { data, error } = await supabase
+      .from(DATABASE_TABLES.MESSAGES)
+      .insert({
+        conversation_id: params.conversation_id,
+        sender_id: userId,
+        content: params.content,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  },
+
+  invite_to_organization: async (supabase, userId, _actorId, params) => {
+    // group_invitations: group_id (= organization_id), user_id, role, invited_by (inviter's userId)
+    const { data, error } = await supabase
+      .from(DATABASE_TABLES.GROUP_INVITATIONS)
+      .insert({
+        group_id: params.organization_id,
+        user_id: params.user_id,
+        role: (params.role as string) || 'member',
+        invited_by: userId,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  },
+
   // ---------- CONTEXT ACTIONS ----------
 
   add_context: async (supabase, _userId, actorId, params) => {
@@ -818,6 +854,10 @@ export class CatActionExecutor {
         return `Post to timeline: "${String(parameters.content).slice(0, 50)}..."`;
       case 'send_message':
         return `Send message to user`;
+      case 'reply_to_message':
+        return `Reply in conversation: "${String(parameters.content).slice(0, 50)}"`;
+      case 'invite_to_organization':
+        return `Invite user to organization (role: ${parameters.role || 'member'})`;
       case 'send_payment': {
         const amount = parameters.amount_btc;
         return `Send ${amount} BTC to ${parameters.recipient}`;

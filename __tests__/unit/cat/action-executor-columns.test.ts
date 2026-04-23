@@ -403,4 +403,59 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.label).toBe('cooperative');
     });
   });
+
+  // ── reply_to_message ─────────────────────────────────────────────────────────
+  describe('reply_to_message', () => {
+    it('inserts into messages table with conversation_id, sender_id (userId), and content', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'reply_to_message', {
+        conversation_id: 'conv-abc',
+        content: 'Thanks for reaching out!',
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.MESSAGES);
+      expect(insert).toBeDefined();
+
+      expect(insert!.conversation_id).toBe('conv-abc');
+      expect(insert!.content).toBe('Thanks for reaching out!');
+      // sender_id must be the acting userId, not actorId
+      expect(insert!.sender_id).toBe(USER_ID);
+    });
+  });
+
+  // ── invite_to_organization ───────────────────────────────────────────────────
+  describe('invite_to_organization', () => {
+    it('inserts into group_invitations with group_id, user_id, role, and invited_by', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'invite_to_organization', {
+        organization_id: 'org-xyz',
+        user_id: 'invitee-789',
+        role: 'admin',
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.GROUP_INVITATIONS);
+      expect(insert).toBeDefined();
+
+      // organization_id must be mapped to group_id (the DB column)
+      expect(insert!.group_id).toBe('org-xyz');
+      expect((insert as Record<string, unknown>).organization_id).toBeUndefined();
+      expect(insert!.user_id).toBe('invitee-789');
+      expect(insert!.role).toBe('admin');
+      // invited_by must be the acting userId
+      expect(insert!.invited_by).toBe(USER_ID);
+    });
+
+    it('defaults role to member when not provided', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'invite_to_organization', {
+        organization_id: 'org-xyz',
+        user_id: 'invitee-789',
+      });
+
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.GROUP_INVITATIONS);
+      expect(insert!.role).toBe('member');
+    });
+  });
 });
