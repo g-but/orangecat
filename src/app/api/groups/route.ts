@@ -37,8 +37,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
 
     // Build query filters
     const query = {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(type && { type: type as any }),
+      ...(type && { type }),
       ...(category && { category }),
     };
 

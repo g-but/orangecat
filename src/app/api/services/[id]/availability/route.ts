@@ -41,10 +41,7 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
     }
 
     // Verify service exists
-    const { data: service, error: serviceError } = await (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      supabase.from(getTableName('service')) as any
-    )
+    const { data: service, error: serviceError } = await supabase.from(getTableName('service'))
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
       .eq('status', STATUS.SERVICES.ACTIVE)

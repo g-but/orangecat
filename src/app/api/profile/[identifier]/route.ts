@@ -122,9 +122,8 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
     let projectCount = 0;
     try {
       const actor = await getOrCreateUserActor(resolvedUserId);
-      const { count } = await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(getTableName('project')) as any)
+      const { count } = await supabase
+        .from(getTableName('project'))
         .select('*', { count: 'exact', head: true })
         .eq('actor_id', actor.id)
         .neq('status', 'draft'); // Exclude drafts from public view

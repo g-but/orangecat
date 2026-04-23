@@ -67,11 +67,8 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     }
 
     // Fetch current project
-    const { data: existingProject, error: fetchError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(getTableName('project')) as any
-    )
+    const { data: existingProject, error: fetchError } = await supabase
+        .from(getTableName('project'))
       .select('id, user_id, status')
       .eq('id', id)
       .single();
@@ -97,11 +94,8 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     }
 
     // Update status
-    const { data: project, error: updateError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(getTableName('project')) as any
-    )
+    const { data: project, error: updateError } = await supabase
+        .from(getTableName('project'))
       .update({
         status: normalizedStatus,
         updated_at: new Date().toISOString(),

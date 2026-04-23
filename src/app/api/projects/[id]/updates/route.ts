@@ -39,11 +39,8 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
     const { supabase } = req;
 
     // Fetch project to ensure it exists and is viewable
-    const { data: project, error: projectError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(getTableName('project')) as any
-    )
+    const { data: project, error: projectError } = await supabase
+        .from(getTableName('project'))
       .select('id, status')
       .eq('id', projectId)
       .single();

@@ -4,6 +4,7 @@ import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 /**
  * GET /api/messages/unread-count
@@ -21,7 +22,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
   try {
     const { user } = req;
 
-    const admin = createAdminClient();
+    const admin = createAdminClient() as unknown as AnySupabaseClient;
 
     // Optimized approach: Try RPC function first, fallback to old method
     // This ensures backward compatibility if function doesn't exist
@@ -29,13 +30,10 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
 
     // Try optimized RPC function first
     try {
-      const rpcArgs: Database['public']['Functions']['get_total_unread_count']['Args'] = {
-        p_user_id: user.id,
-      };
-      const { data: totalCount, error: rpcError } = await (admin.rpc(
+      const { data: totalCount, error: rpcError } = await admin.rpc(
         'get_total_unread_count',
-        rpcArgs as any
-      ) as any);
+        { p_user_id: user.id }
+      );
 
       if (!rpcError && typeof totalCount === 'number') {
         totalUnread = totalCount;

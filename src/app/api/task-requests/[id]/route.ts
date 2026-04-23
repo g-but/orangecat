@@ -46,7 +46,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tr = taskRequest as any;
+    const tr = taskRequest;
     const canRespond = tr.requested_user_id === user.id || tr.requested_user_id === null;
     if (!canRespond) {return apiForbidden('You cannot respond to this request');}
     if (tr.status !== REQUEST_STATUSES.PENDING) {return apiBadRequest('This request has already been answered');}
@@ -69,7 +69,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     // Notify the requester
     const { data: profile } = await supabase.from(DATABASE_TABLES.PROFILES).select('username, display_name').eq('id', user.id).single();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const responderName = (profile as any)?.display_name || (profile as any)?.username || 'Someone';
+    const responderName = profile?.display_name || profile?.username || 'Someone';
     const taskTitle = tr.task?.title || 'Task';
     const taskId = tr.task?.id || tr.task_id;
     const notifTitle = d.status === REQUEST_STATUSES.ACCEPTED ? `${responderName} accepted: "${taskTitle}"` : `${responderName} declined: "${taskTitle}"`;

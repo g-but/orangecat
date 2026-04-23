@@ -22,7 +22,7 @@ interface RouteContext {
 }
 
 async function verifyResearchOwner(supabase: any, id: string, userId: string, extraFields = '') {
-  const { data, error } = await (supabase.from(getTableName('research')) as any)
+  const { data, error } = await supabase.from(getTableName('research'))
     .select(`user_id${extraFields ? ', ' + extraFields : ''}`)
     .eq('id', id).single();
   if (error) {return error.code === 'PGRST116' ? 'not_found' : ('error' as const);}
@@ -36,7 +36,7 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
   if (idValidation) {return idValidation;}
   const { user, supabase } = request;
   try {
-    const { data: entity, error } = await (supabase.from(getTableName('research')) as any)
+    const { data: entity, error } = await supabase.from(getTableName('research'))
       .select('*').eq('id', id).single();
     if (error) {return error.code === 'PGRST116' ? apiNotFound('Research entity not found') : handleApiError(error);}
     if (!entity.is_public && (!user || user.id !== entity.user_id)) {return apiForbidden('This research entity is private');}
@@ -69,7 +69,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     if (ownership === 'forbidden') {return apiForbidden('You can only update your own research entities');}
     if (ownership === 'error') {return handleApiError(new Error('DB error'));}
 
-    const { data: entity, error: updateError } = await (supabase.from(getTableName('research')) as any)
+    const { data: entity, error: updateError } = await supabase.from(getTableName('research'))
       .update({ ...parsed.data, updated_at: new Date().toISOString() }).eq('id', id).select().single();
     if (updateError) {throw updateError;}
 
@@ -91,9 +91,9 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     if (ownership === 'not_found') {return apiNotFound('Research entity not found');}
     if (ownership === 'forbidden') {return apiForbidden('You can only delete your own research entities');}
     if (ownership === 'error') {return handleApiError(new Error('DB error'));}
-    if ((ownership as any).funding_raised_btc > 0) {return apiForbidden('Cannot delete research entity with funding. Archive instead.');}
+    if (ownership.funding_raised_btc > 0) {return apiForbidden('Cannot delete research entity with funding. Archive instead.');}
 
-    const { error: deleteError } = await (supabase.from(getTableName('research')) as any).delete().eq('id', id);
+    const { error: deleteError } = await supabase.from(getTableName('research')).delete().eq('id', id);
     if (deleteError) {throw deleteError;}
 
     logger.info('Research entity deleted', { researchEntityId: id, userId: user.id });

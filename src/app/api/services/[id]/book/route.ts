@@ -59,11 +59,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const endsAt = new Date(ends_at);
 
     // Verify service exists and is active
-    const { data: service, error: serviceError } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(getTableName('service')) as any
-    )
+    const { data: service, error: serviceError } = await supabase
+        .from(getTableName('service'))
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
       .eq('status', STATUS.SERVICES.ACTIVE)

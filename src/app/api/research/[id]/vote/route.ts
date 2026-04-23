@@ -55,7 +55,7 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
     if (error) {throw error;}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return apiSuccess(aggregateVotes((votesData ?? []) as any[], user?.id ?? null));
+    return apiSuccess(aggregateVotes(votesData ?? [], user?.id ?? null));
   } catch (error) {
     return handleApiError(error);
   }

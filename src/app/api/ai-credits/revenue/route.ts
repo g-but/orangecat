@@ -46,7 +46,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     if (assistantsError) {throw assistantsError;}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const assistantRows = (assistants || []) as any[];
+    const assistantRows = assistants || [];
 
     const totalRevenueBtc = assistantRows.reduce((sum: number, a: any) => sum + (a.total_revenue_btc || 0), 0);
     const totalConversations = assistantRows.reduce((sum: number, a: any) => sum + (a.total_conversations || 0), 0);

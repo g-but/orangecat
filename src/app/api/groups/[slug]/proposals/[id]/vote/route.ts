@@ -42,8 +42,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     if (!parsed.success) {return apiBadRequest('vote must be one of: yes, no, abstain');}
     const result = await castVote({ proposal_id: id, vote: parsed.data.vote }, supabase);
     if (!result.success) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return apiBadRequest((result as any).error);
+      return apiBadRequest(result.error);
     }
     return apiSuccess(result.vote);
   } catch (error) {

@@ -1,5 +1,6 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { apiSuccess, apiBadRequest, handleApiError, apiRateLimited } from '@/lib/api/standardResponse';
 import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
@@ -18,8 +19,7 @@ const CATEGORY_TOGGLE_KEYS = ['economic_emails', 'social_emails', 'group_emails'
 export const GET = withAuth(async (req: AuthenticatedRequest) => {
   try {
     const { user } = req;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const admin = createAdminClient() as any;
+    const admin = createAdminClient() as unknown as AnySupabaseClient;
 
     const { data, error } = await admin.from(TABLE).select('*').eq('user_id', user.id).maybeSingle();
     if (error) { logger.error('Failed to fetch notification preferences', { error, userId: user.id }, 'NotificationPrefs'); throw error; }
@@ -84,8 +84,7 @@ export const PUT = withAuth(async (req: AuthenticatedRequest) => {
     if (Object.keys(updateData).length === 0) {return apiBadRequest('No valid fields provided to update');}
     updateData.updated_at = new Date().toISOString();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const admin = createAdminClient() as any;
+    const admin = createAdminClient() as unknown as AnySupabaseClient;
     const upsertData = { ...createDefaultPreferences(user.id), ...updateData, user_id: user.id };
     const { data, error } = await admin.from(TABLE).upsert(upsertData, { onConflict: 'user_id' }).select().single();
 

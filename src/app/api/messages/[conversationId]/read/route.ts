@@ -8,8 +8,8 @@ import {
 } from '@/lib/api/standardResponse';
 import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
-import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 export const POST = withAuth(async (
@@ -29,11 +29,10 @@ export const POST = withAuth(async (
     }
 
     // Use admin client to bypass RLS for both verification and update
-    const admin = createAdminClient();
+    const admin = createAdminClient() as unknown as AnySupabaseClient;
 
     // Verify user is a participant
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: participant, error: partError } = await (admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
+    const { data: participant, error: partError } = await admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
       .select('*')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
@@ -46,12 +45,8 @@ export const POST = withAuth(async (
 
     // Mark conversation as read by updating last_read_at
     // Use admin client to bypass RLS
-    const updateData: Database['public']['Tables']['conversation_participants']['Update'] = {
-      last_read_at: new Date().toISOString(),
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: readError } = await (admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
-      .update(updateData)
+    const { error: readError } = await admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+      .update({ last_read_at: new Date().toISOString() })
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
       .eq('is_active', true);

@@ -10,7 +10,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { entityWalletLinkSchema } from '@/lib/validation/finance';
 import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
-import { ENTITY_TYPES } from '@/config/entity-registry';
+import { ENTITY_TYPES, type EntityType } from '@/config/entity-registry';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -50,7 +50,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     return apiBadRequest('entity_id must be a valid UUID');
   }
 
-  if (!ENTITY_TYPES.includes(entityType as any)) {
+  if (!ENTITY_TYPES.includes(entityType as EntityType)) {
     return apiBadRequest(`entity_type must be one of: ${ENTITY_TYPES.join(', ')}`);
   }
 

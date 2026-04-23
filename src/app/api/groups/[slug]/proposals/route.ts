@@ -11,7 +11,7 @@ import {
 import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getGroup } from '@/services/groups/queries/groups';
-import { getGroupProposals } from '@/services/groups/queries/proposals';
+import { getGroupProposals, type ProposalStatus } from '@/services/groups/queries/proposals';
 import { createProposal } from '@/services/groups/mutations/proposals';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
@@ -37,8 +37,7 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
     const { slug } = await context.params;
     const { user } = request;
     const { searchParams } = request.nextUrl;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const status = (searchParams.get('status') || 'all') as any;
+    const status = (searchParams.get('status') || 'all') as ProposalStatus | 'all';
     const proposalType = searchParams.get('proposal_type') || undefined;
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const offset = Math.max(0, parseInt(searchParams.get('offset') || '0', 10));

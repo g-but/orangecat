@@ -38,8 +38,7 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
       .order('created_at', { ascending: false });
 
     if (Array.isArray(convs)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const selfConv = (convs as any[]).find(c => {
+      const selfConv = convs.find((c: any) => {
         if (c.is_group) {return false;}
         const parts = Array.isArray(c.participants) ? c.participants : [];
         return parts.length === 1 && parts[0]?.user_id === user.id;

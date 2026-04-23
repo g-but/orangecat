@@ -44,11 +44,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 
-    const { data: project } = await (
-      supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(getTableName('project')) as any
-    )
+    const { data: project } = await supabase
+        .from(getTableName('project'))
       .select('user_id')
       .eq('id', projectId)
       .single();

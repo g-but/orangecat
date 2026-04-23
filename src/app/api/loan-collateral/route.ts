@@ -58,7 +58,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     // Verify ownership of loan
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: loan, error: loanErr } = await (supabase.from(getTableName('loan')) as any)
+    const { data: loan, error: loanErr } = await supabase.from(getTableName('loan'))
       .select('id, actor_id')
       .eq('id', data.loan_id)
       .single();
@@ -69,7 +69,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     // Verify ownership of asset
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: asset, error: assetErr } = await (supabase.from(getTableName('asset')) as any)
+    const { data: asset, error: assetErr } = await supabase.from(getTableName('asset'))
       .select('id, actor_id')
       .eq('id', data.asset_id)
       .single();

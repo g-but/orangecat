@@ -19,9 +19,8 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
     const { supabase } = req;
 
     // Get project details
-    const { data: projectData, error: projectError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('project')) as any)
+    const { data: projectData, error: projectError } = await supabase
+      .from(getTableName('project'))
       .select(
         `
         id,
@@ -40,7 +39,7 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
       .eq('id', projectId)
       .single();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const project = projectData as any;
+    const project = projectData;
 
     if (projectError || !project) {
       return apiNotFound('Campaign not found');
@@ -77,15 +76,14 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
     const dailyFundingRate = project.raised_amount / daysSinceCreation;
 
     // Get project category and related projects
-    const { data: relatedProjectsData, error: _relatedError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('project')) as any)
+    const { data: relatedProjectsData, error: _relatedError } = await supabase
+      .from(getTableName('project'))
       .select('id, title, raised_amount')
       .eq('category', project.category || '')
       .neq('id', projectId)
       .limit(5);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const relatedProjects = relatedProjectsData as any[];
+    const relatedProjects = relatedProjectsData;
 
     const categoryRank = relatedProjects?.length || 0;
 
