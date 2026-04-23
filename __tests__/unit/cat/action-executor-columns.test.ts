@@ -214,7 +214,7 @@ describe('Cat action-executor — correct DB column names', () => {
 
   // ── create_cause ────────────────────────────────────────────────────────────
   describe('create_cause', () => {
-    it('uses `cause_category` (not category) and includes goal_amount + currency', async () => {
+    it('uses `cause_category` (not category) and includes target_amount + currency', async () => {
       const supabase = buildMockSupabase();
       await run(supabase, 'create_cause', {
         title: 'Feed the World',
@@ -226,7 +226,9 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.cause_category).toBe('hunger');
       // `category` must NOT appear — it's not a DB column on causes
       expect(insert!.category).toBeUndefined();
-      expect(insert!.goal_amount).toBe(10);
+      // DB column is `target_amount`, not `goal_amount`
+      expect(insert!.target_amount).toBe(10);
+      expect(insert!.goal_amount).toBeUndefined();
       expect(insert!.currency).toBe('BTC');
       expect(insert!.actor_id).toBe(ACTOR_ID);
     });
@@ -242,11 +244,12 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.category).toBeUndefined();
     });
 
-    it('falls back to goal_amount param when no goal_btc', async () => {
+    it('falls back to target_amount param when no goal_btc', async () => {
       const supabase = buildMockSupabase();
-      await run(supabase, 'create_cause', { title: 'C', goal_amount: 5 });
+      await run(supabase, 'create_cause', { title: 'C', target_amount: 5 });
       const insert = getEntityInsert(supabase, ENTITY_REGISTRY.cause.tableName);
-      expect(insert!.goal_amount).toBe(5);
+      expect(insert!.target_amount).toBe(5);
+      expect(insert!.goal_amount).toBeUndefined();
     });
   });
 

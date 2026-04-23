@@ -7,6 +7,9 @@ import {
 } from '@/lib/api/standardResponse';
 import { getTableName } from '@/config/entity-registry';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { DATABASE_TABLES } from '@/config/database-tables';
+
+const DEFAULT_CAMPAIGN_DURATION_DAYS = 30;
 
 export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ id: string }> }) => {
   try {
@@ -43,9 +46,13 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
       return apiNotFound('Campaign not found');
     }
 
-    // Get transaction/donation count (if transactions table exists)
-    // For now, we'll calculate based on raised amount
-    const donorCount = project.raised_amount > 0 ? Math.ceil(project.raised_amount / 10000) : 0;
+    // Get real supporter count from project_support table
+    const { count: supportCount } = await supabase
+      .from(DATABASE_TABLES.PROJECT_SUPPORT)
+      .select('*', { count: 'exact', head: true })
+      .eq('project_id', projectId)
+      .eq('status', 'confirmed');
+    const donorCount = supportCount ?? 0;
 
     // Calculate progress
     const progressPercent =
@@ -53,9 +60,9 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
         ? Math.min((project.raised_amount / project.goal_amount) * 100, 100)
         : 0;
 
-    // Calculate days remaining (30 days from creation by default)
+    // Calculate days remaining (default campaign duration from creation date)
     const createdDate = new Date(project.created_at);
-    const endDate = new Date(createdDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const endDate = new Date(createdDate.getTime() + DEFAULT_CAMPAIGN_DURATION_DAYS * 24 * 60 * 60 * 1000);
     const now = new Date();
     const daysRemaining = Math.max(
       0,
@@ -98,7 +105,7 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
         daysActive: daysSinceCreation,
         daysRemaining,
         endDate: endDate.toISOString(),
-        daysPercentElapsed: Math.min((daysSinceCreation / 30) * 100, 100),
+        daysPercentElapsed: Math.min((daysSinceCreation / DEFAULT_CAMPAIGN_DURATION_DAYS) * 100, 100),
       },
       performanceMetrics: {
         dailyFundingRate: Math.round(dailyFundingRate),
@@ -109,7 +116,7 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
         categoryRank,
       },
       status: project.status,
-      visibility: 'public', // MVP: all projects are public
+      visibility: project.status === 'active' ? 'public' : project.status,
     });
   } catch (error) {
     logger.error('Error fetching project stats', { error, projectId: (await params).id }, 'Projects');

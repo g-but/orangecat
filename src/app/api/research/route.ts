@@ -11,6 +11,7 @@ import {
   apiSuccess,
   handleApiError,
   apiRateLimited,
+  handleValidationError,
 } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { compose } from '@/lib/api/compose';
@@ -106,7 +107,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const schema = researchConfig.schema as ZodType | undefined;
     if (schema) {
       const parsed = schema.safeParse(body);
-      if (!parsed.success) {return handleApiError({ message: 'Invalid request body' });}
+      if (!parsed.success) {return handleValidationError(parsed.error);}
     }
 
     const { response } = await createResearch(supabase, user.id, body as ResearchEntityCreate);

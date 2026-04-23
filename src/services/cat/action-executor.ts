@@ -147,8 +147,8 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   },
 
   create_cause: async (supabase, _userId, actorId, params) => {
-    // DB column is `cause_category` (not `category`); also needs goal_amount + currency
-    const goalAmount = (params.goal_btc as number | null) ?? (params.goal_amount as number | null) ?? null;
+    // DB column is `cause_category` (not `category`); target_amount is the funding goal
+    const targetAmount = (params.goal_btc as number | null) ?? (params.target_amount as number | null) ?? (params.goal_amount as number | null) ?? null;
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.cause.tableName)
       .insert({
@@ -156,7 +156,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
         title: params.title,
         description: params.description || null,
         cause_category: (params.cause_category as string | null) ?? (params.category as string | null) ?? null,
-        goal_amount: goalAmount,
+        target_amount: targetAmount,
         currency: 'BTC',
         status: params.publish ? 'active' : 'draft',
       })
