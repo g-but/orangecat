@@ -372,17 +372,19 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   // ---------- PRODUCTIVITY ACTIONS ----------
 
   create_task: async (supabase, userId, _actorId, params) => {
+    // DB columns: current_status (not status), task_type enum: one_time|recurring_scheduled|recurring_as_needed,
+    // category enum: cleaning|maintenance|admin|inventory|it|kitchen|workshop|logistics|other,
+    // priority enum: low|normal|high|urgent (not medium)
     const { data, error } = await supabase
       .from(DATABASE_TABLES.TASKS)
       .insert({
         created_by: userId,
         title: params.title,
         description: (params.description as string | null) || null,
-        priority: (params.priority as string) || 'medium',
-        due_date: (params.due_date as string | null) || null,
-        status: 'pending',
-        task_type: 'personal',
-        category: 'general',
+        priority: (params.priority as string) || 'normal',
+        task_type: 'one_time',
+        category: 'other',
+        current_status: 'idle',
       })
       .select()
       .single();
@@ -396,13 +398,24 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   // ---------- ORGANIZATION ACTIONS ----------
 
   create_organization: async (supabase, userId, _actorId, params) => {
+    // groups table has: name, slug (UNIQUE NOT NULL), label (not type), created_by
+    // label enum: circle|family|dao|company|nonprofit|cooperative|guild|network_state
+    const name = params.name as string;
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 60)
+      + '-' + Math.random().toString(36).slice(2, 7);
+
     // Create the group (organization)
     const { data: group, error: groupError } = await supabase
       .from(ENTITY_REGISTRY.group.tableName)
       .insert({
-        name: params.name,
+        name,
+        slug,
         description: params.description || null,
-        type: params.type || 'organization',
+        label: (params.label as string | null) ?? (params.type as string | null) ?? 'circle',
         created_by: userId,
       })
       .select()

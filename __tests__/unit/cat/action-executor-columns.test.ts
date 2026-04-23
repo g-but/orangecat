@@ -15,6 +15,7 @@
 
 import { CatActionExecutor } from '@/services/cat/action-executor';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // ── Mock CatPermissionService ─────────────────────────────────────────────────
 // Auto-allow every action: allowed=true, requiresConfirmation=false
@@ -331,6 +332,75 @@ describe('Cat action-executor — correct DB column names', () => {
 
       expect(result.status).toBe('failed');
       expect(result.error).toMatch(/no valid fields/i);
+    });
+  });
+
+  // ── create_task ─────────────────────────────────────────────────────────────
+  describe('create_task', () => {
+    it('uses current_status (not status) with valid enum values', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'create_task', {
+        title: 'Fix the sink',
+        description: 'Leaking pipe under kitchen sink',
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+      expect(insert).toBeDefined();
+
+      // Correct column name
+      expect(insert!.current_status).toBe('idle');
+      // Wrong column name must NOT appear
+      expect((insert as Record<string, unknown>).status).toBeUndefined();
+
+      // Valid enum values only
+      expect(insert!.task_type).toBe('one_time');       // not 'personal'
+      expect(insert!.category).toBe('other');            // not 'general'
+      expect(insert!.priority).toBe('normal');           // not 'medium'
+      expect(insert!.created_by).toBe(USER_ID);
+    });
+  });
+
+  // ── create_organization ─────────────────────────────────────────────────────
+  describe('create_organization', () => {
+    it('uses label (not type) and generates a slug', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'create_organization', {
+        name: 'Bitcoin Builders',
+        description: 'Building on Bitcoin',
+        label: 'company',
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.group.tableName);
+      expect(insert).toBeDefined();
+
+      // Correct column used
+      expect(insert!.label).toBe('company');
+      // Wrong column must NOT appear
+      expect((insert as Record<string, unknown>).type).toBeUndefined();
+
+      // Slug must be generated (non-empty, derived from name)
+      expect(typeof insert!.slug).toBe('string');
+      expect((insert!.slug as string).length).toBeGreaterThan(0);
+      expect((insert!.slug as string)).toMatch(/^bitcoin-builders-/);
+
+      expect(insert!.name).toBe('Bitcoin Builders');
+      expect(insert!.created_by).toBe(USER_ID);
+    });
+
+    it('defaults label to circle when not provided', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_organization', { name: 'My Group' });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.group.tableName);
+      expect(insert!.label).toBe('circle');
+    });
+
+    it('accepts legacy type param as fallback for label', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_organization', { name: 'Coop', type: 'cooperative' });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.group.tableName);
+      expect(insert!.label).toBe('cooperative');
     });
   });
 });
