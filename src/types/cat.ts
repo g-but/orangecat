@@ -19,7 +19,16 @@ import type { WalletBehaviorType, WalletCategory, BudgetPeriod } from '@/types/w
  */
 export type CatCreatableEntityType = Extract<
   EntityType,
-  'product' | 'service' | 'project' | 'cause' | 'event' | 'asset'
+  | 'product'
+  | 'service'
+  | 'project'
+  | 'cause'
+  | 'event'
+  | 'asset'
+  | 'loan'
+  | 'investment'
+  | 'research'
+  | 'wishlist'
 >;
 
 /** All entity types Cat can create, as a runtime array for validation */
@@ -30,6 +39,10 @@ export const CAT_CREATABLE_ENTITY_TYPES: CatCreatableEntityType[] = [
   'cause',
   'event',
   'asset',
+  'loan',
+  'investment',
+  'research',
+  'wishlist',
 ];
 
 /**
