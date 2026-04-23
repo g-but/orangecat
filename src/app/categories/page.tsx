@@ -35,7 +35,7 @@ export default function CategoriesPage() {
           <h1 className="text-4xl font-bold mb-4">Find Your Community</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Whether you&apos;re a creator, builder, educator, or organization, OrangeCat helps you
-            receive Bitcoin funding transparently.
+            exchange, fund, lend, invest, and govern—without gatekeepers.
           </p>
         </div>
 

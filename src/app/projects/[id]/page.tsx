@@ -71,7 +71,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = `${project.title} | OrangeCat`;
   const description =
     project.description ||
-    `Support ${project.title} on OrangeCat. ${progress > 0 ? `${progress}% funded. ` : ''}Bitcoin fundraising project by ${creatorName}.`;
+    `Support ${project.title} on OrangeCat. ${progress > 0 ? `${progress}% funded. ` : ''}Community-funded project by ${creatorName}.`;
   const image = creatorProfile?.avatar_url || '/images/og-default.png';
   const url = `https://orangecat.ch${ROUTES.PROJECTS.VIEW(id)}`;
 

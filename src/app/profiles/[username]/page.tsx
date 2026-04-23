@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       // Not authenticated - return generic metadata
       return {
         title: 'My Profile | OrangeCat',
-        description: 'View your profile on OrangeCat. Support Bitcoin fundraising projects.',
+        description: 'View your profile on OrangeCat. Exchange, fund, lend, invest, and connect with others.',
       };
     }
   }
@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const displayName = profile.name || profile.username || targetUsername;
   const description =
     profile.bio ||
-    `View ${displayName}'s profile on OrangeCat. Support their Bitcoin fundraising projects.`;
+    `View ${displayName}'s profile on OrangeCat. Explore their projects, services, and economic activity.`;
   const image = profile.avatar_url || '/images/og-default.png';
   // Use actual username in URL, not "me" for better SEO
   const url = `https://orangecat.ch/profiles/${profile.username || targetUsername}`;

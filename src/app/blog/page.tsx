@@ -13,7 +13,7 @@ export default function BlogPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">OrangeCat Blog</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Insights, guides, and stories about Bitcoin funding and community building
+            Insights, guides, and stories about economic freedom, Bitcoin, and building on OrangeCat
           </p>
         </div>
 

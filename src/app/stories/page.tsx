@@ -20,7 +20,7 @@ const StoriesPageClient = nextDynamic(() => import('@/components/stories/Stories
 export const metadata: Metadata = {
   title: 'Success Stories | OrangeCat',
   description:
-    'Real stories from real people using OrangeCat to fund their projects with Bitcoin. From artists to entrepreneurs, medical researchers to educators—see how direct Bitcoin funding makes real change.',
+    'Real stories from people using OrangeCat to fund projects, sell services, and build economic independence. From artists to entrepreneurs, researchers to educators—peer-to-peer economic participation without middlemen.',
   openGraph: {
     title: 'Success Stories | OrangeCat',
     description:
