@@ -9,7 +9,7 @@ import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api
 import type { User } from '@supabase/supabase-js';
 import { logger } from '@/utils/logger';
 import { handleSupabaseError } from '@/lib/wallets/errorHandling';
-import { applyRateLimitHeaders, rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  applyRateLimitHeaders, rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { apiSuccess, apiRateLimited } from '@/lib/api/standardResponse';
 import { validateOneOfIds, getValidationError } from '@/lib/api/validation';
 import { getTableName } from '@/config/entity-registry';
@@ -80,7 +80,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const { user, supabase } = request;
 
     const rateLimitResult = await rateLimitWriteAsync(user.id);
-    if (!rateLimitResult.success) { return apiRateLimited('Too many wallet creation requests. Please slow down.', Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)); }
+    if (!rateLimitResult.success) { return apiRateLimited('Too many wallet creation requests. Please slow down.', retryAfterSeconds(rateLimitResult)); }
 
     const rawBody = await request.json();
     const { response } = await createWallet(supabase, user, rawBody);

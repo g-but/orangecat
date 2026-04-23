@@ -18,7 +18,7 @@ import {
   apiSuccess,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskCompletionSchema } from '@/lib/schemas/tasks';
@@ -38,7 +38,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   const db = supabase as any;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const body = await request.json().catch(() => ({}));
     const result = taskCompletionSchema.safeParse(body);

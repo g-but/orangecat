@@ -9,7 +9,7 @@ import {
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { entityWalletLinkSchema } from '@/lib/validation/finance';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { ENTITY_TYPES } from '@/config/entity-registry';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -75,7 +75,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
   // Rate limiting
   const rl = await rateLimitWriteAsync(user.id);
-  if (!rl.success) { return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000)); }
+  if (!rl.success) { return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl)); }
 
   // Zod validation
   const body = await request.json();

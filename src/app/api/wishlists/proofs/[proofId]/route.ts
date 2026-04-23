@@ -22,7 +22,7 @@ import {
   apiInternalError,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ proofId: string }>;
@@ -42,7 +42,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      const retryAfter = retryAfterSeconds(rl);
       return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 

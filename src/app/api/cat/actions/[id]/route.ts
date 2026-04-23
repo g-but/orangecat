@@ -20,7 +20,7 @@ import {
   apiInternalError,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { apiNotFound } from '@/lib/api/standardResponse';
@@ -42,7 +42,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     // Get user's actor ID
     const actorId = await getUserActorId(supabase, user.id);
@@ -76,7 +76,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     // Get optional rejection reason from body (max 500 chars)
     let reason: string | undefined;

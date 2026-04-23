@@ -9,7 +9,7 @@
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { apiBadRequest, apiSuccess, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { createApiKeyService } from '@/services/ai/api-key-service';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
@@ -28,7 +28,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      const retryAfter = retryAfterSeconds(rl);
       return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 

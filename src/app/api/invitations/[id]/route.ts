@@ -14,7 +14,7 @@ import {
   apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
@@ -64,7 +64,7 @@ export const POST = withAuth(
 
       const rl = await rateLimitWriteAsync(user.id);
       if (!rl.success) {
-        return apiRateLimited('Too many invitation requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+        return apiRateLimited('Too many invitation requests. Please slow down.', retryAfterSeconds(rl));
       }
 
       const body = await req.json();
@@ -113,7 +113,7 @@ export const DELETE = withAuth(
 
       const rl = await rateLimitWriteAsync(user.id);
       if (!rl.success) {
-        return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+        return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
       }
 
       const { data: invitation, error: inviteError } = await (

@@ -9,7 +9,7 @@ import {
 import { logger } from '@/utils/logger';
 import { ProfileServerService } from '@/services/profile/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import type { User } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
@@ -61,7 +61,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest) => {
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
-      return apiRateLimited('Too many profile update requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+      return apiRateLimited('Too many profile update requests. Please slow down.', retryAfterSeconds(rl));
     }
 
     const body = await request.json();

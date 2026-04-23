@@ -13,7 +13,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiNotFound, apiBadRequest, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext {
@@ -69,7 +69,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const body = await request.json();
     const result = updateConversationSchema.safeParse(body);
@@ -103,7 +103,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const { error } = await supabase
       .from(DATABASE_TABLES.AI_CONVERSATIONS)

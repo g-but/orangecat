@@ -17,7 +17,7 @@ import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination, getString } from '@/lib/api/query';
-import { applyRateLimitHeaders, rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  applyRateLimitHeaders, rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
@@ -100,7 +100,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) { return apiRateLimited('Too many creation requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000)); }
+    if (!rl.success) { return apiRateLimited('Too many creation requests. Please slow down.', retryAfterSeconds(rl)); }
 
     const body = await (request as NextRequest).json();
     const schema = researchConfig.schema as ZodType | undefined;

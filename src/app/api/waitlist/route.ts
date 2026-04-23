@@ -3,7 +3,7 @@ import { withOptionalAuth } from '@/lib/api/withAuth';
 import { apiSuccess, apiValidationError, apiRateLimited, handleApiError, apiBadRequest } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
-import { rateLimit } from '@/lib/rate-limit';
+import {  rateLimit , retryAfterSeconds } from '@/lib/rate-limit';
 import { z } from 'zod';
 
 const waitlistSchema = z.object({
@@ -15,7 +15,7 @@ const waitlistSchema = z.object({
 export const POST = withOptionalAuth(async (request) => {
   try {
     const rl = await rateLimit(request as NextRequest);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const { user, supabase } = request;
     const body = await (request as NextRequest).json().catch(() => ({}));

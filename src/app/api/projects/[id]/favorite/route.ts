@@ -14,7 +14,7 @@ import {
   apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
@@ -45,7 +45,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, { params }: R
   try {
     const { user, supabase } = request;
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: project } = await (supabase.from(getTableName('project')) as any)
@@ -77,7 +77,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, { params }:
   try {
     const { user, supabase } = request;
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: project } = await (supabase.from(getTableName('project')) as any)

@@ -12,7 +12,7 @@ import { CAT_ACTIONS, ACTION_CATEGORIES, ACTION_CATEGORY_KEYS, type ActionCatego
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiBadRequest, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 
 const categorySchema = z.enum(ACTION_CATEGORY_KEYS);
@@ -51,7 +51,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const body = await (request as NextRequest).json();
     const parseResult = grantPermissionSchema.safeParse(body);
@@ -83,7 +83,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const body = await (request as NextRequest).json();
     const parseResult = revokePermissionSchema.safeParse(body);

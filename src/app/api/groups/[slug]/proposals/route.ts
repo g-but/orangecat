@@ -8,7 +8,7 @@ import {
   apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getGroup } from '@/services/groups/queries/groups';
 import { getGroupProposals } from '@/services/groups/queries/proposals';
@@ -78,7 +78,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      const retryAfter = retryAfterSeconds(rl);
       return apiRateLimited('Too many proposal requests. Please slow down.', retryAfter);
     }
 

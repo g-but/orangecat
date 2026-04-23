@@ -5,7 +5,7 @@ import {
   apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse'
-import { rateLimitWriteAsync } from '@/lib/rate-limit'
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit'
 import { logger } from '@/utils/logger'
 import { z } from 'zod'
 import { DATABASE_TABLES } from '@/config/database-tables'
@@ -21,7 +21,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     const rl = await rateLimitWriteAsync(user.id)
     if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000)
+      const retryAfter = retryAfterSeconds(rl)
       return apiRateLimited('Too many requests. Please slow down.', retryAfter)
     }
 

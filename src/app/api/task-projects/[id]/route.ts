@@ -16,7 +16,7 @@ import {
   apiSuccess,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskProjectUpdateSchema } from '@/lib/schemas/tasks';
 import { logger } from '@/utils/logger';
@@ -59,7 +59,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const ownership = await verifyTaskProjectOwner(supabase, id, user.id);
     if (ownership === 'not_found') {return apiNotFound('Project not found');}
@@ -98,7 +98,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const ownership = await verifyTaskProjectOwner(supabase, id, user.id);
     if (ownership === 'not_found') {return apiNotFound('Project not found');}

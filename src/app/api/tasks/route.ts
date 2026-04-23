@@ -17,7 +17,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskSchema, type TaskFilter } from '@/lib/schemas/tasks';
 import { TASK_DEFAULTS } from '@/config/tasks';
 import { logger } from '@/utils/logger';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   const { supabase } = request;
@@ -66,7 +66,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many task creation requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many task creation requests. Please slow down.', retryAfterSeconds(rl));}
 
     const body = await (request as NextRequest).json();
     const result = taskSchema.safeParse(body);

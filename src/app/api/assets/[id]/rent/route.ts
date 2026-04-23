@@ -11,7 +11,7 @@ import { STATUS } from '@/config/database-constants';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import { apiCreated, apiBadRequest, apiNotFound, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { getUserActorId } from '@/domain/actors';
 
@@ -43,7 +43,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const db = supabase as any;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many rent requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many rent requests. Please slow down.', retryAfterSeconds(rl));}
 
     const body = await request.json();
     const result = rentAssetSchema.safeParse(body);

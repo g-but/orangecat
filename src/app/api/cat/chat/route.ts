@@ -20,7 +20,7 @@ import {
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { GroqAPIError } from '@/services/ai';
-import { applyRateLimitHeaders, rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  applyRateLimitHeaders, rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { buildCatSystemPrompt } from '@/services/cat/system-prompt';
 import { getCatFewShotExamples } from '@/services/cat/few-shot-examples';
 import { parseActionsFromResponse } from '@/services/cat/response-parser';
@@ -58,7 +58,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     // Rate limit (write-tier reused for chat to prevent abuse)
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      const retryAfter = retryAfterSeconds(rl);
       return new Response(
         JSON.stringify({ error: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED', limit: rl.limit, remaining: 0, resetTime: rl.resetTime, resetDate: new Date(rl.resetTime).toUTCString() }),
         { status: 429, headers: { 'Content-Type': 'application/json', 'X-RateLimit-Limit': String(rl.limit), 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': String(rl.resetTime), 'Retry-After': String(retryAfter) } }

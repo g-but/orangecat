@@ -8,7 +8,7 @@
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { apiSuccess, apiForbidden, apiNotFound, apiValidationError, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
@@ -71,7 +71,7 @@ export const PUT = withAuth(
       const db = supabase as any;
 
       const rl = await rateLimitWriteAsync(user.id);
-      if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+      if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
       const group = await resolveGroupBySlug(supabase, slug);
       if (!group) {return apiNotFound('Group not found');}
@@ -108,7 +108,7 @@ export const DELETE = withAuth(
       const db = supabase as any;
 
       const rl = await rateLimitWriteAsync(user.id);
-      if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+      if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
       const group = await resolveGroupBySlug(supabase, slug);
       if (!group) {return apiNotFound('Group not found');}

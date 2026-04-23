@@ -256,10 +256,18 @@ export function createRateLimitResponse(result: RateLimitResult): Response {
         'X-RateLimit-Limit': result.limit.toString(),
         'X-RateLimit-Remaining': result.remaining.toString(),
         'X-RateLimit-Reset': result.resetTime.toString(),
-        'Retry-After': Math.ceil((result.resetTime - Date.now()) / 1000).toString(),
+        'Retry-After': retryAfterSeconds(result).toString(),
       },
     }
   );
+}
+
+/**
+ * Compute seconds until a rate limit resets.
+ * Eliminates the repeated inline Math.ceil((result.resetTime - Date.now()) / 1000).
+ */
+export function retryAfterSeconds(result: RateLimitResult): number {
+  return Math.ceil((result.resetTime - Date.now()) / 1000);
 }
 
 /**
@@ -270,7 +278,7 @@ export function applyRateLimitHeaders<T extends Response>(response: T, result: R
   headers.set('X-RateLimit-Limit', result.limit.toString());
   headers.set('X-RateLimit-Remaining', result.remaining.toString());
   headers.set('X-RateLimit-Reset', result.resetTime.toString());
-  headers.set('Retry-After', Math.ceil((result.resetTime - Date.now()) / 1000).toString());
+  headers.set('Retry-After', retryAfterSeconds(result).toString());
   return response;
 }
 

@@ -18,7 +18,7 @@ import {
   apiCreated,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
@@ -27,7 +27,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const db = supabase as any;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const body = await request.json();
     const v = wishlistFeedbackSchema.safeParse(body);

@@ -6,7 +6,7 @@
  */
 
 import { apiSuccess, apiValidationError, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { generateTitle, detectDocumentType } from '@/services/documents/textExtractor';
 
@@ -19,7 +19,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const { user } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many extraction requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many extraction requests. Please slow down.', retryAfterSeconds(rl));}
 
     const formData = await request.formData();
     const file = formData.get('file') as File;

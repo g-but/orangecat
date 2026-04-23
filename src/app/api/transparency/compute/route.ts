@@ -5,7 +5,7 @@ import {
 } from '@/services/transparency';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { apiSuccess, apiError, apiRateLimited } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 
 const TRANSPARENCY_KEYS: (keyof TransparencyData)[] = [
   'isOpenSource',
@@ -33,7 +33,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      const retryAfter = retryAfterSeconds(rl);
       return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 

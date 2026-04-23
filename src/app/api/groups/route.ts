@@ -20,7 +20,7 @@ import {
   apiInternalError,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
@@ -66,7 +66,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      const retryAfter = retryAfterSeconds(rl);
       return apiRateLimited('Too many group creation requests. Please slow down.', retryAfter);
     }
 

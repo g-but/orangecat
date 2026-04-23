@@ -9,7 +9,7 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 
@@ -88,7 +88,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     }
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many updates. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many updates. Please slow down.', retryAfterSeconds(rl));}
 
     const rawBody = await (request as NextRequest).json();
     const parsed = progressUpdateSchema.safeParse(rawBody);

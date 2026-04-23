@@ -13,7 +13,7 @@ import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api
 import groupsService from '@/services/groups';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiCreated, apiNotFound, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ slug: string }>;
@@ -54,7 +54,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      const retryAfter = retryAfterSeconds(rl);
       return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 

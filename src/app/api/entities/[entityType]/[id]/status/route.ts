@@ -19,7 +19,7 @@ import {
   handleSupabaseError,
 } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { rateLimit, applyRateLimitHeaders } from '@/lib/rate-limit';
+import {  rateLimit, applyRateLimitHeaders , retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { isValidEntityType, getTableName, getUserIdField, type EntityType } from '@/config/entity-registry';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
@@ -52,7 +52,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
 
     const rateLimitResult = await rateLimit(request);
     if (!rateLimitResult.success) {
-      return apiRateLimited('Too many requests', rateLimitResult.resetTime ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000) : undefined);
+      return apiRateLimited('Too many requests', rateLimitResult.resetTime ? retryAfterSeconds(rateLimitResult) : undefined);
     }
 
     const { user, supabase } = request;

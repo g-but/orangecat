@@ -8,7 +8,7 @@ import {
   apiConflict,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { applyRateLimitHeaders, rateLimitSocialAsync } from '@/lib/rate-limit';
+import {  applyRateLimitHeaders, rateLimitSocialAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -20,7 +20,7 @@ async function handleFollow(request: AuthenticatedRequest) {
 
     // Rate limiting check - 10 follows per minute
     const rateLimitResult = await rateLimitSocialAsync(user.id);
-    if (!rateLimitResult.success) { return apiRateLimited('Too many follow requests. Please slow down.', Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)); }
+    if (!rateLimitResult.success) { return apiRateLimited('Too many follow requests. Please slow down.', retryAfterSeconds(rateLimitResult)); }
 
     const { following_id } = await request.json();
 

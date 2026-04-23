@@ -12,7 +12,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiNotFound, apiForbidden, apiBadRequest, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 
 interface RouteContext { params: Promise<{ id: string }> }
@@ -67,7 +67,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const body = await request.json();
     const result = updateBookingSchema.safeParse(body);
@@ -106,7 +106,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { user, supabase } = request;
 
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await createBookingService(supabase as any).cancelBooking(id, user.id, new URL(request.url).searchParams.get('reason') || undefined);

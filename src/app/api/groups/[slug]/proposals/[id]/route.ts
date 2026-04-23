@@ -11,7 +11,7 @@ import { getProposal } from '@/services/groups/queries/proposals';
 import { updateProposal, deleteProposal } from '@/services/groups/mutations/proposals';
 import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { z } from 'zod';
 
 const updateProposalSchema = z.object({
@@ -53,7 +53,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const body = await (request as NextRequest).json();
     const parsed = updateProposalSchema.safeParse(body);
@@ -76,7 +76,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const result = await deleteProposal(id, supabase);
     if (!result.success) {

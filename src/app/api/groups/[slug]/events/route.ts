@@ -15,7 +15,7 @@ import {
   apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -93,7 +93,7 @@ export const POST = withAuth(
 
       const rl = await rateLimitWriteAsync(user.id);
       if (!rl.success) {
-        return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));
+        return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
       }
 
       const group = await resolveGroupBySlug(supabase, slug);

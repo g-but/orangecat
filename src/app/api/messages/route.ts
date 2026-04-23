@@ -9,7 +9,7 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 
 // Schema for creating a conversation
 const createConversationSchema = z.object({
@@ -42,7 +42,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      const retryAfter = retryAfterSeconds(rl);
       return apiRateLimited('Too many conversation requests. Please slow down.', retryAfter);
     }
 

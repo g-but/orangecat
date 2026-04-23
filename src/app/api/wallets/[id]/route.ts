@@ -12,7 +12,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { walletUpdateSchema } from '@/lib/validation/finance';
 import {
   fetchWalletAndVerifyOwner,
@@ -34,7 +34,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     const { user, supabase } = request;
 
     const rlUpdate = await rateLimitWriteAsync(user.id);
-    if (!rlUpdate.success) { return apiRateLimited('Too many wallet update requests. Please slow down.', Math.ceil((rlUpdate.resetTime - Date.now()) / 1000)); }
+    if (!rlUpdate.success) { return apiRateLimited('Too many wallet update requests. Please slow down.', retryAfterSeconds(rlUpdate)); }
 
     const rawBody = await request.json();
     const parseResult = walletUpdateSchema.safeParse(rawBody);
@@ -87,7 +87,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const { user, supabase } = request;
 
     const rlDelete = await rateLimitWriteAsync(user.id);
-    if (!rlDelete.success) { return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rlDelete.resetTime - Date.now()) / 1000)); }
+    if (!rlDelete.success) { return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rlDelete)); }
 
     const result = await fetchWalletAndVerifyOwner(supabase, id, user.id, 'delete');
     if (result.error) {return result.error;}

@@ -8,7 +8,7 @@ import {
   apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
@@ -58,7 +58,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const body = await (request as NextRequest).json();
     const parsed = researchUpdateSchema.safeParse(body);
@@ -85,7 +85,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
   const { user, supabase } = request;
   try {
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000));}
+    if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
     const ownership = await verifyResearchOwner(supabase, id, user.id, 'funding_raised_btc');
     if (ownership === 'not_found') {return apiNotFound('Research entity not found');}

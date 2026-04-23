@@ -17,7 +17,7 @@ import {
   apiRateLimited,
   apiError,
 } from '@/lib/api/standardResponse';
-import { applyRateLimitHeaders, rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  applyRateLimitHeaders, rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
@@ -44,7 +44,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     const rateLimitResult = await rateLimitWriteAsync(user.id);
     if (!rateLimitResult.success) {
-      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
+      const retryAfter = retryAfterSeconds(rateLimitResult);
       const rlResponse = apiRateLimited('Rate limit exceeded', retryAfter);
       rlResponse.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit));
       rlResponse.headers.set('X-RateLimit-Remaining', '0');

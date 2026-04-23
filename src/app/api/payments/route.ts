@@ -14,7 +14,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { initiatePayment } from '@/domain/payments';
 import { paymentCreateSchema } from '@/lib/validation/finance';
-import { rateLimitWriteAsync } from '@/lib/rate-limit';
+import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
@@ -24,7 +24,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     // Rate limiting
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      const retryAfter = retryAfterSeconds(rl);
       return apiRateLimited('Too many payment requests. Please slow down.', retryAfter);
     }
 
