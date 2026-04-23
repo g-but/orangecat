@@ -93,13 +93,13 @@ const config: EntityDetailConfig = {
                 </span>
               </div>
             )}
-            {entity.expected_return_rate != null && (
+            {entity.expected_return_rate !== null && entity.expected_return_rate !== undefined && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Expected Return</span>
                 <span className="font-semibold">{Number(entity.expected_return_rate).toFixed(1)}%</span>
               </div>
             )}
-            {entity.term_months != null && (
+            {entity.term_months !== null && entity.term_months !== undefined && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Term</span>
                 <span className="font-semibold">{entity.term_months} months</span>
@@ -109,7 +109,7 @@ const config: EntityDetailConfig = {
               <span className="text-sm text-gray-500">Minimum Investment</span>
               <span className="font-semibold">{displayBTC(entity.minimum_investment)}</span>
             </div>
-            {entity.maximum_investment != null && (
+            {entity.maximum_investment !== null && entity.maximum_investment !== undefined && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Maximum Investment</span>
                 <span className="font-semibold">{displayBTC(entity.maximum_investment)}</span>
