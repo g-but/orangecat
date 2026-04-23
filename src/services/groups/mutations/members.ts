@@ -19,9 +19,8 @@ import { getCurrentUserId, isGroupMember, getUserRole } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
 import { canPerformAction } from '../permissions/resolver';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Join a group

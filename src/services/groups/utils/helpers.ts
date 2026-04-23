@@ -12,10 +12,8 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { TABLES } from '../constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
-// Type alias for any SupabaseClient (accepts any database schema)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Get current authenticated user ID

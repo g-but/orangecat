@@ -11,8 +11,8 @@ import { ProfileServerService } from '@/services/profile/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import type { User } from '@supabase/supabase-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
@@ -26,10 +26,7 @@ const PROFILE_ALLOWED_FIELDS = [
   'phone', 'bitcoin_address', 'lightning_address',
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SupabaseServer = SupabaseClient<any, any, any>;
-
-async function respondWithProfile(supabase: SupabaseServer, user: User, profile: ProfileRow, request: AuthenticatedRequest) {
+async function respondWithProfile(supabase: AnySupabaseClient, user: User, profile: ProfileRow, request: AuthenticatedRequest) {
   const includeStats = request.nextUrl.searchParams.get('include_stats') === 'true';
   if (includeStats) {
     const projectCount = await ProfileServerService.getProjectCount(supabase, user.id);

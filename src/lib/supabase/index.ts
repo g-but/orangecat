@@ -14,3 +14,4 @@ export { createServerClient } from './server'
 
 // Types
 export type { Database } from '@/types/database'
+export type { AnySupabaseClient } from './types'

@@ -12,10 +12,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Type alias that accepts any typed Supabase client (avoids schema mismatch errors)
-type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /** Max messages to inject into LLM context (10 turns = 20 messages) */
 const HISTORY_INJECTION_LIMIT = 20;

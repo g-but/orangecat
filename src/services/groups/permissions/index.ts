@@ -23,9 +23,8 @@ import { logger } from '@/utils/logger';
 import { TABLES } from '../constants';
 import { GOVERNANCE_PRESETS } from '@/config/governance-presets';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 // Permission keys that map to governance preset actions
 export type GroupPermissionKey =

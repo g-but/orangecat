@@ -14,9 +14,8 @@ import { logger } from '@/utils/logger';
 import { getCurrentUserId } from '../utils/helpers';
 import { canPerformAction } from '../permissions/resolver';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 // ==================== TYPES ====================
 

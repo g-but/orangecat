@@ -12,10 +12,9 @@
  * Created: 2026-03-31
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnySupabaseClient = SupabaseClient<any, any, any>;
+import type { AnySupabaseClient } from '@/lib/supabase/types';
+// Re-export for backward compatibility — files importing AnySupabaseClient from here continue to work.
+export type { AnySupabaseClient } from '@/lib/supabase/types';
 
 /**
  * Call `supabase.from(table)` with a dynamic table name.

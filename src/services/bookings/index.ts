@@ -6,9 +6,9 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 // Type alias for any SupabaseClient (accepts any database schema)
-type AnySupabaseClient = SupabaseClient<any, any, any>;
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';

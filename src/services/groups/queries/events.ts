@@ -14,9 +14,8 @@ import { getCurrentUserId } from '../utils/helpers';
 import { TABLES } from '../constants';
 import type { EventsQuery, EventsListResponse, EventResponse, RsvpsListResponse } from '../types';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Get events for a group

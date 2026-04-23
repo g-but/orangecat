@@ -13,10 +13,8 @@ import { logger } from '@/utils/logger';
 import type { ActivityType } from '../types';
 import { TABLES } from '../constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
-// Type alias for any SupabaseClient (accepts any database schema)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Log group activity

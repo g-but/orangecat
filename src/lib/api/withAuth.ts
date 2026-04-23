@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import type { User } from '@supabase/supabase-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { logger } from '@/utils/logger';
 import { apiUnauthorized, apiForbidden, apiInternalError } from './standardResponse';
 
-// Type alias for any SupabaseClient (accepts any database schema)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
  * Authentication Middleware for API Routes

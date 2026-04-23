@@ -11,7 +11,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { searchPlatform, type SearchType } from './platform-search';
 
 const SEARCH_KEYWORDS = [
@@ -58,7 +58,7 @@ const PLATFORM_TOOL_DEFINITION = [
  * Non-fatal: on any failure returns the original messages unchanged.
  */
 export async function maybeEnrichWithSearchResults(
-  supabase: SupabaseClient<any, any, any>,
+  supabase: AnySupabaseClient,
   messages: any[],
   userMessage: string,
   provider: 'groq' | 'openrouter',
