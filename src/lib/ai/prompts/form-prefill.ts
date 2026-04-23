@@ -177,6 +177,24 @@ export function getExampleDescriptions(entityType: EntityType): string[] {
         'Looking to refinance my existing loan at a better rate',
         'Small business loan for mining equipment, 0.1 BTC',
       ];
+    case 'investment':
+      return [
+        'Seeking 0.5 BTC in equity investment for my app, revenue-share model',
+        'Raising 1 BTC for solar farm expansion, 8% annual return',
+        'Looking for seed funding 0.25 BTC minimum investment',
+      ];
+    case 'research':
+      return [
+        'Bitcoin adoption study in emerging markets, goal 0.5 BTC',
+        'Computational biology research on protein folding, mixed methods',
+        'Economic impact of decentralized finance on local communities',
+      ];
+    case 'wishlist':
+      return [
+        'Birthday wishlist for my 30th in June',
+        'Wedding registry — we need kitchen essentials and a honeymoon fund',
+        'Personal wishlist for books and electronics',
+      ];
     default:
       return ['Describe what you want to create...'];
   }

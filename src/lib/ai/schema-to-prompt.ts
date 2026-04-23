@@ -46,8 +46,8 @@ export function fieldConfigToDescription(field: FieldConfig): FieldDescription {
       }
       break;
     case 'currency':
-      constraints.push('positive number (price in satoshis or currency units)');
-      examples.push('50000 (for 50,000 sats)', '25.99 (for $25.99)');
+      constraints.push('positive decimal number (price in BTC or fiat currency units)');
+      examples.push('0.001 (for 0.001 BTC)', '25.99 (for $25.99 or CHF 25.99)');
       break;
     case 'select':
     case 'radio':
@@ -185,7 +185,7 @@ export function getSpecialFieldInstructions(entityType: EntityType): string {
 
   // Bitcoin-specific instructions
   instructions.push(
-    'For prices in Bitcoin: Express amounts in satoshis (1 BTC = 100,000,000 sats). Common price points: 10000 sats (~$5), 50000 sats (~$25), 100000 sats (~$50).'
+    'For Bitcoin prices: Express amounts in BTC as decimal values (e.g., 0.001 BTC). Never use satoshis. Common price points: 0.00005 BTC (~$5), 0.0003 BTC (~$30), 0.001 BTC (~$100).'
   );
 
   // Entity-specific instructions
@@ -208,7 +208,22 @@ export function getSpecialFieldInstructions(entityType: EntityType): string {
       break;
     case 'loan':
       instructions.push(
-        'For loans: original_amount is what you need to borrow. Interest rates are annual percentages.'
+        'For loans: original_amount is what you need to borrow in BTC. Interest rates are annual percentages (e.g., 5 for 5%).'
+      );
+      break;
+    case 'investment':
+      instructions.push(
+        'For investments: target_amount is the total raise goal in BTC. minimum_investment is the minimum ticket size in BTC.'
+      );
+      break;
+    case 'research':
+      instructions.push(
+        'For research: funding_goal_btc is the target in BTC. field must be one of: computer_science, biology, artificial_intelligence, economics, other.'
+      );
+      break;
+    case 'wishlist':
+      instructions.push(
+        'For wishlists: type must be one of: general, birthday, wedding, baby_shower, graduation, personal. visibility: public, unlisted, or private.'
       );
       break;
   }
