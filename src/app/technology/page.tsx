@@ -58,7 +58,7 @@ export default function TechnologyPage() {
               <Zap className="h-12 w-12 text-orange-600 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Zero Platform Fees</h3>
               <p className="text-gray-600">
-                We don't take a cut. 100% of your support goes directly to creators.
+                We don't take a cut. Payments go directly between parties — 100% reaches the recipient.
               </p>
             </div>
           </div>
