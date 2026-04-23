@@ -73,8 +73,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     if (!result.success) {return apiValidationError('Validation failed', result.error.flatten());}
 
     const d = result.data;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: task, error } = await (supabase as any)
+    const { data: task, error } = await supabase
       .from(DATABASE_TABLES.TASKS)
       .insert({
         title: d.title, description: d.description || null, instructions: d.instructions || null,

@@ -29,8 +29,6 @@ async function insertConversationAndParticipant(
 export const GET = withAuth(async (_req: AuthenticatedRequest) => {
   try {
     const { user, supabase } = _req;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
 
     // Find existing self-conversation (single-participant DM)
     let conversationId: string | null = null;
@@ -58,7 +56,7 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
       }
 
       try {
-        conversationId = await insertConversationAndParticipant(db, user.id);
+        conversationId = await insertConversationAndParticipant(supabase, user.id);
       } catch (serverError) {
         if (process.env.NODE_ENV !== 'production') {
           try {

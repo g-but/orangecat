@@ -41,8 +41,7 @@ export const GET = withAuth(
       const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10) || 20, 100);
       const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = (supabase as any)
+      let query = supabase
         .from(DATABASE_TABLES.GROUP_INVITATIONS)
         .select(`*, inviter:profiles!group_invitations_invited_by_fkey (name, avatar_url), invitee:profiles!group_invitations_user_id_fkey (name, avatar_url)`, { count: 'exact' })
         .eq('group_id', group.id).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
@@ -101,8 +100,7 @@ export const POST = withAuth(
         invitationData.token = btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: invitation, error: insertError } = await (supabase as any)
+      const { data: invitation, error: insertError } = await supabase
         .from(DATABASE_TABLES.GROUP_INVITATIONS).insert(invitationData).select().single();
 
       if (insertError || !invitation) {

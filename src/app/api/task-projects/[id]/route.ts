@@ -71,8 +71,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
 
     const updates = buildTaskProjectUpdates(result.data);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: project, error } = await (supabase as any)
+    const { data: project, error } = await supabase
       .from(DATABASE_TABLES.TASK_PROJECTS)
       .update(updates)
       .eq('id', id)

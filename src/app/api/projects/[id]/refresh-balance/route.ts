@@ -31,13 +31,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     if (idValidation) {return idValidation;}
 
     const { user, supabase } = request;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
-    const { data: project, error } = await db
+    const { data: project, error } = await supabase
       .from(getTableName('project'))
       .select('id, user_id, bitcoin_address, bitcoin_balance_btc, bitcoin_balance_updated_at, title')
       .eq('id', projectId)
@@ -67,7 +65,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       return apiInternalError('Failed to fetch balance from blockchain');
     }
 
-    const { error: updateError } = await db
+    const { error: updateError } = await supabase
       .from(getTableName('project'))
       .update({ bitcoin_balance_btc: balance.balance_btc, bitcoin_balance_updated_at: balance.updated_at })
       .eq('id', projectId);

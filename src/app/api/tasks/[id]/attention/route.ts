@@ -31,8 +31,6 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   const idValidation = getValidationError(validateUUID(taskId, 'task ID'));
   if (idValidation) {return idValidation;}
   const { user, supabase } = request;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
   try {
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
@@ -43,7 +41,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     const flagData = result.data;
 
-    const { data: task, error: taskError } = await db
+    const { data: task, error: taskError } = await supabase
       .from(DATABASE_TABLES.TASKS)
       .select('id, title, created_by')
       .eq('id', taskId)
@@ -55,7 +53,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       return apiInternalError();
     }
 
-    const { data: flag, error: flagError } = await db
+    const { data: flag, error: flagError } = await supabase
       .from(DATABASE_TABLES.TASK_ATTENTION_FLAGS)
       .insert({ task_id: taskId, flagged_by: user.id, message: flagData.message || null })
       .select('id, flagged_by, message, created_at')
@@ -66,15 +64,15 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       return apiInternalError('Failed to flag task');
     }
 
-    await db.from(DATABASE_TABLES.TASKS).update({ current_status: TASK_STATUSES.NEEDS_ATTENTION }).eq('id', taskId);
+    await supabase.from(DATABASE_TABLES.TASKS).update({ current_status: TASK_STATUSES.NEEDS_ATTENTION }).eq('id', taskId);
 
-    const { data: profile } = await db
+    const { data: profile } = await supabase
       .from(DATABASE_TABLES.PROFILES)
       .select('username, display_name')
       .eq('id', user.id)
       .single();
     const flaggerName = profile?.display_name || profile?.username || 'Someone';
-    const notificationService = new NotificationService(db);
+    const notificationService = new NotificationService(supabase);
 
     if (task.created_by !== user.id) {
       await notificationService.createNotification({

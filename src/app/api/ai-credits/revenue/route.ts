@@ -26,11 +26,9 @@ interface AssistantRevenue {
  */
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
   try {
     // Get all assistants owned by this user with revenue stats
-    const { data: assistants, error: assistantsError } = await db
+    const { data: assistants, error: assistantsError } = await supabase
       .from(DATABASE_TABLES.AI_ASSISTANTS)
       .select(`
         id,
@@ -54,7 +52,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     const totalConversations = assistantRows.reduce((sum: number, a: any) => sum + (a.total_conversations || 0), 0);
     const totalMessages = assistantRows.reduce((sum: number, a: any) => sum + (a.total_messages || 0), 0);
 
-    const { data: earnings } = await db
+    const { data: earnings } = await supabase
       .from(DATABASE_TABLES.AI_CREATOR_EARNINGS)
       .select('*')
       .eq('user_id', user.id)

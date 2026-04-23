@@ -25,8 +25,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
 
     const status = statusParam ? (statusParam.split(',') as BookingStatus[]) : undefined;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bookingService = createBookingService(supabase as any);
+    const bookingService = createBookingService(supabase);
     const bookings = await bookingService.getUserBookings(user.id, {
       role: role || 'both',
       status,

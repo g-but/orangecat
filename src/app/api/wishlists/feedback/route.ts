@@ -23,8 +23,6 @@ import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
@@ -35,7 +33,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const d = v.data;
 
     // Verify wishlist item and ownership
-    const { data: wishlistItem, error: itemError } = await db
+    const { data: wishlistItem, error: itemError } = await supabase
       .from(DATABASE_TABLES.WISHLIST_ITEMS)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', d.wishlist_item_id).single();
@@ -46,14 +44,14 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     // Verify proof exists if provided
     if (d.fulfillment_proof_id) {
-      const { data: proof, error: proofError } = await db
+      const { data: proof, error: proofError } = await supabase
         .from(DATABASE_TABLES.WISHLIST_FULFILLMENT_PROOFS)
         .select('id').eq('id', d.fulfillment_proof_id).eq('wishlist_item_id', d.wishlist_item_id).single();
       if (proofError || !proof) {return apiNotFound('Fulfillment proof not found or does not match wishlist item');}
     }
 
     // Check for existing feedback
-    let existingQuery = db.from(DATABASE_TABLES.WISHLIST_FEEDBACK)
+    let existingQuery = supabase.from(DATABASE_TABLES.WISHLIST_FEEDBACK)
       .select('id, feedback_type').eq('user_id', user.id).eq('wishlist_item_id', d.wishlist_item_id);
     if (d.fulfillment_proof_id) {
       existingQuery = existingQuery.eq('fulfillment_proof_id', d.fulfillment_proof_id);
@@ -72,7 +70,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       if (existing.feedback_type === d.feedback_type) {return apiConflict('You have already provided this type of feedback');}
 
       // Update existing feedback (toggle like ↔ dislike)
-      const { data: updated, error: updateError } = await db
+      const { data: updated, error: updateError } = await supabase
         .from(DATABASE_TABLES.WISHLIST_FEEDBACK)
         .update({ feedback_type: d.feedback_type, comment: d.comment })
         .eq('id', existing.id).select().single();
@@ -85,7 +83,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     }
 
     // Create new feedback
-    const { data: feedback, error: feedbackError } = await db
+    const { data: feedback, error: feedbackError } = await supabase
       .from(DATABASE_TABLES.WISHLIST_FEEDBACK)
       .insert({ wishlist_item_id: d.wishlist_item_id, fulfillment_proof_id: d.fulfillment_proof_id, user_id: user.id, feedback_type: d.feedback_type, comment: d.comment })
       .select().single();

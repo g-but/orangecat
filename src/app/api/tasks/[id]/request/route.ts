@@ -49,8 +49,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       if (userError || !target) {return apiNotFound('Requested user not found');}
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: taskRequest, error: requestError } = await (supabase as any)
+    const { data: taskRequest, error: requestError } = await supabase
       .from(DATABASE_TABLES.TASK_REQUESTS)
       .insert({ task_id: taskId, requested_by: user.id, requested_user_id: d.requested_user_id || null, message: d.message || null, status: 'pending' })
       .select('id, requested_by, requested_user_id, message, status, is_broadcast, created_at')
@@ -58,15 +57,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     if (requestError) { logger.error('Failed to create task request', { error: requestError, taskId }, 'TasksAPI'); return apiInternalError('Failed to create request'); }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from(DATABASE_TABLES.TASKS).update({ current_status: TASK_STATUSES.REQUESTED }).eq('id', taskId);
+    await supabase.from(DATABASE_TABLES.TASKS).update({ current_status: TASK_STATUSES.REQUESTED }).eq('id', taskId);
 
     // Send notification
     const { data: profile } = await supabase.from(DATABASE_TABLES.PROFILES).select('username, display_name').eq('id', user.id).single();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const requesterName = (profile as any)?.display_name || (profile as any)?.username || 'Someone';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notificationService = new NotificationService(supabase as any);
+    const notificationService = new NotificationService(supabase);
     const notifBase = { title: '', message: d.message || null, actionUrl: `/dashboard/tasks/${taskId}`, sourceEntityType: 'task' as const, sourceEntityId: taskId };
 
     if (!d.requested_user_id) {

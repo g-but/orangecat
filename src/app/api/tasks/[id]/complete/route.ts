@@ -34,8 +34,6 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   const idValidation = getValidationError(validateUUID(taskId, 'task ID'));
   if (idValidation) {return idValidation;}
   const { user, supabase } = request;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
   try {
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
@@ -46,7 +44,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     const completionData = result.data;
 
-    const { data: task, error: taskError } = await db
+    const { data: task, error: taskError } = await supabase
       .from(DATABASE_TABLES.TASKS)
       .select('id, title, task_type, is_completed, created_by')
       .eq('id', taskId)
@@ -64,7 +62,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
 
     // The database trigger handles: recurring task reset, one-time completion,
     // attention flag resolution, and pending request completion.
-    const { data: completion, error: completionError } = await db
+    const { data: completion, error: completionError } = await supabase
       .from(DATABASE_TABLES.TASK_COMPLETIONS)
       .insert({
         task_id: taskId,
@@ -82,13 +80,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     }
 
     if (task.created_by !== user.id) {
-      const { data: profile } = await db
+      const { data: profile } = await supabase
         .from(DATABASE_TABLES.PROFILES)
         .select('username, display_name')
         .eq('id', user.id)
         .single();
       const completerName = profile?.display_name || profile?.username || 'Someone';
-      await new NotificationService(db).createNotification({
+      await new NotificationService(supabase).createNotification({
         recipientUserId: task.created_by,
         type: 'task_completed',
         title: `${completerName} completed "${task.title}"`,

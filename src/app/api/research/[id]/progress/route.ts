@@ -32,10 +32,8 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
   if (idValidation) {return idValidation;}
   try {
     const { user, supabase } = request;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
 
-    const { data: entity, error: entityError } = await db
+    const { data: entity, error: entityError } = await supabase
       .from(DATABASE_TABLES.RESEARCH_ENTITIES)
       .select('id, user_id, is_public')
       .eq('id', id)
@@ -50,7 +48,7 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
       return apiUnauthorized('This research entity is private');
     }
 
-    const { data: updates, error } = await db
+    const { data: updates, error } = await supabase
       .from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES)
       .select('*')
       .eq('research_entity_id', id)
@@ -70,10 +68,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   if (idValidation) {return idValidation;}
   const { user, supabase } = request;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
 
-    const { data: entity, error: entityError } = await db
+    const { data: entity, error: entityError } = await supabase
       .from(DATABASE_TABLES.RESEARCH_ENTITIES)
       .select('id, user_id')
       .eq('id', id)
@@ -95,7 +91,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid progress update data');}
     const { title, description, milestone_achieved, funding_released, attachments } = parsed.data;
 
-    const { data: update, error } = await db
+    const { data: update, error } = await supabase
       .from(DATABASE_TABLES.RESEARCH_PROGRESS_UPDATES)
       .insert({
         research_entity_id: id,
@@ -112,7 +108,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     if (error) {throw error;}
 
     if (milestone_achieved) {
-      await db.rpc('increment_research_completion', {
+      await supabase.rpc('increment_research_completion', {
         research_entity_id: id,
         percentage_increase: 10,
       });

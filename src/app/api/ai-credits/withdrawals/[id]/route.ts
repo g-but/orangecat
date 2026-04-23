@@ -31,10 +31,8 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
   const idValidation = getValidationError(validateUUID(id, 'withdrawal ID'));
   if (idValidation) {return idValidation;}
   const { user, supabase } = request;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
   try {
-    const { data: withdrawal, error } = await db
+    const { data: withdrawal, error } = await supabase
       .from(DATABASE_TABLES.AI_CREATOR_WITHDRAWALS)
       .select('*')
       .eq('id', id)
@@ -61,8 +59,6 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
   const idValidation = getValidationError(validateUUID(id, 'withdrawal ID'));
   if (idValidation) {return idValidation;}
   const { user, supabase } = request;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
   try {
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
@@ -70,7 +66,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
       return handleApiError({ message: `Rate limit exceeded. Retry after ${retryAfter}s.` });
     }
 
-    const { error } = await db.rpc('cancel_ai_withdrawal', {
+    const { error } = await supabase.rpc('cancel_ai_withdrawal', {
       p_withdrawal_id: id,
       p_user_id: user.id,
     });

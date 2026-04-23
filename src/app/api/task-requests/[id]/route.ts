@@ -51,8 +51,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     if (!canRespond) {return apiForbidden('You cannot respond to this request');}
     if (tr.status !== REQUEST_STATUSES.PENDING) {return apiBadRequest('This request has already been answered');}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: updatedRequest, error: updateError } = await (supabase as any)
+    const { data: updatedRequest, error: updateError } = await supabase
       .from(DATABASE_TABLES.TASK_REQUESTS)
       .update({ status: d.status, response_message: d.response_message || null, responded_by: user.id })
       .eq('id', requestId).select().single();
@@ -64,8 +63,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
 
     // Update task status if accepted
     if (d.status === REQUEST_STATUSES.ACCEPTED) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from(DATABASE_TABLES.TASKS).update({ current_status: TASK_STATUSES.IN_PROGRESS }).eq('id', tr.task_id);
+      await supabase.from(DATABASE_TABLES.TASKS).update({ current_status: TASK_STATUSES.IN_PROGRESS }).eq('id', tr.task_id);
     }
 
     // Notify the requester
@@ -76,8 +74,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     const taskId = tr.task?.id || tr.task_id;
     const notifTitle = d.status === REQUEST_STATUSES.ACCEPTED ? `${responderName} accepted: "${taskTitle}"` : `${responderName} declined: "${taskTitle}"`;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await new NotificationService(supabase as any).createNotification({
+    await new NotificationService(supabase).createNotification({
       recipientUserId: tr.requested_by,
       type: 'task_request',
       title: notifTitle,

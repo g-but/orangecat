@@ -22,16 +22,14 @@ const withdrawalRequestSchema = z.object({
 
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
   try {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     const [{ data: earnings }, { data: withdrawals, error: withdrawalsError, count }] = await Promise.all([
-      db.from(DATABASE_TABLES.AI_CREATOR_EARNINGS).select('*').eq('user_id', user.id).single(),
-      db.from(DATABASE_TABLES.AI_CREATOR_WITHDRAWALS).select('*', { count: 'exact' }).eq('user_id', user.id).order('created_at', { ascending: false }).range(offset, offset + limit - 1),
+      supabase.from(DATABASE_TABLES.AI_CREATOR_EARNINGS).select('*').eq('user_id', user.id).single(),
+      supabase.from(DATABASE_TABLES.AI_CREATOR_WITHDRAWALS).select('*', { count: 'exact' }).eq('user_id', user.id).order('created_at', { ascending: false }).range(offset, offset + limit - 1),
     ]);
 
     if (withdrawalsError) {throw withdrawalsError;}
@@ -49,8 +47,6 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
   try {
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {
@@ -64,7 +60,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     const { amount_btc, lightning_address } = result.data;
 
-    const { data: withdrawalId, error } = await db.rpc('request_ai_withdrawal', {
+    const { data: withdrawalId, error } = await supabase.rpc('request_ai_withdrawal', {
       p_user_id: user.id, p_amount_btc: amount_btc, p_lightning_address: lightning_address,
     });
 
@@ -73,7 +69,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       throw error;
     }
 
-    const { data: withdrawal } = await db.from(DATABASE_TABLES.AI_CREATOR_WITHDRAWALS).select('*').eq('id', String(withdrawalId)).single();
+    const { data: withdrawal } = await supabase.from(DATABASE_TABLES.AI_CREATOR_WITHDRAWALS).select('*').eq('id', String(withdrawalId)).single();
     logger.info('Withdrawal requested', { userId: user.id, withdrawalId, amount_btc });
     return apiSuccess({ withdrawal, message: 'Withdrawal request submitted successfully. Processing will begin shortly.' }, { status: 201 });
   } catch (error) {

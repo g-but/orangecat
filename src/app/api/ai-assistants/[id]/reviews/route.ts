@@ -20,8 +20,6 @@ export const GET = withOptionalAuth(async (request, { params }: RouteParams) => 
   if (idValidation) {return idValidation;}
   try {
     const { user, supabase } = request;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
     const url = new URL(request.url);
 
     const page = parseInt(url.searchParams.get('page') || '1');
@@ -29,11 +27,11 @@ export const GET = withOptionalAuth(async (request, { params }: RouteParams) => 
     const offset = (page - 1) * limit;
     const sortBy = url.searchParams.get('sort') || 'recent';
 
-    const { data: assistant, error: assistantError } = await db
+    const { data: assistant, error: assistantError } = await supabase
       .from(DATABASE_TABLES.AI_ASSISTANTS).select('id, average_rating, total_ratings').eq('id', assistantId).single();
     if (assistantError || !assistant) {return apiNotFound('Assistant not found');}
 
-    let query = db
+    let query = supabase
       .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS)
       .select(`id, rating, review, created_at, updated_at, user:profiles!ai_assistant_ratings_user_id_fkey(id, username, name, avatar_url)`, { count: 'exact' })
       .eq('assistant_id', assistantId);
@@ -46,8 +44,8 @@ export const GET = withOptionalAuth(async (request, { params }: RouteParams) => 
 
     const [{ data: reviews, count, error: reviewsError }, { data: distribution }, { data: myRating }] = await Promise.all([
       query,
-      db.from(DATABASE_TABLES.AI_ASSISTANT_RATINGS).select('rating').eq('assistant_id', assistantId),
-      user ? db.from(DATABASE_TABLES.AI_ASSISTANT_RATINGS).select('id, rating, review, created_at').eq('assistant_id', assistantId).eq('user_id', user.id).single() : Promise.resolve({ data: null }),
+      supabase.from(DATABASE_TABLES.AI_ASSISTANT_RATINGS).select('rating').eq('assistant_id', assistantId),
+      user ? supabase.from(DATABASE_TABLES.AI_ASSISTANT_RATINGS).select('id, rating, review, created_at').eq('assistant_id', assistantId).eq('user_id', user.id).single() : Promise.resolve({ data: null }),
     ]);
 
     if (reviewsError) {

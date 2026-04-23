@@ -23,8 +23,6 @@ const addCreditsSchema = z.object({
 export const POST = withRole('admin', async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
 
     const body = await request.json();
     const result = addCreditsSchema.safeParse(body);
@@ -39,7 +37,7 @@ export const POST = withRole('admin', async (request: AuthenticatedRequest) => {
     const { amount_btc, description } = result.data;
 
     // Call the add_ai_credits RPC function
-    const { data: newBalance, error: addError } = await db.rpc('add_ai_credits', {
+    const { data: newBalance, error: addError } = await supabase.rpc('add_ai_credits', {
       p_user_id: user.id,
       p_amount_btc: amount_btc,
       p_transaction_type: 'deposit',
@@ -52,7 +50,7 @@ export const POST = withRole('admin', async (request: AuthenticatedRequest) => {
         logger.warn('add_ai_credits RPC not found, using direct insert');
 
         // Upsert the credits record
-        const { data: existingCredits } = await db
+        const { data: existingCredits } = await supabase
           .from(DATABASE_TABLES.AI_USER_CREDITS)
           .select('balance_btc')
           .eq('user_id', user.id)
@@ -61,7 +59,7 @@ export const POST = withRole('admin', async (request: AuthenticatedRequest) => {
         const currentBalance = existingCredits?.balance_btc || 0;
         const newBalanceValue = currentBalance + amount_btc;
 
-        const { error: upsertError } = await db.from(DATABASE_TABLES.AI_USER_CREDITS).upsert(
+        const { error: upsertError } = await supabase.from(DATABASE_TABLES.AI_USER_CREDITS).upsert(
           {
             user_id: user.id,
             balance_btc: newBalanceValue,
@@ -78,7 +76,7 @@ export const POST = withRole('admin', async (request: AuthenticatedRequest) => {
         }
 
         // Log the transaction
-        await db.from(DATABASE_TABLES.AI_CREDIT_TRANSACTIONS).insert({
+        await supabase.from(DATABASE_TABLES.AI_CREDIT_TRANSACTIONS).insert({
           user_id: user.id,
           transaction_type: 'deposit',
           amount_btc,

@@ -24,10 +24,8 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
   try {
     const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
 
-    const { data: credits, error: creditsError } = await db
+    const { data: credits, error: creditsError } = await supabase
       .from(DATABASE_TABLES.AI_USER_CREDITS).select('*').eq('user_id', user.id).single();
 
     if (creditsError && creditsError.code !== 'PGRST116') {throw creditsError;}
@@ -36,7 +34,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
       ? { balance_btc: credits.balance_btc || 0, total_deposited_btc: credits.total_deposited_btc || 0, total_spent_btc: credits.total_spent_btc || 0 }
       : { balance_btc: 0, total_deposited_btc: 0, total_spent_btc: 0 };
 
-    const { data: transactions, error: txError } = await db
+    const { data: transactions, error: txError } = await supabase
       .from(DATABASE_TABLES.AI_CREDIT_TRANSACTIONS)
       .select('id, transaction_type, amount_btc, balance_before, balance_after, description, created_at, assistant:ai_assistants(id, name, avatar_url)')
       .eq('user_id', user.id)
@@ -45,7 +43,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
 
     if (txError) {logger.warn('Failed to fetch transactions', { error: txError });}
 
-    const { count } = await db
+    const { count } = await supabase
       .from(DATABASE_TABLES.AI_CREDIT_TRANSACTIONS)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id);

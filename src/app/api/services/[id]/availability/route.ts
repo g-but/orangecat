@@ -54,8 +54,7 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
       return apiNotFound('Service not found');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bookingService = createBookingService(supabase as any);
+    const bookingService = createBookingService(supabase);
     const slots = await bookingService.getServiceAvailability(serviceId, date);
 
     return apiSuccess({

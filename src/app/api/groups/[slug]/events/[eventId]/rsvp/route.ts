@@ -28,13 +28,11 @@ export const POST = withAuth(
       if (!rl.success) {return apiRateLimited('Too many RSVP requests. Please slow down.', retryAfterSeconds(rl));}
 
       const { supabase } = req;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const db = supabase as any;
 
-      const { data: group, error: groupError } = await db.from(DATABASE_TABLES.GROUPS).select('id').eq('slug', slug).single();
+      const { data: group, error: groupError } = await supabase.from(DATABASE_TABLES.GROUPS).select('id').eq('slug', slug).single();
       if (groupError || !group) {return apiNotFound('Group not found');}
 
-      const { data: event, error: eventError } = await db
+      const { data: event, error: eventError } = await supabase
         .from(DATABASE_TABLES.GROUP_EVENTS)
         .select('id, group_id, is_public, requires_rsvp')
         .eq('id', eventId).eq('group_id', group.id)
@@ -42,7 +40,7 @@ export const POST = withAuth(
       if (eventError || !event) {return apiNotFound('Event not found');}
 
       if (!event.is_public) {
-        const { data: membership } = await db
+        const { data: membership } = await supabase
           .from(DATABASE_TABLES.GROUP_MEMBERS).select('id').eq('group_id', group.id).eq('user_id', user.id).maybeSingle();
         if (!membership) {return apiForbidden('You do not have access to this event');}
       }
@@ -53,7 +51,7 @@ export const POST = withAuth(
         return apiValidationError('Invalid request data', { fields: validation.error.issues.map(i => ({ field: i.path.join('.'), message: i.message })) });
       }
 
-      const { data: rsvp, error: rsvpError } = await db
+      const { data: rsvp, error: rsvpError } = await supabase
         .from(DATABASE_TABLES.GROUP_EVENT_RSVPS)
         .upsert({ event_id: eventId, user_id: user.id, status: validation.data.status }, { onConflict: 'event_id,user_id' })
         .select('*, user:profiles!group_event_rsvps_user_id_fkey (id, name, avatar_url)')

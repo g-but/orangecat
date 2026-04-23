@@ -54,8 +54,7 @@ export const GET = withOptionalAuth(async (request, { params }: RouteParams) => 
   try {
     const { user, supabase } = request;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: wishlistItem, error: itemError } = await (supabase as any)
+    const { data: wishlistItem, error: itemError } = await supabase
       .from(DATABASE_TABLES.WISHLIST_ITEMS)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', itemId).single();

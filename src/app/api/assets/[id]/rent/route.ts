@@ -39,8 +39,6 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   if (idValidation) {return idValidation;}
   try {
     const { user, supabase } = request;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
 
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many rent requests. Please slow down.', retryAfterSeconds(rl));}
@@ -53,7 +51,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const startsAt = new Date(starts_at);
     const endsAt = new Date(ends_at);
 
-    const { data: asset, error: assetError } = await db
+    const { data: asset, error: assetError } = await supabase
       .from(DATABASE_TABLES.USER_ASSETS)
       .select('id, title, actor_id, is_for_rent, rental_price_btc, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_btc, currency')
       .eq('id', assetId).eq('status', STATUS.ASSETS.ACTIVE).eq('is_for_rent', true)
@@ -77,7 +75,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     const priceBtc = (asset.rental_price_btc || 0) * periods;
     const depositBtc = asset.requires_deposit ? asset.deposit_amount_btc || 0 : 0;
 
-    const bookingService = createBookingService(db);
+    const bookingService = createBookingService(supabase);
     const bookingResult = await bookingService.createBooking({
       bookableType: 'asset',
       bookableId: assetId,

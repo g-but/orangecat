@@ -36,13 +36,11 @@ export const GET = withAuth(
     if (idValidation) {return idValidation;}
     try {
       const { user, supabase } = req;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const db = supabase as any;
 
       const group = await resolveGroupBySlug(supabase, slug);
       if (!group) {return apiNotFound('Group not found');}
 
-      const { data: event, error: eventError } = await db
+      const { data: event, error: eventError } = await supabase
         .from(DATABASE_TABLES.GROUP_EVENTS)
         .select(`*, creator:profiles!group_events_creator_id_fkey (id, name, avatar_url),
           group:groups!group_events_group_id_fkey (id, name, slug, avatar_url),
@@ -67,8 +65,6 @@ export const PUT = withAuth(
     if (idValidation) {return idValidation;}
     try {
       const { user, supabase } = req;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const db = supabase as any;
 
       const rl = await rateLimitWriteAsync(user.id);
       if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
@@ -76,7 +72,7 @@ export const PUT = withAuth(
       const group = await resolveGroupBySlug(supabase, slug);
       if (!group) {return apiNotFound('Group not found');}
 
-      const { data: event, error: eventError } = await db
+      const { data: event, error: eventError } = await supabase
         .from(DATABASE_TABLES.GROUP_EVENTS).select('id, group_id, creator_id').eq('id', eventId).eq('group_id', group.id).single();
       if (eventError || !event) {return apiNotFound('Event not found');}
       if (!await canEditEvent(supabase, group.id, user.id, event.creator_id)) {return apiForbidden('Only event creator or group admins can update events');}
@@ -85,7 +81,7 @@ export const PUT = withAuth(
       const validation = updateEventSchema.safeParse(body);
       if (!validation.success) {return apiValidationError('Invalid request data', validation.error.flatten());}
 
-      const { data: updatedEvent, error: updateError } = await db
+      const { data: updatedEvent, error: updateError } = await supabase
         .from(DATABASE_TABLES.GROUP_EVENTS).update(validation.data).eq('id', eventId).select().single();
       if (updateError) { logger.error('Failed to update event', { error: updateError, eventId }, 'Groups'); return handleApiError(updateError); }
 
@@ -104,8 +100,6 @@ export const DELETE = withAuth(
     if (idValidation) {return idValidation;}
     try {
       const { user, supabase } = req;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const db = supabase as any;
 
       const rl = await rateLimitWriteAsync(user.id);
       if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
@@ -113,12 +107,12 @@ export const DELETE = withAuth(
       const group = await resolveGroupBySlug(supabase, slug);
       if (!group) {return apiNotFound('Group not found');}
 
-      const { data: event, error: eventError } = await db
+      const { data: event, error: eventError } = await supabase
         .from(DATABASE_TABLES.GROUP_EVENTS).select('id, group_id, creator_id').eq('id', eventId).eq('group_id', group.id).single();
       if (eventError || !event) {return apiNotFound('Event not found');}
       if (!await canEditEvent(supabase, group.id, user.id, event.creator_id)) {return apiForbidden('Only event creator or group admins can delete events');}
 
-      const { error: deleteError } = await db.from(DATABASE_TABLES.GROUP_EVENTS).delete().eq('id', eventId);
+      const { error: deleteError } = await supabase.from(DATABASE_TABLES.GROUP_EVENTS).delete().eq('id', eventId);
       if (deleteError) { logger.error('Failed to delete event', { error: deleteError, eventId }, 'Groups'); return handleApiError(deleteError); }
 
       return apiSuccess({ message: 'Event deleted successfully' });

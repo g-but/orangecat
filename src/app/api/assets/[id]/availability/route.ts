@@ -65,8 +65,7 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
       return apiNotFound('Asset not found or not available for rent');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bookingService = createBookingService(supabase as any);
+    const bookingService = createBookingService(supabase);
     const availability = await bookingService.getAssetAvailability(assetId, startDate, endDate);
 
     return apiSuccess({

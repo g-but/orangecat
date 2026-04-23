@@ -47,8 +47,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
       }
 
       // Call the database function to calculate transparency score
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: _calculatedScore, error: calcError } = await (supabase as any).rpc(
+      const { data: _calculatedScore, error: calcError } = await supabase.rpc(
         'calculate_profile_transparency_score',
         { profile_id: profileId }
       );

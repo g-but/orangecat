@@ -41,8 +41,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest, context: Route
   if (idValidation) {return idValidation;}
   try {
     const { user, supabase } = request;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const booking = await createBookingService(supabase as any).getBooking(id);
+    const booking = await createBookingService(supabase).getBooking(id);
     if (!booking) {return apiNotFound('Booking not found');}
 
     const actorIds = await getActorIds(supabase, user.id);
@@ -72,8 +71,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     if (!result.success) {return apiBadRequest('Validation failed', result.error.flatten());}
 
     const { action, reason } = result.data;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const svc = createBookingService(supabase as any);
+    const svc = createBookingService(supabase);
     const actorIds = await getActorIds(supabase, user.id);
 
     let bookingResult;
@@ -106,8 +104,7 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
     const rl = await rateLimitWriteAsync(user.id);
     if (!rl.success) {return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await createBookingService(supabase as any).cancelBooking(id, user.id, new URL(request.url).searchParams.get('reason') || undefined);
+    const result = await createBookingService(supabase).cancelBooking(id, user.id, new URL(request.url).searchParams.get('reason') || undefined);
     if (!result.success) {return apiBadRequest(result.error || 'Cancel failed');}
     return apiSuccess({ success: true });
   } catch (error) {
