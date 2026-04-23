@@ -66,7 +66,7 @@ export function analyzeDescription(description: string): AnalysisResponse {
   if (description.split('\n').length > 2) {confidence += 10;}
   confidence = Math.min(confidence, 100);
 
-  let recommendation = "A personal project is the ideal fit for your needs. It's quick to set up and gives you direct control over your Bitcoin fundraising.";
+  let recommendation = "A personal project is the ideal fit for your needs. It's quick to set up and gives you direct control over your funding.";
   if (isCharity) {
     recommendation = 'Your charitable cause can be effectively managed through a personal project. This allows you to directly control how funds are used while maintaining transparency with your supporters.';
   } else if (isBusiness) {
