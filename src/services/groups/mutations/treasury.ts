@@ -12,9 +12,7 @@
 import { logger } from '@/utils/logger';
 import { TABLES } from '../constants';
 import supabase from '@/lib/supabase/browser';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-
 
 /**
  * Fetch Bitcoin balance from mempool.space API

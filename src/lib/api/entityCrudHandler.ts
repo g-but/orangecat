@@ -14,10 +14,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
-// Type alias for any SupabaseClient (accepts any database schema)
 import { ZodSchema, ZodError } from 'zod';
 import { createServerClient } from '@/lib/supabase/server';
 import {

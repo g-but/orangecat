@@ -9,14 +9,12 @@
  * Last Modified Summary: Initial implementation
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { CAT_ACTIONS, type CatAction, type ActionCategory } from '@/config/cat-actions';
 import { CatPermissionService } from './permission-service';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
-
 
 // ==================== TYPES ====================
 

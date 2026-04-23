@@ -10,12 +10,10 @@
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { ENTITY_STATUS } from '@/config/database-constants';
-
 
 export type SearchType =
   | 'all'

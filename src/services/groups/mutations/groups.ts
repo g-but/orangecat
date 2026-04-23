@@ -16,9 +16,7 @@ import type { GroupResponse } from '../types';
 import { TABLES, getDefaultsForLabel } from '../constants';
 import { getCurrentUserId, generateSlug, ensureUniqueSlug } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-
 
 /**
  * Create a new group

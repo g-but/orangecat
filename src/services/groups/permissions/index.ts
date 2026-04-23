@@ -22,9 +22,7 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { TABLES } from '../constants';
 import { GOVERNANCE_PRESETS } from '@/config/governance-presets';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-
 
 // Permission keys that map to governance preset actions
 export type GroupPermissionKey =

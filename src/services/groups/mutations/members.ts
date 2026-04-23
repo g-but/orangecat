@@ -18,9 +18,7 @@ import { TABLES } from '../constants';
 import { getCurrentUserId, isGroupMember, getUserRole } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
 import { canPerformAction } from '../permissions/resolver';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-
 
 /**
  * Join a group

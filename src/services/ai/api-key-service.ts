@@ -10,10 +10,8 @@
  * Created: 2026-01-08
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
-// Type alias for any SupabaseClient (accepts any database schema)
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';

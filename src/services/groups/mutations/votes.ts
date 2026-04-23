@@ -5,9 +5,7 @@ import { TABLES } from '../constants';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
 import { getProposal, getProposalVotes } from '../queries/proposals';
 import { executeProposalAction } from '../execution';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-
 
 export interface CastVoteInput {
   proposal_id: string;

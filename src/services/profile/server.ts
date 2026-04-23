@@ -6,15 +6,12 @@
  * Last Modified Summary: Created server-side profile service to eliminate direct database access in API routes
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { logger } from '@/utils/logger';
 import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
-
-// Type alias for any SupabaseClient (accepts any database schema)
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];

@@ -11,9 +11,7 @@
 
 import { canPerformAction, type PermissionResult } from './resolver';
 import { logger } from '@/utils/logger';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-
 
 export interface EnforcePermissionResult {
   allowed: boolean;

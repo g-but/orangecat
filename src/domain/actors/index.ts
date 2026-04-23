@@ -6,10 +6,8 @@
  * the already-authenticated client from withAuth middleware.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
-
 
 /**
  * Get the primary actor ID for a user.

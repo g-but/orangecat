@@ -12,12 +12,10 @@
  * Last Modified Summary: Expanded to include profile, entities, and full user context
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { logger } from '@/utils/logger';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
-
 
 export interface DocumentContext {
   id: string;

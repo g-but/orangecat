@@ -15,9 +15,7 @@ import type { GroupWalletsResponse, GroupWalletSummary } from '../types';
 import { checkGroupPermission } from '../permissions';
 import { getCurrentUserId } from '../utils/helpers';
 import { TABLES } from '../constants';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-
 
 /**
  * Get group wallets

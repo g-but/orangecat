@@ -15,9 +15,7 @@ import { logger } from '@/utils/logger';
 import type { Group, GroupsQuery, GroupsListResponse, GroupResponse } from '../types';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TABLES } from '../constants';
 import { getCurrentUserId, getUserGroupIds } from '../utils/helpers';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-
 
 /**
  * Get a specific group by slug

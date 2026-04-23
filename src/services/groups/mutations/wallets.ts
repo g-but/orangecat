@@ -20,9 +20,7 @@ import { getCurrentUserId } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
 import { checkGroupPermission } from '../permissions';
 import { TABLES } from '../constants';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-
 
 /**
  * Create a group wallet

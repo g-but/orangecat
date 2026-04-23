@@ -12,9 +12,7 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import type { ActivityType } from '../types';
 import { TABLES } from '../constants';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-
 
 /**
  * Log group activity

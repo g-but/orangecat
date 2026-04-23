@@ -13,9 +13,7 @@ import { logger } from '@/utils/logger';
 import { getCurrentUserId } from '../utils/helpers';
 import { TABLES } from '../constants';
 import type { EventsQuery, EventsListResponse, EventResponse, RsvpsListResponse } from '../types';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-
 
 /**
  * Get events for a group
