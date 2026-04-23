@@ -24,6 +24,7 @@ import {
   FileText,
   Bell,
   Building2,
+  TrendingUp,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -268,6 +269,54 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Add my property as an asset',
     ],
     apiEndpoint: '/api/assets',
+    enabled: true,
+  },
+
+  create_investment: {
+    id: 'create_investment',
+    name: 'Create Investment',
+    description: 'Create a structured investment opportunity (equity, revenue-share, or debt)',
+    category: 'entities',
+    icon: TrendingUp,
+    riskLevel: 'high',
+    requiresConfirmation: true,
+    parameters: [
+      { name: 'title', type: 'string', required: true, description: 'Investment opportunity title' },
+      { name: 'description', type: 'string', required: false, description: 'Investment description' },
+      {
+        name: 'investment_type',
+        type: 'string',
+        required: false,
+        description: 'Type: revenue_share, equity, debt, convertible_note, token',
+        default: 'revenue_share',
+      },
+      {
+        name: 'target_amount_btc',
+        type: 'btc',
+        required: true,
+        description: 'Funding target in BTC (e.g., 1.0)',
+      },
+      {
+        name: 'minimum_investment_btc',
+        type: 'btc',
+        required: false,
+        description: 'Minimum investment per investor in BTC (default: 0.0001)',
+        default: 0.0001,
+      },
+      {
+        name: 'publish',
+        type: 'boolean',
+        required: false,
+        description: 'Open for investment immediately (status: open)',
+        default: false,
+      },
+    ],
+    examples: [
+      'Create a revenue-share investment for my startup',
+      'Set up an equity round for my project',
+      'Launch a Bitcoin-denominated investment opportunity',
+    ],
+    apiEndpoint: '/api/investments',
     enabled: true,
   },
 

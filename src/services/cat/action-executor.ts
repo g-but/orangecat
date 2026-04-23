@@ -212,6 +212,36 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     return { success: true, data };
   },
 
+  create_investment: async (supabase, _userId, actorId, params) => {
+    // DB columns: target_amount + currency (not target_amount_btc), minimum_investment.
+    // Published investments use status='open' (not 'active') per investments status enum.
+    const targetAmount = (params.target_amount_btc as number | null) ?? (params.target_amount as number | null) ?? null;
+    const minimumInvestment = (params.minimum_investment_btc as number | null) ?? (params.minimum_investment as number | null) ?? 0.0001;
+
+    const { data, error } = await supabase
+      .from(ENTITY_REGISTRY.investment.tableName)
+      .insert({
+        actor_id: actorId,
+        title: params.title,
+        description: params.description || null,
+        investment_type: (params.investment_type as string) || 'revenue_share',
+        target_amount: targetAmount,
+        minimum_investment: minimumInvestment,
+        currency: 'BTC',
+        total_raised: 0,
+        investor_count: 0,
+        is_public: Boolean(params.publish),
+        status: params.publish ? 'open' : 'draft',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  },
+
   // ---------- ENTITY MANAGEMENT ACTIONS ----------
 
   update_entity: async (supabase, _userId, actorId, params) => {
@@ -845,6 +875,11 @@ export class CatActionExecutor {
       }
       case 'create_cause':
         return `Create cause "${parameters.title}"`;
+      case 'create_investment': {
+        const target = parameters.target_amount_btc ?? parameters.target_amount ?? 'open-ended';
+        const type = parameters.investment_type || 'revenue_share';
+        return `Create ${type} investment "${parameters.title}" targeting ${target} BTC`;
+      }
       case 'create_event':
         return `Create event "${parameters.title}" at ${parameters.location}`;
       case 'create_asset':

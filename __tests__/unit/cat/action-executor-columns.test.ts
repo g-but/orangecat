@@ -421,6 +421,81 @@ describe('Cat action-executor — correct DB column names', () => {
     });
   });
 
+  // ── create_investment ────────────────────────────────────────────────────────
+  describe('create_investment', () => {
+    it('uses `target_amount` (not target_amount_btc) and sets BTC defaults', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'create_investment', {
+        title: 'Bitcoin Revenue Share',
+        investment_type: 'revenue_share',
+        target_amount_btc: 1.5,
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.investment.tableName);
+      expect(insert).toBeDefined();
+
+      // Correct column — target_amount (not target_amount_btc)
+      expect(insert!.target_amount).toBe(1.5);
+      expect((insert as Record<string, unknown>).target_amount_btc).toBeUndefined();
+
+      // Required defaults
+      expect(insert!.currency).toBe('BTC');
+      expect(insert!.investment_type).toBe('revenue_share');
+      expect(insert!.total_raised).toBe(0);
+      expect(insert!.investor_count).toBe(0);
+      expect(insert!.is_public).toBe(false);
+      expect(insert!.status).toBe('draft');
+      expect(insert!.actor_id).toBe(ACTOR_ID);
+    });
+
+    it('uses `minimum_investment` (not minimum_investment_btc) and defaults to 0.0001', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_investment', {
+        title: 'Fund',
+        target_amount_btc: 0.5,
+        minimum_investment_btc: 0.001,
+      });
+
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.investment.tableName);
+      expect(insert!.minimum_investment).toBe(0.001);
+      expect((insert as Record<string, unknown>).minimum_investment_btc).toBeUndefined();
+    });
+
+    it('defaults minimum_investment to 0.0001 when not provided', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_investment', { title: 'Fund', target_amount_btc: 0.5 });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.investment.tableName);
+      expect(insert!.minimum_investment).toBe(0.0001);
+    });
+
+    it('defaults investment_type to revenue_share when not provided', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_investment', { title: 'Fund', target_amount_btc: 1 });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.investment.tableName);
+      expect(insert!.investment_type).toBe('revenue_share');
+    });
+
+    it('uses status=open (not active) when publish=true', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_investment', {
+        title: 'Open Fund',
+        target_amount_btc: 2,
+        publish: true,
+      });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.investment.tableName);
+      expect(insert!.status).toBe('open');
+      expect(insert!.is_public).toBe(true);
+    });
+
+    it('falls back to target_amount param when no target_amount_btc', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_investment', { title: 'Fund', target_amount: 0.75 });
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.investment.tableName);
+      expect(insert!.target_amount).toBe(0.75);
+    });
+  });
+
   // ── reply_to_message ─────────────────────────────────────────────────────────
   describe('reply_to_message', () => {
     it('inserts into messages table with conversation_id, sender_id (userId), and content', async () => {
