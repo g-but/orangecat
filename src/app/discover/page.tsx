@@ -29,7 +29,13 @@ export default function DiscoverPage() {
     profiles,
     loans,
     investments,
+    causes,
+    events,
+    products,
+    services,
+    groups,
     investmentsLoading,
+    genericLoading,
     totalInvestmentsCount,
     stats,
 
@@ -173,7 +179,7 @@ export default function DiscoverPage() {
               )}
 
               {/* Empty State */}
-              {!loading && !loansLoading && !investmentsLoading && !searchError && isEmpty && (
+              {!loading && !loansLoading && !investmentsLoading && !genericLoading && !searchError && isEmpty && (
                 <DiscoverEmptyState
                   activeTab={activeTab}
                   hasFilters={hasFilters}
@@ -182,7 +188,7 @@ export default function DiscoverPage() {
               )}
 
               {/* Results */}
-              {!loading && !loansLoading && !investmentsLoading && !searchError && !isEmpty && (
+              {!loading && !loansLoading && !investmentsLoading && !genericLoading && !searchError && !isEmpty && (
                 <DiscoverResults
                   activeTab={activeTab}
                   viewMode={viewMode}
@@ -190,8 +196,13 @@ export default function DiscoverPage() {
                   profiles={profiles}
                   loans={loans}
                   investments={investments}
-                  totalResults={totalResults + loans.length + investments.length}
-                  loading={loading || loansLoading || investmentsLoading}
+                  causes={causes}
+                  events={events}
+                  products={products}
+                  services={services}
+                  groups={groups}
+                  totalResults={totalResults + loans.length + investments.length + causes.length + events.length + products.length + services.length + groups.length}
+                  loading={loading || loansLoading || investmentsLoading || genericLoading}
                   hasMore={hasMore}
                   isLoadingMore={isLoadingMore}
                   onLoadMore={handleLoadMore}

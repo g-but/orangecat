@@ -13,6 +13,7 @@ import { ENTITY_STATUS } from '@/config/database-constants';
 import type { DiscoverTabType } from '@/components/discover/DiscoverTabs';
 import type { Loan } from '@/types/loans';
 import type { Investment } from '@/types/investments';
+import type { GenericPublicEntity } from '@/components/entity/variants/GenericPublicCard';
 
 export type ViewMode = 'grid' | 'list';
 
@@ -99,6 +100,14 @@ export function useDiscoverState() {
   // Investments data (fetched separately)
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [investmentsLoading, setInvestmentsLoading] = useState(false);
+
+  // Generic public entity data (causes, events, products, services, groups)
+  const [causes, setCauses] = useState<GenericPublicEntity[]>([]);
+  const [events, setEvents] = useState<GenericPublicEntity[]>([]);
+  const [products, setProducts] = useState<GenericPublicEntity[]>([]);
+  const [services, setServices] = useState<GenericPublicEntity[]>([]);
+  const [groups, setGroups] = useState<GenericPublicEntity[]>([]);
+  const [genericLoading, setGenericLoading] = useState(false);
 
   // Fetch total counts from database with client-side caching
   useEffect(() => {
@@ -263,6 +272,108 @@ export function useDiscoverState() {
     };
 
     fetchInvestments();
+  }, [activeTab, searchTerm]);
+
+  // Fetch generic entities (causes, events, products, services, groups) when their tab is active
+  useEffect(() => {
+    const GENERIC_TABS = ['causes', 'events', 'products', 'services', 'groups', 'all'] as const;
+    if (!GENERIC_TABS.includes(activeTab as (typeof GENERIC_TABS)[number])) {
+      return;
+    }
+
+    const fetchGeneric = async () => {
+      setGenericLoading(true);
+      const limit = 50;
+      const escaped = searchTerm ? searchTerm.replace(/[%_]/g, '\\$&') : null;
+
+      const shouldFetch = (tab: DiscoverTabType) => activeTab === 'all' || activeTab === tab;
+
+      try {
+        const [causesRes, eventsRes, productsRes, servicesRes, groupsRes] = await Promise.all([
+          shouldFetch('causes')
+            ? (() => {
+                let q = supabase
+                  .from(getTableName('cause'))
+                  .select('id, title, description, status, cause_category, created_at')
+                  .eq('is_public', true)
+                  .eq('status', 'active')
+                  .order('created_at', { ascending: false })
+                  .limit(activeTab === 'causes' ? limit : 8);
+                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
+                return q;
+              })()
+            : Promise.resolve({ data: null, error: null }),
+
+          shouldFetch('events')
+            ? (() => {
+                let q = supabase
+                  .from(getTableName('event'))
+                  .select('id, title, description, status, category, created_at')
+                  .in('status', ['published', 'open', 'ongoing'])
+                  .order('created_at', { ascending: false })
+                  .limit(activeTab === 'events' ? limit : 8);
+                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
+                return q;
+              })()
+            : Promise.resolve({ data: null, error: null }),
+
+          shouldFetch('products')
+            ? (() => {
+                let q = supabase
+                  .from(getTableName('product'))
+                  .select('id, title, description, status, category, created_at')
+                  .eq('status', 'active')
+                  .order('created_at', { ascending: false })
+                  .limit(activeTab === 'products' ? limit : 8);
+                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
+                return q;
+              })()
+            : Promise.resolve({ data: null, error: null }),
+
+          shouldFetch('services')
+            ? (() => {
+                let q = supabase
+                  .from(getTableName('service'))
+                  .select('id, title, description, status, category, created_at')
+                  .eq('status', 'active')
+                  .order('created_at', { ascending: false })
+                  .limit(activeTab === 'services' ? limit : 8);
+                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
+                return q;
+              })()
+            : Promise.resolve({ data: null, error: null }),
+
+          shouldFetch('groups')
+            ? (() => {
+                let q = supabase
+                  .from(getTableName('group'))
+                  .select('id, name, description, is_public, created_at, slug')
+                  .eq('is_public', true)
+                  .order('created_at', { ascending: false })
+                  .limit(activeTab === 'groups' ? limit : 8);
+                if (escaped) { q = q.or(`name.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
+                return q;
+              })()
+            : Promise.resolve({ data: null, error: null }),
+        ]);
+
+        if (shouldFetch('causes')) { setCauses((causesRes.data ?? []).map(r => ({ ...r }))); }
+        if (shouldFetch('events')) { setEvents((eventsRes.data ?? []).map(r => ({ ...r }))); }
+        if (shouldFetch('products')) { setProducts((productsRes.data ?? []).map(r => ({ ...r }))); }
+        if (shouldFetch('services')) { setServices((servicesRes.data ?? []).map(r => ({ ...r }))); }
+        if (shouldFetch('groups')) {
+          setGroups(
+            (groupsRes.data ?? []).map(r => ({ ...r, title: (r as { name: string }).name }))
+          );
+        }
+      } catch (error) {
+        logger.error('Error fetching generic discover entities', error, 'Discover');
+      } finally {
+        setGenericLoading(false);
+      }
+    };
+
+    fetchGeneric();
   }, [activeTab, searchTerm]);
 
   // Update search filters when local filter state changes
@@ -437,12 +548,21 @@ export function useDiscoverState() {
     (activeTab === 'profiles' && profiles.length === 0) ||
     (activeTab === 'loans' && loans.length === 0) ||
     (activeTab === 'investments' && investments.length === 0) ||
-    (activeTab === 'causes' && projects.length === 0) ||
-    (activeTab === 'events' && projects.length === 0) ||
-    (activeTab === 'products' && projects.length === 0) ||
-    (activeTab === 'services' && projects.length === 0) ||
-    (activeTab === 'groups' && projects.length === 0) ||
-    (activeTab === 'all' && projects.length === 0 && profiles.length === 0 && loans.length === 0 && investments.length === 0);
+    (activeTab === 'causes' && causes.length === 0) ||
+    (activeTab === 'events' && events.length === 0) ||
+    (activeTab === 'products' && products.length === 0) ||
+    (activeTab === 'services' && services.length === 0) ||
+    (activeTab === 'groups' && groups.length === 0) ||
+    (activeTab === 'all' &&
+      projects.length === 0 &&
+      profiles.length === 0 &&
+      loans.length === 0 &&
+      investments.length === 0 &&
+      causes.length === 0 &&
+      events.length === 0 &&
+      products.length === 0 &&
+      services.length === 0 &&
+      groups.length === 0);
 
   const hasFilters = !!(searchTerm || selectedCategories.length > 0);
 
@@ -453,6 +573,7 @@ export function useDiscoverState() {
     loading,
     loansLoading,
     investmentsLoading,
+    genericLoading,
     totalResults,
     hasMore,
     isLoadingMore,
@@ -462,6 +583,11 @@ export function useDiscoverState() {
     profiles,
     loans,
     investments,
+    causes,
+    events,
+    products,
+    services,
+    groups,
     totalInvestmentsCount,
     stats,
 
