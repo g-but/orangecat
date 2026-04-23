@@ -2,7 +2,6 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
-import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
