@@ -7,12 +7,12 @@
 
 import { logger } from '@/utils/logger';
 import { handleSupabaseError } from '@/lib/wallets/errorHandling';
-import { apiSuccess, apiInternalError, apiBadRequest } from '@/lib/api/standardResponse';
+import { apiSuccess, apiInternalError, apiBadRequest, apiRateLimited } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { walletUpdateSchema } from '@/lib/validation/finance';
 import {
   fetchWalletAndVerifyOwner,
@@ -33,13 +33,8 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
 
     const { user, supabase } = request;
 
-    try {
-      await enforceUserWriteLimit(user.id);
-    } catch (e) {
-      const limited = handleRateLimitError(e, 'Too many wallet update requests. Please slow down.');
-      if (limited) {return limited;}
-      throw e;
-    }
+    const rlUpdate = await rateLimitWriteAsync(user.id);
+    if (!rlUpdate.success) { return apiRateLimited('Too many wallet update requests. Please slow down.', Math.ceil((rlUpdate.resetTime - Date.now()) / 1000)); }
 
     const rawBody = await request.json();
     const parseResult = walletUpdateSchema.safeParse(rawBody);
@@ -91,13 +86,8 @@ export const DELETE = withAuth(async (request: AuthenticatedRequest, context: Ro
 
     const { user, supabase } = request;
 
-    try {
-      await enforceUserWriteLimit(user.id);
-    } catch (e) {
-      const limited = handleRateLimitError(e);
-      if (limited) {return limited;}
-      throw e;
-    }
+    const rlDelete = await rateLimitWriteAsync(user.id);
+    if (!rlDelete.success) { return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rlDelete.resetTime - Date.now()) / 1000)); }
 
     const result = await fetchWalletAndVerifyOwner(supabase, id, user.id, 'delete');
     if (result.error) {return result.error;}

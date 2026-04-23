@@ -11,9 +11,10 @@ import {
   apiNotFound,
   apiBadRequest,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { walletTransferSchema } from '@/lib/validation/finance';
 import { executeWalletTransfer } from '@/domain/wallets/transferService';
 
@@ -21,13 +22,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
 
-    try {
-      await enforceUserWriteLimit(user.id);
-    } catch (e) {
-      const limited = handleRateLimitError(e, 'Too many transfer requests. Please slow down.');
-      if (limited) {return limited;}
-      throw e;
-    }
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) { return apiRateLimited('Too many transfer requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000)); }
 
     const rawBody = await request.json();
     const parseResult = walletTransferSchema.safeParse(rawBody);

@@ -10,14 +10,14 @@ import { researchConfig } from '@/config/entity-configs/research-config';
 import {
   apiSuccess,
   handleApiError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination, getString } from '@/lib/api/query';
-import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
-import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
+import { applyRateLimitHeaders, rateLimitWriteAsync } from '@/lib/rate-limit';
 import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
 import type { ResearchEntityCreate } from '@/types/research';
@@ -91,14 +91,8 @@ export const GET = compose(
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
   try {
-    let rl: RateLimitResult;
-    try {
-      rl = await enforceUserWriteLimit(user.id);
-    } catch (e) {
-      const limited = handleRateLimitError(e, 'Too many creation requests. Please slow down.');
-      if (limited) {return limited;}
-      throw e;
-    }
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) { return apiRateLimited('Too many creation requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000)); }
 
     const body = await (request as NextRequest).json();
     const schema = researchConfig.schema as ZodType | undefined;

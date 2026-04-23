@@ -20,8 +20,7 @@ import {
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { GroqAPIError } from '@/services/ai';
-import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
-import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
+import { applyRateLimitHeaders, rateLimitWriteAsync } from '@/lib/rate-limit';
 import { buildCatSystemPrompt } from '@/services/cat/system-prompt';
 import { getCatFewShotExamples } from '@/services/cat/few-shot-examples';
 import { parseActionsFromResponse } from '@/services/cat/response-parser';
@@ -57,20 +56,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
   try {
     // Rate limit (write-tier reused for chat to prevent abuse)
-    let rl: RateLimitResult;
-    try {
-      rl = await enforceUserWriteLimit(user.id);
-    } catch (e) {
-      if (e instanceof RateLimitError) {
-        const retryAfter = e.details?.retryAfter || 60;
-        const limit = e.details?.limit || 30;
-        const resetTime = Date.now() + retryAfter * 1000;
-        return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED', limit, remaining: 0, resetTime, resetDate: new Date(resetTime).toUTCString() }),
-          { status: 429, headers: { 'Content-Type': 'application/json', 'X-RateLimit-Limit': String(limit), 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': String(resetTime), 'Retry-After': String(retryAfter) } }
-        );
-      }
-      throw e;
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED', limit: rl.limit, remaining: 0, resetTime: rl.resetTime, resetDate: new Date(rl.resetTime).toUTCString() }),
+        { status: 429, headers: { 'Content-Type': 'application/json', 'X-RateLimit-Limit': String(rl.limit), 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': String(rl.resetTime), 'Retry-After': String(retryAfter) } }
+      );
     }
 
     const body = await (request as NextRequest).json();

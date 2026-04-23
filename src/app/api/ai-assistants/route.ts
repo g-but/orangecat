@@ -7,13 +7,12 @@
 
 import { NextRequest } from 'next/server';
 import { aiAssistantSchema } from '@/lib/validation';
-import { apiSuccess, apiBadRequest, handleApiError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiBadRequest, handleApiError, apiRateLimited } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { withAuth, withOptionalAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { STATUS } from '@/config/database-constants';
 import { getPagination, getString } from '@/lib/api/query';
-import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
-import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
+import { applyRateLimitHeaders, rateLimitWriteAsync } from '@/lib/rate-limit';
 import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
@@ -88,14 +87,8 @@ export const GET = withOptionalAuth(async (request) => {
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
   try {
-    let rl: RateLimitResult;
-    try {
-      rl = await enforceUserWriteLimit(user.id);
-    } catch (e) {
-      const limited = handleRateLimitError(e, 'Too many creation requests. Please slow down.');
-      if (limited) {return limited;}
-      throw e;
-    }
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) { return apiRateLimited('Too many creation requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000)); }
 
     const body = await (request as NextRequest).json();
     const parsed = aiAssistantSchema.safeParse(body);

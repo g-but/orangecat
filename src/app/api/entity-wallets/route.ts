@@ -4,11 +4,12 @@ import {
   apiError,
   apiCreated,
   apiBadRequest,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { entityWalletLinkSchema } from '@/lib/validation/finance';
-import { enforceUserWriteLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { ENTITY_TYPES } from '@/config/entity-registry';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -73,13 +74,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
 
   // Rate limiting
-  try {
-    await enforceUserWriteLimit(user.id);
-  } catch (e) {
-    const limited = handleRateLimitError(e, 'Too many requests. Please slow down.');
-    if (limited) {return limited;}
-    throw e;
-  }
+  const rl = await rateLimitWriteAsync(user.id);
+  if (!rl.success) { return apiRateLimited('Too many requests. Please slow down.', Math.ceil((rl.resetTime - Date.now()) / 1000)); }
 
   // Zod validation
   const body = await request.json();

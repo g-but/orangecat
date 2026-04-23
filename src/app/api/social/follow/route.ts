@@ -6,9 +6,9 @@ import {
   apiNotFound,
   apiInternalError,
   apiConflict,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
-import { enforceUserSocialLimit, handleRateLimitError } from '@/lib/api/rateLimiting';
+import { applyRateLimitHeaders, rateLimitSocialAsync } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -19,14 +19,8 @@ async function handleFollow(request: AuthenticatedRequest) {
     const { supabase, user } = request;
 
     // Rate limiting check - 10 follows per minute
-    let rateLimitResult: RateLimitResult;
-    try {
-      rateLimitResult = await enforceUserSocialLimit(user.id);
-    } catch (e) {
-      const limited = handleRateLimitError(e, 'Too many follow requests. Please slow down.');
-      if (limited) {return limited;}
-      throw e;
-    }
+    const rateLimitResult = await rateLimitSocialAsync(user.id);
+    if (!rateLimitResult.success) { return apiRateLimited('Too many follow requests. Please slow down.', Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)); }
 
     const { following_id } = await request.json();
 
