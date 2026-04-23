@@ -102,7 +102,7 @@ export const organizationGuidanceContent: Record<
       'Keep it concise but informative',
     ],
     examples: [
-      'Building Bitcoin-powered crowdfunding tools for creators and communities worldwide.',
+      'Building Bitcoin-powered economic tools for creators and communities worldwide.',
       'Supporting local artisans through fair trade and sustainable practices.',
       'Developing open-source privacy tools for digital rights activists.',
     ],

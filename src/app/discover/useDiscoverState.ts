@@ -90,7 +90,7 @@ export function useDiscoverState() {
   // Total counts from database (for stats display)
   const [totalProjectsCount, setTotalProjectsCount] = useState(0);
   const [totalProfilesCount, setTotalProfilesCount] = useState(0);
-  const [_totalLoansCount, setTotalLoansCount] = useState(0);
+  const [totalLoansCount, setTotalLoansCount] = useState(0);
   const [totalInvestmentsCount, setTotalInvestmentsCount] = useState(0);
 
   // Loans data (fetched separately since useSearch doesn't support loans yet)
@@ -541,11 +541,10 @@ export function useDiscoverState() {
     // Use total counts from database, not filtered results
     const totalProjects = totalProjectsCount;
     const totalProfiles = totalProfilesCount;
-    // For now, we don't have supporter or funding data in the current schema
-    const totalSupporters = 0;
-    const totalFunding = 0;
-    return { totalProjects, totalProfiles, totalSupporters, totalFunding };
-  }, [totalProjectsCount, totalProfilesCount]);
+    // Total financial instruments (loans + investments) available on the platform
+    const totalFinancial = totalLoansCount + totalInvestmentsCount;
+    return { totalProjects, totalProfiles, totalFinancial };
+  }, [totalProjectsCount, totalProfilesCount, totalLoansCount, totalInvestmentsCount]);
 
   // Compute whether results are empty (used for empty/results state toggling)
   const isEmpty =

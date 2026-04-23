@@ -328,7 +328,7 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
 export const projectDefaultGuidance: DefaultGuidance = {
   title: 'Create a Compelling Project',
   description:
-    'Transform your idea into a funded reality. Projects on OrangeCat combine crowdfunding with Bitcoin payments for transparent, community-driven development.',
+    'Transform your idea into a funded reality. Projects on OrangeCat combine transparent funding with Bitcoin payments for community-driven development.',
   features: [
     {
       icon: React.createElement(Target, { className: 'w-4 h-4 text-tiffany-600' }),

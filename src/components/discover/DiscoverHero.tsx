@@ -14,13 +14,13 @@ import { motion } from 'framer-motion';
 interface DiscoverHeroProps {
   totalProjects: number;
   totalProfiles: number;
-  totalFunding?: number;
+  totalFinancial?: number;
 }
 
 export default function DiscoverHero({
   totalProjects,
   totalProfiles,
-  totalFunding = 0,
+  totalFinancial = 0,
 }: DiscoverHeroProps) {
   return (
     <motion.div
@@ -42,9 +42,9 @@ export default function DiscoverHero({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            <span className="block">Discover Projects</span>
+            <span className="block">Discover Opportunities</span>
             <span className="block bg-gradient-to-r from-tiffany-600 via-bitcoinOrange to-orange-500 bg-clip-text text-transparent">
-              You Care About
+              Fund, Invest & Connect
             </span>
           </motion.h1>
 
@@ -54,7 +54,7 @@ export default function DiscoverHero({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
-            Support creative projects, community initiatives, and bold ideas—using Bitcoin.
+            Projects, causes, products, services, loans, investments, events, and more — from creators and communities around the world.
           </motion.p>
 
           {/* Stats - Compact */}
@@ -74,9 +74,9 @@ export default function DiscoverHero({
             </div>
             <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-white/80 shadow-card">
               <div className="text-fluid-xl font-bold text-bitcoinOrange">
-                {totalFunding > 0 ? `${totalFunding} BTC` : '0 BTC'}
+                {totalFinancial}
               </div>
-              <div className="text-sm text-gray-600 mt-1">Funds Raised</div>
+              <div className="text-sm text-gray-600 mt-1">Loans & Investments</div>
             </div>
           </motion.div>
         </motion.div>

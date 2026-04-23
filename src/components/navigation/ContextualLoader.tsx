@@ -140,7 +140,7 @@ export function ContextualLoader({ className, pathname: propPathname }: Contextu
         title: 'Projects',
         subtitle: 'Bring your ideas to life',
         actions: [
-          { icon: Plus, text: 'Start a new crowdfunding campaign' },
+          { icon: Plus, text: 'Start a new project' },
           { icon: Target, text: 'Set goals and track progress' },
           { icon: Users, text: 'Build your supporter community' },
           { icon: DollarSign, text: 'Manage funds and rewards' },

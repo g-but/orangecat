@@ -184,7 +184,7 @@ export const projectConfig = createEntityConfig<ProjectData>({
   backUrl: ENTITY_REGISTRY['project'].basePath,
   successUrl: `${ENTITY_REGISTRY['project'].publicBasePath}/[id]`,
   pageTitle: 'Create Project',
-  pageDescription: 'Start a crowdfunding campaign for your Bitcoin-powered project.',
+  pageDescription: 'Create a project and start receiving funding from your community.',
   formTitle: 'Project Information',
   formDescription: 'Tell your story and set funding goals',
   fieldGroups,

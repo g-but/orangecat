@@ -5,10 +5,10 @@ import { Bitcoin, Shield, Zap, Lock, Globe, Code, Server, CheckCircle } from 'lu
 export const metadata: Metadata = {
   title: 'Technology | OrangeCat',
   description:
-    'Learn about the technology powering OrangeCat - Bitcoin-native crowdfunding with transparency, security, and zero platform fees.',
+    'Learn about the technology powering OrangeCat - Bitcoin-native economic infrastructure with transparency, security, and zero platform fees.',
   openGraph: {
     title: 'Our Technology | OrangeCat',
-    description: 'Bitcoin-native crowdfunding built on modern web technology',
+    description: 'Bitcoin-native economic infrastructure built on modern web technology',
     type: 'website',
   },
 };
@@ -25,7 +25,7 @@ export default function TechnologyPage() {
               Built on Bitcoin
             </h1>
             <p className="mt-6 max-w-3xl mx-auto text-xl text-orange-100">
-              Direct, transparent, and unstoppable crowdfunding powered by the world's most secure
+              Direct, transparent, and unstoppable economic participation powered by the world's most secure
               network
             </p>
           </div>

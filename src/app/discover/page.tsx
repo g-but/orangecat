@@ -103,7 +103,7 @@ export default function DiscoverPage() {
       <DiscoverHero
         totalProjects={stats.totalProjects}
         totalProfiles={stats.totalProfiles}
-        totalFunding={stats.totalFunding}
+        totalFinancial={stats.totalFinancial}
       />
 
       {/* Main Content */}

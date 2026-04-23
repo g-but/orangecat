@@ -122,7 +122,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
   {
     id: 'create-first-project',
     title: 'Launch Your First Project',
-    description: 'Start crowdfunding with Bitcoin in just a few minutes',
+    description: 'Launch a project and start receiving support in just a few minutes',
     priority: 'high',
     category: 'create',
     action: { label: 'Create Project', href: ENTITY_REGISTRY.project.createPath },
