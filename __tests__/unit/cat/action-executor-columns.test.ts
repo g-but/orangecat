@@ -30,9 +30,10 @@ jest.mock('@/utils/logger', () => ({
 }));
 
 // ── Supabase mock factory ─────────────────────────────────────────────────────
-// Tracks insert payloads per table so tests can inspect what was sent.
+// Tracks insert and update payloads per table so tests can inspect what was sent.
 function buildMockSupabase() {
   const insertsByTable: Record<string, unknown[]> = {};
+  const updatesByTable: Record<string, unknown[]> = {};
 
   const makeChain = (tableName: string) => {
     const chain = {
@@ -41,7 +42,11 @@ function buildMockSupabase() {
         insertsByTable[tableName].push(payload);
         return chain;
       }),
-      update: jest.fn().mockReturnThis(),
+      update: jest.fn((payload: unknown) => {
+        if (!updatesByTable[tableName]) updatesByTable[tableName] = [];
+        updatesByTable[tableName].push(payload);
+        return chain;
+      }),
       select: jest.fn().mockReturnThis(),
       single: jest.fn().mockResolvedValue({
         data: { id: 'mock-id', title: 'mock' },
@@ -56,6 +61,7 @@ function buildMockSupabase() {
   const supabase = {
     from: jest.fn((table: string) => makeChain(table)),
     _insertsByTable: insertsByTable,
+    _updatesByTable: updatesByTable,
   };
 
   return supabase;
@@ -79,6 +85,14 @@ function getEntityInsert(
   tableName: string
 ): Record<string, unknown> | undefined {
   const rows = supabase._insertsByTable[tableName];
+  return rows?.[0] as Record<string, unknown> | undefined;
+}
+
+function getEntityUpdate(
+  supabase: ReturnType<typeof buildMockSupabase>,
+  tableName: string
+): Record<string, unknown> | undefined {
+  const rows = supabase._updatesByTable[tableName];
   return rows?.[0] as Record<string, unknown> | undefined;
 }
 
@@ -270,6 +284,53 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.verification_status).toBe('unverified');
       expect(insert!.public_visibility).toBe(false);
       expect(insert!.actor_id).toBe(ACTOR_ID);
+    });
+  });
+
+  // ── update_entity ───────────────────────────────────────────────────────────
+  describe('update_entity', () => {
+    it('passes cause_category through to causes table (not silently dropped)', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'update_entity', {
+        entity_type: 'cause',
+        entity_id: 'cause-abc',
+        updates: { cause_category: 'environment' },
+      });
+
+      // Must succeed — not "No valid fields to update"
+      expect(result.status).toBe('completed');
+      const update = getEntityUpdate(supabase, ENTITY_REGISTRY.cause.tableName);
+      expect(update).toBeDefined();
+      expect(update!.cause_category).toBe('environment');
+      // `category` must NOT appear in the update payload
+      expect(update!.category).toBeUndefined();
+    });
+
+    it('passes common safe fields through for any entity', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'update_entity', {
+        entity_type: 'product',
+        entity_id: 'prod-123',
+        updates: { title: 'New Title', description: 'Updated', status: 'active' },
+      });
+
+      const update = getEntityUpdate(supabase, ENTITY_REGISTRY.product.tableName);
+      expect(update!.title).toBe('New Title');
+      expect(update!.description).toBe('Updated');
+      expect(update!.status).toBe('active');
+    });
+
+    it('rejects updates with only non-safe fields', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'update_entity', {
+        entity_type: 'product',
+        entity_id: 'prod-123',
+        // price is intentionally NOT in safeFields (financial field)
+        updates: { price: 9999 },
+      });
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/no valid fields/i);
     });
   });
 });

@@ -226,8 +226,9 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
       return { success: false, error: `Unknown entity type: ${entityType}` };
     }
 
-    // Only allow updating safe fields
-    const safeFields = ['title', 'description', 'category', 'status', 'tags'];
+    // Only allow updating safe fields.
+    // cause_category is the causes-specific equivalent of category (causes table has no generic `category` column).
+    const safeFields = ['title', 'description', 'category', 'cause_category', 'status', 'tags'];
     const safeUpdates: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(updates)) {
       if (safeFields.includes(key)) {
