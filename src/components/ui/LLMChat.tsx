@@ -120,7 +120,7 @@ export function LLMChat({
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.message,
+        content: data.data?.message,
         timestamp: new Date(),
       };
 

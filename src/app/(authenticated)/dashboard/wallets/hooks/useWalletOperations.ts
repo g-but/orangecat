@@ -342,7 +342,7 @@ export function useWalletOperations({
       let updatedWallet;
       try {
         const responseData = await response.json();
-        updatedWallet = responseData.wallet || responseData;
+        updatedWallet = responseData.data || responseData.wallet || responseData;
       } catch {
         throw new Error('Invalid response from server');
       }
@@ -439,7 +439,8 @@ export function useWalletOperations({
         throw new Error(errorData.error || 'Failed to refresh wallet');
       }
 
-      const refreshedWallet = await response.json();
+      const refreshedData = await response.json();
+      const refreshedWallet = refreshedData.data?.wallet ?? refreshedData.data;
       setWallets(prev => prev.map(w => (w.id === walletId ? refreshedWallet : w)));
       toast.success('Wallet refreshed successfully');
     } catch (error) {
