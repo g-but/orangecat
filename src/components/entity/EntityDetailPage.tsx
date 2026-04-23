@@ -19,6 +19,7 @@
 
 import { notFound, redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 import EntityDetailLayout from '@/components/entity/EntityDetailLayout';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
@@ -140,6 +141,7 @@ function makeDefaultDetailFields<T extends BaseEntity>(
       [
         'id',
         'user_id',
+        'actor_id',
         'title',
         'description',
         'thumbnail_url',
@@ -233,12 +235,23 @@ export default async function EntityDetailPage<T extends BaseEntity>({
   const entityType = entityTypeMap[config.name.toLowerCase()] || config.name.toLowerCase();
   const tableName = getTableName(entityType as Parameters<typeof getTableName>[0]);
 
+  // Look up current user's actor_id for ownership filtering
+  let actorId: string | null = null;
+  if (user) {
+    const actor = await getOrCreateUserActor(user.id);
+    actorId = actor.id;
+  }
+
   // Build query
   let query = (supabase.from(tableName) as any).select('*').eq('id', entityId);
 
-  // If userId provided, filter by user
-  if (userId || (user && requireAuth)) {
-    query = query.eq('user_id', userId || user!.id);
+  // Filter by actor_id to enforce ownership (actor_id is NOT NULL on all entity tables)
+  if (userId || (actorId && requireAuth)) {
+    // userId prop is a legacy auth.users UUID; resolve it to actor_id if provided
+    const filterActorId = userId
+      ? (await getOrCreateUserActor(userId)).id
+      : actorId!;
+    query = query.eq('actor_id', filterActorId);
   }
 
   const { data: entity, error } = await query.single();
@@ -248,7 +261,7 @@ export default async function EntityDetailPage<T extends BaseEntity>({
   }
 
   // Check permissions (if entity has is_public field)
-  if ('is_public' in entity && !entity.is_public && user && entity.user_id !== user.id) {
+  if ('is_public' in entity && !entity.is_public && actorId && entity.actor_id !== actorId) {
     notFound();
   }
 
