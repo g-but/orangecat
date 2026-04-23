@@ -3,10 +3,6 @@
 import { useState } from 'react';
 import { ChevronDown, Bot, Coins, Users, Shield, Zap, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Metadata } from 'next';
-
-// Note: metadata export is ignored in client components; see layout for page metadata.
-// For SEO this page relies on the root layout metadata defaults.
 
 interface FaqItem {
   question: string;
