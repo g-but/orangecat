@@ -295,7 +295,6 @@ export function useDiscoverState() {
                 let q = supabase
                   .from(getTableName('cause'))
                   .select('id, title, description, status, cause_category, created_at')
-                  .eq('is_public', true)
                   .eq('status', 'active')
                   .order('created_at', { ascending: false })
                   .limit(activeTab === 'causes' ? limit : 8);
