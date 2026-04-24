@@ -608,6 +608,40 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     enabled: true,
   },
 
+  add_wallet: {
+    id: 'add_wallet',
+    name: 'Add Wallet',
+    description: 'Create a savings goal wallet or budget wallet on the user\'s profile',
+    category: 'payments',
+    icon: Wallet,
+    riskLevel: 'medium',
+    requiresConfirmation: false,
+    parameters: [
+      { name: 'label', type: 'string', required: true, description: 'Wallet name (e.g. "Vacation Fund", "Food Budget")' },
+      {
+        name: 'behavior_type',
+        type: 'string',
+        required: true,
+        description: '"one_time_goal" (save toward a target) | "recurring_budget" (periodic spending limit) | "general"',
+      },
+      { name: 'category', type: 'string', required: false, description: 'general | rent | food | medical | education | emergency | transportation | utilities | projects | legal | entertainment' },
+      { name: 'description', type: 'string', required: false, description: 'What this wallet is for' },
+      { name: 'goal_amount', type: 'number', required: false, description: 'Target amount in BTC (for one_time_goal)' },
+      { name: 'goal_currency', type: 'string', required: false, description: 'Currency for the goal (e.g. BTC, CHF, USD)' },
+      { name: 'goal_deadline', type: 'string', required: false, description: 'ISO date for the goal deadline (e.g. 2026-12-31)' },
+      { name: 'budget_amount', type: 'number', required: false, description: 'Budget amount in BTC per period (for recurring_budget)' },
+      { name: 'budget_period', type: 'string', required: false, description: 'daily | weekly | monthly | quarterly | yearly' },
+      { name: 'lightning_address', type: 'string', required: false, description: 'Lightning address to associate (uses primary wallet\'s address if omitted)' },
+    ],
+    examples: [
+      'Set up a vacation savings goal for 0.05 BTC by December',
+      'Create a monthly food budget of 0.002 BTC',
+      'Start an emergency fund',
+      'I want to save for a new laptop — 0.1 BTC by end of year',
+    ],
+    enabled: true,
+  },
+
   fund_project: {
     id: 'fund_project',
     name: 'Fund Project',

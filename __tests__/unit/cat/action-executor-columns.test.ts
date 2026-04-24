@@ -1373,4 +1373,204 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(isNaN(ts.getTime())).toBe(false);
     });
   });
+
+  // ── add_wallet ───────────────────────────────────────────────────────────────
+
+  /**
+   * add_wallet mock.
+   *
+   * The add_wallet handler does TWO queries on the wallets table:
+   *   1. A list SELECT (awaited directly after .limit(1)) — returns existing lightning address
+   *   2. An INSERT followed by .select().single() — returns the new wallet row
+   *
+   * To handle the list SELECT, the chain must be "thenable" so that
+   * `await chain` resolves to `{ data: [...], error: null }`.
+   */
+  function buildMockSupabaseForAddWallet(
+    existingLightningAddress: string | null = 'alice@getalby.com'
+  ) {
+    const insertsByTable: Record<string, unknown[]> = {};
+
+    const makeChain = (tableName: string) => {
+      let _operation: 'select' | 'insert' | 'update' | 'other' = 'other';
+
+      const chain: Record<string, unknown> = {};
+
+      chain.select = jest.fn(() => {
+        _operation = 'select';
+        return chain;
+      });
+      chain.insert = jest.fn((payload: unknown) => {
+        _operation = 'insert';
+        if (!insertsByTable[tableName]) insertsByTable[tableName] = [];
+        insertsByTable[tableName].push(payload);
+        return chain;
+      });
+      chain.update = jest.fn(() => { _operation = 'update'; return chain; });
+      chain.eq = jest.fn().mockReturnThis();
+      chain.not = jest.fn().mockReturnThis();
+      chain.order = jest.fn().mockReturnThis();
+      chain.limit = jest.fn().mockReturnThis();
+      chain.neq = jest.fn().mockReturnThis();
+      chain.or = jest.fn().mockReturnThis();
+      chain.in = jest.fn().mockReturnThis();
+      chain.maybeSingle = jest.fn().mockResolvedValue({ data: null, error: null });
+
+      // Make chain thenable so `await chain` (for list queries like .limit(1)) resolves correctly.
+      // The wallets SELECT returns a list with the lightning address; inserts return the new row.
+      chain.then = jest.fn().mockImplementation((resolve: (v: unknown) => void) => {
+        if (tableName === DATABASE_TABLES.WALLETS && _operation === 'select') {
+          resolve({
+            data: existingLightningAddress
+              ? [{ lightning_address: existingLightningAddress }]
+              : [],
+            error: null,
+          });
+        } else {
+          resolve({ data: [], error: null });
+        }
+      });
+
+      // single() — used by INSERT .select().single() and by action log
+      chain.single = jest.fn().mockImplementation(() => {
+        if (tableName === DATABASE_TABLES.WALLETS && _operation === 'insert') {
+          return Promise.resolve({
+            data: { id: 'new-wallet-id', label: 'Test Wallet', behavior_type: 'one_time_goal', category: 'general' },
+            error: null,
+          });
+        }
+        // action_log table or other
+        return Promise.resolve({
+          data: { id: 'log-id' },
+          error: null,
+        });
+      });
+
+      return chain;
+    };
+
+    const supabase = {
+      from: jest.fn((table: string) => makeChain(table)),
+      _insertsByTable: insertsByTable,
+    };
+
+    return supabase;
+  }
+
+  describe('add_wallet', () => {
+    it('inserts into the wallets table with correct column names', async () => {
+      const supabase = buildMockSupabaseForAddWallet();
+      const result = await run(supabase, 'add_wallet', {
+        label: 'Vacation Fund',
+        behavior_type: 'one_time_goal',
+        category: 'general',
+        goal_amount: 0.05,
+        goal_currency: 'BTC',
+        goal_deadline: '2026-12-31',
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = supabase._insertsByTable[DATABASE_TABLES.WALLETS]?.[0] as Record<string, unknown>;
+      expect(insert).toBeDefined();
+      expect(insert.label).toBe('Vacation Fund');
+      expect(insert.behavior_type).toBe('one_time_goal');
+      expect(insert.category).toBe('general');
+      expect(insert.goal_amount).toBe(0.05);
+      expect(insert.goal_currency).toBe('BTC');
+      expect(insert.goal_deadline).toBe('2026-12-31');
+    });
+
+    it('uses the existing lightning address from user wallets when none provided', async () => {
+      const supabase = buildMockSupabaseForAddWallet('alice@getalby.com');
+      await run(supabase, 'add_wallet', {
+        label: 'Emergency Fund',
+        behavior_type: 'one_time_goal',
+      });
+
+      const insert = supabase._insertsByTable[DATABASE_TABLES.WALLETS]?.[0] as Record<string, unknown>;
+      expect(insert).toBeDefined();
+      expect(insert.lightning_address).toBe('alice@getalby.com');
+    });
+
+    it('uses lightning_address param when explicitly provided', async () => {
+      const supabase = buildMockSupabaseForAddWallet('alice@getalby.com');
+      await run(supabase, 'add_wallet', {
+        label: 'Bitcoin Wallet',
+        behavior_type: 'general',
+        lightning_address: 'custom@wallet.io',
+      });
+
+      const insert = supabase._insertsByTable[DATABASE_TABLES.WALLETS]?.[0] as Record<string, unknown>;
+      // Provided address takes priority
+      expect(insert.lightning_address).toBe('custom@wallet.io');
+    });
+
+    it('creates recurring_budget wallet with budget fields', async () => {
+      const supabase = buildMockSupabaseForAddWallet();
+      await run(supabase, 'add_wallet', {
+        label: 'Food Budget',
+        behavior_type: 'recurring_budget',
+        category: 'food',
+        budget_amount: 0.002,
+        budget_period: 'monthly',
+      });
+
+      const insert = supabase._insertsByTable[DATABASE_TABLES.WALLETS]?.[0] as Record<string, unknown>;
+      expect(insert.behavior_type).toBe('recurring_budget');
+      expect(insert.budget_amount).toBe(0.002);
+      expect(insert.budget_period).toBe('monthly');
+      expect(insert.category).toBe('food');
+    });
+
+    it('sets profile_id = userId and is_primary = false', async () => {
+      const supabase = buildMockSupabaseForAddWallet();
+      await run(supabase, 'add_wallet', {
+        label: 'My Fund',
+        behavior_type: 'general',
+      });
+
+      const insert = supabase._insertsByTable[DATABASE_TABLES.WALLETS]?.[0] as Record<string, unknown>;
+      expect(insert.profile_id).toBe(USER_ID);
+      expect(insert.is_primary).toBe(false);
+      expect(insert.is_active).toBe(true);
+    });
+
+    it('returns error when label is missing', async () => {
+      const supabase = buildMockSupabaseForAddWallet();
+      const result = await run(supabase, 'add_wallet', {
+        behavior_type: 'one_time_goal',
+      });
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/label/i);
+    });
+
+    it('returns error when no lightning address is available', async () => {
+      // buildMockSupabaseForAddWallet(null) → wallets SELECT returns empty array
+      const supabase = buildMockSupabaseForAddWallet(null);
+      const result = await run(supabase, 'add_wallet', {
+        label: 'No Address Fund',
+        behavior_type: 'one_time_goal',
+      });
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/lightning address/i);
+    });
+
+    it('returns displayMessage with 💰 and wallet name', async () => {
+      const supabase = buildMockSupabaseForAddWallet();
+      const result = await run(supabase, 'add_wallet', {
+        label: 'Vacation Fund',
+        behavior_type: 'one_time_goal',
+        goal_amount: 0.05,
+        goal_currency: 'BTC',
+        goal_deadline: '2026-12-31',
+      });
+
+      expect(result.status).toBe('completed');
+      const msg = (result.data as Record<string, unknown>)?.displayMessage as string;
+      expect(msg).toContain('💰');
+      expect(msg).toContain('Vacation Fund');
+    });
+  });
 });

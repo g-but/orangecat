@@ -972,6 +972,90 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
   // ---------- PAYMENT ACTIONS ----------
 
+  add_wallet: async (supabase, userId, _actorId, params) => {
+    // Create a savings goal or budget wallet for the user's profile.
+    // Wallets require a lightning address — we use the one provided, or fall back to
+    // the user's primary lightning address from their existing wallets.
+    const label = params.label as string | undefined;
+    if (!label?.trim()) {
+      return { success: false, error: 'label is required — provide a name for the wallet (e.g. "Vacation Fund")' };
+    }
+
+    const behaviorType = (params.behavior_type as string | undefined) || 'general';
+    const validBehaviorTypes = ['general', 'one_time_goal', 'recurring_budget'];
+    if (!validBehaviorTypes.includes(behaviorType)) {
+      return { success: false, error: `behavior_type must be one of: ${validBehaviorTypes.join(', ')}` };
+    }
+
+    // Resolve lightning address: use provided one, else look up user's primary
+    let lightningAddress = (params.lightning_address as string | undefined) || null;
+    if (!lightningAddress) {
+      const { data: existingWallets } = await supabase
+        .from(DATABASE_TABLES.WALLETS)
+        .select('lightning_address')
+        .eq('profile_id', userId)
+        .eq('is_active', true)
+        .not('lightning_address', 'is', null)
+        .order('is_primary', { ascending: false })
+        .limit(1);
+      lightningAddress = existingWallets?.[0]?.lightning_address ?? null;
+    }
+
+    if (!lightningAddress) {
+      return {
+        success: false,
+        error: 'No lightning address available. Add one in Settings → Wallets first, or provide a lightning_address parameter.',
+      };
+    }
+
+    const walletRecord: Record<string, unknown> = {
+      profile_id: userId,
+      label: label.trim(),
+      lightning_address: lightningAddress,
+      is_active: true,
+      is_primary: false,
+      behavior_type: behaviorType,
+      category: (params.category as string | undefined) || 'general',
+    };
+
+    if (params.description) walletRecord.description = params.description as string;
+
+    // Goal fields (one_time_goal)
+    if (params.goal_amount !== undefined) walletRecord.goal_amount = params.goal_amount as number;
+    if (params.goal_currency) walletRecord.goal_currency = params.goal_currency as string;
+    if (params.goal_deadline) walletRecord.goal_deadline = params.goal_deadline as string;
+
+    // Budget fields (recurring_budget)
+    if (params.budget_amount !== undefined) walletRecord.budget_amount = params.budget_amount as number;
+    if (params.budget_period) walletRecord.budget_period = params.budget_period as string;
+
+    const { data, error } = await supabase
+      .from(DATABASE_TABLES.WALLETS)
+      .insert(walletRecord)
+      .select('id, label, behavior_type, category, goal_amount, goal_currency, goal_deadline, budget_amount, budget_period')
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    const parts: string[] = [label.trim()];
+    if (behaviorType === 'one_time_goal' && params.goal_amount) {
+      parts.push(`goal: ${params.goal_amount} ${params.goal_currency ?? 'BTC'}`);
+      if (params.goal_deadline) parts.push(`by ${params.goal_deadline}`);
+    } else if (behaviorType === 'recurring_budget' && params.budget_amount) {
+      parts.push(`${params.budget_amount} BTC/${params.budget_period ?? 'month'}`);
+    }
+
+    return {
+      success: true,
+      data: {
+        ...data,
+        displayMessage: `💰 Wallet created: ${parts.join(' — ')}`,
+      },
+    };
+  },
+
   send_payment: async (supabase, userId, _actorId, params) => {
     const amountBtc = params.amount_btc as number;
     const recipient = params.recipient as string;
@@ -1661,6 +1745,12 @@ export class CatActionExecutor {
           .filter(f => parameters[f] !== undefined)
           .join(', ');
         return `Update profile${fields ? ': ' + fields : ''}`;
+      }
+      case 'add_wallet': {
+        const walletLabel = parameters.label as string | undefined;
+        const btype = parameters.behavior_type as string | undefined;
+        const typeLabel = btype === 'one_time_goal' ? ' (goal)' : btype === 'recurring_budget' ? ' (budget)' : '';
+        return `Create wallet: "${walletLabel ?? 'unnamed'}"${typeLabel}`;
       }
       default:
         return `Execute ${action.name}`;
