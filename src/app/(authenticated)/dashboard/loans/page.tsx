@@ -169,7 +169,7 @@ export default function LoansPage() {
         href={loanEntityConfig.createPath}
         className="bg-gradient-to-r from-tiffany-600 to-tiffany-700 w-full sm:w-auto"
       >
-        Add Loan
+        Create Loan
       </Button>
     </div>
   );

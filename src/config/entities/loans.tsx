@@ -100,7 +100,7 @@ export const loanEntityConfig: EntityConfig<Loan> = {
     description: 'Add your first loan to start receiving refinancing offers from the community.',
     action: (
       <Link href={ROUTES.DASHBOARD.LOANS_CREATE}>
-        <Button className="bg-gradient-to-r from-tiffany-600 to-tiffany-700">Add Loan</Button>
+        <Button className="bg-gradient-to-r from-tiffany-600 to-tiffany-700">Create Loan</Button>
       </Link>
     ),
   },

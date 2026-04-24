@@ -88,7 +88,7 @@ export default function ResearchDashboard() {
       headerActions={
         <Button onClick={() => router.push(`${ROUTES.DASHBOARD.RESEARCH}/create`)}>
           <Plus className="w-4 h-4 mr-2" />
-          Start Research
+          Create Research
         </Button>
       }
     >
@@ -206,7 +206,7 @@ export default function ResearchDashboard() {
           </p>
           <Button onClick={() => router.push(`${ROUTES.DASHBOARD.RESEARCH}/create`)}>
             <Plus className="w-4 h-4 mr-2" />
-            Create Research Entity
+            Create Research
           </Button>
         </div>
       ) : (
