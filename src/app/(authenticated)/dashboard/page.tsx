@@ -329,8 +329,9 @@ export default function DashboardPage() {
                 key={action.id}
                 action={action}
                 onConfirm={async (actionId) => {
-                  await confirmAction(actionId);
+                  const displayMessage = await confirmAction(actionId);
                   setPendingActions(prev => prev.filter(a => a.id !== actionId));
+                  return displayMessage;
                 }}
                 onReject={async (actionId) => {
                   await rejectAction(actionId);

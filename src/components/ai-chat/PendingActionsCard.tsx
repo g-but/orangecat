@@ -42,7 +42,8 @@ interface PendingAction {
 
 interface PendingActionsCardProps {
   action: PendingAction;
-  onConfirm: (actionId: string) => Promise<void>;
+  /** Returns the handler's displayMessage if the action produced one */
+  onConfirm: (actionId: string) => Promise<string | undefined>;
   onReject: (actionId: string) => Promise<void>;
 }
 
@@ -115,6 +116,7 @@ export function PendingActionsCard({ action, onConfirm, onReject }: PendingActio
   const [confirming, setConfirming] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [completed, setCompleted] = useState<'confirmed' | 'rejected' | null>(null);
+  const [confirmMessage, setConfirmMessage] = useState<string | undefined>(undefined);
 
   const Icon = ACTION_ICONS[action.actionId] || CATEGORY_ICONS[action.category] || Package;
   const timeLeft = formatTimeLeft(action.expiresAt);
@@ -123,7 +125,8 @@ export function PendingActionsCard({ action, onConfirm, onReject }: PendingActio
   const handleConfirm = async () => {
     setConfirming(true);
     try {
-      await onConfirm(action.id);
+      const msg = await onConfirm(action.id);
+      setConfirmMessage(msg);
       setCompleted('confirmed');
     } finally {
       setConfirming(false);
@@ -150,9 +153,9 @@ export function PendingActionsCard({ action, onConfirm, onReject }: PendingActio
         <div className="flex items-center gap-3">
           {completed === 'confirmed' ? (
             <>
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
               <span className="text-sm font-medium text-green-800">
-                Action confirmed and executed
+                {confirmMessage ?? 'Action confirmed and executed'}
               </span>
             </>
           ) : (
@@ -260,13 +263,13 @@ export function PendingActionsCard({ action, onConfirm, onReject }: PendingActio
  * Hook to manage pending actions state
  */
 export function usePendingActions() {
-  const confirmAction = async (
-    actionId: string
-  ): Promise<{ success: boolean; data?: unknown; error?: string }> => {
+  const confirmAction = async (actionId: string): Promise<string | undefined> => {
     const res = await fetch(`${API_ROUTES.CAT.ACTIONS}/${actionId}`, {
       method: 'POST',
     });
-    return res.json();
+    const json = await res.json();
+    const data = json?.data as Record<string, unknown> | undefined;
+    return typeof data?.displayMessage === 'string' ? data.displayMessage : undefined;
   };
 
   const rejectAction = async (actionId: string, reason?: string): Promise<{ success: boolean }> => {

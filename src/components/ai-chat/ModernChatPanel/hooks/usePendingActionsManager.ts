@@ -36,24 +36,24 @@ export function usePendingActionsManager({
   }, [fetchPendingActions]);
 
   const handleConfirmAction = useCallback(
-    async (actionId: string) => {
+    async (actionId: string): Promise<string | undefined> => {
       try {
-        const result = await confirmAction(actionId);
-        if (result.success) {
-          const action = pendingActions.find(a => a.id === actionId);
-          // Remove from local state
-          setPendingActions(prev => prev.filter(a => a.id !== actionId));
-          // Notify parent
-          if (action && onActionConfirmed) {
-            onActionConfirmed(action);
-          }
+        const displayMessage = await confirmAction(actionId);
+        const action = pendingActions.find(a => a.id === actionId);
+        // Remove from local state
+        setPendingActions(prev => prev.filter(a => a.id !== actionId));
+        // Notify parent
+        if (action && onActionConfirmed) {
+          onActionConfirmed(action);
         }
+        return displayMessage;
       } catch (e) {
         logger.error(
           'Failed to confirm action',
           { error: e, actionId },
           'usePendingActionsManager'
         );
+        return undefined;
       }
     },
     [confirmAction, pendingActions, onActionConfirmed]
