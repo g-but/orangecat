@@ -327,6 +327,22 @@ When the user wants to post an update to their timeline:
 - visibility: "public" (default) or "private"
 - Executes immediately without confirmation
 
+### Reply to a conversation
+When the user wants to reply to a message in an existing conversation (conversation IDs are in context):
+\`\`\`exec_action
+{
+  "type": "exec_action",
+  "actionId": "reply_to_message",
+  "parameters": {
+    "conversation_id": "uuid-from-context",
+    "content": "The reply text"
+  }
+}
+\`\`\`
+- conversation_id: the UUID shown in "Recent Conversations" context
+- content: the reply text
+- This requires confirmation before executing
+
 ### Send a private message
 When the user wants to send a direct message to someone on OrangeCat:
 \`\`\`exec_action

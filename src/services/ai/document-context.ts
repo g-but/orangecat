@@ -80,12 +80,28 @@ export interface PaymentCapabilities {
   lightningAddress: string | null;
 }
 
+export interface ConversationSummary {
+  /** Conversation UUID — use as conversation_id in reply_to_message exec_action */
+  id: string;
+  /** @username of the other person (null for group chats) */
+  other_username: string | null;
+  /** Display name of the other person */
+  other_name: string | null;
+  /** Last message preview (truncated) */
+  last_message_preview: string | null;
+  /** True if the user sent the last message; false if they received it */
+  last_message_is_mine: boolean;
+  /** ISO timestamp of last message */
+  last_message_at: string | null;
+}
+
 export interface FullUserContext {
   profile: ProfileContext | null;
   documents: DocumentContext[];
   entities: EntitySummary[];
   tasks: TaskSummary[];
   wallets: WalletSummary[];
+  conversations: ConversationSummary[];
   paymentCapabilities: PaymentCapabilities;
   stats: {
     totalProducts: number;
@@ -662,18 +678,117 @@ export async function fetchTasksForCat(
 }
 
 /**
+ * Fetch recent direct conversations for My Cat context.
+ * Returns last 8 conversations with message previews so Cat can assist with replies.
+ */
+export async function fetchConversationsForCat(
+  supabase: AnySupabaseClient,
+  userId: string
+): Promise<ConversationSummary[]> {
+  try {
+    // 1. Get conversation IDs where user is an active participant
+    const { data: participations, error: partError } = await supabase
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+      .select('conversation_id')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .limit(50);
+
+    if (partError || !participations || participations.length === 0) {
+      return [];
+    }
+
+    const convIds = participations.map((p: { conversation_id: string }) => p.conversation_id);
+
+    // 2. Get conversations ordered by most recent message, limited to 8
+    const { data: conversations, error: convError } = await supabase
+      .from(DATABASE_TABLES.CONVERSATIONS)
+      .select('id, last_message_preview, last_message_sender_id, last_message_at, is_group')
+      .in('id', convIds)
+      .not('last_message_at', 'is', null)
+      .order('last_message_at', { ascending: false })
+      .limit(8);
+
+    if (convError || !conversations || conversations.length === 0) {
+      return [];
+    }
+
+    const recentIds = conversations.map((c: { id: string }) => c.id);
+
+    // 3. Get other participants for these conversations
+    const { data: otherParts, error: otherError } = await supabase
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+      .select('conversation_id, user_id')
+      .in('conversation_id', recentIds)
+      .neq('user_id', userId)
+      .eq('is_active', true);
+
+    if (otherError) {
+      logger.warn('Failed to fetch conversation participants for cat', { error: otherError.message }, 'DocumentContext');
+    }
+
+    // 4. Fetch profiles for the other participants
+    const otherUserIds = [...new Set((otherParts || []).map((p: { user_id: string }) => p.user_id))];
+    let profileMap: Record<string, { username: string | null; name: string | null }> = {};
+
+    if (otherUserIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from(DATABASE_TABLES.PROFILES)
+        .select('id, username, name')
+        .in('id', otherUserIds);
+
+      (profiles || []).forEach((p: { id: string; username: string | null; name: string | null }) => {
+        profileMap[p.id] = { username: p.username, name: p.name };
+      });
+    }
+
+    // 5. Build a map: conversation_id → other user_id
+    const otherUserByConv: Record<string, string> = {};
+    (otherParts || []).forEach((p: { conversation_id: string; user_id: string }) => {
+      if (!otherUserByConv[p.conversation_id]) {
+        otherUserByConv[p.conversation_id] = p.user_id;
+      }
+    });
+
+    // 6. Assemble summaries
+    return conversations.map((c: {
+      id: string;
+      last_message_preview: string | null;
+      last_message_sender_id: string | null;
+      last_message_at: string | null;
+      is_group: boolean;
+    }) => {
+      const otherUserId = otherUserByConv[c.id] ?? null;
+      const profile = otherUserId ? profileMap[otherUserId] : null;
+      return {
+        id: c.id,
+        other_username: profile?.username ?? null,
+        other_name: profile?.name ?? null,
+        last_message_preview: c.last_message_preview,
+        last_message_is_mine: c.last_message_sender_id === userId,
+        last_message_at: c.last_message_at,
+      };
+    });
+  } catch (error) {
+    logger.error('Exception fetching conversations for cat', error, 'DocumentContext');
+    return [];
+  }
+}
+
+/**
  * Fetch all context for My Cat
  */
 export async function fetchFullContextForCat(
   supabase: AnySupabaseClient,
   userId: string
 ): Promise<FullUserContext> {
-  const [profile, documents, { entities, stats }, tasks, wallets] = await Promise.all([
+  const [profile, documents, { entities, stats }, tasks, wallets, conversations] = await Promise.all([
     fetchProfileForCat(supabase, userId),
     fetchDocumentsForCat(supabase, userId),
     fetchEntitiesForCat(supabase, userId),
     fetchTasksForCat(supabase, userId),
     fetchWalletsForCat(supabase, userId),
+    fetchConversationsForCat(supabase, userId),
   ]);
 
   const urgentTasks = tasks.filter(
@@ -692,6 +807,7 @@ export async function fetchFullContextForCat(
     entities,
     tasks,
     wallets,
+    conversations,
     paymentCapabilities,
     stats: {
       ...stats,
@@ -865,6 +981,21 @@ export function buildFullContextString(context: FullUserContext): string {
     });
 
     sections.push(`## User's Wallets\n${walletLines.join('\n')}`);
+  }
+
+  // Conversations section — gives Cat visibility into recent messages so it can help reply
+  if (context.conversations.length > 0) {
+    const convLines = context.conversations.map(c => {
+      const who = c.other_username ? `@${c.other_username}` : '(group chat)';
+      const direction = c.last_message_is_mine ? 'you sent' : 'received';
+      const preview = c.last_message_preview
+        ? `: "${c.last_message_preview.substring(0, 80)}${c.last_message_preview.length > 80 ? '…' : ''}"`
+        : '';
+      return `- ${who}${preview} (${direction}) [conv id: ${c.id}]`;
+    });
+    sections.push(
+      `## Recent Conversations\nUse the conversation id with reply_to_message to reply on the user's behalf.\n${convLines.join('\n')}`
+    );
   }
 
   // Payment capabilities section — always include so Cat knows what actions are available

@@ -448,34 +448,57 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
       recipientId = recipientParam;
     }
 
-    // First, find or create conversation
-    const { data: existingConv } = await supabase
-      .from(DATABASE_TABLES.CONVERSATIONS)
-      .select('id')
-      .or(
-        `and(participant_1_id.eq.${userId},participant_2_id.eq.${recipientId}),and(participant_1_id.eq.${recipientId},participant_2_id.eq.${userId})`
-      )
-      .single();
+    // Find existing direct conversation via conversation_participants junction table
+    // (conversations has no participant_1_id/participant_2_id columns — uses junction table)
+    const { data: myParticipations } = await supabase
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+      .select('conversation_id')
+      .eq('user_id', userId)
+      .eq('is_active', true);
 
-    let conversationId: string;
+    const myConvIds = (myParticipations || []).map(
+      (r: { conversation_id: string }) => r.conversation_id
+    );
 
-    if (existingConv) {
-      conversationId = existingConv.id;
-    } else {
-      // Create new conversation
+    let conversationId: string | null = null;
+
+    if (myConvIds.length > 0) {
+      const { data: shared } = await supabase
+        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+        .select('conversation_id')
+        .eq('user_id', recipientId)
+        .eq('is_active', true)
+        .in('conversation_id', myConvIds)
+        .limit(1)
+        .maybeSingle();
+
+      conversationId = (shared as { conversation_id: string } | null)?.conversation_id ?? null;
+    }
+
+    if (!conversationId) {
+      // Create new direct conversation + both participant rows
       const { data: newConv, error: convError } = await supabase
         .from(DATABASE_TABLES.CONVERSATIONS)
-        .insert({
-          participant_1_id: userId,
-          participant_2_id: recipientId,
-        })
-        .select()
+        .insert({ created_by: userId, is_group: false })
+        .select('id')
         .single();
 
-      if (convError) {
-        return { success: false, error: convError.message };
+      if (convError || !newConv) {
+        return { success: false, error: convError?.message ?? 'Failed to create conversation' };
       }
-      conversationId = newConv.id;
+      conversationId = (newConv as { id: string }).id;
+
+      const { error: partError } = await supabase
+        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+        .insert([
+          { conversation_id: conversationId, user_id: userId, role: 'member', is_active: true },
+          { conversation_id: conversationId, user_id: recipientId, role: 'member', is_active: true },
+        ])
+        .select();
+
+      if (partError) {
+        return { success: false, error: `Could not set up conversation: ${partError.message}` };
+      }
     }
 
     // Send message
@@ -485,6 +508,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
         conversation_id: conversationId,
         sender_id: userId,
         content: params.content,
+        message_type: 'text',
       })
       .select()
       .single();

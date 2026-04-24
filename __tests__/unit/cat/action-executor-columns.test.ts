@@ -37,25 +37,34 @@ function buildMockSupabase() {
   const updatesByTable: Record<string, unknown[]> = {};
 
   const makeChain = (tableName: string) => {
-    const chain = {
-      insert: jest.fn((payload: unknown) => {
-        if (!insertsByTable[tableName]) insertsByTable[tableName] = [];
-        insertsByTable[tableName].push(payload);
-        return chain;
-      }),
-      update: jest.fn((payload: unknown) => {
-        if (!updatesByTable[tableName]) updatesByTable[tableName] = [];
-        updatesByTable[tableName].push(payload);
-        return chain;
-      }),
-      select: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({
-        data: { id: 'mock-id', title: 'mock' },
-        error: null,
-      }),
-      eq: jest.fn().mockReturnThis(),
-      or: jest.fn().mockReturnThis(),
-    };
+    const chain: Record<string, unknown> = {};
+
+    // Mutation trackers
+    chain.insert = jest.fn((payload: unknown) => {
+      if (!insertsByTable[tableName]) insertsByTable[tableName] = [];
+      insertsByTable[tableName].push(payload);
+      return chain;
+    });
+    chain.update = jest.fn((payload: unknown) => {
+      if (!updatesByTable[tableName]) updatesByTable[tableName] = [];
+      updatesByTable[tableName].push(payload);
+      return chain;
+    });
+
+    // Terminal resolvers — single returns a row, maybeSingle returns null for participant lookup
+    chain.single = jest.fn().mockResolvedValue({ data: { id: 'mock-id', title: 'mock' }, error: null });
+    chain.maybeSingle = jest.fn().mockResolvedValue({ data: null, error: null }); // no shared conv → create new
+
+    // Chainable filters / modifiers
+    chain.select = jest.fn().mockReturnThis();
+    chain.eq = jest.fn().mockReturnThis();
+    chain.neq = jest.fn().mockReturnThis();
+    chain.or = jest.fn().mockReturnThis();
+    chain.in = jest.fn().mockReturnThis();
+    chain.not = jest.fn().mockReturnThis();
+    chain.order = jest.fn().mockReturnThis();
+    chain.limit = jest.fn().mockReturnThis();
+
     return chain;
   };
 
@@ -564,24 +573,30 @@ describe('Cat action-executor — correct DB column names', () => {
 
   // ── send_message ─────────────────────────────────────────────────────────────
   describe('send_message', () => {
-    it('resolves @username to user ID via profiles lookup before inserting message', async () => {
+    it('resolves @username via profiles and creates a new conversation when none exists', async () => {
       const supabase = buildMockSupabase();
-      // Mock resolves to { id: 'mock-id' } for any .single() call (including profiles lookup)
+      // maybeSingle returns null → no shared conversation → creates new one
       const result = await run(supabase, 'send_message', {
         recipient: '@alice',
         content: 'Hey, want to collaborate?',
       });
 
       expect(result.status).toBe('completed');
-      // profiles table was queried
+      // profiles table was queried for username lookup
       expect(supabase.from).toHaveBeenCalledWith(DATABASE_TABLES.PROFILES);
+      // conversation_participants was queried for existing conv check
+      expect(supabase.from).toHaveBeenCalledWith(DATABASE_TABLES.CONVERSATION_PARTICIPANTS);
+      // new conversation was created
+      expect(supabase.from).toHaveBeenCalledWith(DATABASE_TABLES.CONVERSATIONS);
+      // message was inserted with correct content
       const insert = getEntityInsert(supabase, DATABASE_TABLES.MESSAGES);
       expect(insert).toBeDefined();
       expect(insert!.content).toBe('Hey, want to collaborate?');
       expect(insert!.sender_id).toBe(USER_ID);
+      expect(insert!.message_type).toBe('text');
     });
 
-    it('accepts a raw UUID recipient_id without a profiles lookup', async () => {
+    it('accepts a raw UUID recipient without a profiles lookup', async () => {
       const supabase = buildMockSupabase();
       const rawUuid = '550e8400-e29b-41d4-a716-446655440000';
       const result = await run(supabase, 'send_message', {
@@ -593,6 +608,12 @@ describe('Cat action-executor — correct DB column names', () => {
       const insert = getEntityInsert(supabase, DATABASE_TABLES.MESSAGES);
       expect(insert).toBeDefined();
       expect(insert!.content).toBe('Direct message');
+    });
+
+    it('returns error when recipient param is missing', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'send_message', { content: 'Hello' });
+      expect(result.status).toBe('failed');
     });
   });
 
