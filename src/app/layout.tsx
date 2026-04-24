@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   description:
     'Fund, lend, invest, trade, and govern with any identity, any currency. OrangeCat is your AI economic agent — the platform where economic participation is open to everyone.',
   keywords:
-    'AI economic agent, bitcoin, finance, community, fund, invest, lend, products, services, crowdfunding, cryptocurrency, lightning network, peer-to-peer',
+    'AI economic agent, bitcoin, finance, community, fund, invest, lend, products, services, lightning network, peer-to-peer, pseudonymous, any currency',
   metadataBase: new URL(SITE_URL),
   openGraph: {
     type: 'website',

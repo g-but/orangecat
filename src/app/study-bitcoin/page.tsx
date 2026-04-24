@@ -157,7 +157,7 @@ export default function StudyBitcoinPage() {
       <PageHeader
         title="Study Bitcoin"
         subtitle="Your comprehensive guide to understanding Bitcoin"
-        description="From basics to advanced concepts, learn everything you need to know about Bitcoin, cryptocurrency, and the future of money."
+        description="From basics to advanced concepts, learn everything you need to know about Bitcoin and the future of money."
       >
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <Button href="/bitcoin-wallet-guide" size="lg" className="min-h-[48px]">

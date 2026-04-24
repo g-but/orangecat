@@ -46,7 +46,19 @@
     "no-eval": "error",
     "no-implied-eval": "error",
     "no-new-func": "error",
-    "no-script-url": "error"
+    "no-script-url": "error",
+
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "Identifier[name=/[Cc]ampaign/]",
+        "message": "CLAUDE.md bans 'Campaign' terminology — use 'Project' instead. The canonical entity name is in ENTITY_REGISTRY.project."
+      },
+      {
+        "selector": "Identifier[name=/[Cc]rowdfund/]",
+        "message": "CLAUDE.md bans 'crowdfund' terminology — use 'fund' / 'funding' / 'project' instead."
+      }
+    ]
   },
   // Plugin-specific rule adjustments
   "overrides": [
