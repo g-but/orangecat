@@ -72,7 +72,7 @@ type ActionHandler = (
  *   - ISO/date strings: passed through as-is if parseable
  */
 export function parseReminderDate(when: string): string | null {
-  if (!when) return null;
+  if (!when) { return null; }
   const now = new Date();
   const lower = when.trim().toLowerCase();
 

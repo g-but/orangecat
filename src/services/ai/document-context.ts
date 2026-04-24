@@ -67,6 +67,17 @@ export interface WalletSummary {
   budget_amount: number | null;
   budget_period: string | null;
   is_primary: boolean;
+  /** Whether this wallet has a Nostr Wallet Connect URI configured (can auto-send payments) */
+  has_nwc: boolean;
+  /** Lightning address for receiving payments, if configured */
+  lightning_address: string | null;
+}
+
+export interface PaymentCapabilities {
+  /** User has at least one wallet with NWC configured — required for send_payment / fund_project actions */
+  hasNwcWallet: boolean;
+  /** User's primary lightning address (for display / recipient lookup) */
+  lightningAddress: string | null;
 }
 
 export interface FullUserContext {
@@ -75,6 +86,7 @@ export interface FullUserContext {
   entities: EntitySummary[];
   tasks: TaskSummary[];
   wallets: WalletSummary[];
+  paymentCapabilities: PaymentCapabilities;
   stats: {
     totalProducts: number;
     totalServices: number;
@@ -587,7 +599,7 @@ export async function fetchWalletsForCat(
     const { data: wallets, error } = await supabase
       .from(DATABASE_TABLES.WALLETS)
       .select(
-        'label, description, category, behavior_type, goal_amount, goal_currency, goal_deadline, budget_amount, budget_period, is_primary'
+        'label, description, category, behavior_type, goal_amount, goal_currency, goal_deadline, budget_amount, budget_period, is_primary, nwc_connection_uri, lightning_address'
       )
       .eq('profile_id', profile.id)
       .eq('is_active', true)
@@ -598,7 +610,21 @@ export async function fetchWalletsForCat(
       return [];
     }
 
-    return (wallets || []) as WalletSummary[];
+    // Map DB rows to WalletSummary — expose capability flags without leaking encrypted URI
+    return (wallets || []).map(w => ({
+      label: w.label,
+      description: w.description,
+      category: w.category,
+      behavior_type: w.behavior_type,
+      goal_amount: w.goal_amount,
+      goal_currency: w.goal_currency,
+      goal_deadline: w.goal_deadline,
+      budget_amount: w.budget_amount,
+      budget_period: w.budget_period,
+      is_primary: w.is_primary,
+      has_nwc: !!w.nwc_connection_uri,
+      lightning_address: w.lightning_address ?? null,
+    })) as WalletSummary[];
   } catch (error) {
     logger.error('Exception fetching wallets for cat', error, 'DocumentContext');
     return [];
@@ -654,12 +680,19 @@ export async function fetchFullContextForCat(
     t => t.priority === 'urgent' || t.current_status === 'needs_attention'
   ).length;
 
+  // Derive payment capabilities from wallet data
+  const paymentCapabilities: PaymentCapabilities = {
+    hasNwcWallet: wallets.some(w => w.has_nwc),
+    lightningAddress: wallets.find(w => w.lightning_address)?.lightning_address ?? null,
+  };
+
   return {
     profile,
     documents,
     entities,
     tasks,
     wallets,
+    paymentCapabilities,
     stats: {
       ...stats,
       totalTasks: tasks.length,
@@ -817,6 +850,23 @@ export function buildFullContextString(context: FullUserContext): string {
     });
 
     sections.push(`## User's Wallets\n${walletLines.join('\n')}`);
+  }
+
+  // Payment capabilities section — always include so Cat knows what actions are available
+  {
+    const { hasNwcWallet, lightningAddress } = context.paymentCapabilities;
+    const capLines: string[] = [];
+    if (hasNwcWallet) {
+      capLines.push('⚡ **NWC wallet connected** — can use send_payment and fund_project exec_action blocks to send Bitcoin automatically');
+    } else {
+      capLines.push('❌ **No NWC wallet** — cannot auto-send payments; if user asks to send Bitcoin, tell them to connect a Nostr Wallet Connect wallet first (Settings → Wallets)');
+    }
+    if (lightningAddress) {
+      capLines.push(`📬 **Lightning address**: ${lightningAddress} (others can pay the user here)`);
+    } else {
+      capLines.push('📬 **No lightning address configured** — user cannot receive lightning payments without one');
+    }
+    sections.push(`## Payment Capabilities\n${capLines.join('\n')}`);
   }
 
   // Stats summary
