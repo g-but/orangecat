@@ -19,6 +19,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { type EntityType, getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 import { logger } from '@/utils/logger';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 // ==================== TYPES ====================
 
@@ -73,7 +74,7 @@ export async function listEntityPage<T = Record<string, unknown>>(
     publicStatuses = ['active'],
   } = params;
 
-  const supabase = await createServerClient();
+  const supabase = (await createServerClient()) as unknown as AnySupabaseClient;
   const tableName = getTableName(entityType);
 
   // Resolve actor if userId provided
@@ -84,15 +85,14 @@ export async function listEntityPage<T = Record<string, unknown>>(
   }
 
   // Build data query
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let itemsQuery = (supabase.from(tableName) as any)
+  let itemsQuery = supabase
+    .from(tableName)
     .select(select)
     .order(orderBy, { ascending })
     .range(offset, offset + limit - 1);
 
   // Build count query
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let countQuery = (supabase.from(tableName) as any).select('*', {
+  let countQuery = supabase.from(tableName).select('*', {
     count: 'exact',
     head: true,
   });
@@ -163,14 +163,10 @@ export async function getEntity<T = Record<string, unknown>>(
   id: string,
   select = '*'
 ): Promise<T | null> {
-  const supabase = await createServerClient();
+  const supabase = (await createServerClient()) as unknown as AnySupabaseClient;
   const tableName = getTableName(entityType);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.from(tableName) as any)
-    .select(select)
-    .eq('id', id)
-    .single();
+  const { data, error } = await supabase.from(tableName).select(select).eq('id', id).single();
 
   if (error) {
     if (error.code === 'PGRST116') {
@@ -195,14 +191,14 @@ export async function createEntity<T = Record<string, unknown>>(
   data: Record<string, unknown>,
   options?: {
     /** Override the supabase client (e.g., use admin client) */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    client?: any;
+    client?: AnySupabaseClient;
     /** Column to select after insert (default: '*') */
     select?: string;
   }
 ): Promise<T> {
   const actor = await getOrCreateUserActor(userId);
-  const client = options?.client || (await createServerClient());
+  const client =
+    options?.client ?? ((await createServerClient()) as unknown as AnySupabaseClient);
   const tableName = getTableName(entityType);
   const selectColumns = options?.select ?? '*';
 
@@ -211,8 +207,8 @@ export async function createEntity<T = Record<string, unknown>>(
     ...data,
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: created, error } = await (client.from(tableName) as any)
+  const { data: created, error } = await client
+    .from(tableName)
     .insert(payload)
     .select(selectColumns)
     .single();
@@ -249,12 +245,12 @@ export async function updateEntity<T = Record<string, unknown>>(
   }
 ): Promise<T> {
   const actor = await getOrCreateUserActor(userId);
-  const supabase = await createServerClient();
+  const supabase = (await createServerClient()) as unknown as AnySupabaseClient;
   const tableName = getTableName(entityType);
   const selectColumns = options?.select ?? '*';
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: updated, error } = await (supabase.from(tableName) as any)
+  const { data: updated, error } = await supabase
+    .from(tableName)
     .update(data)
     .eq('id', id)
     .eq('actor_id', actor.id)

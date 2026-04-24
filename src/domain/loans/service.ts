@@ -4,6 +4,7 @@ import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getTableName } from '@/config/entity-registry';
 import { STATUS } from '@/config/database-constants';
 import { createEntity } from '@/domain/base/entityService';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 export interface CreateLoanInput {
   loan_type?: 'new_request' | 'existing_refinance';
@@ -84,7 +85,7 @@ export async function createLoan(
       status: STATUS.LOANS.ACTIVE,
     },
     {
-      client: supabase,
+      client: supabase as unknown as AnySupabaseClient,
     }
   );
 

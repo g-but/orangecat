@@ -4,6 +4,7 @@ import { entityTransforms } from '@/lib/api/normalizeEntityData';
 import { createEntity } from '@/domain/base/entityService';
 import { createServerClient } from '@/lib/supabase/server';
 import type { CreateInvestmentRequest } from '@/types/investments';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 const normalizeToNull = (value: unknown): unknown =>
   entityTransforms.emptyStringToNull(value) ?? null;
@@ -38,7 +39,7 @@ export async function createInvestment(
       status: STATUS.INVESTMENTS.DRAFT,
     },
     {
-      client: supabase,
+      client: supabase as unknown as AnySupabaseClient,
     }
   );
 }
