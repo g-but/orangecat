@@ -708,6 +708,21 @@ export async function fetchFullContextForCat(
 export function buildFullContextString(context: FullUserContext): string {
   const sections: string[] = [];
 
+  // Current date/time — injected first so Cat can reason temporally about reminders,
+  // deadlines, overdue tasks, and upcoming events
+  {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
+    const timeStr = now.toISOString().slice(11, 16);
+    sections.push(`## Current Date & Time\nToday is ${dateStr}, ${timeStr} UTC.`);
+  }
+
   // Profile section
   if (context.profile) {
     const p = context.profile;
