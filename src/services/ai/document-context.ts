@@ -44,6 +44,10 @@ export interface EntitySummary {
   price_btc?: number;
   category?: string;
   location?: string;
+  /** BTC received/raised for this entity (projects, causes, research) */
+  raised_btc?: number;
+  /** Number of unique supporters/contributors */
+  num_supporters?: number;
 }
 
 export interface TaskSummary {
@@ -576,6 +580,8 @@ export async function fetchEntitiesForCat(
           status: r.status,
           price_btc: r.funding_goal_btc,
           category: r.field,
+          // funding_raised_btc is maintained as a running total on the research entity itself
+          raised_btc: r.funding_raised_btc > 0 ? r.funding_raised_btc : undefined,
         });
       });
     }
@@ -603,6 +609,34 @@ export async function fetchEntitiesForCat(
           category: w.type,    // wishlist type (birthday, wedding, general, etc.)
         });
       });
+    }
+
+    // Enrich projects with funding stats from project_support_stats view.
+    // Done after all entity fetches so we have the project IDs.
+    const projectIds = entities.filter(e => e.type === 'project').map(e => e.id);
+    if (projectIds.length > 0) {
+      const { data: supportStats } = await supabase
+        .from(DATABASE_TABLES.PROJECT_SUPPORT_STATS)
+        .select('project_id, total_bitcoin_btc, total_supporters')
+        .in('project_id', projectIds);
+
+      if (supportStats && supportStats.length > 0) {
+        const statsMap = new Map(
+          supportStats.map((s: { project_id: string; total_bitcoin_btc: number; total_supporters: number }) => [
+            s.project_id,
+            { raised: s.total_bitcoin_btc, supporters: s.total_supporters },
+          ])
+        );
+        entities.forEach(e => {
+          if (e.type === 'project') {
+            const s = statsMap.get(e.id);
+            if (s && s.raised > 0) {
+              e.raised_btc = s.raised;
+              e.num_supporters = s.supporters;
+            }
+          }
+        });
+      }
     }
 
     logger.info(
@@ -1063,6 +1097,13 @@ export function buildFullContextString(context: FullUserContext): string {
           }
           if (item.location) {
             parts.push(` @ ${item.location}`);
+          }
+          // Show funding received where known (projects, research, causes)
+          if (item.raised_btc !== undefined && item.raised_btc > 0) {
+            const supporterNote = item.num_supporters
+              ? ` from ${item.num_supporters} supporter${item.num_supporters !== 1 ? 's' : ''}`
+              : '';
+            parts.push(` — raised ${item.raised_btc} BTC${supporterNote}`);
           }
           if (item.description) {
             parts.push(`: ${item.description}`);
