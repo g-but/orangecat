@@ -40,7 +40,7 @@ export default function IntelligentOnboarding() {
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const handleStartChat = async () => {
-    if (!description.trim()) return;
+    if (!description.trim()) { return; }
     setIsRedirecting(true);
 
     // Mark onboarding complete in the background — don't block the redirect
