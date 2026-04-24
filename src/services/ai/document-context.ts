@@ -54,6 +54,10 @@ export interface TaskSummary {
   current_status: string;
   task_type: string;
   schedule_human?: string | null;
+  /** ISO timestamp — present on one-time tasks/reminders with a deadline */
+  due_date?: string | null;
+  /** True if this task was created by the Cat as a reminder (vs a team task) */
+  is_reminder?: boolean;
 }
 
 export interface WalletSummary {
@@ -658,10 +662,12 @@ export async function fetchTasksForCat(
   try {
     const { data: tasks, error } = await supabase
       .from(DATABASE_TABLES.TASKS)
-      .select('id, title, category, priority, current_status, task_type, schedule_human')
+      .select('id, title, category, priority, current_status, task_type, schedule_human, due_date, is_reminder')
       .eq('created_by', userId)
       .eq('is_archived', false)
       .eq('is_completed', false)
+      // Upcoming deadlines first (nulls last), then by priority within undated tasks
+      .order('due_date', { ascending: true, nullsFirst: false })
       .order('priority', { ascending: false })
       .limit(30);
 
@@ -939,21 +945,46 @@ export function buildFullContextString(context: FullUserContext): string {
 
   // Tasks section
   if (context.tasks.length > 0) {
+    const now = new Date();
     const urgent = context.tasks.filter(
       t => t.priority === 'urgent' || t.current_status === 'needs_attention'
     );
+    const overdueReminders = context.tasks.filter(
+      t => t.is_reminder && t.due_date && new Date(t.due_date) < now
+    );
     const taskLines = context.tasks.map(t => {
       const parts = [`- **${t.title}**`];
-      parts.push(` [${t.category}]`);
-      if (t.priority !== 'normal') {parts.push(` priority:${t.priority}`);}
-      if (t.current_status !== 'idle') {parts.push(` status:${t.current_status}`);}
-      if (t.task_type !== 'one_time' && t.schedule_human) {parts.push(` — ${t.schedule_human}`);}
+      // Label: reminder vs team task
+      if (t.is_reminder) {
+        parts.push(' [reminder]');
+      } else {
+        parts.push(` [${t.category}]`);
+      }
+      if (t.priority !== 'normal') { parts.push(` priority:${t.priority}`); }
+      if (t.current_status !== 'idle') { parts.push(` status:${t.current_status}`); }
+      // Due date / schedule
+      if (t.due_date) {
+        const due = new Date(t.due_date);
+        const isOverdue = due < now;
+        const dueStr = due.toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hour12: false,
+        }) + ' UTC';
+        parts.push(isOverdue ? ` ⚠️ OVERDUE (was due ${dueStr})` : ` — due ${dueStr}`);
+      } else if (t.task_type !== 'one_time' && t.schedule_human) {
+        parts.push(` — ${t.schedule_human}`);
+      }
       return parts.join('');
     });
-    const urgentNote = urgent.length > 0
-      ? `\n⚠️ ${urgent.length} task${urgent.length > 1 ? 's' : ''} need${urgent.length === 1 ? 's' : ''} attention.`
-      : '';
-    sections.push(`## Active Tasks${urgentNote}\n${taskLines.join('\n')}`);
+    const alerts: string[] = [];
+    if (urgent.length > 0) {
+      alerts.push(`⚠️ ${urgent.length} task${urgent.length > 1 ? 's' : ''} need${urgent.length === 1 ? 's' : ''} attention.`);
+    }
+    if (overdueReminders.length > 0) {
+      alerts.push(`🔔 ${overdueReminders.length} reminder${overdueReminders.length > 1 ? 's are' : ' is'} overdue.`);
+    }
+    const alertNote = alerts.length > 0 ? `\n${alerts.join(' ')}` : '';
+    sections.push(`## Active Tasks & Reminders${alertNote}\n${taskLines.join('\n')}`);
   }
 
   // Wallets section
