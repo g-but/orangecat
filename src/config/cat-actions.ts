@@ -858,6 +858,33 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     ],
     enabled: true,
   },
+
+  // ---------- PROFILE ACTIONS ----------
+
+  update_profile: {
+    id: 'update_profile',
+    name: 'Update Profile',
+    description: 'Update the user\'s public profile — name, bio, background, location, or website',
+    category: 'context',
+    icon: Settings,
+    riskLevel: 'medium',
+    requiresConfirmation: false,
+    parameters: [
+      { name: 'name', type: 'string', required: false, description: 'Display name' },
+      { name: 'bio', type: 'string', required: false, description: 'Short bio (appears on profile)' },
+      { name: 'background', type: 'string', required: false, description: 'Longer background / about section' },
+      { name: 'website', type: 'string', required: false, description: 'Personal or business website URL' },
+      { name: 'location_city', type: 'string', required: false, description: 'City' },
+      { name: 'location_country', type: 'string', required: false, description: 'Country (ISO 2-letter code, e.g. CH, US, DE)' },
+    ],
+    examples: [
+      'Update my bio to say I\'m a freelance photographer',
+      'Set my location to Zurich, Switzerland',
+      'My website is example.com, add it to my profile',
+      'Write a background section based on what I\'ve told you',
+    ],
+    enabled: true,
+  },
 };
 
 // Categories with metadata

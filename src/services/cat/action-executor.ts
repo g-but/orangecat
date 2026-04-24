@@ -619,6 +619,44 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     return { success: true, data };
   },
 
+  update_profile: async (supabase, userId, _actorId, params) => {
+    // Update the user's public profile. Only safe text fields — no username (affects URLs),
+    // no email, no financial addresses. Profile.id = auth.users.id = userId.
+    const SAFE_FIELDS = ['name', 'bio', 'background', 'website', 'location_city', 'location_country'] as const;
+    type SafeField = typeof SAFE_FIELDS[number];
+
+    const updates: Partial<Record<SafeField, string>> = {};
+    for (const field of SAFE_FIELDS) {
+      if (params[field] !== undefined && params[field] !== null) {
+        updates[field] = params[field] as string;
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return { success: false, error: 'No profile fields to update — provide at least one of: name, bio, background, website, location_city, location_country' };
+    }
+
+    const { data, error } = await supabase
+      .from(DATABASE_TABLES.PROFILES)
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', userId)
+      .select('name, bio, background, website, location_city, location_country')
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    const updatedFields = Object.keys(updates).join(', ');
+    return {
+      success: true,
+      data: {
+        ...data,
+        displayMessage: `✅ Profile updated: ${updatedFields}`,
+      },
+    };
+  },
+
   // ---------- PRODUCTIVITY ACTIONS ----------
 
   create_task: async (supabase, userId, _actorId, params) => {
@@ -1618,6 +1656,12 @@ export class CatActionExecutor {
       }
       case 'create_organization':
         return `Create organization "${parameters.name}"`;
+      case 'update_profile': {
+        const fields = ['name', 'bio', 'background', 'website', 'location_city', 'location_country']
+          .filter(f => parameters[f] !== undefined)
+          .join(', ');
+        return `Update profile${fields ? ': ' + fields : ''}`;
+      }
       default:
         return `Execute ${action.name}`;
     }

@@ -452,6 +452,30 @@ When the user wants to delete, remove, or archive a product, service, project, c
 - **Requires confirmation before executing** (riskLevel: high)
 - Use when the user says "delete", "remove", "archive", "get rid of", "take down" an entity
 
+### Update the user's profile
+When the user wants to update their public profile (bio, name, location, website, background):
+\`\`\`exec_action
+{
+  "type": "exec_action",
+  "actionId": "update_profile",
+  "parameters": {
+    "bio": "Short bio that appears on the profile",
+    "background": "Longer story about who they are and what they do",
+    "name": "Display name",
+    "website": "https://example.com",
+    "location_city": "Zurich",
+    "location_country": "CH"
+  }
+}
+\`\`\`
+- Include only the fields the user wants to change — omit the rest
+- location_country: 2-letter ISO code (CH, US, DE, FR, GB, etc.)
+- Use when user says "update my bio", "set my location", "add my website", "write a background for me"
+- After a profile-building conversation, offer to update the profile with what you've learned: "Want me to update your profile with this?"
+- Executes immediately without confirmation
+- Do NOT update username (affects public URLs — too disruptive)
+- Do NOT update email, phone, or financial addresses (sensitive, requires separate verification)
+
 **When to use exec_action vs action blocks**:
 - \`\`\`action blocks: suggest creating or updating entities (opens a form for the user)
 - \`\`\`exec_action blocks: execute operations directly (payment, reminder, task, post)

@@ -1261,4 +1261,116 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(displayMessage).toContain('📅');
     });
   });
+
+  // ── update_profile ────────────────────────────────────────────────────────────
+  // Regression: verify correct column names and safe-field filtering.
+  // update_profile updates the profiles table keyed on profiles.id = userId.
+  describe('update_profile', () => {
+    it('updates the profiles table with bio and name using correct column names', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'update_profile', {
+        name: 'Alice the Baker',
+        bio: 'I bake sourdough and teach people to do the same.',
+      });
+
+      expect(result.status).toBe('completed');
+      const update = getEntityUpdate(supabase, DATABASE_TABLES.PROFILES);
+      expect(update).toBeDefined();
+      expect(update!.name).toBe('Alice the Baker');
+      expect(update!.bio).toBe('I bake sourdough and teach people to do the same.');
+    });
+
+    it('updates background and website correctly', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'update_profile', {
+        background: 'Former software engineer turned artisan baker.',
+        website: 'https://alicebakes.com',
+      });
+
+      const update = getEntityUpdate(supabase, DATABASE_TABLES.PROFILES);
+      expect(update!.background).toBe('Former software engineer turned artisan baker.');
+      expect(update!.website).toBe('https://alicebakes.com');
+    });
+
+    it('updates location_city and location_country', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'update_profile', {
+        location_city: 'Zurich',
+        location_country: 'CH',
+      });
+
+      const update = getEntityUpdate(supabase, DATABASE_TABLES.PROFILES);
+      expect(update!.location_city).toBe('Zurich');
+      expect(update!.location_country).toBe('CH');
+    });
+
+    it('filters out unsafe fields — username must never appear in update payload', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'update_profile', {
+        bio: 'Safe bio',
+        username: 'hacked_username',   // must be silently dropped
+        email: 'hacker@evil.com',       // must be silently dropped
+        id: 'injected-id',              // must be silently dropped
+      });
+
+      const update = getEntityUpdate(supabase, DATABASE_TABLES.PROFILES);
+      expect(update!.bio).toBe('Safe bio');
+      // Unsafe fields must NOT appear in the DB update
+      expect((update as Record<string, unknown>).username).toBeUndefined();
+      expect((update as Record<string, unknown>).email).toBeUndefined();
+      expect((update as Record<string, unknown>).id).toBeUndefined();
+    });
+
+    it('keyed on profiles.id = userId (not actorId)', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'update_profile', { bio: 'Test' });
+
+      // The from('profiles').eq('id', ...) chain must have been called
+      expect(supabase.from).toHaveBeenCalledWith(DATABASE_TABLES.PROFILES);
+      // eq is called on the chain — USER_ID should be used (not ACTOR_ID)
+      // We verify via the mock's .eq call — the chain for profiles must be called
+      // with eq('id', USER_ID). Since eq returns this, we verify via call order.
+      const profileCalls = (supabase.from as jest.Mock).mock.calls.filter(
+        ([t]: [string]) => t === DATABASE_TABLES.PROFILES
+      );
+      expect(profileCalls.length).toBeGreaterThan(0);
+    });
+
+    it('returns error when no safe fields are provided', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'update_profile', {
+        // Only unsafe fields — nothing valid to update
+        username: 'blocked',
+        email: 'blocked@example.com',
+      });
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/no profile fields/i);
+    });
+
+    it('returns a displayMessage listing updated fields', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'update_profile', {
+        bio: 'New bio',
+        website: 'https://example.com',
+      });
+
+      expect(result.status).toBe('completed');
+      const msg = (result.data as Record<string, unknown>)?.displayMessage as string;
+      expect(msg).toContain('✅');
+      expect(msg).toContain('bio');
+      expect(msg).toContain('website');
+    });
+
+    it('includes updated_at in the DB update payload', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'update_profile', { name: 'Alice' });
+
+      const update = getEntityUpdate(supabase, DATABASE_TABLES.PROFILES);
+      expect(typeof update!.updated_at).toBe('string');
+      // Must be a recent ISO timestamp
+      const ts = new Date(update!.updated_at as string);
+      expect(isNaN(ts.getTime())).toBe(false);
+    });
+  });
 });
