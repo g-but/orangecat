@@ -54,9 +54,5 @@ export const aiAssistantSchema = z.object({
   bitcoin_address: optionalText(),
 });
 
-// Legacy schema alias for backward compatibility
-export const userAIAssistantSchema = aiAssistantSchema;
-
 // Types
 export type AIAssistantFormData = z.infer<typeof aiAssistantSchema>;
-export type UserAIAssistantFormData = AIAssistantFormData; // Legacy alias
