@@ -743,7 +743,7 @@ export async function fetchConversationsForCat(
 
     // 4. Fetch profiles for the other participants
     const otherUserIds = [...new Set((otherParts || []).map((p: { user_id: string }) => p.user_id))];
-    let profileMap: Record<string, { username: string | null; name: string | null }> = {};
+    const profileMap: Record<string, { username: string | null; name: string | null }> = {};
 
     if (otherUserIds.length > 0) {
       const { data: profiles } = await supabase

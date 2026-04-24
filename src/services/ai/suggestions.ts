@@ -48,11 +48,12 @@ const DOCUMENT_TYPE_SUGGESTIONS: Record<string, (doc: DocumentContext) => string
   other: _doc => [`Give me advice based on my context`, `What opportunities should I consider?`],
 };
 
+// Shown to brand-new users with no context yet — broad, inviting, covers the full range
 export const DEFAULT_SUGGESTIONS = [
-  'Help me write a product description',
-  'Give me ideas for my first listing',
-  'How do I price my products in BTC?',
-  'What makes a successful OrangeCat seller?',
+  'What can I do on OrangeCat?',
+  'I want to earn Bitcoin — where do I start?',
+  'Help me fund a project or cause',
+  'Tell me how Bitcoin payments work here',
 ];
 
 const CONTEXT_AWARE_GENERIC = [
