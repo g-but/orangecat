@@ -1070,16 +1070,16 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
       category: (params.category as string | undefined) || 'general',
     };
 
-    if (params.description) walletRecord.description = params.description as string;
+    if (params.description) { walletRecord.description = params.description as string; }
 
     // Goal fields (one_time_goal)
-    if (params.goal_amount !== undefined) walletRecord.goal_amount = params.goal_amount as number;
-    if (params.goal_currency) walletRecord.goal_currency = params.goal_currency as string;
-    if (params.goal_deadline) walletRecord.goal_deadline = params.goal_deadline as string;
+    if (params.goal_amount !== undefined) { walletRecord.goal_amount = params.goal_amount as number; }
+    if (params.goal_currency) { walletRecord.goal_currency = params.goal_currency as string; }
+    if (params.goal_deadline) { walletRecord.goal_deadline = params.goal_deadline as string; }
 
     // Budget fields (recurring_budget)
-    if (params.budget_amount !== undefined) walletRecord.budget_amount = params.budget_amount as number;
-    if (params.budget_period) walletRecord.budget_period = params.budget_period as string;
+    if (params.budget_amount !== undefined) { walletRecord.budget_amount = params.budget_amount as number; }
+    if (params.budget_period) { walletRecord.budget_period = params.budget_period as string; }
 
     const { data, error } = await supabase
       .from(DATABASE_TABLES.WALLETS)
@@ -1094,7 +1094,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     const parts: string[] = [label.trim()];
     if (behaviorType === 'one_time_goal' && params.goal_amount) {
       parts.push(`goal: ${params.goal_amount} ${params.goal_currency ?? 'BTC'}`);
-      if (params.goal_deadline) parts.push(`by ${params.goal_deadline}`);
+      if (params.goal_deadline) { parts.push(`by ${params.goal_deadline}`); }
     } else if (behaviorType === 'recurring_budget' && params.budget_amount) {
       parts.push(`${params.budget_amount} BTC/${params.budget_period ?? 'month'}`);
     }
@@ -1785,9 +1785,9 @@ export class CatActionExecutor {
         return `Mark task as completed (id: ${parameters.task_id})`;
       case 'update_task': {
         const parts: string[] = [];
-        if (parameters.title) parts.push(`rename to "${parameters.title}"`);
-        if (parameters.due_date) parts.push(`reschedule to ${parameters.due_date}`);
-        if (parameters.priority) parts.push(`priority → ${parameters.priority}`);
+        if (parameters.title) { parts.push(`rename to "${parameters.title}"`); }
+        if (parameters.due_date) { parts.push(`reschedule to ${parameters.due_date}`); }
+        if (parameters.priority) { parts.push(`priority → ${parameters.priority}`); }
         return `Update task (id: ${parameters.task_id})${parts.length ? ': ' + parts.join(', ') : ''}`;
       }
       case 'create_organization':
