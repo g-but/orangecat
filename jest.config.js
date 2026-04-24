@@ -34,6 +34,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/components/ui/tabs$': '<rootDir>/__mocks__/ui-tabs.js',
     '^@/contexts/AuthContext$': '<rootDir>/__mocks__/contexts/AuthContext.js',
+    '^@/lib/nostr/nwc$': '<rootDir>/__mocks__/nostr-nwc.js',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^next/navigation$': '<rootDir>/__mocks__/next-navigation.js',
     '^next/server$': '<rootDir>/__mocks__/next-server.js',
