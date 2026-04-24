@@ -43,7 +43,7 @@ export const SecuritySchemas = {
       .or(z.literal('')),
   }),
 
-  // Campaign validation
+  // Project validation
   projectData: z.object({
     title: z
       .string()

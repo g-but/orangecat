@@ -24,7 +24,7 @@ interface SmartCreateButtonProps {
   showIcon?: boolean;
   fullWidth?: boolean;
   // Force bypassing draft check (for specific use cases)
-  forceNewCampaign?: boolean;
+  forceNewProject?: boolean;
 }
 
 export default function SmartCreateButton({
@@ -34,7 +34,7 @@ export default function SmartCreateButton({
   variant = 'primary',
   showIcon = true,
   fullWidth = false,
-  forceNewCampaign = false,
+  forceNewProject = false,
 }: SmartCreateButtonProps) {
   const router = useRouter();
   const { drafts } = useProjectStore();
@@ -42,7 +42,7 @@ export default function SmartCreateButton({
 
   const hasAnyDraft = drafts.length > 0;
   const primaryDraft = hasAnyDraft ? drafts[0] : null;
-  const shouldShowDraftPrompt = hasAnyDraft && !forceNewCampaign;
+  const shouldShowDraftPrompt = hasAnyDraft && !forceNewProject;
 
   const handleClick = () => {
     if (shouldShowDraftPrompt) {
@@ -342,13 +342,13 @@ export function DashboardCreateButton({ className = '' }: { className?: string }
 }
 
 // Export a specialized version that always creates new (for "Start Fresh" scenarios)
-export function NewCampaignButton({
+export function NewProjectButton({
   children,
   className = '',
   ...props
-}: Omit<SmartCreateButtonProps, 'forceNewCampaign'>) {
+}: Omit<SmartCreateButtonProps, 'forceNewProject'>) {
   return (
-    <SmartCreateButton {...props} forceNewCampaign={true} className={className}>
+    <SmartCreateButton {...props} forceNewProject={true} className={className}>
       {children || 'Start New Project'}
     </SmartCreateButton>
   );

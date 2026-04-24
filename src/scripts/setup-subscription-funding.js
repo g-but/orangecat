@@ -66,9 +66,9 @@ async function setupSubscriptionFunding() {
 
     // Create subscription projects
 
-    // 1. Claude Code Subscription Campaign
+    // 1. Claude Code Subscription Project
     console.log('📋 Creating Claude Code subscription project...');
-    const { data: claudeCampaign, error: claudeError } = await supabase
+    const { data: claudeProject, error: claudeError } = await supabase
       .from('projects')
       .insert({
         creator_id: organizationId, // Using organization ID as creator_id
@@ -90,12 +90,12 @@ async function setupSubscriptionFunding() {
     if (claudeError) {
       console.warn(`Warning creating Claude project: ${claudeError.message}`);
     } else {
-      console.log('✅ Claude Code project created:', claudeCampaign.id);
+      console.log('✅ Claude Code project created:', claudeProject.id);
     }
 
-    // 2. Cursor Subscription Campaign
+    // 2. Cursor Subscription Project
     console.log('📋 Creating Cursor subscription project...');
-    const { data: cursorCampaign, error: cursorError } = await supabase
+    const { data: cursorProject, error: cursorError } = await supabase
       .from('projects')
       .insert({
         creator_id: organizationId,
@@ -117,12 +117,12 @@ async function setupSubscriptionFunding() {
     if (cursorError) {
       console.warn(`Warning creating Cursor project: ${cursorError.message}`);
     } else {
-      console.log('✅ Cursor project created:', cursorCampaign.id);
+      console.log('✅ Cursor project created:', cursorProject.id);
     }
 
-    // 3. General Development Fund Campaign
+    // 3. General Development Fund Project
     console.log('📋 Creating general development fund project...');
-    const { data: generalCampaign, error: generalError } = await supabase
+    const { data: generalProject, error: generalError } = await supabase
       .from('projects')
       .insert({
         creator_id: organizationId,
@@ -144,7 +144,7 @@ async function setupSubscriptionFunding() {
     if (generalError) {
       console.warn(`Warning creating general fund project: ${generalError.message}`);
     } else {
-      console.log('✅ General development fund project created:', generalCampaign.id);
+      console.log('✅ General development fund project created:', generalProject.id);
     }
 
     console.log('\n🎉 Orange Cat subscription funding setup complete!');
@@ -152,14 +152,14 @@ async function setupSubscriptionFunding() {
     console.log(`Organization: Orange Cat (${organizationId})`);
     console.log(`Treasury Address: bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh`);
     console.log('\n💰 Projects Created:');
-    if (claudeCampaign) {
-      console.log(`- Claude Code: ${claudeCampaign.id} (1.2 BTC goal)`);
+    if (claudeProject) {
+      console.log(`- Claude Code: ${claudeProject.id} (1.2 BTC goal)`);
     }
-    if (cursorCampaign) {
-      console.log(`- Cursor IDE: ${cursorCampaign.id} (0.96 BTC goal)`);
+    if (cursorProject) {
+      console.log(`- Cursor IDE: ${cursorProject.id} (0.96 BTC goal)`);
     }
-    if (generalCampaign) {
-      console.log(`- Development Fund: ${generalCampaign.id} (0.5 BTC goal)`);
+    if (generalProject) {
+      console.log(`- Development Fund: ${generalProject.id} (0.5 BTC goal)`);
     }
 
     console.log('\n🚀 Next steps:');

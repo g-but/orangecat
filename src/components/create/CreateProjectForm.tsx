@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { CampaignStorageService } from '@/services/projects/projectStorageService';
+import { ProjectStorageService } from '@/services/projects/projectStorageService';
 import { z } from 'zod';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
-import { campaignFormSchema } from '@/lib/validation/projects';
+import { projectFormSchema } from '@/lib/validation/projects';
 
-export interface CampaignFormData {
+export interface ProjectFormData {
   title: string;
   description: string;
   bitcoin_address: string;
@@ -20,19 +20,19 @@ export interface CampaignFormData {
   gallery_images: string[];
 }
 
-interface CreateCampaignFormProps {
+interface CreateProjectFormProps {
   currentStep: number;
   setCurrentStep: (step: number) => void;
   onPreviewToggle: () => void;
   showPreview: boolean;
 }
 
-export default function CreateCampaignForm({
+export default function CreateProjectForm({
   currentStep,
   setCurrentStep,
   onPreviewToggle: _onPreviewToggle,
   showPreview: _showPreview,
-}: CreateCampaignFormProps) {
+}: CreateProjectFormProps) {
   const router = useRouter();
   const { user } = useAuth();
 
@@ -42,7 +42,7 @@ export default function CreateCampaignForm({
   const [isUploading, setIsUploading] = useState(false);
   const [formErrors, setFormErrors] = useState<z.ZodError | null>(null);
 
-  const [formData, setFormData] = useState<CampaignFormData>({
+  const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
     description: '',
     bitcoin_address: '',
@@ -90,7 +90,7 @@ export default function CreateCampaignForm({
     const { name, value } = e.target;
     const newFormData = { ...formData, [name]: value };
     setFormData(newFormData);
-    const result = campaignFormSchema.safeParse(newFormData);
+    const result = projectFormSchema.safeParse(newFormData);
     if (!result.success) {
       setFormErrors(result.error);
     } else {
@@ -113,17 +113,17 @@ export default function CreateCampaignForm({
       setUploadProgress(prev => ({ ...prev, [type]: 0 }));
 
       // Generate temporary project ID for uploads
-      const tempCampaignId = `temp-${user.id}-${Date.now()}`;
+      const tempProjectId = `temp-${user.id}-${Date.now()}`;
 
       let result;
       if (type === 'banner') {
-        result = await CampaignStorageService.uploadBanner(tempCampaignId, file, progress => {
+        result = await ProjectStorageService.uploadBanner(tempProjectId, file, progress => {
           setUploadProgress(prev => ({ ...prev, [type]: progress.percentage }));
         });
       } else {
         const imageIndex = formData.gallery_images.length;
-        result = await CampaignStorageService.uploadGalleryImage(
-          tempCampaignId,
+        result = await ProjectStorageService.uploadGalleryImage(
+          tempProjectId,
           file,
           imageIndex,
           progress => {
@@ -193,7 +193,7 @@ export default function CreateCampaignForm({
     setLoading(true);
     setError(null);
 
-    const result = campaignFormSchema.safeParse(formData);
+    const result = projectFormSchema.safeParse(formData);
     if (!result.success) {
       setFormErrors(result.error);
       toast.error('Please fix the errors in the form');

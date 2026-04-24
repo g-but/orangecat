@@ -61,10 +61,10 @@ interface ProfileService {
 ### Funding Service
 ```typescript
 interface FundingService {
-  createCampaign(data: CampaignData): Promise<Campaign>;
-  getCampaign(id: string): Promise<Campaign>;
-  updateCampaign(id: string, data: CampaignUpdate): Promise<Campaign>;
-  processDonation(campaignId: string, amount: number): Promise<Transaction>;
+  createProject(data: ProjectData): Promise<Project>;
+  getProject(id: string): Promise<Project>;
+  updateProject(id: string, data: ProjectUpdate): Promise<Project>;
+  processDonation(projectId: string, amount: number): Promise<Transaction>;
 }
 ```
 

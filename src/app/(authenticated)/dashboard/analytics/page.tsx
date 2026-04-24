@@ -8,15 +8,15 @@ import Loading from '@/components/Loading';
 import { TrendingUp, Users, DollarSign, Target, Zap } from 'lucide-react';
 import AnalyticsMetricsGrid from './components/AnalyticsMetricsGrid';
 import type { AnalyticsMetric } from './components/AnalyticsMetricsGrid';
-import CampaignPerformanceTable from './components/CampaignPerformanceTable';
-import type { CampaignPerformance } from './components/CampaignPerformanceTable';
+import ProjectPerformanceTable from './components/ProjectPerformanceTable';
+import type { ProjectPerformance } from './components/ProjectPerformanceTable';
 import AnalyticsInsights from './components/AnalyticsInsights';
 
 export default function AnalyticsPage() {
   const { user, isLoading: authLoading } = useRequireAuth();
   const { projects, loadProjects, isLoading: projectLoading } = useProjectStore();
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
-  const [selectedCampaign, setSelectedCampaign] = useState<string>('all');
+  const [selectedProject, setSelectedProject] = useState<string>('all');
 
   useEffect(() => {
     if (user?.id) {
@@ -49,10 +49,10 @@ export default function AnalyticsPage() {
     ];
   };
 
-  const getCampaignPerformance = (): CampaignPerformance[] => {
+  const getProjectPerformance = (): ProjectPerformance[] => {
     return projects.map(project => ({
       id: project.id,
-      title: project.title || 'Untitled Campaign',
+      title: project.title || 'Untitled Project',
       totalRaised: project.total_funding || 0,
       goalAmount: project.goal_amount || 0,
       supporters: project.contributor_count || 0,
@@ -62,7 +62,7 @@ export default function AnalyticsPage() {
   };
 
   const metrics = calculateMetrics();
-  const projectPerformance = getCampaignPerformance();
+  const projectPerformance = getProjectPerformance();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -71,7 +71,7 @@ export default function AnalyticsPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Campaign Analytics</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Project Analytics</h1>
             <p className="text-gray-600 mt-1">Track your fundraising performance and insights</p>
           </div>
 
@@ -93,14 +93,14 @@ export default function AnalyticsPage() {
             </div>
 
             <select
-              value={selectedCampaign}
-              onChange={e => setSelectedCampaign(e.target.value)}
+              value={selectedProject}
+              onChange={e => setSelectedProject(e.target.value)}
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             >
               <option value="all">All Projects</option>
               {projects.map(project => (
                 <option key={project.id} value={project.id}>
-                  {project.title || 'Untitled Campaign'}
+                  {project.title || 'Untitled Project'}
                 </option>
               ))}
             </select>
@@ -109,7 +109,7 @@ export default function AnalyticsPage() {
       </div>
 
       <AnalyticsMetricsGrid metrics={metrics} />
-      <CampaignPerformanceTable campaigns={projectPerformance} />
+      <ProjectPerformanceTable projects={projectPerformance} />
       <AnalyticsInsights hasProjects={projects.length > 0} />
     </div>
   );

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Share2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import CampaignShare from './CampaignShare';
+import ProjectShare from './ProjectShare';
 
 interface ShareButtonProps {
   projectId: string;
@@ -85,7 +85,7 @@ export default function ShareButton({
 
         {showShare && (
           <div ref={dropdownRef} className="absolute top-full right-0 mt-2 z-50">
-            <CampaignShare
+            <ProjectShare
               projectId={projectId}
               projectTitle={projectTitle}
               projectDescription={projectDescription}
@@ -116,7 +116,7 @@ export default function ShareButton({
 
       {showShare && (
         <div ref={dropdownRef} className="absolute top-full right-0 mt-2 z-50">
-          <CampaignShare
+          <ProjectShare
             projectId={projectId}
             projectTitle={projectTitle}
             projectDescription={projectDescription}

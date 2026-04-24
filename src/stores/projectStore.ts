@@ -224,7 +224,3 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 }));
 
-// BACKWARDS COMPATIBILITY - Old campaignStore imports
-export const useCampaignStore = useProjectStore;
-export type Campaign = Project;
-export type CampaignState = ProjectState;

@@ -33,7 +33,7 @@ export const fundraising: Initiative = {
   features: [
     {
       icon: 'Target',
-      title: 'Campaign Creation',
+      title: 'Project Creation',
       description: 'Create compelling fundraising projects with rich media and transparent goals.',
       color: 'text-blue-600 bg-blue-100',
     },
@@ -115,7 +115,7 @@ export const fundraising: Initiative = {
     },
   ],
   capabilities: [
-    'Campaign management',
+    'Project management',
     'Bitcoin payment processing',
     'Goal tracking and milestones',
     'Supporter communication',
@@ -124,7 +124,7 @@ export const fundraising: Initiative = {
     'Multi-currency support',
     'Automated refunds',
     'Tax receipt generation',
-    'Campaign analytics',
+    'Project analytics',
   ],
   useCases: [
     'Raise funds for charitable causes',

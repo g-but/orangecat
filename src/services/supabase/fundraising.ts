@@ -209,7 +209,7 @@ export async function getUserFundraisingActivity(
 
       activities.push({
         type: 'project',
-        title: 'Campaign created',
+        title: 'Project created',
         context: page.title,
         time: timeAgo,
       });

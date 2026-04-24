@@ -433,7 +433,7 @@ export default function StudyBitcoinPage() {
             </Button>
             <Button href="/projects/create" variant="outline" size="lg" className="min-h-[48px]">
               <Target className="w-5 h-5 mr-2" />
-              Start a Campaign
+              Start a Project
             </Button>
           </div>
         </div>

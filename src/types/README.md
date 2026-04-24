@@ -83,34 +83,34 @@ interface ProfileUpdate {
 
 ### Funding Types
 ```typescript
-interface Campaign {
+interface Project {
   id: string;
   userId: string;
   title: string;
   description: string;
   goalAmount: number;
   currentAmount: number;
-  status: CampaignStatus;
+  status: ProjectStatus;
   createdAt: Date;
   updatedAt: Date;
 }
 
-type CampaignStatus = 'active' | 'completed' | 'cancelled';
+type ProjectStatus = 'active' | 'completed' | 'cancelled';
 
 interface Donation {
   id: string;
-  campaignId: string;
+  projectId: string;
   userId: string;
   amount: number;
   transactionId: string;
   createdAt: Date;
 }
 
-interface CampaignUpdate {
+interface ProjectUpdate {
   title?: string;
   description?: string;
   goalAmount?: number;
-  status?: CampaignStatus;
+  status?: ProjectStatus;
 }
 ```
 
@@ -186,7 +186,7 @@ function isUser(obj: any): obj is User {
   );
 }
 
-function isCampaign(obj: any): obj is Campaign {
+function isProject(obj: any): obj is Project {
   return (
     typeof obj === 'object' &&
     obj !== null &&

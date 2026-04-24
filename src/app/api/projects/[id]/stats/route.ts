@@ -41,7 +41,7 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
     const project = projectData;
 
     if (projectError || !project) {
-      return apiNotFound('Campaign not found');
+      return apiNotFound('Project not found');
     }
 
     // Get real supporter count from project_support table

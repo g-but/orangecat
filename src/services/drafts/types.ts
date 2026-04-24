@@ -30,7 +30,7 @@ export interface DraftState {
   id: string
   userId: string
   title: string
-  formData: CampaignFormData
+  formData: ProjectFormData
   currentStep: number
   version: number
   status: DraftStatus
@@ -70,7 +70,7 @@ export interface DraftConflict {
   resolution?: 'local' | 'remote' | 'merge'
 }
 
-export interface CampaignFormData {
+export interface ProjectFormData {
   title: string
   description: string
   bitcoin_address: string

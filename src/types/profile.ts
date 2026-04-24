@@ -82,7 +82,7 @@ export const PROFILE_CATEGORIES = {
     ],
   },
   project: {
-    label: 'Campaign',
+    label: 'Project',
     description: 'A specific project or initiative seeking Bitcoin funding',
     icon: '🎯',
     color: 'orange',

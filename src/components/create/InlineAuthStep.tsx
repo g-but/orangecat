@@ -371,9 +371,9 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
           </Tabs>
         </div>
 
-        {/* Campaign Preview */}
+        {/* Project Preview */}
         <div className="bg-gray-50 px-8 py-6 border-t border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Your Campaign Summary</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Your Project Summary</h3>
           <div className="bg-white rounded-lg p-4 border border-gray-200 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Title</span>

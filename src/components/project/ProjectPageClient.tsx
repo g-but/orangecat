@@ -12,7 +12,7 @@ import { getStatusInfo } from '@/config/status-config';
 import { PublicEntityPaymentSection } from '@/components/payment';
 
 const MissingWalletBanner = dynamic(() => import('@/components/project/MissingWalletBanner'));
-const CampaignShare = dynamic(() => import('@/components/sharing/CampaignShare'));
+const ProjectShare = dynamic(() => import('@/components/sharing/ProjectShare'));
 const ProjectMediaGallery = dynamic(() => import('@/components/project/ProjectMediaGallery'));
 const ProjectSummaryRail = dynamic(() => import('@/components/project/ProjectSummaryRail'));
 const ProjectHeader = dynamic(() => import('@/components/project/ProjectHeader'));
@@ -184,7 +184,7 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
       {showShareDialog && project && (
         <div className="fixed inset-0 z-50 flex items-start justify-end p-4 pointer-events-none">
           <div className="pointer-events-auto mt-20 mr-4">
-            <CampaignShare
+            <ProjectShare
               projectId={project.id}
               projectTitle={project.title}
               projectDescription={project.description}

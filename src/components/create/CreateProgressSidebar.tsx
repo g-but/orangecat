@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { Check } from 'lucide-react';
-import type { CampaignFormData } from './CreateCampaignForm';
+import type { ProjectFormData } from './CreateProjectForm';
 
 interface CreateProgressSidebarProps {
   currentStep: number;
   completionPercentage: number;
-  formData: CampaignFormData;
+  formData: ProjectFormData;
 }
 
 export default function CreateProgressSidebar({
@@ -99,7 +99,7 @@ export default function CreateProgressSidebar({
     <div className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-80 bg-white/90 backdrop-blur-sm border-r border-gray-200 p-6 overflow-y-auto hidden lg:block">
       {/* Progress Header */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">Campaign Creation</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">Project Creation</h2>
         <div className="flex items-center gap-3">
           <div className="flex-1 bg-gray-200 rounded-full h-2">
             <div

@@ -44,7 +44,7 @@ export function WalletAddModal({ open, onClose }: WalletAddModalProps) {
                   <select className="w-full px-3 py-2 border border-gray-300 rounded-lg">
                     <option value="personal">Personal</option>
                     <option value="organization">Organization</option>
-                    <option value="project">Campaign</option>
+                    <option value="project">Project</option>
                     <option value="friend">Friend</option>
                     <option value="business">Business</option>
                     <option value="donation">Funding</option>

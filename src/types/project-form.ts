@@ -1,21 +1,12 @@
 /**
- * Campaign Types - Proper TypeScript Definitions
+ * Project Form Types
  *
- * Replaces 'any' types in Campaign services with proper type definitions
- * for form data, API responses, and project operations
- *
- * Created: 2025-06-08
- * Last Modified: 2025-06-08
- * Last Modified Summary: Initial creation of Campaign types for TypeScript cleanup
+ * TypeScript definitions for the project creation form and its drafts.
  */
 
-// ==================== CAMPAIGN FORM DATA ====================
+// ==================== PROJECT FORM DATA ====================
 
-/**
- * Campaign form data structure
- * Replaces: formData: any in project services
- */
-export interface CampaignFormData {
+export interface ProjectFormData {
   // Basic Information
   title: string;
   description: string;
@@ -32,7 +23,7 @@ export interface CampaignFormData {
   image_url?: string;
   banner_url?: string;
 
-  // Campaign Settings
+  // Project Settings
   duration_days?: number;
   is_public: boolean;
 
@@ -56,19 +47,18 @@ export interface CampaignFormData {
 }
 
 /**
- * Campaign draft data (subset of full project)
- * Replaces: draftData: any
+ * Project draft data (subset of full project)
  */
-export interface CampaignDraftData {
+export interface ProjectDraftData {
   title?: string;
   description?: string;
   category?: string;
-  categories?: string[]; // Array format used in actual code
+  categories?: string[];
   goal?: number;
-  goal_amount?: number | string; // Used in actual code
+  goal_amount?: number | string;
   currency?: 'BTC' | 'USD';
   bitcoin_address?: string;
-  lightning_address?: string; // Used in actual code
+  lightning_address?: string;
   image_url?: string;
   banner_url?: string;
   duration_days?: number;
@@ -76,17 +66,13 @@ export interface CampaignDraftData {
   tags?: string[];
   location?: string;
   website_url?: string;
-  social_links?: CampaignFormData['social_links'];
+  social_links?: ProjectFormData['social_links'];
   story?: string;
   current_step?: number;
   last_saved?: string;
 }
 
-/**
- * Safe number parsing for project goals
- * Replaces: safeParseFloat(value: any)
- */
-export function safeParseCampaignGoal(value: unknown): number | null {
+export function safeParseProjectGoal(value: unknown): number | null {
   if (typeof value === 'number' && isFinite(value) && value > 0) {
     return value;
   }

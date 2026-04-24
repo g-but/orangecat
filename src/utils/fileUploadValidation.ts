@@ -7,7 +7,7 @@
  * Consolidates:
  * - src/app/api/avatar/route.ts (duplicate validation)
  * - src/app/api/banner/route.ts (duplicate validation)
- * - Campaign storage validation
+ * - Project storage validation
  * - Profile storage validation
  */
 

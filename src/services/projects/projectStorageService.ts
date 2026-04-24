@@ -22,7 +22,7 @@ export interface FileUploadProgress {
   percentage: number;
 }
 
-export class CampaignStorageService {
+export class ProjectStorageService {
   private static readonly BUCKET_NAME = 'projects';
   private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB for project images
   private static readonly ALLOWED_TYPES = [
@@ -190,4 +190,4 @@ export class CampaignStorageService {
   }
 }
 
-export default CampaignStorageService;
+export default ProjectStorageService;

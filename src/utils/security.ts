@@ -137,7 +137,7 @@ export const SecuritySchemas = {
       .or(z.literal(''))
   }),
 
-  // Campaign validation
+  // Project validation
   projectData: z.object({
     title: z.string()
       .min(5, 'Title must be at least 5 characters')

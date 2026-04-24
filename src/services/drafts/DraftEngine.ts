@@ -10,7 +10,7 @@ import {
   DraftStatus,
   DraftConflict,
   SyncResult,
-  CampaignFormData,
+  ProjectFormData,
   DraftQuery,
 } from './types';
 
@@ -19,7 +19,7 @@ interface RemoteDraftRecord {
   id: string;
   user_id: string;
   title: string;
-  form_data: Partial<CampaignFormData>;
+  form_data: Partial<ProjectFormData>;
   current_step: number;
   version: number;
   metadata: Record<string, unknown>;
@@ -53,14 +53,14 @@ export class DraftEngine {
   /**
    * REAL-TIME DRAFT CREATION
    */
-  async createDraft(userId: string, initialData?: Partial<CampaignFormData>): Promise<DraftState> {
+  async createDraft(userId: string, initialData?: Partial<ProjectFormData>): Promise<DraftState> {
     const draftId = this.generateDraftId();
     const now = Date.now();
 
     const draft: DraftState = {
       id: draftId,
       userId,
-      title: initialData?.title || 'Untitled Campaign',
+      title: initialData?.title || 'Untitled Project',
       formData: {
         title: initialData?.title || '',
         description: initialData?.description || '',
@@ -118,8 +118,8 @@ export class DraftEngine {
    */
   async updateField(
     draftId: string,
-    field: keyof CampaignFormData,
-    value: CampaignFormData[keyof CampaignFormData],
+    field: keyof ProjectFormData,
+    value: ProjectFormData[keyof ProjectFormData],
     debounceMs = 500
   ): Promise<void> {
     const draft = this.drafts.get(draftId);
@@ -384,7 +384,7 @@ export class DraftEngine {
    */
   private detectConflicts(local: DraftState, remote: RemoteDraftRecord): DraftConflict[] {
     const conflicts: DraftConflict[] = [];
-    const fields: (keyof CampaignFormData)[] = [
+    const fields: (keyof ProjectFormData)[] = [
       'title',
       'description',
       'bitcoin_address',
@@ -487,10 +487,10 @@ export class DraftEngine {
       .filter(word => word.length > 0).length;
   }
 
-  private calculateCompletion(data: Partial<CampaignFormData> = {}): number {
+  private calculateCompletion(data: Partial<ProjectFormData> = {}): number {
     const requiredFields = ['title', 'description', 'bitcoin_address', 'goal_amount'];
     const completed = requiredFields.filter(field => {
-      const value = data[field as keyof CampaignFormData];
+      const value = data[field as keyof ProjectFormData];
       return value && value !== '' && value !== 0;
     }).length;
 

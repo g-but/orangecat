@@ -6,7 +6,7 @@ import { trackEvent } from '@/utils/monitoring';
 import ShareContent from './ShareContent';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
-interface CampaignShareProps {
+interface ProjectShareProps {
   projectId: string;
   projectTitle: string;
   projectDescription?: string;
@@ -18,13 +18,13 @@ interface CampaignShareProps {
 }
 
 /**
- * CampaignShare Component
+ * ProjectShare Component
  *
- * Wrapper around ShareContent for project/campaign-specific sharing.
+ * Wrapper around ShareContent for project-specific sharing.
  * Extends ShareContent with project-specific features (QR code, analytics).
  * DRY: Uses reusable ShareContent component.
  */
-export default function CampaignShare({
+export default function ProjectShare({
   projectId,
   projectTitle,
   projectDescription = '',
@@ -32,7 +32,7 @@ export default function CampaignShare({
   onClose,
   variant = 'dropdown',
   className = '',
-}: CampaignShareProps) {
+}: ProjectShareProps) {
   // Construct the project URL
   const projectUrl =
     currentUrl ||
@@ -61,7 +61,7 @@ export default function CampaignShare({
         <DialogContent className="max-w-md">
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="w-5 h-5" />
-            Share Campaign
+            Share Project
           </DialogTitle>
           <CardContent className="space-y-4 p-0">
             <div>
@@ -89,7 +89,7 @@ export default function CampaignShare({
         description={shareDescription}
         url={projectUrl}
         onClose={handleClose}
-        titleText="Share Campaign"
+        titleText="Share Project"
       />
     </div>
   );

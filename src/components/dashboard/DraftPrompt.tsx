@@ -5,7 +5,7 @@ import { Clock, Edit3, ArrowRight, X, FileText } from 'lucide-react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { useProjectStore, Campaign } from '@/stores/projectStore';
+import { useProjectStore, type Project } from '@/stores/projectStore';
 import { formatDistanceToNow } from 'date-fns';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { ROUTES } from '@/config/routes';
@@ -42,7 +42,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
     }
   };
 
-  const _getCompletionPercentage = (draft: Campaign) => {
+  const _getCompletionPercentage = (draft: Project) => {
     let completed = 0;
     const total = 6; // title, description, goal, category, bitcoin_address, website
 
@@ -169,7 +169,7 @@ export function DraftsList({ className }: { className?: string }) {
       </h3>
 
       <div className="space-y-2">
-        {drafts.slice(0, 3).map((draft: Campaign) => (
+        {drafts.slice(0, 3).map((draft: Project) => (
           <Card key={draft.id} className="border-gray-200 hover:border-blue-300 transition-colors">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">

@@ -65,10 +65,10 @@ export const projectSchema = z.object({
 // Types
 export type ProjectData = z.infer<typeof projectSchema>;
 
-// Campaign (wizard) form schema — used by CreateCampaignForm
-// Different shape from projectSchema: goal_amount is a string (raw input), tags is a comma-separated string
+// Project wizard form schema — used by CreateProjectForm.
+// Different shape from projectSchema: goal_amount is a string (raw input), tags is a comma-separated string.
 import { isValidBitcoinAddress } from '@/utils/validation';
-export const campaignFormSchema = z.object({
+export const projectFormSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().optional(),
   bitcoin_address: z.string().refine(isValidBitcoinAddress, 'Invalid Bitcoin address'),
@@ -82,4 +82,4 @@ export const campaignFormSchema = z.object({
   banner_url: z.string().optional(),
   gallery_images: z.array(z.string()).optional(),
 });
-export type CampaignFormValues = z.infer<typeof campaignFormSchema>;
+export type ProjectFormValues = z.infer<typeof projectFormSchema>;

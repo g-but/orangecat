@@ -132,7 +132,7 @@ export default function Hero() {
                   className="w-full sm:w-auto text-lg px-8 py-4 min-h-[56px] bg-gradient-to-r from-bitcoinOrange to-orange-500 hover:from-orange-600 hover:to-orange-600 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   <Bitcoin className="mr-2 h-5 w-5" />
-                  Start Your Campaign
+                  Start Your Project
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>

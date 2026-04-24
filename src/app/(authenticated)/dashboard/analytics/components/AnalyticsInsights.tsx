@@ -75,7 +75,7 @@ export default function AnalyticsInsights({ hasProjects }: AnalyticsInsightsProp
                   <div className="flex items-start gap-3">
                     <TrendingUp className="w-5 h-5 text-blue-600 mt-0.5" />
                     <div>
-                      <h4 className="font-medium text-blue-900">Optimize Your Campaign Timing</h4>
+                      <h4 className="font-medium text-blue-900">Optimize Your Project Timing</h4>
                       <p className="text-blue-700 text-sm mt-1">
                         Your projects perform 23% better when launched on Tuesdays. Consider timing
                         your next launch accordingly.
