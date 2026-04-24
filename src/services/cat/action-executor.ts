@@ -149,7 +149,9 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const title = params.title as string;
+    const statusLabel = params.publish ? 'live' : 'draft';
+    return { success: true, data: { ...data, displayMessage: `🛍️ Product "${title}" created (${statusLabel})` } };
   },
 
   create_service: async (supabase, _userId, actorId, params) => {
@@ -182,7 +184,9 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const title = params.title as string;
+    const statusLabel = params.publish ? 'live' : 'draft';
+    return { success: true, data: { ...data, displayMessage: `🔧 Service "${title}" created (${statusLabel})` } };
   },
 
   create_project: async (supabase, _userId, actorId, params) => {
@@ -206,7 +210,9 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const title = params.title as string;
+    const statusLabel = params.publish ? 'live' : 'draft';
+    return { success: true, data: { ...data, displayMessage: `🚀 Project "${title}" created (${statusLabel})` } };
   },
 
   create_cause: async (supabase, _userId, actorId, params) => {
@@ -229,7 +235,9 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const title = params.title as string;
+    const statusLabel = params.publish ? 'live' : 'draft';
+    return { success: true, data: { ...data, displayMessage: `❤️ Cause "${title}" created (${statusLabel})` } };
   },
 
   create_event: async (supabase, _userId, actorId, params) => {
@@ -249,7 +257,9 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const title = params.title as string;
+    const statusLabel = params.publish ? 'live' : 'draft';
+    return { success: true, data: { ...data, displayMessage: `📅 Event "${title}" created (${statusLabel})` } };
   },
 
   create_asset: async (supabase, _userId, actorId, params) => {
@@ -272,7 +282,8 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const title = params.title as string;
+    return { success: true, data: { ...data, displayMessage: `🏠 Asset "${title}" registered` } };
   },
 
   create_investment: async (supabase, _userId, actorId, params) => {
@@ -302,7 +313,9 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const title = params.title as string;
+    const statusLabel = params.publish ? 'open' : 'draft';
+    return { success: true, data: { ...data, displayMessage: `📈 Investment "${title}" created (${statusLabel})` } };
   },
 
   create_loan: async (supabase, userId, actorId, params) => {
@@ -334,7 +347,9 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const title = params.title as string;
+    const rateNote = params.interest_rate ? ` at ${params.interest_rate}% interest` : '';
+    return { success: true, data: { ...data, displayMessage: `💰 Loan request "${title}" created${rateNote}` } };
   },
 
   // ---------- ENTITY MANAGEMENT ACTIONS ----------
@@ -376,7 +391,15 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const updatedTitle = (data as Record<string, unknown>)?.title as string | undefined;
+    const updatedFields = Object.keys(safeUpdates).join(', ');
+    return {
+      success: true,
+      data: {
+        ...data,
+        displayMessage: `✏️ Updated "${updatedTitle ?? entityType}" — ${updatedFields}`,
+      },
+    };
   },
 
   publish_entity: async (supabase, _userId, actorId, params) => {
@@ -399,7 +422,15 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const title = (data as Record<string, unknown>)?.title as string | undefined;
+    const entityLabel = meta.name ?? entityType;
+    return {
+      success: true,
+      data: {
+        ...data,
+        displayMessage: `✅ "${title ?? entityLabel}" is now live!`,
+      },
+    };
   },
 
   archive_entity: async (supabase, _userId, actorId, params) => {
@@ -462,7 +493,8 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const snippet = text.length > 60 ? text.slice(0, 57) + '…' : text;
+    return { success: true, data: { ...data, displayMessage: `📢 Posted to timeline: "${snippet}"` } };
   },
 
   send_message: async (supabase, userId, _actorId, params) => {
@@ -559,7 +591,17 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data: { ...data, conversation_id: conversationId } };
+    const recipientDisplay = recipientParam?.startsWith('@')
+      ? recipientParam
+      : `@${recipientParam}`;
+    return {
+      success: true,
+      data: {
+        ...data,
+        conversation_id: conversationId,
+        displayMessage: `💬 Message sent to ${recipientDisplay}`,
+      },
+    };
   },
 
   reply_to_message: async (supabase, userId, _actorId, params) => {
@@ -576,7 +618,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    return { success: true, data: { ...data, displayMessage: '💬 Reply sent' } };
   },
 
   invite_to_organization: async (supabase, userId, _actorId, params) => {
@@ -595,7 +637,8 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const role = (params.role as string) || 'member';
+    return { success: true, data: { ...data, displayMessage: `📨 Invitation sent (role: ${role})` } };
   },
 
   // ---------- CONTEXT ACTIONS ----------
@@ -616,7 +659,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    return { success: true, data: { ...data, displayMessage: `🧠 Saved to your Cat context: "${params.title}"` } };
   },
 
   update_profile: async (supabase, userId, _actorId, params) => {
@@ -686,7 +729,9 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const taskTitle = params.title as string;
+    const dueNote = params.due_date ? ` — due ${params.due_date}` : '';
+    return { success: true, data: { ...data, displayMessage: `✅ Task created: "${taskTitle}"${dueNote}` } };
   },
 
   set_reminder: async (supabase, userId, _actorId, params) => {
@@ -872,7 +917,8 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const title = params.title as string;
+    return { success: true, data: { ...data, displayMessage: `🎁 Wishlist "${title}" created` } };
   },
 
   create_research: async (supabase, userId, _actorId, params) => {
@@ -923,7 +969,9 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data };
+    const resTitle = params.title as string;
+    const field = params.field ? ` [${params.field}]` : '';
+    return { success: true, data: { ...data, displayMessage: `🔬 Research "${resTitle}"${field} created` } };
   },
 
   // ---------- ORGANIZATION ACTIONS ----------
@@ -967,7 +1015,11 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
       return { success: false, error: memberError.message };
     }
 
-    return { success: true, data: group };
+    const groupLabel = (params.label as string | null) ?? (params.type as string | null) ?? 'circle';
+    return {
+      success: true,
+      data: { ...group, displayMessage: `👥 ${groupLabel.charAt(0).toUpperCase() + groupLabel.slice(1)} "${name}" created` },
+    };
   },
 
   // ---------- PAYMENT ACTIONS ----------
