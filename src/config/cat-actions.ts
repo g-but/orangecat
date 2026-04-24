@@ -712,7 +712,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     requiresConfirmation: false,
     parameters: [
       { name: 'title', type: 'string', required: true, description: 'Task title' },
-      { name: 'description', type: 'string', required: false, description: 'Task description' },
+      { name: 'notes', type: 'string', required: false, description: 'Task notes / description' },
       {
         name: 'priority',
         type: 'string',
@@ -778,8 +778,9 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     riskLevel: 'low',
     requiresConfirmation: false,
     parameters: [
-      { name: 'message', type: 'string', required: true, description: 'Reminder message' },
-      { name: 'when', type: 'string', required: true, description: 'When to remind' },
+      { name: 'title', type: 'string', required: true, description: 'What to be reminded about' },
+      { name: 'due_date', type: 'string', required: true, description: 'When — ISO 8601 or natural language ("tomorrow", "in 2 hours")' },
+      { name: 'notes', type: 'string', required: false, description: 'Optional additional context' },
     ],
     examples: [
       'Remind me to check on my project tomorrow',

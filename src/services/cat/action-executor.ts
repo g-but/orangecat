@@ -594,13 +594,15 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     // priority enum: low|normal|high|urgent (not medium — map 'medium' defensively)
     const rawPriority = (params.priority as string) || 'normal';
     const priority = rawPriority === 'medium' ? 'normal' : rawPriority;
+    // Accept both `description` and `notes` — system prompt documents `notes`
+    const description = (params.description as string | null) || (params.notes as string | null) || null;
 
     const { data, error } = await supabase
       .from(DATABASE_TABLES.TASKS)
       .insert({
         created_by: userId,
         title: params.title,
-        description: (params.description as string | null) || null,
+        description,
         priority,
         task_type: 'one_time',
         category: 'other',
@@ -617,19 +619,30 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   },
 
   set_reminder: async (supabase, userId, _actorId, params) => {
-    const message = params.message as string;
-    const when = params.when as string;
+    // System prompt documents: title, due_date (ISO or natural language), notes
+    // Handler also accepts legacy aliases: message (→title), when (→due_date)
+    const title = (params.title as string | undefined) || (params.message as string | undefined) || '';
+    const when = (params.due_date as string | undefined) || (params.when as string | undefined) || '';
+    const notes = (params.notes as string | undefined) || null;
 
-    // Parse natural-language "when" into an ISO timestamp.
+    if (!title) {
+      return { success: false, error: 'title is required for set_reminder' };
+    }
+
+    // Parse natural-language or ISO "when" into a stored ISO timestamp.
     // Supports: "in N minutes/hours/days", "tomorrow", "next week", specific ISO strings.
     const dueDate = parseReminderDate(when);
+
+    const description = notes
+      ? `Reminder set by My Cat\nNotes: ${notes}`
+      : `Reminder set by My Cat`;
 
     const { data, error } = await supabase
       .from(DATABASE_TABLES.TASKS)
       .insert({
         created_by: userId,
-        title: message,
-        description: `Reminder set by My Cat\nWhen: ${when}`,
+        title,
+        description,
         priority: 'normal',
         task_type: 'one_time',
         category: 'other',
@@ -646,13 +659,13 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
     const dueDateDisplay = dueDate
       ? new Date(dueDate).toLocaleString('en-CH', { dateStyle: 'medium', timeStyle: 'short' })
-      : when;
+      : when || 'no date set';
 
     return {
       success: true,
       data: {
         ...data,
-        displayMessage: `Reminder set for ${dueDateDisplay}: "${message}"`,
+        displayMessage: `Reminder set for ${dueDateDisplay}: "${title}"`,
       },
     };
   },
@@ -1489,8 +1502,11 @@ export class CatActionExecutor {
         const due = parameters.due_date ? ` due ${parameters.due_date}` : '';
         return `Create task: "${parameters.title}"${priority}${due}`;
       }
-      case 'set_reminder':
-        return `Set reminder: "${parameters.message}" — ${parameters.when}`;
+      case 'set_reminder': {
+        const reminderTitle = (parameters.title as string | undefined) || (parameters.message as string | undefined) || 'reminder';
+        const reminderWhen = (parameters.due_date as string | undefined) || (parameters.when as string | undefined) || 'no date';
+        return `Set reminder: "${reminderTitle}" — ${reminderWhen}`;
+      }
       case 'complete_task':
         return `Mark task as completed (id: ${parameters.task_id})`;
       case 'create_organization':

@@ -854,6 +854,138 @@ describe('Cat action-executor — correct DB column names', () => {
     });
   });
 
+  // ── set_reminder ─────────────────────────────────────────────────────────────
+  // Regression: system prompt documents title/due_date/notes but handler previously
+  // read message/when — reminders were silently created with undefined title + no due date.
+  describe('set_reminder', () => {
+    it('reads `title` param and stores it in the tasks title column', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'set_reminder', {
+        title: 'Call the dentist',
+        due_date: '2026-05-01T09:00:00Z',
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+      expect(insert).toBeDefined();
+      // title must reach the DB
+      expect(insert!.title).toBe('Call the dentist');
+      // Wrong column name must NOT appear
+      expect((insert as Record<string, unknown>).message).toBeUndefined();
+    });
+
+    it('parses `due_date` (ISO string) and stores it in the tasks due_date column', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'set_reminder', {
+        title: 'Submit tax return',
+        due_date: '2026-04-30T23:59:00Z',
+      });
+
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+      expect(insert!.due_date).not.toBeNull();
+      // Must be a parseable ISO string; check UTC year and month to avoid timezone flips
+      const stored = new Date(insert!.due_date as string);
+      expect(stored.getUTCFullYear()).toBe(2026);
+      expect(stored.getUTCMonth()).toBe(3); // 0-indexed April
+    });
+
+    it('parses `due_date` with natural language ("tomorrow") to a date', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'set_reminder', {
+        title: 'Check in with team',
+        due_date: 'tomorrow',
+      });
+
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+      expect(insert!.due_date).not.toBeNull();
+      const stored = new Date(insert!.due_date as string);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      expect(stored.getDate()).toBe(tomorrow.getDate());
+    });
+
+    it('passes `notes` into the task description with Reminder prefix', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'set_reminder', {
+        title: 'Water plants',
+        notes: 'Don\'t forget the balcony ones',
+      });
+
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+      expect(insert!.description).toContain('Don\'t forget the balcony ones');
+    });
+
+    it('still works with legacy `message`/`when` params for backward compatibility', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'set_reminder', {
+        message: 'Legacy reminder title',
+        when: 'in 1 hour',
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+      expect(insert!.title).toBe('Legacy reminder title');
+      expect(insert!.due_date).not.toBeNull();
+    });
+
+    it('returns error when no title (or message) is provided', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'set_reminder', { due_date: 'tomorrow' });
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/title/i);
+    });
+
+    it('sets is_reminder=true and correct enum values', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'set_reminder', { title: 'Reminder test' });
+
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+      expect(insert!.is_reminder).toBe(true);
+      expect(insert!.current_status).toBe('idle');
+      expect(insert!.task_type).toBe('one_time');
+      expect(insert!.priority).toBe('normal');
+      expect(insert!.created_by).toBe(USER_ID);
+    });
+  });
+
+  // ── create_task (notes alias) ─────────────────────────────────────────────────
+  // Regression: system prompt documents `notes` param but handler previously only
+  // read `description` — notes were silently dropped on task creation.
+  describe('create_task — notes param alias', () => {
+    it('maps `notes` param to the description column', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'create_task', {
+        title: 'Buy groceries',
+        notes: 'Milk, eggs, bread',
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+      expect(insert!.description).toBe('Milk, eggs, bread');
+    });
+
+    it('prefers `description` when both description and notes are provided', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_task', {
+        title: 'Task',
+        description: 'The description field',
+        notes: 'Notes field',
+      });
+
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+      // description takes priority (truthy short-circuit)
+      expect(insert!.description).toBe('The description field');
+    });
+
+    it('sets description to null when neither description nor notes provided', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'create_task', { title: 'Bare task' });
+
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TASKS);
+      expect(insert!.description).toBeNull();
+    });
+  });
+
   // ── complete_task ────────────────────────────────────────────────────────────
   describe('complete_task', () => {
     // complete_task does a select on tasks first, then inserts into task_completions.

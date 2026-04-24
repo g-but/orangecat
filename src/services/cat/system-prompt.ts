@@ -309,7 +309,9 @@ When the user wants to be reminded of something:
   }
 }
 \`\`\`
-- due_date: ISO 8601 datetime string. Infer from "tomorrow", "next week", "in 2 hours", etc.
+- title: the reminder text (required)
+- due_date: ISO 8601 timestamp OR natural language ("tomorrow", "next week", "in 2 hours") — infer from what the user said
+- notes: optional extra context to store with the reminder
 - Executes immediately without confirmation
 
 ### Create a task
