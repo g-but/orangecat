@@ -53,8 +53,13 @@ export function parseActionsFromResponse(content: string): ParsedResponse {
       if (
         raw.type === 'create_entity' &&
         entityTypes.includes(raw.entityType) &&
-        raw.prefill?.title
+        (raw.prefill?.title || raw.prefill?.name)
       ) {
+        // Groups (and any future entities) use `name` as the primary label field.
+        // Normalise name→title so the UI always has action.prefill.title to display.
+        if (!raw.prefill.title && raw.prefill.name) {
+          raw.prefill.title = raw.prefill.name;
+        }
         actions.push(raw as SuggestedAction);
       } else if (
         raw.type === 'update_entity' &&

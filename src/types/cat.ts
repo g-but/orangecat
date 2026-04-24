@@ -29,6 +29,7 @@ export type CatCreatableEntityType = Extract<
   | 'investment'
   | 'research'
   | 'wishlist'
+  | 'group'
 >;
 
 /** All entity types Cat can create, as a runtime array for validation */
@@ -43,16 +44,20 @@ export const CAT_CREATABLE_ENTITY_TYPES: CatCreatableEntityType[] = [
   'investment',
   'research',
   'wishlist',
+  'group',
 ];
 
 /**
  * An action suggesting entity creation, embedded as ```action JSON blocks in AI responses.
+ * title is required for most entity types; groups use `name` instead.
+ * The response parser normalises name→title so the UI always has a label to display.
  */
 export interface SuggestedAction {
   type: 'create_entity';
   entityType: CatCreatableEntityType;
   prefill: {
-    title: string;
+    title?: string;
+    name?: string;
     description?: string;
     category?: string;
     [key: string]: unknown;
