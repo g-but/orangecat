@@ -5,11 +5,62 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Cat, User, Copy, Check } from 'lucide-react';
+import { Cat, User, Copy, Check, Clock, X } from 'lucide-react';
 import { AI_MODEL_REGISTRY } from '@/config/ai-models';
 import { renderChatMarkdown } from '@/utils/markdown';
 import { ActionButton } from './ActionButton';
-import type { Message, CatAction } from '../types';
+import type { Message, CatAction, ExecActionResult } from '../types';
+
+// Human-readable labels for exec_action IDs
+const ACTION_LABELS: Record<string, string> = {
+  set_reminder: 'Reminder',
+  create_task: 'Task',
+  post_to_timeline: 'Timeline post',
+  send_message: 'Message',
+  reply_to_message: 'Reply',
+  send_payment: 'Payment',
+  fund_project: 'Contribution',
+  add_context: 'Context saved',
+  create_product: 'Product',
+  create_service: 'Service',
+  create_project: 'Project',
+  create_cause: 'Cause',
+  create_event: 'Event',
+  create_organization: 'Organization',
+};
+
+function ExecResultChip({ result }: { result: ExecActionResult }) {
+  const noun = ACTION_LABELS[result.actionId] ?? result.actionId;
+
+  if (result.status === 'completed') {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+        <Check className="h-3 w-3 flex-shrink-0" />
+        {noun} done
+      </span>
+    );
+  }
+
+  if (result.status === 'pending_confirmation') {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+        <Clock className="h-3 w-3 flex-shrink-0" />
+        {noun} — confirm below
+      </span>
+    );
+  }
+
+  // failed
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-100"
+      title={result.error}
+    >
+      <X className="h-3 w-3 flex-shrink-0" />
+      {noun} failed{result.error ? `: ${result.error}` : ''}
+    </span>
+  );
+}
 
 interface MessageBubbleProps {
   message: Message;
@@ -21,8 +72,8 @@ export function MessageBubble({ message, isLast, onActionClick }: MessageBubbleP
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
 
-  // Clean the message content by removing action blocks for display
-  const displayContent = message.content.replace(/```action[\s\S]*?```/g, '').trim();
+  // Clean the message content by removing action and exec_action blocks for display
+  const displayContent = message.content.replace(/```(?:action|exec_action)[\s\S]*?```/g, '').trim();
 
   const handleCopy = () => {
     void navigator.clipboard.writeText(displayContent);
@@ -86,6 +137,15 @@ export function MessageBubble({ message, isLast, onActionClick }: MessageBubbleP
           <div className="mt-3 flex flex-wrap gap-2">
             {message.actions.map((action, idx) => (
               <ActionButton key={idx} action={action} onClick={() => onActionClick?.(action)} />
+            ))}
+          </div>
+        )}
+
+        {/* Exec action result chips */}
+        {!isUser && message.execResults && message.execResults.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {message.execResults.map((result, idx) => (
+              <ExecResultChip key={idx} result={result} />
             ))}
           </div>
         )}

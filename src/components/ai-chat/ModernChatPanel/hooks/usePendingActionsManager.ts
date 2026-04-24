@@ -18,22 +18,22 @@ export function usePendingActionsManager({
   const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);
   const { confirmAction, rejectAction, getPendingActions } = usePendingActions();
 
+  const fetchPendingActions = useCallback(async () => {
+    try {
+      const actions = await getPendingActions();
+      setPendingActions(actions);
+    } catch (e) {
+      logger.error('Failed to fetch pending actions', { error: e }, 'usePendingActionsManager');
+    }
+  }, [getPendingActions]);
+
   // Fetch pending actions on mount and periodically
   useEffect(() => {
-    const fetchPendingActions = async () => {
-      try {
-        const actions = await getPendingActions();
-        setPendingActions(actions);
-      } catch (e) {
-        logger.error('Failed to fetch pending actions', { error: e }, 'usePendingActionsManager');
-      }
-    };
-
     void fetchPendingActions();
     // Poll for new pending actions every 30 seconds
     const interval = setInterval(fetchPendingActions, 30000);
     return () => clearInterval(interval);
-  }, [getPendingActions]);
+  }, [fetchPendingActions]);
 
   const handleConfirmAction = useCallback(
     async (actionId: string) => {
@@ -76,5 +76,6 @@ export function usePendingActionsManager({
     pendingActions,
     handleConfirmAction,
     handleRejectAction,
+    refreshPendingActions: fetchPendingActions,
   };
 }

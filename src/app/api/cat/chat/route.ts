@@ -32,16 +32,7 @@ import { maybeEnrichWithSearchResults } from '@/services/cat/tool-use';
 import { fetchFullContextForCat, buildFullContextString } from '@/services/ai/document-context';
 import { createActionExecutor } from '@/services/cat';
 import { getUserActorId } from '@/domain/actors';
-import type { ExecAction, CatAction } from '@/types/cat';
-
-// Result of a server-side executor action run during a chat turn
-interface ExecActionResult {
-  actionId: string;
-  status: 'completed' | 'pending_confirmation' | 'failed';
-  data?: unknown;
-  error?: string;
-  pendingActionId?: string;
-}
+import type { ExecAction, CatAction, ExecActionResult } from '@/types/cat';
 
 /**
  * Execute all exec_action blocks parsed from an AI response.

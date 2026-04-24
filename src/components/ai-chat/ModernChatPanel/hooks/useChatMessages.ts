@@ -8,21 +8,26 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { readEventStream } from '@/lib/sse';
 import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
-import type { Message, CatAction } from '../types';
+import type { Message, CatAction, ExecActionResult } from '../types';
 
 const STREAM_TIMEOUT_MS = 60_000;
 
 interface UseChatMessagesOptions {
   selectedModel: string;
+  /** Called when an exec_action result has status=pending_confirmation (new item for user to approve) */
+  onPendingResult?: () => void;
 }
 
-export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
+export function useChatMessages({ selectedModel, onPendingResult }: UseChatMessagesOptions) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  // Use a ref so the sendMessage callback always sees the latest value without needing it in deps
+  const onPendingResultRef = useRef(onPendingResult);
+  onPendingResultRef.current = onPendingResult;
 
   // Load persistent history on mount
   useEffect(() => {
@@ -133,6 +138,7 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
 
         let modelUsed = selectedModel;
         let actions: CatAction[] | undefined;
+        let execResults: ExecActionResult[] | undefined;
 
         await readEventStream(res.body, (json: unknown) => {
           const event = json as {
@@ -141,6 +147,7 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
             usage?: unknown;
             model?: string;
             actions?: CatAction[];
+            execResults?: ExecActionResult[];
             error?: string;
           };
           if (event?.error) {
@@ -159,11 +166,19 @@ export function useChatMessages({ selectedModel }: UseChatMessagesOptions) {
           if (event?.actions) {
             actions = event.actions;
           }
+          if (event?.execResults) {
+            execResults = event.execResults;
+          }
         });
 
-        // Update with final model used and actions
+        // Trigger immediate pending actions refresh if any exec results need confirmation
+        if (execResults?.some(r => r.status === 'pending_confirmation')) {
+          onPendingResultRef.current?.();
+        }
+
+        // Update with final model used, actions, and exec results
         setMessages(prev =>
-          prev.map(m => (m.id === assistantId ? { ...m, modelUsed, actions } : m))
+          prev.map(m => (m.id === assistantId ? { ...m, modelUsed, actions, execResults } : m))
         );
       } catch (e) {
         const isAbort = e instanceof DOMException && e.name === 'AbortError';

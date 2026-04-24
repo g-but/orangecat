@@ -4,8 +4,8 @@
  */
 
 // SSOT shared types from @/types/cat
-import type { SuggestedAction, SuggestedWalletAction, CatAction } from '@/types/cat';
-export type { SuggestedAction, SuggestedWalletAction, CatAction };
+import type { SuggestedAction, SuggestedWalletAction, CatAction, ExecActionResult } from '@/types/cat';
+export type { SuggestedAction, SuggestedWalletAction, CatAction, ExecActionResult };
 
 export interface Message {
   id: string;
@@ -14,6 +14,7 @@ export interface Message {
   timestamp: Date;
   modelUsed?: string;
   actions?: CatAction[];
+  execResults?: ExecActionResult[];
 }
 
 export interface UserStatus {

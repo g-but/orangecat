@@ -22,6 +22,9 @@ export function ModernChatPanel() {
   const [selectedModel, setSelectedModel] = useState('auto');
   const lastUserMessageRef = useRef<string>('');
 
+  // Callback ref for refreshing pending actions — avoids circular hook dependency
+  const refreshPendingActionsRef = useRef<(() => Promise<void>) | undefined>(undefined);
+
   // Chat messages hook
   const {
     messages,
@@ -34,17 +37,23 @@ export function ModernChatPanel() {
     clearChat,
     setError,
     addSystemMessage,
-  } = useChatMessages({ selectedModel });
+  } = useChatMessages({
+    selectedModel,
+    onPendingResult: () => refreshPendingActionsRef.current?.(),
+  });
 
   // Suggestions hook
   const { suggestions, hasContext, isLoadingSuggestions } = useSuggestions();
 
   // Pending actions hook
-  const { pendingActions, handleConfirmAction, handleRejectAction } = usePendingActionsManager({
+  const { pendingActions, handleConfirmAction, handleRejectAction, refreshPendingActions } = usePendingActionsManager({
     onActionConfirmed: action => {
       addSystemMessage(`✅ Action completed: ${action.description}`);
     },
   });
+
+  // Keep ref in sync so sendMessage always calls the latest refresh function
+  refreshPendingActionsRef.current = refreshPendingActions;
 
   // Handle send
   const handleSend = useCallback(() => {

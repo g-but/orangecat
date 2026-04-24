@@ -108,6 +108,20 @@ export interface ExecAction {
   parameters: Record<string, unknown>;
 }
 
+/**
+ * Result of a server-side exec_action execution, returned in the chat API response.
+ * Completed: action ran successfully.
+ * Pending: action queued for user confirmation (visible in PendingActionsCard).
+ * Failed: action could not be executed.
+ */
+export interface ExecActionResult {
+  actionId: string;
+  status: 'completed' | 'pending_confirmation' | 'failed';
+  data?: unknown;
+  error?: string;
+  pendingActionId?: string;
+}
+
 /** Union of all action types Cat can suggest or execute */
 export type CatAction =
   | SuggestedAction
