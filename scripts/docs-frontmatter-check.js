@@ -23,7 +23,6 @@ function parseFrontmatter(text) {
 
 async function main() {
   const files = await glob('docs/**/*.md', { ignore: [
-    'docs/archives/**',
     '**/node_modules/**',
   ] });
 

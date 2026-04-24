@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
   docs-slop-scan.js
-  Scans for sloppy placeholder phrases outside of allowed directories (archives/tests)
+  Scans for sloppy placeholder phrases outside of tests
 */
 
 const { glob } = require('glob');
@@ -20,7 +20,6 @@ async function main() {
     '**/node_modules/**',
     '**/.next/**',
     '**/__tests__/**',
-    'docs/archives/**',
     '.claude/**',
   ] })))).flat();
 
@@ -38,7 +37,7 @@ async function main() {
   }
 
   if (violations.length) {
-    console.log('Slop phrases found (outside archives/tests):');
+    console.log('Slop phrases found:');
     violations.slice(0, 100).forEach(v => console.log(`- ${v.file}:${v.line} ${v.text}`));
     process.exitCode = 1;
   } else {
