@@ -562,6 +562,40 @@ describe('Cat action-executor — correct DB column names', () => {
     });
   });
 
+  // ── send_message ─────────────────────────────────────────────────────────────
+  describe('send_message', () => {
+    it('resolves @username to user ID via profiles lookup before inserting message', async () => {
+      const supabase = buildMockSupabase();
+      // Mock resolves to { id: 'mock-id' } for any .single() call (including profiles lookup)
+      const result = await run(supabase, 'send_message', {
+        recipient: '@alice',
+        content: 'Hey, want to collaborate?',
+      });
+
+      expect(result.status).toBe('completed');
+      // profiles table was queried
+      expect(supabase.from).toHaveBeenCalledWith(DATABASE_TABLES.PROFILES);
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.MESSAGES);
+      expect(insert).toBeDefined();
+      expect(insert!.content).toBe('Hey, want to collaborate?');
+      expect(insert!.sender_id).toBe(USER_ID);
+    });
+
+    it('accepts a raw UUID recipient_id without a profiles lookup', async () => {
+      const supabase = buildMockSupabase();
+      const rawUuid = '550e8400-e29b-41d4-a716-446655440000';
+      const result = await run(supabase, 'send_message', {
+        recipient: rawUuid,
+        content: 'Direct message',
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.MESSAGES);
+      expect(insert).toBeDefined();
+      expect(insert!.content).toBe('Direct message');
+    });
+  });
+
   // ── reply_to_message ─────────────────────────────────────────────────────────
   describe('reply_to_message', () => {
     it('inserts into messages table with conversation_id, sender_id (userId), and content', async () => {

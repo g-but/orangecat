@@ -423,10 +423,32 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   },
 
   send_message: async (supabase, userId, _actorId, params) => {
-    // First, find or create conversation
-    const recipientId = params.recipient_id as string;
+    // Resolve recipient: accept "@username" (preferred) or raw UUID (fallback)
+    let recipientId = params.recipient_id as string | undefined;
+    const recipientParam = (params.recipient as string | undefined) ?? recipientId;
 
-    // Check for existing conversation
+    if (!recipientParam) {
+      return { success: false, error: 'recipient is required' };
+    }
+
+    if (recipientParam.startsWith('@') || !recipientParam.match(/^[0-9a-f-]{36}$/i)) {
+      // Looks like a username — resolve to user ID via profiles table
+      const username = recipientParam.replace(/^@/, '');
+      const { data: profile, error: profileError } = await supabase
+        .from(DATABASE_TABLES.PROFILES)
+        .select('id')
+        .eq('username', username)
+        .single();
+
+      if (profileError || !profile) {
+        return { success: false, error: `User @${username} not found` };
+      }
+      recipientId = profile.id as string;
+    } else {
+      recipientId = recipientParam;
+    }
+
+    // First, find or create conversation
     const { data: existingConv } = await supabase
       .from(DATABASE_TABLES.CONVERSATIONS)
       .select('id')

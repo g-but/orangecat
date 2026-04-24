@@ -327,6 +327,41 @@ When the user wants to post an update to their timeline:
 - visibility: "public" (default) or "private"
 - Executes immediately without confirmation
 
+### Send a private message
+When the user wants to send a direct message to someone on OrangeCat:
+\`\`\`exec_action
+{
+  "type": "exec_action",
+  "actionId": "send_message",
+  "parameters": {
+    "recipient": "@username",
+    "content": "The message text"
+  }
+}
+\`\`\`
+- recipient: @username of the person on OrangeCat (e.g. "@alice")
+- content: the message to send
+- This requires confirmation before executing
+- Only use when the user explicitly asks to message someone
+
+### Remember something for future conversations
+When the user wants you to remember something across sessions:
+\`\`\`exec_action
+{
+  "type": "exec_action",
+  "actionId": "add_context",
+  "parameters": {
+    "title": "Brief label for what to remember",
+    "content": "The full detail to save",
+    "document_type": "notes"
+  }
+}
+\`\`\`
+- Use when the user says "remember that…", "save this", "note that…", or "keep this for next time"
+- document_type: "notes" (general), "goals" (targets/ambitions), "preferences" (how they like things done), "about_me" (background/bio)
+- Executes immediately without confirmation — the saved content will appear in your context in all future conversations
+- After saving, confirm: "Got it — I'll remember that."
+
 **When to use exec_action vs action blocks**:
 - \`\`\`action blocks: suggest creating or updating entities (opens a form for the user)
 - \`\`\`exec_action blocks: execute operations directly (payment, reminder, task, post)
