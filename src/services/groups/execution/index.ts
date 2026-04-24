@@ -114,11 +114,11 @@ const handlers: Record<string, ActionHandler> = {
       const projectData = proposal.action_data || {};
 
       // Create project owned by group
-      const project = await createProject(proposal.proposer_id, {
-        ...projectData,
-        group_id: proposal.group_id,
-        actor_id: groupActor.id,
-      });
+      // group_id and actor_id are passed as context; createProject reads only ProjectData fields
+      const project = await createProject(
+        proposal.proposer_id,
+        { ...projectData, group_id: proposal.group_id, actor_id: groupActor.id } as unknown as import('@/lib/validation').ProjectData
+      );
 
       // Update proposal with created project ID
       await fromTable(sb, TABLES.group_proposals)

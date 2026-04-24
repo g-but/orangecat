@@ -1,6 +1,7 @@
 import { listEntityPage, createEntity } from '@/domain/base/entityService';
 import { PROJECT_STATUS } from '@/config/project-statuses';
 import { STATUS } from '@/config/database-constants';
+import type { ProjectData } from '@/lib/validation';
 
 export async function listProjectsPage(limit: number, offset: number, userId?: string) {
   const result = await listEntityPage('project', {
@@ -13,8 +14,7 @@ export async function listProjectsPage(limit: number, offset: number, userId?: s
   });
 
   // Ensure raised_amount defaults to 0
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const items = result.items.map((project: any) => ({
+  const items = result.items.map((project: Record<string, unknown>) => ({
     ...project,
     raised_amount: project.raised_amount ?? 0,
   }));
@@ -22,8 +22,7 @@ export async function listProjectsPage(limit: number, offset: number, userId?: s
   return { items, total: result.total };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function createProject(userId: string, payload: any) {
+export async function createProject(userId: string, payload: ProjectData) {
   return createEntity('project', userId, {
     user_id: userId,
     title: payload.title,

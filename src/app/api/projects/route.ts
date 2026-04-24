@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
-import { projectSchema } from '@/lib/validation';
+import { projectSchema, type ProjectData } from '@/lib/validation';
 import { handleApiError, apiSuccess } from '@/lib/api/standardResponse';
 import { getPagination } from '@/lib/api/query';
 import { listProjectsPage, createProject } from '@/domain/projects/service';
@@ -36,6 +36,6 @@ export const POST = createEntityPostHandler({
   schema: projectSchema,
   useActorOwnership: true,
   createEntity: async (userId, data, _supabase) => {
-    return await createProject(userId, data);
+    return await createProject(userId, data as unknown as ProjectData);
   },
 });

@@ -1,7 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server';
-import { isTableNotFound } from '@/lib/db/errors';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
-import { getTableName } from '@/config/entity-registry';
 import { STATUS } from '@/config/database-constants';
 import { createEntity } from '@/domain/base/entityService';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
@@ -23,21 +21,6 @@ export interface CreateLoanInput {
   monthly_payment?: number | null;
   desired_rate?: number | null;
   currency?: string;
-}
-
-export async function listLoans() {
-  const supabase = await createServerClient();
-  const { data, error } = await supabase
-    .from(getTableName('loan'))
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error) {
-    if (isTableNotFound(error)) {
-      return [];
-    }
-    throw error;
-  }
-  return data || [];
 }
 
 export async function createLoan(

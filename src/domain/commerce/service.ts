@@ -2,7 +2,6 @@ import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { UserProduct, UserService, UserCause } from '@/types/database';
 import { logger } from '@/utils/logger';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { getTableName } from '@/config/entity-registry';
 import { STATUS } from '@/config/database-constants';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
@@ -11,8 +10,6 @@ import { createEntity } from '@/domain/base/entityService';
 // Table type - using entity registry table names
 // Accept string to allow dynamic table names from entity registry
 type Table = string;
-// Type alias for SupabaseClient parameter - unused but kept for API compatibility
-type _SupabaseInstance = SupabaseClient;
 
 interface ListParams {
   limit?: number;
@@ -20,40 +17,6 @@ interface ListParams {
   category?: string | null;
   userId?: string | null;
   includeOwnDrafts?: boolean;
-}
-
-export async function listEntities(table: Table, params: ListParams) {
-  const supabase = await createServerClient();
-  const { limit = 20, offset = 0, category, userId, includeOwnDrafts } = params;
-
-  // Using dynamic table access - type assertion needed for entity registry pattern
-  let query = supabase
-    .from(table)
-    .select('*')
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (userId && includeOwnDrafts) {
-    // Resolve user_id to actor_id for ownership filtering
-    const actor = await getOrCreateUserActor(userId);
-    query = query.eq('actor_id', actor.id);
-  } else {
-    // public list: status = active
-    query = query.eq('status', STATUS.PRODUCTS.ACTIVE);
-    if (userId) {
-      const actor = await getOrCreateUserActor(userId);
-      query = query.eq('actor_id', actor.id);
-    }
-    if (category) {
-      query = query.eq('category', category);
-    }
-  }
-
-  const { data, error } = await query;
-  if (error) {
-    throw error;
-  }
-  return data || [];
 }
 
 export async function listEntitiesPage(
