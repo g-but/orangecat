@@ -405,13 +405,23 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   // ---------- COMMUNICATION ACTIONS ----------
 
   post_to_timeline: async (supabase, _userId, actorId, params) => {
+    // timeline_events schema: event_type, event_subtype, subject_type (all required),
+    // title (required), description (text), content (jsonb { text: ... })
+    // No entity_id column — not timeline_posts (which doesn't exist).
+    const text = (params.content as string) || '';
+    const title = text.length > 100 ? text.slice(0, 97) + '…' : text;
+
     const { data, error } = await supabase
-      .from(DATABASE_TABLES.TIMELINE_POSTS)
+      .from(DATABASE_TABLES.TIMELINE_EVENTS)
       .insert({
         actor_id: actorId,
-        content: params.content,
-        entity_id: params.entity_id || null,
-        visibility: 'public',
+        event_type: 'post',
+        event_subtype: 'text',
+        subject_type: 'profile',
+        title,
+        description: text,
+        content: { text },
+        visibility: (params.visibility as string) || 'public',
       })
       .select()
       .single();

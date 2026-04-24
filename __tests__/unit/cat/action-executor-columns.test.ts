@@ -802,4 +802,55 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.event_date).toBeNull();
     });
   });
+
+  // ── post_to_timeline ──────────────────────────────────────────────────────────
+  describe('post_to_timeline', () => {
+    it('inserts into timeline_events (not timeline_posts) with required fields', async () => {
+      const supabase = buildMockSupabase();
+      const content = 'Just shipped a new feature on OrangeCat!';
+      const result = await run(supabase, 'post_to_timeline', { content });
+
+      expect(result.status).toBe('completed');
+
+      // Must write to timeline_events, never to timeline_posts (which does not exist)
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TIMELINE_EVENTS);
+      expect(insert).toBeDefined();
+      expect((supabase._insertsByTable as Record<string, unknown>)['timeline_posts']).toBeUndefined();
+
+      // Required fields
+      expect(insert!.event_type).toBe('post');
+      expect(insert!.event_subtype).toBe('text');
+      expect(insert!.subject_type).toBe('profile');
+      expect(insert!.actor_id).toBe(ACTOR_ID);
+
+      // title is a truncated version of content; description is the full text
+      expect(insert!.title).toBe(content);
+      expect(insert!.description).toBe(content);
+
+      // content is JSONB { text: "..." }, not a plain string
+      expect(insert!.content).toEqual({ text: content });
+      expect(typeof insert!.content).toBe('object');
+
+      // No entity_id column (does not exist on timeline_events)
+      expect((insert as Record<string, unknown>).entity_id).toBeUndefined();
+    });
+
+    it('truncates title to 100 chars but keeps full text in description and content', async () => {
+      const supabase = buildMockSupabase();
+      const long = 'A'.repeat(120);
+      await run(supabase, 'post_to_timeline', { content: long });
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TIMELINE_EVENTS);
+
+      expect(insert!.title).toHaveLength(98); // 97 chars + 1 char ellipsis
+      expect(insert!.description).toBe(long);
+      expect((insert!.content as { text: string }).text).toBe(long);
+    });
+
+    it('defaults visibility to public', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'post_to_timeline', { content: 'Hello world' });
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.TIMELINE_EVENTS);
+      expect(insert!.visibility).toBe('public');
+    });
+  });
 });
