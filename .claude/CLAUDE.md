@@ -31,7 +31,7 @@
 | Lending                | loan                      | Repayment expected         |
 | Investing              | investment                | Return/equity expected     |
 | Assets                 | asset                     | Collateral, rental         |
-| Governance             | group, circle             | Collective decisions       |
+| Governance             | group                     | Collective decisions       |
 | AI services            | ai_assistant              | Automated economic actor   |
 | Events                 | event                     | Time-bound coordination    |
 | Cat context            | document                  | Structured context for Cat |
