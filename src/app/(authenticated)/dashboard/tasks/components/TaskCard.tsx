@@ -34,10 +34,10 @@ function formatDueDate(dueDate: string): string {
   const diffMs = date.getTime() - now.getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
 
-  if (diffMs < 0) return 'Overdue';
-  if (diffHours < 1) return `${Math.round(diffMs / 60000)} min`;
-  if (diffHours < 24) return `${Math.round(diffHours)}h`;
-  if (diffHours < 48) return 'Tomorrow';
+  if (diffMs < 0) { return 'Overdue'; }
+  if (diffHours < 1) { return `${Math.round(diffMs / 60000)} min`; }
+  if (diffHours < 24) { return `${Math.round(diffHours)}h`; }
+  if (diffHours < 48) { return 'Tomorrow'; }
   return date.toLocaleDateString('en-CH', { month: 'short', day: 'numeric' });
 }
 
