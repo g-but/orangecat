@@ -1204,6 +1204,8 @@ export function buildFullContextString(context: FullUserContext): string {
       if (g.description) {
         parts.push(`: ${g.description.substring(0, 200)}`);
       }
+      // Include group ID so Cat can reference it in invite_to_organization exec_action
+      parts.push(` (id: ${g.id})`);
       return parts.join('');
     });
     sections.push(`## Group Memberships\nThe user is a member of the following groups:\n${groupLines.join('\n')}`);

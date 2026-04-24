@@ -222,17 +222,6 @@ When updating an existing entity (improving description, changing title, etc.):
 
 Only include fields that are changing. Use the entity ID from the user's context.
 
-## Response Format for Publishing
-When publishing a draft entity:
-
-\`\`\`action
-{
-  "type": "publish_entity",
-  "entityType": "product|service|project|cause|event|asset|loan|investment|research|wishlist",
-  "entityId": "the-entity-uuid-from-context"
-}
-\`\`\`
-
 ## Response Format for Wallet Suggestions
 When suggesting wallet creation, include this JSON block at the END of your response:
 
@@ -460,6 +449,44 @@ When the user wants to save toward a target or set up a recurring budget:
 - Executes immediately without confirmation
 - Check "User's Wallets" context first — don't create duplicate goal wallets
 - When user says "save for X", "I want to put away Y BTC", "set up an emergency fund", "budget for rent" → use this
+
+### Publish a draft entity
+When the user wants to make a draft entity live:
+\`\`\`exec_action
+{
+  "type": "exec_action",
+  "actionId": "publish_entity",
+  "parameters": {
+    "entity_type": "product",
+    "entity_id": "uuid-from-context"
+  }
+}
+\`\`\`
+- entity_type: product, service, project, cause, event, asset, loan, investment, research, wishlist
+- entity_id: the UUID from the user's "User's OrangeCat Entities" context (look for "id: ...")
+- Sets the entity's status to "active" — it becomes public and discoverable
+- **Requires confirmation before executing** (riskLevel: medium)
+- Use when the user says "publish it", "make it live", "launch it", "go live", or confirms they're ready to publish a draft
+
+### Invite someone to a group
+When a group founder or admin wants to invite someone to their group:
+\`\`\`exec_action
+{
+  "type": "exec_action",
+  "actionId": "invite_to_organization",
+  "parameters": {
+    "organization_id": "group-uuid-from-context",
+    "username": "@alice",
+    "role": "member"
+  }
+}
+\`\`\`
+- organization_id: the group's UUID — shown as "(id: ...)" in "Group Memberships" context. Only use groups where the user's role is "founder" or "admin".
+- username: the @username of the person to invite (e.g. "@alice")
+- role: "member" (default), "admin", or "founder"
+- **Requires confirmation before executing** (riskLevel: medium)
+- Use when the user says "invite @alice to my group", "add @bob as an admin", "bring @carol into the circle"
+- Only suggest this when the user already has groups (check "Group Memberships" context)
 
 ### Archive (remove) an entity
 When the user wants to delete, remove, or archive a product, service, project, cause, or event:

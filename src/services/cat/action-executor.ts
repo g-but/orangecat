@@ -623,11 +623,31 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
   invite_to_organization: async (supabase, userId, _actorId, params) => {
     // group_invitations: group_id (= organization_id), user_id, role, invited_by (inviter's userId)
+    // Accepts either `username` (Cat-friendly) or `user_id` (UUID). Resolves username → user_id.
+    let inviteeId = params.user_id as string | undefined;
+
+    if (!inviteeId && params.username) {
+      const rawUsername = (params.username as string).replace(/^@/, '');
+      const { data: profile, error: profileError } = await supabase
+        .from(DATABASE_TABLES.PROFILES)
+        .select('id')
+        .eq('username', rawUsername)
+        .maybeSingle();
+      if (profileError || !profile) {
+        return { success: false, error: `User @${rawUsername} not found on OrangeCat` };
+      }
+      inviteeId = profile.id as string;
+    }
+
+    if (!inviteeId) {
+      return { success: false, error: 'Provide either username or user_id for the invitee' };
+    }
+
     const { data, error } = await supabase
       .from(DATABASE_TABLES.GROUP_INVITATIONS)
       .insert({
         group_id: params.organization_id,
-        user_id: params.user_id,
+        user_id: inviteeId,
         role: (params.role as string) || 'member',
         invited_by: userId,
       })
@@ -638,7 +658,10 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
       return { success: false, error: error.message };
     }
     const role = (params.role as string) || 'member';
-    return { success: true, data: { ...data, displayMessage: `📨 Invitation sent (role: ${role})` } };
+    const recipientDisplay = params.username
+      ? (params.username as string).startsWith('@') ? params.username : `@${params.username}`
+      : `user ${inviteeId.slice(0, 8)}`;
+    return { success: true, data: { ...data, displayMessage: `📨 Invitation sent to ${recipientDisplay} (role: ${role})` } };
   },
 
   // ---------- CONTEXT ACTIONS ----------
