@@ -96,9 +96,22 @@ export interface SuggestedWalletAction {
   };
 }
 
-/** Union of all action types Cat can suggest */
+/**
+ * An action triggering a Cat executor action (send_payment, set_reminder, etc.)
+ * Embedded as ```exec_action JSON blocks in AI responses.
+ * Confirmation-required actions create a pending action record; the user approves via PendingActionsCard.
+ * Auto-execute actions run immediately server-side.
+ */
+export interface ExecAction {
+  type: 'exec_action';
+  actionId: string;
+  parameters: Record<string, unknown>;
+}
+
+/** Union of all action types Cat can suggest or execute */
 export type CatAction =
   | SuggestedAction
   | UpdateEntityAction
   | PublishEntityAction
-  | SuggestedWalletAction;
+  | SuggestedWalletAction
+  | ExecAction;

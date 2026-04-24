@@ -35,6 +35,9 @@ export function ActionButton({ action, onClick }: ActionButtonProps) {
     );
   }
 
+  // exec_action blocks run server-side; they don't render a button here
+  if (action.type === 'exec_action') { return null; }
+
   // Entity actions (create, update, publish)
   const entityMeta = ENTITY_REGISTRY[action.entityType];
   const Icon = entityMeta?.icon || Plus;

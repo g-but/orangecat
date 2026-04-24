@@ -30,6 +30,64 @@ import {
 import { resolveProvider } from '@/services/cat/provider-resolver';
 import { maybeEnrichWithSearchResults } from '@/services/cat/tool-use';
 import { fetchFullContextForCat, buildFullContextString } from '@/services/ai/document-context';
+import { createActionExecutor } from '@/services/cat';
+import { getUserActorId } from '@/domain/actors';
+import type { ExecAction, CatAction } from '@/types/cat';
+
+// Result of a server-side executor action run during a chat turn
+interface ExecActionResult {
+  actionId: string;
+  status: 'completed' | 'pending_confirmation' | 'failed';
+  data?: unknown;
+  error?: string;
+  pendingActionId?: string;
+}
+
+/**
+ * Execute all exec_action blocks parsed from an AI response.
+ * Actions with requiresConfirmation=true create pending actions in the DB.
+ * Actions without confirmation run immediately.
+ * Results are returned alongside the chat response for the client.
+ */
+async function runExecActions(
+  supabase: AuthenticatedRequest['supabase'],
+  userId: string,
+  actorId: string | null,
+  actions: CatAction[]
+): Promise<ExecActionResult[]> {
+  const execActions = actions.filter((a): a is ExecAction => a.type === 'exec_action');
+  if (execActions.length === 0) { return []; }
+  if (!actorId) { return execActions.map(a => ({ actionId: a.actionId, status: 'failed' as const, error: 'User has no actor record' })); }
+
+  const executor = createActionExecutor(supabase);
+  const results: ExecActionResult[] = [];
+
+  for (const action of execActions) {
+    try {
+      const result = await executor.executeAction(userId, actorId, {
+        actionId: action.actionId,
+        parameters: action.parameters,
+      });
+      results.push({
+        actionId: action.actionId,
+        status: result.status === 'completed' ? 'completed'
+          : result.status === 'pending_confirmation' ? 'pending_confirmation'
+          : 'failed',
+        data: result.data,
+        error: result.error,
+        pendingActionId: result.pendingActionId,
+      });
+    } catch (err) {
+      results.push({
+        actionId: action.actionId,
+        status: 'failed',
+        error: err instanceof Error ? err.message : 'Execution error',
+      });
+    }
+  }
+
+  return results;
+}
 
 const bodySchema = z.object({
   message: z.string().min(1).max(10000),
@@ -67,6 +125,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const resolved = await resolveProvider(supabase, user.id, request.headers, { requestedModel, message });
     if (resolved instanceof Response) {return resolved;}
     const { provider, hasByok, modelToUse, aiService, platformUsage, keyService, userGroqKey } = resolved;
+
+    // Resolve actor ID for exec_action execution
+    const actorId = await getUserActorId(supabase, user.id);
 
     // Build context + history
     const userContext = await fetchFullContextForCat(supabase, user.id);
@@ -109,7 +170,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
               }
               if (chunk.done) {
                 const { actions } = parseActionsFromResponse(fullContent);
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, usage, model: modelToUse, provider, actions: actions.length > 0 ? actions : undefined })}\n\n`));
+                const execResults = await runExecActions(supabase, user.id, actorId, actions);
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, usage, model: modelToUse, provider, actions: actions.length > 0 ? actions : undefined, execResults: execResults.length > 0 ? execResults : undefined })}\n\n`));
                 break;
               }
             }
@@ -149,6 +211,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     }
 
     const { message: cleanedMessage, actions } = parseActionsFromResponse(result.content);
+    const execResults = await runExecActions(supabase, user.id, actorId, actions);
 
     if (conversationId) {
       saveMessages(supabase, conversationId, user.id, [
@@ -161,6 +224,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       apiSuccess({
         message: cleanedMessage,
         actions: actions.length > 0 ? actions : undefined,
+        execResults: execResults.length > 0 ? execResults : undefined,
         modelUsed: result.model,
         provider,
         usage: { inputTokens: result.inputTokens, outputTokens: result.outputTokens, totalTokens: result.totalTokens, apiCostBtc: result.costBtc || 0, isFreeModel: result.isFreeModel, usedByok: result.usedByok },

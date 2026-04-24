@@ -15,6 +15,7 @@ import {
   type UpdateEntityAction,
   type PublishEntityAction,
   type SuggestedWalletAction,
+  type ExecAction,
   type CatAction,
 } from '@/types/cat';
 import { WALLET_CATEGORIES } from '@/types/wallet';
@@ -31,15 +32,15 @@ export interface ParsedResponse {
 
 /**
  * Parse action blocks from AI response.
- * Actions are embedded as ```action JSON blocks in the response content.
- * Supports: create_entity, update_entity, publish_entity, suggest_wallet.
+ * Actions are embedded as ```action or ```exec_action JSON blocks in the response content.
+ * Supports: create_entity, update_entity, publish_entity, suggest_wallet, exec_action.
  * Invalid blocks (bad JSON, unknown types, missing required fields) are silently skipped.
  */
 export function parseActionsFromResponse(content: string): ParsedResponse {
   const actions: CatAction[] = [];
 
-  // Match ```action ... ``` blocks
-  const actionBlockRegex = /```action\s*([\s\S]*?)```/g;
+  // Match ```action ... ``` and ```exec_action ... ``` blocks
+  const actionBlockRegex = /```(?:action|exec_action)\s*([\s\S]*?)```/g;
   let match;
   let cleanedMessage = content;
 
@@ -82,6 +83,14 @@ export function parseActionsFromResponse(content: string): ParsedResponse {
           wallet.prefill.behavior_type = 'general';
         }
         actions.push(wallet);
+      } else if (
+        raw.type === 'exec_action' &&
+        typeof raw.actionId === 'string' &&
+        raw.actionId.length > 0 &&
+        raw.parameters &&
+        typeof raw.parameters === 'object'
+      ) {
+        actions.push(raw as ExecAction);
       }
     } catch {
       // Invalid JSON, skip this block
