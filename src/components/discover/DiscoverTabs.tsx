@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Target, Users, Grid3X3, DollarSign, TrendingUp, Heart, Package, Briefcase, Calendar, Building2 } from 'lucide-react';
+import { Target, Users, Grid3X3, DollarSign, TrendingUp, Heart, Package, Briefcase, Calendar, Building2, Gift } from 'lucide-react';
 
-export type DiscoverTabType = 'all' | 'projects' | 'profiles' | 'loans' | 'investments' | 'causes' | 'events' | 'products' | 'services' | 'groups';
+export type DiscoverTabType = 'all' | 'projects' | 'profiles' | 'loans' | 'investments' | 'causes' | 'events' | 'products' | 'services' | 'groups' | 'wishlists';
 
 interface TabCounts {
   projects: number;
@@ -15,6 +15,7 @@ interface TabCounts {
   products: number;
   services: number;
   groups: number;
+  wishlists: number;
 }
 
 interface DiscoverTabsProps {
@@ -29,6 +30,7 @@ interface DiscoverTabsProps {
   productCount?: number;
   serviceCount?: number;
   groupCount?: number;
+  wishlistCount?: number;
   loading?: boolean;
 }
 
@@ -44,7 +46,7 @@ const tabs: TabConfig[] = [
     id: 'all',
     label: 'All',
     icon: <Grid3X3 className="w-4 h-4" />,
-    getCount: (c) => c.projects + c.profiles + c.loans + c.investments + c.causes + c.events + c.products + c.services + c.groups,
+    getCount: (c) => c.projects + c.profiles + c.loans + c.investments + c.causes + c.events + c.products + c.services + c.groups + c.wishlists,
   },
   {
     id: 'projects',
@@ -95,6 +97,12 @@ const tabs: TabConfig[] = [
     getCount: (c) => c.groups,
   },
   {
+    id: 'wishlists',
+    label: 'Wishlists',
+    icon: <Gift className="w-4 h-4" />,
+    getCount: (c) => c.wishlists,
+  },
+  {
     id: 'profiles',
     label: 'People',
     icon: <Users className="w-4 h-4" />,
@@ -114,6 +122,7 @@ export default function DiscoverTabs({
   productCount = 0,
   serviceCount = 0,
   groupCount = 0,
+  wishlistCount = 0,
   loading = false,
 }: DiscoverTabsProps) {
   const counts: TabCounts = {
@@ -126,6 +135,7 @@ export default function DiscoverTabs({
     products: productCount,
     services: serviceCount,
     groups: groupCount,
+    wishlists: wishlistCount,
   };
 
   return (

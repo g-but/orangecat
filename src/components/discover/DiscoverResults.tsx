@@ -10,7 +10,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { ArrowUpDown, Loader2, Target, Users, DollarSign, TrendingUp } from 'lucide-react';
+import { ArrowUpDown, Loader2, Target, Users, DollarSign, TrendingUp, Gift } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ProjectCard } from '@/components/entity/variants/ProjectCard';
 import ProfileCard from '@/components/ui/ProfileCard';
@@ -44,6 +44,7 @@ interface DiscoverResultsProps {
   products?: GenericPublicEntity[];
   services?: GenericPublicEntity[];
   groups?: GenericPublicEntity[];
+  wishlists?: GenericPublicEntity[];
   totalResults: number;
   loading: boolean;
   hasMore: boolean;
@@ -64,6 +65,7 @@ export default function DiscoverResults({
   products = [],
   services = [],
   groups = [],
+  wishlists = [],
   totalResults,
   loading,
   hasMore,
@@ -124,7 +126,8 @@ export default function DiscoverResults({
     events.length +
     products.length +
     services.length +
-    groups.length;
+    groups.length +
+    wishlists.length;
 
   // Results Header
   const resultsHeader = (
@@ -278,7 +281,7 @@ export default function DiscoverResults({
   if (activeTab === 'all') {
     const sectionLengths = [
       projects.length, profiles.length, loans.length, investments.length,
-      causes.length, events.length, products.length, services.length, groups.length,
+      causes.length, events.length, products.length, services.length, groups.length, wishlists.length,
     ];
     const hasMultipleSections = sectionLengths.filter(n => n > 0).length > 1;
     return (
@@ -324,6 +327,11 @@ export default function DiscoverResults({
             <GenericGrid items={groups.slice(0, 6)} entityType="group" makeHref={e => ROUTES.GROUPS.VIEW(e.slug ?? e.id)} />
           </ResultsSection>
         )}
+        {wishlists.length > 0 && (
+          <ResultsSection title="Wishlists" count={wishlists.length} icon={<Gift className="w-5 h-5" />} onViewAll={() => onTabChange('wishlists')} showViewAll={hasMultipleSections} viewAllLabel="View All Wishlists">
+            <GenericGrid items={wishlists.slice(0, 6)} entityType="wishlist" makeHref={e => ROUTES.WISHLISTS.VIEW(e.id)} />
+          </ResultsSection>
+        )}
         {profiles.length > 0 && (
           <ResultsSection title="People" count={profiles.length} icon={<Users className="w-5 h-5" />} onViewAll={() => onTabChange('profiles')} showViewAll={hasMultipleSections} viewAllLabel="View All People">
             <ResultsGrid items={profiles.slice(0, 6)} type="profile" />
@@ -350,6 +358,9 @@ export default function DiscoverResults({
   }
   if (activeTab === 'groups') {
     return (<>{resultsHeader}<GenericGrid items={groups} entityType="group" makeHref={e => ROUTES.GROUPS.VIEW(e.slug ?? e.id)} />{hasMore && <LoadMoreButton label="Load More Groups" />}</>);
+  }
+  if (activeTab === 'wishlists') {
+    return (<>{resultsHeader}<GenericGrid items={wishlists} entityType="wishlist" makeHref={e => ROUTES.WISHLISTS.VIEW(e.id)} />{hasMore && <LoadMoreButton label="Load More Wishlists" />}</>);
   }
   if (activeTab === 'projects') {
     return (<>{resultsHeader}<ResultsGrid items={projects} type="project" />{hasMore && <LoadMoreButton label="Load More Projects" />}</>);

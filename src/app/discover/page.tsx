@@ -34,6 +34,7 @@ export default function DiscoverPage() {
     products,
     services,
     groups,
+    wishlists,
     investmentsLoading,
     genericLoading,
     totalInvestmentsCount,
@@ -140,6 +141,7 @@ export default function DiscoverPage() {
               productCount={products.length}
               serviceCount={services.length}
               groupCount={groups.length}
+              wishlistCount={wishlists.length}
               loading={loading || loansLoading || investmentsLoading || genericLoading}
             />
 
@@ -206,7 +208,8 @@ export default function DiscoverPage() {
                   products={products}
                   services={services}
                   groups={groups}
-                  totalResults={totalResults + loans.length + investments.length + causes.length + events.length + products.length + services.length + groups.length}
+                  wishlists={wishlists}
+                  totalResults={totalResults + loans.length + investments.length + causes.length + events.length + products.length + services.length + groups.length + wishlists.length}
                   loading={loading || loansLoading || investmentsLoading || genericLoading}
                   hasMore={hasMore}
                   isLoadingMore={isLoadingMore}
