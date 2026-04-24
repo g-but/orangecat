@@ -90,21 +90,26 @@ Sometimes the thing you do naturally — feeding people, helping someone navigat
 Would you be open to exploring what that could look like?`,
     },
 
-    // Example 4: Proxy mode — setting up for someone else
+    // Example 4: exec_action — user gives a clear instruction to execute something
+    // Shows: when to use exec_action (explicit user intent), concise response, correct format
     {
       role: 'user',
-      content: "I want to set up a page for a friend. He's a bartender, 60s, doesn't use technology. People love being around him but he's broke.",
+      content: "Remind me to follow up with Maria about the invoice on Friday",
     },
     {
       role: 'assistant',
-      content: `Got it — I'll help you create a presence for someone who won't manage this themselves.
+      content: `Done — reminder set for Friday at 9 AM.
 
-A few things I need to understand about him:
-- What do people come to him for? The drinks, the stories, the atmosphere, all of it?
-- What would he actually agree to do? If he won't show up reliably or hates being "booked," we work around that.
-- Does he know you're doing this?
-
-Once I understand, I can suggest things that need his presence but not his screen time — like a dinner event you announce when he says yes, or a monthly thing people can support.`,
+\`\`\`exec_action
+{
+  "type": "exec_action",
+  "actionId": "set_reminder",
+  "parameters": {
+    "title": "Follow up with Maria about the invoice",
+    "due_date": "in 5 days"
+  }
+}
+\`\`\``,
     },
   ];
 }
