@@ -114,6 +114,16 @@ export interface SaleRecord {
   created_at: string;
 }
 
+/** A group the user is a member of (not necessarily the creator) */
+export interface GroupMembershipSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  label: string;
+  role: 'founder' | 'admin' | 'member';
+  visibility: 'public' | 'members_only' | 'private';
+}
+
 /** An upcoming booking where the user is the service/asset provider */
 export interface BookingRecord {
   starts_at: string;
@@ -136,6 +146,7 @@ export interface FullUserContext {
   wallets: WalletSummary[];
   conversations: ConversationSummary[];
   inboundActivity: InboundActivity;
+  memberGroups: GroupMembershipSummary[];
   paymentCapabilities: PaymentCapabilities;
   stats: {
     totalProducts: number;
@@ -952,13 +963,68 @@ export async function fetchInboundActivityForCat(
 }
 
 /**
+ * Fetch groups the user is a member of (not just groups they created).
+ * This lets Cat answer "what groups am I in?" accurately.
+ */
+export async function fetchGroupMembershipsForCat(
+  supabase: AnySupabaseClient,
+  userId: string
+): Promise<GroupMembershipSummary[]> {
+  try {
+    // Get membership rows for this user
+    const { data: memberships, error: memberError } = await supabase
+      .from(DATABASE_TABLES.GROUP_MEMBERS)
+      .select('group_id, role')
+      .eq('user_id', userId)
+      .limit(30);
+
+    if (memberError || !memberships || memberships.length === 0) {
+      if (memberError) {
+        logger.warn('Failed to fetch group memberships for cat', { error: memberError.message }, 'DocumentContext');
+      }
+      return [];
+    }
+
+    const groupIds = memberships.map((m: { group_id: string }) => m.group_id);
+
+    // Fetch the group details in one query
+    const { data: groups, error: groupsError } = await supabase
+      .from(DATABASE_TABLES.GROUPS)
+      .select('id, name, description, label, visibility')
+      .in('id', groupIds);
+
+    if (groupsError || !groups) {
+      logger.warn('Failed to fetch groups for cat membership', { error: groupsError?.message }, 'DocumentContext');
+      return [];
+    }
+
+    // Build role map: group_id → role
+    const roleMap = new Map(
+      (memberships as { group_id: string; role: 'founder' | 'admin' | 'member' }[]).map(m => [m.group_id, m.role])
+    );
+
+    return (groups as { id: string; name: string; description: string | null; label: string; visibility: 'public' | 'members_only' | 'private' }[]).map(g => ({
+      id: g.id,
+      name: g.name,
+      description: g.description,
+      label: g.label,
+      role: roleMap.get(g.id) ?? 'member',
+      visibility: g.visibility,
+    }));
+  } catch (error) {
+    logger.error('Exception fetching group memberships for cat', error, 'DocumentContext');
+    return [];
+  }
+}
+
+/**
  * Fetch all context for My Cat
  */
 export async function fetchFullContextForCat(
   supabase: AnySupabaseClient,
   userId: string
 ): Promise<FullUserContext> {
-  const [profile, documents, { entities, stats }, tasks, wallets, conversations, inboundActivity] = await Promise.all([
+  const [profile, documents, { entities, stats }, tasks, wallets, conversations, inboundActivity, memberGroups] = await Promise.all([
     fetchProfileForCat(supabase, userId),
     fetchDocumentsForCat(supabase, userId),
     fetchEntitiesForCat(supabase, userId),
@@ -966,6 +1032,7 @@ export async function fetchFullContextForCat(
     fetchWalletsForCat(supabase, userId),
     fetchConversationsForCat(supabase, userId),
     fetchInboundActivityForCat(supabase, userId),
+    fetchGroupMembershipsForCat(supabase, userId),
   ]);
 
   const urgentTasks = tasks.filter(
@@ -986,6 +1053,7 @@ export async function fetchFullContextForCat(
     wallets,
     conversations,
     inboundActivity,
+    memberGroups,
     paymentCapabilities,
     stats: {
       ...stats,
@@ -1120,6 +1188,25 @@ export function buildFullContextString(context: FullUserContext): string {
         `## User's OrangeCat Entities\n\nThe user has created the following on OrangeCat:\n\n${entityParts.join('\n\n')}`
       );
     }
+  }
+
+  // Group memberships section — groups the user belongs to (not just groups they created)
+  if (context.memberGroups.length > 0) {
+    const groupLines = context.memberGroups.map(g => {
+      const parts = [`- **${g.name}**`];
+      if (g.label) {
+        parts.push(` [${g.label}]`);
+      }
+      parts.push(` — role: ${g.role}`);
+      if (g.visibility !== 'public') {
+        parts.push(` (${g.visibility})`);
+      }
+      if (g.description) {
+        parts.push(`: ${g.description.substring(0, 200)}`);
+      }
+      return parts.join('');
+    });
+    sections.push(`## Group Memberships\nThe user is a member of the following groups:\n${groupLines.join('\n')}`);
   }
 
   // Tasks section
