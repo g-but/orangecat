@@ -49,6 +49,7 @@ export const ROUTE_CONTEXTS = {
     '/investments',
     '/groups',
     '/ai-assistants',
+    '/wishlists',
     '/technology',
     '/bitcoin-wallet-guide',
     '/study-bitcoin',
@@ -259,6 +260,9 @@ export const ROUTES = {
   },
   EVENTS: {
     VIEW: (id: string) => `/events/${id}`,
+  },
+  WISHLISTS: {
+    VIEW: (id: string) => `/wishlists/${id}`,
   },
   GROUPS: {
     VIEW: (slug: string) => `/groups/${slug}`,
