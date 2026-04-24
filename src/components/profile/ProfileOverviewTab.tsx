@@ -6,6 +6,7 @@ import { User, Globe, Calendar, Mail, Phone } from 'lucide-react';
 import { SocialLinksDisplay } from './SocialLinksDisplay';
 import { SocialLink } from '@/types/social';
 import { ROUTES } from '@/config/routes';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 interface ProfileOverviewTabProps {
   profile: ScalableProfile;
@@ -82,7 +83,7 @@ export default function ProfileOverviewTab({
                   {stats.projectCount}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-600 mt-1">
-                  {stats.projectCount === 1 ? 'Project' : 'Projects'}
+                  {stats.projectCount === 1 ? ENTITY_REGISTRY.project.name : ENTITY_REGISTRY.project.namePlural}
                 </div>
               </div>
             </CardContent>

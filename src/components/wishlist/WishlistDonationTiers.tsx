@@ -19,6 +19,7 @@ import { logger } from '@/utils/logger';
 import BitcoinPaymentModal from '@/components/bitcoin/BitcoinPaymentModal';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { convert, formatCurrency } from '@/services/currency';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 interface WishlistItem {
   id: string;
@@ -38,7 +39,7 @@ interface WishlistDonationTiersProps {
 export function WishlistDonationTiers({
   userId,
   projectId,
-  projectTitle = 'Project',
+  projectTitle = ENTITY_REGISTRY.project.name,
   recipientAddress,
 }: WishlistDonationTiersProps) {
   const [items, setItems] = useState<WishlistItem[]>([]);

@@ -12,6 +12,7 @@ import {
   Globe,
   ArrowRight,
 } from 'lucide-react';
+import { ENTITY_REGISTRY, ENTITY_TYPES as ENTITY_TYPE_KEYS } from '@/config/entity-registry';
 
 export const metadata: Metadata = {
   title: 'Documentation | OrangeCat',
@@ -19,22 +20,9 @@ export const metadata: Metadata = {
     'Platform documentation for OrangeCat — how the AI economic agent works, entity types, payments, and security.',
 };
 
-const ENTITY_TYPES = [
-  { name: 'Product', description: 'Physical or digital goods for sale' },
-  { name: 'Service', description: 'Professional services or consultations' },
-  { name: 'Project', description: 'Milestone-based funding with accountability' },
-  { name: 'Cause', description: 'Outright giving — no strings attached' },
-  { name: 'Research', description: 'Decentralized science funding and collaboration' },
-  { name: 'Wishlist', description: 'Gift registries and want lists' },
-  { name: 'Loan', description: 'Peer-to-peer lending with custom terms' },
-  { name: 'Investment', description: 'Equity or revenue-share investing' },
-  { name: 'Asset', description: 'Real estate, collateral, and rentable assets' },
-  { name: 'Event', description: 'Time-bound coordination and ticketing' },
-  { name: 'Group', description: 'Organizations with shared treasury and governance' },
-  { name: 'Circle', description: 'Lighter-weight communities and interest groups' },
-  { name: 'AI Assistant', description: 'Autonomous AI economic actors' },
-  { name: 'Document', description: 'Structured context for the Cat' },
-];
+const ENTITY_TYPES = ENTITY_TYPE_KEYS
+  .filter(t => t !== 'wallet') // wallet is infrastructure, not a user-listable entity type
+  .map(t => ({ name: ENTITY_REGISTRY[t].name, description: ENTITY_REGISTRY[t].description }));
 
 export default function DocsPage() {
   return (

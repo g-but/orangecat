@@ -26,6 +26,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { WishlistDonationTiers } from '@/components/wishlist/WishlistDonationTiers';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { convert, formatCurrency } from '@/services/currency';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 interface ProjectDonationSectionProps {
   projectId: string;
@@ -48,7 +49,7 @@ export function ProjectDonationSection({
   ownerId,
   bitcoinAddress,
   lightningAddress,
-  projectTitle = 'Project',
+  projectTitle = ENTITY_REGISTRY.project.name,
   isOwner = false,
 }: ProjectDonationSectionProps) {
   const { user } = useAuth();

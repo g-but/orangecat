@@ -10,8 +10,14 @@ import { AI_MODEL_REGISTRY } from '@/config/ai-models';
 import { renderChatMarkdown } from '@/utils/markdown';
 import { ActionButton } from './ActionButton';
 import type { Message, CatAction, ExecActionResult } from '../types';
+import { ENTITY_REGISTRY, ENTITY_TYPES } from '@/config/entity-registry';
 
-// Human-readable labels for exec_action IDs — shown when no displayMessage is available
+// Human-readable labels for exec_action IDs — shown when no displayMessage is available.
+// Entity-creation labels come from ENTITY_REGISTRY[type].name (SSOT); non-entity labels stay local.
+const ENTITY_CREATE_LABELS = Object.fromEntries(
+  ENTITY_TYPES.filter(t => t !== 'wallet').map(t => [`create_${t}`, ENTITY_REGISTRY[t].name])
+);
+
 const ACTION_LABELS: Record<string, string> = {
   // Productivity
   set_reminder: 'Reminder',
@@ -29,18 +35,9 @@ const ACTION_LABELS: Record<string, string> = {
   // Context
   add_context: 'Context saved',
   update_profile: 'Profile',
-  // Entities
-  create_product: 'Product',
-  create_service: 'Service',
-  create_project: 'Project',
-  create_cause: 'Cause',
-  create_event: 'Event',
-  create_asset: 'Asset',
-  create_loan: 'Loan',
-  create_investment: 'Investment',
-  create_research: 'Research',
-  create_wishlist: 'Wishlist',
-  create_ai_assistant: 'AI assistant',
+  // Entities (derived from ENTITY_REGISTRY — SSOT)
+  ...ENTITY_CREATE_LABELS,
+  // Entity creation for concepts not in the registry but handled by the executor
   create_organization: 'Organization',
   // Entity management
   update_entity: 'Entity',
