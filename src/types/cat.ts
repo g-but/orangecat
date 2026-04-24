@@ -123,6 +123,8 @@ export interface ExecActionResult {
   actionId: string;
   status: 'completed' | 'pending_confirmation' | 'failed';
   data?: unknown;
+  /** Human-readable result from the handler, e.g. "💰 Wallet created: Vacation Fund" */
+  displayMessage?: string;
   error?: string;
   pendingActionId?: string;
 }

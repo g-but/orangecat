@@ -11,39 +11,61 @@ import { renderChatMarkdown } from '@/utils/markdown';
 import { ActionButton } from './ActionButton';
 import type { Message, CatAction, ExecActionResult } from '../types';
 
-// Human-readable labels for exec_action IDs
+// Human-readable labels for exec_action IDs — shown when no displayMessage is available
 const ACTION_LABELS: Record<string, string> = {
+  // Productivity
   set_reminder: 'Reminder',
   create_task: 'Task',
+  complete_task: 'Task',
+  update_task: 'Task',
+  // Communication
   post_to_timeline: 'Timeline post',
   send_message: 'Message',
   reply_to_message: 'Reply',
+  // Payments & wallets
   send_payment: 'Payment',
   fund_project: 'Contribution',
+  add_wallet: 'Wallet',
+  // Context
   add_context: 'Context saved',
+  update_profile: 'Profile',
+  // Entities
   create_product: 'Product',
   create_service: 'Service',
   create_project: 'Project',
   create_cause: 'Cause',
   create_event: 'Event',
+  create_asset: 'Asset',
+  create_loan: 'Loan',
+  create_investment: 'Investment',
+  create_research: 'Research',
+  create_wishlist: 'Wishlist',
+  create_ai_assistant: 'AI assistant',
   create_organization: 'Organization',
+  // Entity management
+  update_entity: 'Entity',
+  publish_entity: 'Entity',
+  archive_entity: 'Entity',
+  invite_to_organization: 'Invitation',
 };
 
 function ExecResultChip({ result }: { result: ExecActionResult }) {
   const noun = ACTION_LABELS[result.actionId] ?? result.actionId;
 
   if (result.status === 'completed') {
+    // Prefer the handler's displayMessage; fall back to generic "noun done"
+    const label = result.displayMessage ?? `${noun} done`;
     return (
-      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+      <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-green-50 text-green-700 border border-green-100">
         <Check className="h-3 w-3 flex-shrink-0" />
-        {noun} done
+        {label}
       </span>
     );
   }
 
   if (result.status === 'pending_confirmation') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+      <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-100">
         <Clock className="h-3 w-3 flex-shrink-0" />
         {noun} — confirm below
       </span>
@@ -53,7 +75,7 @@ function ExecResultChip({ result }: { result: ExecActionResult }) {
   // failed
   return (
     <span
-      className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-100"
+      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-red-50 text-red-700 border border-red-100"
       title={result.error}
     >
       <X className="h-3 w-3 flex-shrink-0" />

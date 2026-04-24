@@ -56,17 +56,41 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 };
 
 const ACTION_ICONS: Record<string, React.ElementType> = {
+  // Entity creation
   create_product: Package,
   create_service: Briefcase,
   create_project: Rocket,
   create_cause: Heart,
   create_event: Calendar,
+  create_asset: FileText,
+  create_loan: FileText,
+  create_investment: Rocket,
+  create_research: FileText,
+  create_wishlist: Heart,
+  create_ai_assistant: FileText,
+  // Entity management
+  update_entity: FileText,
+  publish_entity: Rocket,
+  archive_entity: FileText,
+  // Communication
   post_to_timeline: MessageSquare,
   send_message: MessageSquare,
+  reply_to_message: MessageSquare,
+  // Payments
   send_payment: Wallet,
   fund_project: Rocket,
+  add_wallet: Wallet,
+  // Productivity
+  set_reminder: Clock,
+  create_task: FileText,
+  complete_task: FileText,
+  update_task: FileText,
+  // Organization
   create_organization: Users,
+  invite_to_organization: Users,
+  // Context
   add_context: FileText,
+  update_profile: Users,
 };
 
 function formatTimeLeft(expiresAt: string): string {

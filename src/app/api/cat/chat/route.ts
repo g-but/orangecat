@@ -59,12 +59,18 @@ async function runExecActions(
         actionId: action.actionId,
         parameters: action.parameters,
       });
+      // Extract displayMessage from handler data (handlers attach it as data.displayMessage)
+      const handlerData = result.data as Record<string, unknown> | undefined;
+      const displayMessage = typeof handlerData?.displayMessage === 'string'
+        ? handlerData.displayMessage
+        : undefined;
       results.push({
         actionId: action.actionId,
         status: result.status === 'completed' ? 'completed'
           : result.status === 'pending_confirmation' ? 'pending_confirmation'
           : 'failed',
         data: result.data,
+        displayMessage,
         error: result.error,
         pendingActionId: result.pendingActionId,
       });
