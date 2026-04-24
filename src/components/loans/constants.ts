@@ -9,9 +9,9 @@
  */
 
 import { DEFAULT_CURRENCY } from '@/config/currencies';
-import type { LoanFormData } from './validation';
+import type { LoanDialogFormData } from './validation';
 
-export const DEFAULT_LOAN_FORM_VALUES: LoanFormData = {
+export const DEFAULT_LOAN_FORM_VALUES: LoanDialogFormData = {
   title: '',
   description: '',
   original_amount: 0,

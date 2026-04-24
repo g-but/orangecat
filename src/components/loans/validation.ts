@@ -36,6 +36,6 @@ export const loanSchema = z
     path: ['remaining_balance'],
   });
 
-export type LoanFormData = z.infer<typeof loanSchema>;
+export type LoanDialogFormData = z.infer<typeof loanSchema>;
 
 

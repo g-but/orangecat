@@ -30,11 +30,11 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import type { Control } from 'react-hook-form';
-import type { LoanFormData } from '../validation';
+import type { LoanDialogFormData } from '../validation';
 import { CONTACT_METHODS } from '../constants';
 
 interface PreferencesSectionProps {
-  control: Control<LoanFormData>;
+  control: Control<LoanDialogFormData>;
 }
 
 export function PreferencesSection({ control }: PreferencesSectionProps) {

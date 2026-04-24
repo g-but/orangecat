@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 import { LoanTemplates, type LoanTemplateData } from './LoanTemplates';
 import { CreateAssetDialog } from '../assets/CreateAssetDialog';
 import { DEFAULT_CURRENCY } from '@/config/currencies';
-import { loanSchema, type LoanFormData } from './validation';
+import { loanSchema, type LoanDialogFormData } from './validation';
 import { DEFAULT_LOAN_FORM_VALUES } from './constants';
 import { useLoanCategories } from './hooks/useLoanCategories';
 import { useAssets } from './hooks/useAssets';
@@ -55,8 +55,8 @@ export function CreateLoanDialog({
   } = useLoanCategories(open);
   const { assets, loading: assetsLoading, error: assetsError, refreshAssets } = useAssets(open);
 
-  const form = useForm<LoanFormData>({
-    resolver: zodResolver(loanSchema) as Resolver<LoanFormData>,
+  const form = useForm<LoanDialogFormData>({
+    resolver: zodResolver(loanSchema) as Resolver<LoanDialogFormData>,
     defaultValues: DEFAULT_LOAN_FORM_VALUES,
   });
 
@@ -98,7 +98,7 @@ export function CreateLoanDialog({
     }
   };
 
-  const onSubmit = async (data: LoanFormData) => {
+  const onSubmit = async (data: LoanDialogFormData) => {
     try {
       setLoading(true);
 

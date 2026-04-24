@@ -29,11 +29,11 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import type { Control } from 'react-hook-form';
-import type { LoanFormData } from '../validation';
+import type { LoanDialogFormData } from '../validation';
 import type { LoanCategory } from '@/types/loans';
 
 interface BasicInfoSectionProps {
-  control: Control<LoanFormData>;
+  control: Control<LoanDialogFormData>;
   categories: LoanCategory[];
   categoriesLoading: boolean;
   categoriesError: string | null;

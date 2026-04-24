@@ -22,10 +22,10 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Building } from 'lucide-react';
 import type { Control } from 'react-hook-form';
-import type { LoanFormData } from '../validation';
+import type { LoanDialogFormData } from '../validation';
 
 interface LenderInfoSectionProps {
-  control: Control<LoanFormData>;
+  control: Control<LoanDialogFormData>;
 }
 
 export function LenderInfoSection({ control }: LenderInfoSectionProps) {
