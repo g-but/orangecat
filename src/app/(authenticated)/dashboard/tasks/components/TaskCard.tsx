@@ -5,7 +5,7 @@ import {
   getTaskStatusInfo,
   getPriorityInfo,
 } from '@/config/tasks';
-import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Bell, CheckCircle, Clock } from 'lucide-react';
 import type { Task } from '@/lib/schemas/tasks';
 
 interface TaskWithRelations extends Task {
@@ -28,18 +28,37 @@ interface TaskCardProps {
   onClick: () => void;
 }
 
+function formatDueDate(dueDate: string): string {
+  const date = new Date(dueDate);
+  const now = new Date();
+  const diffMs = date.getTime() - now.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+
+  if (diffMs < 0) return 'Overdue';
+  if (diffHours < 1) return `${Math.round(diffMs / 60000)} min`;
+  if (diffHours < 24) return `${Math.round(diffHours)}h`;
+  if (diffHours < 48) return 'Tomorrow';
+  return date.toLocaleDateString('en-CH', { month: 'short', day: 'numeric' });
+}
+
 export default function TaskCard({ task, onComplete, onFlagAttention, onClick }: TaskCardProps) {
   const statusInfo = getTaskStatusInfo(task.current_status);
   const priorityInfo = getPriorityInfo(task.priority);
+  const isOverdue = task.due_date && new Date(task.due_date) < new Date();
 
   return (
     <div
-      className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+      className={`bg-white rounded-xl border p-4 hover:shadow-md transition-shadow cursor-pointer ${
+        isOverdue ? 'border-red-200 bg-red-50/30' : 'border-gray-200'
+      }`}
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
+            {task.is_reminder && (
+              <Bell className="h-3.5 w-3.5 text-tiffany flex-shrink-0" aria-label="Reminder" />
+            )}
             <h3 className="text-base font-semibold text-gray-900 truncate">{task.title}</h3>
             <span
               className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
@@ -73,6 +92,15 @@ export default function TaskCard({ task, onComplete, onFlagAttention, onClick }:
               <>
                 <span>&bull;</span>
                 <span>~{task.estimated_minutes} min</span>
+              </>
+            )}
+            {task.due_date && (
+              <>
+                <span>&bull;</span>
+                <span className={`flex items-center gap-1 ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+                  <Clock className="h-3 w-3" />
+                  {formatDueDate(task.due_date)}
+                </span>
               </>
             )}
           </div>

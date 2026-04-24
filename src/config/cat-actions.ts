@@ -755,7 +755,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Set a reminder for the meeting next week',
       'Notify me when funding reaches 50%',
     ],
-    enabled: false, // needs reminder storage system
+    enabled: true,
   },
 };
 

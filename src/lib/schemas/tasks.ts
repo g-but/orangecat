@@ -225,6 +225,10 @@ export interface Task {
   is_archived: boolean;
   created_at: string;
   updated_at: string;
+  /** ISO timestamp for when this task/reminder is due */
+  due_date: string | null;
+  /** True when this task was created by My Cat as a reminder */
+  is_reminder: boolean;
 }
 
 /**

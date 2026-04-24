@@ -55,6 +55,65 @@ type ActionHandler = (
   params: Record<string, unknown>
 ) => Promise<{ success: boolean; data?: unknown; error?: string }>;
 
+/**
+ * Parses natural-language reminder time expressions into ISO timestamps.
+ * Returns an ISO string on success, or null if the expression cannot be parsed.
+ *
+ * Supports:
+ *   - Relative: "in 30 minutes", "in 2 hours", "in 3 days"
+ *   - Named: "tomorrow", "next week", "next month"
+ *   - ISO/date strings: passed through as-is if parseable
+ */
+export function parseReminderDate(when: string): string | null {
+  if (!when) return null;
+  const now = new Date();
+  const lower = when.trim().toLowerCase();
+
+  // "in N unit" pattern
+  const inMatch = lower.match(/^in\s+(\d+)\s+(minute|minutes|hour|hours|day|days|week|weeks|month|months)$/);
+  if (inMatch) {
+    const n = parseInt(inMatch[1], 10);
+    const unit = inMatch[2];
+    const result = new Date(now);
+    if (unit.startsWith('minute')) result.setMinutes(result.getMinutes() + n);
+    else if (unit.startsWith('hour')) result.setHours(result.getHours() + n);
+    else if (unit.startsWith('day')) result.setDate(result.getDate() + n);
+    else if (unit.startsWith('week')) result.setDate(result.getDate() + n * 7);
+    else if (unit.startsWith('month')) result.setMonth(result.getMonth() + n);
+    return result.toISOString();
+  }
+
+  // Named shortcuts
+  if (lower === 'tomorrow') {
+    const result = new Date(now);
+    result.setDate(result.getDate() + 1);
+    result.setHours(9, 0, 0, 0); // 9 AM next day
+    return result.toISOString();
+  }
+  if (lower === 'next week') {
+    const result = new Date(now);
+    result.setDate(result.getDate() + 7);
+    result.setHours(9, 0, 0, 0);
+    return result.toISOString();
+  }
+  if (lower === 'next month') {
+    const result = new Date(now);
+    result.setMonth(result.getMonth() + 1);
+    result.setDate(1);
+    result.setHours(9, 0, 0, 0);
+    return result.toISOString();
+  }
+
+  // Try parsing as a date string directly
+  const parsed = new Date(when);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString();
+  }
+
+  // Couldn't parse — store null, the reminder will be "timeless"
+  return null;
+}
+
 // Registry of action handlers
 const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   // ---------- ENTITY ACTIONS ----------
@@ -483,6 +542,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
         task_type: 'one_time',
         category: 'other',
         current_status: 'idle',
+        due_date: (params.due_date as string | null) || null,
       })
       .select()
       .single();
@@ -491,6 +551,47 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
       return { success: false, error: error.message };
     }
     return { success: true, data };
+  },
+
+  set_reminder: async (supabase, userId, _actorId, params) => {
+    const message = params.message as string;
+    const when = params.when as string;
+
+    // Parse natural-language "when" into an ISO timestamp.
+    // Supports: "in N minutes/hours/days", "tomorrow", "next week", specific ISO strings.
+    const dueDate = parseReminderDate(when);
+
+    const { data, error } = await supabase
+      .from(DATABASE_TABLES.TASKS)
+      .insert({
+        created_by: userId,
+        title: message,
+        description: `Reminder set by My Cat\nWhen: ${when}`,
+        priority: 'normal',
+        task_type: 'one_time',
+        category: 'other',
+        current_status: 'idle',
+        is_reminder: true,
+        due_date: dueDate,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    const dueDateDisplay = dueDate
+      ? new Date(dueDate).toLocaleString('en-CH', { dateStyle: 'medium', timeStyle: 'short' })
+      : when;
+
+    return {
+      success: true,
+      data: {
+        ...data,
+        displayMessage: `Reminder set for ${dueDateDisplay}: "${message}"`,
+      },
+    };
   },
 
   create_wishlist: async (supabase, _userId, actorId, params) => {
@@ -1022,6 +1123,8 @@ export class CatActionExecutor {
         const due = parameters.due_date ? ` due ${parameters.due_date}` : '';
         return `Create task: "${parameters.title}"${priority}${due}`;
       }
+      case 'set_reminder':
+        return `Set reminder: "${parameters.message}" — ${parameters.when}`;
       case 'create_organization':
         return `Create organization "${parameters.name}"`;
       default:
