@@ -59,12 +59,12 @@ const PLATFORM_TOOL_DEFINITION = [
  */
 export async function maybeEnrichWithSearchResults(
   supabase: AnySupabaseClient,
-  messages: any[],
+  messages: Record<string, unknown>[],
   userMessage: string,
   provider: 'groq' | 'openrouter',
   groqKey: string | null,
   modelToUse: string
-): Promise<any[]> {
+): Promise<Record<string, unknown>[]> {
   if (provider !== 'groq') {return messages;}
 
   const mightNeedSearch = SEARCH_KEYWORDS.some(kw => userMessage.toLowerCase().includes(kw));

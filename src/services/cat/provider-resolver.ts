@@ -6,8 +6,6 @@
  * ready-to-use AI service pair with all metadata the route needs.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { createApiKeyService } from '@/services/ai/api-key-service';
 import {
   createOpenRouterService,
@@ -26,6 +24,7 @@ import {
 import { createAutoRouter } from '@/services/ai/auto-router';
 import { OPENROUTER_KEY_HEADER } from '@/config/http-headers';
 import { ROUTES } from '@/config/routes';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 const GROQ_KEY_HEADER = 'x-groq-api-key';
 
@@ -35,11 +34,14 @@ export type AIProvider = 'groq' | 'openrouter';
 export interface AiService {
   streamChatCompletion(opts: {
     model: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     messages: any[];
     temperature: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }): AsyncIterable<{ content?: string; usage?: any; done?: boolean }>;
   chatCompletion(opts: {
     model: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     messages: any[];
     temperature: number;
   }): Promise<{
@@ -69,7 +71,7 @@ export interface ResolvedProvider {
  * Returns `ResolvedProvider` on success, or a `Response` to return directly on failure.
  */
 export async function resolveProvider(
-  supabase: any,
+  supabase: AnySupabaseClient,
   userId: string,
   requestHeaders: Headers,
   opts: { requestedModel?: string; message: string }

@@ -13,6 +13,7 @@ import { apiBadRequest, apiUnauthorized } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import type { User } from '@supabase/supabase-js';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 /**
  * Validation result type for API validators
@@ -191,8 +192,7 @@ export function validateBitcoinAddressParam(
  * @returns Boolean indicating ownership
  */
 export async function validateEntityOwnership(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any,
+  supabase: AnySupabaseClient,
   userId: string,
   entityType: 'profile' | 'project',
   entityId: string

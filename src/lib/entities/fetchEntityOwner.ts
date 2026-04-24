@@ -1,4 +1,5 @@
 import { DATABASE_TABLES } from '@/config/database-tables';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 export interface EntityOwner {
   id: string; // actor or profile ID (for wallet lookup)
@@ -13,8 +14,7 @@ export interface EntityOwner {
  * Handles both actor_id (actors table) and user_id/created_by (profiles table).
  */
 export async function fetchEntityOwner(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any,
+  supabase: AnySupabaseClient,
   entity: { actor_id?: string | null; user_id?: string | null; created_by?: string | null }
 ): Promise<EntityOwner | null> {
   // Try actors table if actor_id is present — join profiles for user actors
@@ -28,8 +28,8 @@ export async function fetchEntityOwner(
       .eq('id', entity.actor_id)
       .maybeSingle();
     if (actorData) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const actor = actorData as any;
+      type ActorRow = { id: string; user_id: string | null; profiles?: { username: string | null; name: string | null; avatar_url: string | null } };
+      const actor = actorData as unknown as ActorRow;
       const profile = actor.profiles;
       return {
         id: actor.id,

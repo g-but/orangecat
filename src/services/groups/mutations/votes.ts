@@ -4,6 +4,7 @@ import { STATUS } from '@/config/database-constants';
 import { TABLES } from '../constants';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
 import { getProposal, getProposalVotes } from '../queries/proposals';
+import type { ProposalVote } from '../queries/proposals';
 import { executeProposalAction } from '../execution';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
@@ -99,15 +100,11 @@ export async function checkAndResolveProposal(
     const votes = votesResult.votes;
 
     const yesVotes = votes
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .filter((v: any) => v.vote === 'yes')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .reduce((sum: number, v: any) => sum + Number(v.voting_power || 1), 0);
+      .filter((v: ProposalVote) => v.vote === 'yes')
+      .reduce((sum: number, v: ProposalVote) => sum + Number(v.voting_power || 1), 0);
     const noVotes = votes
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .filter((v: any) => v.vote === 'no')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .reduce((sum: number, v: any) => sum + Number(v.voting_power || 1), 0);
+      .filter((v: ProposalVote) => v.vote === 'no')
+      .reduce((sum: number, v: ProposalVote) => sum + Number(v.voting_power || 1), 0);
     const totalVotedPower = yesVotes + noVotes;
 
     const yesPercentage = totalVotedPower > 0 ? (yesVotes / totalVotedPower) * 100 : 0;
