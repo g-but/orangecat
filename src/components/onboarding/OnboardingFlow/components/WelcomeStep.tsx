@@ -8,7 +8,6 @@
 
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
 import { Bitcoin, Eye, Users, Cat, ArrowRight } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 
