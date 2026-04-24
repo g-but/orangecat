@@ -24,7 +24,9 @@ import {
   PRIORITY_LABELS,
   TASK_DEFAULTS,
 } from '@/config/tasks';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { ROUTES } from '@/config/routes';
 import { API_ROUTES } from '@/config/api-routes';
 
 type TaskCategory = (typeof TASK_CATEGORIES)[keyof typeof TASK_CATEGORIES];
@@ -188,13 +190,7 @@ export default function NewTaskPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-20 md:pb-8">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <Button onClick={() => router.back()} variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        </div>
+        <Breadcrumb items={[{ label: 'Tasks', href: ROUTES.DASHBOARD.TASKS }, { label: 'Create Task' }]} className="mb-6" />
 
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">

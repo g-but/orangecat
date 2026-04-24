@@ -15,6 +15,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { WishlistItemProofSection } from '@/components/wishlist/WishlistItemProofSection';
 import { FormattedAmount } from '@/components/ui/FormattedAmount';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 
 interface PageProps {
   params: Promise<{ itemId: string }>;
@@ -68,12 +69,14 @@ export default async function WishlistItemDetailPage({ params }: PageProps) {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-6">
-        <a
-          href={`/dashboard/wishlists/${wishlist?.id}`}
-          className="text-sm text-gray-600 hover:text-gray-900 mb-4 inline-block"
-        >
-          ← Back to Wishlist
-        </a>
+        <Breadcrumb
+          items={[
+            { label: 'Wishlists', href: '/dashboard/wishlists' },
+            { label: wishlist?.title || 'Wishlist', href: `/dashboard/wishlists/${wishlist?.id}` },
+            { label: item.title },
+          ]}
+          className="mb-4"
+        />
         <h1 className="text-3xl font-bold mt-2">{item.title}</h1>
         {item.description && <p className="text-gray-600 mt-2">{item.description}</p>}
       </div>

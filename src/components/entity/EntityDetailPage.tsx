@@ -277,11 +277,17 @@ export default async function EntityDetailPage<T extends BaseEntity>({
     </Link>
   );
 
+  const breadcrumbItems = [
+    { label: config.namePlural, href: config.listPath },
+    { label: entity.title || 'Untitled' },
+  ];
+
   return (
     <EntityDetailLayout
       title={entity.title || 'Untitled'}
       subtitle={entity.description || undefined}
       headerActions={headerActions}
+      breadcrumbItems={breadcrumbItems}
       left={
         <div className="space-y-4">
           {(fields.left ?? []).length > 0 ? (

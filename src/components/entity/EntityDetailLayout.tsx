@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { Breadcrumb, BreadcrumbItem } from '@/components/ui/Breadcrumb'
 
 interface EntityDetailLayoutProps {
   title: string
@@ -10,6 +11,7 @@ interface EntityDetailLayoutProps {
   left: ReactNode
   right?: ReactNode
   className?: string
+  breadcrumbItems?: BreadcrumbItem[]
 }
 
 export default function EntityDetailLayout({
@@ -19,9 +21,11 @@ export default function EntityDetailLayout({
   left,
   right,
   className,
+  breadcrumbItems,
 }: EntityDetailLayoutProps) {
   return (
     <div className={cn('min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8', className)}>
+      {breadcrumbItems && <Breadcrumb items={breadcrumbItems} className="mb-4" />}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{title}</h1>

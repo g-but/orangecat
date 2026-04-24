@@ -15,7 +15,6 @@ import {
   getPriorityInfo,
 } from '@/config/tasks';
 import {
-  ArrowLeft,
   Edit,
   Trash2,
   CheckCircle,
@@ -32,6 +31,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CompleteModal, AttentionModal, RequestModal } from './TaskActionModals';
 import CompletionHistory, { type CompletionWithUser } from './CompletionHistory';
 import type { TaskWithRelations } from './types';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { ROUTES } from '@/config/routes';
 
 export default function TaskDetailPage() {
   const { user, isLoading: authLoading, hydrated } = useRequireAuth();
@@ -108,10 +109,7 @@ export default function TaskDetailPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8">
         <div className="max-w-3xl mx-auto">
-          <Button onClick={() => router.back()} variant="ghost" size="sm" className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
+          <Breadcrumb items={[{ label: 'Tasks', href: ROUTES.DASHBOARD.TASKS }]} className="mb-4" />
           <div className="bg-white rounded-xl border border-red-200 p-6 text-red-600">
             {error || 'Task not found'}
           </div>
@@ -126,12 +124,9 @@ export default function TaskDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-20 md:pb-8">
       <div className="max-w-3xl mx-auto space-y-6">
+        <Breadcrumb items={[{ label: 'Tasks', href: ROUTES.DASHBOARD.TASKS }, { label: task.title }]} />
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <Button onClick={() => router.back()} variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
             <Button href={`/dashboard/tasks/${taskId}/edit`} variant="outline" size="sm">
               <Edit className="h-4 w-4 mr-2" />

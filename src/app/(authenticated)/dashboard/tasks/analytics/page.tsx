@@ -18,7 +18,6 @@ import { logger } from '@/utils/logger';
 import { TASK_CATEGORY_LABELS } from '@/config/tasks';
 import { API_ROUTES } from '@/config/api-routes';
 import {
-  ArrowLeft,
   BarChart3,
   Users,
   Clock,
@@ -27,6 +26,8 @@ import {
   CheckCircle,
   Award,
 } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { ROUTES } from '@/config/routes';
 
 interface ContributionData {
   user: {
@@ -147,10 +148,7 @@ export default function TaskAnalyticsPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8">
         <div className="max-w-4xl mx-auto">
-          <Button onClick={() => router.back()} variant="ghost" size="sm" className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
+          <Breadcrumb items={[{ label: 'Tasks', href: ROUTES.DASHBOARD.TASKS }, { label: 'Analytics' }]} className="mb-4" />
           <div className="bg-white rounded-xl border border-red-200 p-6 text-red-600">{error}</div>
         </div>
       </div>
@@ -163,15 +161,10 @@ export default function TaskAnalyticsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-20 md:pb-8">
       <div className="max-w-4xl mx-auto space-y-6">
+        <Breadcrumb items={[{ label: 'Tasks', href: ROUTES.DASHBOARD.TASKS }, { label: 'Analytics' }]} />
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button onClick={() => router.back()} variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-            <h1 className="text-2xl font-bold text-gray-900">Task Statistics</h1>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Task Statistics</h1>
           <div className="flex items-center gap-2">
             <select
               value={days}
