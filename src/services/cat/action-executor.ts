@@ -75,11 +75,11 @@ export function parseReminderDate(when: string): string | null {
     const n = parseInt(inMatch[1], 10);
     const unit = inMatch[2];
     const result = new Date(now);
-    if (unit.startsWith('minute')) result.setMinutes(result.getMinutes() + n);
-    else if (unit.startsWith('hour')) result.setHours(result.getHours() + n);
-    else if (unit.startsWith('day')) result.setDate(result.getDate() + n);
-    else if (unit.startsWith('week')) result.setDate(result.getDate() + n * 7);
-    else if (unit.startsWith('month')) result.setMonth(result.getMonth() + n);
+    if (unit.startsWith('minute')) { result.setMinutes(result.getMinutes() + n); }
+    else if (unit.startsWith('hour')) { result.setHours(result.getHours() + n); }
+    else if (unit.startsWith('day')) { result.setDate(result.getDate() + n); }
+    else if (unit.startsWith('week')) { result.setDate(result.getDate() + n * 7); }
+    else if (unit.startsWith('month')) { result.setMonth(result.getMonth() + n); }
     return result.toISOString();
   }
 
