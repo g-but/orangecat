@@ -12,7 +12,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
-import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { TASK_CATEGORY_LABELS } from '@/config/tasks';

@@ -3,7 +3,7 @@
 /** Task Detail Page - view details, completion history, and take actions */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import Button from '@/components/ui/Button';
@@ -36,7 +36,6 @@ import { ROUTES } from '@/config/routes';
 
 export default function TaskDetailPage() {
   const { user, isLoading: authLoading, hydrated } = useRequireAuth();
-  const router = useRouter();
   const params = useParams();
   const taskId = params?.id as string;
 
