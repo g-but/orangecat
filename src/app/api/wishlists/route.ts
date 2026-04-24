@@ -12,7 +12,7 @@ import { NextRequest } from 'next/server';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
-import { wishlistSchema } from '@/lib/validation';
+import { wishlistSchema, type WishlistFormData } from '@/lib/validation';
 import { handleApiError, apiSuccess } from '@/lib/api/standardResponse';
 import { getPagination } from '@/lib/api/query';
 import { listWishlistsPage, createWishlist } from '@/domain/wishlists/service';
@@ -45,6 +45,6 @@ export const POST = createEntityPostHandler({
   entityType: 'wishlist',
   schema: wishlistSchema,
   createEntity: async (userId, data, _supabase) => {
-    return await createWishlist(userId, data);
+    return await createWishlist(userId, data as unknown as WishlistFormData);
   },
 });

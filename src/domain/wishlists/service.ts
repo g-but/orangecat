@@ -53,8 +53,7 @@ export async function listWishlistsPage(limit: number, offset: number, userId?: 
   return { items, total: count || 0 };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function createWishlist(userId: string, data: any) {
+export async function createWishlist(userId: string, data: WishlistFormData) {
   return createEntity('wishlist', userId, {
     title: data.title,
     description: data.description,
