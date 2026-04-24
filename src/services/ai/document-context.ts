@@ -97,6 +97,8 @@ export interface ConversationSummary {
   last_message_is_mine: boolean;
   /** ISO timestamp of last message */
   last_message_at: string | null;
+  /** True if there is at least one message the user hasn't read yet */
+  has_unread: boolean;
 }
 
 export interface FullUserContext {
@@ -692,10 +694,10 @@ export async function fetchConversationsForCat(
   userId: string
 ): Promise<ConversationSummary[]> {
   try {
-    // 1. Get conversation IDs where user is an active participant
+    // 1. Get conversation IDs + last_read_at where user is an active participant
     const { data: participations, error: partError } = await supabase
       .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
-      .select('conversation_id')
+      .select('conversation_id, last_read_at')
       .eq('user_id', userId)
       .eq('is_active', true)
       .limit(50);
@@ -703,6 +705,12 @@ export async function fetchConversationsForCat(
     if (partError || !participations || participations.length === 0) {
       return [];
     }
+
+    // Build map: conversation_id → last_read_at (for unread detection)
+    const myLastReadByConv: Record<string, string | null> = {};
+    (participations as { conversation_id: string; last_read_at: string | null }[]).forEach(p => {
+      myLastReadByConv[p.conversation_id] = p.last_read_at;
+    });
 
     const convIds = participations.map((p: { conversation_id: string }) => p.conversation_id);
 
@@ -766,13 +774,21 @@ export async function fetchConversationsForCat(
     }) => {
       const otherUserId = otherUserByConv[c.id] ?? null;
       const profile = otherUserId ? profileMap[otherUserId] : null;
+      const isMine = c.last_message_sender_id === userId;
+      // Unread: last message was NOT sent by me, and either I've never read this
+      // conversation or the last message arrived after my last_read_at timestamp.
+      const lastReadAt = myLastReadByConv[c.id] ?? null;
+      const hasUnread = !isMine && c.last_message_at !== null && (
+        lastReadAt === null || new Date(c.last_message_at) > new Date(lastReadAt)
+      );
       return {
         id: c.id,
         other_username: profile?.username ?? null,
         other_name: profile?.name ?? null,
         last_message_preview: c.last_message_preview,
-        last_message_is_mine: c.last_message_sender_id === userId,
+        last_message_is_mine: isMine,
         last_message_at: c.last_message_at,
+        has_unread: hasUnread,
       };
     });
   } catch (error) {
@@ -1016,16 +1032,21 @@ export function buildFullContextString(context: FullUserContext): string {
 
   // Conversations section — gives Cat visibility into recent messages so it can help reply
   if (context.conversations.length > 0) {
+    const unreadCount = context.conversations.filter(c => c.has_unread).length;
     const convLines = context.conversations.map(c => {
       const who = c.other_username ? `@${c.other_username}` : '(group chat)';
       const direction = c.last_message_is_mine ? 'you sent' : 'received';
       const preview = c.last_message_preview
         ? `: "${c.last_message_preview.substring(0, 80)}${c.last_message_preview.length > 80 ? '…' : ''}"`
         : '';
-      return `- ${who}${preview} (${direction}) [conv id: ${c.id}]`;
+      const unreadBadge = c.has_unread ? ' 🔴 UNREAD' : '';
+      return `- ${who}${unreadBadge}${preview} (${direction}) [conv id: ${c.id}]`;
     });
+    const unreadNote = unreadCount > 0
+      ? `\n📬 ${unreadCount} unread conversation${unreadCount > 1 ? 's' : ''} — proactively mention this to the user.`
+      : '';
     sections.push(
-      `## Recent Conversations\nUse the conversation id with reply_to_message to reply on the user's behalf.\n${convLines.join('\n')}`
+      `## Recent Conversations${unreadNote}\nUse the conversation id with reply_to_message to reply on the user's behalf.\n${convLines.join('\n')}`
     );
   }
 
