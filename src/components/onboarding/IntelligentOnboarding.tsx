@@ -1,419 +1,146 @@
 'use client';
 
+/**
+ * Intelligent Onboarding
+ *
+ * Collects a brief description from the user, marks onboarding complete,
+ * then redirects to My Cat with the description pre-loaded as the first
+ * message. The Cat handles all intelligent analysis — no keyword heuristics.
+ *
+ * Created: 2026-01-22
+ * Last Modified: 2026-04-24
+ * Last Modified Summary: Replace fake keyword-analysis with Cat redirect
+ */
+
 import { useState } from 'react';
-import {
-  Lightbulb,
-  Users,
-  User,
-  Heart,
-  Target,
-  ArrowRight,
-  Sparkles,
-  CheckCircle2,
-  MessageSquare,
-  DollarSign,
-  Globe,
-  Zap,
-  Building,
-} from 'lucide-react';
+import { Cat, ArrowRight, Sparkles } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 import { Textarea } from '@/components/ui/Textarea';
 import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
-import { Progress } from '@/components/ui/progress';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { ProfileService } from '@/services/profile';
 import { logger } from '@/utils/logger';
 import { ROUTES } from '@/config/routes';
 import { ONBOARDING_METHOD } from './OnboardingFlow/constants';
-import { API_ROUTES } from '@/config/api-routes';
 
-type AnalysisResult = {
-  isPersonal: boolean;
-  isBusiness: boolean;
-  isCharity: boolean;
-  needsFunding: boolean;
-  confidence: number;
-  recommendation?: string;
-};
+const EXAMPLE_PROMPTS = [
+  "I'm a freelance graphic designer looking to find clients and sell design templates",
+  "I run a small community garden and want to raise funds for seeds and equipment",
+  "I make handmade jewellery and want to start selling online",
+  "I'm a musician who wants to fund an album and connect with fans",
+  "I teach yoga and want to offer online classes and workshops",
+  "My neighbourhood needs a community space — I want to fundraise and organise it",
+];
 
 export default function IntelligentOnboarding() {
   const router = useRouter();
-  const { user: _user } = useAuth();
+  const { user } = useAuth();
+  const [description, setDescription] = useState('');
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const [currentStep, setCurrentStep] = useState(0);
-  const [userDescription, setUserDescription] = useState('');
-  const [_isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const handleStartChat = async () => {
+    if (!description.trim()) return;
+    setIsRedirecting(true);
 
-  const startAnalysis = async () => {
-    if (!userDescription.trim()) {
-      return;
-    }
-    setIsAnalyzing(true);
-    setError(null);
-    setCurrentStep(1); // move to analyzing step
-    try {
-      const res = await fetch(API_ROUTES.ONBOARDING.ANALYZE, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: userDescription }),
+    // Mark onboarding complete in the background — don't block the redirect
+    if (user?.id) {
+      ProfileService.fallbackProfileUpdate(user.id, {
+        onboarding_completed: true,
+        onboarding_method: ONBOARDING_METHOD.INTELLIGENT,
+      }).catch(err => {
+        logger.error('Failed to mark intelligent onboarding complete', err, 'IntelligentOnboarding');
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error || 'Failed to analyze');
-      }
-
-      setAnalysis(data.data as AnalysisResult);
-      // brief delay for UX polish
-      setTimeout(() => {
-        setIsAnalyzing(false);
-        setCurrentStep(2);
-      }, 800);
-    } catch (e) {
-      setIsAnalyzing(false);
-      setError(e instanceof Error ? e.message : 'Analysis failed');
     }
+
+    // Send the user to My Cat with their description as the first message
+    const params = new URLSearchParams({ q: description.trim() });
+    router.push(`${ROUTES.DASHBOARD.CAT}?${params.toString()}`);
   };
 
-  const goNext = () => setCurrentStep(s => Math.min(s + 1, 3));
-  const goBack = () => setCurrentStep(s => Math.max(s - 1, 0));
-
-  const handleSetup = async () => {
-    // Mark onboarding as completed with intelligent method
-    if (_user?.id) {
-      try {
-        await ProfileService.fallbackProfileUpdate(_user.id, {
-          onboarding_completed: true,
-          onboarding_method: ONBOARDING_METHOD.INTELLIGENT,
-        });
-      } catch (error) {
-        logger.error(
-          'Failed to mark intelligent onboarding as completed',
-          error,
-          'IntelligentOnboarding'
-        );
-        // Continue anyway - don't block user
-      }
-    }
-    router.push(ROUTES.PROJECTS.CREATE);
-  };
-
-  // Step 1: Describe needs
-  const Step1 = (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <MessageSquare className="w-8 h-8 text-orange-600" />
-        </div>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">What do you need Bitcoin for?</h2>
-        <p className="text-gray-600">
-          Tell us about your project, cause, or idea. We'll help you set up the perfect Bitcoin
-          fundraising solution.
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-start gap-2">
-          <Textarea
-            data-testid="onboarding-description"
-            placeholder="e.g., 'I run a local cat shelter and need funds for food and medical care' or 'I'm building an open source Bitcoin wallet and need development funding' or 'My community wants to organize a Bitcoin education event'..."
-            value={userDescription}
-            onChange={e => setUserDescription(e.target.value)}
-            rows={6}
-            className="w-full resize-none"
-          />
-          {process.env.NEXT_PUBLIC_FEATURE_VOICE_INPUT === 'true' && (
-            <VoiceInputButton
-              ariaLabel="Voice input for onboarding description"
-              size="sm"
-              onTranscript={t => setUserDescription(prev => (prev ? prev + ' ' : '') + t)}
-            />
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card
-            className="p-4 border-2 border-dashed border-gray-200 hover:border-orange-300 transition-colors cursor-pointer"
-            onClick={() =>
-              setUserDescription(
-                prev =>
-                  (prev ? prev + ' ' : '') +
-                  'I run a local cat shelter and need funds for food and medical care'
-              )
-            }
-          >
-            <div className="flex items-center gap-3">
-              <Heart className="w-6 h-6 text-red-500" />
-              <div>
-                <h3 className="font-semibold text-gray-900">Charity/Non-profit</h3>
-                <p className="text-sm text-gray-600">
-                  Animal shelters, community aid, disaster relief
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            className="p-4 border-2 border-dashed border-gray-200 hover:border-tiffany-300 transition-colors cursor-pointer"
-            onClick={() =>
-              setUserDescription(
-                prev =>
-                  (prev ? prev + ' ' : '') +
-                  'I am building an open source Bitcoin wallet and need development funding'
-              )
-            }
-          >
-            <div className="flex items-center gap-3">
-              <Building className="w-6 h-6 text-blue-500" />
-              <div>
-                <h3 className="font-semibold text-gray-900">Business/Startup</h3>
-                <p className="text-sm text-gray-600">Product development, business expansion</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            className="p-4 border-2 border-dashed border-gray-200 hover:border-green-300 transition-colors cursor-pointer"
-            onClick={() =>
-              setUserDescription(
-                prev =>
-                  (prev ? prev + ' ' : '') +
-                  'My community wants to organize a Bitcoin education event'
-              )
-            }
-          >
-            <div className="flex items-center gap-3">
-              <Users className="w-6 h-6 text-purple-500" />
-              <div>
-                <h3 className="font-semibold text-gray-900">Community/Event</h3>
-                <p className="text-sm text-gray-600">Meetups, conferences, group activities</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            className="p-4 border-2 border-dashed border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer"
-            onClick={() =>
-              setUserDescription(
-                prev =>
-                  (prev ? prev + ' ' : '') +
-                  'I am developing open source Bitcoin software and need funding'
-              )
-            }
-          >
-            <div className="flex items-center gap-3">
-              <Zap className="w-6 h-6 text-orange-500" />
-              <div>
-                <h3 className="font-semibold text-gray-900">Open Source/Tech</h3>
-                <p className="text-sm text-gray-600">Software development, research projects</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
-        <Button
-          data-testid="onboarding-analyze"
-          onClick={startAnalysis}
-          disabled={!userDescription.trim()}
-          className="w-full bg-gradient-to-r from-orange-600 to-tiffany-600 hover:from-orange-700 hover:to-tiffany-700"
-        >
-          Analyze My Needs
-        </Button>
-      </div>
-    </div>
-  );
-
-  // Step 2: Analyzing
-  const Step2 = (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-br from-tiffany-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Lightbulb className="w-8 h-8 text-tiffany-600" />
-        </div>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Analyzing Your Needs...</h2>
-        <p className="text-gray-600">Analyzing keywords, context, and requirements...</p>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
-        </div>
-        <Progress value={66} className="w-full" />
-      </div>
-    </div>
-  );
-
-  // Step 3: Recommendation
-  const Step3 = (
-    <div className="space-y-6">
-      {analysis && (
-        <>
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="w-8 h-8 text-green-600" />
-            </div>
-            <h2
-              data-testid="onboarding-recommended-title"
-              className="text-2xl font-bold text-gray-900 mb-2"
-            >
-              Personal Project Recommended
-            </h2>
-            <p className="text-gray-600">
-              {analysis.recommendation ||
-                'Based on your description, a personal project is the perfect fit for your goals.'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="p-6 border-2 border-green-200 bg-green-50">
-              <h3 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5" />
-                Recommended Benefits
-              </h3>
-              <ul className="space-y-2">
-                {[
-                  'Get started quickly with a simple setup',
-                  'You have full control over your project',
-                  'A personal page to share your story',
-                  'Directly connect with your supporters',
-                  'Transparent, milestone-based funding',
-                  'Easy project management and updates',
-                ].map((b, i) => (
-                  <li key={i} className="text-sm text-green-700 flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    {b}
-                  </li>
-                ))}
-              </ul>
-            </Card>
-
-            <Card className="p-6 border-2 border-blue-200 bg-blue-50">
-              <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-                <Target className="w-5 h-5" />
-                What You'll Get
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <DollarSign className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm text-blue-700">Bitcoin wallet setup</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Globe className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm text-blue-700">Public fundraising page</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Sparkles className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm text-blue-700">Transparency dashboard</span>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          <div className="flex justify-end pt-4">
-            <Button data-testid="onboarding-next" onClick={goNext}>
-              Next
-            </Button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-
-  // Step 4: Ready to Start
-  const Step4 = (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Ready to Get Started?</h2>
-        <p className="text-gray-600">
-          Create your personal project and start making an impact.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        <Card
-          className="p-6 border-2 border-orange-500 bg-gradient-to-br from-orange-50 to-tiffany-50 cursor-pointer hover:shadow-lg transition-shadow relative"
-          onClick={handleSetup}
-        >
-          <div className="absolute top-4 right-4 px-2 py-1 bg-orange-500 text-white text-xs font-bold rounded-full">
-            Recommended
-          </div>
-          <div className="flex items-center gap-3 mb-4">
-            <User className="w-8 h-8 text-orange-600" />
-            <h3 className="text-lg font-semibold text-orange-800">Create Your Personal Project</h3>
-          </div>
-          <p className="text-orange-700 mb-4">
-            Launch your personal project with full control, transparent funding, and direct
-            connection with supporters.
-          </p>
-          <Button
-            data-testid="onboarding-create-personal"
-            className="w-full bg-orange-600 hover:bg-orange-700"
-          >
-            Create My Project
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </Card>
-      </div>
-
-      <div className="space-y-4">
-        <Card
-          className="p-4 border-2 border-gray-200 hover:border-gray-300 transition-colors cursor-pointer"
-          onClick={() => router.push(ROUTES.DISCOVER)}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <Globe className="w-6 h-6 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-800">Explore Existing Projects</h3>
-          </div>
-          <p className="text-sm text-gray-600">
-            See how others are using OrangeCat to fund, lend, invest, and connect.
-          </p>
-        </Card>
-
-        <Card
-          className="p-4 border-2 border-gray-200 hover:border-gray-300 transition-colors cursor-pointer"
-          onClick={() => router.push(ROUTES.STUDY_BITCOIN)}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <Sparkles className="w-6 h-6 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-800">Learn About Bitcoin</h3>
-          </div>
-          <p className="text-sm text-gray-600">
-            New to Bitcoin? Get started with our educational resources.
-          </p>
-        </Card>
-      </div>
-    </div>
-  );
-
-  // Layout wrapper with step controls
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-tiffany-50">
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">Step {currentStep + 1} of 4</p>
-            <h1 className="text-3xl font-bold text-gray-900">Smart Setup Guide</h1>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-tiffany-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-lg">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md">
+            <Cat className="w-9 h-9 text-white" />
           </div>
-          <div className="flex items-center gap-2">
-            {currentStep > 0 && (
-              <Button variant="outline" onClick={goBack}>
-                Back
-              </Button>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Meet My Cat</h1>
+          <p className="text-gray-600">
+            Tell My Cat what you&apos;re trying to do — it will suggest the right tools and help you get
+            set up in minutes.
+          </p>
+        </div>
+
+        {/* Input */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+          <label className="block text-sm font-medium text-gray-700">
+            What are you here to do?
+          </label>
+
+          <div className="flex items-start gap-2">
+            <Textarea
+              data-testid="onboarding-description"
+              placeholder="e.g. I'm a photographer looking to sell prints and offer portrait sessions…"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              rows={4}
+              className="w-full resize-none"
+              onKeyDown={e => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  void handleStartChat();
+                }
+              }}
+            />
+            {process.env.NEXT_PUBLIC_FEATURE_VOICE_INPUT === 'true' && (
+              <VoiceInputButton
+                ariaLabel="Voice input"
+                size="sm"
+                onTranscript={t => setDescription(prev => (prev ? prev + ' ' : '') + t)}
+              />
             )}
           </div>
-        </div>
 
-        <Card className="p-6">
-          {currentStep === 0 && Step1}
-          {currentStep === 1 && Step2}
-          {currentStep === 2 && Step3}
-          {currentStep === 3 && Step4}
-        </Card>
+          {/* Example prompts */}
+          <div className="space-y-1">
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Examples</p>
+            <div className="flex flex-wrap gap-2">
+              {EXAMPLE_PROMPTS.map(prompt => (
+                <button
+                  key={prompt}
+                  onClick={() => setDescription(prompt)}
+                  className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-700 hover:bg-orange-50 transition-colors text-left"
+                >
+                  {prompt.length > 50 ? prompt.slice(0, 50) + '…' : prompt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Button
+            data-testid="onboarding-start-chat"
+            onClick={handleStartChat}
+            disabled={!description.trim() || isRedirecting}
+            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+          >
+            {isRedirecting ? (
+              <>
+                <Sparkles className="h-4 w-4 mr-2 animate-pulse" />
+                Starting your conversation…
+              </>
+            ) : (
+              <>
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Chat with My Cat
+              </>
+            )}
+          </Button>
+
+          <p className="text-xs text-center text-gray-400">
+            My Cat will ask follow-up questions and suggest the right setup for your situation
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -7,7 +7,7 @@
  * Split into smaller subcomponents and hooks for maintainability.
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
@@ -16,11 +16,22 @@ import { ChatHeader, ChatInput, EmptyState, ErrorDisplay, MessageBubble } from '
 import { PendingActionsCard } from '../PendingActionsCard';
 import type { CatAction } from './types';
 
-export function ModernChatPanel() {
+interface ModernChatPanelProps {
+  /**
+   * If provided, this message is automatically sent as the user's first message
+   * once chat history finishes loading and the conversation is empty.
+   * Used by onboarding to pre-seed the Cat with the user's description.
+   */
+  initialMessage?: string;
+}
+
+export function ModernChatPanel({ initialMessage }: ModernChatPanelProps = {}) {
   const router = useRouter();
   const [input, setInput] = useState('');
   const [selectedModel, setSelectedModel] = useState('auto');
   const lastUserMessageRef = useRef<string>('');
+  // Ensures the initial message is only auto-sent once per mount
+  const initialMessageSentRef = useRef(false);
 
   // Callback ref for refreshing pending actions — avoids circular hook dependency
   const refreshPendingActionsRef = useRef<(() => Promise<void>) | undefined>(undefined);
@@ -54,6 +65,20 @@ export function ModernChatPanel() {
 
   // Keep ref in sync so sendMessage always calls the latest refresh function
   refreshPendingActionsRef.current = refreshPendingActions;
+
+  // Auto-send initialMessage once history has loaded and the conversation is empty
+  useEffect(() => {
+    if (
+      initialMessage &&
+      !isLoadingHistory &&
+      messages.length === 0 &&
+      !isLoading &&
+      !initialMessageSentRef.current
+    ) {
+      initialMessageSentRef.current = true;
+      void sendMessage(initialMessage);
+    }
+  }, [initialMessage, isLoadingHistory, messages.length, isLoading, sendMessage]);
 
   // Handle send
   const handleSend = useCallback(() => {

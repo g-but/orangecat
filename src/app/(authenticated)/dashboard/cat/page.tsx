@@ -58,6 +58,9 @@ export default function CatHubPage() {
     return null;
   }
 
+  // Pre-seed the Cat with a message from onboarding (or any ?q= link)
+  const initialMessage = searchParams?.get('q') || undefined;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
       {/* Header */}
@@ -111,7 +114,7 @@ export default function CatHubPage() {
           <div className="px-4 pb-24 sm:pb-8">
             {/* Chat Tab */}
             <TabsContent value="chat" className="mt-4 focus:outline-none">
-              <ModernChatPanel />
+              <ModernChatPanel initialMessage={initialMessage} />
             </TabsContent>
 
             {/* Context Tab */}
