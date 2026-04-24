@@ -33,7 +33,7 @@ export function useDiscoverState() {
     | 'relevance'
     | 'recent';
   const urlType = (searchParams?.get('type') || 'all') as DiscoverTabType;
-  const validTabTypes: DiscoverTabType[] = ['all', 'projects', 'profiles', 'loans', 'investments', 'causes', 'events', 'products', 'services', 'groups', 'wishlists'];
+  const validTabTypes: DiscoverTabType[] = ['all', 'projects', 'profiles', 'loans', 'investments', 'causes', 'events', 'products', 'services', 'groups', 'wishlists', 'research'];
   const initialType = validTabTypes.includes(urlType) ? urlType : 'all';
   const initialCountry = searchParams?.get('country') || '';
   const initialCity = searchParams?.get('city') || '';
@@ -101,13 +101,14 @@ export function useDiscoverState() {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [investmentsLoading, setInvestmentsLoading] = useState(false);
 
-  // Generic public entity data (causes, events, products, services, groups, wishlists)
+  // Generic public entity data (causes, events, products, services, groups, wishlists, research)
   const [causes, setCauses] = useState<GenericPublicEntity[]>([]);
   const [events, setEvents] = useState<GenericPublicEntity[]>([]);
   const [products, setProducts] = useState<GenericPublicEntity[]>([]);
   const [services, setServices] = useState<GenericPublicEntity[]>([]);
   const [groups, setGroups] = useState<GenericPublicEntity[]>([]);
   const [wishlists, setWishlists] = useState<GenericPublicEntity[]>([]);
+  const [research, setResearch] = useState<GenericPublicEntity[]>([]);
   const [genericLoading, setGenericLoading] = useState(false);
 
   // Fetch total counts from database with client-side caching
@@ -275,9 +276,9 @@ export function useDiscoverState() {
     fetchInvestments();
   }, [activeTab, searchTerm]);
 
-  // Fetch generic entities (causes, events, products, services, groups, wishlists) when their tab is active
+  // Fetch generic entities (causes, events, products, services, groups, wishlists, research) when their tab is active
   useEffect(() => {
-    const GENERIC_TABS = ['causes', 'events', 'products', 'services', 'groups', 'wishlists', 'all'] as const;
+    const GENERIC_TABS = ['causes', 'events', 'products', 'services', 'groups', 'wishlists', 'research', 'all'] as const;
     if (!GENERIC_TABS.includes(activeTab as (typeof GENERIC_TABS)[number])) {
       return;
     }
@@ -290,7 +291,7 @@ export function useDiscoverState() {
       const shouldFetch = (tab: DiscoverTabType) => activeTab === 'all' || activeTab === tab;
 
       try {
-        const [causesRes, eventsRes, productsRes, servicesRes, groupsRes, wishlistsRes] = await Promise.all([
+        const [causesRes, eventsRes, productsRes, servicesRes, groupsRes, wishlistsRes, researchRes] = await Promise.all([
           shouldFetch('causes')
             ? (() => {
                 let q = supabase
@@ -369,6 +370,20 @@ export function useDiscoverState() {
                 return q;
               })()
             : Promise.resolve({ data: null, error: null }),
+
+          shouldFetch('research')
+            ? (() => {
+                let q = supabase
+                  .from(getTableName('research'))
+                  .select('id, title, description, status, field, created_at')
+                  .eq('is_public', true)
+                  .eq('status', 'active')
+                  .order('created_at', { ascending: false })
+                  .limit(activeTab === 'research' ? limit : 8);
+                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
+                return q;
+              })()
+            : Promise.resolve({ data: null, error: null }),
         ]);
 
         if (shouldFetch('causes')) { setCauses((causesRes.data ?? []) as unknown as GenericPublicEntity[]); }
@@ -387,6 +402,18 @@ export function useDiscoverState() {
           );
         }
         if (shouldFetch('wishlists')) { setWishlists((wishlistsRes.data ?? []) as unknown as GenericPublicEntity[]); }
+        if (shouldFetch('research')) {
+          setResearch(
+            ((researchRes.data ?? []) as unknown as Array<{ id: string; title: string; description?: string | null; status?: string | null; field?: string | null; created_at: string }>).map(r => ({
+              id: r.id,
+              title: r.title,
+              description: r.description ?? null,
+              status: r.status ?? null,
+              category: r.field ?? null,
+              created_at: r.created_at,
+            } satisfies GenericPublicEntity))
+          );
+        }
       } catch (error) {
         logger.error('Error fetching generic discover entities', error, 'Discover');
       } finally {
@@ -574,6 +601,7 @@ export function useDiscoverState() {
     (activeTab === 'services' && services.length === 0) ||
     (activeTab === 'groups' && groups.length === 0) ||
     (activeTab === 'wishlists' && wishlists.length === 0) ||
+    (activeTab === 'research' && research.length === 0) ||
     (activeTab === 'all' &&
       projects.length === 0 &&
       profiles.length === 0 &&
@@ -584,7 +612,8 @@ export function useDiscoverState() {
       products.length === 0 &&
       services.length === 0 &&
       groups.length === 0 &&
-      wishlists.length === 0);
+      wishlists.length === 0 &&
+      research.length === 0);
 
   const hasFilters = !!(searchTerm || selectedCategories.length > 0);
 
@@ -611,6 +640,7 @@ export function useDiscoverState() {
     services,
     groups,
     wishlists,
+    research,
     totalInvestmentsCount,
     stats,
 

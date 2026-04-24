@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Target, Users, Grid3X3, DollarSign, TrendingUp, Heart, Package, Briefcase, Calendar, Building2, Gift } from 'lucide-react';
+import { Target, Users, Grid3X3, DollarSign, TrendingUp, Heart, Package, Briefcase, Calendar, Building2, Gift, FlaskConical } from 'lucide-react';
 
-export type DiscoverTabType = 'all' | 'projects' | 'profiles' | 'loans' | 'investments' | 'causes' | 'events' | 'products' | 'services' | 'groups' | 'wishlists';
+export type DiscoverTabType = 'all' | 'projects' | 'profiles' | 'loans' | 'investments' | 'causes' | 'events' | 'products' | 'services' | 'groups' | 'wishlists' | 'research';
 
 interface TabCounts {
   projects: number;
@@ -16,6 +16,7 @@ interface TabCounts {
   services: number;
   groups: number;
   wishlists: number;
+  research: number;
 }
 
 interface DiscoverTabsProps {
@@ -31,6 +32,7 @@ interface DiscoverTabsProps {
   serviceCount?: number;
   groupCount?: number;
   wishlistCount?: number;
+  researchCount?: number;
   loading?: boolean;
 }
 
@@ -46,7 +48,7 @@ const tabs: TabConfig[] = [
     id: 'all',
     label: 'All',
     icon: <Grid3X3 className="w-4 h-4" />,
-    getCount: (c) => c.projects + c.profiles + c.loans + c.investments + c.causes + c.events + c.products + c.services + c.groups + c.wishlists,
+    getCount: (c) => c.projects + c.profiles + c.loans + c.investments + c.causes + c.events + c.products + c.services + c.groups + c.wishlists + c.research,
   },
   {
     id: 'projects',
@@ -103,6 +105,12 @@ const tabs: TabConfig[] = [
     getCount: (c) => c.wishlists,
   },
   {
+    id: 'research',
+    label: 'Research',
+    icon: <FlaskConical className="w-4 h-4" />,
+    getCount: (c) => c.research,
+  },
+  {
     id: 'profiles',
     label: 'People',
     icon: <Users className="w-4 h-4" />,
@@ -123,6 +131,7 @@ export default function DiscoverTabs({
   serviceCount = 0,
   groupCount = 0,
   wishlistCount = 0,
+  researchCount = 0,
   loading = false,
 }: DiscoverTabsProps) {
   const counts: TabCounts = {
@@ -136,6 +145,7 @@ export default function DiscoverTabs({
     services: serviceCount,
     groups: groupCount,
     wishlists: wishlistCount,
+    research: researchCount,
   };
 
   return (
