@@ -101,6 +101,29 @@ export interface ConversationSummary {
   has_unread: boolean;
 }
 
+/** A completed or recent sale (order where the user is the seller) */
+export interface SaleRecord {
+  entity_title: string;
+  entity_type: string;
+  amount_btc: number;
+  status: string;
+  created_at: string;
+}
+
+/** An upcoming booking where the user is the service/asset provider */
+export interface BookingRecord {
+  starts_at: string;
+  ends_at: string | null;
+  status: string;
+  customer_display_name: string | null;
+  customer_username: string | null;
+}
+
+export interface InboundActivity {
+  recentSales: SaleRecord[];
+  upcomingBookings: BookingRecord[];
+}
+
 export interface FullUserContext {
   profile: ProfileContext | null;
   documents: DocumentContext[];
@@ -108,6 +131,7 @@ export interface FullUserContext {
   tasks: TaskSummary[];
   wallets: WalletSummary[];
   conversations: ConversationSummary[];
+  inboundActivity: InboundActivity;
   paymentCapabilities: PaymentCapabilities;
   stats: {
     totalProducts: number;
@@ -798,19 +822,116 @@ export async function fetchConversationsForCat(
 }
 
 /**
+ * Fetch inbound economic activity for My Cat:
+ * - Recent sales (orders where the user is the seller, status='paid')
+ * - Upcoming bookings where the user is the provider
+ */
+export async function fetchInboundActivityForCat(
+  supabase: AnySupabaseClient,
+  userId: string
+): Promise<InboundActivity> {
+  try {
+    // Resolve user's actor IDs (needed for booking provider lookup)
+    const { data: actorRows } = await supabase
+      .from(DATABASE_TABLES.ACTORS)
+      .select('id')
+      .eq('user_id', userId);
+    const actorIds = (actorRows ?? []).map((a: { id: string }) => a.id);
+
+    const now = new Date().toISOString();
+
+    // Run sales and bookings queries in parallel
+    const [salesResult, bookingsResult] = await Promise.all([
+      // Recent paid sales (user as seller)
+      supabase
+        .from(DATABASE_TABLES.ORDERS)
+        .select('entity_title, entity_type, amount_btc, status, created_at')
+        .eq('seller_id', userId)
+        .eq('status', 'paid')
+        .order('created_at', { ascending: false })
+        .limit(10),
+
+      // Upcoming bookings as provider (confirmed or pending, starting in the future)
+      actorIds.length > 0
+        ? supabase
+            .from(DATABASE_TABLES.BOOKINGS)
+            .select(`
+              starts_at,
+              ends_at,
+              status,
+              customer:customer_actor_id(
+                display_name,
+                username
+              )
+            `)
+            .in('provider_actor_id', actorIds)
+            .in('status', ['confirmed', 'pending'])
+            .gte('starts_at', now)
+            .order('starts_at', { ascending: true })
+            .limit(5)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    const recentSales: SaleRecord[] = (salesResult.data ?? []).map((o: {
+      entity_title: string;
+      entity_type: string;
+      amount_btc: number;
+      status: string;
+      created_at: string;
+    }) => ({
+      entity_title: o.entity_title,
+      entity_type: o.entity_type,
+      amount_btc: o.amount_btc,
+      status: o.status,
+      created_at: o.created_at,
+    }));
+
+    const upcomingBookings: BookingRecord[] = (bookingsResult.data ?? []).map((b: {
+      starts_at: string;
+      ends_at: string | null;
+      status: string;
+      // Supabase returns one-to-one FK joins as arrays; take first element
+      customer: { display_name: string | null; username: string | null }[] | null;
+    }) => {
+      const customer = Array.isArray(b.customer) ? b.customer[0] : b.customer;
+      return {
+        starts_at: b.starts_at,
+        ends_at: b.ends_at,
+        status: b.status,
+        customer_display_name: customer?.display_name ?? null,
+        customer_username: customer?.username ?? null,
+      };
+    });
+
+    if (salesResult.error) {
+      logger.warn('Failed to fetch sales for cat', { error: salesResult.error.message }, 'DocumentContext');
+    }
+    if (bookingsResult.error) {
+      logger.warn('Failed to fetch bookings for cat', { error: bookingsResult.error.message }, 'DocumentContext');
+    }
+
+    return { recentSales, upcomingBookings };
+  } catch (error) {
+    logger.error('Exception fetching inbound activity for cat', error, 'DocumentContext');
+    return { recentSales: [], upcomingBookings: [] };
+  }
+}
+
+/**
  * Fetch all context for My Cat
  */
 export async function fetchFullContextForCat(
   supabase: AnySupabaseClient,
   userId: string
 ): Promise<FullUserContext> {
-  const [profile, documents, { entities, stats }, tasks, wallets, conversations] = await Promise.all([
+  const [profile, documents, { entities, stats }, tasks, wallets, conversations, inboundActivity] = await Promise.all([
     fetchProfileForCat(supabase, userId),
     fetchDocumentsForCat(supabase, userId),
     fetchEntitiesForCat(supabase, userId),
     fetchTasksForCat(supabase, userId),
     fetchWalletsForCat(supabase, userId),
     fetchConversationsForCat(supabase, userId),
+    fetchInboundActivityForCat(supabase, userId),
   ]);
 
   const urgentTasks = tasks.filter(
@@ -830,6 +951,7 @@ export async function fetchFullContextForCat(
     tasks,
     wallets,
     conversations,
+    inboundActivity,
     paymentCapabilities,
     stats: {
       ...stats,
@@ -1048,6 +1170,38 @@ export function buildFullContextString(context: FullUserContext): string {
     sections.push(
       `## Recent Conversations${unreadNote}\nUse the conversation id with reply_to_message to reply on the user's behalf.\n${convLines.join('\n')}`
     );
+  }
+
+  // Inbound activity section — sales received and upcoming bookings as provider
+  {
+    const { recentSales, upcomingBookings } = context.inboundActivity;
+    const parts: string[] = [];
+
+    if (recentSales.length > 0) {
+      const saleLines = recentSales.map(s => {
+        const date = new Date(s.created_at).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+        });
+        return `- **${s.entity_title}** (${s.entity_type}) — ${s.amount_btc} BTC — ${date}`;
+      });
+      parts.push(`### Recent Sales (paid)\n${saleLines.join('\n')}`);
+    }
+
+    if (upcomingBookings.length > 0) {
+      const bookingLines = upcomingBookings.map(b => {
+        const start = new Date(b.starts_at).toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hour12: false,
+        });
+        const who = b.customer_display_name ?? (b.customer_username ? `@${b.customer_username}` : 'unknown customer');
+        return `- ${start} UTC with ${who} [${b.status}]`;
+      });
+      parts.push(`### Upcoming Bookings (as provider)\n${bookingLines.join('\n')}`);
+    }
+
+    if (parts.length > 0) {
+      sections.push(`## Inbound Economic Activity\n${parts.join('\n\n')}`);
+    }
   }
 
   // Payment capabilities section — always include so Cat knows what actions are available
