@@ -28,20 +28,20 @@ export function EmptyState({
       <p className="text-gray-500 mb-8 max-w-md">
         {hasContext ? (
           <>
-            I know about your goals and context. Ask me anything — I'll give you personalized
-            advice.
+            I know your profile and what you're working on. Ask me anything — I'll give you
+            personalised advice.
           </>
         ) : (
           <>
             I'm here to help with your projects, products, and ideas. Ask me anything —
-            conversations are private and not saved.
+            only you can see our conversations.
           </>
         )}
       </p>
       {hasContext && (
         <p className="text-xs text-tiffany-600 mb-4 flex items-center gap-1">
           <Sparkles className="h-3 w-3" />
-          Personalized suggestions based on your context
+          Personalised based on your profile and activity
         </p>
       )}
       <div className="flex flex-wrap justify-center gap-2 max-w-lg">

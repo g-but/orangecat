@@ -2,7 +2,7 @@
  * My Cat suggestion generation — pure functions, no DB dependencies.
  */
 
-import type { DocumentContext } from './document-context';
+import type { DocumentContext, FullUserContext } from './document-context';
 
 function truncate(str: string, maxLen: number): string {
   return str.length <= maxLen ? str : str.substring(0, maxLen - 3) + '...';
@@ -62,6 +62,7 @@ const CONTEXT_AWARE_GENERIC = [
   'What Bitcoin opportunities align with my skills?',
 ];
 
+/** Legacy: generate suggestions from documents only. */
 export function generateSuggestions(documents: DocumentContext[]): string[] {
   if (documents.length === 0) {return DEFAULT_SUGGESTIONS;}
 
@@ -77,5 +78,94 @@ export function generateSuggestions(documents: DocumentContext[]): string[] {
   for (const s of CONTEXT_AWARE_GENERIC) {
     if (!used.has(s) && suggestions.length < 6) { suggestions.push(s); used.add(s); }
   }
+  return suggestions.slice(0, 4);
+}
+
+/**
+ * Returns true when the user has enough context for the Cat to give personalised advice.
+ * Includes profile info, entities, documents, tasks, and wallets — not just documents.
+ */
+export function hasRichContext(context: FullUserContext): boolean {
+  return (
+    !!(context.profile?.name || context.profile?.bio || context.profile?.background) ||
+    context.entities.length > 0 ||
+    context.documents.length > 0 ||
+    context.tasks.length > 0 ||
+    context.wallets.length > 0
+  );
+}
+
+/**
+ * Generate context-aware suggestions from the full user context.
+ * Prioritises entity-based gaps, then document-based suggestions, then generic.
+ */
+export function generateSuggestionsFromContext(context: FullUserContext): string[] {
+  if (!hasRichContext(context)) {return DEFAULT_SUGGESTIONS;}
+
+  const suggestions: string[] = [];
+  const used = new Set<string>();
+
+  function add(s: string) {
+    if (!used.has(s) && suggestions.length < 6) { suggestions.push(s); used.add(s); }
+  }
+
+  // 1. Named-entity suggestions — most specific and valuable
+  const firstProduct = context.entities.find(e => e.type === 'product');
+  const firstService = context.entities.find(e => e.type === 'service');
+  const firstProject = context.entities.find(e => e.type === 'project');
+  const firstCause   = context.entities.find(e => e.type === 'cause');
+
+  if (firstProduct) {
+    add(`Help me write a better description for "${truncate(firstProduct.title, 35)}"`);
+  }
+  if (firstService) {
+    add(`How can I attract more clients for "${truncate(firstService.title, 35)}"?`);
+  }
+  if (firstProject) {
+    add(`What should the next milestone be for "${truncate(firstProject.title, 35)}"?`);
+  }
+  if (firstCause) {
+    add(`How do I grow support for "${truncate(firstCause.title, 35)}"?`);
+  }
+
+  // 2. Gap suggestions — based on what the user has vs. what's missing
+  const hasProducts  = context.stats.totalProducts > 0;
+  const hasServices  = context.stats.totalServices > 0;
+  const hasProjects  = context.stats.totalProjects > 0;
+  const hasCauses    = context.stats.totalCauses > 0;
+  const hasWallets   = context.wallets.length > 0;
+  const hasTasks     = context.tasks.length > 0;
+
+  if (hasProducts && !hasProjects && !hasCauses) {
+    add('I have products — should I also create a project to fund a bigger vision?');
+  }
+  if (hasServices && !hasProducts) {
+    add('What digital products could I create alongside my services?');
+  }
+  if (!hasProducts && !hasServices && !hasProjects && !hasCauses) {
+    // Has profile/tasks/wallets but no entities — new user nudge
+    const name = context.profile?.name;
+    if (name) {
+      add(`What's the best first thing to list for someone like me?`);
+    } else {
+      add('What should I create first on OrangeCat?');
+    }
+  }
+  if (hasWallets) {
+    add('How do I reach my savings goal faster?');
+  }
+  if (hasTasks) {
+    add('Help me prioritize my current tasks');
+  }
+
+  // 3. Document-based suggestions
+  for (const doc of context.documents) {
+    const generator = DOCUMENT_TYPE_SUGGESTIONS[doc.document_type || 'other'] || DOCUMENT_TYPE_SUGGESTIONS.other;
+    for (const s of generator(doc)) { add(s); }
+  }
+
+  // 4. Generic fallbacks
+  for (const s of CONTEXT_AWARE_GENERIC) { add(s); }
+
   return suggestions.slice(0, 4);
 }
