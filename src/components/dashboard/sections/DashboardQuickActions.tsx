@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Eye, Star, ArrowRight } from 'lucide-react';
+import { Eye, Star, ArrowRight, Cat } from 'lucide-react';
 import { ENTITY_REGISTRY, getEntitiesByCategory } from '@/config/entity-registry';
+import { ROUTES } from '@/config/routes';
 
 interface DashboardQuickActionsProps {
   hasProjects: boolean;
@@ -21,6 +22,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 /**
  * DashboardQuickActions - Quick action buttons + getting-started entity cards
  * When user has no projects, shows entity type cards to guide first creation.
+ * My Cat is always surfaced as a shortcut — it's the primary interface.
  * Uses ENTITY_REGISTRY for entity-related routes (SSOT).
  */
 export function DashboardQuickActions({ hasProjects }: DashboardQuickActionsProps) {
@@ -33,6 +35,12 @@ export function DashboardQuickActions({ hasProjects }: DashboardQuickActionsProp
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
+            <Link href={ROUTES.DASHBOARD.CAT}>
+              <Button variant="outline" className="min-h-[44px] border-orange-200 text-orange-700 hover:bg-orange-50">
+                <Cat className="w-4 h-4 mr-2" />
+                Ask My Cat
+              </Button>
+            </Link>
             <Link href={ENTITY_REGISTRY.project.basePath}>
               <Button variant="outline" className="min-h-[44px]">
                 <Eye className="w-4 h-4 mr-2" />
@@ -57,9 +65,26 @@ export function DashboardQuickActions({ hasProjects }: DashboardQuickActionsProp
     <Card>
       <CardHeader className="pb-3">
         <CardTitle>Get Started</CardTitle>
-        <CardDescription>Create your first listing — pick a category to begin</CardDescription>
+        <CardDescription>Not sure where to begin? Ask My Cat — or pick a category below.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
+        {/* Cat CTA — primary guidance option */}
+        <Link href={ROUTES.DASHBOARD.CAT}>
+          <div className="flex items-center gap-3 p-3 rounded-lg border border-orange-200 bg-orange-50/60 hover:bg-orange-100/60 hover:border-orange-300 transition-all cursor-pointer min-h-[44px]">
+            <div className="p-1.5 bg-orange-100 rounded-md flex-shrink-0">
+              <Cat className="h-4 w-4 text-orange-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-orange-900">Ask My Cat</p>
+              <p className="text-xs text-orange-700">
+                Describe your goals — My Cat will suggest the right first step
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-orange-400 flex-shrink-0" />
+          </div>
+        </Link>
+
+        {/* Entity type cards by category */}
         {GETTING_STARTED_CATEGORIES.map(category => {
           const entities = entitiesByCategory[category];
           if (!entities?.length) {
