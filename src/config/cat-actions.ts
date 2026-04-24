@@ -489,6 +489,26 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     enabled: true,
   },
 
+  archive_entity: {
+    id: 'archive_entity',
+    name: 'Archive Entity',
+    description: 'Archive (soft-delete) a product, service, project, cause, or event — sets status to archived and removes it from public view',
+    category: 'entities',
+    icon: Settings,
+    riskLevel: 'high',
+    requiresConfirmation: true,
+    parameters: [
+      { name: 'entity_type', type: 'string', required: true, description: 'Type of entity (product, service, project, cause, event, etc.)' },
+      { name: 'entity_id', type: 'entity_id', required: true, description: 'Entity ID to archive' },
+    ],
+    examples: [
+      'Delete my old product',
+      'Remove that service from my profile',
+      'Archive the project we cancelled',
+    ],
+    enabled: true,
+  },
+
   // ---------- COMMUNICATION ACTIONS ----------
 
   post_to_timeline: {
@@ -764,6 +784,55 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Done with that — check it off',
     ],
     apiEndpoint: '/api/tasks/:id/complete',
+    enabled: true,
+  },
+
+  update_task: {
+    id: 'update_task',
+    name: 'Update Task',
+    description: 'Update a task or reminder — reschedule, rename, or change priority',
+    category: 'context',
+    icon: Settings,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      {
+        name: 'task_id',
+        type: 'string',
+        required: true,
+        description: 'The task UUID from context (shown as [task_id: ...])',
+      },
+      {
+        name: 'title',
+        type: 'string',
+        required: false,
+        description: 'New title (omit to keep existing)',
+      },
+      {
+        name: 'due_date',
+        type: 'string',
+        required: false,
+        description: 'New due date — ISO 8601 or natural language ("next week", "in 2 hours")',
+      },
+      {
+        name: 'notes',
+        type: 'string',
+        required: false,
+        description: 'New notes/description (omit to keep existing)',
+      },
+      {
+        name: 'priority',
+        type: 'string',
+        required: false,
+        description: 'New priority: low, normal, high, urgent',
+      },
+    ],
+    examples: [
+      'Move that reminder to next Monday',
+      'Reschedule the dentist reminder to next week',
+      'Change the task title to something clearer',
+      'Make that task high priority',
+    ],
     enabled: true,
   },
 

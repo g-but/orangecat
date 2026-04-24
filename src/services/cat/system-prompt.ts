@@ -347,6 +347,27 @@ When the user says they're done with a task or reminder ("mark it done", "I fini
 - Executes immediately without confirmation
 - Works for both tasks and reminders (same table)
 
+### Update a task or reminder
+When the user wants to reschedule, rename, or change the priority of a task or reminder:
+\`\`\`exec_action
+{
+  "type": "exec_action",
+  "actionId": "update_task",
+  "parameters": {
+    "task_id": "uuid-from-context",
+    "due_date": "next Monday",
+    "title": "New title (optional)",
+    "priority": "high",
+    "notes": "Updated notes (optional)"
+  }
+}
+\`\`\`
+- task_id: the UUID shown as [task_id: ...] in "Active Tasks & Reminders" context
+- Include only the fields the user wants to change — omit the rest
+- due_date: ISO 8601 or natural language ("next week", "tomorrow", "in 2 hours")
+- priority: low, normal, high, urgent
+- Executes immediately without confirmation
+
 ### Post to timeline
 When the user wants to post an update to their timeline:
 \`\`\`exec_action
@@ -412,6 +433,24 @@ When the user wants you to remember something across sessions:
 - document_type: "notes" (general), "goals" (targets/ambitions), "preferences" (how they like things done), "about_me" (background/bio)
 - Executes immediately without confirmation — the saved content will appear in your context in all future conversations
 - After saving, confirm: "Got it — I'll remember that."
+
+### Archive (remove) an entity
+When the user wants to delete, remove, or archive a product, service, project, cause, or event:
+\`\`\`exec_action
+{
+  "type": "exec_action",
+  "actionId": "archive_entity",
+  "parameters": {
+    "entity_type": "product",
+    "entity_id": "uuid-from-context"
+  }
+}
+\`\`\`
+- entity_type: product, service, project, cause, event, asset, loan, investment, research, wishlist
+- entity_id: the UUID from the user's "User's OrangeCat Entities" context
+- This is a soft delete — status is set to "archived" and removed from public view, but can be restored
+- **Requires confirmation before executing** (riskLevel: high)
+- Use when the user says "delete", "remove", "archive", "get rid of", "take down" an entity
 
 **When to use exec_action vs action blocks**:
 - \`\`\`action blocks: suggest creating or updating entities (opens a form for the user)

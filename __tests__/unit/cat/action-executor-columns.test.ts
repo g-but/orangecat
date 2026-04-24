@@ -300,6 +300,62 @@ describe('Cat action-executor — correct DB column names', () => {
     });
   });
 
+  // ── archive_entity ───────────────────────────────────────────────────────────
+  describe('archive_entity', () => {
+    it('sets status=archived on the entity table and returns a displayMessage', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'archive_entity', {
+        entity_type: 'product',
+        entity_id: 'prod-abc',
+      });
+
+      expect(result.status).toBe('completed');
+      const update = getEntityUpdate(supabase, ENTITY_REGISTRY.product.tableName);
+      expect(update).toBeDefined();
+      expect(update!.status).toBe('archived');
+      // Must NOT set to any other status
+      expect(update!.status).not.toBe('active');
+      expect(update!.status).not.toBe('draft');
+    });
+
+    it('works across all entity types via registry', async () => {
+      for (const entityType of ['service', 'project', 'cause', 'event'] as const) {
+        const supabase = buildMockSupabase();
+        const result = await run(supabase, 'archive_entity', {
+          entity_type: entityType,
+          entity_id: `${entityType}-id`,
+        });
+
+        expect(result.status).toBe('completed');
+        const update = getEntityUpdate(supabase, ENTITY_REGISTRY[entityType].tableName);
+        expect(update!.status).toBe('archived');
+      }
+    });
+
+    it('returns error for unknown entity type', async () => {
+      const supabase = buildMockSupabase();
+      const result = await run(supabase, 'archive_entity', {
+        entity_type: 'nonexistent_type',
+        entity_id: 'some-id',
+      });
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/unknown entity type/i);
+    });
+
+    it('returns a displayMessage containing the entity title', async () => {
+      const supabase = buildMockSupabase();
+      // The mock single() returns { id: 'mock-id', title: 'mock' }
+      const result = await run(supabase, 'archive_entity', {
+        entity_type: 'product',
+        entity_id: 'prod-abc',
+      });
+
+      expect(result.status).toBe('completed');
+      expect((result.data as Record<string, unknown>)?.displayMessage).toContain('archived');
+    });
+  });
+
   // ── update_entity ───────────────────────────────────────────────────────────
   describe('update_entity', () => {
     it('passes cause_category through to causes table (not silently dropped)', async () => {
@@ -1076,6 +1132,133 @@ describe('Cat action-executor — correct DB column names', () => {
 
       expect(result.status).toBe('completed');
       expect((result.data as Record<string, unknown>)?.displayMessage).toContain('Call dentist');
+    });
+  });
+
+  // ── update_task ──────────────────────────────────────────────────────────────
+  describe('update_task', () => {
+    // update_task selects the task first (ownership check), then updates.
+    // We need a table-aware mock so the tasks select returns real task data.
+    function buildMockSupabaseForUpdateTask(taskOverrides: Record<string, unknown> = {}) {
+      const updatesByTable: Record<string, unknown[]> = {};
+      const taskRow = {
+        id: 'task-xyz',
+        title: 'Water plants',
+        created_by: USER_ID,
+        ...taskOverrides,
+      };
+
+      const supabase = {
+        from: jest.fn((table: string) => {
+          const chain: Record<string, unknown> = {};
+          chain.insert = jest.fn().mockReturnThis();
+          chain.update = jest.fn((payload: unknown) => {
+            if (!updatesByTable[table]) updatesByTable[table] = [];
+            updatesByTable[table].push(payload);
+            return chain;
+          });
+          chain.select = jest.fn().mockReturnThis();
+          chain.eq = jest.fn().mockReturnThis();
+          chain.order = jest.fn().mockReturnThis();
+          chain.limit = jest.fn().mockReturnThis();
+          // Tasks select returns real task data; update single returns updated row
+          chain.single = jest.fn().mockResolvedValue(
+            table === DATABASE_TABLES.TASKS
+              ? { data: { ...taskRow, due_date: null, priority: 'normal' }, error: null }
+              : { data: { id: 'new-id' }, error: null }
+          );
+          chain.maybeSingle = jest.fn().mockResolvedValue({ data: null, error: null });
+          return chain;
+        }),
+        _updatesByTable: updatesByTable,
+      };
+      return supabase;
+    }
+
+    it('updates due_date from natural language ("next week") via parseReminderDate', async () => {
+      const supabase = buildMockSupabaseForUpdateTask();
+      const result = await run(supabase as never, 'update_task', {
+        task_id: 'task-xyz',
+        due_date: 'next week',
+      });
+
+      expect(result.status).toBe('completed');
+      const update = supabase._updatesByTable[DATABASE_TABLES.TASKS]?.[0] as Record<string, unknown>;
+      expect(update).toBeDefined();
+      // due_date should be a valid ISO string (next week)
+      expect(typeof update.due_date).toBe('string');
+      const stored = new Date(update.due_date as string);
+      expect(isNaN(stored.getTime())).toBe(false);
+    });
+
+    it('updates title when provided', async () => {
+      const supabase = buildMockSupabaseForUpdateTask();
+      const result = await run(supabase as never, 'update_task', {
+        task_id: 'task-xyz',
+        title: 'Water ALL the plants',
+      });
+
+      expect(result.status).toBe('completed');
+      const update = supabase._updatesByTable[DATABASE_TABLES.TASKS]?.[0] as Record<string, unknown>;
+      expect(update.title).toBe('Water ALL the plants');
+    });
+
+    it('maps `notes` to description column', async () => {
+      const supabase = buildMockSupabaseForUpdateTask();
+      await run(supabase as never, 'update_task', {
+        task_id: 'task-xyz',
+        notes: 'Also the ones on the balcony',
+      });
+
+      const update = supabase._updatesByTable[DATABASE_TABLES.TASKS]?.[0] as Record<string, unknown>;
+      expect(update.description).toBe('Also the ones on the balcony');
+      // `notes` must NOT be sent as a DB column
+      expect(update.notes).toBeUndefined();
+    });
+
+    it('maps priority=medium to normal', async () => {
+      const supabase = buildMockSupabaseForUpdateTask();
+      await run(supabase as never, 'update_task', {
+        task_id: 'task-xyz',
+        priority: 'medium',
+      });
+
+      const update = supabase._updatesByTable[DATABASE_TABLES.TASKS]?.[0] as Record<string, unknown>;
+      expect(update.priority).toBe('normal');
+    });
+
+    it('returns error when task belongs to a different user', async () => {
+      const supabase = buildMockSupabaseForUpdateTask({ created_by: 'someone-else' });
+      const result = await run(supabase as never, 'update_task', {
+        task_id: 'task-xyz',
+        title: 'Hacked title',
+      });
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/own/i);
+    });
+
+    it('returns error when no fields to update are provided', async () => {
+      const supabase = buildMockSupabaseForUpdateTask();
+      const result = await run(supabase as never, 'update_task', {
+        task_id: 'task-xyz',
+        // no title, due_date, notes, or priority
+      });
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/no fields/i);
+    });
+
+    it('returns a displayMessage with new due date when rescheduling', async () => {
+      const supabase = buildMockSupabaseForUpdateTask();
+      const result = await run(supabase as never, 'update_task', {
+        task_id: 'task-xyz',
+        due_date: 'tomorrow',
+      });
+
+      expect(result.status).toBe('completed');
+      const displayMessage = (result.data as Record<string, unknown>)?.displayMessage as string;
+      expect(displayMessage).toContain('📅');
     });
   });
 });

@@ -402,6 +402,39 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     return { success: true, data };
   },
 
+  archive_entity: async (supabase, _userId, actorId, params) => {
+    // Soft-delete: set status to 'archived'. Reversible. Works for all entity types.
+    // Uses actor_id ownership guard so users can only archive their own entities.
+    const entityType = params.entity_type as string;
+    const entityId = params.entity_id as string;
+
+    const meta = ENTITY_REGISTRY[entityType as keyof typeof ENTITY_REGISTRY];
+    if (!meta) {
+      return { success: false, error: `Unknown entity type: ${entityType}` };
+    }
+
+    const { data, error } = await supabase
+      .from(meta.tableName)
+      .update({ status: 'archived' })
+      .eq('id', entityId)
+      .eq('actor_id', actorId)
+      .select('id, title, status')
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    const title = (data as Record<string, unknown>)?.title as string | undefined;
+    return {
+      success: true,
+      data: {
+        ...data,
+        displayMessage: `🗂️ "${title ?? entityId}" has been archived and removed from public view`,
+      },
+    };
+  },
+
   // ---------- COMMUNICATION ACTIONS ----------
 
   post_to_timeline: async (supabase, _userId, actorId, params) => {
@@ -716,6 +749,71 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
         displayMessage: `✅ Marked "${task.title}" as completed`,
       },
     };
+  },
+
+  update_task: async (supabase, userId, _actorId, params) => {
+    // Update mutable fields of a task/reminder. Ownership is verified via created_by.
+    // Accepts natural-language due_date (same parser as set_reminder).
+    const taskId = params.task_id as string;
+
+    // Fetch to verify ownership and get current title for display
+    const { data: task, error: fetchError } = await supabase
+      .from(DATABASE_TABLES.TASKS)
+      .select('id, title, created_by')
+      .eq('id', taskId)
+      .single();
+
+    if (fetchError || !task) {
+      return { success: false, error: 'Task not found' };
+    }
+
+    if (task.created_by !== userId) {
+      return { success: false, error: 'You can only update your own tasks' };
+    }
+
+    // Build the update payload — only include fields the caller explicitly provided
+    const updates: Record<string, unknown> = {};
+
+    if (params.title !== undefined) {
+      updates.title = params.title as string;
+    }
+    if (params.notes !== undefined) {
+      updates.description = params.notes as string;
+    }
+    if (params.priority !== undefined) {
+      const rawPriority = params.priority as string;
+      updates.priority = rawPriority === 'medium' ? 'normal' : rawPriority;
+    }
+    if (params.due_date !== undefined) {
+      const parsed = parseReminderDate(params.due_date as string);
+      updates.due_date = parsed; // null if unparseable — stored as timeless
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return { success: false, error: 'No fields to update — provide at least one of: title, notes, due_date, priority' };
+    }
+
+    const { data, error } = await supabase
+      .from(DATABASE_TABLES.TASKS)
+      .update(updates)
+      .eq('id', taskId)
+      .eq('created_by', userId)
+      .select('id, title, due_date, priority')
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    const updatedTitle = (data as Record<string, unknown>)?.title as string ?? task.title as string;
+    const dueDateDisplay = updates.due_date
+      ? new Date(updates.due_date as string).toLocaleString('en-CH', { dateStyle: 'medium', timeStyle: 'short' })
+      : null;
+    const displayMessage = dueDateDisplay
+      ? `📅 Updated "${updatedTitle}" — now due ${dueDateDisplay}`
+      : `✏️ Updated "${updatedTitle}"`;
+
+    return { success: true, data: { ...data, displayMessage } };
   },
 
   create_wishlist: async (supabase, _userId, actorId, params) => {
@@ -1479,6 +1577,8 @@ export class CatActionExecutor {
         return `Update ${parameters.entity_type} with ${Object.keys(typeof parameters.updates === 'object' ? (parameters.updates as object) : {}).join(', ') || 'changes'}`;
       case 'publish_entity':
         return `Publish ${parameters.entity_type} (make it live)`;
+      case 'archive_entity':
+        return `Archive ${parameters.entity_type} (remove from public view)`;
       case 'post_to_timeline':
         return `Post to timeline: "${String(parameters.content).slice(0, 50)}..."`;
       case 'send_message':
@@ -1509,6 +1609,13 @@ export class CatActionExecutor {
       }
       case 'complete_task':
         return `Mark task as completed (id: ${parameters.task_id})`;
+      case 'update_task': {
+        const parts: string[] = [];
+        if (parameters.title) parts.push(`rename to "${parameters.title}"`);
+        if (parameters.due_date) parts.push(`reschedule to ${parameters.due_date}`);
+        if (parameters.priority) parts.push(`priority → ${parameters.priority}`);
+        return `Update task (id: ${parameters.task_id})${parts.length ? ': ' + parts.join(', ') : ''}`;
+      }
       case 'create_organization':
         return `Create organization "${parameters.name}"`;
       default:
