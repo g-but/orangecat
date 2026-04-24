@@ -657,6 +657,54 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
     };
   },
 
+  complete_task: async (supabase, userId, _actorId, params) => {
+    const taskId = params.task_id as string;
+    const notes = (params.notes as string | null) || null;
+
+    // First fetch the task to confirm it belongs to this user and isn't already completed
+    const { data: task, error: taskError } = await supabase
+      .from(DATABASE_TABLES.TASKS)
+      .select('id, title, task_type, is_completed, created_by')
+      .eq('id', taskId)
+      .single();
+
+    if (taskError || !task) {
+      return { success: false, error: 'Task not found' };
+    }
+
+    if (task.created_by !== userId) {
+      return { success: false, error: 'You can only complete your own tasks' };
+    }
+
+    if (task.is_completed && task.task_type === 'one_time') {
+      return { success: false, error: `Task "${task.title}" is already completed` };
+    }
+
+    // Insert into task_completions — the DB trigger handles status reset and one-time completion
+    const { error: completionError } = await supabase
+      .from(DATABASE_TABLES.TASK_COMPLETIONS)
+      .insert({
+        task_id: taskId,
+        completed_by: userId,
+        completed_at: new Date().toISOString(),
+        notes,
+        duration_minutes: null,
+      });
+
+    if (completionError) {
+      return { success: false, error: completionError.message };
+    }
+
+    return {
+      success: true,
+      data: {
+        task_id: taskId,
+        title: task.title,
+        displayMessage: `✅ Marked "${task.title}" as completed`,
+      },
+    };
+  },
+
   create_wishlist: async (supabase, _userId, actorId, params) => {
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.wishlist.tableName)
@@ -1443,6 +1491,8 @@ export class CatActionExecutor {
       }
       case 'set_reminder':
         return `Set reminder: "${parameters.message}" — ${parameters.when}`;
+      case 'complete_task':
+        return `Mark task as completed (id: ${parameters.task_id})`;
       case 'create_organization':
         return `Create organization "${parameters.name}"`;
       default:

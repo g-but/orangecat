@@ -1240,6 +1240,8 @@ export function buildFullContextString(context: FullUserContext): string {
       } else if (t.task_type !== 'one_time' && t.schedule_human) {
         parts.push(` — ${t.schedule_human}`);
       }
+      // Always include task ID so Cat can reference it in complete_task exec_action
+      parts.push(` [task_id: ${t.id}]`);
       return parts.join('');
     });
     const alerts: string[] = [];

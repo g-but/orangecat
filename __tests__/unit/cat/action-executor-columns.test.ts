@@ -853,4 +853,97 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.visibility).toBe('public');
     });
   });
+
+  // ── complete_task ────────────────────────────────────────────────────────────
+  describe('complete_task', () => {
+    // complete_task does a select on tasks first, then inserts into task_completions.
+    // We need a table-aware mock so the tasks select returns real task data.
+    function buildMockSupabaseForCompleteTask(taskOverrides: Record<string, unknown> = {}) {
+      const insertsByTable: Record<string, unknown[]> = {};
+      const taskRow = {
+        id: 'task-abc',
+        title: 'Call dentist',
+        task_type: 'one_time',
+        is_completed: false,
+        created_by: USER_ID,
+        ...taskOverrides,
+      };
+
+      const supabase = {
+        from: jest.fn((table: string) => {
+          const chain: Record<string, unknown> = {};
+          chain.insert = jest.fn((payload: unknown) => {
+            if (!insertsByTable[table]) insertsByTable[table] = [];
+            insertsByTable[table].push(payload);
+            return chain;
+          });
+          chain.update = jest.fn().mockReturnThis();
+          chain.select = jest.fn().mockReturnThis();
+          chain.eq = jest.fn().mockReturnThis();
+          chain.in = jest.fn().mockReturnThis();
+          chain.order = jest.fn().mockReturnThis();
+          chain.limit = jest.fn().mockReturnThis();
+          // Tasks select returns real task data; everything else returns a generic insert success
+          chain.single = jest.fn().mockResolvedValue(
+            table === DATABASE_TABLES.TASKS
+              ? { data: taskRow, error: null }
+              : { data: { id: 'new-id' }, error: null }
+          );
+          chain.maybeSingle = jest.fn().mockResolvedValue({ data: null, error: null });
+          return chain;
+        }),
+        _insertsByTable: insertsByTable,
+      };
+      return supabase;
+    }
+
+    it('inserts into task_completions with task_id, completed_by, and completed_at', async () => {
+      const supabase = buildMockSupabaseForCompleteTask();
+      const result = await run(supabase as never, 'complete_task', {
+        task_id: 'task-abc',
+      });
+
+      expect(result.status).toBe('completed');
+      const insert = supabase._insertsByTable[DATABASE_TABLES.TASK_COMPLETIONS]?.[0] as Record<string, unknown>;
+      expect(insert).toBeDefined();
+      expect(insert.task_id).toBe('task-abc');
+      expect(insert.completed_by).toBe(USER_ID);
+      expect(typeof insert.completed_at).toBe('string');
+    });
+
+    it('passes notes through to task_completions when provided', async () => {
+      const supabase = buildMockSupabaseForCompleteTask();
+      await run(supabase as never, 'complete_task', {
+        task_id: 'task-abc',
+        notes: 'Done after rescheduling twice',
+      });
+
+      const insert = supabase._insertsByTable[DATABASE_TABLES.TASK_COMPLETIONS]?.[0] as Record<string, unknown>;
+      expect(insert.notes).toBe('Done after rescheduling twice');
+    });
+
+    it('returns error when task belongs to a different user', async () => {
+      const supabase = buildMockSupabaseForCompleteTask({ created_by: 'other-user-999' });
+      const result = await run(supabase as never, 'complete_task', { task_id: 'task-abc' });
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/own/i);
+    });
+
+    it('returns error when one-time task is already completed', async () => {
+      const supabase = buildMockSupabaseForCompleteTask({ is_completed: true, task_type: 'one_time' });
+      const result = await run(supabase as never, 'complete_task', { task_id: 'task-abc' });
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/already completed/i);
+    });
+
+    it('returns a displayMessage confirming completion', async () => {
+      const supabase = buildMockSupabaseForCompleteTask();
+      const result = await run(supabase as never, 'complete_task', { task_id: 'task-abc' });
+
+      expect(result.status).toBe('completed');
+      expect((result.data as Record<string, unknown>)?.displayMessage).toContain('Call dentist');
+    });
+  });
 });

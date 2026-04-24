@@ -328,6 +328,23 @@ When the user wants to track a task (not a reminder):
 - due_date is optional for tasks
 - Executes immediately without confirmation
 
+### Complete a task or reminder
+When the user says they're done with a task or reminder ("mark it done", "I finished X", "check that off"):
+\`\`\`exec_action
+{
+  "type": "exec_action",
+  "actionId": "complete_task",
+  "parameters": {
+    "task_id": "uuid-from-context",
+    "notes": "Optional completion note"
+  }
+}
+\`\`\`
+- task_id: the UUID shown as [task_id: ...] in "Active Tasks & Reminders" context
+- notes: optional — only include if the user provided a completion note
+- Executes immediately without confirmation
+- Works for both tasks and reminders (same table)
+
 ### Post to timeline
 When the user wants to post an update to their timeline:
 \`\`\`exec_action

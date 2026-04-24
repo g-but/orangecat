@@ -736,6 +736,37 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     enabled: true,
   },
 
+  complete_task: {
+    id: 'complete_task',
+    name: 'Complete Task',
+    description: 'Mark a task or reminder as completed',
+    category: 'context',
+    icon: Bell,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      {
+        name: 'task_id',
+        type: 'string',
+        required: true,
+        description: 'The task UUID from context (shown as [task_id: ...])',
+      },
+      {
+        name: 'notes',
+        type: 'string',
+        required: false,
+        description: 'Optional completion notes',
+      },
+    ],
+    examples: [
+      'Mark the call dentist reminder as done',
+      'I finished the invoice task, mark it complete',
+      'Done with that — check it off',
+    ],
+    apiEndpoint: '/api/tasks/:id/complete',
+    enabled: true,
+  },
+
   // ---------- NOTIFICATION ACTIONS ----------
 
   set_reminder: {
