@@ -33,7 +33,7 @@ export function useDiscoverState() {
     | 'relevance'
     | 'recent';
   const urlType = (searchParams?.get('type') || 'all') as DiscoverTabType;
-  const validTabTypes: DiscoverTabType[] = ['all', 'projects', 'profiles', 'loans', 'investments', 'causes', 'events', 'products', 'services', 'groups', 'wishlists', 'research'];
+  const validTabTypes: DiscoverTabType[] = ['all', 'projects', 'profiles', 'loans', 'investments', 'causes', 'events', 'products', 'services', 'groups', 'wishlists', 'research', 'ai_assistants'];
   const initialType = validTabTypes.includes(urlType) ? urlType : 'all';
   const initialCountry = searchParams?.get('country') || '';
   const initialCity = searchParams?.get('city') || '';
@@ -101,7 +101,7 @@ export function useDiscoverState() {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [investmentsLoading, setInvestmentsLoading] = useState(false);
 
-  // Generic public entity data (causes, events, products, services, groups, wishlists, research)
+  // Generic public entity data (causes, events, products, services, groups, wishlists, research, ai_assistants)
   const [causes, setCauses] = useState<GenericPublicEntity[]>([]);
   const [events, setEvents] = useState<GenericPublicEntity[]>([]);
   const [products, setProducts] = useState<GenericPublicEntity[]>([]);
@@ -109,6 +109,7 @@ export function useDiscoverState() {
   const [groups, setGroups] = useState<GenericPublicEntity[]>([]);
   const [wishlists, setWishlists] = useState<GenericPublicEntity[]>([]);
   const [research, setResearch] = useState<GenericPublicEntity[]>([]);
+  const [aiAssistants, setAiAssistants] = useState<GenericPublicEntity[]>([]);
   const [genericLoading, setGenericLoading] = useState(false);
 
   // Fetch total counts from database with client-side caching
@@ -276,9 +277,9 @@ export function useDiscoverState() {
     fetchInvestments();
   }, [activeTab, searchTerm]);
 
-  // Fetch generic entities (causes, events, products, services, groups, wishlists, research) when their tab is active
+  // Fetch generic entities (causes, events, products, services, groups, wishlists, research, ai_assistants) when their tab is active
   useEffect(() => {
-    const GENERIC_TABS = ['causes', 'events', 'products', 'services', 'groups', 'wishlists', 'research', 'all'] as const;
+    const GENERIC_TABS = ['causes', 'events', 'products', 'services', 'groups', 'wishlists', 'research', 'ai_assistants', 'all'] as const;
     if (!GENERIC_TABS.includes(activeTab as (typeof GENERIC_TABS)[number])) {
       return;
     }
@@ -291,7 +292,7 @@ export function useDiscoverState() {
       const shouldFetch = (tab: DiscoverTabType) => activeTab === 'all' || activeTab === tab;
 
       try {
-        const [causesRes, eventsRes, productsRes, servicesRes, groupsRes, wishlistsRes, researchRes] = await Promise.all([
+        const [causesRes, eventsRes, productsRes, servicesRes, groupsRes, wishlistsRes, researchRes, aiAssistantsRes] = await Promise.all([
           shouldFetch('causes')
             ? (() => {
                 let q = supabase
@@ -384,6 +385,20 @@ export function useDiscoverState() {
                 return q;
               })()
             : Promise.resolve({ data: null, error: null }),
+
+          shouldFetch('ai_assistants')
+            ? (() => {
+                let q = supabase
+                  .from(getTableName('ai_assistant'))
+                  .select('id, title, description, status, category, created_at')
+                  .eq('is_public', true)
+                  .eq('status', 'active')
+                  .order('created_at', { ascending: false })
+                  .limit(activeTab === 'ai_assistants' ? limit : 8);
+                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
+                return q;
+              })()
+            : Promise.resolve({ data: null, error: null }),
         ]);
 
         if (shouldFetch('causes')) { setCauses((causesRes.data ?? []) as unknown as GenericPublicEntity[]); }
@@ -414,6 +429,7 @@ export function useDiscoverState() {
             } satisfies GenericPublicEntity))
           );
         }
+        if (shouldFetch('ai_assistants')) { setAiAssistants((aiAssistantsRes.data ?? []) as unknown as GenericPublicEntity[]); }
       } catch (error) {
         logger.error('Error fetching generic discover entities', error, 'Discover');
       } finally {
@@ -602,6 +618,7 @@ export function useDiscoverState() {
     (activeTab === 'groups' && groups.length === 0) ||
     (activeTab === 'wishlists' && wishlists.length === 0) ||
     (activeTab === 'research' && research.length === 0) ||
+    (activeTab === 'ai_assistants' && aiAssistants.length === 0) ||
     (activeTab === 'all' &&
       projects.length === 0 &&
       profiles.length === 0 &&
@@ -613,7 +630,8 @@ export function useDiscoverState() {
       services.length === 0 &&
       groups.length === 0 &&
       wishlists.length === 0 &&
-      research.length === 0);
+      research.length === 0 &&
+      aiAssistants.length === 0);
 
   const hasFilters = !!(searchTerm || selectedCategories.length > 0);
 
@@ -641,6 +659,7 @@ export function useDiscoverState() {
     groups,
     wishlists,
     research,
+    aiAssistants,
     totalInvestmentsCount,
     stats,
 

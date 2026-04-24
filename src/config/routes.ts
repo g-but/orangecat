@@ -268,6 +268,9 @@ export const ROUTES = {
   RESEARCH: {
     VIEW: (id: string) => `/research/${id}`,
   },
+  AI_ASSISTANTS: {
+    VIEW: (id: string) => `/ai-assistants/${id}`,
+  },
   GROUPS: {
     VIEW: (slug: string) => `/groups/${slug}`,
   },

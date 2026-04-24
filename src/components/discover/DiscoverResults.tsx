@@ -10,7 +10,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { ArrowUpDown, Loader2, Target, Users, DollarSign, TrendingUp, Gift, FlaskConical } from 'lucide-react';
+import { ArrowUpDown, Loader2, Target, Users, DollarSign, TrendingUp, Gift, FlaskConical, Bot } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ProjectCard } from '@/components/entity/variants/ProjectCard';
 import ProfileCard from '@/components/ui/ProfileCard';
@@ -46,6 +46,7 @@ interface DiscoverResultsProps {
   groups?: GenericPublicEntity[];
   wishlists?: GenericPublicEntity[];
   research?: GenericPublicEntity[];
+  aiAssistants?: GenericPublicEntity[];
   totalResults: number;
   loading: boolean;
   hasMore: boolean;
@@ -68,6 +69,7 @@ export default function DiscoverResults({
   groups = [],
   wishlists = [],
   research = [],
+  aiAssistants = [],
   totalResults,
   loading,
   hasMore,
@@ -130,7 +132,8 @@ export default function DiscoverResults({
     services.length +
     groups.length +
     wishlists.length +
-    research.length;
+    research.length +
+    aiAssistants.length;
 
   // Results Header
   const resultsHeader = (
@@ -284,7 +287,7 @@ export default function DiscoverResults({
   if (activeTab === 'all') {
     const sectionLengths = [
       projects.length, profiles.length, loans.length, investments.length,
-      causes.length, events.length, products.length, services.length, groups.length, wishlists.length, research.length,
+      causes.length, events.length, products.length, services.length, groups.length, wishlists.length, research.length, aiAssistants.length,
     ];
     const hasMultipleSections = sectionLengths.filter(n => n > 0).length > 1;
     return (
@@ -340,6 +343,11 @@ export default function DiscoverResults({
             <GenericGrid items={research.slice(0, 6)} entityType="research" makeHref={e => ROUTES.RESEARCH.VIEW(e.id)} />
           </ResultsSection>
         )}
+        {aiAssistants.length > 0 && (
+          <ResultsSection title="AI Assistants" count={aiAssistants.length} icon={<Bot className="w-5 h-5" />} onViewAll={() => onTabChange('ai_assistants')} showViewAll={hasMultipleSections} viewAllLabel="View All AI Assistants">
+            <GenericGrid items={aiAssistants.slice(0, 6)} entityType="ai_assistant" makeHref={e => ROUTES.AI_ASSISTANTS.VIEW(e.id)} />
+          </ResultsSection>
+        )}
         {profiles.length > 0 && (
           <ResultsSection title="People" count={profiles.length} icon={<Users className="w-5 h-5" />} onViewAll={() => onTabChange('profiles')} showViewAll={hasMultipleSections} viewAllLabel="View All People">
             <ResultsGrid items={profiles.slice(0, 6)} type="profile" />
@@ -372,6 +380,9 @@ export default function DiscoverResults({
   }
   if (activeTab === 'research') {
     return (<>{resultsHeader}<GenericGrid items={research} entityType="research" makeHref={e => ROUTES.RESEARCH.VIEW(e.id)} />{hasMore && <LoadMoreButton label="Load More Research" />}</>);
+  }
+  if (activeTab === 'ai_assistants') {
+    return (<>{resultsHeader}<GenericGrid items={aiAssistants} entityType="ai_assistant" makeHref={e => ROUTES.AI_ASSISTANTS.VIEW(e.id)} />{hasMore && <LoadMoreButton label="Load More AI Assistants" />}</>);
   }
   if (activeTab === 'projects') {
     return (<>{resultsHeader}<ResultsGrid items={projects} type="project" />{hasMore && <LoadMoreButton label="Load More Projects" />}</>);

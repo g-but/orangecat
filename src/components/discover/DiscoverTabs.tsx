@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Target, Users, Grid3X3, DollarSign, TrendingUp, Heart, Package, Briefcase, Calendar, Building2, Gift, FlaskConical } from 'lucide-react';
+import { Target, Users, Grid3X3, DollarSign, TrendingUp, Heart, Package, Briefcase, Calendar, Building2, Gift, FlaskConical, Bot } from 'lucide-react';
 
-export type DiscoverTabType = 'all' | 'projects' | 'profiles' | 'loans' | 'investments' | 'causes' | 'events' | 'products' | 'services' | 'groups' | 'wishlists' | 'research';
+export type DiscoverTabType = 'all' | 'projects' | 'profiles' | 'loans' | 'investments' | 'causes' | 'events' | 'products' | 'services' | 'groups' | 'wishlists' | 'research' | 'ai_assistants';
 
 interface TabCounts {
   projects: number;
@@ -17,6 +17,7 @@ interface TabCounts {
   groups: number;
   wishlists: number;
   research: number;
+  ai_assistants: number;
 }
 
 interface DiscoverTabsProps {
@@ -33,6 +34,7 @@ interface DiscoverTabsProps {
   groupCount?: number;
   wishlistCount?: number;
   researchCount?: number;
+  aiAssistantCount?: number;
   loading?: boolean;
 }
 
@@ -48,7 +50,7 @@ const tabs: TabConfig[] = [
     id: 'all',
     label: 'All',
     icon: <Grid3X3 className="w-4 h-4" />,
-    getCount: (c) => c.projects + c.profiles + c.loans + c.investments + c.causes + c.events + c.products + c.services + c.groups + c.wishlists + c.research,
+    getCount: (c) => c.projects + c.profiles + c.loans + c.investments + c.causes + c.events + c.products + c.services + c.groups + c.wishlists + c.research + c.ai_assistants,
   },
   {
     id: 'projects',
@@ -111,6 +113,12 @@ const tabs: TabConfig[] = [
     getCount: (c) => c.research,
   },
   {
+    id: 'ai_assistants',
+    label: 'AI Assistants',
+    icon: <Bot className="w-4 h-4" />,
+    getCount: (c) => c.ai_assistants,
+  },
+  {
     id: 'profiles',
     label: 'People',
     icon: <Users className="w-4 h-4" />,
@@ -132,6 +140,7 @@ export default function DiscoverTabs({
   groupCount = 0,
   wishlistCount = 0,
   researchCount = 0,
+  aiAssistantCount = 0,
   loading = false,
 }: DiscoverTabsProps) {
   const counts: TabCounts = {
@@ -146,6 +155,7 @@ export default function DiscoverTabs({
     groups: groupCount,
     wishlists: wishlistCount,
     research: researchCount,
+    ai_assistants: aiAssistantCount,
   };
 
   return (
