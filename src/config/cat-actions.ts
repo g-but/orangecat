@@ -29,6 +29,7 @@ import {
   Gift,
   type LucideIcon,
 } from 'lucide-react';
+import { getApiEndpoint } from '@/config/entity-registry';
 
 // ==================== ACTION TYPES ====================
 
@@ -95,7 +96,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'List my consulting package for sale',
       'Set up a product page for my artwork',
     ],
-    apiEndpoint: '/api/products',
+    apiEndpoint: getApiEndpoint('product'),
     enabled: true,
   },
 
@@ -141,7 +142,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Offer my design services',
       'Set up a coaching session service',
     ],
-    apiEndpoint: '/api/services',
+    apiEndpoint: getApiEndpoint('service'),
     enabled: true,
   },
 
@@ -176,7 +177,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Launch my network state project',
       'Create a funding campaign for my book',
     ],
-    apiEndpoint: '/api/projects',
+    apiEndpoint: getApiEndpoint('project'),
     enabled: true,
   },
 
@@ -205,7 +206,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Start a movement for digital sovereignty',
       'Set up ongoing support for my work',
     ],
-    apiEndpoint: '/api/causes',
+    apiEndpoint: getApiEndpoint('cause'),
     enabled: true,
   },
 
@@ -235,7 +236,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Set up a conference event',
       'Organize a community gathering',
     ],
-    apiEndpoint: '/api/events',
+    apiEndpoint: getApiEndpoint('event'),
     enabled: true,
   },
 
@@ -270,7 +271,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'List my co-working space',
       'Add my property as an asset',
     ],
-    apiEndpoint: '/api/assets',
+    apiEndpoint: getApiEndpoint('asset'),
     enabled: true,
   },
 
@@ -318,7 +319,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Set up an equity round for my project',
       'Launch a Bitcoin-denominated investment opportunity',
     ],
-    apiEndpoint: '/api/investments',
+    apiEndpoint: getApiEndpoint('investment'),
     enabled: true,
   },
 
@@ -358,7 +359,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Borrow 0.05 BTC for equipment at 5% interest',
       'Refinance my existing loan at a lower rate',
     ],
-    apiEndpoint: '/api/loans',
+    apiEndpoint: getApiEndpoint('loan'),
     enabled: true,
   },
 
@@ -407,7 +408,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Create a Bitcoin-funded biology research entity',
       'Launch a decentralized science study on climate',
     ],
-    apiEndpoint: '/api/research',
+    apiEndpoint: getApiEndpoint('research'),
     enabled: true,
   },
 
@@ -448,7 +449,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Set up a wedding registry',
       'Make a personal wishlist for my followers',
     ],
-    apiEndpoint: '/api/wishlists',
+    apiEndpoint: getApiEndpoint('wishlist'),
     enabled: true,
   },
 
@@ -750,7 +751,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Add to my context that my budget is 0.01 BTC',
       'Note that my goal is to launch by March',
     ],
-    apiEndpoint: '/api/documents',
+    apiEndpoint: getApiEndpoint('document'),
     enabled: true,
   },
 
