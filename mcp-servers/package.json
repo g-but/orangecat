@@ -12,7 +12,7 @@
     "dev": "node --inspect github-server.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.2",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@octokit/rest": "^20.0.0",
     "libsodium-wrappers": "^0.7.11"
   },
@@ -23,5 +23,8 @@
     "claude"
   ],
   "author": "Your Name",
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "ajv": "^8.18.0"
+  }
 }
