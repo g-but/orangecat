@@ -160,7 +160,7 @@
     "next-mdx-remote": "^6.0.0",
     "next-themes": "^0.4.6",
     "nostr-tools": "^2.23.1",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.10",
     "qrcode": "^1.5.3",
     "qrcode.react": "^4.2.0",
     "react": "^18",
@@ -178,7 +178,7 @@
     "tailwindcss-animate": "^1.0.7",
     "tiny-secp256k1": "^2.2.4",
     "typescript": "^5.8.3",
-    "uuid": "^13.0.0",
+    "uuid": "^14.0.0",
     "zod": "^3.25.76",
     "zustand": "^5.0.4"
   },
@@ -234,6 +234,8 @@
   },
   "overrides": {
     "@isaacs/brace-expansion": "^5.0.1",
-    "tar": "^7.5.8"
+    "tar": "^7.5.8",
+    "postcss": "^8.5.10",
+    "uuid": "^14.0.0"
   }
 }
