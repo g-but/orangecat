@@ -83,7 +83,6 @@ export type ProjectTemplate = typeof PROJECT_TEMPLATES[number];
 export type AssetTemplate = typeof ASSET_TEMPLATES[number];
 export type EventTemplate = typeof EVENT_TEMPLATES[number];
 export type GroupTemplate = typeof GROUP_TEMPLATES[number];
-export type WishlistTemplate = typeof WISHLIST_TEMPLATES[number];
 
 // ==================== TEMPLATE ARRAY EXPORTS ====================
 

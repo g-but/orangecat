@@ -13,10 +13,10 @@ import {
   TASK_CATEGORY_OPTIONS,
   PRIORITY_OPTIONS,
   TASK_STATUS_OPTIONS,
-  PROJECT_STATUS_OPTIONS,
+  TASK_PROJECT_STATUS_OPTIONS,
   REQUEST_STATUSES,
   TASK_DEFAULTS,
-  PROJECT_DEFAULTS,
+  TASK_PROJECT_DEFAULTS,
 } from '@/config/tasks';
 
 // ==================== TASK SCHEMAS ====================
@@ -144,8 +144,8 @@ export const taskProjectSchema = z.object({
     .nullable(),
 
   status: z
-    .enum(PROJECT_STATUS_OPTIONS as unknown as [string, ...string[]])
-    .default(PROJECT_DEFAULTS.status),
+    .enum(TASK_PROJECT_STATUS_OPTIONS as unknown as [string, ...string[]])
+    .default(TASK_PROJECT_DEFAULTS.status),
 
   target_date: z.string().optional().nullable(),
 });

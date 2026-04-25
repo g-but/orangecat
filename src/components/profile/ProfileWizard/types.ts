@@ -3,12 +3,10 @@
  * Shared types for the profile wizard
  */
 
-import { z } from 'zod';
 import type { Profile } from '@/types/profile';
 import type { ProfileFormData } from '@/types/database';
-import { profileSchema } from '@/lib/validation';
 
-export type ProfileFormValues = z.infer<typeof profileSchema>;
+export type { ProfileFormValues } from '../types';
 
 export interface ProfileWizardProps {
   profile: Profile;

@@ -20,7 +20,7 @@ import {
 import {  rateLimitWriteAsync , retryAfterSeconds } from '@/lib/rate-limit';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskProjectSchema } from '@/lib/schemas/tasks';
-import { PROJECT_DEFAULTS } from '@/config/tasks';
+import { TASK_PROJECT_DEFAULTS } from '@/config/tasks';
 import { logger } from '@/utils/logger';
 
 /**
@@ -90,7 +90,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       .insert({
         title: projectData.title,
         description: projectData.description || null,
-        status: projectData.status || PROJECT_DEFAULTS.status,
+        status: projectData.status || TASK_PROJECT_DEFAULTS.status,
         target_date: projectData.target_date || null,
         created_by: user.id,
       })

@@ -205,12 +205,16 @@ export const PRIORITY_CONFIG: Record<Priority, PriorityInfo> = {
   },
 };
 
-// ==================== PROJECT STATUSES ====================
+// ==================== TASK PROJECT STATUSES ====================
 
 /**
- * Project statuses for task grouping
+ * Statuses for task-management project groupings.
+ *
+ * NOTE: These are NOT the same as the fundraising-project entity statuses
+ * in `src/config/project-statuses.ts`. These describe how a workspace
+ * project (used to group tasks in the tasks dashboard) is progressing.
  */
-export const PROJECT_STATUSES = {
+export const TASK_PROJECT_STATUSES = {
   PLANNING: 'planning',
   ACTIVE: 'active',
   ON_HOLD: 'on_hold',
@@ -218,11 +222,11 @@ export const PROJECT_STATUSES = {
   CANCELLED: 'cancelled',
 } as const;
 
-export type ProjectStatus = (typeof PROJECT_STATUSES)[keyof typeof PROJECT_STATUSES];
+export type TaskProjectStatus = (typeof TASK_PROJECT_STATUSES)[keyof typeof TASK_PROJECT_STATUSES];
 
-export const PROJECT_STATUS_OPTIONS = Object.values(PROJECT_STATUSES);
+export const TASK_PROJECT_STATUS_OPTIONS = Object.values(TASK_PROJECT_STATUSES);
 
-export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+export const TASK_PROJECT_STATUS_LABELS: Record<TaskProjectStatus, string> = {
   planning: 'Planning',
   active: 'Active',
   on_hold: 'On Hold',
@@ -230,7 +234,10 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   cancelled: 'Cancelled',
 };
 
-export const PROJECT_STATUS_CONFIG: Record<ProjectStatus, { label: string; className: string }> = {
+export const TASK_PROJECT_STATUS_CONFIG: Record<
+  TaskProjectStatus,
+  { label: string; className: string }
+> = {
   planning: {
     label: 'Planning',
     className: 'bg-gray-100 text-gray-700',
@@ -386,6 +393,6 @@ export const TASK_DEFAULTS = {
   task_type: TASK_TYPES.ONE_TIME,
 } as const;
 
-export const PROJECT_DEFAULTS = {
-  status: PROJECT_STATUSES.PLANNING,
+export const TASK_PROJECT_DEFAULTS = {
+  status: TASK_PROJECT_STATUSES.PLANNING,
 } as const;
