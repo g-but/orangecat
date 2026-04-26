@@ -4,6 +4,7 @@
  * @module messaging/hooks
  */
 
+export { useConversations } from './useConversations';
 export { useMessages } from './useMessages';
 export { useTypingIndicator } from './useTypingIndicator';
 export { usePresence, formatLastSeen } from './usePresence';
