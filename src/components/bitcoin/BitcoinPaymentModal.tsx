@@ -147,7 +147,7 @@ export default function BitcoinPaymentModal({
               />
 
               <div className="text-base text-gray-600">
-                Amount: {formatAmount(paymentRequest.amount)}
+                Amount: {formatAmount(paymentRequest.amount_btc)}
               </div>
               {transactionId && <div className="text-xs text-gray-500">Transaction created</div>}
             </div>

@@ -13,8 +13,6 @@ export type PaymentStatus = 'pending' | 'paid' | 'expired' | 'failed';
 export interface Invoice {
   id: string;
   amount_btc: number;
-  /** @deprecated Use amount_btc. Kept for backward compatibility with existing components. */
-  amount: number;
   type: PaymentType;
   address?: string;
   invoice?: string;

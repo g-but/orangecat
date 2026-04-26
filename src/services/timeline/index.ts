@@ -29,7 +29,6 @@ import {
   getUserFeed,
   getProjectFeed,
   getProfileFeed,
-  getProjectTimeline,
   getFollowedUsersFeed,
   getCommunityFeed,
   getEnrichedUserFeed,
@@ -117,13 +116,7 @@ class TimelineService {
     amountBtc: number,
     eventType: 'donation_received' | 'donation_sent' = 'donation_received'
   ): Promise<TimelineEventResponse> {
-    return createTransactionEvent(
-      transactionId,
-      projectId,
-      donorId,
-      amountBtc,
-      eventType
-    );
+    return createTransactionEvent(transactionId, projectId, donorId, amountBtc, eventType);
   }
 
   /**
@@ -180,14 +173,6 @@ class TimelineService {
     pagination?: Partial<TimelinePagination>
   ): Promise<TimelineFeedResponse> {
     return getProfileFeed(profileId, filters, pagination);
-  }
-
-  /**
-   * Get project timeline
-   * @deprecated Use getProjectFeed instead. This method is kept for backward compatibility only.
-   */
-  async getProjectTimeline(projectId: string, limit: number = 50): Promise<TimelineDisplayEvent[]> {
-    return getProjectTimeline(projectId, limit);
   }
 
   /**

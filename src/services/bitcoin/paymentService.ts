@@ -60,7 +60,6 @@ class MockPaymentProvider implements PaymentProvider {
       const invoice: Invoice = {
         id: paymentId,
         amount_btc,
-        amount: amount_btc,
         type,
         description,
         createdAt: new Date(),

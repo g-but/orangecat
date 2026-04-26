@@ -68,7 +68,6 @@ export class NWCPaymentProvider implements PaymentProvider {
       const invoice: Invoice = {
         id: nwcInvoice.payment_hash,
         amount_btc,
-        amount: amount_btc, // backward compat
         type: 'lightning',
         invoice: nwcInvoice.invoice,
         description,

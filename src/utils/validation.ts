@@ -274,17 +274,6 @@ export function isValidBio(bio: string): boolean {
 }
 
 /**
- * @deprecated Use isValidPassword() from @/lib/validation/password instead.
- *
- * This function is deprecated in favor of centralized password validation.
- * Re-exported for backward compatibility.
- *
- * Last Modified: 2026-01-30
- * Last Modified Summary: Deprecated - re-exports from centralized password validation
- */
-export { isValidPassword } from '@/lib/validation/password';
-
-/**
  * Type guard for AuthError
  * @param error - Error object to check
  * @returns boolean indicating if error is an AuthError

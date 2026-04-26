@@ -133,7 +133,6 @@ export class BTCPayProvider implements PaymentProvider {
         invoice: {
           id: invoice.id,
           amount_btc,
-          amount: amount_btc, // backward-compat alias
           type,
           address: lightningMethod?.destination ?? undefined,
           invoice: lightningMethod?.paymentLink ?? undefined,
@@ -162,7 +161,11 @@ export class BTCPayProvider implements PaymentProvider {
       );
 
       if (!response.ok) {
-        logger.warn('BTCPay checkPayment not found', { invoiceId, status: response.status }, 'BTCPay');
+        logger.warn(
+          'BTCPay checkPayment not found',
+          { invoiceId, status: response.status },
+          'BTCPay'
+        );
         return null;
       }
 
@@ -182,9 +185,7 @@ export class BTCPayProvider implements PaymentProvider {
     try {
       // BTCPay Greenfield API: GET /api/v1/stores/{storeId}/payment-methods/onchain/BTC/wallet
       const response = await fetch(
-        this.endpoint(
-          `/api/v1/stores/${this.config.storeId}/payment-methods/onchain/BTC/wallet`
-        ),
+        this.endpoint(`/api/v1/stores/${this.config.storeId}/payment-methods/onchain/BTC/wallet`),
         { headers: this.headers }
       );
 
