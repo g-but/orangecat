@@ -3,12 +3,12 @@
 import { logger } from '@/utils/logger';
 
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import type { Conversation } from './types';
+import type { Conversation } from '../types';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useMessagingStore } from '@/stores/messaging';
-import { API_ROUTES, CHANNELS, TIMING, debugLog } from './lib/constants';
-import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
+import { API_ROUTES, CHANNELS, TIMING, debugLog } from '../lib/constants';
+import { useRealtimeSubscription } from './useRealtimeSubscription';
 
 export function useConversations(searchQuery: string, selectedConversationId?: string | null) {
   const { user, hydrated, isLoading: authLoading, isAuthenticated } = useAuth();
