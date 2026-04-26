@@ -9,7 +9,7 @@ import {
   ThumbsDown,
   MessageCircle,
 } from 'lucide-react';
-import { BitcoinTransaction } from '@/types/bitcoin/index';
+import { BitcoinTransaction } from '@/types/bitcoin';
 import { getTransactionUrl, formatBtcValue } from '@/services/bitcoin';
 import { formatDistanceToNow } from 'date-fns';
 

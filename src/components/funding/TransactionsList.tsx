@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { motion } from 'framer-motion'
-import { BitcoinTransaction } from '@/types/bitcoin/index'
-import { TransactionCard } from './TransactionCard'
+import { motion } from 'framer-motion';
+import { BitcoinTransaction } from '@/types/bitcoin';
+import { TransactionCard } from './TransactionCard';
 
 interface TransactionsListProps {
-  transactions: BitcoinTransaction[]
-  isLoading: boolean
+  transactions: BitcoinTransaction[];
+  isLoading: boolean;
 }
 
 export function TransactionsList({ transactions, isLoading }: TransactionsListProps) {
@@ -20,7 +20,7 @@ export function TransactionsList({ transactions, isLoading }: TransactionsListPr
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (transactions.length === 0) {
@@ -28,7 +28,7 @@ export function TransactionsList({ transactions, isLoading }: TransactionsListPr
       <div className="text-center py-6 text-gray-500">
         <p>No transactions found for this wallet address.</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -38,9 +38,9 @@ export function TransactionsList({ transactions, isLoading }: TransactionsListPr
       transition={{ duration: 0.5 }}
       className="space-y-4"
     >
-      {transactions.map((tx) => (
+      {transactions.map(tx => (
         <TransactionCard key={tx.txid} transaction={tx} />
       ))}
     </motion.div>
-  )
-} 
+  );
+}

@@ -13,3 +13,10 @@ export interface BitcoinWalletData {
   network: 'mainnet' | 'testnet';
   lastUpdated?: string;
 }
+
+export type {
+  MempoolAddressInfo,
+  MempoolTransaction,
+  BlockstreamAddressInfo,
+  BlockstreamTransaction,
+} from './api-types';

@@ -42,7 +42,7 @@ const formatTransactionValue = (transaction: BitcoinTransaction) => {
   const sign = transaction.type === 'incoming' ? '+' : '-';
   const color = transaction.type === 'incoming' ? 'text-green-600' : 'text-red-600';
   return {
-    display: `${sign}₿${formatBitcoinAmount(transaction.amount)}`,
+    display: `${sign}₿${formatBitcoinAmount(transaction.value)}`,
     color,
   };
 };

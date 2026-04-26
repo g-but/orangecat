@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchBitcoinWalletData } from '@/services/bitcoin';
-import { BitcoinWalletData } from '@/types/bitcoin/index';
+import { BitcoinWalletData } from '@/types/bitcoin';
 import { logger } from '@/utils/logger';
 
 export function useBitcoinWallet(walletAddress: string) {
@@ -39,4 +39,4 @@ export function useBitcoinWallet(walletAddress: string) {
   }, [fetchData]);
 
   return { walletData, isLoading, error, refresh: fetchData };
-} 
+}

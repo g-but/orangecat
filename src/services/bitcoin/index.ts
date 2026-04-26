@@ -1,9 +1,10 @@
-import { BitcoinTransaction, BitcoinWalletData } from '@/types/bitcoin/index';
-import type {
-  MempoolAddressInfo,
-  BlockstreamAddressInfo,
-  MempoolTransaction,
-  BlockstreamTransaction,
+import {
+  BitcoinTransaction,
+  BitcoinWalletData,
+  type MempoolAddressInfo,
+  type BlockstreamAddressInfo,
+  type MempoolTransaction,
+  type BlockstreamTransaction,
 } from '@/types/bitcoin';
 import { getErrorMessage } from '@/types/common';
 import { logger } from '@/utils/logger';
@@ -119,10 +120,13 @@ export class BitcoinService {
 
             const inputsFromAddress =
               tx.vin?.filter(
-                (input: TransactionInput) => input.prevout && input.prevout.scriptpubkey_address === address
+                (input: TransactionInput) =>
+                  input.prevout && input.prevout.scriptpubkey_address === address
               ) || [];
             const outputsToAddress =
-              tx.vout?.filter((output: TransactionOutput) => output.scriptpubkey_address === address) || [];
+              tx.vout?.filter(
+                (output: TransactionOutput) => output.scriptpubkey_address === address
+              ) || [];
 
             if (inputsFromAddress.length > 0) {
               txType = 'outgoing';
@@ -136,7 +140,8 @@ export class BitcoinService {
                 valueInSatoshis = amountSentToOthers;
               } else {
                 const totalValueFromInputs = inputsFromAddress.reduce(
-                  (sum: number, input: TransactionInput) => sum + (Number(input.prevout?.value) || 0),
+                  (sum: number, input: TransactionInput) =>
+                    sum + (Number(input.prevout?.value) || 0),
                   0
                 );
                 valueInSatoshis = totalValueFromInputs;
@@ -193,10 +198,13 @@ export class BitcoinService {
 
             const inputsFromAddress =
               tx.vin?.filter(
-                (input: TransactionInput) => input.prevout && input.prevout.scriptpubkey_address === address
+                (input: TransactionInput) =>
+                  input.prevout && input.prevout.scriptpubkey_address === address
               ) || [];
             const outputsToAddress =
-              tx.vout?.filter((output: TransactionOutput) => output.scriptpubkey_address === address) || [];
+              tx.vout?.filter(
+                (output: TransactionOutput) => output.scriptpubkey_address === address
+              ) || [];
 
             if (inputsFromAddress.length > 0) {
               txType = 'outgoing';
@@ -210,7 +218,8 @@ export class BitcoinService {
                 valueInSatoshis = amountSentToOthers;
               } else {
                 const totalValueFromInputs = inputsFromAddress.reduce(
-                  (sum: number, input: TransactionInput) => sum + (Number(input.prevout?.value) || 0),
+                  (sum: number, input: TransactionInput) =>
+                    sum + (Number(input.prevout?.value) || 0),
                   0
                 );
                 valueInSatoshis = totalValueFromInputs;
