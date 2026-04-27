@@ -1,17 +1,13 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { offlineQueueService } from '@/lib/offline-queue';
-import { timelineService } from '@/services/timeline';
 import { logger } from '@/utils/logger';
 import { useAuth } from '@/hooks/useAuth';
 import { TimelineVisibility } from '@/types/timeline';
 import { usePostDraft } from '@/hooks/usePostDraft';
 import {
-  createOptimisticEvent,
   formatPostError,
-  truncateToTitle,
-  buildTimelineContexts,
   fetchUserProjects,
-  ensureProfileExists,
+  submitPost,
+  queueOfflinePost,
 } from '@/services/timeline/utils/post-composer';
 
 export interface PostComposerOptions {
@@ -154,106 +150,35 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       });
   }, [allowProjectSelection, user?.id]);
 
-  // Main posting logic
   const performPost = useCallback(async (): Promise<boolean> => {
-    if (!canPost || !user?.id) {
+    if (!canPost || !user) {
       return false;
     }
-
     try {
-      const profileExists = await ensureProfileExists(user.id);
-      if (!profileExists) {
-        throw new Error(
-          'Unable to verify your profile. Please refresh the page and try again. If the problem persists, you may need to complete your profile setup.'
-        );
-      }
-
-      const postContent = content.trim();
-      const title = truncateToTitle(postContent);
-
-      // Create optimistic event immediately
-      const optimisticEvent = createOptimisticEvent({
+      const result = await submitPost({
         user,
-        content: postContent,
+        content,
         subjectType,
         subjectId,
         visibility,
         selectedProjects,
         parentEventId,
+        onOptimisticUpdate,
       });
-      if (onOptimisticUpdate) {
-        onOptimisticUpdate(optimisticEvent);
+      if (!result.success) {
+        setError(result.error);
+        return false;
       }
-
-      // Build timeline visibility contexts
-      const timelineContexts = buildTimelineContexts(
-        subjectType,
-        subjectId,
-        user.id,
-        selectedProjects,
-        visibility,
-        parentEventId
-      );
-
-      let mainPostResult;
-      if (parentEventId) {
-        mainPostResult = await timelineService.createEvent({
-          eventType: 'status_update',
-          actorId: user.id,
-          subjectType,
-          subjectId: subjectId || user.id,
-          title,
-          description: postContent,
-          visibility,
-          metadata: {
-            is_user_post: true,
-            is_reply: true,
-          },
-          parentEventId,
-        });
-      } else {
-        mainPostResult = await timelineService.createEventWithVisibility({
-          eventType: 'status_update',
-          actorId: user.id,
-          subjectType,
-          subjectId: subjectId || user.id,
-          title,
-          description: postContent,
-          visibility,
-          metadata: {
-            is_user_post: true,
-            cross_posted_count: selectedProjects.length,
-          },
-          timelineContexts,
-        });
-      }
-
-      if (!mainPostResult.success) {
-        const errorMsg = mainPostResult.error || 'Failed to create post';
-        logger.error(
-          'Post creation failed',
-          { error: errorMsg, mainPostResult },
-          'usePostComposer'
-        );
-        throw new Error(errorMsg);
-      }
-
-      // Success
       clearDraft();
       setPostSuccess(true);
-      onSuccess?.(mainPostResult.event);
-
+      onSuccess?.(result.event);
       if (successTimer.current) {
         clearTimeout(successTimer.current);
       }
-      successTimer.current = setTimeout(() => {
-        setPostSuccess(false);
-      }, 3000);
-
+      successTimer.current = setTimeout(() => setPostSuccess(false), 3000);
       return true;
     } catch (err) {
-      const errorMessage = formatPostError(err);
-      setError(errorMessage);
+      setError(formatPostError(err));
       logger.error('Failed to create post', err, 'usePostComposer');
       return false;
     }
@@ -261,12 +186,12 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     canPost,
     user,
     content,
-    onOptimisticUpdate,
     subjectType,
     subjectId,
     visibility,
     selectedProjects,
     parentEventId,
+    onOptimisticUpdate,
     onSuccess,
     clearDraft,
   ]);
@@ -287,50 +212,20 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       return;
     }
 
-    // Offline handling: queue the post instead of sending
     if (!navigator.onLine) {
       try {
-        const postContent = content.trim();
-        const postTitle = truncateToTitle(postContent);
-        const postPayload = {
-          eventType: 'status_update',
-          actorId: user.id,
+        await queueOfflinePost({
+          user,
+          content,
           subjectType,
-          subjectId: subjectId || user.id,
-          title: postTitle,
-          description: postContent,
+          subjectId,
           visibility,
-          metadata: {
-            is_user_post: true,
-            cross_posted: subjectId && subjectId !== user.id,
-            cross_posted_projects: selectedProjects.length > 0 ? selectedProjects : undefined,
-          },
-        };
-        await offlineQueueService.addToQueue(postPayload, user.id);
-
+          selectedProjects,
+          parentEventId,
+          onOptimisticUpdate,
+        });
         setError(null);
         setPostSuccess(true);
-
-        if (onOptimisticUpdate) {
-          const offlineEvent = createOptimisticEvent({
-            user,
-            content: content.trim(),
-            subjectType,
-            subjectId,
-            visibility,
-            selectedProjects,
-            parentEventId,
-          });
-          // Override with offline-specific metadata
-          offlineEvent.id = `offline-${Date.now()}`;
-          offlineEvent.metadata = {
-            ...offlineEvent.metadata,
-            is_offline_queued: true,
-            offline_queued_at: new Date().toISOString(),
-          };
-          onOptimisticUpdate(offlineEvent);
-        }
-
         reset();
       } catch (err) {
         setError('Failed to save post for offline sending.');

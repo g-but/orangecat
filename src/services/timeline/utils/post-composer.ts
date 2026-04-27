@@ -4,6 +4,8 @@ import { TimelineVisibility } from '@/types/timeline';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES, STORAGE_BUCKETS } from '@/config/database-tables';
 import { API_ROUTES } from '@/config/api-routes';
+import { timelineService } from '@/services/timeline';
+import { offlineQueueService } from '@/lib/offline-queue';
 
 const PROFILE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const profileCheckCache = new Map<string, { exists: boolean; timestamp: number }>();
@@ -200,6 +202,161 @@ export function buildTimelineContexts(
   }
 
   return contexts;
+}
+
+// =============================================================================
+// POST SUBMISSION
+// =============================================================================
+
+interface PostSubmitOptions {
+  user: OptimisticEventUser;
+  content: string;
+  subjectType: string;
+  subjectId?: string;
+  visibility: TimelineVisibility;
+  selectedProjects: string[];
+  parentEventId?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onOptimisticUpdate?: (event: any) => void;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PostSubmitResult = { success: true; event: any } | { success: false; error: string };
+
+/**
+ * Submits a post to the timeline service.
+ * Fires the optimistic update callback before the network call so the UI
+ * responds immediately.
+ */
+export async function submitPost(options: PostSubmitOptions): Promise<PostSubmitResult> {
+  const {
+    user,
+    content,
+    subjectType,
+    subjectId,
+    visibility,
+    selectedProjects,
+    parentEventId,
+    onOptimisticUpdate,
+  } = options;
+
+  const profileExists = await ensureProfileExists(user.id);
+  if (!profileExists) {
+    throw new Error(
+      'Unable to verify your profile. Please refresh the page and try again. If the problem persists, you may need to complete your profile setup.'
+    );
+  }
+
+  const postContent = content.trim();
+  const title = truncateToTitle(postContent);
+
+  const optimisticEvent = createOptimisticEvent({
+    user,
+    content: postContent,
+    subjectType,
+    subjectId,
+    visibility,
+    selectedProjects,
+    parentEventId,
+  });
+  onOptimisticUpdate?.(optimisticEvent);
+
+  const timelineContexts = buildTimelineContexts(
+    subjectType,
+    subjectId,
+    user.id,
+    selectedProjects,
+    visibility,
+    parentEventId
+  );
+
+  const result = parentEventId
+    ? await timelineService.createEvent({
+        eventType: 'status_update',
+        actorId: user.id,
+        subjectType,
+        subjectId: subjectId || user.id,
+        title,
+        description: postContent,
+        visibility,
+        metadata: { is_user_post: true, is_reply: true },
+        parentEventId,
+      })
+    : await timelineService.createEventWithVisibility({
+        eventType: 'status_update',
+        actorId: user.id,
+        subjectType,
+        subjectId: subjectId || user.id,
+        title,
+        description: postContent,
+        visibility,
+        metadata: { is_user_post: true, cross_posted_count: selectedProjects.length },
+        timelineContexts,
+      });
+
+  if (!result.success) {
+    const errorMsg = result.error || 'Failed to create post';
+    logger.error('Post creation failed', { error: errorMsg, result }, 'usePostComposer');
+    return { success: false, error: errorMsg };
+  }
+
+  return { success: true, event: result.event };
+}
+
+/**
+ * Queues a post for offline delivery and fires the optimistic update callback
+ * with an offline-tagged event so the UI can show it as queued.
+ */
+export async function queueOfflinePost(options: PostSubmitOptions): Promise<void> {
+  const {
+    user,
+    content,
+    subjectType,
+    subjectId,
+    visibility,
+    selectedProjects,
+    parentEventId,
+    onOptimisticUpdate,
+  } = options;
+
+  const postContent = content.trim();
+
+  await offlineQueueService.addToQueue(
+    {
+      eventType: 'status_update',
+      actorId: user.id,
+      subjectType,
+      subjectId: subjectId || user.id,
+      title: truncateToTitle(postContent),
+      description: postContent,
+      visibility,
+      metadata: {
+        is_user_post: true,
+        cross_posted: subjectId && subjectId !== user.id,
+        cross_posted_projects: selectedProjects.length > 0 ? selectedProjects : undefined,
+      },
+    },
+    user.id
+  );
+
+  if (onOptimisticUpdate) {
+    const offlineEvent = createOptimisticEvent({
+      user,
+      content: postContent,
+      subjectType,
+      subjectId,
+      visibility,
+      selectedProjects,
+      parentEventId,
+    });
+    offlineEvent.id = `offline-${Date.now()}`;
+    offlineEvent.metadata = {
+      ...offlineEvent.metadata,
+      is_offline_queued: true,
+      offline_queued_at: new Date().toISOString(),
+    };
+    onOptimisticUpdate(offlineEvent);
+  }
 }
 
 /**
