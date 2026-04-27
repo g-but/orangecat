@@ -12,7 +12,7 @@ import {
   buildTimelineContexts,
   fetchUserProjects,
   ensureProfileExists,
-} from '@/hooks/usePostComposerUtils';
+} from '@/services/timeline/utils/post-composer';
 
 export interface PostComposerOptions {
   subjectType?: 'profile' | 'project';
