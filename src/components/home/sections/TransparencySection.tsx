@@ -117,7 +117,7 @@ export default function TransparencySection() {
                     Profile Preview
                   </h3>
                 </div>
-                <span className="px-2 py-1 bg-gray-100 text-gray-500 text-[10px] sm:text-xs font-medium rounded">
+                <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded">
                   UI Example
                 </span>
               </div>
@@ -150,7 +150,7 @@ export default function TransparencySection() {
                       style={{ width: '85%' }}
                     />
                   </div>
-                  <p className="text-[10px] sm:text-xs text-gray-600 mt-1.5 sm:mt-2">
+                  <p className="text-xs text-gray-600 mt-1.5 sm:mt-2">
                     <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3 inline mr-1" />
                     Score increases as you share updates and receipts
                   </p>
@@ -166,8 +166,8 @@ export default function TransparencySection() {
                       &quot;Received funding for my project. Withdrew funds and posted receipts
                       showing exactly how it was spent.&quot;
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] sm:text-xs text-gray-600">
-                      <span className="bg-green-100 text-green-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[10px] sm:text-xs">
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <span className="bg-green-100 text-green-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs">
                         Score increases
                       </span>
                       <span>With each update</span>
@@ -179,15 +179,11 @@ export default function TransparencySection() {
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-gray-100">
                   <div>
                     <div className="text-lg sm:text-xl font-bold text-gray-900">Supporters</div>
-                    <div className="text-[10px] sm:text-xs text-gray-600">
-                      Who trust your transparency
-                    </div>
+                    <div className="text-xs text-gray-600">Who trust your transparency</div>
                   </div>
                   <div>
                     <div className="text-lg sm:text-xl font-bold text-gray-900">Updates</div>
-                    <div className="text-[10px] sm:text-xs text-gray-600">
-                      You've shared publicly
-                    </div>
+                    <div className="text-xs text-gray-600">You've shared publicly</div>
                   </div>
                 </div>
               </div>

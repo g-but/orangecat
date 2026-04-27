@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { formatCurrency } from '@/services/currency';
+import { BarChart3 } from 'lucide-react';
 
 interface ProjectPerformance {
   id: string;
@@ -16,7 +17,25 @@ interface ProjectPerformanceTableProps {
 }
 
 export default function ProjectPerformanceTable({ projects }: ProjectPerformanceTableProps) {
-  if (projects.length === 0) {return null;}
+  if (projects.length === 0) {
+    return (
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Project Performance</CardTitle>
+          <CardDescription>Detailed breakdown of your project metrics</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-10 text-center text-gray-500">
+            <BarChart3 className="h-10 w-10 mb-3 text-gray-300" />
+            <p className="font-medium text-gray-700">No project data yet</p>
+            <p className="text-sm mt-1">
+              Create a project and receive funding to see performance metrics here.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="mb-8">
