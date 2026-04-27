@@ -12,7 +12,7 @@
 import { Search, MessageSquare, Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useUnreadCount } from '@/stores/messaging';
-import { useUnreadNotifications } from '@/hooks/useNotifications';
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { TOUCH_TARGETS, HEADER_BUTTON_BASE } from '@/constants/header';
 import { cn } from '@/lib/utils';
