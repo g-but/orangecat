@@ -1,18 +1,5 @@
 'use client';
 
-/**
- * Projects Dashboard Page
- *
- * Refactored to use modular entity components for consistency with other entity pages.
- * Maintains tabs functionality (My Projects, Favorites) while using EntityListShell.
- *
- * Created: 2025-01-27
- * Last Modified: 2025-12-31
- * Last Modified Summary: Refactored to use modular EntityList pattern with EntityListShell
- */
-
-import { useState, useMemo } from 'react';
-import { useRequireAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
 import EntityListShell from '@/components/entity/EntityListShell';
@@ -20,147 +7,49 @@ import EntityList from '@/components/entity/EntityList';
 import CommercePagination from '@/components/commerce/CommercePagination';
 import BulkActionsBar from '@/components/entity/BulkActionsBar';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useEntityList } from '@/hooks/useEntityList';
-import { useBulkSelection } from '@/hooks/useBulkSelection';
-import { projectEntityConfig, type ProjectListItem } from '@/config/entities/projects';
-import { PROJECT_STATUS } from '@/config/project-statuses';
+import { projectEntityConfig } from '@/config/entities/projects';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Target, Heart, Search, X } from 'lucide-react';
-import Input from '@/components/ui/Input';
-import { toast } from 'sonner';
-import { logger } from '@/utils/logger';
+import { Target, Heart } from 'lucide-react';
+import { useProjectList } from './useProjectList';
+import { ProjectsSearchFilter } from './ProjectsSearchFilter';
 
 export default function ProjectsDashboardPage() {
-  const { user, isLoading, hydrated, session } = useRequireAuth();
-  const { selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelection();
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showSelection, setShowSelection] = useState(false);
-  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'my-projects' | 'favorites'>('my-projects');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-
-  // Fetch my projects
   const {
-    items: myProjects,
-    loading: projectsLoading,
-    error: projectsError,
-    page,
-    total,
-    setPage,
-    refresh,
-  } = useEntityList<ProjectListItem>({
-    apiEndpoint: projectEntityConfig.apiEndpoint,
-    userId: user?.id,
-    limit: 12,
-    enabled: !!user?.id && hydrated && !isLoading && activeTab === 'my-projects',
-  });
+    user,
+    isLoading,
+    hydrated,
+    session,
+    selectedIds,
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    isDeleting,
+    showSelection,
+    setShowSelection,
+    bulkDeleteConfirm,
+    setBulkDeleteConfirm,
+    activeTab,
+    switchTab,
+    searchQuery,
+    setSearchQuery,
+    statusFilter,
+    setStatusFilter,
+    myProjects,
+    favorites,
+    filteredProjects,
+    projectsLoading,
+    projectsError,
+    favPage,
+    favTotal,
+    setFavPage,
+    currentLoading,
+    currentPage,
+    currentTotal,
+    setCurrentPage,
+    handleBulkDelete,
+    executeBulkDelete,
+  } = useProjectList();
 
-  // Fetch favorites
-  const {
-    items: favorites,
-    loading: favoritesLoading,
-    page: favPage,
-    total: favTotal,
-    setPage: setFavPage,
-    refresh: _refreshFavorites,
-  } = useEntityList<ProjectListItem>({
-    apiEndpoint: '/api/projects/favorites',
-    userId: user?.id,
-    limit: 12,
-    enabled: !!user?.id && hydrated && !isLoading && activeTab === 'favorites',
-    transformResponse: data => {
-      // Handle favorites API response format
-      const items = data?.data?.data || data?.data || data?.items || [];
-      const count = data?.data?.count || data?.count || data?.total || items.length;
-      return { items, total: count };
-    },
-  });
-
-  // Memoize and filter projects
-  const filteredProjects = useMemo(() => {
-    let items = activeTab === 'favorites' ? favorites : myProjects;
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      items = items.filter(
-        p =>
-          p?.title?.toLowerCase().includes(query) ||
-          p?.description?.toLowerCase().includes(query) ||
-          p?.category?.toLowerCase().includes(query) ||
-          p?.tags?.some(tag => tag?.toLowerCase().includes(query))
-      );
-    }
-
-    // Apply status filter (only for my projects)
-    if (activeTab === 'my-projects' && statusFilter !== 'all') {
-      items = items.filter(p => {
-        if (!p) {
-          return false;
-        }
-        if (statusFilter === PROJECT_STATUS.DRAFT) {
-          return p.isDraft;
-        }
-        if (statusFilter === PROJECT_STATUS.ACTIVE) {
-          return p.isActive;
-        }
-        if (statusFilter === PROJECT_STATUS.PAUSED) {
-          return p.isPaused;
-        }
-        if (statusFilter === PROJECT_STATUS.COMPLETED) {
-          return p.status === PROJECT_STATUS.COMPLETED;
-        }
-        if (statusFilter === PROJECT_STATUS.CANCELLED) {
-          return p.status === PROJECT_STATUS.CANCELLED;
-        }
-        return true;
-      });
-    }
-
-    return items;
-  }, [activeTab, myProjects, favorites, searchQuery, statusFilter]);
-
-  const handleBulkDelete = () => {
-    if (selectedIds.size === 0) {return;}
-    setBulkDeleteConfirm(true);
-  };
-
-  const executeBulkDelete = async () => {
-    setBulkDeleteConfirm(false);
-    setIsDeleting(true);
-    try {
-      const deletePromises = Array.from(selectedIds).map(async id => {
-        const response = await fetch(`/api/projects/${id}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `Failed to delete project ${id}`);
-        }
-        const result = await response.json().catch(() => ({}));
-        if (result.error) {
-          throw new Error(result.error);
-        }
-        return result;
-      });
-
-      await Promise.all(deletePromises);
-      toast.success(
-        `Successfully deleted ${selectedIds.size} project${selectedIds.size > 1 ? 's' : ''}`
-      );
-      clearSelection();
-      setShowSelection(false);
-      await refresh();
-    } catch (error) {
-      logger.error('Failed to delete projects', { error }, 'ProjectsDashboardPage');
-      toast.error('Failed to delete some projects. Please try again.');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  // Handle loading states
   if (!hydrated || isLoading) {
     return <Loading fullScreen message="Loading your projects..." />;
   }
@@ -168,11 +57,6 @@ export default function ProjectsDashboardPage() {
   if (!user || !session) {
     return null;
   }
-
-  const currentLoading = activeTab === 'favorites' ? favoritesLoading : projectsLoading;
-  const currentPage = activeTab === 'favorites' ? favPage : page;
-  const currentTotal = activeTab === 'favorites' ? favTotal : total;
-  const setCurrentPage = activeTab === 'favorites' ? setFavPage : setPage;
 
   const headerActions = (
     <div className="flex items-center gap-2">
@@ -199,11 +83,7 @@ export default function ProjectsDashboardPage() {
       >
         <Tabs
           value={activeTab}
-          onValueChange={v => {
-            setActiveTab(v as typeof activeTab);
-            setShowSelection(false);
-            clearSelection();
-          }}
+          onValueChange={v => switchTab(v as typeof activeTab)}
           className="space-y-6"
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -224,48 +104,13 @@ export default function ProjectsDashboardPage() {
               </TabsTrigger>
             </TabsList>
 
-            {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-initial">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"
-                  aria-hidden="true"
-                />
-                <Input
-                  type="text"
-                  placeholder="Search projects..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-10 w-full sm:w-48 md:w-64"
-                  aria-label="Search projects"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    aria-label="Clear search"
-                  >
-                    <X className="w-4 h-4" aria-hidden="true" />
-                  </button>
-                )}
-              </div>
-
-              {activeTab === 'my-projects' && (
-                <select
-                  value={statusFilter}
-                  onChange={e => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent w-full sm:w-auto min-w-[140px]"
-                  aria-label="Filter by status"
-                >
-                  <option value="all">All Status</option>
-                  <option value="draft">Draft</option>
-                  <option value="active">Active</option>
-                  <option value="paused">Paused</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              )}
-            </div>
+            <ProjectsSearchFilter
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              showStatusFilter={activeTab === 'my-projects'}
+            />
           </div>
 
           <TabsContent value="my-projects" className="space-y-6">
