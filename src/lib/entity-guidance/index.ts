@@ -24,38 +24,13 @@ export {
 } from './service-guidance';
 
 // Cause guidance
-export {
-  causeGuidanceContent,
-  causeDefaultGuidance,
-  type CauseFieldType,
-} from './cause-guidance';
-
-// Circle guidance
-export {
-  circleGuidanceContent,
-  circleDefaultGuidance,
-  type CircleFieldType,
-} from './circle-guidance';
+export { causeGuidanceContent, causeDefaultGuidance, type CauseFieldType } from './cause-guidance';
 
 // Loan guidance
-export {
-  loanGuidanceContent,
-  loanDefaultGuidance,
-  type LoanFieldType,
-} from './loan-guidance';
+export { loanGuidanceContent, loanDefaultGuidance, type LoanFieldType } from './loan-guidance';
 
 // Asset guidance
-export {
-  assetGuidanceContent,
-  assetDefaultGuidance,
-} from './asset-guidance';
-
-// Organization guidance
-export {
-  organizationGuidanceContent,
-  organizationDefaultGuidance,
-  type OrganizationFieldType,
-} from './organization-guidance';
+export { assetGuidanceContent, assetDefaultGuidance } from './asset-guidance';
 
 // Project guidance (single source of truth - in this directory)
 export {
@@ -94,4 +69,3 @@ export {
   walletDefaultContent,
   type WalletFieldType,
 } from '@/lib/wallet-guidance';
-
