@@ -12,6 +12,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import supabase from '@/lib/supabase/browser';
 import { debugLog } from '@/features/messaging/lib/constants';
+import { useConnectionHeartbeat } from './useConnectionHeartbeat';
 
 export type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting' | 'error';
 
@@ -57,7 +58,6 @@ export function useRealtimeConnection(
   const [error, setError] = useState<Error | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isMountedRef = useRef(true);
   const attemptReconnectRef = useRef<(() => void) | null>(null);
@@ -92,43 +92,17 @@ export function useRealtimeConnection(
     [onStatusChange]
   );
 
-  /**
-   * Stop heartbeat
-   */
-  const stopHeartbeat = useCallback(() => {
-    if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current);
-      heartbeatIntervalRef.current = null;
-    }
-  }, []);
-
-  /**
-   * Start heartbeat to detect dead connections
-   */
-  const startHeartbeat = useCallback(() => {
-    if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current);
-    }
-
-    heartbeatIntervalRef.current = setInterval(() => {
-      if (!channelRef.current || !isMountedRef.current) {
-        return;
+  const { start: startHeartbeat, stop: stopHeartbeat } = useConnectionHeartbeat({
+    channelRef,
+    isMountedRef,
+    updateStatus,
+    onDeadConnection: useCallback(() => {
+      reconnectAttemptsRef.current = 0;
+      if (attemptReconnectRef.current) {
+        attemptReconnectRef.current();
       }
-
-      // Check if channel is still subscribed
-      const channelState = channelRef.current.state;
-      debugLog('[useRealtimeConnection] Heartbeat check - channel state:', channelState);
-
-      if (channelState !== 'joined' && channelState !== 'joining') {
-        debugLog('[useRealtimeConnection] Heartbeat detected dead connection, reconnecting...');
-        updateStatus('reconnecting');
-        reconnectAttemptsRef.current = 0;
-        if (attemptReconnectRef.current) {
-          attemptReconnectRef.current();
-        }
-      }
-    }, 30000); // Check every 30 seconds
-  }, [updateStatus]);
+    }, []),
+  });
 
   /**
    * Setup the connection monitoring channel

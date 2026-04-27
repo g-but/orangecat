@@ -6,6 +6,7 @@ import { DATABASE_TABLES, STORAGE_BUCKETS } from '@/config/database-tables';
 import { API_ROUTES } from '@/config/api-routes';
 import { timelineService } from '@/services/timeline';
 import { offlineQueueService } from '@/lib/offline-queue';
+import type { TimelineSubjectType } from '@/types/timeline';
 
 const PROFILE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const profileCheckCache = new Map<string, { exists: boolean; timestamp: number }>();
@@ -211,7 +212,7 @@ export function buildTimelineContexts(
 interface PostSubmitOptions {
   user: OptimisticEventUser;
   content: string;
-  subjectType: string;
+  subjectType: TimelineSubjectType;
   subjectId?: string;
   visibility: TimelineVisibility;
   selectedProjects: string[];
