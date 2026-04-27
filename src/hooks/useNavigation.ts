@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { usePathname } from 'next/navigation';
+import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
-import { logger } from '@/utils/logger';
+import { useActiveNavItem } from './useActiveNavItem';
+import {
+  useNavigationStorage,
+  buildInitialCollapsedSections,
+  clearNavigationStorage,
+} from './useNavigationStorage';
 
-// Navigation types
 export interface NavItem {
   name: string;
   href?: string;
@@ -29,20 +32,18 @@ export interface NavSection {
   requiresAuth?: boolean;
 }
 
-// Navigation state interface
 export interface NavigationState {
   isSidebarOpen: boolean;
-  isSidebarCollapsed: boolean; // Desktop collapse state (icons only vs full width)
+  isSidebarCollapsed: boolean;
   collapsedSections: Set<string>;
   activeSection: string | null;
   activeItem: string | null;
 }
 
-// Hook return type
 export interface UseNavigationReturn {
   navigationState: NavigationState;
   toggleSidebar: () => void;
-  toggleSidebarCollapse: () => void; // Toggle between expanded (full width) and collapsed (icons only)
+  toggleSidebarCollapse: () => void;
   toggleSection: (sectionId: string) => void;
   setSidebarOpen: (open: boolean) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
@@ -51,269 +52,85 @@ export interface UseNavigationReturn {
   resetNavigation: () => void;
 }
 
-// Local storage keys
-const STORAGE_KEYS = {
-  SIDEBAR_OPEN: 'orangecat_sidebar_open',
-  SIDEBAR_COLLAPSED: 'orangecat_sidebar_collapsed',
-  COLLAPSED_SECTIONS: 'orangecat_collapsed_sections',
-} as const;
-
-function buildInitialCollapsedSections(sections: NavSection[]): Set<string> {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
-  const collapsed = new Set<string>();
-  sections.forEach(section => {
-    if (section.collapsible) {
-      if (isMobile ? section.priority > 3 : !section.defaultExpanded) {
-        collapsed.add(section.id);
-      }
-    }
-  });
-  return collapsed;
-}
-
 export function useNavigation(sections: NavSection[]): UseNavigationReturn {
-  const pathname = usePathname();
   const { user, profile, hydrated } = useAuth();
 
-  // Initialize state - sidebar defaults to collapsed (narrow with icons only)
-  const [navigationState, setNavigationState] = useState<NavigationState>({
-    isSidebarOpen: false,
-    isSidebarCollapsed: false, // Default to expanded on desktop
-    collapsedSections: new Set<string>(),
-    activeSection: null,
-    activeItem: null,
-  });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
-  // Initialize navigation state from localStorage and defaults
-  useEffect(() => {
-    if (!hydrated) {
-      return;
-    }
+  const { persistSidebarState, persistSidebarCollapsedState, persistCollapsedSections } =
+    useNavigationStorage(hydrated, sections, {
+      onStateLoaded: ({ isSidebarOpen, isSidebarCollapsed, collapsedSections }) => {
+        setIsSidebarOpen(isSidebarOpen);
+        setIsSidebarCollapsed(isSidebarCollapsed);
+        setCollapsedSections(collapsedSections);
+      },
+      onLoadFailed: defaultCollapsed => {
+        setCollapsedSections(defaultCollapsed);
+      },
+    });
 
-    try {
-      // Load sidebar state from localStorage - default to collapsed (false)
-      const savedSidebarState = localStorage.getItem(STORAGE_KEYS.SIDEBAR_OPEN);
-      const isSidebarOpen = savedSidebarState ? JSON.parse(savedSidebarState) : false;
+  const { activeSection, activeItem, isItemActive } = useActiveNavItem(sections);
 
-      // Load sidebar collapsed state from localStorage - default to expanded (false)
-      const savedCollapsedState = localStorage.getItem(STORAGE_KEYS.SIDEBAR_COLLAPSED);
-      const isSidebarCollapsed = savedCollapsedState ? JSON.parse(savedCollapsedState) : false;
-
-      // Load collapsed sections from localStorage
-      const savedCollapsedSections = localStorage.getItem(STORAGE_KEYS.COLLAPSED_SECTIONS);
-      const collapsedFromStorage = savedCollapsedSections
-        ? new Set<string>(JSON.parse(savedCollapsedSections))
-        : new Set<string>();
-
-      // Initialize collapsed sections from saved state, falling back to defaults when no saved state
-      const defaultCollapsedSections = buildInitialCollapsedSections(sections);
-      const initialCollapsed =
-        collapsedFromStorage.size > 0 ? collapsedFromStorage : defaultCollapsedSections;
-
-      setNavigationState(prev => ({
-        ...prev,
-        isSidebarOpen,
-        isSidebarCollapsed,
-        collapsedSections: initialCollapsed,
-      }));
-    } catch (error) {
-      logger.warn('Failed to load navigation state from localStorage', { error }, 'useNavigation');
-      setNavigationState(prev => ({
-        ...prev,
-        collapsedSections: buildInitialCollapsedSections(sections),
-      }));
-    }
-  }, [hydrated, sections]);
-
-  // Update active section and item based on pathname
-  useEffect(() => {
-    if (!pathname) {
-      return;
-    }
-
-    let activeSection: string | null = null;
-    let activeItem: string | null = null;
-
-    for (const section of sections) {
-      for (const item of section.items) {
-        // Use improved matching logic
-        if (pathname === item.href) {
-          activeSection = section.id;
-          activeItem = item.href ?? null;
-          break;
-        }
-        // Special handling for dashboard
-        if (
-          item.href === '/dashboard' &&
-          (pathname === '/dashboard' || pathname.startsWith('/dashboard/'))
-        ) {
-          activeSection = section.id;
-          activeItem = item.href ?? null;
-          break;
-        }
-        // For other routes, use precise matching
-        if (
-          item.href !== '/dashboard' &&
-          (pathname.startsWith(`${item.href}/`) || pathname === item.href)
-        ) {
-          activeSection = section.id;
-          activeItem = item.href ?? null;
-          break;
-        }
-      }
-      if (activeSection) {
-        break;
-      }
-    }
-
-    setNavigationState(prev => ({
-      ...prev,
-      activeSection,
-      activeItem,
-    }));
-  }, [pathname, sections]);
-
-  // Persist sidebar state to localStorage
-  const persistSidebarState = useCallback((isOpen: boolean) => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.SIDEBAR_OPEN, JSON.stringify(isOpen));
-    } catch (error) {
-      logger.warn('Failed to persist sidebar state', { error, isOpen }, 'useNavigation');
-    }
-  }, []);
-
-  // Persist sidebar collapsed state to localStorage
-  const persistSidebarCollapsedState = useCallback((isCollapsed: boolean) => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, JSON.stringify(isCollapsed));
-    } catch (error) {
-      logger.warn(
-        'Failed to persist sidebar collapsed state',
-        { error, isCollapsed },
-        'useNavigation'
-      );
-    }
-  }, []);
-
-  // Persist collapsed sections to localStorage
-  const persistCollapsedSections = useCallback((collapsed: Set<string>) => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.COLLAPSED_SECTIONS, JSON.stringify(Array.from(collapsed)));
-    } catch (error) {
-      logger.warn(
-        'Failed to persist collapsed sections',
-        { error, collapsed: Array.from(collapsed) },
-        'useNavigation'
-      );
-    }
-  }, []);
-
-  // Toggle sidebar
   const toggleSidebar = useCallback(() => {
-    setNavigationState(prev => {
-      const newIsOpen = !prev.isSidebarOpen;
-      persistSidebarState(newIsOpen);
-      return {
-        ...prev,
-        isSidebarOpen: newIsOpen,
-      };
+    setIsSidebarOpen(prev => {
+      const next = !prev;
+      persistSidebarState(next);
+      return next;
     });
   }, [persistSidebarState]);
 
-  // Set sidebar open state
   const setSidebarOpen = useCallback(
     (open: boolean) => {
-      setNavigationState(prev => {
-        if (prev.isSidebarOpen === open) {
+      setIsSidebarOpen(prev => {
+        if (prev === open) {
           return prev;
         }
         persistSidebarState(open);
-        return {
-          ...prev,
-          isSidebarOpen: open,
-        };
+        return open;
       });
     },
     [persistSidebarState]
   );
 
-  // Toggle sidebar collapse state (for desktop - icons only vs full width)
   const toggleSidebarCollapse = useCallback(() => {
-    setNavigationState(prev => {
-      const newIsCollapsed = !prev.isSidebarCollapsed;
-      persistSidebarCollapsedState(newIsCollapsed);
-      return {
-        ...prev,
-        isSidebarCollapsed: newIsCollapsed,
-      };
+    setIsSidebarCollapsed(prev => {
+      const next = !prev;
+      persistSidebarCollapsedState(next);
+      return next;
     });
   }, [persistSidebarCollapsedState]);
 
-  // Set sidebar collapsed state
   const setSidebarCollapsed = useCallback(
     (collapsed: boolean) => {
-      setNavigationState(prev => {
-        if (prev.isSidebarCollapsed === collapsed) {
+      setIsSidebarCollapsed(prev => {
+        if (prev === collapsed) {
           return prev;
         }
         persistSidebarCollapsedState(collapsed);
-        return {
-          ...prev,
-          isSidebarCollapsed: collapsed,
-        };
+        return collapsed;
       });
     },
     [persistSidebarCollapsedState]
   );
 
-  // Toggle section collapse
   const toggleSection = useCallback(
     (sectionId: string) => {
-      setNavigationState(prev => {
-        const newCollapsed = new Set(prev.collapsedSections);
-        if (newCollapsed.has(sectionId)) {
-          newCollapsed.delete(sectionId);
+      setCollapsedSections(prev => {
+        const next = new Set(prev);
+        if (next.has(sectionId)) {
+          next.delete(sectionId);
         } else {
-          newCollapsed.add(sectionId);
+          next.add(sectionId);
         }
-        persistCollapsedSections(newCollapsed);
-        return {
-          ...prev,
-          collapsedSections: newCollapsed,
-        };
+        persistCollapsedSections(next);
+        return next;
       });
     },
     [persistCollapsedSections]
   );
 
-  // Check if item is active
-  // Improved route matching logic to handle edge cases
-  const isItemActive = useCallback(
-    (href: string) => {
-      if (!pathname || !href) {
-        return false;
-      }
-
-      // Exact match
-      if (pathname === href) {
-        return true;
-      }
-
-      // Special handling for dashboard root - only match exact /dashboard, not sub-routes
-      // This prevents /dashboard/projects from highlighting both Dashboard and Projects
-      if (href === '/dashboard') {
-        return pathname === '/dashboard'; // Only exact match, not sub-routes
-      }
-
-      // For other routes, use more precise matching
-      // Match if pathname starts with href followed by '/' or end of string
-      // This prevents false positives like '/dashboard-settings' matching '/dashboard'
-      return pathname.startsWith(`${href}/`) || pathname === href;
-    },
-    [pathname]
-  );
-
-  // Filter sections based on auth state and requirements
   const getFilteredSections = useCallback(() => {
     if (!hydrated) {
       return [];
@@ -321,12 +138,9 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
 
     return sections
       .filter(section => {
-        // Check section-level auth requirements
         if (section.requiresAuth && !user) {
           return false;
         }
-
-        // Filter items within the section
         const filteredItems = section.items.filter(item => {
           if (item.requiresAuth && !user) {
             return false;
@@ -336,8 +150,6 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
           }
           return true;
         });
-
-        // Only include section if it has visible items
         return filteredItems.length > 0;
       })
       .map(section => ({
@@ -355,26 +167,18 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
       .sort((a, b) => a.priority - b.priority);
   }, [sections, user, profile, hydrated]);
 
-  // Reset navigation state
   const resetNavigation = useCallback(() => {
-    try {
-      localStorage.removeItem(STORAGE_KEYS.SIDEBAR_OPEN);
-      localStorage.removeItem(STORAGE_KEYS.SIDEBAR_COLLAPSED);
-      localStorage.removeItem(STORAGE_KEYS.COLLAPSED_SECTIONS);
-    } catch (error) {
-      logger.warn('Failed to reset navigation state', { error }, 'useNavigation');
-    }
-
-    setNavigationState({
-      isSidebarOpen: false,
-      isSidebarCollapsed: false,
-      collapsedSections: buildInitialCollapsedSections(sections),
-      activeSection: null,
-      activeItem: null,
-    });
+    clearNavigationStorage();
+    setIsSidebarOpen(false);
+    setIsSidebarCollapsed(false);
+    setCollapsedSections(buildInitialCollapsedSections(sections));
   }, [sections]);
 
-  // Memoize the return value to prevent unnecessary re-renders
+  const navigationState = useMemo<NavigationState>(
+    () => ({ isSidebarOpen, isSidebarCollapsed, collapsedSections, activeSection, activeItem }),
+    [isSidebarOpen, isSidebarCollapsed, collapsedSections, activeSection, activeItem]
+  );
+
   return useMemo(
     () => ({
       navigationState,
