@@ -8,7 +8,7 @@ import {
   TASK_CATEGORY_LABELS,
   PRIORITY_LABELS,
 } from '@/config/tasks';
-import type { TaskFormData } from './types';
+import type { TaskFormData } from './task-form-types';
 
 interface TaskFormFieldsProps {
   formData: TaskFormData;
@@ -24,6 +24,8 @@ interface TaskFormFieldsProps {
   onRemoveTag: (tag: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
+  showTaskTypeHint?: boolean;
+  submitLabel?: string;
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -53,6 +55,8 @@ export function TaskFormFields({
   onRemoveTag,
   onSubmit,
   onCancel,
+  showTaskTypeHint = false,
+  submitLabel = 'Save',
 }: TaskFormFieldsProps) {
   return (
     <form onSubmit={onSubmit} className="p-6 space-y-4">
@@ -87,6 +91,16 @@ export function TaskFormFields({
             </option>
           ))}
         </select>
+        {showTaskTypeHint && (
+          <p className="text-xs text-gray-500 mt-1">
+            {formData.task_type === TASK_TYPES.ONE_TIME &&
+              'One-time task, marked as completed once done'}
+            {formData.task_type === TASK_TYPES.RECURRING_SCHEDULED &&
+              'Recurring task with a fixed schedule'}
+            {formData.task_type === TASK_TYPES.RECURRING_AS_NEEDED &&
+              'Recurring task, completed as needed'}
+          </p>
+        )}
       </div>
 
       {formData.task_type === TASK_TYPES.RECURRING_SCHEDULED && (
@@ -100,6 +114,11 @@ export function TaskFormFields({
             placeholder="e.g. Every Monday, Daily at 9 AM"
             className={selectClass}
           />
+          {showTaskTypeHint && (
+            <p className="text-xs text-gray-500 mt-1">
+              Describe when this task should be completed
+            </p>
+          )}
         </div>
       )}
 
@@ -227,7 +246,7 @@ export function TaskFormFields({
         </Button>
         <Button type="submit" isLoading={submitting}>
           <Save className="h-4 w-4 mr-2" />
-          Save
+          {submitLabel}
         </Button>
       </div>
     </form>

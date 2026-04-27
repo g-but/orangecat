@@ -6,7 +6,7 @@ import Loading from '@/components/Loading';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { ROUTES } from '@/config/routes';
 import { useEditTaskForm } from './useEditTaskForm';
-import { TaskFormFields } from './TaskFormFields';
+import { TaskFormFields } from '../../TaskFormFields';
 
 export default function EditTaskPage() {
   const { user, isLoading: authLoading, hydrated } = useRequireAuth();
