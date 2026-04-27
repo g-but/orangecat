@@ -203,7 +203,7 @@
     "playwright": "^1.53.0",
     "prettier": "^3.6.2",
     "shadcn": "^3.4.2",
-    "supabase": "^2.58.5",
+    "supabase": "^2.95.5",
     "ts-jest": "^29.4.9",
     "ws": "^8.18.2"
   },
