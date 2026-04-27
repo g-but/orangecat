@@ -7,6 +7,7 @@ import { logger } from '@/utils/logger';
 import type { ModelTier } from '@/config/ai-models';
 import type { UserApiKey } from '@/components/ai/AIKeyManager';
 import { API_ROUTES } from '@/config/api-routes';
+import { useAISettingsMutations } from './useAISettingsMutations';
 
 // ==================== TYPES ====================
 
@@ -130,130 +131,19 @@ export function useAISettings() {
     fetchPlatformUsage();
   }, [fetchData, fetchPlatformUsage]);
 
-  // Update preferences
-  const updatePreferences = useCallback(
-    async (updates: Partial<UserAIPreferences>) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Not authenticated');
-      }
-
-      // If no preferences exist, create them
-      if (!state.preferences) {
-        const { data, error } = await supabase
-          .from(DATABASE_TABLES.USER_AI_PREFERENCES)
-          .insert({
-            user_id: user.id,
-            ...updates,
-          })
-          .select()
-          .single();
-
-        if (error) {
-          throw error;
-        }
-
-        setState(prev => ({ ...prev, preferences: data }));
-        return data;
-      }
-
-      // Update existing preferences
-      const { data, error } = await supabase
-        .from(DATABASE_TABLES.USER_AI_PREFERENCES)
-        .update(updates)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      setState(prev => ({ ...prev, preferences: data }));
-      return data;
-    },
-    [supabase, state.preferences]
-  );
-
-  // Add API key
-  const addKey = useCallback(
-    async (params: { provider: string; apiKey: string; keyName: string }) => {
-      const response = await fetch(API_ROUTES.USER.API_KEYS, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add key');
-      }
-
-      const data = await response.json();
-
-      // Refresh keys
-      await fetchData();
-
-      return data;
-    },
-    [fetchData]
-  );
-
-  // Delete API key
-  const deleteKey = useCallback(
-    async (keyId: string) => {
-      const response = await fetch(`${API_ROUTES.USER.API_KEYS}/${keyId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete key');
-      }
-
-      // Refresh keys
-      await fetchData();
-    },
-    [fetchData]
-  );
-
-  // Set primary key
-  const setPrimaryKey = useCallback(
-    async (keyId: string) => {
-      const response = await fetch(`${API_ROUTES.USER.API_KEYS}/${keyId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPrimary: true }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to set primary key');
-      }
-
-      // Refresh keys
-      await fetchData();
-    },
-    [fetchData]
-  );
-
-  // Complete onboarding
-  const completeOnboarding = useCallback(async () => {
-    return updatePreferences({
-      onboarding_completed: true,
-      onboarding_completed_at: new Date().toISOString(),
-    });
-  }, [updatePreferences]);
-
-  // Update onboarding step
-  const updateOnboardingStep = useCallback(
-    async (step: number) => {
-      return updatePreferences({ onboarding_step: step });
-    },
-    [updatePreferences]
-  );
+  const {
+    updatePreferences,
+    addKey,
+    deleteKey,
+    setPrimaryKey,
+    completeOnboarding,
+    updateOnboardingStep,
+  } = useAISettingsMutations({
+    supabase,
+    preferences: state.preferences,
+    setState,
+    fetchData,
+  });
 
   return {
     // State
