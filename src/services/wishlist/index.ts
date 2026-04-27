@@ -8,4 +8,4 @@
  */
 
 export { ProofStorageService } from './proofStorage';
-export type { FileUploadResult, FileUploadProgress } from './proofStorage';
+export type { FileUploadResult, FileUploadProgress } from '@/types/storage';

@@ -35,26 +35,3 @@ export function useUserCurrency(): Currency {
   // Default to CHF as the platform is Swiss-focused
   return PLATFORM_DEFAULT_CURRENCY;
 }
-
-/**
- * Get the default currency for entity creation forms.
- * This is used when initializing form values.
- * Returns PLATFORM_DEFAULT_CURRENCY ('CHF') as the platform default (Swiss-focused).
- */
-export function getDefaultFormCurrency(): Currency {
-  return PLATFORM_DEFAULT_CURRENCY;
-}
-
-/**
- * Check if a currency is a fiat currency (not BTC/SATS)
- */
-export function isFiatCurrency(currency: string): boolean {
-  return ['CHF', 'EUR', 'USD', 'GBP'].includes(currency);
-}
-
-/**
- * Check if a currency is a crypto currency (BTC/SATS)
- */
-export function isCryptoCurrency(currency: string): boolean {
-  return ['BTC', 'SATS'].includes(currency);
-}

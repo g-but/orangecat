@@ -9,18 +9,9 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import type { FileUploadResult, FileUploadProgress } from '@/types/storage';
 
-export interface FileUploadResult {
-  success: boolean;
-  url?: string;
-  error?: string;
-}
-
-export interface FileUploadProgress {
-  loaded: number;
-  total: number;
-  percentage: number;
-}
+export type { FileUploadResult, FileUploadProgress };
 
 export class ProjectStorageService {
   private static readonly BUCKET_NAME = 'projects';
@@ -96,10 +87,12 @@ export class ProjectStorageService {
       }
 
       // Upload to Supabase Storage
-      const { data: _data, error } = await supabase.storage.from(this.BUCKET_NAME).upload(fileName, file, {
-        cacheControl: '31536000', // 1 year
-        upsert: true, // Replace if exists
-      });
+      const { data: _data, error } = await supabase.storage
+        .from(this.BUCKET_NAME)
+        .upload(fileName, file, {
+          cacheControl: '31536000', // 1 year
+          upsert: true, // Replace if exists
+        });
 
       if (error) {
         logger.error(`Failed to upload ${type}`, { error, fileName });

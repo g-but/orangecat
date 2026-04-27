@@ -9,18 +9,9 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import type { FileUploadResult, FileUploadProgress } from '@/types/storage';
 
-export interface FileUploadResult {
-  success: boolean;
-  url?: string;
-  error?: string;
-}
-
-export interface FileUploadProgress {
-  loaded: number;
-  total: number;
-  percentage: number;
-}
+export type { FileUploadResult, FileUploadProgress };
 
 export class ProofStorageService {
   private static readonly BUCKET_NAME = 'proofs';

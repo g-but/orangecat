@@ -15,7 +15,8 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useUserCurrency, isFiatCurrency } from './useUserCurrency';
+import { useUserCurrency } from './useUserCurrency';
+import { isFiatCurrency } from '@/utils/currency-helpers';
 import { useCurrencyConversion } from './useCurrencyConversion';
 import { formatCurrency, formatSats, satsToBitcoin } from '@/services/currency';
 import type { CurrencyCode } from '@/config/currencies';

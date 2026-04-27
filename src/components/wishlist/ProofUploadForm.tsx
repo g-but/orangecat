@@ -39,7 +39,8 @@ import {
 } from '@/lib/validation';
 import { cn } from '@/lib/utils';
 import { PROOF_TYPE_META, type ProofUploadFormProps, type ProofType } from './types';
-import { ProofStorageService, type FileUploadProgress } from '@/services/wishlist';
+import { ProofStorageService } from '@/services/wishlist';
+import type { FileUploadProgress } from '@/types/storage';
 
 const PROOF_TYPE_OPTIONS: Array<{
   value: ProofType;
