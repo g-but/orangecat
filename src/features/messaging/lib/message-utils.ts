@@ -7,8 +7,11 @@
  * @module messaging/lib/message-utils
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Message, Participant } from '../types';
 import { MESSAGE_STATUS, type MessageStatus } from './constants';
+import { DATABASE_TABLES } from '@/config/database-tables';
+import { logger } from '@/utils/logger';
 
 // =============================================================================
 // MESSAGE STATUS CALCULATION
@@ -433,4 +436,116 @@ export function confirmOptimisticMessage(
     return withoutOptimistic;
   }
   return mergeMessages(withoutOptimistic, [confirmedMessage]);
+}
+
+// =============================================================================
+// REALTIME FETCH HELPERS
+// =============================================================================
+
+type RawPayload = Record<string, unknown>;
+
+type MessageWithSender = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  message_type: string;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+  edited_at: string | null;
+  sender: {
+    id: string;
+    username: string | null;
+    name: string | null;
+    avatar_url: string | null;
+  } | null;
+};
+
+const FALLBACK_SENDER = (senderId: string) => ({
+  id: senderId,
+  username: '',
+  name: '',
+  avatar_url: null as string | null,
+});
+
+/**
+ * Fetch a full Message object from the database given a realtime INSERT payload.
+ *
+ * Tries message_details view first (richest data), falls back to messages+profiles
+ * join, and as a last resort constructs from the raw payload so the caller always
+ * gets something usable.
+ */
+export async function fetchFullMessage(
+  supabase: SupabaseClient,
+  messageId: string,
+  payloadNew: RawPayload
+): Promise<Message | null> {
+  const senderId = payloadNew.sender_id as string;
+
+  const { data: details, error: viewError } = await supabase
+    .from(DATABASE_TABLES.MESSAGE_DETAILS)
+    .select('*')
+    .eq('id', messageId)
+    .single();
+
+  if (details && !viewError) {
+    const msg = details as Message;
+    return {
+      ...msg,
+      sender: msg.sender ?? FALLBACK_SENDER(senderId),
+      is_delivered: msg.is_delivered ?? true,
+      is_read: msg.is_read ?? false,
+      status: msg.status || (msg.is_read ? MESSAGE_STATUS.READ : MESSAGE_STATUS.DELIVERED),
+    };
+  }
+
+  const { data: joined, error: joinError } = await supabase
+    .from(DATABASE_TABLES.MESSAGES)
+    .select('*, sender:profiles!messages_sender_id_fkey(id, username, name, avatar_url)')
+    .eq('id', messageId)
+    .single();
+
+  const typedJoined = joined as MessageWithSender | null;
+
+  if (typedJoined && !joinError) {
+    return {
+      ...typedJoined,
+      sender: typedJoined.sender
+        ? {
+            id: typedJoined.sender.id,
+            username: typedJoined.sender.username || '',
+            name: typedJoined.sender.name || '',
+            avatar_url: typedJoined.sender.avatar_url || null,
+          }
+        : FALLBACK_SENDER(senderId),
+      is_read: false,
+      is_delivered: true,
+      status: MESSAGE_STATUS.DELIVERED,
+    } as Message;
+  }
+
+  logger.error('Failed to fetch message', joinError || viewError, 'Messaging');
+
+  if (!payloadNew.id) {
+    return null;
+  }
+
+  return {
+    id: payloadNew.id as string,
+    conversation_id: payloadNew.conversation_id as string,
+    sender_id: senderId,
+    content: payloadNew.content as string,
+    message_type: (payloadNew.message_type as string) || 'text',
+    metadata: (payloadNew.metadata as Record<string, unknown>) || null,
+    created_at: payloadNew.created_at as string,
+    updated_at: (payloadNew.updated_at as string) || (payloadNew.created_at as string),
+    is_deleted: (payloadNew.is_deleted as boolean) || false,
+    edited_at: (payloadNew.edited_at as string) || null,
+    sender: FALLBACK_SENDER(senderId),
+    is_read: false,
+    is_delivered: true,
+    status: MESSAGE_STATUS.DELIVERED,
+  } as Message;
 }

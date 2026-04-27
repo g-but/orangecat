@@ -6,8 +6,7 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import type { Message } from '@/features/messaging/types';
 import { CHANNELS, debugLog, TIMING } from '@/features/messaging/lib/constants';
-import { DATABASE_TABLES } from '@/config/database-tables';
-import { STATUS } from '@/config/database-constants';
+import { fetchFullMessage } from '@/features/messaging/lib/message-utils';
 
 interface UseMessageSubscriptionOptions {
   onNewMessage?: (message: Message) => void;
@@ -142,161 +141,22 @@ export function useMessageSubscription(
           filter: `conversation_id=eq.${conversationId}`,
         },
         async payload => {
-          debugLog('[useMessageSubscription] insert', {
-            conversationId: payload.new.conversation_id,
-            senderId: payload.new.sender_id,
-            userId: user.id,
-            messageId: payload.new.id,
-          });
+          debugLog('[useMessageSubscription] insert', { messageId: payload.new.id });
           const { onNewMessage, onOwnMessage } = callbacksRef.current;
 
+          if (payload.new.sender_id === user.id) {
+            debugLog('[useMessageSubscription] own message; onOwnMessage');
+            if (onOwnMessage) {
+              onOwnMessage(payload.new.id);
+            }
+            return;
+          }
+
           try {
-            debugLog('[useMessageSubscription] handling insert', {
-              messageId: payload.new.id,
-              senderId: payload.new.sender_id,
-              currentUserId: user.id,
-              conversationId: payload.new.conversation_id,
-            });
-
-            // Skip if this is our own message (handled optimistically)
-            if (payload.new.sender_id === user.id) {
-              debugLog('[useMessageSubscription] own message; onOwnMessage');
-              if (onOwnMessage) {
-                onOwnMessage(payload.new.id);
-              }
-              return;
-            }
-
-            // Fetch the full message with sender info
-            // Try message_details first, fallback to messages + profiles join if view doesn't exist
-            let newMessage: Message | null = null;
-
-            const { data: messageDetails, error: viewError } = await supabase
-              .from(DATABASE_TABLES.MESSAGE_DETAILS)
-              .select('*')
-              .eq('id', payload.new.id)
-              .single();
-
-            if (messageDetails && !viewError) {
-              newMessage = messageDetails as Message;
-              // Ensure status is set
-              if (!newMessage.status) {
-                newMessage.status = newMessage.is_read
-                  ? STATUS.MESSAGES.READ
-                  : STATUS.MESSAGES.DELIVERED;
-              }
-            } else {
-              // Fallback: fetch from messages table and join with profiles
-              const { data: messageData, error: messageError } = await supabase
-                .from(DATABASE_TABLES.MESSAGES)
-                .select(
-                  `
-                  *,
-                  sender:profiles!messages_sender_id_fkey(id, username, name, avatar_url)
-                `
-                )
-                .eq('id', payload.new.id)
-                .single();
-
-              // Type for the joined query result
-              type MessageWithSender = {
-                id: string;
-                conversation_id: string;
-                sender_id: string;
-                content: string;
-                message_type: string;
-                metadata: Record<string, unknown> | null;
-                created_at: string;
-                updated_at: string;
-                is_deleted: boolean;
-                edited_at: string | null;
-                sender: {
-                  id: string;
-                  username: string | null;
-                  name: string | null;
-                  avatar_url: string | null;
-                } | null;
-              };
-
-              const typedMessageData = messageData as MessageWithSender | null;
-
-              if (typedMessageData && !messageError) {
-                newMessage = {
-                  ...typedMessageData,
-                  sender: typedMessageData.sender
-                    ? {
-                        id: typedMessageData.sender.id,
-                        username: typedMessageData.sender.username || '',
-                        name: typedMessageData.sender.name || '',
-                        avatar_url: typedMessageData.sender.avatar_url || null,
-                      }
-                    : {
-                        id: payload.new.sender_id,
-                        username: '',
-                        name: '',
-                        avatar_url: null,
-                      },
-                  is_read: false,
-                  is_delivered: true,
-                  status: STATUS.MESSAGES.DELIVERED as typeof STATUS.MESSAGES.DELIVERED,
-                } as Message;
-              } else {
-                logger.error('Failed to fetch message', messageError || viewError, 'Messaging');
-                // Last resort: create message from payload
-                if (payload.new) {
-                  newMessage = {
-                    id: payload.new.id,
-                    conversation_id: payload.new.conversation_id,
-                    sender_id: payload.new.sender_id,
-                    content: payload.new.content,
-                    message_type: payload.new.message_type || 'text',
-                    metadata: payload.new.metadata,
-                    created_at: payload.new.created_at,
-                    updated_at: payload.new.updated_at || payload.new.created_at,
-                    is_deleted: payload.new.is_deleted || false,
-                    edited_at: payload.new.edited_at || null,
-                    sender: {
-                      id: payload.new.sender_id,
-                      username: '',
-                      name: '',
-                      avatar_url: null,
-                    },
-                    is_read: false,
-                    is_delivered: true,
-                    status: STATUS.MESSAGES.DELIVERED as typeof STATUS.MESSAGES.DELIVERED,
-                  } as Message;
-                }
-              }
-            }
-
+            const newMessage = await fetchFullMessage(supabase, payload.new.id, payload.new);
             if (newMessage) {
-              // Ensure message has all required fields with proper defaults
-              const messageWithStatus: Message = {
-                ...newMessage,
-                // Ensure sender object exists
-                sender: newMessage.sender || {
-                  id: payload.new.sender_id,
-                  username: '',
-                  name: '',
-                  avatar_url: null,
-                },
-                // Ensure status fields are set
-                is_delivered: newMessage.is_delivered ?? true, // If it's in DB and we received it, it's delivered
-                is_read: newMessage.is_read ?? false,
-                status:
-                  newMessage.status ||
-                  (newMessage.is_read ? STATUS.MESSAGES.READ : STATUS.MESSAGES.DELIVERED),
-              };
-
-              debugLog('[useMessageSubscription] ✅ Processed new message:', {
-                id: messageWithStatus.id,
-                status: messageWithStatus.status,
-                senderId: messageWithStatus.sender_id,
-              });
-
               if (onNewMessage) {
-                // Call immediately - React will batch updates
-                onNewMessage(messageWithStatus);
+                onNewMessage(newMessage);
               } else {
                 logger.warn('onNewMessage callback not provided', undefined, 'Messaging');
               }
@@ -319,17 +179,11 @@ export function useMessageSubscription(
         async payload => {
           const { onNewMessage } = callbacksRef.current;
           debugLog('[useMessageSubscription] update', payload.new.id);
-          // Handle message updates (e.g., edited, deleted)
           if (onNewMessage && payload.new) {
             try {
-              const { data: messageDetails } = await supabase
-                .from(DATABASE_TABLES.MESSAGE_DETAILS)
-                .select('*')
-                .eq('id', payload.new.id)
-                .single();
-
-              if (messageDetails) {
-                onNewMessage(messageDetails as Message);
+              const updated = await fetchFullMessage(supabase, payload.new.id, payload.new);
+              if (updated) {
+                onNewMessage(updated);
               }
             } catch (error) {
               logger.error('Error processing message update', error, 'Messaging');
