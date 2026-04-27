@@ -6,6 +6,7 @@
  */
 
 import { type CurrencyCode } from '@/config/currencies';
+import type { OffsetPagination } from '@/types/pagination';
 
 export type LoanStatus = 'active' | 'paid_off' | 'refinanced' | 'defaulted' | 'cancelled';
 
@@ -255,11 +256,7 @@ export interface LoanStatsResponse {
 
 // ==================== PAGINATION & FILTERING ====================
 
-export interface Pagination {
-  page?: number;
-  pageSize?: number;
-  offset?: number;
-}
+export type Pagination = OffsetPagination;
 
 export interface LoansQuery {
   user_id?: string;

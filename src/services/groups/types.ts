@@ -106,11 +106,6 @@ export interface GroupsQuery {
   member_count_max?: number;
 }
 
-export interface Pagination {
-  page?: number;
-  pageSize?: number;
-}
-
 // ==================== WALLET TYPES ====================
 
 /**

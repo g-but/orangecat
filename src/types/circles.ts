@@ -5,6 +5,8 @@
  * Enables users to form groups with shared wallets, activities, and governance.
  */
 
+import type { CursorPagination } from '@/types/pagination';
+
 export type CircleVisibility = 'public' | 'members_only' | 'private';
 
 export type CircleJoinPolicy = 'open' | 'invite_only' | 'closed';
@@ -298,17 +300,11 @@ export interface CircleActivitiesQuery {
   sort_order?: 'asc' | 'desc';
 }
 
-export interface Pagination {
-  hasMore: boolean;
-  nextCursor: string | null;
-  count: number;
-}
-
-export interface CirclesPagination extends Pagination {
+export interface CirclesPagination extends CursorPagination {
   query?: CirclesQuery;
 }
 
-export interface CircleActivitiesPagination extends Pagination {
+export interface CircleActivitiesPagination extends CursorPagination {
   query?: CircleActivitiesQuery;
 }
 
@@ -438,7 +434,7 @@ export interface CircleSortOption {
 
 export interface UseCirclesOptions {
   query?: CirclesQuery;
-  pagination?: Pagination;
+  pagination?: CursorPagination;
   enabled?: boolean;
 }
 
@@ -460,7 +456,7 @@ export interface UseCircleWalletsOptions {
 export interface UseCircleActivitiesOptions {
   circleId: string;
   query?: CircleActivitiesQuery;
-  pagination?: Pagination;
+  pagination?: CursorPagination;
   enabled?: boolean;
 }
 
@@ -472,6 +468,3 @@ export interface UseCreateCircleOptions {
 export interface UseUpdateCircleOptions extends UseCreateCircleOptions {
   circleId: string;
 }
-
-
-
