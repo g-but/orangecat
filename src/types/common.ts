@@ -27,27 +27,7 @@ export interface AppError extends Error {
  */
 export type CatchError = Error | string | unknown;
 
-/**
- * API Error response structure
- */
-export interface ApiErrorResponse {
-  message: string;
-  code?: string;
-  status?: number;
-  details?: Record<string, unknown>;
-}
-
 // ==================== API RESPONSES ====================
-
-/**
- * Generic API response wrapper
- * Replaces: { data: any, error: any }
- */
-export interface ApiResponse<T = unknown> {
-  data: T | null;
-  error: ApiErrorResponse | null;
-  status?: number;
-}
 
 /**
  * Supabase-style response
@@ -57,20 +37,6 @@ export interface SupabaseResponse<T = unknown> {
   data: T | null;
   error: Error | null;
   status?: number;
-}
-
-/**
- * Paginated API response
- */
-export interface PaginatedResponse<T = unknown> {
-  data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-  error: ApiErrorResponse | null;
 }
 
 // ==================== FORM DATA ====================
