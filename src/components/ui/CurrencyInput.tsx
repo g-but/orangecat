@@ -305,7 +305,7 @@ export function CurrencyInput({
 
           <div className="mt-2 pt-2 border-t border-orange-100 flex items-start gap-1">
             <Info className="w-3 h-3 text-orange-500 mt-0.5 flex-shrink-0" />
-            <p className="text-[10px] text-gray-600">
+            <p className="text-xs text-gray-600">
               All transactions settle in Bitcoin. Amounts shown are estimates based on current
               exchange rates.
               {isBitcoinNativeCurrency(inputCurrency) &&

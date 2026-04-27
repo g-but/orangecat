@@ -79,7 +79,7 @@ export function ModelSelector({ selectedModel, onSelect, disabled }: ModelSelect
           <div className="h-px bg-gray-100 my-1" />
 
           {/* Free models */}
-          <div className="px-3 py-1.5 text-xs font-medium text-gray-400 uppercase">Free Models</div>
+          <div className="px-3 py-1.5 text-xs font-medium text-gray-500 uppercase">Free Models</div>
           {freeModels.map(model => (
             <button
               key={model.id}

@@ -55,7 +55,7 @@ const Footer = React.memo(function Footer() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="group w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-orange-500 hover:to-tiffany-500 transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                  className="group w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500 hover:text-white hover:bg-gradient-to-r hover:from-orange-500 hover:to-tiffany-500 transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Follow us on ${item.name}`}
