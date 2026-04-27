@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSearchSuggestions } from '@/hooks/useSearch';
+import { useSearchSuggestions } from '@/hooks/useSearchSuggestions';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface SearchItem {

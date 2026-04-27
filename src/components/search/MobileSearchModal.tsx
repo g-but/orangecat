@@ -13,7 +13,7 @@ import {
   ArrowUpRight,
   Sparkles,
 } from 'lucide-react';
-import { useSearchSuggestions } from '@/hooks/useSearch';
+import { useSearchSuggestions } from '@/hooks/useSearchSuggestions';
 import { useAuth } from '@/hooks/useAuth';
 
 interface MobileSearchModalProps {
