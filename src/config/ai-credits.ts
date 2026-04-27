@@ -37,5 +37,8 @@ export const AI_CREDITS_CONFIG = {
   },
 } as const;
 
+/** Quick-pick preset amounts (in satoshis) shown in deposit/withdrawal dialogs */
+export const QUICK_AMOUNT_PRESETS_SATS = [1000, 5000, 10000, 50000] as const;
+
 export type AiOperation = keyof typeof AI_CREDITS_CONFIG.operations;
 export type AiCreditTier = keyof typeof AI_CREDITS_CONFIG.tiers;

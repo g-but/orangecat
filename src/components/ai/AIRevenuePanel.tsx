@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { API_ROUTES } from '@/config/api-routes';
+import { QUICK_AMOUNT_PRESETS_SATS } from '@/config/ai-credits';
 
 interface AssistantRevenue {
   id: string;
@@ -234,16 +235,23 @@ export function AIRevenuePanel() {
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
           <div className="text-sm text-green-800 mb-1">Total Earnings</div>
           <div className="text-3xl font-bold text-green-900">
-            {formatAmount(Math.round((earnings?.total_earned_btc || summary.total_revenue_btc) * 100_000_000))}
+            {formatAmount(
+              Math.round((earnings?.total_earned_btc || summary.total_revenue_btc) * 100_000_000)
+            )}
           </div>
           <div className="text-sm text-green-700 mt-1 space-y-0.5">
             <div>
               Available:{' '}
-              {formatAmount(Math.round((earnings?.available_balance_btc || summary.available_balance_btc) * 100_000_000))}
+              {formatAmount(
+                Math.round(
+                  (earnings?.available_balance_btc || summary.available_balance_btc) * 100_000_000
+                )
+              )}
             </div>
             {(earnings?.pending_withdrawal_btc || 0) > 0 && (
               <div className="text-yellow-700">
-                Pending: {formatAmount(Math.round((earnings?.pending_withdrawal_btc || 0) * 100_000_000))}
+                Pending:{' '}
+                {formatAmount(Math.round((earnings?.pending_withdrawal_btc || 0) * 100_000_000))}
               </div>
             )}
           </div>
@@ -293,7 +301,9 @@ export function AIRevenuePanel() {
                   <div className="flex items-center gap-2">
                     {getStatusIcon(withdrawal.status)}
                     <div>
-                      <div className="font-medium">{formatAmount(Math.round(withdrawal.amount_btc * 100_000_000))}</div>
+                      <div className="font-medium">
+                        {formatAmount(Math.round(withdrawal.amount_btc * 100_000_000))}
+                      </div>
                       <div className="text-xs text-gray-500">
                         {new Date(withdrawal.created_at).toLocaleDateString()}
                       </div>
@@ -376,17 +386,20 @@ export function AIRevenuePanel() {
               <div className="text-sm text-green-800">Available to withdraw</div>
               <div className="text-2xl font-bold text-green-900">
                 {formatAmount(
-                  Math.round(((earnings?.available_balance_btc || 0) - (earnings?.pending_withdrawal_btc || 0)) * 100_000_000)
+                  Math.round(
+                    ((earnings?.available_balance_btc || 0) -
+                      (earnings?.pending_withdrawal_btc || 0)) *
+                      100_000_000
+                  )
                 )}
               </div>
             </div>
 
             {/* Quick amounts */}
             <div className="grid grid-cols-4 gap-2">
-              {[1000, 5000, 10000, 50000].map(amount => {
+              {QUICK_AMOUNT_PRESETS_SATS.map(amount => {
                 const maxAmount =
-                  (earnings?.available_balance_btc || 0) -
-                  (earnings?.pending_withdrawal_btc || 0);
+                  (earnings?.available_balance_btc || 0) - (earnings?.pending_withdrawal_btc || 0);
                 const isDisabled = amount > maxAmount;
                 return (
                   <Button

@@ -14,6 +14,7 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { AI_MESSAGE_MAX_CHARS } from '@/lib/validation/ai';
 
 // Initialize Gemini AI with API key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -26,7 +27,10 @@ const chatRequestSchema = z.object({
   message: z
     .string()
     .min(1, 'Message is required')
-    .max(10000, 'Message too long (max 10,000 characters)'),
+    .max(
+      AI_MESSAGE_MAX_CHARS,
+      `Message too long (max ${AI_MESSAGE_MAX_CHARS.toLocaleString()} characters)`
+    ),
   systemPrompt: z.string().max(5000).optional(),
 });
 

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { API_ROUTES } from '@/config/api-routes';
+import { QUICK_AMOUNT_PRESETS_SATS } from '@/config/ai-credits';
 
 interface CreditBalance {
   balance_btc: number;
@@ -253,7 +254,7 @@ export function AICreditsPanel() {
           <div className="space-y-4 py-4">
             {/* Quick amounts */}
             <div className="grid grid-cols-4 gap-2">
-              {[1000, 5000, 10000, 50000].map(amount => (
+              {QUICK_AMOUNT_PRESETS_SATS.map(amount => (
                 <Button
                   key={amount}
                   variant={depositAmount === amount.toString() ? 'primary' : 'outline'}

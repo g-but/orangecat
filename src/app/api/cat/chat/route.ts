@@ -9,16 +9,15 @@
 
 import { NextRequest } from 'next/server';
 import { logger } from '@/utils/logger';
-import {
-  apiBadRequest,
-  apiError,
-  apiSuccess,
-  apiInternalError,
-} from '@/lib/api/standardResponse';
+import { apiBadRequest, apiError, apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { GroqAPIError } from '@/services/ai';
-import {  applyRateLimitHeaders, createRateLimitResponse, rateLimitWriteAsync } from '@/lib/rate-limit';
+import {
+  applyRateLimitHeaders,
+  createRateLimitResponse,
+  rateLimitWriteAsync,
+} from '@/lib/rate-limit';
 import { buildCatSystemPrompt } from '@/services/cat/system-prompt';
 import { getCatFewShotExamples } from '@/services/cat/few-shot-examples';
 import { parseActionsFromResponse } from '@/services/cat/response-parser';
@@ -33,6 +32,7 @@ import { fetchFullContextForCat, buildFullContextString } from '@/services/ai/do
 import { createActionExecutor } from '@/services/cat';
 import { getUserActorId } from '@/domain/actors';
 import type { ExecAction, CatAction, ExecActionResult } from '@/types/cat';
+import { AI_MESSAGE_MAX_CHARS } from '@/lib/validation/ai';
 
 /**
  * Execute all exec_action blocks parsed from an AI response.
@@ -47,8 +47,16 @@ async function runExecActions(
   actions: CatAction[]
 ): Promise<ExecActionResult[]> {
   const execActions = actions.filter((a): a is ExecAction => a.type === 'exec_action');
-  if (execActions.length === 0) { return []; }
-  if (!actorId) { return execActions.map(a => ({ actionId: a.actionId, status: 'failed' as const, error: 'User has no actor record' })); }
+  if (execActions.length === 0) {
+    return [];
+  }
+  if (!actorId) {
+    return execActions.map(a => ({
+      actionId: a.actionId,
+      status: 'failed' as const,
+      error: 'User has no actor record',
+    }));
+  }
 
   const executor = createActionExecutor(supabase);
   const results: ExecActionResult[] = [];
@@ -61,14 +69,16 @@ async function runExecActions(
       });
       // Extract displayMessage from handler data (handlers attach it as data.displayMessage)
       const handlerData = result.data as Record<string, unknown> | undefined;
-      const displayMessage = typeof handlerData?.displayMessage === 'string'
-        ? handlerData.displayMessage
-        : undefined;
+      const displayMessage =
+        typeof handlerData?.displayMessage === 'string' ? handlerData.displayMessage : undefined;
       results.push({
         actionId: action.actionId,
-        status: result.status === 'completed' ? 'completed'
-          : result.status === 'pending_confirmation' ? 'pending_confirmation'
-          : 'failed',
+        status:
+          result.status === 'completed'
+            ? 'completed'
+            : result.status === 'pending_confirmation'
+              ? 'pending_confirmation'
+              : 'failed',
         data: result.data,
         displayMessage,
         error: result.error,
@@ -87,20 +97,34 @@ async function runExecActions(
 }
 
 const bodySchema = z.object({
-  message: z.string().min(1).max(10000),
+  message: z.string().min(1).max(AI_MESSAGE_MAX_CHARS),
   model: z.string().optional(),
   stream: z.boolean().optional(),
 });
 
 function isAiRateLimitError(error: unknown): boolean {
   if (error instanceof GroqAPIError) {
-    if (error.type === 'rate_limit' || error.statusCode === 429) {return true;}
+    if (error.type === 'rate_limit' || error.statusCode === 429) {
+      return true;
+    }
     const msg = error.message.toLowerCase();
-    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) {return true;}
+    if (
+      msg.includes('request too large') ||
+      msg.includes('rate limit') ||
+      msg.includes('tokens per minute')
+    ) {
+      return true;
+    }
   }
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
-    if (msg.includes('request too large') || msg.includes('rate limit') || msg.includes('tokens per minute')) {return true;}
+    if (
+      msg.includes('request too large') ||
+      msg.includes('rate limit') ||
+      msg.includes('tokens per minute')
+    ) {
+      return true;
+    }
   }
   return false;
 }
@@ -110,18 +134,28 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     // Rate limit (write-tier reused for chat to prevent abuse)
     const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {return createRateLimitResponse(rl);}
+    if (!rl.success) {
+      return createRateLimitResponse(rl);
+    }
 
     const body = await (request as NextRequest).json();
     const parsed = bodySchema.safeParse(body);
-    if (!parsed.success) {return apiBadRequest('Invalid request', parsed.error.flatten());}
+    if (!parsed.success) {
+      return apiBadRequest('Invalid request', parsed.error.flatten());
+    }
 
     const { message, model: requestedModel, stream } = parsed.data;
 
     // Resolve provider, BYOK keys, model, and platform limits
-    const resolved = await resolveProvider(supabase, user.id, request.headers, { requestedModel, message });
-    if (resolved instanceof Response) {return resolved;}
-    const { provider, hasByok, modelToUse, aiService, platformUsage, keyService, userGroqKey } = resolved;
+    const resolved = await resolveProvider(supabase, user.id, request.headers, {
+      requestedModel,
+      message,
+    });
+    if (resolved instanceof Response) {
+      return resolved;
+    }
+    const { provider, hasByok, modelToUse, aiService, platformUsage, keyService, userGroqKey } =
+      resolved;
 
     // Resolve actor ID for exec_action execution
     const actorId = await getUserActorId(supabase, user.id);
@@ -136,7 +170,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     try {
       conversationId = await getOrCreateDefaultConversation(supabase, user.id);
       historyMessages = await getMessagesForContext(supabase, user.id);
-    } catch { /* Non-fatal — continue without history */ }
+    } catch {
+      /* Non-fatal — continue without history */
+    }
 
     // Build message array: system + few-shots + history + user message
     let messages: any[] = [
@@ -147,7 +183,14 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     ];
 
     // Tool use: optionally enrich with platform search results (Groq only)
-    messages = await maybeEnrichWithSearchResults(supabase, messages, message, provider, userGroqKey, modelToUse);
+    messages = await maybeEnrichWithSearchResults(
+      supabase,
+      messages,
+      message,
+      provider,
+      userGroqKey,
+      modelToUse
+    );
 
     // ── Streaming ──────────────────────────────────────────────────────────────
     if (stream) {
@@ -155,20 +198,36 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       const readable = new ReadableStream({
         async start(controller) {
           try {
-            let usage: { inputTokens?: number; outputTokens?: number; totalTokens?: number } | undefined;
+            let usage:
+              | { inputTokens?: number; outputTokens?: number; totalTokens?: number }
+              | undefined;
             let fullContent = '';
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ model: modelToUse, provider })}\n\n`));
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ model: modelToUse, provider })}\n\n`)
+            );
 
-            for await (const chunk of aiService.streamChatCompletion({ model: modelToUse, messages, temperature: 0.7 })) {
-              if (chunk.usage) {usage = chunk.usage;}
+            for await (const chunk of aiService.streamChatCompletion({
+              model: modelToUse,
+              messages,
+              temperature: 0.7,
+            })) {
+              if (chunk.usage) {
+                usage = chunk.usage;
+              }
               if (chunk.content) {
                 fullContent += chunk.content;
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk.content })}\n\n`));
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({ content: chunk.content })}\n\n`)
+                );
               }
               if (chunk.done) {
                 const { actions } = parseActionsFromResponse(fullContent);
                 const execResults = await runExecActions(supabase, user.id, actorId, actions);
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, usage, model: modelToUse, provider, actions: actions.length > 0 ? actions : undefined, execResults: execResults.length > 0 ? execResults : undefined })}\n\n`));
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({ done: true, usage, model: modelToUse, provider, actions: actions.length > 0 ? actions : undefined, execResults: execResults.length > 0 ? execResults : undefined })}\n\n`
+                  )
+                );
                 break;
               }
             }
@@ -176,15 +235,26 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
             if (conversationId && fullContent) {
               saveMessages(supabase, conversationId, user.id, [
                 { role: 'user', content: message },
-                { role: 'assistant', content: fullContent, model_used: modelToUse, provider, token_count: usage?.totalTokens },
-              ]).catch((err: unknown) => { logger.error('Failed to persist streaming messages', { err }, 'cat/chat'); });
+                {
+                  role: 'assistant',
+                  content: fullContent,
+                  model_used: modelToUse,
+                  provider,
+                  token_count: usage?.totalTokens,
+                },
+              ]).catch((err: unknown) => {
+                logger.error('Failed to persist streaming messages', { err }, 'cat/chat');
+              });
             }
             if (!hasByok && usage?.totalTokens) {
               await keyService.incrementPlatformUsage(user.id, 1, usage.totalTokens);
             }
           } catch (err) {
             const errPayload = isAiRateLimitError(err)
-              ? { error: 'AI is temporarily busy. Please try again in a minute.', code: 'AI_RATE_LIMITED' }
+              ? {
+                  error: 'AI is temporarily busy. Please try again in a minute.',
+                  code: 'AI_RATE_LIMITED',
+                }
               : { error: err instanceof Error ? err.message : 'stream_error' };
             controller.enqueue(encoder.encode(`event: error\n`));
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(errPayload)}\n\n`));
@@ -195,13 +265,25 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       });
       return applyRateLimitHeaders(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        new Response(readable, { status: 200, headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' } }) as any,
+        new Response(readable, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache, no-transform',
+            Connection: 'keep-alive',
+            'X-Accel-Buffering': 'no',
+          },
+        }) as any,
         rl
       );
     }
 
     // ── Non-streaming ──────────────────────────────────────────────────────────
-    const result = await aiService.chatCompletion({ model: modelToUse, messages, temperature: 0.7 });
+    const result = await aiService.chatCompletion({
+      model: modelToUse,
+      messages,
+      temperature: 0.7,
+    });
 
     if (!hasByok) {
       await keyService.incrementPlatformUsage(user.id, 1, result.totalTokens);
@@ -213,8 +295,16 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     if (conversationId) {
       saveMessages(supabase, conversationId, user.id, [
         { role: 'user', content: message },
-        { role: 'assistant', content: cleanedMessage, model_used: result.model, provider, token_count: result.totalTokens },
-      ]).catch((err: unknown) => { logger.error('Failed to persist messages', { err }, 'cat/chat'); });
+        {
+          role: 'assistant',
+          content: cleanedMessage,
+          model_used: result.model,
+          provider,
+          token_count: result.totalTokens,
+        },
+      ]).catch((err: unknown) => {
+        logger.error('Failed to persist messages', { err }, 'cat/chat');
+      });
     }
 
     return applyRateLimitHeaders(
@@ -224,14 +314,29 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
         execResults: execResults.length > 0 ? execResults : undefined,
         modelUsed: result.model,
         provider,
-        usage: { inputTokens: result.inputTokens, outputTokens: result.outputTokens, totalTokens: result.totalTokens, apiCostBtc: result.costBtc || 0, isFreeModel: result.isFreeModel, usedByok: result.usedByok },
-        userStatus: { hasByok, freeMessagesPerDay: platformUsage?.daily_limit ?? 0, freeMessagesRemaining: platformUsage?.requests_remaining ?? 0 },
+        usage: {
+          inputTokens: result.inputTokens,
+          outputTokens: result.outputTokens,
+          totalTokens: result.totalTokens,
+          apiCostBtc: result.costBtc || 0,
+          isFreeModel: result.isFreeModel,
+          usedByok: result.usedByok,
+        },
+        userStatus: {
+          hasByok,
+          freeMessagesPerDay: platformUsage?.daily_limit ?? 0,
+          freeMessagesRemaining: platformUsage?.requests_remaining ?? 0,
+        },
       }),
       rl
     );
   } catch (error) {
     if (isAiRateLimitError(error)) {
-      return apiError('AI is temporarily busy. Please try again in a minute.', 'AI_RATE_LIMITED', 429);
+      return apiError(
+        'AI is temporarily busy. Please try again in a minute.',
+        'AI_RATE_LIMITED',
+        429
+      );
     }
     logger.error('Cat chat unhandled error', error, 'CatChatAPI');
     return apiInternalError('An unexpected error occurred. Please try again.');

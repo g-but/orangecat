@@ -8,6 +8,7 @@ import {
 } from '@/types/bitcoin';
 import { getErrorMessage } from '@/types/common';
 import { logger } from '@/utils/logger';
+import { BITCOIN_FETCH_TIMEOUT_MS } from '@/lib/wallets/constants';
 
 /**
  * BITCOIN SERVICE - CLASS-BASED ARCHITECTURE WITH DEPENDENCY INJECTION
@@ -19,7 +20,7 @@ import { logger } from '@/utils/logger';
  * - Dependency injection for testability
  */
 
-const API_TIMEOUT_MS = 10000; // 10 seconds timeout for API calls
+const API_TIMEOUT_MS = BITCOIN_FETCH_TIMEOUT_MS;
 
 // Transaction input/output types for processing
 interface TransactionInput {

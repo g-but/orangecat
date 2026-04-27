@@ -10,6 +10,7 @@
  */
 
 import { logger } from '@/utils/logger';
+import { BITCOIN_FETCH_TIMEOUT_MS } from '@/lib/wallets/constants';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -67,7 +68,7 @@ async function getCurrentBlockHeight(): Promise<number> {
   }
 
   const response = await fetch(`${MEMPOOL_API}/blocks/tip/height`, {
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.timeout(BITCOIN_FETCH_TIMEOUT_MS),
   });
 
   if (!response.ok) {
@@ -94,7 +95,7 @@ async function getCurrentBlockHeight(): Promise<number> {
  */
 async function getAddressTransactions(address: string): Promise<MempoolTransaction[]> {
   const response = await fetch(`${MEMPOOL_API}/address/${address}/txs`, {
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.timeout(BITCOIN_FETCH_TIMEOUT_MS),
   });
 
   if (!response.ok) {

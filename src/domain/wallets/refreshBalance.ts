@@ -9,15 +9,20 @@ import { fetchBitcoinBalance } from '@/services/blockchain';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
+import { BITCOIN_FETCH_TIMEOUT_MS } from '@/lib/wallets/constants';
 
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
-const API_TIMEOUT_MS = 10_000;
+const API_TIMEOUT_MS = BITCOIN_FETCH_TIMEOUT_MS;
 const SATS_PER_BTC = 100_000_000;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = any;
 
-async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -26,7 +31,9 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
     return res;
   } catch (error) {
     clearTimeout(id);
-    if (error instanceof Error && error.name === 'AbortError') {throw new Error('TIMEOUT');}
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('TIMEOUT');
+    }
     throw new Error('NETWORK_ERROR');
   }
 }
@@ -37,9 +44,15 @@ async function fetchXpubBalance(xpub: string): Promise<number> {
     { headers: { Accept: 'application/json' } },
     API_TIMEOUT_MS
   );
-  if (res.status === 429) {throw new Error('RATE_LIMITED');}
-  if (res.status === 404) {return 0;}
-  if (!res.ok) {throw new Error(`API_ERROR_${res.status}`);}
+  if (res.status === 429) {
+    throw new Error('RATE_LIMITED');
+  }
+  if (res.status === 404) {
+    return 0;
+  }
+  if (!res.ok) {
+    throw new Error(`API_ERROR_${res.status}`);
+  }
   const data = await res.json();
   const funded: number = data?.chain_stats?.funded_txo_sum ?? 0;
   const spent: number = data?.chain_stats?.spent_txo_sum ?? 0;
@@ -67,7 +80,11 @@ export async function refreshWalletBalance(
   if (wallet.balance_updated_at) {
     const timeSince = Date.now() - new Date(wallet.balance_updated_at as string).getTime();
     if (timeSince < COOLDOWN_MS) {
-      return { ok: false, code: 'COOLDOWN', remainingSeconds: Math.ceil((COOLDOWN_MS - timeSince) / 1000) };
+      return {
+        ok: false,
+        code: 'COOLDOWN',
+        remainingSeconds: Math.ceil((COOLDOWN_MS - timeSince) / 1000),
+      };
     }
   }
 
@@ -84,9 +101,15 @@ export async function refreshWalletBalance(
     }
   } catch (error) {
     const msg = error instanceof Error ? error.message : '';
-    if (msg === 'TIMEOUT') {return { ok: false, code: 'TIMEOUT' };}
-    if (msg === 'RATE_LIMITED') {return { ok: false, code: 'RATE_LIMITED' };}
-    if (msg.startsWith('API_ERROR')) {return { ok: false, code: 'API_ERROR' };}
+    if (msg === 'TIMEOUT') {
+      return { ok: false, code: 'TIMEOUT' };
+    }
+    if (msg === 'RATE_LIMITED') {
+      return { ok: false, code: 'RATE_LIMITED' };
+    }
+    if (msg.startsWith('API_ERROR')) {
+      return { ok: false, code: 'API_ERROR' };
+    }
     return { ok: false, code: 'NETWORK_ERROR' };
   }
 

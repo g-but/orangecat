@@ -8,7 +8,8 @@
  */
 
 // Timeout constants (in milliseconds)
-export const API_TIMEOUT_MS = 8000; // 8 seconds for API requests
+export const API_TIMEOUT_MS = 8000; // 8 seconds for wallet management API requests
+export const BITCOIN_FETCH_TIMEOUT_MS = 10_000; // 10 seconds for on-chain Bitcoin API fetches (mempool, blockstream)
 export const AUTH_TIMEOUT_MS = 15000; // 15 seconds for auth loading
 
 // Business rules

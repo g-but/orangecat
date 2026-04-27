@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { lightningAddressSchema, optionalText, optionalUrl } from './base';
 
+/** Maximum character length for AI chat messages and system prompts */
+export const AI_MESSAGE_MAX_CHARS = 10_000;
+
 /**
  * AI Assistant Schema
  *
@@ -20,7 +23,7 @@ export const aiAssistantSchema = z.object({
   system_prompt: z
     .string()
     .min(10, 'System prompt must be at least 10 characters')
-    .max(10000, 'System prompt must be at most 10000 characters'),
+    .max(AI_MESSAGE_MAX_CHARS, `System prompt must be at most ${AI_MESSAGE_MAX_CHARS} characters`),
   welcome_message: optionalText(500),
   personality_traits: z.array(z.string()).optional().default([]),
   knowledge_base_urls: z.array(z.string().url()).optional().default([]),
