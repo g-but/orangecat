@@ -58,7 +58,11 @@
         "selector": "Identifier[name=/[Cc]rowdfund/]",
         "message": "CLAUDE.md bans 'crowdfund' terminology — use 'fund' / 'funding' / 'project' instead."
       }
-    ]
+    ],
+
+    // Lock @deprecated count at 0 — all deprecated symbols have been cleared (08b1ac28).
+    // Any new @deprecated marker must be cleaned up immediately, not left for later.
+    "no-warning-comments": ["error", { "terms": ["@deprecated"], "location": "anywhere" }]
   },
   // Plugin-specific rule adjustments
   "overrides": [
