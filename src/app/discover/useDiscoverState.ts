@@ -1,54 +1,61 @@
 'use client';
 
-import { logger } from '@/utils/logger';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { logger } from '@/utils/logger';
 import { useSearch } from '@/hooks/useSearch';
 import { SearchFundingPage, SearchProfile, SearchType, SortOption } from '@/services/search';
 import { PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
-import supabase from '@/lib/supabase/browser';
-import { DATABASE_TABLES } from '@/config/database-tables';
-import { getTableName } from '@/config/entity-registry';
-import { ENTITY_STATUS } from '@/config/database-constants';
+import { useDiscoverCounts } from './useDiscoverCounts';
+import { useDiscoverFinancialData } from './useDiscoverFinancialData';
+import { useDiscoverGenericData } from './useDiscoverGenericData';
 import type { DiscoverTabType } from '@/components/discover/DiscoverTabs';
-import type { Loan } from '@/types/loans';
-import type { Investment } from '@/types/investments';
-import type { GenericPublicEntity } from '@/components/entity/variants/GenericPublicCard';
 
 export type ViewMode = 'grid' | 'list';
+
+const VALID_TAB_TYPES: DiscoverTabType[] = [
+  'all',
+  'projects',
+  'profiles',
+  'loans',
+  'investments',
+  'causes',
+  'events',
+  'products',
+  'services',
+  'groups',
+  'wishlists',
+  'research',
+  'ai_assistants',
+];
 
 export function useDiscoverState() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Initialize state from URL params
+  // Read initial state from URL params
   const initialSearchTerm = searchParams?.get('search') || '';
   const initialCategories = (searchParams?.get('category') || '')
     .split(',')
     .map(s => s.trim())
     .filter(Boolean);
-  // Convert legacy sort values to current options
   const urlSort = searchParams?.get('sort') || 'recent';
   const initialSort = (['recent', 'relevance'].includes(urlSort) ? urlSort : 'recent') as
     | 'relevance'
     | 'recent';
   const urlType = (searchParams?.get('type') || 'all') as DiscoverTabType;
-  const validTabTypes: DiscoverTabType[] = ['all', 'projects', 'profiles', 'loans', 'investments', 'causes', 'events', 'products', 'services', 'groups', 'wishlists', 'research', 'ai_assistants'];
-  const initialType = validTabTypes.includes(urlType) ? urlType : 'all';
+  const initialType = VALID_TAB_TYPES.includes(urlType) ? urlType : 'all';
   const initialCountry = searchParams?.get('country') || '';
   const initialCity = searchParams?.get('city') || '';
   const initialPostal = searchParams?.get('postal') || '';
   const initialRadiusKm = Number(searchParams?.get('radius_km') || 0);
 
-  // Use the optimized useSearch hook with pagination and debouncing
   const {
     query: searchTerm,
     setQuery: setSearchTerm,
-    searchType: _searchType,
     setSearchType,
     sortBy,
     setSortBy,
-    filters: _filters,
     setFilters,
     results: searchResults,
     loading,
@@ -60,17 +67,17 @@ export function useDiscoverState() {
     initialQuery: initialSearchTerm,
     initialType:
       initialType === 'all' ? 'all' : initialType === 'profiles' ? 'profiles' : 'projects',
-    initialSort: initialSort,
+    initialSort,
     initialFilters: {
       categories: initialCategories.length > 0 ? initialCategories : undefined,
-      statuses: PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[], // Default status filter
+      statuses: PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[],
       country: initialCountry || undefined,
       city: initialCity || undefined,
       postal_code: initialPostal || undefined,
       radius_km: initialRadiusKm || undefined,
     },
     autoSearch: true,
-    debounceMs: 300, // 300ms debounce for search input
+    debounceMs: 300,
   });
 
   // UI state
@@ -80,367 +87,29 @@ export function useDiscoverState() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
   const [selectedStatuses, setSelectedStatuses] = useState<
     ('active' | 'paused' | 'completed' | 'cancelled')[]
-  >(PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[]); // Default: show active and paused
+  >(PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[]);
   const [country, setCountry] = useState(initialCountry);
   const [city, setCity] = useState(initialCity);
   const [postal, setPostal] = useState(initialPostal);
   const [radiusKm, setRadiusKm] = useState<number>(initialRadiusKm);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Total counts from database (for stats display)
-  const [totalProjectsCount, setTotalProjectsCount] = useState(0);
-  const [totalProfilesCount, setTotalProfilesCount] = useState(0);
-  const [totalLoansCount, setTotalLoansCount] = useState(0);
-  const [totalInvestmentsCount, setTotalInvestmentsCount] = useState(0);
-
-  // Loans data (fetched separately since useSearch doesn't support loans yet)
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [loansLoading, setLoansLoading] = useState(false);
-
-  // Investments data (fetched separately)
-  const [investments, setInvestments] = useState<Investment[]>([]);
-  const [investmentsLoading, setInvestmentsLoading] = useState(false);
-
-  // Generic public entity data (causes, events, products, services, groups, wishlists, research, ai_assistants)
-  const [causes, setCauses] = useState<GenericPublicEntity[]>([]);
-  const [events, setEvents] = useState<GenericPublicEntity[]>([]);
-  const [products, setProducts] = useState<GenericPublicEntity[]>([]);
-  const [services, setServices] = useState<GenericPublicEntity[]>([]);
-  const [groups, setGroups] = useState<GenericPublicEntity[]>([]);
-  const [wishlists, setWishlists] = useState<GenericPublicEntity[]>([]);
-  const [research, setResearch] = useState<GenericPublicEntity[]>([]);
-  const [aiAssistants, setAiAssistants] = useState<GenericPublicEntity[]>([]);
-  const [genericLoading, setGenericLoading] = useState(false);
-
-  // Fetch total counts from database with client-side caching
-  useEffect(() => {
-    const CACHE_KEY = 'discover_counts';
-    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-    const fetchTotalCounts = async () => {
-      try {
-        // Check cache first
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) {
-          const { projects, profiles, loans: loansCount, investments: investmentsCount, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < CACHE_DURATION) {
-            setTotalProjectsCount(projects);
-            setTotalProfilesCount(profiles);
-            setTotalLoansCount(loansCount || 0);
-            setTotalInvestmentsCount(investmentsCount || 0);
-            return; // Use cached data
-          }
-        }
-
-        // Fetch fresh data
-        const [projectsResult, profilesResult, loansResult, investmentsResult] = await Promise.all([
-          supabase
-            .from(getTableName('project'))
-            .select('*', { count: 'exact', head: true })
-            .eq('status', ENTITY_STATUS.ACTIVE),
-          supabase.from(DATABASE_TABLES.PROFILES).select('*', { count: 'exact', head: true }),
-          supabase
-            .from(getTableName('loan'))
-            .select('*', { count: 'exact', head: true })
-            .eq('is_public', true)
-            .eq('status', ENTITY_STATUS.ACTIVE),
-          supabase
-            .from(getTableName('investment'))
-            .select('*', { count: 'exact', head: true })
-            .eq('is_public', true),
-        ]);
-
-        const projectCount = projectsResult.count ?? 0;
-        const profileCount = profilesResult.count ?? 0;
-        const loanCount = loansResult.count ?? 0;
-        const investmentCount = investmentsResult.count ?? 0;
-
-        setTotalProjectsCount(projectCount);
-        setTotalProfilesCount(profileCount);
-        setTotalLoansCount(loanCount);
-        setTotalInvestmentsCount(investmentCount);
-
-        // Cache the results
-        localStorage.setItem(
-          CACHE_KEY,
-          JSON.stringify({
-            projects: projectCount,
-            profiles: profileCount,
-            loans: loanCount,
-            investments: investmentCount,
-            timestamp: Date.now(),
-          })
-        );
-      } catch (error) {
-        logger.error('Error fetching total counts', error, 'Discover');
-      }
-    };
-
-    fetchTotalCounts();
-  }, []);
+  // Sub-hook data
+  const counts = useDiscoverCounts();
+  const financial = useDiscoverFinancialData(activeTab, searchTerm);
+  const generic = useDiscoverGenericData(activeTab, searchTerm);
 
   // Extract projects and profiles from search results
-  const projects = useMemo(() => {
-    return searchResults
-      .filter(result => result.type === 'project')
-      .map(result => result.data as SearchFundingPage);
-  }, [searchResults]);
+  const projects = useMemo(
+    () => searchResults.filter(r => r.type === 'project').map(r => r.data as SearchFundingPage),
+    [searchResults]
+  );
+  const profiles = useMemo(
+    () => searchResults.filter(r => r.type === 'profile').map(r => r.data as SearchProfile),
+    [searchResults]
+  );
 
-  const profiles = useMemo(() => {
-    return searchResults
-      .filter(result => result.type === 'profile')
-      .map(result => result.data as SearchProfile);
-  }, [searchResults]);
-
-  // Fetch loans when needed (for 'all' or 'loans' tab)
-  useEffect(() => {
-    const fetchLoans = async () => {
-      // Only fetch loans when on 'all' or 'loans' tab
-      if (activeTab !== 'all' && activeTab !== 'loans') {
-        setLoans([]);
-        return;
-      }
-
-      setLoansLoading(true);
-      try {
-        let query = supabase
-          .from(getTableName('loan'))
-          .select('*')
-          .eq('is_public', true)
-          .eq('status', ENTITY_STATUS.ACTIVE)
-          .order('created_at', { ascending: false })
-          .limit(activeTab === 'loans' ? 50 : 12);
-
-        // Apply search term filter if present
-        if (searchTerm) {
-          const escapedTerm = searchTerm.replace(/[%_]/g, '\\$&');
-          query = query.or(`title.ilike.%${escapedTerm}%,description.ilike.%${escapedTerm}%`);
-        }
-
-        const { data, error } = await query;
-
-        if (error) {
-          logger.error('Error fetching loans', error, 'Discover');
-          setLoans([]);
-        } else {
-          setLoans(data || []);
-        }
-      } catch (error) {
-        logger.error('Error fetching loans', error, 'Discover');
-        setLoans([]);
-      } finally {
-        setLoansLoading(false);
-      }
-    };
-
-    fetchLoans();
-  }, [activeTab, searchTerm]);
-
-  // Fetch investments when needed (for 'all' or 'investments' tab)
-  useEffect(() => {
-    const fetchInvestments = async () => {
-      if (activeTab !== 'all' && activeTab !== 'investments') {
-        setInvestments([]);
-        return;
-      }
-
-      setInvestmentsLoading(true);
-      try {
-        let query = supabase
-          .from(getTableName('investment'))
-          .select('*')
-          .eq('is_public', true)
-          .order('created_at', { ascending: false })
-          .limit(activeTab === 'investments' ? 50 : 12);
-
-        if (searchTerm) {
-          const escapedTerm = searchTerm.replace(/[%_]/g, '\\$&');
-          query = query.or(`title.ilike.%${escapedTerm}%,description.ilike.%${escapedTerm}%`);
-        }
-
-        const { data, error } = await query;
-
-        if (error) {
-          logger.error('Error fetching investments', error, 'Discover');
-          setInvestments([]);
-        } else {
-          setInvestments(data || []);
-        }
-      } catch (error) {
-        logger.error('Error fetching investments', error, 'Discover');
-        setInvestments([]);
-      } finally {
-        setInvestmentsLoading(false);
-      }
-    };
-
-    fetchInvestments();
-  }, [activeTab, searchTerm]);
-
-  // Fetch generic entities (causes, events, products, services, groups, wishlists, research, ai_assistants) when their tab is active
-  useEffect(() => {
-    const GENERIC_TABS = ['causes', 'events', 'products', 'services', 'groups', 'wishlists', 'research', 'ai_assistants', 'all'] as const;
-    if (!GENERIC_TABS.includes(activeTab as (typeof GENERIC_TABS)[number])) {
-      return;
-    }
-
-    const fetchGeneric = async () => {
-      setGenericLoading(true);
-      const limit = 50;
-      const escaped = searchTerm ? searchTerm.replace(/[%_]/g, '\\$&') : null;
-
-      const shouldFetch = (tab: DiscoverTabType) => activeTab === 'all' || activeTab === tab;
-
-      try {
-        const [causesRes, eventsRes, productsRes, servicesRes, groupsRes, wishlistsRes, researchRes, aiAssistantsRes] = await Promise.all([
-          shouldFetch('causes')
-            ? (() => {
-                let q = supabase
-                  .from(getTableName('cause'))
-                  .select('id, title, description, status, cause_category, created_at')
-                  .eq('status', 'active')
-                  .order('created_at', { ascending: false })
-                  .limit(activeTab === 'causes' ? limit : 8);
-                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
-                return q;
-              })()
-            : Promise.resolve({ data: null, error: null }),
-
-          shouldFetch('events')
-            ? (() => {
-                let q = supabase
-                  .from(getTableName('event'))
-                  .select('id, title, description, status, category, created_at')
-                  .in('status', ['published', 'open', 'ongoing'])
-                  .order('created_at', { ascending: false })
-                  .limit(activeTab === 'events' ? limit : 8);
-                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
-                return q;
-              })()
-            : Promise.resolve({ data: null, error: null }),
-
-          shouldFetch('products')
-            ? (() => {
-                let q = supabase
-                  .from(getTableName('product'))
-                  .select('id, title, description, status, category, created_at')
-                  .eq('status', 'active')
-                  .order('created_at', { ascending: false })
-                  .limit(activeTab === 'products' ? limit : 8);
-                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
-                return q;
-              })()
-            : Promise.resolve({ data: null, error: null }),
-
-          shouldFetch('services')
-            ? (() => {
-                let q = supabase
-                  .from(getTableName('service'))
-                  .select('id, title, description, status, category, created_at')
-                  .eq('status', 'active')
-                  .order('created_at', { ascending: false })
-                  .limit(activeTab === 'services' ? limit : 8);
-                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
-                return q;
-              })()
-            : Promise.resolve({ data: null, error: null }),
-
-          shouldFetch('groups')
-            ? (() => {
-                let q = supabase
-                  .from(getTableName('group'))
-                  .select('id, name, description, is_public, created_at, slug')
-                  .eq('is_public', true)
-                  .order('created_at', { ascending: false })
-                  .limit(activeTab === 'groups' ? limit : 8);
-                if (escaped) { q = q.or(`name.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
-                return q;
-              })()
-            : Promise.resolve({ data: null, error: null }),
-
-          shouldFetch('wishlists')
-            ? (() => {
-                let q = supabase
-                  .from(getTableName('wishlist'))
-                  .select('id, title, description, type, created_at')
-                  .eq('visibility', 'public')
-                  .eq('is_active', true)
-                  .order('created_at', { ascending: false })
-                  .limit(activeTab === 'wishlists' ? limit : 8);
-                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
-                return q;
-              })()
-            : Promise.resolve({ data: null, error: null }),
-
-          shouldFetch('research')
-            ? (() => {
-                let q = supabase
-                  .from(getTableName('research'))
-                  .select('id, title, description, status, field, created_at')
-                  .eq('is_public', true)
-                  .eq('status', 'active')
-                  .order('created_at', { ascending: false })
-                  .limit(activeTab === 'research' ? limit : 8);
-                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
-                return q;
-              })()
-            : Promise.resolve({ data: null, error: null }),
-
-          shouldFetch('ai_assistants')
-            ? (() => {
-                let q = supabase
-                  .from(getTableName('ai_assistant'))
-                  .select('id, title, description, status, category, created_at')
-                  .eq('is_public', true)
-                  .eq('status', 'active')
-                  .order('created_at', { ascending: false })
-                  .limit(activeTab === 'ai_assistants' ? limit : 8);
-                if (escaped) { q = q.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`); }
-                return q;
-              })()
-            : Promise.resolve({ data: null, error: null }),
-        ]);
-
-        if (shouldFetch('causes')) { setCauses((causesRes.data ?? []) as unknown as GenericPublicEntity[]); }
-        if (shouldFetch('events')) { setEvents((eventsRes.data ?? []) as unknown as GenericPublicEntity[]); }
-        if (shouldFetch('products')) { setProducts((productsRes.data ?? []) as unknown as GenericPublicEntity[]); }
-        if (shouldFetch('services')) { setServices((servicesRes.data ?? []) as unknown as GenericPublicEntity[]); }
-        if (shouldFetch('groups')) {
-          setGroups(
-            ((groupsRes.data ?? []) as unknown as Array<{ id: string; name: string; description?: string | null; created_at: string; slug?: string | null }>).map(r => ({
-              id: r.id,
-              title: r.name,
-              description: r.description ?? null,
-              created_at: r.created_at,
-              slug: r.slug ?? null,
-            } satisfies GenericPublicEntity))
-          );
-        }
-        if (shouldFetch('wishlists')) { setWishlists((wishlistsRes.data ?? []) as unknown as GenericPublicEntity[]); }
-        if (shouldFetch('research')) {
-          setResearch(
-            ((researchRes.data ?? []) as unknown as Array<{ id: string; title: string; description?: string | null; status?: string | null; field?: string | null; created_at: string }>).map(r => ({
-              id: r.id,
-              title: r.title,
-              description: r.description ?? null,
-              status: r.status ?? null,
-              category: r.field ?? null,
-              created_at: r.created_at,
-            } satisfies GenericPublicEntity))
-          );
-        }
-        if (shouldFetch('ai_assistants')) { setAiAssistants((aiAssistantsRes.data ?? []) as unknown as GenericPublicEntity[]); }
-      } catch (error) {
-        logger.error('Error fetching generic discover entities', error, 'Discover');
-      } finally {
-        setGenericLoading(false);
-      }
-    };
-
-    fetchGeneric();
-  }, [activeTab, searchTerm]);
-
-  // Update search filters when local filter state changes
+  // Sync filter state into search hook
   useEffect(() => {
     setFilters({
       categories: selectedCategories.length > 0 ? selectedCategories : undefined,
@@ -452,61 +121,51 @@ export function useDiscoverState() {
     });
   }, [selectedCategories, selectedStatuses, country, city, postal, radiusKm, setFilters]);
 
-  // Sync URL params with search state
+  // Sync state back to URL
   useEffect(() => {
-    const newSearchParams = new URLSearchParams(searchParams?.toString() || '');
-
-    // Tab/type parameter
+    const p = new URLSearchParams(searchParams?.toString() || '');
     if (activeTab !== 'all') {
-      newSearchParams.set('type', activeTab);
+      p.set('type', activeTab);
     } else {
-      newSearchParams.delete('type');
+      p.delete('type');
     }
-
     if (searchTerm) {
-      newSearchParams.set('search', searchTerm);
+      p.set('search', searchTerm);
     } else {
-      newSearchParams.delete('search');
+      p.delete('search');
     }
-
     if (selectedCategories.length > 0) {
-      newSearchParams.set('category', selectedCategories.join(','));
+      p.set('category', selectedCategories.join(','));
     } else {
-      newSearchParams.delete('category');
+      p.delete('category');
     }
-
-    // Only set sort if it's not the default (recent)
     if (sortBy !== 'recent') {
-      newSearchParams.set('sort', sortBy);
+      p.set('sort', sortBy);
     } else {
-      newSearchParams.delete('sort');
+      p.delete('sort');
     }
-
     if (country) {
-      newSearchParams.set('country', country);
+      p.set('country', country);
     } else {
-      newSearchParams.delete('country');
+      p.delete('country');
     }
-
     if (city) {
-      newSearchParams.set('city', city);
+      p.set('city', city);
     } else {
-      newSearchParams.delete('city');
+      p.delete('city');
     }
-
     if (postal) {
-      newSearchParams.set('postal', postal);
+      p.set('postal', postal);
     } else {
-      newSearchParams.delete('postal');
+      p.delete('postal');
     }
-
     if (radiusKm) {
-      newSearchParams.set('radius_km', String(radiusKm));
+      p.set('radius_km', String(radiusKm));
     } else {
-      newSearchParams.delete('radius_km');
+      p.delete('radius_km');
     }
 
-    const newUrl = `/discover?${newSearchParams.toString()}`;
+    const newUrl = `/discover?${p.toString()}`;
     const currentUrl = searchParams ? `/discover?${searchParams.toString()}` : '/discover';
     if (newUrl !== currentUrl) {
       router.replace(newUrl, { scroll: false });
@@ -524,7 +183,7 @@ export function useDiscoverState() {
     searchParams,
   ]);
 
-  // Handle load more with loading state
+  // Handlers
   const handleLoadMore = useCallback(async () => {
     if (!hasMore || isLoadingMore) {
       return;
@@ -533,39 +192,32 @@ export function useDiscoverState() {
     try {
       await loadMore();
     } catch (error) {
-      logger.error('Error loading more projects:', error);
+      logger.error('Error loading more results', error, 'Discover');
     } finally {
       setIsLoadingMore(false);
     }
   }, [hasMore, isLoadingMore, loadMore]);
 
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    // URL update happens automatically via useEffect
-  };
+  const handleSearch = (value: string) => setSearchTerm(value);
 
   const handleToggleCategory = useCallback((category: string) => {
-    setSelectedCategories(prev => {
-      const next = prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category];
-      return next;
-    });
-    // URL update happens automatically via useEffect
+    setSelectedCategories(prev =>
+      prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
+    );
   }, []);
 
   const handleSortChange = (sort: string) => {
-    // Validate sort is a valid SortOption
     const validSorts: SortOption[] = ['relevance', 'recent'];
     if (validSorts.includes(sort as SortOption)) {
       setSortBy(sort as SortOption);
     }
-    // URL update happens automatically via useEffect
   };
 
   const handleToggleStatus = useCallback(
     (status: 'active' | 'paused' | 'completed' | 'cancelled') => {
       setSelectedStatuses(prev => {
         const next = prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status];
-        return next.length > 0 ? next : ['active', 'paused']; // Always have at least one status selected
+        return next.length > 0 ? next : ['active', 'paused'];
       });
     },
     []
@@ -574,10 +226,9 @@ export function useDiscoverState() {
   const handleTabChange = useCallback(
     (tab: DiscoverTabType) => {
       setActiveTab(tab);
-      // Convert tab to search type
-      const newSearchType: SearchType =
+      const newType: SearchType =
         tab === 'all' ? 'all' : tab === 'profiles' ? 'profiles' : 'projects';
-      setSearchType(newSearchType);
+      setSearchType(newType);
     },
     [setSearchType]
   );
@@ -587,7 +238,7 @@ export function useDiscoverState() {
     setSelectedCategories([]);
     setSelectedStatuses(
       PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[]
-    ); // Reset to default statuses
+    );
     setSortBy('recent');
     setCountry('');
     setCity('');
@@ -596,42 +247,41 @@ export function useDiscoverState() {
     router.push('/discover');
   };
 
-  const stats = useMemo(() => {
-    // Use total counts from database, not filtered results
-    const totalProjects = totalProjectsCount;
-    const totalProfiles = totalProfilesCount;
-    // Total financial instruments (loans + investments) available on the platform
-    const totalFinancial = totalLoansCount + totalInvestmentsCount;
-    return { totalProjects, totalProfiles, totalFinancial };
-  }, [totalProjectsCount, totalProfilesCount, totalLoansCount, totalInvestmentsCount]);
+  const stats = useMemo(
+    () => ({
+      totalProjects: counts.totalProjectsCount,
+      totalProfiles: counts.totalProfilesCount,
+      totalFinancial: counts.totalLoansCount + counts.totalInvestmentsCount,
+    }),
+    [counts]
+  );
 
-  // Compute whether results are empty (used for empty/results state toggling)
   const isEmpty =
     (activeTab === 'projects' && projects.length === 0) ||
     (activeTab === 'profiles' && profiles.length === 0) ||
-    (activeTab === 'loans' && loans.length === 0) ||
-    (activeTab === 'investments' && investments.length === 0) ||
-    (activeTab === 'causes' && causes.length === 0) ||
-    (activeTab === 'events' && events.length === 0) ||
-    (activeTab === 'products' && products.length === 0) ||
-    (activeTab === 'services' && services.length === 0) ||
-    (activeTab === 'groups' && groups.length === 0) ||
-    (activeTab === 'wishlists' && wishlists.length === 0) ||
-    (activeTab === 'research' && research.length === 0) ||
-    (activeTab === 'ai_assistants' && aiAssistants.length === 0) ||
+    (activeTab === 'loans' && financial.loans.length === 0) ||
+    (activeTab === 'investments' && financial.investments.length === 0) ||
+    (activeTab === 'causes' && generic.causes.length === 0) ||
+    (activeTab === 'events' && generic.events.length === 0) ||
+    (activeTab === 'products' && generic.products.length === 0) ||
+    (activeTab === 'services' && generic.services.length === 0) ||
+    (activeTab === 'groups' && generic.groups.length === 0) ||
+    (activeTab === 'wishlists' && generic.wishlists.length === 0) ||
+    (activeTab === 'research' && generic.research.length === 0) ||
+    (activeTab === 'ai_assistants' && generic.aiAssistants.length === 0) ||
     (activeTab === 'all' &&
       projects.length === 0 &&
       profiles.length === 0 &&
-      loans.length === 0 &&
-      investments.length === 0 &&
-      causes.length === 0 &&
-      events.length === 0 &&
-      products.length === 0 &&
-      services.length === 0 &&
-      groups.length === 0 &&
-      wishlists.length === 0 &&
-      research.length === 0 &&
-      aiAssistants.length === 0);
+      financial.loans.length === 0 &&
+      financial.investments.length === 0 &&
+      generic.causes.length === 0 &&
+      generic.events.length === 0 &&
+      generic.products.length === 0 &&
+      generic.services.length === 0 &&
+      generic.groups.length === 0 &&
+      generic.wishlists.length === 0 &&
+      generic.research.length === 0 &&
+      generic.aiAssistants.length === 0);
 
   const hasFilters = !!(searchTerm || selectedCategories.length > 0);
 
@@ -640,9 +290,9 @@ export function useDiscoverState() {
     searchTerm,
     searchError,
     loading,
-    loansLoading,
-    investmentsLoading,
-    genericLoading,
+    loansLoading: financial.loansLoading,
+    investmentsLoading: financial.investmentsLoading,
+    genericLoading: generic.genericLoading,
     totalResults,
     hasMore,
     isLoadingMore,
@@ -650,17 +300,17 @@ export function useDiscoverState() {
     // Data
     projects,
     profiles,
-    loans,
-    investments,
-    causes,
-    events,
-    products,
-    services,
-    groups,
-    wishlists,
-    research,
-    aiAssistants,
-    totalInvestmentsCount,
+    loans: financial.loans,
+    investments: financial.investments,
+    causes: generic.causes,
+    events: generic.events,
+    products: generic.products,
+    services: generic.services,
+    groups: generic.groups,
+    wishlists: generic.wishlists,
+    research: generic.research,
+    aiAssistants: generic.aiAssistants,
+    totalInvestmentsCount: counts.totalInvestmentsCount,
     stats,
 
     // UI state
