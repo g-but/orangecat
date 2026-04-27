@@ -1,8 +1,5 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useRequireAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
 import EntityListShell from '@/components/entity/EntityListShell';
@@ -10,145 +7,51 @@ import EntityList from '@/components/entity/EntityList';
 import CommercePagination from '@/components/commerce/CommercePagination';
 import BulkActionsBar from '@/components/entity/BulkActionsBar';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useEntityList } from '@/hooks/useEntityList';
-import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { loanEntityConfig } from '@/config/entities/loans';
-import { Loan, LoanOffer } from '@/types/loans';
-import { toast } from 'sonner';
-import { logger } from '@/utils/logger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Coins, DollarSign, Target, TrendingUp } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import { AvailableLoans } from '@/components/loans/AvailableLoans';
 import { LoanOffersList } from '@/components/loans/LoanOffersList';
 import { CreateLoanDialog } from '@/components/loans/CreateLoanDialog';
-import loansService from '@/services/loans';
+import { useLoanList } from './useLoanList';
 
-/**
- * Loans Dashboard Page
- *
- * Refactored to use modular entity components for consistency with other entity pages.
- * Maintains tabs functionality (My Loans, Available Loans, My Offers) while using
- * EntityListShell and EntityList for the "My Loans" tab.
- *
- * Created: 2025-01-30
- * Last Modified: 2025-12-31
- * Last Modified Summary: Refactored to use modular EntityList pattern, removed non-actionable stats cards
- */
 export default function LoansPage() {
-  const { user, isLoading, hydrated } = useRequireAuth();
-  const _router = useRouter();
-  const { selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelection();
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showSelection, setShowSelection] = useState(false);
-  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'my-loans' | 'available' | 'offers'>('my-loans');
-  const [myOffers, setMyOffers] = useState<LoanOffer[]>([]);
-  const [availableLoans, setAvailableLoans] = useState<Loan[]>([]);
-  const [availablePage, setAvailablePage] = useState(1);
-  const [availableTotal, setAvailableTotal] = useState(0);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const availablePageSize = 12;
-
   const {
-    items: myLoans,
+    user,
+    isLoading,
+    hydrated,
+    selectedIds,
+    toggleSelect,
+    toggleSelectAll,
+    isDeleting,
+    showSelection,
+    setShowSelection,
+    bulkDeleteConfirm,
+    setBulkDeleteConfirm,
+    activeTab,
+    switchTab,
+    myLoans,
+    myOffers,
+    availableLoans,
+    availablePage,
+    setAvailablePage,
+    availableTotal,
+    availablePageSize,
+    createDialogOpen,
+    setCreateDialogOpen,
     loading,
     error,
     page,
     total,
     setPage,
-    refresh,
-  } = useEntityList<Loan>({
-    apiEndpoint: '/api/loans',
-    userId: user?.id,
-    limit: 12,
-    enabled: !!user?.id && hydrated && !isLoading && activeTab === 'my-loans',
-  });
-
-  // Memoize loans to prevent unnecessary re-renders
-  const memoizedLoans = useMemo(() => myLoans, [myLoans]);
-
-  const loadOffers = useCallback(async () => {
-    try {
-      const offersResult = await loansService.getUserOffers();
-      if (offersResult.success) {
-        setMyOffers(offersResult.offers || []);
-      }
-    } catch (error) {
-      logger.error('Failed to load offers', { error }, 'LoansPage');
-    }
-  }, []);
-
-  const loadAvailableLoans = useCallback(async () => {
-    try {
-      const availableResult = await loansService.getAvailableLoans(undefined, {
-        pageSize: availablePageSize,
-        offset: (availablePage - 1) * availablePageSize,
-      });
-      if (availableResult.success) {
-        setAvailableLoans(availableResult.loans || []);
-        setAvailableTotal(availableResult.total || 0);
-      }
-    } catch (error) {
-      logger.error('Failed to load available loans', { error }, 'LoansPage');
-    }
-  }, [availablePage, availablePageSize]);
-
-  // Load offers and available loans when their tabs are active
-  useEffect(() => {
-    if (activeTab === 'offers' && user?.id) {
-      loadOffers();
-    }
-    if (activeTab === 'available' && user?.id) {
-      loadAvailableLoans();
-    }
-  }, [activeTab, user?.id, loadOffers, loadAvailableLoans]);
-
-  const handleBulkDelete = () => {
-    if (selectedIds.size === 0) {return;}
-    setBulkDeleteConfirm(true);
-  };
-
-  const executeBulkDelete = async () => {
-    setBulkDeleteConfirm(false);
-    setIsDeleting(true);
-    try {
-      const deletePromises = Array.from(selectedIds).map(async id => {
-        const response = await fetch(`/api/loans/${id}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `Failed to delete loan ${id}`);
-        }
-        const result = await response.json().catch(() => ({}));
-        if (result.error) {
-          throw new Error(result.error);
-        }
-        return result;
-      });
-
-      await Promise.all(deletePromises);
-      toast.success(
-        `Successfully deleted ${selectedIds.size} loan${selectedIds.size > 1 ? 's' : ''}`
-      );
-      clearSelection();
-      await refresh();
-    } catch (error) {
-      logger.error('Failed to delete loans', { error }, 'LoansPage');
-      toast.error('Failed to delete some loans. Please try again.');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleLoanCreated = () => {
-    setCreateDialogOpen(false);
-    refresh();
-    loadOffers();
-    loadAvailableLoans();
-    toast.success('Loan created successfully!');
-  };
+    loadOffers,
+    loadAvailableLoans,
+    handleBulkDelete,
+    executeBulkDelete,
+    handleLoanCreated,
+    clearSelection,
+  } = useLoanList();
 
   if (!hydrated || isLoading) {
     return <Loading fullScreen message="Loading your loans..." />;
@@ -160,7 +63,7 @@ export default function LoansPage() {
 
   const headerActions = (
     <div className="flex items-center gap-2">
-      {activeTab === 'my-loans' && memoizedLoans.length > 0 && (
+      {activeTab === 'my-loans' && myLoans.length > 0 && (
         <Button onClick={() => setShowSelection(!showSelection)} variant="outline" size="sm">
           {showSelection ? 'Cancel' : 'Select'}
         </Button>
@@ -183,14 +86,7 @@ export default function LoansPage() {
       >
         <Tabs
           value={activeTab}
-          onValueChange={v => {
-            setActiveTab(v as typeof activeTab);
-            // Clear selection when switching tabs
-            if (v !== 'my-loans') {
-              clearSelection();
-              setShowSelection(false);
-            }
-          }}
+          onValueChange={v => switchTab(v as typeof activeTab)}
           className="space-y-6"
         >
           <TabsList className="grid w-full grid-cols-3">
@@ -198,9 +94,7 @@ export default function LoansPage() {
               <DollarSign className="h-4 w-4" />
               <span className="hidden sm:inline">My Loans</span>
               <span className="sm:hidden">Mine</span>
-              {memoizedLoans.length > 0 && (
-                <span className="ml-1 text-xs">({memoizedLoans.length})</span>
-              )}
+              {myLoans.length > 0 && <span className="ml-1 text-xs">({myLoans.length})</span>}
             </TabsTrigger>
             <TabsTrigger value="available" className="gap-2">
               <Target className="h-4 w-4" />
@@ -223,15 +117,13 @@ export default function LoansPage() {
               <div className="rounded-xl border bg-white p-6 text-red-600">{error}</div>
             ) : (
               <>
-                {showSelection && memoizedLoans.length > 0 && (
+                {showSelection && myLoans.length > 0 && (
                   <div className="mb-4 flex items-center justify-between">
                     <label className="flex items-center gap-2 text-sm text-gray-700">
                       <input
                         type="checkbox"
-                        checked={
-                          selectedIds.size === memoizedLoans.length && memoizedLoans.length > 0
-                        }
-                        onChange={() => toggleSelectAll(memoizedLoans.map(l => l.id))}
+                        checked={selectedIds.size === myLoans.length && myLoans.length > 0}
+                        onChange={() => toggleSelectAll(myLoans.map(l => l.id))}
                         className="h-4 w-4 rounded border-gray-300 text-tiffany-600 focus:ring-tiffany-500"
                       />
                       <span>Select All</span>
@@ -239,7 +131,7 @@ export default function LoansPage() {
                   </div>
                 )}
                 <EntityList
-                  items={memoizedLoans}
+                  items={myLoans}
                   isLoading={loading}
                   makeHref={loanEntityConfig.makeHref}
                   makeCardProps={loanEntityConfig.makeCardProps}
@@ -289,7 +181,7 @@ export default function LoansPage() {
                 title="No offers made yet"
                 description="Browse available loans to make your first refinancing offer"
                 action={
-                  <Button onClick={() => setActiveTab('available')} variant="outline">
+                  <Button onClick={() => switchTab('available')} variant="outline">
                     Browse Available Loans
                   </Button>
                 }
