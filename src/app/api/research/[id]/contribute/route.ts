@@ -16,7 +16,10 @@ import {
 } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { createResearchContribution, computeContributionStats } from '@/domain/research/contributionService';
+import {
+  createResearchContribution,
+  computeContributionStats,
+} from '@/domain/research/contributionService';
 import { z } from 'zod';
 
 const contributeSchema = z.object({
@@ -31,20 +34,32 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
+interface ResearchContributionRow {
+  id: string;
+  amount_btc: number;
+  funding_model: string;
+  [key: string]: unknown;
+}
+
 export const GET = withOptionalAuth(async (request, context: RouteContext) => {
   const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'research ID'));
-  if (idValidation) {return idValidation;}
+  if (idValidation) {
+    return idValidation;
+  }
   try {
     const { user, supabase } = request;
 
-    const { data: entity, error: entityError } = await supabase.from(DATABASE_TABLES.RESEARCH_ENTITIES)
+    const { data: entity, error: entityError } = await supabase
+      .from(DATABASE_TABLES.RESEARCH_ENTITIES)
       .select('id, is_public, user_id')
       .eq('id', id)
       .single();
 
     if (entityError) {
-      if (entityError.code === 'PGRST116') {return apiNotFound('Research entity not found');}
+      if (entityError.code === 'PGRST116') {
+        return apiNotFound('Research entity not found');
+      }
       throw entityError;
     }
 
@@ -52,8 +67,11 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
     if (!canSeeDetails && user) {
       const { data: myContribs } = await supabase
         .from(DATABASE_TABLES.RESEARCH_CONTRIBUTIONS)
-        .select('id').eq('research_entity_id', id).eq('user_id', user.id).limit(1);
-      canSeeDetails = !!(myContribs?.length);
+        .select('id')
+        .eq('research_entity_id', id)
+        .eq('user_id', user.id)
+        .limit(1);
+      canSeeDetails = !!myContribs?.length;
     }
 
     let query = supabase
@@ -62,13 +80,16 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
       .eq('research_entity_id', id)
       .order('created_at', { ascending: false });
 
-    if (!canSeeDetails) {query = query.eq('anonymous', false);}
+    if (!canSeeDetails) {
+      query = query.eq('anonymous', false);
+    }
 
     const { data: contributionsData, error } = await query;
-    if (error) {throw error;}
+    if (error) {
+      throw error;
+    }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const contributions = (contributionsData ?? []) as any[];
+    const contributions = (contributionsData ?? []) as unknown as ResearchContributionRow[];
     return apiSuccess({ contributions, statistics: computeContributionStats(contributions) });
   } catch (error) {
     return handleApiError(error);
@@ -78,27 +99,41 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
 export const POST = withOptionalAuth(async (request, context: RouteContext) => {
   const { id } = await context.params;
   const idValidation = getValidationError(validateUUID(id, 'research ID'));
-  if (idValidation) {return idValidation;}
+  if (idValidation) {
+    return idValidation;
+  }
   try {
     const { user, supabase } = request;
 
     const rawBody = await (request as NextRequest).json();
     const parsed = contributeSchema.safeParse(rawBody);
-    if (!parsed.success) {return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid contribution data');}
+    if (!parsed.success) {
+      return apiBadRequest(parsed.error.errors[0]?.message || 'Invalid contribution data');
+    }
     const result = await createResearchContribution(supabase, id, user?.id ?? null, parsed.data);
 
     if (!result.ok) {
       switch (result.code) {
-        case 'NOT_FOUND': return apiNotFound(result.message);
-        case 'NOT_ACCEPTING': return apiUnauthorized(result.message);
-        case 'INVALID_AMOUNT': return apiUnauthorized(result.message);
-        case 'INVALID_MODEL': return apiUnauthorized(result.message);
-        case 'DB_ERROR': return handleApiError(new Error(result.message));
+        case 'NOT_FOUND':
+          return apiNotFound(result.message);
+        case 'NOT_ACCEPTING':
+          return apiUnauthorized(result.message);
+        case 'INVALID_AMOUNT':
+          return apiUnauthorized(result.message);
+        case 'INVALID_MODEL':
+          return apiUnauthorized(result.message);
+        case 'DB_ERROR':
+          return handleApiError(new Error(result.message));
       }
     }
 
     return apiSuccess(
-      { contribution: result.contribution, lightning_invoice: result.invoice, message: 'Contribution recorded. Please pay the Lightning invoice to complete the transaction.' },
+      {
+        contribution: result.contribution,
+        lightning_invoice: result.invoice,
+        message:
+          'Contribution recorded. Please pay the Lightning invoice to complete the transaction.',
+      },
       { status: 201 }
     );
   } catch (error) {

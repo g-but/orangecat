@@ -37,7 +37,6 @@ export default function ProjectsDashboardPage() {
     myProjects,
     favorites,
     filteredProjects,
-    _projectsLoading,
     projectsError,
     favPage,
     favTotal,

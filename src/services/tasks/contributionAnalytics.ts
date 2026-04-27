@@ -4,7 +4,7 @@
  * Pure computation for grouping task completions by contributor.
  */
 
-interface CompletionRow {
+export interface CompletionRow {
   id: string;
   completed_by: string;
   completed_at: string;
@@ -12,7 +12,7 @@ interface CompletionRow {
   task: { id: string; title: string; category: string } | null;
 }
 
-interface ProfileRow {
+export interface ProfileRow {
   id: string;
   username: string;
   display_name: string | null;
@@ -31,15 +31,24 @@ export function aggregateContributions(
   profilesMap: Map<string, ProfileRow>,
   categoryFilter?: string
 ): ContributorStats[] {
-  const filtered = categoryFilter ? completions.filter(c => c.task?.category === categoryFilter) : completions;
+  const filtered = categoryFilter
+    ? completions.filter(c => c.task?.category === categoryFilter)
+    : completions;
   const byUser = new Map<string, ContributorStats>();
 
   for (const c of filtered) {
     const profile = profilesMap.get(c.completed_by);
-    if (!profile) {continue;}
+    if (!profile) {
+      continue;
+    }
 
     if (!byUser.has(c.completed_by)) {
-      byUser.set(c.completed_by, { user: profile, totalCompletions: 0, totalMinutes: 0, byCategory: {} });
+      byUser.set(c.completed_by, {
+        user: profile,
+        totalCompletions: 0,
+        totalMinutes: 0,
+        byCategory: {},
+      });
     }
     const stats = byUser.get(c.completed_by)!;
     stats.totalCompletions += 1;

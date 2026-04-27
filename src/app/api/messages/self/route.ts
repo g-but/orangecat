@@ -3,10 +3,17 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { apiSuccess, apiInternalError, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
+
+interface ConversationRow {
+  id: string;
+  is_group: boolean;
+  participants: Array<{ user_id: string }> | null;
+}
 
 /** Insert a conversation row + participant row using the given Supabase client. */
 async function insertConversationAndParticipant(
-  client: any,
+  client: AnySupabaseClient,
   userId: string
 ): Promise<string> {
   const { data: convIns, error: convErr } = await client
@@ -14,7 +21,9 @@ async function insertConversationAndParticipant(
     .insert({ created_by: userId, is_group: false })
     .select('id')
     .single();
-  if (convErr || !convIns?.id) {throw convErr || new Error('conv insert failed');}
+  if (convErr || !convIns?.id) {
+    throw convErr || new Error('conv insert failed');
+  }
   const conversationId = convIns.id as string;
   const { error: partErr } = await client
     .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
@@ -38,19 +47,32 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
       .order('created_at', { ascending: false });
 
     if (Array.isArray(convs)) {
-      const selfConv = convs.find((c: any) => {
-        if (c.is_group) {return false;}
+      const selfConv = (convs as ConversationRow[]).find(c => {
+        if (c.is_group) {
+          return false;
+        }
         const parts = Array.isArray(c.participants) ? c.participants : [];
         return parts.length === 1 && parts[0]?.user_id === user.id;
       });
-      if (selfConv) {conversationId = selfConv.id;}
+      if (selfConv) {
+        conversationId = selfConv.id;
+      }
     }
 
     if (!conversationId) {
       const { ProfileServerService } = await import('@/services/profile/server');
-      const profileResult = await ProfileServerService.ensureProfile(supabase, user.id, user.email || '', user.user_metadata || {});
+      const profileResult = await ProfileServerService.ensureProfile(
+        supabase,
+        user.id,
+        user.email || '',
+        user.user_metadata || {}
+      );
       if (profileResult.error || !profileResult.data) {
-        logger.error('Failed to ensure user profile', { error: profileResult.error, userId: user.id }, 'Messages');
+        logger.error(
+          'Failed to ensure user profile',
+          { error: profileResult.error, userId: user.id },
+          'Messages'
+        );
         return apiInternalError('Failed to create user profile');
       }
 
@@ -61,11 +83,19 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
           try {
             conversationId = await insertConversationAndParticipant(createAdminClient(), user.id);
           } catch (e) {
-            logger.error('Self conversation creation failed (admin fallback)', { error: e, userId: user.id }, 'Messages');
+            logger.error(
+              'Self conversation creation failed (admin fallback)',
+              { error: e, userId: user.id },
+              'Messages'
+            );
             return apiInternalError('Self conversation creation failed');
           }
         } else {
-          logger.error('Failed to create conversation', { error: serverError, userId: user.id }, 'Messages');
+          logger.error(
+            'Failed to create conversation',
+            { error: serverError, userId: user.id },
+            'Messages'
+          );
           return apiInternalError('Failed to create conversation');
         }
       }

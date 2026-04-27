@@ -27,7 +27,7 @@ import {
   saveMessages,
 } from '@/services/cat/conversation-history';
 import { resolveProvider } from '@/services/cat/provider-resolver';
-import { maybeEnrichWithSearchResults } from '@/services/cat/tool-use';
+import { maybeEnrichWithSearchResults, type ToolAugmentedMessage } from '@/services/cat/tool-use';
 import { fetchFullContextForCat, buildFullContextString } from '@/services/ai/document-context';
 import { createActionExecutor } from '@/services/cat';
 import { getUserActorId } from '@/domain/actors';
@@ -175,7 +175,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     }
 
     // Build message array: system + few-shots + history + user message
-    let messages: any[] = [
+    let messages: ToolAugmentedMessage[] = [
       { role: 'system', content: systemPrompt },
       ...getCatFewShotExamples(),
       ...historyMessages,

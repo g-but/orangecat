@@ -9,10 +9,28 @@
  * Only active for the Groq provider (OpenRouter tool use is not yet supported).
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { AnySupabaseClient } from '@/lib/supabase/types';
+import type { OpenRouterMessage } from '@/services/ai/openrouter';
 import { searchPlatform, type SearchType } from './platform-search';
+
+/** Standard chat message (system/user/assistant) */
+export type { OpenRouterMessage as ChatMessage };
+
+/** Messages that Groq can return/accept when tool-use is active */
+interface ToolCallAssistantMessage {
+  role: 'assistant';
+  content: string | null;
+  tool_calls: Array<{ id: string; type: string; function: { name: string; arguments: string } }>;
+}
+
+interface ToolResultMessage {
+  role: 'tool';
+  tool_call_id: string;
+  content: string;
+}
+
+/** Full union of message types that may appear in a Groq tool-augmented conversation */
+export type ToolAugmentedMessage = OpenRouterMessage | ToolCallAssistantMessage | ToolResultMessage;
 
 const SEARCH_KEYWORDS = [
   'find',
@@ -59,19 +77,25 @@ const PLATFORM_TOOL_DEFINITION = [
  */
 export async function maybeEnrichWithSearchResults(
   supabase: AnySupabaseClient,
-  messages: Record<string, unknown>[],
+  messages: ToolAugmentedMessage[],
   userMessage: string,
   provider: 'groq' | 'openrouter',
   groqKey: string | null,
   modelToUse: string
-): Promise<Record<string, unknown>[]> {
-  if (provider !== 'groq') {return messages;}
+): Promise<ToolAugmentedMessage[]> {
+  if (provider !== 'groq') {
+    return messages;
+  }
 
   const mightNeedSearch = SEARCH_KEYWORDS.some(kw => userMessage.toLowerCase().includes(kw));
-  if (!mightNeedSearch) {return messages;}
+  if (!mightNeedSearch) {
+    return messages;
+  }
 
   const key = groqKey ?? process.env.GROQ_API_KEY;
-  if (!key) {return messages;}
+  if (!key) {
+    return messages;
+  }
 
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -83,25 +107,33 @@ export async function maybeEnrichWithSearchResults(
         tools: PLATFORM_TOOL_DEFINITION,
         tool_choice: 'auto',
         stream: false,
-        max_tokens: 500, // Keep fast — only need to detect tool_calls
+        max_tokens: 500,
       }),
     });
 
-    if (!res.ok) {return messages;}
+    if (!res.ok) {
+      return messages;
+    }
 
     const data = await res.json();
     const choice = data.choices?.[0];
     if (choice?.finish_reason !== 'tool_calls' || !choice.message?.tool_calls?.length) {
-      return messages; // Model decided no search needed
+      return messages;
     }
 
-    const enriched = [...messages, choice.message];
+    const assistantMsg = choice.message as ToolCallAssistantMessage;
+    const enriched: ToolAugmentedMessage[] = [...messages, assistantMsg];
 
-    for (const toolCall of choice.message.tool_calls as any[]) {
-      if (toolCall.function?.name !== 'search_platform') {continue;}
+    for (const toolCall of assistantMsg.tool_calls) {
+      if (toolCall.function?.name !== 'search_platform') {
+        continue;
+      }
       let content: string;
       try {
-        const args = JSON.parse(toolCall.function.arguments ?? '{}');
+        const args = JSON.parse(toolCall.function.arguments ?? '{}') as {
+          query?: string;
+          type?: string;
+        };
         const results = await searchPlatform(
           supabase,
           args.query ?? '',
@@ -119,6 +151,6 @@ export async function maybeEnrichWithSearchResults(
 
     return enriched;
   } catch {
-    return messages; // Non-fatal
+    return messages;
   }
 }
