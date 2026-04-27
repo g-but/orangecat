@@ -6,13 +6,23 @@
  * The manual entity creation flow remains available for users who know exactly what they want.
  */
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Bitcoin, Eye, Users, Cat, ArrowRight } from 'lucide-react';
+import { Bitcoin, Eye, Users, Cat, ArrowRight, Loader2 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 
 export function WelcomeStep() {
   const router = useRouter();
+  const [navigating, setNavigating] = useState(false);
+
+  const handleCatClick = () => {
+    if (navigating) {
+      return;
+    }
+    setNavigating(true);
+    router.push(ROUTES.ONBOARDING.INTELLIGENT);
+  };
 
   return (
     <div className="space-y-6">
@@ -21,7 +31,6 @@ export function WelcomeStep() {
         <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md">
           <span className="text-4xl">🐾</span>
         </div>
-        <h2 className="text-2xl font-semibold mb-2">Welcome to OrangeCat</h2>
         <p className="text-muted-foreground max-w-sm mx-auto">
           Earn, fund, save, and connect — with Bitcoin, with your community, on your terms.
         </p>
@@ -29,8 +38,9 @@ export function WelcomeStep() {
 
       {/* Primary CTA: Cat */}
       <button
-        onClick={() => router.push(ROUTES.ONBOARDING.INTELLIGENT)}
-        className="w-full text-left"
+        onClick={handleCatClick}
+        disabled={navigating}
+        className="w-full text-left disabled:opacity-75"
       >
         <div className="flex items-center gap-4 p-4 rounded-xl border-2 border-orange-300 bg-orange-50 hover:bg-orange-100 hover:border-orange-400 transition-all">
           <div className="p-3 bg-orange-100 rounded-xl flex-shrink-0">
@@ -42,7 +52,11 @@ export function WelcomeStep() {
               Describe your goals — your AI assistant will suggest the right setup in seconds
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-orange-400 flex-shrink-0" />
+          {navigating ? (
+            <Loader2 className="h-5 w-5 text-orange-400 animate-spin flex-shrink-0" />
+          ) : (
+            <ArrowRight className="h-5 w-5 text-orange-400 flex-shrink-0" />
+          )}
         </div>
       </button>
 

@@ -4,7 +4,7 @@
  */
 
 import { Button } from '@/components/ui/Button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 import type { OnboardingStep } from '../types';
 
 interface OnboardingNavigationProps {
@@ -31,14 +31,14 @@ export function OnboardingNavigation({
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
-      <Button
-        variant="outline"
-        onClick={onPrevious}
-        disabled={currentStep === 0}
-        className="w-full sm:w-auto"
-      >
-        Previous
-      </Button>
+      {currentStep > 0 ? (
+        <Button variant="outline" onClick={onPrevious} className="w-full sm:w-auto">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Previous
+        </Button>
+      ) : (
+        <div className="hidden sm:block" />
+      )}
 
       <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
         {currentStepData.action && (

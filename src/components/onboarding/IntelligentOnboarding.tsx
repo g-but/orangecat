@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react';
-import { Cat, ArrowRight, Sparkles } from 'lucide-react';
+import { Cat, ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
@@ -26,11 +26,11 @@ import { ONBOARDING_METHOD } from './OnboardingFlow/constants';
 
 const EXAMPLE_PROMPTS = [
   "I'm a freelance graphic designer looking to find clients and sell design templates",
-  "I run a small community garden and want to raise funds for seeds and equipment",
-  "I make handmade jewellery and want to start selling online",
+  'I run a small community garden and want to raise funds for seeds and equipment',
+  'I make handmade jewellery and want to start selling online',
   "I'm a musician who wants to fund an album and connect with fans",
-  "I teach yoga and want to offer online classes and workshops",
-  "My neighbourhood needs a community space — I want to fundraise and organise it",
+  'I teach yoga and want to offer online classes and workshops',
+  'My neighbourhood needs a community space — I want to fundraise and organise it',
 ];
 
 export default function IntelligentOnboarding() {
@@ -40,7 +40,9 @@ export default function IntelligentOnboarding() {
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const handleStartChat = async () => {
-    if (!description.trim()) { return; }
+    if (!description.trim()) {
+      return;
+    }
     setIsRedirecting(true);
 
     // Mark onboarding complete in the background — don't block the redirect
@@ -49,7 +51,11 @@ export default function IntelligentOnboarding() {
         onboarding_completed: true,
         onboarding_method: ONBOARDING_METHOD.INTELLIGENT,
       }).catch(err => {
-        logger.error('Failed to mark intelligent onboarding complete', err, 'IntelligentOnboarding');
+        logger.error(
+          'Failed to mark intelligent onboarding complete',
+          err,
+          'IntelligentOnboarding'
+        );
       });
     }
 
@@ -61,6 +67,15 @@ export default function IntelligentOnboarding() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-tiffany-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
+        {/* Back navigation */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md">
@@ -68,8 +83,8 @@ export default function IntelligentOnboarding() {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Meet My Cat</h1>
           <p className="text-gray-600">
-            Tell My Cat what you&apos;re trying to do — it will suggest the right tools and help you get
-            set up in minutes.
+            Tell My Cat what you&apos;re trying to do — it will suggest the right tools and help you
+            get set up in minutes.
           </p>
         </div>
 

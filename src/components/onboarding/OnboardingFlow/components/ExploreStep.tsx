@@ -8,33 +8,37 @@
  * Uses OnboardingContext to mark onboarding complete before navigating away.
  */
 
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Bitcoin, ArrowRight } from 'lucide-react';
+import { Bitcoin, ArrowRight, Loader2 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import { EXPLORE_OPTIONS, EXPLORE_COLOR_CLASSES } from '@/config/onboarding';
 import { useOnboardingContext } from '../context';
 
 export function ExploreStep() {
   const { onNavigateAway } = useOnboardingContext();
+  const [loadingHref, setLoadingHref] = useState<string | null>(null);
+
+  const handleOptionClick = (href: string) => {
+    if (loadingHref) {
+      return;
+    }
+    setLoadingHref(href);
+    onNavigateAway(href);
+  };
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold mb-2">Explore & Connect</h3>
-        <p className="text-sm text-muted-foreground">
-          Discover what's happening on OrangeCat and find your community.
-        </p>
-      </div>
-
       <div className="space-y-3">
         {EXPLORE_OPTIONS.map(option => {
           const Icon = option.icon;
           const colors = EXPLORE_COLOR_CLASSES[option.color];
+          const isLoading = loadingHref === option.href;
           return (
             <Card
               key={option.title}
-              className={`${colors.border} hover:shadow-md transition-all cursor-pointer`}
-              onClick={() => onNavigateAway(option.href)}
+              className={`transition-all ${isLoading ? `${colors.border.replace('hover:', '')} shadow-md` : loadingHref ? 'opacity-50 cursor-not-allowed' : `${colors.border} hover:shadow-md cursor-pointer`}`}
+              onClick={() => handleOptionClick(option.href)}
             >
               <CardContent className="p-4 flex items-center gap-4">
                 <div className={`p-3 ${colors.bg} rounded-xl flex-shrink-0`}>
@@ -44,7 +48,11 @@ export function ExploreStep() {
                   <p className="font-semibold">{option.title}</p>
                   <p className="text-sm text-muted-foreground">{option.description}</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                {isLoading ? (
+                  <Loader2 className={`h-4 w-4 ${colors.text} animate-spin flex-shrink-0`} />
+                ) : (
+                  <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                )}
               </CardContent>
             </Card>
           );
@@ -60,7 +68,7 @@ export function ExploreStep() {
               <p className="text-sm text-amber-900">
                 <strong>Bitcoin wallet?</strong> You can add your Bitcoin address anytime in{' '}
                 <button
-                  onClick={() => onNavigateAway(ROUTES.SETTINGS)}
+                  onClick={() => handleOptionClick(ROUTES.SETTINGS)}
                   className="underline hover:text-amber-700 font-medium"
                 >
                   Settings

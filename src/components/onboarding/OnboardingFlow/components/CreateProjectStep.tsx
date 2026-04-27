@@ -8,8 +8,9 @@
  * Uses OnboardingContext to mark onboarding complete before navigating away.
  */
 
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { getEntitiesByCategory } from '@/config/entity-registry';
 import { ONBOARDING_CATEGORIES, CATEGORY_LABELS } from '@/config/onboarding';
 import { useOnboardingContext } from '../context';
@@ -18,8 +19,13 @@ import type { EntityMetadata } from '@/config/entity-registry';
 export function CreateProjectStep() {
   const { onNavigateAway } = useOnboardingContext();
   const entitiesByCategory = getEntitiesByCategory();
+  const [loadingPath, setLoadingPath] = useState<string | null>(null);
 
   const handleEntityClick = (entity: EntityMetadata) => {
+    if (loadingPath) {
+      return;
+    }
+    setLoadingPath(entity.createPath);
     onNavigateAway(entity.createPath);
   };
 
@@ -27,9 +33,6 @@ export function CreateProjectStep() {
     <div className="space-y-6">
       <div className="text-center mb-4">
         <h3 className="text-lg font-semibold mb-2">What would you like to create?</h3>
-        <p className="text-sm text-muted-foreground">
-          Pick a type to get started. You can always create more later.
-        </p>
       </div>
 
       {ONBOARDING_CATEGORIES.map(category => {
@@ -49,7 +52,7 @@ export function CreateProjectStep() {
                 return (
                   <Card
                     key={entity.type}
-                    className="hover:border-orange-300 hover:shadow-md transition-all cursor-pointer"
+                    className={`transition-all ${loadingPath === entity.createPath ? 'border-orange-300 shadow-md opacity-100' : loadingPath ? 'opacity-50 cursor-not-allowed' : 'hover:border-orange-300 hover:shadow-md cursor-pointer'}`}
                     onClick={() => handleEntityClick(entity)}
                   >
                     <CardContent className="p-4 flex items-center gap-3">
@@ -62,7 +65,11 @@ export function CreateProjectStep() {
                           {entity.description}
                         </p>
                       </div>
-                      <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      {loadingPath === entity.createPath ? (
+                        <Loader2 className="h-4 w-4 text-orange-500 animate-spin flex-shrink-0" />
+                      ) : (
+                        <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      )}
                     </CardContent>
                   </Card>
                 );
