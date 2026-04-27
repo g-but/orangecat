@@ -6,7 +6,6 @@ export { cn } from '@/lib/utils';
 
 // Individual utility modules can be imported directly:
 // import { convert, formatCurrency } from '@/services/currency'  // Currency utilities (consolidated)
-// import { validateEmail } from '@/utils/validation'
 // import { generateBitcoinAddress } from '@/utils/bitcoin'
 // etc.
 

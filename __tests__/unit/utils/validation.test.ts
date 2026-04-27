@@ -5,7 +5,7 @@ import {
   isValidLightningAddress,
   isValidEmail,
   isValidUsername,
-} from '@/utils/validation';
+} from '@/lib/validation';
 
 describe('isValidUUID', () => {
   it('accepts a valid v4 UUID', () => {
@@ -122,7 +122,11 @@ describe('isValidBitcoinAddress', () => {
 
 describe('isValidLightningInvoice', () => {
   it('accepts a mainnet invoice starting with lnbc', () => {
-    expect(isValidLightningInvoice('lnbc1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5sxxmmwwd5kgetjypeh2ursdae8g6twvusx7mje')).toBe(true);
+    expect(
+      isValidLightningInvoice(
+        'lnbc1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5sxxmmwwd5kgetjypeh2ursdae8g6twvusx7mje'
+      )
+    ).toBe(true);
   });
 
   it('accepts a testnet invoice starting with lntb', () => {

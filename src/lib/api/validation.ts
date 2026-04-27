@@ -8,7 +8,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { isValidUUID, isValidBitcoinAddress } from '@/utils/validation';
+import { isValidUUID, isValidBitcoinAddress } from '@/lib/validation';
 import { apiBadRequest, apiUnauthorized } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
