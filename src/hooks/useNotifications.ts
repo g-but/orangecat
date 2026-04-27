@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createBrowserClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
+import { useNotificationsMutations } from './useNotificationsMutations';
+import { useNotificationsRealtime } from './useNotificationsRealtime';
 
 export interface Notification {
   id: string;
@@ -17,7 +18,6 @@ export interface Notification {
     | 'like'
     | 'mention'
     | 'system'
-    // Task-related notification types
     | 'task_attention'
     | 'task_request'
     | 'task_completed'
@@ -59,15 +59,6 @@ interface UseNotificationsReturn {
   refresh: () => Promise<void>;
 }
 
-/**
- * Hook for managing notifications
- *
- * Features:
- * - Fetch notifications with pagination
- * - Real-time updates via Supabase
- * - Mark as read (single, bulk, all)
- * - Delete notifications
- */
 export function useNotifications(options: UseNotificationsOptions = {}): UseNotificationsReturn {
   const { filter = 'all', limit = 20, realtime = true } = options;
   const { user } = useAuth();
@@ -79,7 +70,6 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
   const [offset, setOffset] = useState(0);
   const [total, setTotal] = useState(0);
 
-  // Fetch notifications
   const fetchNotifications = useCallback(
     async (reset = false) => {
       if (!user) {
@@ -121,7 +111,6 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     [user, offset, limit, filter]
   );
 
-  // Fetch unread count
   const fetchUnreadCount = useCallback(async () => {
     if (!user) {
       return;
@@ -139,7 +128,6 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     }
   }, [user]);
 
-  // Initial fetch
   useEffect(() => {
     if (user) {
       fetchNotifications(true);
@@ -147,73 +135,39 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     }
   }, [user, filter, fetchNotifications, fetchUnreadCount]);
 
-  // Real-time subscription
-  useEffect(() => {
-    if (!user || !realtime) {
-      return;
-    }
+  const handleInsert = useCallback((notification: Notification) => {
+    setNotifications(prev => [notification, ...prev]);
+    setUnreadCount(prev => prev + 1);
+    setTotal(prev => prev + 1);
+  }, []);
 
-    const supabase = createBrowserClient();
+  const handleUpdate = useCallback(
+    (updated: Record<string, unknown>) => {
+      setNotifications(prev =>
+        prev.map(n => (n.id === (updated as { id: string }).id ? { ...n, ...updated } : n))
+      );
+      fetchUnreadCount();
+    },
+    [fetchUnreadCount]
+  );
 
-    const channel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `recipient_user_id=eq.${user.id}`,
-        },
-        (payload: { new: Record<string, unknown> }) => {
-          // Add new notification to the top
-          setNotifications(prev => [payload.new as unknown as Notification, ...prev]);
-          setUnreadCount(prev => prev + 1);
-          setTotal(prev => prev + 1);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `recipient_user_id=eq.${user.id}`,
-        },
-        (payload: { new: Record<string, unknown> }) => {
-          // Update notification in list
-          setNotifications(prev =>
-            prev.map(n =>
-              n.id === (payload.new as { id: string }).id ? { ...n, ...payload.new } : n
-            )
-          );
-          // Recalculate unread count
-          fetchUnreadCount();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `recipient_user_id=eq.${user.id}`,
-        },
-        (payload: { old: { id: string } }) => {
-          // Remove notification from list
-          setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
-          setTotal(prev => prev - 1);
-          fetchUnreadCount();
-        }
-      )
-      .subscribe();
+  const handleDelete = useCallback(
+    (id: string) => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      setTotal(prev => prev - 1);
+      fetchUnreadCount();
+    },
+    [fetchUnreadCount]
+  );
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, realtime, fetchUnreadCount]);
+  useNotificationsRealtime({
+    user,
+    enabled: realtime,
+    onInsert: handleInsert,
+    onUpdate: handleUpdate,
+    onDelete: handleDelete,
+  });
 
-  // Load more
   const loadMore = useCallback(async () => {
     if (isLoading || notifications.length >= total) {
       return;
@@ -221,92 +175,12 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     await fetchNotifications(false);
   }, [isLoading, notifications.length, total, fetchNotifications]);
 
-  // Mark as read
-  const markAsRead = useCallback(async (id: string | string[] | 'all') => {
-    try {
-      const body = id === 'all' ? { all: true } : Array.isArray(id) ? { ids: id } : { id };
+  const { markAsRead, deleteNotification, clearRead } = useNotificationsMutations({
+    setNotifications,
+    setUnreadCount,
+    setTotal,
+  });
 
-      const response = await fetch(API_ROUTES.NOTIFICATIONS.READ, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.error);
-      }
-
-      // Update local state
-      if (id === 'all') {
-        setNotifications(prev =>
-          prev.map(n => ({ ...n, read: true, read_at: new Date().toISOString() }))
-        );
-        setUnreadCount(0);
-      } else {
-        const ids = Array.isArray(id) ? id : [id];
-        setNotifications(prev =>
-          prev.map(n =>
-            ids.includes(n.id) ? { ...n, read: true, read_at: new Date().toISOString() } : n
-          )
-        );
-        setUnreadCount(prev => Math.max(0, prev - ids.length));
-      }
-    } catch (err) {
-      logger.error('Failed to mark as read', err, 'Notifications');
-      throw err;
-    }
-  }, []);
-
-  // Delete notification
-  const deleteNotification = useCallback(async (id: string) => {
-    try {
-      const response = await fetch(`/api/notifications?id=${id}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.error);
-      }
-
-      // Update local state
-      setNotifications(prev => {
-        const notification = prev.find(n => n.id === id);
-        if (notification && !notification.read) {
-          setUnreadCount(c => Math.max(0, c - 1));
-        }
-        return prev.filter(n => n.id !== id);
-      });
-      setTotal(prev => prev - 1);
-    } catch (err) {
-      logger.error('Failed to delete notification', err, 'Notifications');
-      throw err;
-    }
-  }, []);
-
-  // Clear all read notifications
-  const clearRead = useCallback(async () => {
-    try {
-      const response = await fetch('/api/notifications?clear=read', {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.error);
-      }
-
-      // Update local state
-      setNotifications(prev => prev.filter(n => !n.read));
-      setTotal(prev => prev - (data.data.deleted || 0));
-    } catch (err) {
-      logger.error('Failed to clear read notifications', err, 'Notifications');
-      throw err;
-    }
-  }, []);
-
-  // Refresh
   const refresh = useCallback(async () => {
     await fetchNotifications(true);
     await fetchUnreadCount();
