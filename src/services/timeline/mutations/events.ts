@@ -141,7 +141,14 @@ export async function createEventWithVisibility(
     }
 
     // Parse the JSONB response
-    let result: { success?: boolean; error?: string; post_id?: string; data?: { post_id?: string }; id?: string; visibility_count?: number };
+    let result: {
+      success?: boolean;
+      error?: string;
+      post_id?: string;
+      data?: { post_id?: string };
+      id?: string;
+      visibility_count?: number;
+    };
     if (typeof data === 'string') {
       try {
         result = JSON.parse(data);
@@ -366,7 +373,7 @@ export async function createProjectEvent(
 export async function createTransactionEvent(
   transactionId: string,
   projectId: string,
-  donorId: string,
+  supporterId: string,
   amountBtc: number,
   eventType: 'donation_received' | 'donation_sent' = 'donation_received'
 ): Promise<TimelineEventResponse> {
@@ -385,10 +392,10 @@ export async function createTransactionEvent(
     .single();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: donor } = await (supabase as any)
+  const { data: supporter } = await (supabase as any)
     .from(DATABASE_TABLES.PROFILES)
     .select('username, display_name')
-    .eq('id', donorId)
+    .eq('id', supporterId)
     .single();
 
   if (!transaction || !project) {
@@ -402,12 +409,12 @@ export async function createTransactionEvent(
 
   const description =
     eventType === 'donation_received'
-      ? `${donor?.display_name || donor?.username || 'Anonymous'} contributed ₿${amountBtc.toFixed(6)} to ${project.title}`
+      ? `${supporter?.display_name || supporter?.username || 'Anonymous'} contributed ₿${amountBtc.toFixed(6)} to ${project.title}`
       : `Contributed ₿${amountBtc.toFixed(6)} to ${project.title}`;
 
   return createEvent({
     eventType,
-    actorId: donorId,
+    actorId: supporterId,
     subjectType: 'transaction',
     subjectId: transactionId,
     targetType: 'project',
@@ -420,8 +427,8 @@ export async function createTransactionEvent(
       transaction_id: transactionId,
       project_id: projectId,
       project_title: project.title,
-      donor_name: donor?.display_name || donor?.username,
-      is_anonymous: !donor?.display_name && !donor?.username,
+      supporter_name: supporter?.display_name || supporter?.username,
+      is_anonymous: !supporter?.display_name && !supporter?.username,
     },
   });
 }
@@ -436,7 +443,9 @@ export async function createQuoteReply(
   content: string,
   quotedContent: string,
   visibility: TimelineVisibility = 'public',
-  getEventById?: (eventId: string) => Promise<{ success: boolean; event?: TimelineEvent | TimelineDisplayEvent; error?: string }>
+  getEventById?: (
+    eventId: string
+  ) => Promise<{ success: boolean; event?: TimelineEvent | TimelineDisplayEvent; error?: string }>
 ): Promise<TimelineEventResponse> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

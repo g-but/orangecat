@@ -112,11 +112,11 @@ class TimelineService {
   async createTransactionEvent(
     transactionId: string,
     projectId: string,
-    donorId: string,
+    supporterId: string,
     amountBtc: number,
     eventType: 'donation_received' | 'donation_sent' = 'donation_received'
   ): Promise<TimelineEventResponse> {
-    return createTransactionEvent(transactionId, projectId, donorId, amountBtc, eventType);
+    return createTransactionEvent(transactionId, projectId, supporterId, amountBtc, eventType);
   }
 
   /**

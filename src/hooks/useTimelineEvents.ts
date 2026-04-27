@@ -40,25 +40,25 @@ export const useTimelineEvents = () => {
       }
     };
 
-    // Listen for donation events
-    const handleDonationReceived = async (event: CustomEvent) => {
-      const { transactionId, projectId, amountBtc, donorId } = event.detail;
+    // Listen for support/funding events
+    const handleSupportReceived = async (event: CustomEvent) => {
+      const { transactionId, projectId, amountBtc, supporterId } = event.detail;
 
       try {
         await timelineService.createTransactionEvent(
           transactionId,
           projectId,
-          donorId || user.id,
+          supporterId || user.id,
           amountBtc
         );
 
         logger.info(
-          'Created timeline event for donation',
+          'Created timeline event for support',
           { transactionId, projectId },
           'TimelineHook'
         );
       } catch (error) {
-        logger.error('Failed to create donation timeline event', error, 'TimelineHook');
+        logger.error('Failed to create support timeline event', error, 'TimelineHook');
       }
     };
 
@@ -130,20 +130,32 @@ export const useTimelineEvents = () => {
     // Custom event types for timeline events
     // TypeScript doesn't know about custom events, so we cast to EventListener
     const projectCreatedEvent = 'project-created';
-    const donationReceivedEvent = 'donation-received';
+    const supportReceivedEvent = 'support-received';
     const profileUpdatedEvent = 'profile-updated';
     const userFollowedEvent = 'user-followed';
 
     window.addEventListener(projectCreatedEvent, handleProjectCreated as unknown as EventListener);
-    window.addEventListener(donationReceivedEvent, handleDonationReceived as unknown as EventListener);
+    window.addEventListener(
+      supportReceivedEvent,
+      handleSupportReceived as unknown as EventListener
+    );
     window.addEventListener(profileUpdatedEvent, handleProfileUpdated as unknown as EventListener);
     window.addEventListener(userFollowedEvent, handleUserFollowed as unknown as EventListener);
 
     // Cleanup
     return () => {
-      window.removeEventListener(projectCreatedEvent, handleProjectCreated as unknown as EventListener);
-      window.removeEventListener(donationReceivedEvent, handleDonationReceived as unknown as EventListener);
-      window.removeEventListener(profileUpdatedEvent, handleProfileUpdated as unknown as EventListener);
+      window.removeEventListener(
+        projectCreatedEvent,
+        handleProjectCreated as unknown as EventListener
+      );
+      window.removeEventListener(
+        supportReceivedEvent,
+        handleSupportReceived as unknown as EventListener
+      );
+      window.removeEventListener(
+        profileUpdatedEvent,
+        handleProfileUpdated as unknown as EventListener
+      );
       window.removeEventListener(userFollowedEvent, handleUserFollowed as unknown as EventListener);
     };
   }, [user?.id, profile]);
@@ -159,15 +171,15 @@ export const useTimelineEvents = () => {
       );
     },
 
-    dispatchDonationReceived: (
+    dispatchSupportReceived: (
       transactionId: string,
       projectId: string,
       amountBtc: number,
-      donorId?: string
+      supporterId?: string
     ) => {
       window.dispatchEvent(
-        new CustomEvent('donation-received', {
-          detail: { transactionId, projectId, amountBtc, donorId },
+        new CustomEvent('support-received', {
+          detail: { transactionId, projectId, amountBtc, supporterId },
         })
       );
     },

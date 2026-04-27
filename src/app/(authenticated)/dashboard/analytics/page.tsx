@@ -32,7 +32,7 @@ export default function AnalyticsPage() {
     const activeProjects = projects.filter(c => c.isActive);
     const totalRaised = projects.reduce((sum, c) => sum + (c.total_funding || 0), 0);
     const totalSupporters = projects.reduce((sum, c) => sum + (c.contributor_count || 0), 0);
-    const avgDonation = totalSupporters > 0 ? totalRaised / totalSupporters : 0;
+    const avgContribution = totalSupporters > 0 ? totalRaised / totalSupporters : 0;
     const successRate =
       projects.length > 0
         ? (projects.filter(c => c.goal_amount && c.total_funding >= c.goal_amount).length /
@@ -41,11 +41,33 @@ export default function AnalyticsPage() {
         : 0;
 
     return [
-      { label: 'Total Raised', value: totalRaised, format: 'currency', icon: DollarSign, color: 'text-green-600' },
-      { label: 'Active Projects', value: activeProjects.length, icon: Target, color: 'text-blue-600' },
+      {
+        label: 'Total Raised',
+        value: totalRaised,
+        format: 'currency',
+        icon: DollarSign,
+        color: 'text-green-600',
+      },
+      {
+        label: 'Active Projects',
+        value: activeProjects.length,
+        icon: Target,
+        color: 'text-blue-600',
+      },
       { label: 'Total Supporters', value: totalSupporters, icon: Users, color: 'text-purple-600' },
-      { label: 'Avg Contribution', value: avgDonation, format: 'currency', icon: TrendingUp, color: 'text-orange-600' },
-      { label: 'Success Rate', value: `${successRate.toFixed(1)}%`, icon: Zap, color: 'text-teal-600' },
+      {
+        label: 'Avg Contribution',
+        value: avgContribution,
+        format: 'currency',
+        icon: TrendingUp,
+        color: 'text-orange-600',
+      },
+      {
+        label: 'Success Rate',
+        value: `${successRate.toFixed(1)}%`,
+        icon: Zap,
+        color: 'text-teal-600',
+      },
     ];
   };
 
@@ -56,8 +78,13 @@ export default function AnalyticsPage() {
       totalRaised: project.total_funding || 0,
       goalAmount: project.goal_amount || 0,
       supporters: project.contributor_count || 0,
-      avgDonation: project.contributor_count > 0 ? (project.total_funding || 0) / project.contributor_count : 0,
-      daysActive: Math.floor((Date.now() - new Date(project.created_at).getTime()) / (1000 * 60 * 60 * 24)),
+      avgContribution:
+        project.contributor_count > 0
+          ? (project.total_funding || 0) / project.contributor_count
+          : 0,
+      daysActive: Math.floor(
+        (Date.now() - new Date(project.created_at).getTime()) / (1000 * 60 * 60 * 24)
+      ),
     }));
   };
 

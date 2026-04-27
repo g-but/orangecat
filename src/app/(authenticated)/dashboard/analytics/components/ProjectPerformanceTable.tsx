@@ -8,7 +8,7 @@ interface ProjectPerformance {
   totalRaised: number;
   goalAmount: number;
   supporters: number;
-  avgDonation: number;
+  avgContribution: number;
   daysActive: number;
 }
 
@@ -90,7 +90,7 @@ export default function ProjectPerformanceTable({ projects }: ProjectPerformance
                     </td>
                     <td className="py-3 px-4 font-medium">{project.supporters}</td>
                     <td className="py-3 px-4 text-gray-600">
-                      {formatCurrency(project.avgDonation, 'BTC')}
+                      {formatCurrency(project.avgContribution, 'BTC')}
                     </td>
                   </tr>
                 );
