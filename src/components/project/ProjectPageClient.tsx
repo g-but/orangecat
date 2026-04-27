@@ -40,7 +40,7 @@ interface Project {
   bitcoin_balance_btc?: number | null;
   bitcoin_balance_updated_at?: string | null;
   supporters_count?: number | null;
-  last_donation_at?: string | null;
+  last_support_at?: string | null;
   profiles?: {
     username: string | null;
     name: string | null;
@@ -171,7 +171,7 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
                 bitcoin_balance_btc: project.bitcoin_balance_btc || 0,
                 bitcoin_balance_updated_at: project.bitcoin_balance_updated_at || null,
                 supporters_count: project.supporters_count || 0,
-                last_donation_at: project.last_donation_at || null,
+                last_support_at: project.last_support_at || null,
                 user_id: project.user_id,
               }}
               isOwner={isOwner}

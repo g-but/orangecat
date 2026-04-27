@@ -13,10 +13,10 @@ export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 
 // Support type labels (user-facing)
-// Note: The key 'bitcoin_donation' is an internal identifier (database/API).
+// Note: The key 'bitcoin_funding' matches the database enum value (database/API).
 // The label uses "Funding" per domain-specific.md terminology.
 export const SUPPORT_TYPE_LABELS: Record<string, string> = {
-  bitcoin_donation: 'Bitcoin Funding',
+  bitcoin_funding: 'Bitcoin Funding',
   signature: 'Signature',
   message: 'Message',
   reaction: 'Reaction',
@@ -39,7 +39,7 @@ export const REACTION_LABELS: Record<string, string> = {
 
 // Support type descriptions (user-facing)
 export const SUPPORT_TYPE_DESCRIPTIONS: Record<string, string> = {
-  bitcoin_donation: 'Fund this project with Bitcoin',
+  bitcoin_funding: 'Fund this project with Bitcoin',
   signature: 'Sign your name to show you support this project',
   message: 'Leave a message of encouragement or congratulations',
   reaction: 'Quick reaction to show your support',

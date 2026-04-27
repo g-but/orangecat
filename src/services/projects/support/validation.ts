@@ -11,7 +11,7 @@
 import { z } from 'zod';
 
 // Support type enum
-export const supportTypeSchema = z.enum(['bitcoin_donation', 'signature', 'message', 'reaction']);
+export const supportTypeSchema = z.enum(['bitcoin_funding', 'signature', 'message', 'reaction']);
 
 // Reaction emoji schema
 export const reactionEmojiSchema = z.enum(['❤️', '👍', '🔥', '🚀', '💪', '🎉', '⭐', '🙌']);
@@ -20,24 +20,24 @@ export const reactionEmojiSchema = z.enum(['❤️', '👍', '🔥', '🚀', '�
 export const supportProjectSchema = z
   .object({
     support_type: supportTypeSchema,
-    
+
     // Bitcoin donation fields
     amount_btc: z.number().positive().int().optional(),
     lightning_invoice: z.string().optional(),
     transaction_hash: z.string().optional(),
-    
+
     // Signature/Message fields
     display_name: z.string().min(1).max(100).optional(),
     message: z.string().min(1).max(1000).optional(),
     is_anonymous: z.boolean().optional().default(false),
-    
+
     // Reaction field
     reaction_emoji: reactionEmojiSchema.optional(),
   })
   .refine(
-    (data) => {
+    data => {
       // Bitcoin donation must have amount_btc
-      if (data.support_type === 'bitcoin_donation') {
+      if (data.support_type === 'bitcoin_funding') {
         return data.amount_btc !== undefined && data.amount_btc > 0;
       }
       return true;
@@ -48,7 +48,7 @@ export const supportProjectSchema = z
     }
   )
   .refine(
-    (data) => {
+    data => {
       // Signature must have display_name
       if (data.support_type === 'signature') {
         return data.display_name !== undefined && data.display_name.length > 0;
@@ -61,7 +61,7 @@ export const supportProjectSchema = z
     }
   )
   .refine(
-    (data) => {
+    data => {
       // Message must have message text
       if (data.support_type === 'message') {
         return data.message !== undefined && data.message.length > 0;
@@ -74,7 +74,7 @@ export const supportProjectSchema = z
     }
   )
   .refine(
-    (data) => {
+    data => {
       // Reaction must have reaction_emoji
       if (data.support_type === 'reaction') {
         return data.reaction_emoji !== undefined;
@@ -105,5 +105,3 @@ export const supportPaginationSchema = z.object({
 export type SupportProjectInput = z.infer<typeof supportProjectSchema>;
 export type SupportFiltersInput = z.infer<typeof supportFiltersSchema>;
 export type SupportPaginationInput = z.infer<typeof supportPaginationSchema>;
-
-

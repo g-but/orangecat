@@ -96,7 +96,7 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
             return;
           }
           request = {
-            support_type: 'bitcoin_donation',
+            support_type: 'bitcoin_funding',
             amount: parseFloat(amount),
             currency: currency,
             transaction_hash: transactionHash || undefined,
@@ -406,7 +406,7 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {SUPPORT_TYPE_DESCRIPTIONS.bitcoin_donation}
+              {SUPPORT_TYPE_DESCRIPTIONS.bitcoin_funding}
             </p>
 
             <div>

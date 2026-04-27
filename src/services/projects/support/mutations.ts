@@ -43,7 +43,7 @@ export async function createProjectSupport(
     };
 
     // Add type-specific fields
-    if (request.support_type === 'bitcoin_donation') {
+    if (request.support_type === 'bitcoin_funding') {
       supportData.amount_btc = request.amount;
       supportData.transaction_hash = request.transaction_hash || null;
       supportData.lightning_invoice = request.lightning_invoice || null;

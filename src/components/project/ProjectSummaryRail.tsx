@@ -23,7 +23,7 @@ interface Props {
     bitcoin_balance_btc?: number;
     bitcoin_balance_updated_at?: string | null;
     supporters_count?: number;
-    last_donation_at?: string | null;
+    last_support_at?: string | null;
     user_id?: string;
   };
   isOwner?: boolean;
@@ -34,7 +34,9 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
   const goalCurrency = project.goal_currency || project.currency || PLATFORM_DEFAULT_CURRENCY;
   const [amountRaised, setAmountRaised] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [bitcoinBalanceBtc, setBitcoinBalanceBtc] = useState<number>(project.bitcoin_balance_btc || 0);
+  const [bitcoinBalanceBtc, setBitcoinBalanceBtc] = useState<number>(
+    project.bitcoin_balance_btc || 0
+  );
   const [bitcoinBalanceUpdatedAt, setBitcoinBalanceUpdatedAt] = useState<string | null>(
     project.bitcoin_balance_updated_at || null
   );
@@ -126,7 +128,7 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
       </div>
 
       {/* Social Proof - Supporters Count */}
-      {(project.supporters_count || project.last_donation_at) && (
+      {(project.supporters_count || project.last_support_at) && (
         <div className="space-y-2 text-sm border-t pt-4">
           {project.supporters_count !== undefined && project.supporters_count > 0 && (
             <div className="flex items-center justify-between">
@@ -136,11 +138,11 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
               </span>
             </div>
           )}
-          {project.last_donation_at && (
+          {project.last_support_at && (
             <div className="text-xs text-green-600 flex items-center gap-1">
               <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
               Last contribution{' '}
-              {formatDistanceToNow(new Date(project.last_donation_at), { addSuffix: true })}
+              {formatDistanceToNow(new Date(project.last_support_at), { addSuffix: true })}
             </div>
           )}
         </div>

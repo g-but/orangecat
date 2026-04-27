@@ -28,8 +28,8 @@ export function validateEventRequest(request: CreateTimelineEventRequest): {
 
   // Add more validation based on event type
   switch (request.eventType) {
-    case 'donation_received':
-    case 'donation_sent':
+    case 'support_received':
+    case 'support_sent':
       if (!request.amountBtc || request.amountBtc <= 0) {
         return { valid: false, error: 'Valid contribution amount required' };
       }

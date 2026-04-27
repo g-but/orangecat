@@ -32,7 +32,7 @@ export type AnalyticsEvent =
   | 'project_created'
   | 'project_published'
   | 'project_draft_saved'
-  | 'first_donation_received'
+  | 'first_support_received'
   | 'profile_updated'
   | 'timeline_post_created'
   // Entity lifecycle
@@ -61,13 +61,19 @@ const isDev = process.env.NODE_ENV === 'development';
 
 /** Initialize analytics — call once in your app layout */
 export function initAnalytics() {
-  if (typeof window === 'undefined') { return; }
-  if (isDev) { logger.debug('Analytics initialized (console mode)', undefined, 'analytics'); }
+  if (typeof window === 'undefined') {
+    return;
+  }
+  if (isDev) {
+    logger.debug('Analytics initialized (console mode)', undefined, 'analytics');
+  }
 }
 
 /** Track an analytics event */
 export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperties) {
-  if (typeof window === 'undefined') { return; }
+  if (typeof window === 'undefined') {
+    return;
+  }
 
   const enrichedProperties = {
     ...properties,
@@ -83,7 +89,9 @@ export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperti
   try {
     const events = JSON.parse(localStorage.getItem('orangecat_analytics') || '[]');
     events.push({ event, properties: enrichedProperties });
-    if (events.length > 100) { events.shift(); }
+    if (events.length > 100) {
+      events.shift();
+    }
     localStorage.setItem('orangecat_analytics', JSON.stringify(events));
   } catch {
     // ignore storage errors
@@ -92,8 +100,12 @@ export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperti
 
 /** Identify a user for analytics */
 export function identifyUser(properties: UserProperties) {
-  if (typeof window === 'undefined') { return; }
-  if (isDev) { logger.debug('User identified', properties, 'analytics'); }
+  if (typeof window === 'undefined') {
+    return;
+  }
+  if (isDev) {
+    logger.debug('User identified', properties, 'analytics');
+  }
 }
 
 /** Track page view */
@@ -148,7 +160,9 @@ export const entityEvents = {
 
 /** Debug: view stored analytics events */
 export function getStoredEvents(): Array<{ event: string; properties: AnalyticsProperties }> {
-  if (typeof window === 'undefined') { return []; }
+  if (typeof window === 'undefined') {
+    return [];
+  }
   try {
     return JSON.parse(localStorage.getItem('orangecat_analytics') || '[]');
   } catch {
@@ -158,6 +172,8 @@ export function getStoredEvents(): Array<{ event: string; properties: AnalyticsP
 
 /** Clear stored analytics events */
 export function clearStoredEvents() {
-  if (typeof window === 'undefined') { return; }
+  if (typeof window === 'undefined') {
+    return;
+  }
   localStorage.removeItem('orangecat_analytics');
 }

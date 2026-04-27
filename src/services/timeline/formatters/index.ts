@@ -116,8 +116,8 @@ export function getEventIcon(eventType: TimelineEventType): LucideIcon {
     project_goal_reached: Trophy,
 
     // Transaction events
-    donation_received: Bitcoin,
-    donation_sent: Share2,
+    support_received: Bitcoin,
+    support_sent: Share2,
     bitcoin_transaction: Bitcoin,
     lightning_payment: Zap,
 
@@ -155,7 +155,7 @@ export function getEventIcon(eventType: TimelineEventType): LucideIcon {
 export function getEventColor(eventType: TimelineEventType): string {
   const colorMap: Record<string, string> = {
     project_created: 'blue',
-    donation_received: 'green',
+    support_received: 'green',
     user_followed: 'purple',
     project_completed: 'orange',
   };

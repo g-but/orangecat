@@ -10,7 +10,7 @@
  */
 
 // Support type enum
-export type SupportType = 'bitcoin_donation' | 'signature' | 'message' | 'reaction';
+export type SupportType = 'bitcoin_funding' | 'signature' | 'message' | 'reaction';
 
 // Reaction emoji types
 export type ReactionEmoji = '❤️' | '👍' | '🔥' | '🚀' | '💪' | '🎉' | '⭐' | '🙌';
@@ -24,7 +24,7 @@ export interface ProjectSupport {
   // Support type
   support_type: SupportType;
 
-  // Bitcoin funding fields (if type = 'bitcoin_donation')
+  // Bitcoin funding fields (if type = 'bitcoin_funding')
   amount_btc?: number | null;
   transaction_hash?: string | null;
   lightning_invoice?: string | null;

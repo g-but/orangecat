@@ -40,8 +40,8 @@ export type TimelineEventType =
   | 'project_goal_reached'
 
   // Transaction events
-  | 'donation_received'
-  | 'donation_sent'
+  | 'support_received'
+  | 'support_sent'
   | 'bitcoin_transaction'
   | 'lightning_payment'
 
@@ -480,11 +480,10 @@ export const TIMELINE_EVENT_CONFIGS: Partial<Record<TimelineEventType, TimelineE
 /**
  * Timeline event for database operations
  */
-export interface TimelineEventDb
-  extends Omit<
-    TimelineEvent,
-    'eventType' | 'eventSubtype' | 'actorType' | 'subjectType' | 'targetType' | 'visibility'
-  > {
+export interface TimelineEventDb extends Omit<
+  TimelineEvent,
+  'eventType' | 'eventSubtype' | 'actorType' | 'subjectType' | 'targetType' | 'visibility'
+> {
   event_type: string;
   event_subtype?: string;
   actor_type: string;

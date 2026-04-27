@@ -4,7 +4,7 @@
 
 -- Support types enum
 CREATE TYPE support_type AS ENUM (
-  'bitcoin_donation',
+  'bitcoin_funding',
   'signature',
   'message',
   'reaction'
@@ -19,7 +19,7 @@ CREATE TABLE project_support (
   -- Support type
   support_type support_type NOT NULL,
   
-  -- Bitcoin donation (if type = 'bitcoin_donation')
+  -- Bitcoin donation (if type = 'bitcoin_funding')
   amount_sats bigint,
   transaction_hash text,
   lightning_invoice text,
@@ -37,8 +37,8 @@ CREATE TABLE project_support (
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   
   -- Constraints
-  CONSTRAINT valid_bitcoin_donation CHECK (
-    support_type != 'bitcoin_donation' OR (amount_sats IS NOT NULL AND amount_sats > 0)
+  CONSTRAINT valid_bitcoin_funding CHECK (
+    support_type != 'bitcoin_funding' OR (amount_sats IS NOT NULL AND amount_sats > 0)
   ),
   CONSTRAINT valid_signature CHECK (
     support_type != 'signature' OR display_name IS NOT NULL
@@ -77,7 +77,7 @@ BEGIN
   INSERT INTO project_support_stats (project_id, total_bitcoin_sats, total_signatures, total_messages, total_reactions, total_supporters, last_support_at)
   VALUES (
     NEW.project_id,
-    CASE WHEN NEW.support_type = 'bitcoin_donation' THEN NEW.amount_sats ELSE 0 END,
+    CASE WHEN NEW.support_type = 'bitcoin_funding' THEN NEW.amount_sats ELSE 0 END,
     CASE WHEN NEW.support_type = 'signature' THEN 1 ELSE 0 END,
     CASE WHEN NEW.support_type = 'message' THEN 1 ELSE 0 END,
     CASE WHEN NEW.support_type = 'reaction' THEN 1 ELSE 0 END,
@@ -86,7 +86,7 @@ BEGIN
   )
   ON CONFLICT (project_id) DO UPDATE SET
     total_bitcoin_sats = project_support_stats.total_bitcoin_sats + 
-      CASE WHEN NEW.support_type = 'bitcoin_donation' THEN NEW.amount_sats ELSE 0 END,
+      CASE WHEN NEW.support_type = 'bitcoin_funding' THEN NEW.amount_sats ELSE 0 END,
     total_signatures = project_support_stats.total_signatures + 
       CASE WHEN NEW.support_type = 'signature' THEN 1 ELSE 0 END,
     total_messages = project_support_stats.total_messages + 

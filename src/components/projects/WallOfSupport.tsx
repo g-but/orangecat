@@ -76,7 +76,7 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
 
   const getSupportIcon = (supportType: string) => {
     switch (supportType) {
-      case 'bitcoin_donation':
+      case 'bitcoin_funding':
         return <Coins className="h-4 w-4 text-orange-600" />;
       case 'signature':
         return <PenTool className="h-4 w-4 text-blue-600" />;

@@ -114,7 +114,7 @@ class TimelineService {
     projectId: string,
     supporterId: string,
     amountBtc: number,
-    eventType: 'donation_received' | 'donation_sent' = 'donation_received'
+    eventType: 'support_received' | 'support_sent' = 'support_received'
   ): Promise<TimelineEventResponse> {
     return createTransactionEvent(transactionId, projectId, supporterId, amountBtc, eventType);
   }

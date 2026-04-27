@@ -375,7 +375,7 @@ export async function createTransactionEvent(
   projectId: string,
   supporterId: string,
   amountBtc: number,
-  eventType: 'donation_received' | 'donation_sent' = 'donation_received'
+  eventType: 'support_received' | 'support_sent' = 'support_received'
 ): Promise<TimelineEventResponse> {
   // Get transaction and project details
   const { data: transaction } = await supabase
@@ -403,12 +403,12 @@ export async function createTransactionEvent(
   }
 
   const title =
-    eventType === 'donation_received'
+    eventType === 'support_received'
       ? `Received ₿${amountBtc.toFixed(6)} contribution`
       : `Sent ₿${amountBtc.toFixed(6)} contribution`;
 
   const description =
-    eventType === 'donation_received'
+    eventType === 'support_received'
       ? `${supporter?.display_name || supporter?.username || 'Anonymous'} contributed ₿${amountBtc.toFixed(6)} to ${project.title}`
       : `Contributed ₿${amountBtc.toFixed(6)} to ${project.title}`;
 
