@@ -22,6 +22,17 @@ module.exports = {
     '!src/**/__tests__/**',
   ],
   coverageReporters: ['text', 'lcov', 'html'],
+  // Ratchet floor — set just below measured coverage (2026-07: ~10.9% stmts,
+  // 7.6% branches) so coverage can only go up. Raise as tests are added;
+  // never lower to make a failing build pass.
+  coverageThreshold: {
+    global: {
+      statements: 10,
+      branches: 7,
+      functions: 7,
+      lines: 10,
+    },
+  },
   verbose: true,
   // Exclude Playwright tests from Jest
   testPathIgnorePatterns: [
