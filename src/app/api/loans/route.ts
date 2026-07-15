@@ -15,7 +15,6 @@ import { STATUS } from '@/config/database-constants';
 // Uses generic entity list handler with status filter support
 export const GET = createEntityListHandler({
   entityType: 'loan',
-  userIdField: 'actor_id',
   publicStatuses: [STATUS.LOANS.ACTIVE],
   additionalFilters: { status: 'status' }, // Allow status filter from URL params
 });

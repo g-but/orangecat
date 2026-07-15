@@ -6,7 +6,6 @@ import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 // GET /api/products - Get all active products
 export const GET = createEntityListHandler({
   entityType: 'product',
-  userIdField: 'actor_id',
   useListHelper: true, // Uses listEntitiesPage for commerce entities
 });
 
