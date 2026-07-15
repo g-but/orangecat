@@ -30,6 +30,7 @@ import {
   ActorNotPermittedError,
 } from '@/services/webhooks/webhookEndpointsService';
 import { PUBLIC_API_WEBHOOK_EVENTS } from '@/config/public-api';
+import { checkPublicUrl } from '@/lib/security/ssrfGuard';
 
 // Validate against the SSOT allowlist instead of accepting any string.
 // A curl-mint with event_types=['totally.fake'] would otherwise pass
@@ -84,6 +85,15 @@ export const POST = compose(
     const isProd = process.env.NODE_ENV === 'production';
     if (isProd && !body.url.startsWith('https://')) {
       return apiForbidden('Webhook URL must use https in production.');
+    }
+    // SSRF guard: the worker fetches this URL server-side and stores the
+    // response where the owner can read it — never allow internal targets.
+    // (Dev keeps localhost receivers working; the worker re-checks in prod.)
+    if (isProd) {
+      const urlCheck = await checkPublicUrl(body.url);
+      if (!urlCheck.ok) {
+        return apiForbidden(`Webhook URL rejected: ${urlCheck.reason}.`);
+      }
     }
     try {
       const minted = await createWebhookEndpoint({

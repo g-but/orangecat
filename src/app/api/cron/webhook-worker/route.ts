@@ -34,6 +34,7 @@ import {
   touchEndpointLastDelivery,
 } from '@/services/webhooks/webhookEndpointsService';
 import { signWebhookPayload } from '@/services/webhooks/signing';
+import { checkPublicUrl } from '@/lib/security/ssrfGuard';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -68,7 +69,19 @@ async function processDelivery(delivery: DeliveryRow): Promise<DeliveryOutcome> 
     return { deliveryId: delivery.id, outcome: 'delivered', responseStatus: 0 };
   }
 
-  // 3. Sign + POST.
+  // 3. SSRF re-check at fire time — mint-time validation alone would miss a
+  //    DNS record that later flips to an internal address. Dev skips it so
+  //    localhost receivers keep working (mirrors the mint route's policy).
+  if (process.env.NODE_ENV === 'production') {
+    const urlCheck = await checkPublicUrl(ctx.url);
+    if (!urlCheck.ok) {
+      await markFailedOrRetry(claimedDelivery, null, `[ssrf-blocked] ${urlCheck.reason}`);
+      const outcome = claimedDelivery.attempt_count > 6 ? ('failed' as const) : ('retry' as const);
+      return { deliveryId: delivery.id, outcome, responseStatus: null };
+    }
+  }
+
+  // 4. Sign + POST.
   const rawBody = JSON.stringify(delivery.payload);
   const signature = signWebhookPayload(rawBody, ctx.secret);
 

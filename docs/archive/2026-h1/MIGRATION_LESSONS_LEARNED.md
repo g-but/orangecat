@@ -85,7 +85,7 @@ FATAL: Tenant or user not found
 **What we tried:**
 
 ```javascript
-const ACCESS_TOKEN = 'sbp_8a9797e27e1e7b1819c04ce9e2ccee0cfb9ed85b'; // Hardcoded
+const ACCESS_TOKEN = 'sbp_REDACTED'; // Hardcoded (never do this — real value scrubbed)
 ```
 
 **Error:**
