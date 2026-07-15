@@ -91,18 +91,18 @@ export async function getReplies(
 
       const enrichedChildren = await enrichEventsForDisplay(childEvents || []);
 
-      // Recursively fetch children for each reply
-      const withNested = [];
-      for (const reply of enrichedChildren) {
-        const nestedReplies = await buildTree(reply.id, depth + 1);
-        withNested.push({
-          ...reply,
-          replies: nestedReplies,
-          replyCount: nestedReplies.length,
-        });
-      }
-
-      return withNested;
+      // Recursively fetch children for each reply, in parallel — a sequential
+      // loop here made thread latency grow linearly with reply count
+      return Promise.all(
+        enrichedChildren.map(async reply => {
+          const nestedReplies = await buildTree(reply.id, depth + 1);
+          return {
+            ...reply,
+            replies: nestedReplies,
+            replyCount: nestedReplies.length,
+          };
+        })
+      );
     };
 
     const replies = await buildTree(eventId, 0);

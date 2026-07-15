@@ -18,26 +18,13 @@ import { DATABASE_TABLES, TIMELINE_TABLES } from '@/config/database-tables';
 import type {
   TimelineFeedResponse,
   TimelineDisplayEvent,
-  TimelineEventDb,
   TimelineFilters,
   TimelinePagination,
 } from '@/types/timeline';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from './constants';
 import { getCurrentUserId, transformEnrichedEventToDisplay } from './helpers';
 import { getDateRangeFilter, buildDefaultFilters } from '@/services/timeline/formatters/filters';
-import {
-  enrichEventsForDisplay,
-  getActorInfo,
-  getSubjectInfo,
-} from '@/services/timeline/processors/enrichment';
-import {
-  mapDbEventToTimelineEvent,
-  getEventIcon,
-  getEventDisplayType,
-  formatAmount,
-  getTimeAgo,
-  isEventRecent,
-} from '@/services/timeline/formatters';
+import { enrichEventsForDisplay } from '@/services/timeline/processors/enrichment';
 
 /**
  * Get user's personalized timeline feed
@@ -341,48 +328,24 @@ export async function getEnrichedUserFeed(
       }
     }
 
-    // Transform to display events with social data
-    const displayEvents = await Promise.all(
-      (events || []).map(async (event: Record<string, unknown>) => {
-        const timelineEvent = mapDbEventToTimelineEvent(event as unknown as TimelineEventDb);
-
-        // Enrich with actor info
-        const actor = await getActorInfo(timelineEvent.actorId);
-        const subject = timelineEvent.subjectId
-          ? await getSubjectInfo(timelineEvent.subjectType, timelineEvent.subjectId)
-          : undefined;
-        const target = timelineEvent.targetId
-          ? await getSubjectInfo(timelineEvent.targetType!, timelineEvent.targetId)
-          : undefined;
-
-        // Omit eventType and eventSubtype as TimelineDisplayEvent extends Omit<TimelineEvent, 'eventType' | 'eventSubtype'>
-        const {
-          eventType: _eventType,
-          eventSubtype: _eventSubtype,
-          ...eventWithoutTypes
-        } = timelineEvent;
-
-        return {
-          ...eventWithoutTypes,
-          icon: getEventIcon(timelineEvent.eventType),
-          displayType: getEventDisplayType(timelineEvent.eventType),
-          displaySubtype: timelineEvent.eventSubtype,
-          actor,
-          subject,
-          target,
-          formattedAmount: formatAmount(timelineEvent),
-          timeAgo: getTimeAgo(timelineEvent.eventTimestamp),
-          isRecent: isEventRecent(timelineEvent.eventTimestamp),
-          // Social interaction data
-          likesCount: event.like_count || 0,
-          sharesCount: event.share_count || 0,
-          commentsCount: event.comment_count || 0,
-          userLiked: event.user_liked || false,
-          userShared: event.user_shared || false,
-          userCommented: event.user_commented || false,
-        } as TimelineDisplayEvent;
-      })
-    );
+    // Transform to display events with social data. Enrichment is batched
+    // (3 queries total) instead of up to 3 lookups per event — see
+    // processors/enrichment.ts. Batch output preserves input order, so the
+    // social counters can be zipped back in by index.
+    const enrichedEvents = await enrichEventsForDisplay(events || []);
+    const displayEvents = enrichedEvents.map((displayEvent, index) => {
+      const event = (events || [])[index] as Record<string, unknown>;
+      return {
+        ...displayEvent,
+        // Social interaction data
+        likesCount: event.like_count || 0,
+        sharesCount: event.share_count || 0,
+        commentsCount: event.comment_count || 0,
+        userLiked: event.user_liked || false,
+        userShared: event.user_shared || false,
+        userCommented: event.user_commented || false,
+      } as TimelineDisplayEvent;
+    });
 
     return {
       events: displayEvents,
