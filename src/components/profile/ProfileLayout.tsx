@@ -12,9 +12,20 @@ import ProfilePeopleTab from '@/components/profile/ProfilePeopleTab';
 import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
 import ProfileWalletsTab from '@/components/profile/ProfileWalletsTab';
 import ProfileEntityTab from '@/components/profile/ProfileEntityTab';
-import { Users, User, MessageSquare, Globe, ExternalLink, Info, Wallet } from 'lucide-react';
+import ProfileArticlesTab from '@/components/profile/ProfileArticlesTab';
+import {
+  Users,
+  User,
+  MessageSquare,
+  Globe,
+  ExternalLink,
+  Info,
+  Wallet,
+  FileText,
+} from 'lucide-react';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import type { EntityType } from '@/config/entity-registry';
+import type { Article } from '@/services/articles/types';
 import { cn } from '@/lib/utils';
 import { useProfileActions } from './useProfileActions';
 import { ProfileBannerSection } from './ProfileBannerSection';
@@ -39,6 +50,7 @@ const ENTITY_TAB_IDS = new Set(
 interface ProfileLayoutProps {
   profile: ScalableProfile;
   projects?: Project[];
+  articles?: Article[];
   stats?: {
     projectCount: number;
     totalRaised: number;
@@ -58,6 +70,7 @@ interface ProfileLayoutProps {
 export default function ProfileLayout({
   profile,
   projects,
+  articles,
   stats,
   mode: _mode = 'view',
   onSave,
@@ -115,6 +128,13 @@ export default function ProfileLayout({
       content: <ProfileTimelineTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
     {
+      id: 'articles',
+      label: 'Articles',
+      icon: <FileText className="w-4 h-4" />,
+      badge: articles?.length || undefined,
+      content: <ProfileArticlesTab articles={articles ?? []} isOwnProfile={isOwnProfile} />,
+    },
+    {
       id: 'projects',
       label: ENTITY_REGISTRY['project'].namePlural,
       icon: (() => {
@@ -162,6 +182,9 @@ export default function ProfileLayout({
     }
     if (tab.id === 'projects') {
       return (stats?.projectCount || 0) > 0;
+    }
+    if (tab.id === 'articles') {
+      return (articles?.length || 0) > 0;
     }
     if (tab.id === 'people') {
       return (stats?.followerCount || 0) + (stats?.followingCount || 0) > 0;

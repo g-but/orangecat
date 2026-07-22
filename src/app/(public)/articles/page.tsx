@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Clock, PenLine } from 'lucide-react';
+import { PenLine } from 'lucide-react';
 import { listPublishedArticles } from '@/services/articles/get-article';
+import ArticleList from '@/components/articles/ArticleList';
 import { ARTICLE_COPY } from '@/config/articles';
 import { ROUTES } from '@/config/routes';
 
@@ -13,14 +14,6 @@ export const metadata: Metadata = {
   title: 'Articles',
   description: 'Long-form thinking from the OrangeCat community — Bitcoin-native, free to read.',
 };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
 
 export default async function ArticlesIndexPage() {
   const articles = await listPublishedArticles();
@@ -56,42 +49,7 @@ export default async function ArticlesIndexPage() {
             </Link>
           </div>
         ) : (
-          <ul className="divide-y divide-subtle">
-            {articles.map(article => (
-              <li key={article.id}>
-                <Link
-                  href={ROUTES.ARTICLE(article.slug)}
-                  className="group flex gap-4 py-6 transition-opacity hover:opacity-90"
-                >
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-xl font-semibold leading-snug text-fg-primary group-hover:text-accent-warm">
-                      {article.title}
-                    </h2>
-                    {article.excerpt && (
-                      <p className="mt-1.5 line-clamp-2 text-fg-secondary">{article.excerpt}</p>
-                    )}
-                    <div className="mt-3 flex items-center gap-3 text-sm text-fg-tertiary">
-                      <span className="font-medium text-fg-secondary">{article.author.name}</span>
-                      <span aria-hidden>·</span>
-                      <time dateTime={article.publishedAt}>{formatDate(article.publishedAt)}</time>
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        {article.readingTime} min
-                      </span>
-                    </div>
-                  </div>
-                  {article.coverImage && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={article.coverImage}
-                      alt=""
-                      className="h-20 w-28 flex-shrink-0 rounded-lg border border-subtle object-cover"
-                    />
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <ArticleList articles={articles} />
         )}
       </div>
     </div>
