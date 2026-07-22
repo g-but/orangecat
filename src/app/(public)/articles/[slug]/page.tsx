@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Clock, Lock, Users } from 'lucide-react';
-import { getArticleBySlug } from '@/services/articles/get-article';
+import { getArticleBySlug, isCurrentUserArticleAuthor } from '@/services/articles/get-article';
 import { ARTICLE_COPY } from '@/config/articles';
 import { ROUTES } from '@/config/routes';
 import { JsonLdScript } from '@/lib/seo/structured-data';
@@ -11,6 +11,7 @@ import ArticleMarkdown from './ArticleMarkdown';
 import ReadingProgress from './ReadingProgress';
 import ShareButton from './ShareButton';
 import TipButton from '@/components/tips/TipButton';
+import ArticleOwnerActions from './ArticleOwnerActions';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -64,6 +65,8 @@ export default async function ArticlePage({ params }: PageProps) {
   if (!article) {
     notFound();
   }
+
+  const isOwner = await isCurrentUserArticleAuthor(article.authorActorId);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -188,6 +191,7 @@ export default async function ArticlePage({ params }: PageProps) {
                     recipientName={article.author.name}
                   />
                 )}
+                {isOwner && <ArticleOwnerActions articleId={article.id} slug={article.slug} />}
                 <ShareButton title={article.title} url={shareUrl} />
               </div>
             </div>

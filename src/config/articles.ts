@@ -46,11 +46,21 @@ export const ARTICLE_COPY = {
     publishing: 'Publishing…',
     cancel: 'Cancel',
   },
+  edit: {
+    heading: 'Edit article',
+    subheading: 'Update your article. Changes go live immediately.',
+    save: 'Save changes',
+    saving: 'Saving…',
+  },
   reader: {
     back: 'All articles',
     byUnknown: 'Unknown',
     privateNotice: 'Only you can see this article.',
     followersNotice: 'Visible to your followers.',
+    edit: 'Edit',
+    delete: 'Delete',
+    deleting: 'Deleting…',
+    deleteConfirm: 'Delete this article? This cannot be undone.',
   },
   index: {
     heading: 'Articles',
