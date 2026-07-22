@@ -284,6 +284,7 @@ export const ROUTES = {
   ARTICLES: '/articles',
   ARTICLES_NEW: '/articles/new',
   ARTICLE: (slug: string) => `/articles/${slug}`,
+  ARTICLE_EDIT: (slug: string) => `/articles/${slug}/edit`,
   DOCS: '/docs',
   FAQ: '/faq',
   PRICING: '/pricing',

@@ -5,6 +5,7 @@
  */
 
 import { createServerClient } from '@/lib/supabase/server';
+import { getUserActorId } from '@/domain/actors';
 import { logger } from '@/utils/logger';
 import { ARTICLE_METADATA_FLAG } from '@/config/articles';
 import type { Article, ArticleMetadataPayload } from './types';
@@ -57,6 +58,7 @@ function rowToArticle(row: EnrichedArticleRow): Article | null {
       username: actor?.username,
       avatarUrl: actor?.avatar_url,
     },
+    authorActorId: row.actor_id,
   };
 }
 
@@ -85,10 +87,16 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
     }
 
     if (article.visibility !== 'public') {
+      // Non-public articles are visible only to their author. Compare via actor
+      // id (author.id / user.id are different id spaces).
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user || user.id !== article.author.id) {
+      if (!user) {
+        return null;
+      }
+      const viewerActorId = await getUserActorId(supabase, user.id);
+      if (!viewerActorId || viewerActorId !== article.authorActorId) {
         return null;
       }
     }
@@ -97,6 +105,27 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
   } catch (err) {
     logger.error('Failed to fetch article by slug', { err, slug }, 'Articles');
     return null;
+  }
+}
+
+/**
+ * Whether the current (session) viewer is the article's author. Compares actor
+ * ids (author.id / user.id are different id spaces). Used to gate owner-only
+ * edit/delete affordances — the mutations are independently RLS-protected.
+ */
+export async function isCurrentUserArticleAuthor(authorActorId: string): Promise<boolean> {
+  try {
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return false;
+    }
+    const viewerActorId = await getUserActorId(supabase, user.id);
+    return !!viewerActorId && viewerActorId === authorActorId;
+  } catch {
+    return false;
   }
 }
 
