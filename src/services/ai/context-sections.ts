@@ -507,6 +507,32 @@ export function renderConversations(
   return `## Recent Conversations${unreadNote}\nUse the conversation id with reply_to_message to reply on the user's behalf.\n${convLines.join('\n')}`;
 }
 
+export function renderNotifications(
+  notifications: FullUserContext['notifications'],
+  locale: string
+): string | null {
+  if (!notifications || notifications.length === 0) {
+    return null;
+  }
+  const lines = notifications.map(n => {
+    const repeat = n.count > 1 ? ` ×${n.count}` : '';
+    const preview =
+      n.message && n.message !== n.title
+        ? ` — "${n.message.substring(0, 160)}${n.message.length > 160 ? '…' : ''}"`
+        : '';
+    const latest = new Date(n.latest_at).toLocaleDateString(locale, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
+    return `- [${n.type}] **${n.title}**${repeat}${preview} (latest ${latest})`;
+  });
+  return `## Unread Platform Notifications
+These are the user's unread in-app notifications, coalesced (×N = the same alert fired N times — one problem repeated, not N problems). If the user asks about their notifications, or a system alert concerns something you can act on (like Cat/provider health), help them with it in plain language — never just repeat raw ops jargon back.
+${lines.join('\n')}`;
+}
+
 export function renderInboundActivity(
   inboundActivity: FullUserContext['inboundActivity'],
   locale: string

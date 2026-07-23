@@ -44,6 +44,7 @@ export default function NotificationCenter({
     handleDeleteNotification,
     handleClearRead,
     handleNotificationClick,
+    handleAskCat,
   } = useNotificationCenter({ onClose });
 
   return (
@@ -139,6 +140,7 @@ export default function NotificationCenter({
                       onMarkAsRead={handleMarkAsRead}
                       onDelete={handleDeleteNotification}
                       onClick={handleNotificationClick}
+                      onAskCat={handleAskCat}
                     />
                   ))}
                   {hasMore && (

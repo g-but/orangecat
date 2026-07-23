@@ -37,6 +37,7 @@ import {
 } from './social-context-fetcher';
 import { fetchProjectActivityForCat, fetchStakeholdersForCat } from './project-activity-fetcher';
 import { fetchGitHubReposForCat } from './github-repos-fetcher';
+import { fetchNotificationsForCat } from './notification-context-fetcher';
 
 // Re-export types so existing callers stay unchanged
 export type {
@@ -51,6 +52,7 @@ export type {
   GroupMembershipSummary,
   BookingRecord,
   InboundActivity,
+  NotificationSummary,
   SocialGraphSummary,
   ProjectActivityEvent,
   StakeholderSummary,
@@ -78,6 +80,9 @@ export { fetchProjectActivityForCat, fetchStakeholdersForCat } from './project-a
 
 // Re-export GitHub repos fetcher
 export { fetchGitHubReposForCat } from './github-repos-fetcher';
+
+// Re-export notifications fetcher
+export { fetchNotificationsForCat } from './notification-context-fetcher';
 
 async function fetchDocumentsForCat(
   supabase: AnySupabaseClient,
@@ -346,6 +351,7 @@ export async function fetchFullContextForCat(
     tasks,
     wallets,
     conversations,
+    notifications,
     inboundActivity,
     memberGroups,
     socialGraph,
@@ -360,6 +366,7 @@ export async function fetchFullContextForCat(
     fetchTasksForCat(supabase, userId),
     fetchWalletsForCat(supabase, userId),
     fetchConversationsForCat(supabase, userId),
+    fetchNotificationsForCat(supabase, userId),
     fetchInboundActivityForCat(supabase, userId),
     fetchGroupMembershipsForCat(supabase, userId),
     fetchSocialGraphForCat(supabase, userId),
@@ -388,6 +395,7 @@ export async function fetchFullContextForCat(
     tasks,
     wallets,
     conversations,
+    notifications,
     inboundActivity,
     memberGroups,
     socialGraph,

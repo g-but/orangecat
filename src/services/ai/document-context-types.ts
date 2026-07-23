@@ -155,6 +155,22 @@ export interface SocialGraphSummary {
   recentFollowing: Array<{ username: string | null; name: string | null }>;
 }
 
+/**
+ * A coalesced group of unread in-app notifications. Repeated alerts with the
+ * same title (e.g. the nightly eval harness failing several nights in a row)
+ * collapse into one summary with a count, so the Cat sees "×18", not 18 rows.
+ */
+export interface NotificationSummary {
+  type: string;
+  title: string;
+  message: string;
+  /** How many unread notifications share this type+title. */
+  count: number;
+  /** ISO timestamp of the most recent occurrence. */
+  latest_at: string;
+  action_url: string | null;
+}
+
 /** An upcoming booking where the user is the service/asset provider */
 export interface BookingRecord {
   starts_at: string;
@@ -219,6 +235,11 @@ export interface FullUserContext {
   tasks: TaskSummary[];
   wallets: WalletSummary[];
   conversations: ConversationSummary[];
+  /**
+   * Unread in-app notifications, coalesced by title. Optional: only the full
+   * Cat context fetch populates it; other consumers leave it undefined.
+   */
+  notifications?: NotificationSummary[];
   inboundActivity: InboundActivity;
   memberGroups: GroupMembershipSummary[];
   socialGraph: SocialGraphSummary;

@@ -12,6 +12,7 @@ import { getEntityConfig } from '@/config/entity-configs/get-config';
 import { isValidEntityType, type EntityType } from '@/config/entity-registry';
 import { PREFILLABLE_ENTITY_TYPES } from './tool-use-detection';
 import { fetchWebsiteText, resolveRequestedUrl } from './website-analysis';
+import { runCatHealthProbes } from './health-probes';
 import type {
   ToolResultMessage,
   ToolCallResultRef,
@@ -172,6 +173,44 @@ INSTRUCTIONS (hard constraints):
           ? `Proposed ${emitted} grounded offer${emitted === 1 ? '' : 's'} as draft cards the user can review and publish. Introduce them in one or two warm sentences — do NOT list the field values; the cards show those.`
           : `Couldn't draft grounded offers from the user's current context. Invite them to add a little more about themselves (a quick document or a few profile details) so you can tailor real ideas — do not invent offers.`,
     };
+  }
+
+  // ── check_cat_health ─────────────────────────────────────────────────────
+  // Live provider probes (same logic as GET /api/cat/diagnose) so the Cat can
+  // explain "why isn't the AI answering?" and provider-failure notifications
+  // with real data instead of sending the user to server logs.
+  if (toolName === 'check_cat_health') {
+    onToolCall?.({ id: toolCall.id, name: toolName, status: 'running' });
+    try {
+      const report = await runCatHealthProbes();
+      onToolCall?.({
+        id: toolCall.id,
+        name: toolName,
+        status: 'completed',
+        resultCount: Object.keys(report.probes).length,
+        results: [],
+      });
+      return {
+        role: 'tool',
+        tool_call_id: toolCall.id,
+        content: `LIVE CAT HEALTH CHECK:
+${JSON.stringify(report, null, 2)}
+Explain this to the user in plain language: which provider is healthy, degraded, or down, and what that means for THEM. If they asked about a notification mentioning "provider layer" failures or eval errors, connect it to these results (e.g. rate_limit = the free-tier provider was overloaded, usually recovers on its own; auth/invalid_key/no_key = the API key needs fixing in settings; no_response = the provider was unreachable). Suggest ONE concrete next step. Never tell the user to read server logs.`,
+      };
+    } catch (err) {
+      onToolCall?.({
+        id: toolCall.id,
+        name: toolName,
+        status: 'failed',
+        error: err instanceof Error ? err.message : 'unknown',
+      });
+      return {
+        role: 'tool',
+        tool_call_id: toolCall.id,
+        content:
+          'The health check itself failed to run. Tell the user honestly that you could not probe the providers right now and suggest trying again in a moment.',
+      };
+    }
   }
 
   // ── search_platform ──────────────────────────────────────────────────────
