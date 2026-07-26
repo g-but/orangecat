@@ -40,7 +40,7 @@ export function usePostDraft(
   const { subjectType, subjectId, enableDrafts, debounceMs, defaultVisibility } = options;
   const { content, visibility, selectedProjects } = state;
 
-  const debounceTimer = useRef<NodeJS.Timeout>();
+  const debounceTimer = useRef<NodeJS.Timeout>(undefined);
   const draftKey = `post-draft-${subjectType}-${subjectId || 'general'}`;
 
   // Cleanup debounce timer on unmount

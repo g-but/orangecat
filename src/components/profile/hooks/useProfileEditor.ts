@@ -29,8 +29,8 @@ export interface UseProfileEditorReturn {
   isSaving: boolean;
   avatarPreview: string | null;
   bannerPreview: string | null;
-  avatarInputRef: React.RefObject<HTMLInputElement>;
-  bannerInputRef: React.RefObject<HTMLInputElement>;
+  avatarInputRef: React.RefObject<HTMLInputElement | null>;
+  bannerInputRef: React.RefObject<HTMLInputElement | null>;
   handleFileUpload: (file: File, type: 'avatar' | 'banner') => Promise<void>;
   socialLinks: SocialLink[];
   setSocialLinks: React.Dispatch<React.SetStateAction<SocialLink[]>>;

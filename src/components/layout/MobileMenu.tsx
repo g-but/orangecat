@@ -20,7 +20,7 @@ interface MobileMenuProps {
   /** Whether menu is in closing animation */
   isClosing: boolean;
   /** Ref for menu element */
-  menuRef: React.RefObject<HTMLDivElement>;
+  menuRef: React.RefObject<HTMLDivElement | null>;
   /** Navigation items */
   navigation: NavigationItem[];
   /** Footer navigation */
