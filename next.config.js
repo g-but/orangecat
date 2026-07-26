@@ -72,7 +72,6 @@ const nextConfig = {
   // Experimental features for performance
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-dropdown-menu'],
-    webpackBuildWorker: true,
   },
 
   // Enable compression

@@ -74,13 +74,13 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
     isSidebarCollapsed: boolean;
     collapsedSections: Set<string>;
   };
-  const onStateLoadedRef = useRef<(s: LoadedState) => void>();
+  const onStateLoadedRef = useRef<(s: LoadedState) => void>(undefined);
   onStateLoadedRef.current = ({ isSidebarOpen, isSidebarCollapsed, collapsedSections: cs }) => {
     setIsSidebarOpen(isSidebarOpen);
     setIsSidebarCollapsed(isSidebarCollapsed);
     setCollapsedSections(cs);
   };
-  const onLoadFailedRef = useRef<(d: Set<string>) => void>();
+  const onLoadFailedRef = useRef<(d: Set<string>) => void>(undefined);
   onLoadFailedRef.current = defaultCollapsed => setCollapsedSections(defaultCollapsed);
 
   const onStateLoaded = useCallback((s: LoadedState) => onStateLoadedRef.current?.(s), []);

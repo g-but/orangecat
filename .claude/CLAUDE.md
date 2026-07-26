@@ -63,7 +63,7 @@ npm run dev -- -p 3020  # Port 3020 to avoid conflicts
 
 | Layer      | Technology                                       |
 | ---------- | ------------------------------------------------ |
-| Framework  | Next.js 15 (App Router)                          |
+| Framework  | Next.js 16 (App Router), React 19                |
 | Language   | TypeScript 5.8                                   |
 | Styling    | Tailwind CSS 3.3                                 |
 | Database   | Self-hosted Supabase (PostgreSQL + Auth + RLS)   |

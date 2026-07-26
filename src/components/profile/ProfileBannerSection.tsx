@@ -15,8 +15,8 @@ interface ProfileBannerSectionProps {
   isFollowing: boolean;
   isFollowLoading: boolean;
   showShare: boolean;
-  shareButtonRef: React.RefObject<HTMLDivElement>;
-  shareDropdownRef: React.RefObject<HTMLDivElement>;
+  shareButtonRef: React.RefObject<HTMLDivElement | null>;
+  shareDropdownRef: React.RefObject<HTMLDivElement | null>;
   onShareToggle: () => void;
   onFollowToggle: () => void;
 }

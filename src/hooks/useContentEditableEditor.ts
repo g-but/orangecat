@@ -17,7 +17,7 @@ interface UseContentEditableEditorOptions {
 }
 
 interface UseContentEditableEditorReturn {
-  editorRef: React.RefObject<HTMLDivElement>;
+  editorRef: React.RefObject<HTMLDivElement | null>;
   handleInput: () => void;
   handlePaste: (e: React.ClipboardEvent<HTMLDivElement>) => void;
   handleKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => void;

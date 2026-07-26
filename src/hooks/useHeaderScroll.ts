@@ -113,7 +113,7 @@ export function useBottomNavScroll(
   const { transparencyThreshold = 10, scrollDelay = 200 } = options;
   const [shouldBeTransparent, setShouldBeTransparent] = useState(false);
   const [shouldBeSmall, setShouldBeSmall] = useState(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>(undefined);
   const lastScrollY = useRef(0);
   const isScrollingRef = useRef(false);
 

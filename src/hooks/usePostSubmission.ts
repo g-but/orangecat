@@ -55,8 +55,8 @@ export function usePostSubmission({
 
   const canPost = contentValid && !isPosting;
 
-  const successTimer = useRef<NodeJS.Timeout>();
-  const retryTimer = useRef<NodeJS.Timeout>();
+  const successTimer = useRef<NodeJS.Timeout>(undefined);
+  const retryTimer = useRef<NodeJS.Timeout>(undefined);
 
   useEffect(() => {
     return () => {
