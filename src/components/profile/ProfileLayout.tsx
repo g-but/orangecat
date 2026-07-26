@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { ScalableProfile } from '@/services/profile/types';
 import { ProfileFormData, Project } from '@/types/database';
 import ProfileViewTabs from '@/components/profile/ProfileViewTabs';
+import { PRIMARY_PROFILE_TAB_IDS } from '@/components/profile/profileTabLayout';
 import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab';
 import ProfileTimelineTab from '@/components/profile/ProfileTimelineTab';
 import ProfileProjectsTab from '@/components/profile/ProfileProjectsTab';
@@ -222,7 +223,11 @@ export default function ProfileLayout({
           {/* Timeline-first: open on the living activity feed so visitors see the
               latest — new projects, funding, updates — the way an X profile does,
               rather than a static summary. Overview remains one tap away. */}
-          <ProfileViewTabs tabs={filteredTabs} defaultTab="timeline" />
+          <ProfileViewTabs
+            tabs={filteredTabs}
+            defaultTab="timeline"
+            primaryTabIds={PRIMARY_PROFILE_TAB_IDS}
+          />
         </div>
       </div>
     </div>

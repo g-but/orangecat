@@ -2,6 +2,7 @@ import { z } from 'zod';
 import DOMPurify from 'dompurify';
 import { validatePhoneNumber, normalizePhoneNumber } from '../phone-validation';
 import { CURRENCY_CODES } from '@/config/currencies';
+import { profilePrivacySettingsSchema } from '@/config/profile-privacy';
 
 /**
  * Lightning Address Validation
@@ -234,6 +235,11 @@ export const profileSchema = z.object({
   lightning_address: optionalText(200),
   // Currency preference for displaying prices
   currency: z.enum(CURRENCY_CODES).optional().nullable(),
+  // Per-field visibility (which public fields the owner hides from visitors).
+  // Stored in the profiles.privacy_settings jsonb column. Included here so it
+  // survives both the client zodResolver and this server-side parse — a field
+  // absent from the schema is silently stripped. See config/profile-privacy.ts.
+  privacy_settings: profilePrivacySettingsSchema,
 });
 
 // HTML sanitization for rich text content

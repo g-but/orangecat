@@ -11,6 +11,7 @@ import type { ScalableProfile } from '@/services/profile/types';
 import { mapProjectRow } from '@/types/project';
 import { ROUTES } from '@/config/routes';
 import { APP_NAME, APP_KICKER, SITE_URL } from '@/config/brand';
+import { applyProfilePrivacy } from '@/config/profile-privacy';
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -235,35 +236,37 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const projectCount = projects?.length || 0;
   const totalRaised = projects?.reduce((sum, p) => sum + (Number(p.raised_amount) || 0), 0) || 0;
 
-  // Generate JSON-LD structured data for SEO
-  // Use actual username in URL, not "me" for better SEO
-  const canonicalUsername = profile.username || targetUsername;
-  const structuredData = {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    name: profile.name || profile.username || canonicalUsername,
-    alternateName: profile.username || undefined,
-    description: profile.bio || undefined,
-    image: profile.avatar_url || undefined,
-    url: `${SITE_URL}/profiles/${canonicalUsername}`,
-    sameAs: profile.website ? [profile.website] : undefined,
-    ...(profile.bitcoin_address && {
-      paymentAccepted: 'Bitcoin',
-      bitcoinAddress: profile.bitcoin_address,
-    }),
-  };
-
   // Check if viewing own profile (server-side, avoids hydration flash)
   const {
     data: { user: currentUser },
   } = await supabase.auth.getUser();
   const isOwnProfile = !!currentUser && currentUser.id === profile.id;
 
-  // The `email` column is the account login email — private. `select('*')` pulls
-  // it into the row, which would otherwise ship to every visitor's client
-  // payload. Redact it for non-owners so it never leaves the server. (phone /
-  // contact_email are opt-in public fields and stay.)
-  const safeProfile = isOwnProfile ? profile : { ...profile, email: null };
+  // Redact before anything derives from the row, so hidden data never leaves the
+  // server — not in the client payload, not in the JSON-LD below.
+  // 1. `email` is the private account login email; `select('*')` pulls it in.
+  // 2. Owner-hidden public fields (website, phone, contact_email, social_links)
+  //    per profiles.privacy_settings. See config/profile-privacy.ts.
+  const emailSafeProfile = isOwnProfile ? profile : { ...profile, email: null };
+  const safeProfile = applyProfilePrivacy(emailSafeProfile, { isOwner: isOwnProfile });
+
+  // Generate JSON-LD structured data for SEO
+  // Use actual username in URL, not "me" for better SEO
+  const canonicalUsername = safeProfile.username || targetUsername;
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: safeProfile.name || safeProfile.username || canonicalUsername,
+    alternateName: safeProfile.username || undefined,
+    description: safeProfile.bio || undefined,
+    image: safeProfile.avatar_url || undefined,
+    url: `${SITE_URL}/profiles/${canonicalUsername}`,
+    sameAs: safeProfile.website ? [safeProfile.website] : undefined,
+    ...(safeProfile.bitcoin_address && {
+      paymentAccepted: 'Bitcoin',
+      bitcoinAddress: safeProfile.bitcoin_address,
+    }),
+  };
 
   // Pass data to client component for interactivity
   return (

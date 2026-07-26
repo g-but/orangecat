@@ -2,7 +2,15 @@
 
 import { useState, ReactNode, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import { partitionTabs } from './profileTabLayout';
 
 export interface ProfileTab {
   id: string;
@@ -16,6 +24,11 @@ interface ProfileViewTabsProps {
   tabs: ProfileTab[];
   defaultTab?: string;
   className?: string;
+  /**
+   * Tab ids to keep visible up front. Any tab not listed is tucked into a
+   * "More" overflow menu. Omit to render every tab inline (legacy behaviour).
+   */
+  primaryTabIds?: readonly string[];
 }
 
 /**
@@ -27,7 +40,12 @@ interface ProfileViewTabsProps {
  * - Progressive: Lazy loads tab content on first click
  * - Mobile-optimized: X/Twitter-style horizontal scrollable tabs on mobile
  */
-export default function ProfileViewTabs({ tabs, defaultTab, className }: ProfileViewTabsProps) {
+export default function ProfileViewTabs({
+  tabs,
+  defaultTab,
+  className,
+  primaryTabIds,
+}: ProfileViewTabsProps) {
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams?.get('tab');
   const navRef = useRef<HTMLElement>(null);
@@ -122,6 +140,13 @@ export default function ProfileViewTabs({ tabs, defaultTab, className }: Profile
     }
   };
 
+  // Split into up-front tabs and a "More" overflow menu. Without primaryTabIds
+  // every tab stays inline (legacy behaviour, e.g. dashboards with few tabs).
+  const { primary: primaryTabs, overflow: overflowTabs } = primaryTabIds
+    ? partitionTabs(tabs, primaryTabIds)
+    : { primary: tabs, overflow: [] as ProfileTab[] };
+  const activeInOverflow = overflowTabs.some(tab => tab.id === activeTab);
+
   return (
     <div className={cn('w-full', className)}>
       {/* Tab Navigation - X/Twitter-style horizontal scroll on mobile, flex on desktop */}
@@ -146,7 +171,7 @@ export default function ProfileViewTabs({ tabs, defaultTab, className }: Profile
             msOverflowStyle: 'none',
           }}
         >
-          {tabs.map(tab => {
+          {primaryTabs.map(tab => {
             const isActive = activeTab === tab.id;
             return (
               <button
@@ -189,6 +214,53 @@ export default function ProfileViewTabs({ tabs, defaultTab, className }: Profile
               </button>
             );
           })}
+
+          {overflowTabs.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  ref={activeInOverflow ? activeTabRef : null}
+                  className={cn(
+                    'group inline-flex items-center justify-center sm:justify-start py-2.5 sm:py-3 lg:py-4 px-3 sm:px-1 md:px-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap touch-manipulation min-h-11 flex-shrink-0 focus:outline-none',
+                    activeInOverflow
+                      ? 'border-fg-primary text-fg-primary'
+                      : 'border-transparent text-fg-secondary hover:text-fg-primary hover:border-strong dark:hover:border-default'
+                  )}
+                  aria-label="More profile tabs"
+                  aria-current={activeInOverflow ? 'page' : undefined}
+                >
+                  <span className="truncate">More</span>
+                  <ChevronDown className="ml-1 h-4 w-4 flex-shrink-0" aria-hidden />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[10rem]">
+                {overflowTabs.map(tab => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <DropdownMenuItem
+                      key={tab.id}
+                      onSelect={() => handleTabClick(tab.id)}
+                      className={cn(
+                        'cursor-pointer gap-2',
+                        isActive && 'bg-surface-raised text-fg-primary'
+                      )}
+                      aria-current={isActive ? 'page' : undefined}
+                    >
+                      {tab.icon && (
+                        <span className="flex-shrink-0 text-fg-tertiary">{tab.icon}</span>
+                      )}
+                      <span className="flex-1 truncate">{tab.label}</span>
+                      {tab.badge !== undefined && (
+                        <span className="ml-auto py-0.5 px-1.5 rounded-full text-2xs font-medium bg-surface-raised text-fg-secondary flex-shrink-0">
+                          {tab.badge}
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </nav>
       </div>
 

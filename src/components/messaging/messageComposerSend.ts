@@ -29,7 +29,7 @@ interface SendMessageParams {
   selectedActor: MessagingActor | null | undefined;
   setIsSending: (v: boolean) => void;
   setContent: (v: string) => void;
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
 interface MessageResponse {

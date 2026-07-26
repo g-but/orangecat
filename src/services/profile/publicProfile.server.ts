@@ -12,6 +12,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import { ENTITY_STATUS } from '@/config/database-constants';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
+import { applyProfilePrivacy } from '@/config/profile-privacy';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 export type PublicProfileErrorCode = 'not_found';
@@ -56,7 +57,11 @@ const SENSITIVE_PROFILE_FIELDS = [
 ] as const;
 
 function toPublicProfile(profile: Record<string, unknown>): Record<string, unknown> {
-  const clean: Record<string, unknown> = { ...profile };
+  // This endpoint is unauthenticated and serves the public view, so honour the
+  // owner's per-field hide list (privacy_settings.hidden_fields) BEFORE the
+  // denylist below strips privacy_settings itself. isOwner: false — an owner who
+  // wants their full row uses the authenticated GET /api/profile.
+  const clean: Record<string, unknown> = applyProfilePrivacy({ ...profile }, { isOwner: false });
   for (const field of SENSITIVE_PROFILE_FIELDS) {
     delete clean[field];
   }

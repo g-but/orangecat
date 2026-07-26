@@ -11,7 +11,7 @@ FleetCrown (rebranded from Cockpit) is a live customer project (see "FleetCrown"
 
 | Layer      | Technology                                                                          |
 | ---------- | ----------------------------------------------------------------------------------- |
-| Framework  | Next.js 15, TypeScript 5.8                                                          |
+| Framework  | Next.js 16, React 19, TypeScript 5.8                                                          |
 | Styling    | Tailwind CSS 3.3                                                                    |
 | Database   | Self-hosted Supabase (PostgreSQL + Auth + RLS) — `supabase.orangecat.ch` on Hetzner |
 | Bitcoin    | Lightning Network, BTCPay, NWC                                                      |

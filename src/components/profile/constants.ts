@@ -15,6 +15,7 @@ export const PROFILE_SECTIONS = {
   ONLINE_PRESENCE: 'Online Presence',
   CONTACT: 'Contact Information',
   PREFERENCES: 'Preferences',
+  PRIVACY: 'Privacy',
 } as const;
 
 export const PROFILE_SECTION_DESCRIPTIONS = {
@@ -22,4 +23,5 @@ export const PROFILE_SECTION_DESCRIPTIONS = {
   ONLINE_PRESENCE: 'Your website and social media – where people can find you online.',
   CONTACT: 'How people can reach you directly.',
   PREFERENCES: 'Your display preferences – currency and other settings.',
+  PRIVACY: 'Choose which details stay hidden from visitors. You always see everything.',
 } as const;

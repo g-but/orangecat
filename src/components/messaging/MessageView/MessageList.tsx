@@ -23,7 +23,7 @@ interface MessageListProps {
   onLoadMore: () => void;
   onMessageLongPress?: (message: Message, position?: { x: number; y: number }) => void;
   /** Ref to scroll to bottom */
-  messagesEndRef?: React.RefObject<HTMLDivElement>;
+  messagesEndRef?: React.RefObject<HTMLDivElement | null>;
   editingMessageId?: string | null;
   onEditSave?: (messageId: string, newContent: string) => void;
   onEditCancel?: () => void;

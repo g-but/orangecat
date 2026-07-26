@@ -16,7 +16,7 @@ interface ProofImageUploadProps {
   isDragging: boolean;
   uploadProgress: number;
   uploadError: string | null;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   imageUrlError?: FieldError;
   onFileInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDragOver: (e: React.DragEvent) => void;

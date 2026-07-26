@@ -6,6 +6,7 @@ import { SocialLinksDisplay } from './SocialLinksDisplay';
 import { SocialLink } from '@/types/social';
 import { format } from 'date-fns';
 import { isLocationHidden } from '@/lib/location-privacy';
+import { getHiddenProfileFields } from '@/config/profile-privacy';
 import { ProfileField } from './ProfileField';
 import { ROUTES } from '@/config/routes';
 import type { Profile as DatabaseProfile } from '@/types/database';
@@ -29,6 +30,12 @@ export function ProfileDetailsCard({
   // account login email. The registration email has its own owner-gated field
   // below. See profile email-leak fix.
   const publicContactEmail = profile.contact_email || null;
+
+  // Owner-only cue: which public fields the owner has hidden from visitors, so
+  // the "Hidden" pill can surface their own choice on their own profile view.
+  // (Visitors never receive hidden values, so this set is empty-equivalent for
+  // them — but we still gate the pill on isOwnProfile in ProfileField.)
+  const hiddenFields = new Set(getHiddenProfileFields(profile.privacy_settings));
 
   const locationValue = (() => {
     if (isLocationHidden(profile.location_context || '')) {
@@ -144,6 +151,7 @@ export function ProfileDetailsCard({
               }
               editHref={`${ROUTES.DASHBOARD.INFO_EDIT}#website`}
               isOwnProfile={isOwnProfile}
+              hiddenFromVisitors={hiddenFields.has('website')}
             />
             <ProfileField
               icon={Globe}
@@ -152,6 +160,7 @@ export function ProfileDetailsCard({
               editHref={`${ROUTES.DASHBOARD.INFO_EDIT}#socialLinks`}
               emptyText="No links added yet"
               isOwnProfile={isOwnProfile}
+              hiddenFromVisitors={hiddenFields.has('social_links')}
             />
           </div>
         </section>
@@ -186,7 +195,7 @@ export function ProfileDetailsCard({
             )}
             <ProfileField
               icon={Mail}
-              label={`Contact Email${isOwnProfile ? ' (public)' : ''}`}
+              label={`Contact Email${isOwnProfile && !hiddenFields.has('contact_email') ? ' (public)' : ''}`}
               value={
                 publicContactEmail ? (
                   <a
@@ -199,6 +208,7 @@ export function ProfileDetailsCard({
               }
               editHref={`${ROUTES.DASHBOARD.INFO_EDIT}#contactEmail`}
               isOwnProfile={isOwnProfile}
+              hiddenFromVisitors={hiddenFields.has('contact_email')}
             />
             <ProfileField
               icon={Phone}
@@ -215,6 +225,7 @@ export function ProfileDetailsCard({
               }
               editHref={`${ROUTES.DASHBOARD.INFO_EDIT}#phone`}
               isOwnProfile={isOwnProfile}
+              hiddenFromVisitors={hiddenFields.has('phone')}
             />
           </div>
         </section>

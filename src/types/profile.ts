@@ -29,6 +29,7 @@ export interface Profile {
   // User preferences
   currency?: string | null; // User's preferred display currency (from CURRENCY_CODES)
   preferences?: Record<string, unknown> | null; // Generic preference bag (theme, notifications, etc.)
+  privacy_settings?: Record<string, unknown> | null; // Per-field visibility, e.g. { hidden_fields: [...] }. See config/profile-privacy.ts
   onboarding_completed?: boolean | null;
   created_at: string;
   updated_at: string;

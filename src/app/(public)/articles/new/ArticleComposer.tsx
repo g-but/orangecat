@@ -18,6 +18,7 @@ import ArticleMarkdown from '../[slug]/ArticleMarkdown';
 import MarkdownToolbar from '@/components/articles/MarkdownToolbar';
 import { useMarkdownTextarea } from '@/components/articles/useMarkdownTextarea';
 import AiWriterPanel from '@/components/articles/AiWriterPanel';
+import CoverImageUpload from '@/components/articles/CoverImageUpload';
 
 const DRAFT_KEY = 'oc:draft:article';
 
@@ -212,12 +213,11 @@ export default function ArticleComposer({ user }: { user: { id: string } }) {
               rows={2}
               aria-label="Excerpt"
             />
-            <Input
+            <CoverImageUpload
               value={coverImage}
-              onChange={e => setCoverImage(e.target.value)}
-              placeholder={ARTICLE_COPY.new.coverLabel}
-              type="url"
-              aria-label="Cover image URL"
+              onChange={setCoverImage}
+              userId={user.id}
+              disabled={publishing}
             />
             <div>
               <MarkdownToolbar actions={md} disabled={publishing} />

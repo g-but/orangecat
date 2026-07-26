@@ -9,6 +9,7 @@ import { ProfileBasicSection } from './sections/ProfileBasicSection';
 import { OnlinePresenceSection } from './sections/OnlinePresenceSection';
 import { ContactSection } from './sections/ContactSection';
 import { PreferencesSection } from './sections/PreferencesSection';
+import { PrivacySection } from './sections/PrivacySection';
 import { FormErrorDisplay } from './components/FormErrorDisplay';
 import { ProfileFormActions } from './components/ProfileFormActions';
 import type { ModernProfileEditorProps } from './types';
@@ -114,6 +115,9 @@ export default function ModernProfileEditor({
 
               {/* Preferences Section */}
               <PreferencesSection control={form.control} onFieldFocus={onFieldFocus} />
+
+              {/* Privacy Section — per-field visibility to visitors */}
+              <PrivacySection form={form} />
             </div>
 
             {/* Action Buttons */}
@@ -180,6 +184,9 @@ export default function ModernProfileEditor({
 
               {/* Preferences Section */}
               <PreferencesSection control={form.control} onFieldFocus={onFieldFocus} />
+
+              {/* Privacy Section — per-field visibility to visitors */}
+              <PrivacySection form={form} />
             </div>
 
             {/* Action Buttons */}

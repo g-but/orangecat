@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Edit as EditIcon } from 'lucide-react';
+import { Edit as EditIcon, EyeOff } from 'lucide-react';
 
 interface ProfileFieldProps {
   icon: React.ComponentType<{ className?: string }>;
@@ -11,6 +11,13 @@ interface ProfileFieldProps {
   editHref?: string;
   emptyText?: string;
   isOwnProfile?: boolean;
+  /**
+   * Owner-only cue: this field is hidden from visitors (per the profile privacy
+   * settings). Renders a small "Hidden" pill next to the label so the owner can
+   * see their own choice without opening the editor. Only meaningful when
+   * isOwnProfile — visitors never receive hidden values in the first place.
+   */
+  hiddenFromVisitors?: boolean;
 }
 
 /**
@@ -26,12 +33,24 @@ export function ProfileField({
   editHref,
   emptyText = 'Not filled out yet',
   isOwnProfile,
+  hiddenFromVisitors,
 }: ProfileFieldProps) {
   return (
     <div className="flex items-start gap-3">
       <Icon className="w-5 h-5 text-fg-tertiary mt-0.5" />
       <div className="flex-1">
-        <div className="text-sm text-fg-secondary">{label}</div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-fg-secondary">{label}</span>
+          {hiddenFromVisitors && isOwnProfile && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-surface-raised px-1.5 py-0.5 text-2xs font-medium text-fg-tertiary"
+              title="Hidden from visitors — only you can see this"
+            >
+              <EyeOff className="h-3 w-3" aria-hidden />
+              Hidden
+            </span>
+          )}
+        </div>
         {value ? (
           <>{value}</>
         ) : isOwnProfile && editHref ? (
