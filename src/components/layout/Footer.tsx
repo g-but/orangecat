@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { footerNavigation } from '@/config/navigation';
-import { shouldShowFooter, ROUTES } from '@/config/routes';
+import { shouldShowFooter } from '@/config/routes';
 import Logo from './Logo';
 import { usePathname } from 'next/navigation';
 import { ArrowUp } from 'lucide-react';
@@ -47,7 +47,7 @@ const Footer = React.memo(function Footer() {
 
       <div className="max-w-7xl mx-auto py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8 lg:gap-10">
           {/* Brand Section */}
           <div className="sm:col-span-2 lg:col-span-1 space-y-6">
             <div className="space-y-4">
@@ -80,7 +80,7 @@ const Footer = React.memo(function Footer() {
 
           {/* Navigation Links */}
           <div className="space-y-6">
-            <h3 className={footerHeadingClass}>Navigation</h3>
+            <h3 className={footerHeadingClass}>Product</h3>
             <ul className="space-y-3">
               {footerNavigation.product.map(item => (
                 <li key={item.name}>
@@ -92,11 +92,50 @@ const Footer = React.memo(function Footer() {
             </ul>
           </div>
 
-          {/* Company Links */}
+          {/* Learn Links */}
           <div className="space-y-6">
-            <h3 className={footerHeadingClass}>Company</h3>
+            <h3 className={footerHeadingClass}>Learn</h3>
             <ul className="space-y-3">
-              {footerNavigation.company.map(item => (
+              {footerNavigation.learn.map(item => (
+                <li key={item.name}>
+                  {'external' in item && item.external ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={footerLinkClass}
+                    >
+                      <span>{item.name}</span>
+                    </a>
+                  ) : (
+                    <Link href={item.href} className={footerLinkClass}>
+                      <span>{item.name}</span>
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Support Links */}
+          <div className="space-y-6">
+            <h3 className={footerHeadingClass}>Support</h3>
+            <ul className="space-y-3">
+              {footerNavigation.support.map(item => (
+                <li key={item.name}>
+                  <Link href={item.href} className={footerLinkClass}>
+                    <span>{item.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Ecosystem Links */}
+          <div className="space-y-6">
+            <h3 className={footerHeadingClass}>Ecosystem</h3>
+            <ul className="space-y-3">
+              {footerNavigation.ecosystem.map(item => (
                 <li key={item.name}>
                   {'external' in item && item.external ? (
                     <a
@@ -118,7 +157,7 @@ const Footer = React.memo(function Footer() {
           </div>
 
           {/* Legal Links */}
-          <div className="space-y-6">
+          <div className="space-y-6 sm:col-span-2 lg:col-span-1">
             <h3 className={footerHeadingClass}>Legal</h3>
             <ul className="space-y-3">
               {footerNavigation.legal.map(item => (
@@ -129,22 +168,6 @@ const Footer = React.memo(function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
-
-          {/* Newsletter/CTA Section */}
-          <div className="space-y-6 sm:col-span-2 lg:col-span-1">
-            <h3 className={footerHeadingClass}>Stay Updated</h3>
-            <div className="space-y-4">
-              <p className="text-sm text-fg-secondary leading-relaxed">
-                Get the latest updates on economic freedom, Bitcoin, and building on {APP_NAME}.
-              </p>
-              <Link
-                href={`${ROUTES.AUTH}?mode=register`}
-                className="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 text-sm font-medium text-fg-inverted bg-fg-primary rounded-md hover:bg-muted-strong transition-colors min-h-10"
-              >
-                Get Started Today
-              </Link>
-            </div>
           </div>
         </div>
 

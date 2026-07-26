@@ -94,6 +94,8 @@ export interface EntityMetadata {
   tableName: string;
   /** Column name for user/owner ID (used for RLS queries) */
   userIdField: string;
+  /** Public display-title column. Most entities use `title`; groups use `name`. */
+  titleColumn?: string;
   /** Lucide icon component */
   icon: LucideIcon;
   /** Color theme */
@@ -118,6 +120,12 @@ export interface EntityMetadata {
   createPriority: number;
   /** How this entity is paid for: fixed_price (buy), contribution (support), none (no payment) */
   paymentPattern: PaymentPattern;
+  /**
+   * Whether the public page may offer a separate voluntary Bitcoin support
+   * action. This is intentionally independent from paymentPattern: a product
+   * can still be purchased at a fixed price and supported separately.
+   */
+  canReceiveSupport: boolean;
   /**
    * SSOT for the column holding a fixed_price entity's price (in its own
    * `currency`, NOT BTC). Read by payment-amount resolution and price display so
@@ -153,6 +161,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'gateway',
     createPriority: 1,
     paymentPattern: 'none',
+    canReceiveSupport: false,
   },
 
   // ==================== BUSINESS (Core value creation) ====================
@@ -174,6 +183,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'business',
     createPriority: 1,
     paymentPattern: 'contribution',
+    canReceiveSupport: true,
   },
   product: {
     type: 'product',
@@ -193,6 +203,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'business',
     createPriority: 2,
     paymentPattern: 'fixed_price',
+    canReceiveSupport: true,
     priceColumn: 'price',
   },
   service: {
@@ -213,6 +224,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'business',
     createPriority: 3,
     paymentPattern: 'fixed_price',
+    canReceiveSupport: true,
     priceColumn: 'fixed_price',
   },
   cause: {
@@ -233,6 +245,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'business',
     createPriority: 4,
     paymentPattern: 'contribution',
+    canReceiveSupport: true,
   },
   ai_assistant: {
     type: 'ai_assistant',
@@ -252,6 +265,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'business',
     createPriority: 5,
     paymentPattern: 'fixed_price',
+    canReceiveSupport: true,
   },
 
   // ==================== COMMUNITY (Network building) ====================
@@ -261,6 +275,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     namePlural: 'Groups',
     tableName: 'groups',
     userIdField: 'created_by',
+    titleColumn: 'name',
     icon: Users,
     colorTheme: 'tiffany',
     basePath: '/dashboard/groups',
@@ -273,6 +288,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'community',
     createPriority: 1,
     paymentPattern: 'none',
+    canReceiveSupport: true,
   },
   circle: {
     type: 'circle',
@@ -292,6 +308,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'community',
     createPriority: 2,
     paymentPattern: 'none',
+    canReceiveSupport: true,
   },
 
   // ==================== FINANCE (P2P financial tools) ====================
@@ -313,6 +330,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'finance',
     createPriority: 1,
     paymentPattern: 'none',
+    canReceiveSupport: false,
   },
   loan: {
     type: 'loan',
@@ -332,6 +350,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'finance',
     createPriority: 2,
     paymentPattern: 'none',
+    canReceiveSupport: false,
   },
   investment: {
     type: 'investment',
@@ -351,6 +370,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'finance',
     createPriority: 3,
     paymentPattern: 'contribution',
+    canReceiveSupport: true,
   },
   event: {
     type: 'event',
@@ -370,6 +390,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'community',
     createPriority: 3,
     paymentPattern: 'fixed_price',
+    canReceiveSupport: true,
   },
 
   // ==================== RESEARCH (DeSci ecosystem) ====================
@@ -392,6 +413,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'business',
     createPriority: 6,
     paymentPattern: 'contribution',
+    canReceiveSupport: true,
   },
 
   // ==================== PERSONAL (Wishlists & Registries) ====================
@@ -413,6 +435,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'business',
     createPriority: 7,
     paymentPattern: 'contribution',
+    canReceiveSupport: true,
   },
 
   // ==================== PERSONAL (My Cat Context) ====================
@@ -434,6 +457,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     category: 'personal',
     createPriority: 1,
     paymentPattern: 'none',
+    canReceiveSupport: false,
   },
 };
 
@@ -533,20 +557,5 @@ export function getEntitiesByCategory(): Record<EntityCategory, EntityMetadata[]
 
 export default ENTITY_REGISTRY;
 
-// OrangeCat + FleetCrown integration (SSOT for the customer story).
-// FleetCrown is "customer" of OrangeCat via stakeholder_relationships (table created via 20260601 migration).
-// Both are projects/profiles on this platform for Mao Nakamoto. Shared wallet.
-// See live data, /api/stakeholders, and the sibling FleetCrown repo.
-export const ORANGECAT_FLEETCROWN_INTEGRATION = {
-  customer: 'FleetCrown',
-  owner: 'Mao Nakamoto',
-  orangeCat: { title: 'OrangeCat', id: 'cb093f00-8745-4579-98df-050ebfb37181' },
-  fleetCrown: {
-    title: 'FleetCrown',
-    id: '8130c927-114a-45b7-8cc2-99efd5224025',
-    site: 'https://fleetcrown.orangecat.ch',
-  },
-  wallet: { btc: 'bc1q3hh4yklcmwtpnqmxyksw36yedg7zyfy6tzzqwz', lightning: 'orangecat@getalby.com' },
-  relation: 'FleetCrown is customer of OrangeCat.',
-  note: 'One is customer of the other. See /api/stakeholders and stakeholder_relationships.',
-};
+// Backwards-compatible export for the existing FleetCrown CTA.
+export { ORANGECAT_FLEETCROWN_INTEGRATION } from './ecosystem';

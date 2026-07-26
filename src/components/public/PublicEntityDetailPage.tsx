@@ -37,6 +37,7 @@ import {
   type EntityDetailConfig,
 } from './public-entity-detail-config';
 import { MobileStickyCTA } from './PublicEntityStickyCTA';
+import FleetCrownBuildCta from '@/components/integrations/FleetCrownBuildCta';
 
 // Re-export config types + metadata helper for back-compat with the many
 // entity page/config modules that import them from here.
@@ -146,7 +147,8 @@ export default async function PublicEntityDetailPage({
   const priceAmount = price && price.amount > 0 ? price.amount : undefined;
   let sellerReceive: SellerReceiveInfo | null = null;
   let priceAmountBtc: number | undefined;
-  if (config.showPaymentSection !== false) {
+  const hasPaymentSurface = config.showPaymentSection !== false || meta.canReceiveSupport;
+  if (hasPaymentSurface) {
     sellerReceive = await resolveSellerReceiveInfo(supabase, config.entityType, id);
     if (priceAmount !== undefined && price) {
       priceAmountBtc =
@@ -264,9 +266,18 @@ export default async function PublicEntityDetailPage({
                 description={entity.description}
               />
 
+              {isOwner && config.entityType !== 'wallet' && config.entityType !== 'document' && (
+                <FleetCrownBuildCta
+                  variant="card"
+                  entityType={config.entityType}
+                  entityId={id}
+                  sourcePath={viewRoute}
+                />
+              )}
+
               {config.renderSidebarExtra?.(entity)}
 
-              {config.showPaymentSection !== false && (
+              {hasPaymentSurface && (
                 <div id="pay">
                   <PublicEntityPaymentSection
                     entityType={config.entityType}

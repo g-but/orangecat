@@ -153,7 +153,7 @@ export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
     icon: Wallet,
     title: 'Pick Your Currency',
     description:
-      'Bitcoin and Lightning native — but Twint, PayPal, and local fiat payment methods worldwide are all first-class. Meet your counterparty where they are.',
+      'Price your work in any display currency. Payments settle natively in Bitcoin and Lightning: global, non-custodial, and independently verifiable.',
     iconGradient: GRADIENTS.iconOrange,
     bgColor: 'bg-surface-raised',
   },
@@ -210,7 +210,7 @@ export const PLATFORM_COMPARISON: ComparisonRow[] = [
   {
     feature: 'Payment methods',
     traditional: 'One currency, their rules',
-    orangecat: 'Any currency — Bitcoin, Twint, PayPal, fiat…',
+    orangecat: 'Bitcoin and Lightning settlement',
     highlight: true,
   },
   { feature: 'Platform fees', traditional: '5–10%', orangecat: '0%' },
@@ -250,9 +250,9 @@ export const PLATFORM_BENEFITS: PlatformBenefit[] = [
   },
   {
     icon: Wallet,
-    title: 'Any Currency',
+    title: 'Bitcoin First',
     description:
-      'Bitcoin and Lightning are native, but Twint, PayPal, and local fiat payment methods worldwide are first-class.',
+      'Lightning and on-chain Bitcoin are the live payment rails. Other rails remain roadmap research.',
   },
   {
     icon: Lock,
@@ -282,7 +282,7 @@ export const EXAMPLE_USE_CASES: ExampleUseCase[] = [
     category: 'Creator',
     title: 'Fund Your Work',
     description:
-      'Artists, writers, and makers can raise funds, sell work, and accept support — from anywhere, in any currency, under any identity.',
+      'Artists, writers, and makers can raise funds, sell work, and accept Bitcoin support from anywhere, under any identity.',
     transparencyExample:
       'Share receipts and progress updates publicly, or keep it private. Your choice.',
     gradient: 'bg-surface-base',
@@ -302,7 +302,7 @@ export const EXAMPLE_USE_CASES: ExampleUseCase[] = [
     category: 'Research',
     title: 'Decentralized Science',
     description:
-      'Fund equipment, studies, and publications. Accept Bitcoin, PayPal, Twint — whatever your supporters use.',
+      'Fund equipment, studies, and publications with direct Bitcoin and Lightning support.',
     transparencyExample: 'Publish findings, share lab updates, build scientific credibility.',
     gradient: 'bg-surface-base',
   },
@@ -325,7 +325,7 @@ export const EXAMPLE_USE_CASES: ExampleUseCase[] = [
  */
 export const TRUST_SIGNALS = [
   'Zero platform fees',
-  'Any currency accepted',
+  'Bitcoin and Lightning payments',
   'No account freezing',
   'Open source',
 ] as const;
@@ -355,7 +355,7 @@ export const SECTION_HEADERS = {
   whatCanYouDo: {
     title: 'Everyone Can Make Things',
     subtitle:
-      'Products, services, projects, causes, events, loans, investments — anyone can create any of these, in any currency, under any identity.',
+      'Products, services, projects, causes, events, loans, investments — anyone can create any of these under any identity and settle in Bitcoin.',
   },
   howItWorks: {
     title: 'Meet Your Cat',

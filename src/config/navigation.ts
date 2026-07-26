@@ -36,6 +36,7 @@ import {
   FileText,
   CalendarCheck,
 } from 'lucide-react';
+import { ECOSYSTEM } from './ecosystem';
 
 /**
  * Counter source identifier for nav items showing a live numeric badge.
@@ -86,9 +87,24 @@ interface NavItem {
 const headerNavigationConfig = {
   /** Navigation for unauthenticated visitors (marketing surfaces) */
   unauthenticated: [
-    { name: 'Discover', href: ROUTES.DISCOVER },
-    { name: 'Community', href: ROUTES.COMMUNITY },
-    { name: 'About', href: ROUTES.ABOUT },
+    {
+      name: 'Product',
+      children: [
+        { name: 'About & mission', href: ROUTES.ABOUT, description: 'Why OrangeCat exists' },
+        { name: 'Roadmap', href: ROUTES.ROADMAP, description: 'What works now and what comes next' },
+        { name: 'Changelog', href: ROUTES.CHANGELOG, description: 'Every shipped improvement' },
+        { name: 'Docs', href: ROUTES.DOCS, description: 'Entities, Bitcoin payments, and security' },
+        { name: 'Whitepaper', href: ROUTES.WHITEPAPER, description: 'The economic coordination thesis' },
+      ],
+    },
+    { name: 'Blog', href: ROUTES.BLOG },
+    { name: 'Support', href: ROUTES.SUPPORT },
+    {
+      name: 'FleetCrown',
+      href: ECOSYSTEM.fleetCrown.siteUrl,
+      external: true,
+      description: 'Build with Loki and supervised agent fleets',
+    },
   ],
 };
 
@@ -294,10 +310,27 @@ export const bottomNavItems: NavItem[] = [];
  */
 export const footerNavigation = {
   product: [
-    { name: 'Documentation', href: ROUTES.DOCS },
-    { name: 'How It Works', href: ROUTES.HOW_IT_WORKS },
+    { name: 'Discover', href: ROUTES.DISCOVER },
+    { name: 'How it works', href: ROUTES.HOW_IT_WORKS },
+    { name: 'Roadmap', href: ROUTES.ROADMAP },
     { name: 'Changelog', href: ROUTES.CHANGELOG },
+  ],
+  learn: [
+    { name: 'Documentation', href: ROUTES.DOCS },
+    { name: 'Whitepaper', href: ROUTES.WHITEPAPER },
+    { name: 'Blog', href: ROUTES.BLOG },
+    { name: 'Bitcoin guide', href: ROUTES.STUDY_BITCOIN },
+  ],
+  support: [
+    { name: 'Support OrangeCat', href: ROUTES.SUPPORT },
+    { name: 'FAQ', href: ROUTES.FAQ },
     { name: 'Status', href: ROUTES.STATUS },
+    { name: 'Security', href: ROUTES.SECURITY },
+  ],
+  ecosystem: [
+    { name: 'FleetCrown', href: ECOSYSTEM.fleetCrown.siteUrl, external: true },
+    { name: 'Community', href: ROUTES.COMMUNITY },
+    { name: 'About OrangeCat', href: ROUTES.ABOUT },
   ],
   company: [
     { name: 'About OrangeCat', href: ROUTES.ABOUT },
@@ -328,8 +361,8 @@ export const footerNavigation = {
   bottomBar: [
     { name: 'Documentation', href: ROUTES.DOCS },
     { name: 'Source Code', href: 'https://github.com/g-but/orangecat', external: true },
-    { name: 'Technology', href: ROUTES.TECHNOLOGY },
-    { name: 'FAQ', href: ROUTES.FAQ },
+    { name: 'Roadmap', href: ROUTES.ROADMAP },
+    { name: 'Support', href: ROUTES.SUPPORT },
   ] as { name: string; href: string; external?: boolean }[],
 };
 

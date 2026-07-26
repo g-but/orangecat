@@ -1,15 +1,37 @@
 import Link from 'next/link';
-import { ArrowRight, Bitcoin, KeyRound, Sparkles, Check } from 'lucide-react';
+import { ArrowRight, Bitcoin, KeyRound, Sparkles, Check, Bot, Cat, ExternalLink } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ROUTES } from '@/config/routes';
 import { CAT_FRONTIER_MODELS_LIST, CAT_FRONTIER_MODELS_OR } from '@/config/cat-plans';
 import { FoundingSupporterDonation } from '@/components/support/FoundingSupporterDonation';
+import { ECOSYSTEM_LINKS } from '@/config/ecosystem';
 
 export const metadata = {
   title: 'Become a founding supporter',
   description:
     'OrangeCat is building toward fully managed, permissionless AI and economic participation. Back it in Bitcoin as a founding supporter — and use Cat with your own key today.',
 };
+
+const SUPPORT_TARGETS = [
+  {
+    title: 'OrangeCat',
+    body: 'Fund the public economic layer for people, projects, groups, products, and services.',
+    href: ECOSYSTEM_LINKS.orangeCat,
+    icon: Cat,
+  },
+  {
+    title: 'FleetCrown',
+    body: 'Fund Loki, supervised agent fleets, and the production layer that turns plans into working systems.',
+    href: ECOSYSTEM_LINKS.fleetCrown,
+    icon: Bot,
+  },
+  {
+    title: 'Mao Nakamoto',
+    body: 'Support the founder and follow the entities being built across both products.',
+    href: ECOSYSTEM_LINKS.mao,
+    icon: Bitcoin,
+  },
+] as const;
 
 /**
  * /support — founding-supporter page. Honest framing: OrangeCat has no fiat
@@ -33,10 +55,39 @@ export default function SupportPage() {
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-fg-secondary sm:text-xl">
             OrangeCat is building toward a world where anyone — any person, pseudonym, or AI — can
-            earn, fund, lend, and govern without gatekeepers, in any currency. We&apos;re early, and
-            we&apos;d rather be honest about it than polished about it.
+            earn, fund, lend, and govern without gatekeepers. Today, support settles in Bitcoin;
+            other rails remain roadmap work. We&apos;re early, and we&apos;d rather be honest about
+            it than polished about it.
           </p>
         </div>
+
+        <section className="mx-auto mt-14 max-w-4xl">
+          <h2 className="text-center font-heading text-2xl font-bold tracking-display text-fg-primary">
+            Choose what to support
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-fg-secondary">
+            OrangeCat is the public funding surface for both sibling products. Each link opens the
+            canonical OrangeCat page for that entity.
+          </p>
+          <div className="mt-7 grid gap-4 md:grid-cols-3">
+            {SUPPORT_TARGETS.map(({ title, body, href, icon: Icon }) => (
+              <a
+                key={title}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-default bg-surface-base p-5 transition-colors hover:bg-surface-raised"
+              >
+                <Icon className="h-5 w-5 text-fg-secondary" aria-hidden />
+                <h3 className="mt-4 font-semibold text-fg-primary">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-fg-secondary">{body}</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-fg-primary">
+                  Open page <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
 
         {/* Honest narrative */}
         <section className="mx-auto mt-16 max-w-2xl space-y-4 text-fg-primary">

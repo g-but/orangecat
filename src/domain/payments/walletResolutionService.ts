@@ -45,6 +45,13 @@ export async function resolveSellerWallet(
     return linked;
   }
 
+  // A group is itself the receiving organization. Never silently route club
+  // support into the founder's personal wallet just because `groups.created_by`
+  // is also its ownership field.
+  if (entityType === 'group') {
+    return resolveGroupWallet(admin, entityId);
+  }
+
   // Step 1: Find the entity's owner (seller)
   const meta = getEntityMetadata(entityType);
   const { data: entity, error: entityError } = await admin

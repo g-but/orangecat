@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CURRENCY_CODES } from '@/config/currencies';
 import { lightningAddressSchema, optionalText } from './base';
+import { VALID_PROJECT_STATUSES } from '@/config/project-statuses';
 
 // Project validation
 export const projectSchema = z.object({
@@ -64,6 +65,9 @@ export const projectSchema = z.object({
   // Optional/no-default — see userProductSchema note. Was absent → the form
   // checkbox was silently stripped by zod on submit.
   show_on_profile: z.boolean().optional(),
+  // Integration clients may explicitly publish an active public projection.
+  // Browser forms omit this and still create a draft.
+  status: z.enum(VALID_PROJECT_STATUSES).optional(),
 });
 
 // Types

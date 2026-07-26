@@ -30,14 +30,17 @@ export async function checkNWCPaymentStatus(
     return false;
   }
 
-  // Get the seller's NWC URI to check the invoice
-  const { data: wallet } = await supabase
+  // Use the exact wallet selected when the invoice was created. The fallback
+  // keeps pre-migration intents checkable, but new intents must never search an
+  // arbitrary NWC wallet belonging to the same recipient.
+  let walletQuery = supabase
     .from(DATABASE_TABLES.WALLETS)
     .select('nwc_connection_uri')
-    .eq('profile_id', paymentIntent.seller_id)
-    .not('nwc_connection_uri', 'is', null)
-    .limit(1)
-    .single();
+    .not('nwc_connection_uri', 'is', null);
+  walletQuery = paymentIntent.receiving_wallet_id
+    ? walletQuery.eq('id', paymentIntent.receiving_wallet_id)
+    : walletQuery.eq('profile_id', paymentIntent.seller_id).limit(1);
+  const { data: wallet } = await walletQuery.maybeSingle();
 
   if (!wallet?.nwc_connection_uri) {
     return false;

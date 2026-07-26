@@ -62,7 +62,7 @@ export async function createProject(
       website_url: payload.website_url ?? null,
       category: payload.category ?? null,
       tags: payload.tags ?? [],
-      status: STATUS.PROJECTS.DRAFT,
+      status: payload.status ?? STATUS.PROJECTS.DRAFT,
       // Respect the form's profile-visibility toggle; DB default (true) would
       // otherwise always win and ignore an unchecked box.
       show_on_profile: payload.show_on_profile ?? true,

@@ -12,7 +12,7 @@
 
 import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Copy, Check, QrCode, Wallet, Loader2 } from 'lucide-react';
+import { Copy, Check, QrCode, Wallet, Loader2, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
@@ -34,6 +34,13 @@ interface ReceiveInfo {
   hasWallet: boolean;
   method: 'nwc' | 'lightning_address' | 'onchain' | null;
   address: string | null;
+}
+
+interface RecipientConfirmation {
+  id: string;
+  amount_btc: number;
+  description: string | null;
+  created_at: string;
 }
 
 const METHOD_LABELS: Record<string, string> = {
@@ -59,6 +66,8 @@ export function OwnerCollectPanel({
   const [showQr, setShowQr] = useState(false);
   const [info, setInfo] = useState<ReceiveInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmations, setConfirmations] = useState<RecipientConfirmation[]>([]);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   // The owner is on the entity's public page — that URL is the share link.
   useEffect(() => {
@@ -91,6 +100,28 @@ export function OwnerCollectPanel({
       cancelled = true;
     };
   }, [entityType, entityId]);
+
+  useEffect(() => {
+    fetch(
+      `/api/payments/recipient-confirmations?entity_type=${encodeURIComponent(entityType)}&entity_id=${encodeURIComponent(entityId)}`
+    )
+      .then(res => (res.ok ? res.json() : null))
+      .then(body => setConfirmations((body?.data as RecipientConfirmation[]) ?? []))
+      .catch(() => setConfirmations([]));
+  }, [entityType, entityId]);
+
+  const confirmReceipt = async (id: string) => {
+    setConfirmingId(id);
+    const response = await fetch(`/api/payments/${id}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'seller_confirm' }),
+    });
+    if (response.ok) {
+      setConfirmations(current => current.filter(item => item.id !== id));
+    }
+    setConfirmingId(null);
+  };
 
   return (
     <Card>
@@ -180,6 +211,39 @@ export function OwnerCollectPanel({
         <Button variant="ghost" size="sm" href={ROUTES.DASHBOARD.WALLETS} className="w-full">
           Manage wallets
         </Button>
+
+        {confirmations.length > 0 && (
+          <div className="border-t border-default pt-4">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-status-warning" aria-hidden />
+              <h3 className="text-sm font-medium text-fg-primary">Confirm received payments</h3>
+            </div>
+            <p className="mt-1 text-xs text-fg-secondary">
+              These Lightning Address payments could not be verified automatically. Check your
+              wallet before confirming.
+            </p>
+            <ul className="mt-3 space-y-2">
+              {confirmations.map(item => (
+                <li
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 rounded-md border border-default p-3"
+                >
+                  <span className="font-mono text-sm text-fg-primary">
+                    {Number(item.amount_btc)} BTC
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    isLoading={confirmingId === item.id}
+                    onClick={() => confirmReceipt(item.id)}
+                  >
+                    Received
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

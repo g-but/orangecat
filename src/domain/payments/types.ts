@@ -12,6 +12,7 @@ import { STATUS } from '@/config/database-constants';
 // =====================================================================
 
 export type PaymentMethod = 'nwc' | 'lightning_address' | 'onchain';
+export type PaymentIntentKind = 'purchase' | 'support';
 
 // =====================================================================
 // PAYMENT INTENT
@@ -22,12 +23,14 @@ export type PaymentIntentStatus =
 
 export interface PaymentIntent {
   id: string;
-  buyer_id: string;
+  buyer_id: string | null;
   seller_id: string;
   entity_type: EntityType;
   entity_id: string;
   amount_btc: number;
   payment_method: PaymentMethod;
+  intent_kind: PaymentIntentKind;
+  receiving_wallet_id: string | null;
   bolt11: string | null;
   payment_hash: string | null;
   onchain_address: string | null;
@@ -39,6 +42,7 @@ export interface PaymentIntent {
   paid_at: string | null;
   created_at: string;
   updated_at: string;
+  public_status_token_hash: string | null;
 }
 
 // =====================================================================
@@ -73,7 +77,7 @@ export interface Order {
 export interface Contribution {
   id: string;
   payment_intent_id: string;
-  contributor_id: string;
+  contributor_id: string | null;
   entity_type: EntityType;
   entity_id: string;
   amount_btc: number;
@@ -116,6 +120,29 @@ export interface InitiatePaymentResult {
 export interface PaymentStatusResult {
   status: PaymentIntentStatus;
   paid_at: string | null;
+}
+
+export interface InitiatePublicSupportInput {
+  entity_type: EntityType;
+  entity_id: string;
+  amount_btc: number;
+}
+
+export interface InitiatePublicSupportResult {
+  payment_intent: Pick<
+    PaymentIntent,
+    'id' | 'amount_btc' | 'payment_method' | 'status' | 'expires_at'
+  > & {
+    can_acknowledge: boolean;
+  };
+  status_token: string;
+  qr_data: string;
+  method_label: string;
+  expires_in_seconds: number | null;
+}
+
+export interface PublicPaymentStatusResult extends PaymentStatusResult {
+  requires_recipient_confirmation: boolean;
 }
 
 /** Resolved wallet info for a seller */

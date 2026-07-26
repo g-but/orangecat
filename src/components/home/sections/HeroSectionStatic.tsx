@@ -37,15 +37,15 @@ export default function HeroSectionStatic() {
 
             {/* Subheadline */}
             <p className="text-lg sm:text-xl lg:text-2xl text-fg-secondary leading-relaxed mb-3 sm:mb-4">
-              Create products, services, projects, causes, events, loans — with your own AI, under
-              any identity, in any currency.
+              Create products, services, projects, causes, events, and groups — with your own AI,
+              under any identity, funded in Bitcoin.
             </p>
 
             {/* Supporting text */}
             <p className="text-base sm:text-lg text-fg-secondary leading-relaxed mb-6 sm:mb-8">
               OrangeCat gives every person and organization an AI agent to create and participate in
-              the full economic spectrum. No gatekeepers. No fees. Bitcoin-native, but not
-              Bitcoin-only.
+              the full economic spectrum. No gatekeepers. No fees. Bitcoin and Lightning are the
+              live settlement rails.
             </p>
 
             {/* CTA Buttons */}
@@ -94,7 +94,7 @@ export default function HeroSectionStatic() {
                 <div className="space-y-2">
                   {[
                     'Create products, projects, causes',
-                    'Any currency accepted',
+                    'Bitcoin and Lightning payments',
                     'AI-powered by your Cat',
                   ].map(feature => (
                     <div

@@ -26,7 +26,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: 'What is OrangeCat?',
         answer:
-          'OrangeCat is your AI economic agent — a platform that lets any person, pseudonym, or organization participate in the full spectrum of economic activity: exchange goods and services, fund projects, lend money, invest, and coordinate together. Bitcoin and Lightning Network are the native payment rails, but any payment method is supported.',
+          'OrangeCat is your AI economic agent — a platform that lets any person, pseudonym, or organization participate in the full spectrum of economic activity: exchange goods and services, fund projects, lend money, invest, and coordinate together. Bitcoin and Lightning Network are the live settlement rails.',
       },
       {
         question: 'Who is OrangeCat for?',
@@ -130,7 +130,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: 'What is the difference between a project and a cause?',
         answer:
-          'Projects have milestones and accountability — backers expect progress reports and deliverables. Causes are no-strings funding for meaningful purposes — community support, education, environment, or any cause where the act of giving is the goal itself. Both can receive Bitcoin, Lightning, or other payment methods.',
+          'Projects have milestones and accountability — backers expect progress reports and deliverables. Causes are no-strings funding for meaningful purposes — community support, education, environment, or any cause where the act of giving is the goal itself. Both can receive Bitcoin and Lightning payments.',
       },
       {
         question: 'How do loans work?',
@@ -147,7 +147,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: 'Do I need Bitcoin to use OrangeCat?',
         answer:
-          'No. Bitcoin and Lightning are the native and preferred payment rails because they enable instant, global, permissionless transactions. But OrangeCat supports any payment method — Twint, PayPal, Venmo, bank transfers, and more. You can list whatever receiving options you have and let counterparties choose what works for them.',
+          "You can sign up and publish without owning Bitcoin. To receive payments you need a Lightning or Bitcoin wallet. Fiat methods such as Twint and privacy coins are not available now; the roadmap explains the accountability tradeoffs.",
       },
       {
         question: 'What is the Lightning Network?',
