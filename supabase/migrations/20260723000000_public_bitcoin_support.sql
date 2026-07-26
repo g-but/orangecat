@@ -4,6 +4,12 @@
 -- is nullable. Access to status is instead granted by a high-entropy token whose
 -- SHA-256 hash is stored on the payment intent. intent_kind keeps a voluntary
 -- contribution to a product/service separate from purchasing that offering.
+--
+-- migration-safety: contract-ok — the only "contract" statements here relax
+-- constraints (buyer_id/contributor_id DROP NOT NULL) and replace a CHECK with a
+-- wider one (adds the 'support' intent_kind). All are expanding, not destructive:
+-- the previous release inserts non-null ids and only 'purchase', so it keeps
+-- working and rollback stays safe.
 
 ALTER TABLE payment_intents
   ALTER COLUMN buyer_id DROP NOT NULL,
