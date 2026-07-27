@@ -5,6 +5,7 @@
  */
 
 import { createServerClient } from '@/lib/supabase/server';
+import { getUserActorId } from '@/domain/actors';
 import { logger } from '@/utils/logger';
 import { ARTICLE_METADATA_FLAG } from '@/config/articles';
 import type { Article, ArticleMetadataPayload } from './types';
@@ -120,6 +121,48 @@ export async function listPublishedArticles(limit = 30): Promise<Article[]> {
     return data.map(rowToArticle).filter((a): a is Article => a !== null);
   } catch (err) {
     logger.error('Failed to list published articles', { err }, 'Articles');
+    return [];
+  }
+}
+
+/**
+ * List one author's articles, newest first. Public articles are visible to
+ * everyone; non-public (followers/private) ones are included only when the
+ * viewer is the author (`includeNonPublic`). `authorUserId` is an auth user id —
+ * resolved to the owning actor id to match the article rows.
+ */
+export async function listArticlesByAuthor(
+  authorUserId: string,
+  options: { includeNonPublic?: boolean; limit?: number } = {}
+): Promise<Article[]> {
+  const { includeNonPublic = false, limit = 50 } = options;
+  try {
+    const supabase = await createServerClient();
+    const actorId = await getUserActorId(supabase, authorUserId);
+    if (!actorId) {
+      return [];
+    }
+
+    let query = supabase
+      .from(ENRICHED_VIEW)
+      .select(ARTICLE_COLUMNS)
+      .eq(`metadata->>${ARTICLE_METADATA_FLAG}`, 'true')
+      .eq('actor_id', actorId)
+      .eq('is_deleted', false)
+      .order('event_timestamp', { ascending: false })
+      .limit(limit);
+
+    if (!includeNonPublic) {
+      query = query.eq('visibility', 'public');
+    }
+
+    const { data, error } = await query.returns<EnrichedArticleRow[]>();
+    if (error || !data) {
+      return [];
+    }
+    return data.map(rowToArticle).filter((a): a is Article => a !== null);
+  } catch (err) {
+    logger.error('Failed to list articles by author', { err, authorUserId }, 'Articles');
     return [];
   }
 }
