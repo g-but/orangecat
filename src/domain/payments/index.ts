@@ -7,6 +7,7 @@
 // Types
 export type {
   PaymentMethod,
+  PaymentIntentKind,
   PaymentIntentStatus,
   PaymentIntent,
   Order,
@@ -15,10 +16,21 @@ export type {
   InitiatePaymentResult,
   PaymentStatusResult,
   ResolvedWallet,
+  InitiatePublicSupportInput,
+  InitiatePublicSupportResult,
+  PublicPaymentStatusResult,
 } from './types';
 
 // Services
-export { initiatePayment, checkPaymentStatus, buyerConfirmPayment } from './paymentFlowService';
+export {
+  initiatePayment,
+  initiatePublicSupport,
+  checkPaymentStatus,
+  checkPublicPaymentStatus,
+  acknowledgePublicPayment,
+  buyerConfirmPayment,
+  sellerConfirmPayment,
+} from './paymentFlowService';
 export {
   resolveSellerWallet,
   resolveSellerReceiveInfo,

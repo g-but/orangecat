@@ -20,6 +20,7 @@ import { PaymentExpectationNote } from './PaymentExpectationNote';
 import { SellerWalletBanner } from './SellerWalletBanner';
 import { OwnerCollectPanel } from './OwnerCollectPanel';
 import { PublicPayPanel } from './PublicPayPanel';
+import { PublicSupportPanel } from './PublicSupportPanel';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { ROUTES } from '@/config/routes';
 
@@ -59,6 +60,7 @@ export function PublicEntityPaymentSection({
   signInRedirect,
 }: PublicEntityPaymentSectionProps) {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const meta = getEntityMetadata(entityType);
   // Use sellerUserId (auth.users ID) for wallet lookup — wallets are keyed by profile_id = auth user ID
   // sellerProfileId may be an actor ID for actor-owned entities, which won't match wallet.profile_id
   const { hasWallet, loading: walletLoading } = useSellerPaymentMethods(sellerUserId);
@@ -79,27 +81,52 @@ export function PublicEntityPaymentSection({
   // is no static address to reveal (NWC-only seller), and to an honest notice
   // when the seller has no wallet at all.
   if (!isAuthenticated) {
-    const meta = getEntityMetadata(entityType);
+    if (meta.canReceiveSupport && meta.paymentPattern !== 'fixed_price') {
+      return sellerReceive ? (
+        <PublicSupportPanel
+          entityType={entityType}
+          entityId={entityId}
+          entityTitle={entityTitle}
+        />
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-fg-secondary text-center">
+              This creator hasn&apos;t connected a wallet yet.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
 
     if (
       sellerReceive?.address &&
       (sellerReceive.method === 'onchain' || sellerReceive.method === 'lightning_address')
     ) {
       return (
-        <PublicPayPanel
-          entityTitle={entityTitle}
-          isContribution={meta.paymentPattern === 'contribution'}
-          priceAmount={priceAmount}
-          priceCurrency={priceCurrency}
-          amountBtc={priceAmountBtc}
-          method={sellerReceive.method}
-          address={sellerReceive.address}
-          signInHref={`${ROUTES.AUTH}?mode=login&from=${signInRedirect}`}
-        />
+        <div className="space-y-4">
+          <PublicPayPanel
+            entityTitle={entityTitle}
+            isContribution={meta.paymentPattern === 'contribution'}
+            priceAmount={priceAmount}
+            priceCurrency={priceCurrency}
+            amountBtc={priceAmountBtc}
+            method={sellerReceive.method}
+            address={sellerReceive.address}
+            signInHref={`${ROUTES.AUTH}?mode=login&from=${signInRedirect}`}
+          />
+          {meta.canReceiveSupport && meta.paymentPattern === 'fixed_price' && (
+            <PublicSupportPanel
+              entityType={entityType}
+              entityId={entityId}
+              entityTitle={entityTitle}
+            />
+          )}
+        </div>
       );
     }
 
-    return (
+    const purchaseFallback = (
       <Card>
         <CardContent className="pt-6 space-y-3">
           {!sellerReceive ? (
@@ -111,17 +138,29 @@ export function PublicEntityPaymentSection({
               <Link href={`${ROUTES.AUTH}?mode=login&from=${signInRedirect}`} className="block">
                 <Button className="w-full gap-2 min-h-11">
                   <LogIn className="w-4 h-4" />
-                  Sign in to continue
+                  Sign in to purchase
                 </Button>
               </Link>
               <p className="text-xs text-fg-secondary text-center">
-                Sign in to pay via the seller&apos;s connected wallet
+                This seller uses a connected Lightning wallet for purchases.
               </p>
               <PaymentExpectationNote />
             </>
           )}
         </CardContent>
       </Card>
+    );
+    return sellerReceive && meta.canReceiveSupport && meta.paymentPattern === 'fixed_price' ? (
+      <div className="space-y-4">
+        {purchaseFallback}
+        <PublicSupportPanel
+          entityType={entityType}
+          entityId={entityId}
+          entityTitle={entityTitle}
+        />
+      </div>
+    ) : (
+      purchaseFallback
     );
   }
 
@@ -170,22 +209,37 @@ export function PublicEntityPaymentSection({
     );
   }
 
+  if (meta.paymentPattern === 'none') {
+    return meta.canReceiveSupport ? (
+      <PublicSupportPanel entityType={entityType} entityId={entityId} entityTitle={entityTitle} />
+    ) : null;
+  }
+
   // Logged in, NOT the seller — show payment button + what the payment means.
   return (
-    <Card>
-      <CardContent className="pt-6 space-y-3">
-        <PaymentButton
+    <div className="space-y-4">
+      <Card>
+        <CardContent className="pt-6 space-y-3">
+          <PaymentButton
+            entityType={entityType}
+            entityId={entityId}
+            entityTitle={entityTitle}
+            priceBtc={priceAmount}
+            priceCurrency={priceCurrency}
+            sellerProfileId={sellerProfileId ?? undefined}
+            sellerHasWallet={hasWallet}
+            className="w-full min-h-11"
+          />
+          <PaymentExpectationNote />
+        </CardContent>
+      </Card>
+      {meta.canReceiveSupport && meta.paymentPattern === 'fixed_price' && (
+        <PublicSupportPanel
           entityType={entityType}
           entityId={entityId}
           entityTitle={entityTitle}
-          priceBtc={priceAmount}
-          priceCurrency={priceCurrency}
-          sellerProfileId={sellerProfileId ?? undefined}
-          sellerHasWallet={hasWallet}
-          className="w-full min-h-11"
         />
-        <PaymentExpectationNote />
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }

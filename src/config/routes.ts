@@ -281,6 +281,8 @@ export const ROUTES = {
   HOW_IT_WORKS: '/how-it-works',
   BLOG: '/blog',
   CHANGELOG: '/changelog',
+  ROADMAP: '/roadmap',
+  WHITEPAPER: '/whitepaper',
   ARTICLES: '/articles',
   ARTICLES_NEW: '/articles/new',
   ARTICLE: (slug: string) => `/articles/${slug}`,

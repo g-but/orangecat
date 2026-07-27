@@ -11,6 +11,8 @@ interface EntityShareProps {
   entityId: string;
   title: string;
   description?: string;
+  /** Override for entities whose public route is slug-based rather than ID-based. */
+  publicPath?: string;
   className?: string;
 }
 
@@ -23,13 +25,14 @@ export default function EntityShare({
   entityId,
   title,
   description,
+  publicPath,
   className = '',
 }: EntityShareProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const entityMeta = ENTITY_REGISTRY[entityType];
   const origin = typeof window !== 'undefined' ? window.location.origin : SITE_URL;
-  const shareUrl = `${origin}${entityMeta.publicBasePath}/${entityId}`;
+  const shareUrl = `${origin}${publicPath ?? `${entityMeta.publicBasePath}/${entityId}`}`;
   const shareTitle = title;
   const shareDescription = description || `Check out ${title} on ${APP_NAME}`;
 

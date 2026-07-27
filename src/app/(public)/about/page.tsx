@@ -8,7 +8,7 @@ import { ROUTES } from '@/config/routes';
 export const metadata: Metadata = {
   title: 'About',
   description:
-    'OrangeCat is your AI economic agent — buy, sell, fund, lend, invest, and govern with any identity, in any currency, without gatekeepers.',
+    'OrangeCat is your AI economic agent — buy, sell, fund, lend, invest, and govern with any identity. Bitcoin is the first live payment rail.',
 };
 
 export default function AboutPage() {
@@ -36,7 +36,8 @@ export default function AboutPage() {
             <p className="text-lg text-fg-secondary max-w-3xl mx-auto">
               Enable anyone — any person, pseudonym, or organization — to participate in the full
               spectrum of economic and governance activity: exchanging, funding, lending, investing,
-              and governing, with any counterparty, in any currency, without gatekeepers.
+              and governing, without gatekeepers. We are starting with Bitcoin so settlement can be
+              independently verified.
             </p>
           </div>
 
@@ -59,10 +60,10 @@ export default function AboutPage() {
               <div className="w-16 h-16 bg-surface-raised border border-subtle rounded-full flex items-center justify-center mx-auto mb-4">
                 <Zap className="w-8 h-8 text-fg-secondary" />
               </div>
-              <h3 className="text-lg font-semibold text-fg-primary mb-2">Any Currency</h3>
+              <h3 className="text-lg font-semibold text-fg-primary mb-2">Bitcoin First</h3>
               <p className="text-fg-secondary">
-                Bitcoin and Lightning are native, but any payment method — local or global — is
-                first-class. Meet users where they are.
+                Lightning and on-chain Bitcoin are live. Fiat and privacy coins remain roadmap
+                research until their accountability tradeoffs are resolved.
               </p>
             </div>
 
@@ -91,7 +92,7 @@ export default function AboutPage() {
             </h2>
             <p className="text-xl text-fg-inverted/70 mb-8">
               Exchange, fund, lend, invest, and govern — with your AI agent, under any identity, in
-              any currency.
+              Bitcoin.
             </p>
             <Link href={`${ROUTES.AUTH}?mode=register`}>
               <Button variant="accent" size="lg">

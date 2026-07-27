@@ -38,6 +38,7 @@ const onchainIntent = {
   seller_id: 'seller-1',
   status: STATUS.PAYMENT_INTENTS.INVOICE_READY,
   payment_method: 'onchain',
+  intent_kind: 'purchase',
   onchain_address: 'bc1qxyz',
   entity_type: 'product', // fixed_price
   entity_id: 'prod-1',

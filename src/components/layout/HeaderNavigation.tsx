@@ -13,7 +13,7 @@
 
 import { useState, useRef, useEffect, useId, type ComponentType, type SVGProps } from 'react';
 import Link from 'next/link';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface NavigationItem {
@@ -21,6 +21,7 @@ export interface NavigationItem {
   href?: string;
   children?: NavigationItem[];
   description?: string;
+  external?: boolean;
 }
 
 // Variant A: Horizontal header links
@@ -34,9 +35,11 @@ interface HeaderNavBarProps {
 interface MobileDrawerProps {
   navigation: NavigationItem[];
   footer: {
-    product?: Array<{ name: string; href: string }>;
-    company?: Array<{ name: string; href: string }>;
-    legal?: Array<{ name: string; href: string }>;
+    product?: Array<{ name: string; href: string; external?: boolean }>;
+    learn?: Array<{ name: string; href: string; external?: boolean }>;
+    support?: Array<{ name: string; href: string; external?: boolean }>;
+    ecosystem?: Array<{ name: string; href: string; external?: boolean }>;
+    legal?: Array<{ name: string; href: string; external?: boolean }>;
     // Matches NavigationItem.icon in @/config/navigation — lucide icons and
     // local brand SVGs (BrandIcons) are both plain SVG components.
     social?: Array<{ name: string; href: string; icon?: ComponentType<SVGProps<SVGSVGElement>> }>;
@@ -61,7 +64,19 @@ export function HeaderNavigation(props: HeaderNavigationProps) {
       <div className="flex flex-col h-full">
         <div className="p-4 space-y-1">
           {navItems.map(item =>
-            item.href ? (
+            item.href && item.external ? (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex min-h-11 items-center gap-1.5 rounded-md px-3 py-2 text-base text-fg-primary hover:bg-surface-raised"
+                onClick={onClose}
+              >
+                {item.name}
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              </a>
+            ) : item.href ? (
               <Link
                 key={item.href}
                 href={item.href}
@@ -76,7 +91,7 @@ export function HeaderNavigation(props: HeaderNavigationProps) {
 
         {/* Footer sections */}
         <div className="mt-auto border-t border-subtle">
-          {(['product', 'company', 'legal'] as const).map(sectionKey => {
+          {(['product', 'learn', 'support', 'ecosystem', 'legal'] as const).map(sectionKey => {
             const section = footer?.[sectionKey] || [];
             if (!section || section.length === 0) {
               return null;
@@ -87,16 +102,29 @@ export function HeaderNavigation(props: HeaderNavigationProps) {
                   {sectionKey}
                 </div>
                 <div className="grid grid-cols-1 gap-1">
-                  {section.map(link => (
-                    <Link
-                      key={`${sectionKey}-${link.name}-${link.href}`}
-                      href={link.href}
-                      className="px-3 py-2 min-h-11 rounded-md text-sm text-fg-secondary hover:text-fg-primary hover:bg-surface-raised"
-                      onClick={onClose}
-                    >
-                      {link.name}
-                    </Link>
-                  ))}
+                  {section.map(link =>
+                    link.external ? (
+                      <a
+                        key={`${sectionKey}-${link.name}-${link.href}`}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 min-h-11 rounded-md text-sm text-fg-secondary hover:text-fg-primary hover:bg-surface-raised"
+                        onClick={onClose}
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <Link
+                        key={`${sectionKey}-${link.name}-${link.href}`}
+                        href={link.href}
+                        className="px-3 py-2 min-h-11 rounded-md text-sm text-fg-secondary hover:text-fg-primary hover:bg-surface-raised"
+                        onClick={onClose}
+                      >
+                        {link.name}
+                      </Link>
+                    )
+                  )}
                 </div>
               </div>
             );
@@ -119,6 +147,20 @@ export function HeaderNavigation(props: HeaderNavigationProps) {
 
         if (!item.href) {
           return null;
+        }
+        if (item.external) {
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 px-4 py-2.5 text-sm font-medium text-fg-secondary hover:text-fg-primary"
+            >
+              {item.name}
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            </a>
+          );
         }
         return (
           <HeaderNavLink

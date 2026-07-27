@@ -324,9 +324,24 @@ export const paymentCreateSchema = z.object({
  * Schema for POST /api/payments/[id] — action on a payment.
  */
 export const paymentActionSchema = z.object({
-  action: z.enum(['buyer_confirm'], {
-    errorMap: () => ({ message: 'Invalid action. Supported: buyer_confirm' }),
+  action: z.enum(['buyer_confirm', 'seller_confirm'], {
+    errorMap: () => ({ message: 'Invalid payment action' }),
   }),
+});
+
+export const publicSupportCreateSchema = z.object({
+  entity_type: z.enum(ENTITY_TYPES, {
+    errorMap: () => ({ message: 'Invalid entity type' }),
+  }),
+  entity_id: z.string().uuid('entity_id must be a valid UUID'),
+  amount_btc: z
+    .number()
+    .min(0.000001, 'Minimum support amount is 0.000001 BTC')
+    .max(1, 'Maximum support amount is 1 BTC'),
+});
+
+export const publicPaymentActionSchema = z.object({
+  action: z.literal('acknowledge'),
 });
 
 // ==================== ENTITY-WALLET LINK SCHEMA ====================

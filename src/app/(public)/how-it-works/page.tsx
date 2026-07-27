@@ -191,8 +191,8 @@ export default function HowItWorksPage() {
           <Card className="p-12 bg-surface-raised/30 border-default">
             <h2 className="text-2xl font-semibold mb-4">Ready to Get Started?</h2>
             <p className="text-xl text-fg-secondary mb-8 max-w-2xl mx-auto">
-              Exchange, fund, lend, invest, and govern — with your AI agent, under any identity, in
-              any currency.
+              Publish, fund, and coordinate work with your AI agent. Bitcoin is the settlement rail
+              available today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button

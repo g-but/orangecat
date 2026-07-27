@@ -52,13 +52,13 @@ export const PROJECT_STATUSES = {
 export type ProjectStatus = keyof typeof PROJECT_STATUSES;
 
 /** All valid project status values */
-export const VALID_PROJECT_STATUSES: readonly ProjectStatus[] = [
+export const VALID_PROJECT_STATUSES = [
   'draft',
   'active',
   'paused',
   'completed',
   'cancelled',
-] as const;
+] as const satisfies readonly ProjectStatus[];
 
 /** Statuses visible in public search/discover */
 export const PUBLIC_SEARCH_STATUSES: readonly ProjectStatus[] = ['active', 'paused'] as const;

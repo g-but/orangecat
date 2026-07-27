@@ -67,9 +67,10 @@ export async function notifyFleetCrownProjectFunding(pi: PaymentIntent): Promise
   if (!secret) {
     return;
   }
-  if (pi.entity_type !== 'project' && pi.entity_type !== 'cause') {
+  const meta = getEntityMetadata(pi.entity_type as EntityType);
+  if (pi.intent_kind !== 'support' || !meta.canReceiveSupport) {
     return;
-  } // funding signals only — product sales are the entitlement path
+  }
 
   try {
     const body = JSON.stringify({

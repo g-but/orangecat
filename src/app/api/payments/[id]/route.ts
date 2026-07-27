@@ -12,7 +12,11 @@ import {
   apiInternalError,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { checkPaymentStatus, buyerConfirmPayment } from '@/domain/payments';
+import {
+  checkPaymentStatus,
+  buyerConfirmPayment,
+  sellerConfirmPayment,
+} from '@/domain/payments';
 import { paymentActionSchema } from '@/lib/validation/finance';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
@@ -73,7 +77,10 @@ export const POST = withAuth(
         return apiBadRequest('Invalid input', parsed.error.errors);
       }
 
-      const result = await buyerConfirmPayment(supabase, id, user.id);
+      const result =
+        parsed.data.action === 'seller_confirm'
+          ? await sellerConfirmPayment(supabase, id, user.id)
+          : await buyerConfirmPayment(supabase, id, user.id);
       return apiSuccess(result);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Confirmation failed';

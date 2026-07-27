@@ -48,8 +48,9 @@ export default function BitBaumAboutPage() {
           <h2 className="text-2xl font-semibold text-fg-primary mb-6">Our Mission</h2>
           <p className="text-lg text-fg-secondary max-w-4xl mx-auto leading-relaxed">
             Enable anyone — any person, pseudonym, or organization — to participate in the full
-            spectrum of economic activity: exchanging, funding, lending, investing, and governing,
-            with any counterparty, in any currency, without gatekeepers.
+            spectrum of economic activity: exchanging, funding, lending, investing, and governing
+            without gatekeepers. Bitcoin is the accountable settlement rail available today;
+            broader rails remain part of the long-term mission.
           </p>
         </div>
 
@@ -96,8 +97,8 @@ export default function BitBaumAboutPage() {
               </div>
               <h4 className="text-xl font-semibold text-fg-primary mb-3">OrangeCat</h4>
               <p className="text-fg-secondary mb-4">
-                Our flagship consumer product - the AI economic agent platform where users fund,
-                invest, lend, and transact with any identity, any currency.
+                Our flagship consumer product — an AI economic platform where people and agents can
+                organize and fund work. Settlement is Bitcoin-only today.
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 <span className="px-3 py-1 bg-surface-raised text-fg-primary rounded-full text-sm">
@@ -198,7 +199,8 @@ export default function BitBaumAboutPage() {
                 <div>
                   <h4 className="font-semibold text-fg-primary">Community Growth</h4>
                   <p className="text-fg-secondary text-sm">
-                    Thousands of creators and supporters building with Bitcoin.
+                    An open, censorship-resistant home for creators and supporters building with
+                    Bitcoin.
                   </p>
                 </div>
               </div>

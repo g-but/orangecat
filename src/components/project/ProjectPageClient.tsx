@@ -11,6 +11,7 @@ import { formatCurrency } from '@/services/currency';
 import { getStatusInfo } from '@/config/status-config';
 import { PublicEntityPaymentSection } from '@/components/payment';
 import { Z_INDEX_CLASSES } from '@/constants/z-index';
+import type { SellerReceiveInfo } from '@/domain/payments';
 
 const MissingWalletBanner = dynamic(() => import('@/components/project/MissingWalletBanner'));
 const ProjectShare = dynamic(() => import('@/components/sharing/ProjectShare'));
@@ -52,6 +53,7 @@ interface Project {
 
 interface ProjectPageClientProps {
   project: Project;
+  sellerReceive: SellerReceiveInfo | null;
 }
 
 /**
@@ -60,7 +62,7 @@ interface ProjectPageClientProps {
  * Handles all client-side interactivity for project pages.
  * The server component handles data fetching and SEO metadata.
  */
-export default function ProjectPageClient({ project }: ProjectPageClientProps) {
+export default function ProjectPageClient({ project, sellerReceive }: ProjectPageClientProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -127,7 +129,7 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
             />
 
             {/* Missing Wallet Banner */}
-            {!project.bitcoin_address && !project.lightning_address && (
+            {!sellerReceive && (
               <MissingWalletBanner projectId={projectId} isOwner={isOwner} className="mb-6" />
             )}
 
@@ -162,13 +164,7 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
                 entityTitle={project.title}
                 sellerProfileId={project.user_id}
                 sellerUserId={project.user_id}
-                sellerReceive={
-                  project.bitcoin_address
-                    ? { method: 'onchain', address: project.bitcoin_address }
-                    : project.lightning_address
-                      ? { method: 'lightning_address', address: project.lightning_address }
-                      : null
-                }
+                sellerReceive={sellerReceive}
                 signInRedirect={ROUTES.PROJECTS.VIEW(project.id)}
               />
             </div>
@@ -190,7 +186,14 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
 
             {/* Cross-sell: owners can run AI agents on this project in
                 FleetCrown (sibling product, shared OrangeCat login). */}
-            {isOwner && <FleetCrownBuildCta variant="card" />}
+            {isOwner && (
+              <FleetCrownBuildCta
+                variant="card"
+                entityType="project"
+                entityId={project.id}
+                sourcePath={ROUTES.PROJECTS.VIEW(project.id)}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -217,7 +220,7 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
 
       {/* Floating CTA - Mobile Only. Position + z sourced from SSOT
           so this bar consistently sits above MobileBottomNav. */}
-      {!isOwner && project.bitcoin_address && showFloatingCTA && (
+      {!isOwner && sellerReceive && showFloatingCTA && (
         <div
           className={`lg:hidden fixed inset-x-0 oc-above-mobile-nav ${Z_INDEX_CLASSES.MOBILE_ACTION_BAR} bg-surface-base border-t border-default shadow-sm transition-transform duration-300 ${
             showFloatingCTA ? 'translate-y-0' : 'translate-y-full'

@@ -127,9 +127,10 @@ export default function DocsPage() {
               ) for instant, near-zero-fee payments. On-chain Bitcoin is also supported.
             </p>
             <p className="text-fg-secondary leading-relaxed">
-              OrangeCat is not Bitcoin-only. Any payment method — Twint, PayPal, Venmo, bank
-              transfers — can be listed as a receiving option. Users choose the method that works
-              for them. Meet counterparties where they are.
+              Other rails are intentionally unavailable today. Fiat methods such as Twint rely on
+              banks and private reconciliation without producing a shared public ledger. Privacy
+              coins make public attribution impossible by design. Both stay on the roadmap while
+              the Bitcoin funding loop is hardened.
             </p>
             <div className="grid sm:grid-cols-3 gap-4">
               {/* Highlight cards — uniform neutral tiles per migration 6/N */}
@@ -144,8 +145,10 @@ export default function DocsPage() {
                 <p className="text-fg-secondary text-xs mt-1">OrangeCat never holds your funds</p>
               </div>
               <div className="p-4 bg-surface-raised/40 border border-subtle rounded-lg text-center">
-                <p className="font-medium text-fg-primary text-sm">Any currency</p>
-                <p className="text-fg-secondary text-xs mt-1">Bitcoin, Lightning, fiat, and more</p>
+                <p className="font-medium text-fg-primary text-sm">Auditable settlement</p>
+                <p className="text-fg-secondary text-xs mt-1">
+                  Confirmed Bitcoin can be publicly verified
+                </p>
               </div>
             </div>
           </div>

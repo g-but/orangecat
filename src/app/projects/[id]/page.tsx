@@ -7,6 +7,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import { safeJsonLdString } from '@/lib/seo/structured-data';
 import { APP_NAME, SITE_URL } from '@/config/brand';
+import { resolveSellerReceiveInfo } from '@/domain/payments';
 
 const ProjectPageClient = dynamic(() => import('@/components/project/ProjectPageClient'), {
   loading: () => (
@@ -185,6 +186,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
     raised_amount: project.raised_amount ?? 0,
     profiles: profile ?? undefined,
   };
+  const sellerReceive = await resolveSellerReceiveInfo(supabase, 'project', id);
 
   // Generate JSON-LD structured data for SEO
   const creatorName = profile?.name || profile?.username || 'Creator';
@@ -234,7 +236,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdString(structuredData) }}
       />
-      <ProjectPageClient project={projectWithProfile} />
+      <ProjectPageClient project={projectWithProfile} sellerReceive={sellerReceive} />
     </>
   );
 }

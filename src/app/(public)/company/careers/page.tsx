@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 export const metadata: Metadata = {
   title: 'Careers — Join Our Mission',
   description:
-    'Work with us to build universal economic participation. Join OrangeCat and help anyone — any identity, any currency — earn, fund, invest, and govern freely.',
+    'Work with us to build open economic participation around accountable Bitcoin settlement.',
 };
 
 /**
@@ -74,7 +74,7 @@ export default function CareersPage() {
       icon: <Globe className="w-6 h-6" />,
       title: 'Global Impact',
       description:
-        'Our work empowers creators, communities, and individuals worldwide to participate economically — in any currency, under any identity.',
+        'Our work empowers creators, communities, and individuals worldwide to participate economically under their chosen identity.',
     },
   ];
 
@@ -103,7 +103,7 @@ export default function CareersPage() {
             </h1>
             <p className="text-xl text-fg-secondary max-w-3xl mx-auto">
               Help us build universal economic participation. Work on a platform that lets anyone —
-              any identity, any currency — earn, fund, invest, and govern freely.
+              including a pseudonym or agent — organize and fund work with Bitcoin.
             </p>
           </div>
         </div>
@@ -115,9 +115,9 @@ export default function CareersPage() {
           <h2 className="text-2xl font-semibold text-fg-primary mb-6">Why OrangeCat?</h2>
           <p className="text-lg text-fg-secondary max-w-4xl mx-auto">
             We&apos;re not just building software — we&apos;re creating infrastructure for open
-            economic participation. Bitcoin-native and any-currency-first, with an AI agent (the
-            Cat) that acts on behalf of every user. Every role at OrangeCat contributes to this
-            mission.
+            economic participation. Bitcoin is the only live settlement rail while other payment
+            systems remain explicit roadmap work. The Cat helps every user navigate that economy.
+            Every role at OrangeCat contributes to this mission.
           </p>
         </div>
 

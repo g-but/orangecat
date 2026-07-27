@@ -10,6 +10,9 @@ import { GroupDetailSidebar } from './GroupDetailSidebar';
 import { GroupDetailTabs } from './GroupDetailTabs';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { ROUTES } from '@/config/routes';
+import FleetCrownBuildCta from '@/components/integrations/FleetCrownBuildCta';
+import EntityShare from '@/components/sharing/EntityShare';
+import { PublicSupportPanel } from '@/components/payment/PublicSupportPanel';
 
 interface GroupDetailProps {
   groupSlug: string;
@@ -87,14 +90,33 @@ export function GroupDetail({ groupSlug }: GroupDetailProps) {
         />
       }
       right={
-        <GroupDetailSidebar
-          group={group}
-          members={members}
-          wallets={wallets}
-          labelConfig={labelConfig}
-          governanceConfig={governanceConfig}
-          LabelIcon={LabelIcon}
-        />
+        <div className="space-y-6">
+          <GroupDetailSidebar
+            group={group}
+            members={members}
+            wallets={wallets}
+            labelConfig={labelConfig}
+            governanceConfig={governanceConfig}
+            LabelIcon={LabelIcon}
+          />
+          <EntityShare
+            entityType="group"
+            entityId={group.id}
+            title={group.name}
+            description={group.description ?? undefined}
+            publicPath={`/groups/${groupSlug}`}
+            className="w-full justify-center"
+          />
+          <PublicSupportPanel entityType="group" entityId={group.id} entityTitle={group.name} />
+          {isOwner && (
+            <FleetCrownBuildCta
+              variant="card"
+              entityType="group"
+              entityId={group.id}
+              sourcePath={`/groups/${groupSlug}`}
+            />
+          )}
+        </div>
       }
     />
   );

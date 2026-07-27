@@ -11,6 +11,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createHash, randomBytes } from 'node:crypto';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
@@ -30,6 +31,9 @@ import type {
   PaymentStatusResult,
   PaymentIntentStatus,
   PaymentIntent,
+  InitiatePublicSupportInput,
+  InitiatePublicSupportResult,
+  PublicPaymentStatusResult,
 } from './types';
 import { logger } from '@/utils/logger';
 import { sendSellerPaymentNotification } from '@/lib/email/send-seller-notification';
@@ -45,6 +49,12 @@ const METHOD_LABELS: Record<string, string> = {
   lightning_address: 'Lightning Address',
   onchain: 'On-chain Bitcoin',
 };
+
+const PUBLIC_SUPPORT_EXPIRY_MS = 60 * 60 * 1000;
+
+function hashPublicStatusToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
 
 /**
  * Initiate a payment flow for a buyer purchasing/supporting an entity.
@@ -93,6 +103,8 @@ export async function initiatePayment(
       entity_id,
       amount_btc: amountBtc,
       payment_method: wallet.method,
+      intent_kind: meta.paymentPattern === 'fixed_price' ? 'purchase' : 'support',
+      receiving_wallet_id: wallet.wallet_id,
       bolt11: invoice.bolt11,
       payment_hash: invoice.payment_hash,
       onchain_address: invoice.onchain_address,
@@ -178,6 +190,120 @@ export async function initiatePayment(
 }
 
 /**
+ * Create a tracked voluntary contribution without requiring an account.
+ *
+ * The caller must pass a sessionless client. Its anonymous RLS read is the
+ * publication gate; all cross-user wallet and insert work happens through the
+ * service-role client only after that check succeeds.
+ */
+export async function initiatePublicSupport(
+  publicSupabase: SupabaseClient,
+  input: InitiatePublicSupportInput
+): Promise<InitiatePublicSupportResult> {
+  const { entity_type: entityType, entity_id: entityId, amount_btc: amountBtc } = input;
+  const meta = getEntityMetadata(entityType);
+  if (!meta.canReceiveSupport) {
+    throw new Error('This entity cannot receive public support');
+  }
+
+  const { data: visibleEntity } = await publicSupabase
+    .from(meta.tableName)
+    .select('id')
+    .eq('id', entityId)
+    .maybeSingle();
+  if (!visibleEntity) {
+    throw new Error('Entity is not publicly available');
+  }
+
+  const sellerId = await getSellerUserId(publicSupabase, entityType, entityId);
+  if (!sellerId) {
+    throw new Error('Entity owner not found');
+  }
+
+  const wallet = await resolveSellerWallet(publicSupabase, entityType, entityId);
+  if (!wallet) {
+    throw new Error('Seller has no wallet connected. Payment not available.');
+  }
+
+  const entityTitle = await getEntityTitle(publicSupabase, entityType, entityId);
+  const description = `Support: ${entityTitle}`;
+  const invoice = await generateInvoice(wallet, amountBtc, description);
+  const token = randomBytes(32).toString('base64url');
+  const expiresAt =
+    invoice.expires_at ?? new Date(Date.now() + PUBLIC_SUPPORT_EXPIRY_MS).toISOString();
+  const admin = getAdminClient() as unknown as SupabaseClient;
+
+  const { data: paymentIntent, error: paymentError } = await admin
+    .from(DATABASE_TABLES.PAYMENT_INTENTS)
+    .insert({
+      buyer_id: null,
+      seller_id: sellerId,
+      entity_type: entityType,
+      entity_id: entityId,
+      amount_btc: amountBtc,
+      payment_method: wallet.method,
+      intent_kind: 'support',
+      receiving_wallet_id: wallet.wallet_id,
+      bolt11: invoice.bolt11,
+      payment_hash: invoice.payment_hash,
+      onchain_address: invoice.onchain_address,
+      lnurl_verify_url: invoice.lnurl_verify_url,
+      status:
+        invoice.bolt11 || invoice.onchain_address
+          ? STATUS.PAYMENT_INTENTS.INVOICE_READY
+          : STATUS.PAYMENT_INTENTS.CREATED,
+      description,
+      expires_at: expiresAt,
+      public_status_token_hash: hashPublicStatusToken(token),
+    })
+    .select()
+    .single();
+
+  if (paymentError || !paymentIntent) {
+    logger.error('Failed to create public payment intent', { error: paymentError });
+    throw new Error('Failed to create public payment intent');
+  }
+
+  const { error: contributionError } = await admin.from(DATABASE_TABLES.CONTRIBUTIONS).insert({
+    payment_intent_id: paymentIntent.id,
+    contributor_id: null,
+    entity_type: entityType,
+    entity_id: entityId,
+    amount_btc: amountBtc,
+    message: null,
+    is_anonymous: true,
+  });
+
+  if (contributionError) {
+    await admin.from(DATABASE_TABLES.PAYMENT_INTENTS).delete().eq('id', paymentIntent.id);
+    logger.error('Failed to create public contribution', { error: contributionError });
+    throw new Error('Failed to create public contribution');
+  }
+
+  const expiresInSeconds = Math.max(
+    0,
+    Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)
+  );
+
+  return {
+    payment_intent: {
+      id: paymentIntent.id,
+      amount_btc: Number(paymentIntent.amount_btc),
+      payment_method: paymentIntent.payment_method,
+      status: paymentIntent.status,
+      expires_at: paymentIntent.expires_at,
+      can_acknowledge:
+        paymentIntent.payment_method === 'lightning_address' &&
+        !paymentIntent.lnurl_verify_url,
+    },
+    status_token: token,
+    qr_data: invoice.qr_data,
+    method_label: METHOD_LABELS[wallet.method] || wallet.method,
+    expires_in_seconds: expiresInSeconds,
+  } as InitiatePublicSupportResult;
+}
+
+/**
  * Check payment status. For NWC, does active lookup; for others, returns DB status.
  */
 export async function checkPaymentStatus(
@@ -201,24 +327,107 @@ export async function checkPaymentStatus(
     throw new Error('Access denied');
   }
 
-  // If already terminal, return immediately
+  return refreshPaymentStatus(supabase, pi as PaymentIntent);
+}
+
+export async function checkPublicPaymentStatus(
+  paymentIntentId: string,
+  token: string
+): Promise<PublicPaymentStatusResult> {
+  const admin = getAdminClient() as unknown as SupabaseClient;
+  const { data: pi } = await admin
+    .from(DATABASE_TABLES.PAYMENT_INTENTS)
+    .select('*')
+    .eq('id', paymentIntentId)
+    .eq('public_status_token_hash', hashPublicStatusToken(token))
+    .maybeSingle();
+
+  if (!pi) {
+    throw new Error('Payment not found');
+  }
+
+  const result = await refreshPaymentStatus(admin, pi as PaymentIntent);
+  return {
+    ...result,
+    requires_recipient_confirmation:
+      result.status === STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
+  };
+}
+
+export async function acknowledgePublicPayment(
+  paymentIntentId: string,
+  token: string
+): Promise<PublicPaymentStatusResult> {
+  const admin = getAdminClient() as unknown as SupabaseClient;
+  const { data: pi } = await admin
+    .from(DATABASE_TABLES.PAYMENT_INTENTS)
+    .select('*')
+    .eq('id', paymentIntentId)
+    .eq('public_status_token_hash', hashPublicStatusToken(token))
+    .maybeSingle();
+
+  if (!pi) {
+    throw new Error('Payment not found');
+  }
+  if (pi.payment_method !== 'lightning_address' || pi.lnurl_verify_url) {
+    throw new Error('This payment is confirmed automatically');
+  }
+  if (pi.status === STATUS.PAYMENT_INTENTS.PAID) {
+    return {
+      status: STATUS.PAYMENT_INTENTS.PAID,
+      paid_at: pi.paid_at,
+      requires_recipient_confirmation: false,
+    };
+  }
   if (
-    [
+    pi.status === STATUS.PAYMENT_INTENTS.EXPIRED ||
+    pi.status === STATUS.PAYMENT_INTENTS.FAILED ||
+    (pi.expires_at && new Date(pi.expires_at) < new Date())
+  ) {
+    if (pi.status !== STATUS.PAYMENT_INTENTS.EXPIRED) {
+      await updatePaymentStatus(admin, paymentIntentId, STATUS.PAYMENT_INTENTS.EXPIRED);
+    }
+    throw new Error('This payment request has expired');
+  }
+  if (pi.status === STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED) {
+    return {
+      status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
+      paid_at: null,
+      requires_recipient_confirmation: true,
+    };
+  }
+
+  await updatePaymentStatus(
+    admin,
+    paymentIntentId,
+    STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED
+  );
+  return {
+    status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
+    paid_at: null,
+    requires_recipient_confirmation: true,
+  };
+}
+
+async function refreshPaymentStatus(
+  supabase: SupabaseClient,
+  pi: PaymentIntent
+): Promise<PaymentStatusResult> {
+  const terminalStatuses = new Set<PaymentIntentStatus>([
       STATUS.PAYMENT_INTENTS.PAID,
       STATUS.PAYMENT_INTENTS.EXPIRED,
       STATUS.PAYMENT_INTENTS.FAILED,
-    ].includes(pi.status)
-  ) {
-    return { status: pi.status as PaymentIntentStatus, paid_at: pi.paid_at };
+      STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
+  ]);
+  if (terminalStatuses.has(pi.status)) {
+    return { status: pi.status, paid_at: pi.paid_at };
   }
 
-  // Check expiry
   if (pi.expires_at && new Date(pi.expires_at) < new Date()) {
-    await updatePaymentStatus(supabase, paymentIntentId, STATUS.PAYMENT_INTENTS.EXPIRED);
+    await updatePaymentStatus(supabase, pi.id, STATUS.PAYMENT_INTENTS.EXPIRED);
     return { status: STATUS.PAYMENT_INTENTS.EXPIRED, paid_at: null };
   }
 
-  // For NWC, actively check via relay
   if (pi.payment_method === 'nwc' && pi.payment_hash) {
     const paid = await checkNWCPaymentStatus(supabase, pi);
     if (paid) {
@@ -227,7 +436,6 @@ export async function checkPaymentStatus(
     }
   }
 
-  // For lightning_address with LUD-21 support, actively check the verify URL
   if (pi.payment_method === 'lightning_address' && pi.lnurl_verify_url) {
     const paid = await checkLnurlVerifyPaymentStatus(pi);
     if (paid) {
@@ -236,29 +444,26 @@ export async function checkPaymentStatus(
     }
   }
 
-  // For on-chain, check via Mempool.space API
   if (pi.payment_method === 'onchain' && pi.onchain_address) {
     const onchainStatus = await checkOnchainPaymentStatus(pi);
-
     if (onchainStatus === 'confirmed') {
       await handlePaymentConfirmed(supabase, pi);
       return { status: STATUS.PAYMENT_INTENTS.PAID, paid_at: new Date().toISOString() };
     }
-
     if (
       onchainStatus === 'in_mempool' &&
       pi.status !== STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION
     ) {
       await updatePaymentStatus(
         supabase,
-        paymentIntentId,
+        pi.id,
         STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION
       );
       return { status: STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION, paid_at: null };
     }
   }
 
-  return { status: pi.status as PaymentIntentStatus, paid_at: pi.paid_at };
+  return { status: pi.status, paid_at: pi.paid_at };
 }
 
 /**
@@ -303,28 +508,35 @@ export async function buyerConfirmPayment(
   // Mark as buyer_confirmed — seller verifies in their wallet
   await updatePaymentStatus(supabase, paymentIntentId, STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED);
 
-  // Update order status to paid (trust-based for v1)
-  if (pi.entity_type) {
-    const meta = getEntityMetadata(pi.entity_type as EntityType);
-    if (meta.paymentPattern === 'fixed_price') {
-      const { error: orderError } = await supabase
-        .from(DATABASE_TABLES.ORDERS)
-        .update({ status: STATUS.ORDERS.PAID })
-        .eq('payment_intent_id', paymentIntentId);
+  return { status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED, paid_at: null };
+}
 
-      // The intent is already buyer_confirmed; a silent order-update failure
-      // would leave the order stuck in pending_payment. Surface it.
-      if (orderError) {
-        logger.error('Failed to update order status after buyer confirmation', {
-          paymentIntentId,
-          error: orderError,
-        });
-        throw new Error('Failed to update order status');
-      }
-    }
+/** Seller-side half of the fallback for Lightning Addresses without LUD-21. */
+export async function sellerConfirmPayment(
+  supabase: SupabaseClient,
+  paymentIntentId: string,
+  sellerId: string
+): Promise<PaymentStatusResult> {
+  const { data: pi } = await supabase
+    .from(DATABASE_TABLES.PAYMENT_INTENTS)
+    .select('*')
+    .eq('id', paymentIntentId)
+    .eq('seller_id', sellerId)
+    .maybeSingle();
+
+  if (!pi) {
+    throw new Error('Payment not found');
+  }
+  if (
+    pi.status !== STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED ||
+    pi.payment_method !== 'lightning_address' ||
+    pi.lnurl_verify_url
+  ) {
+    throw new Error('Payment is not awaiting recipient confirmation');
   }
 
-  return { status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED, paid_at: null };
+  await handlePaymentConfirmed(supabase, pi as PaymentIntent);
+  return { status: STATUS.PAYMENT_INTENTS.PAID, paid_at: new Date().toISOString() };
 }
 
 // =====================================================================
@@ -387,13 +599,18 @@ async function getEntityTitle(
   // Cast to untyped client — queries use dynamic column names from entity registry.
   const admin = getAdminClient() as unknown as SupabaseClient;
   const meta = getEntityMetadata(entityType);
+  const titleColumn = meta.titleColumn ?? 'title';
   const { data } = await admin
     .from(meta.tableName)
-    .select('title, name')
+    .select(titleColumn)
     .eq('id', entityId)
     .single();
 
-  return data?.title || data?.name || `${meta.name} #${entityId.slice(0, 8)}`;
+  const row = data as unknown as Record<string, unknown> | null;
+  const title = row?.[titleColumn];
+  return typeof title === 'string' && title.trim()
+    ? title
+    : `${meta.name} #${entityId.slice(0, 8)}`;
 }
 
 async function updatePaymentStatus(
@@ -435,7 +652,7 @@ async function handlePaymentConfirmed(
 
   const meta = getEntityMetadata(entityType);
 
-  if (meta.paymentPattern === 'fixed_price') {
+  if (paymentIntent.intent_kind === 'purchase' && meta.paymentPattern === 'fixed_price') {
     // Update order status. The payment is already verified+paid, so we must NOT
     // throw here (that would 500 the buyer's status check after a successful
     // payment, and the terminal-status short-circuit means a retry wouldn't
@@ -479,9 +696,11 @@ async function handlePaymentConfirmed(
 
   // Grant a FleetCrown pass if this payment was for one — fire-and-forget,
   // never blocks settlement. No-op for normal sales / when unconfigured.
-  void notifyFleetCrownEntitlement(paymentIntent).catch(err =>
-    logger.warn('FleetCrown entitlement notify failed', { err }, 'paymentFlowService')
-  );
+  if (paymentIntent.intent_kind === 'purchase') {
+    void notifyFleetCrownEntitlement(paymentIntent).catch(err =>
+      logger.warn('FleetCrown entitlement notify failed', { err }, 'paymentFlowService')
+    );
+  }
 
   // Funding on a FleetCrown-linked project → activity signal for the fleet.
   // Fire-and-forget; the receiver drops events for unlinked entities.
@@ -491,9 +710,11 @@ async function handlePaymentConfirmed(
 
   // Grant an OrangeCat Supporter plan if this product was a Supporter pass —
   // fire-and-forget, never blocks settlement. No-op for normal sales.
-  void grantSupporterPlan(paymentIntent).catch(err =>
-    logger.warn('Supporter plan grant failed', { err }, 'paymentFlowService')
-  );
+  if (paymentIntent.intent_kind === 'purchase') {
+    void grantSupporterPlan(paymentIntent).catch(err =>
+      logger.warn('Supporter plan grant failed', { err }, 'paymentFlowService')
+    );
+  }
 
   // Also create in-app notification for the seller
   const entityTitle = paymentIntent.description?.split(': ')[1] || 'your listing';

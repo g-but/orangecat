@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { ArrowUpRight, Bot } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ORANGECAT_FLEETCROWN_INTEGRATION } from '@/config/entity-registry';
+import type { EntityType } from '@/config/entity-registry';
 
 /**
  * FleetCrown cross-sell — "build this with an AI fleet".
@@ -29,9 +31,51 @@ const COPY = {
 
 interface FleetCrownBuildCtaProps {
   variant: 'banner' | 'card';
+  entityType?: EntityType;
+  entityId?: string;
+  sourcePath?: string;
 }
 
-export default function FleetCrownBuildCta({ variant }: FleetCrownBuildCtaProps) {
+export default function FleetCrownBuildCta({
+  variant,
+  entityType,
+  entityId,
+  sourcePath,
+}: FleetCrownBuildCtaProps) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const openFleetCrown = async () => {
+    if (!entityType || !entityId) {
+      window.location.assign(FLEETCROWN_BUILD_URL);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/api/integrations/fleetcrown/build-intents', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          entity_type: entityType,
+          entity_id: entityId,
+          source_path: sourcePath,
+        }),
+      });
+      const body = (await response.json()) as {
+        data?: { url?: string };
+        error?: { message?: string };
+      };
+      if (!response.ok || !body.data?.url) {
+        throw new Error(body.error?.message || 'Could not create the FleetCrown handoff.');
+      }
+      window.location.assign(body.data.url);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not open FleetCrown.');
+      setLoading(false);
+    }
+  };
+
   if (variant === 'banner') {
     return (
       <div className="mb-4 rounded-md border border-subtle bg-surface-raised/30 p-4">
@@ -45,11 +89,18 @@ export default function FleetCrownBuildCta({ variant }: FleetCrownBuildCtaProps)
               <p className="mt-1 text-sm text-fg-secondary">{COPY.body}</p>
             </div>
           </div>
-          <Button href={FLEETCROWN_BUILD_URL} variant="outline" size="sm" className="shrink-0">
+          <Button
+            onClick={openFleetCrown}
+            isLoading={loading}
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+          >
             {COPY.action}
             <ArrowUpRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
+        {error && <p className="mt-2 text-xs text-status-negative">{error}</p>}
       </div>
     );
   }
@@ -65,10 +116,17 @@ export default function FleetCrownBuildCta({ variant }: FleetCrownBuildCtaProps)
           <p className="mt-1 text-sm text-fg-secondary">{COPY.body}</p>
         </div>
       </div>
-      <Button href={FLEETCROWN_BUILD_URL} variant="outline" size="sm" className="mt-3 w-full">
+      <Button
+        onClick={openFleetCrown}
+        isLoading={loading}
+        variant="outline"
+        size="sm"
+        className="mt-3 w-full"
+      >
         {COPY.action}
         <ArrowUpRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
       </Button>
+      {error && <p className="mt-2 text-xs text-status-negative">{error}</p>}
     </div>
   );
 }

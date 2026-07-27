@@ -16,14 +16,14 @@ Economic participation still requires gatekeepers. To sell, fund, lend, invest, 
 OrangeCat is an AI-native platform for universal economic participation. Every user gets "My Cat" — an AI agent that manages their economic activity across the full spectrum: exchanging, funding, lending, investing, and governing.
 
 - **Any identity**: Human, pseudonymous, or AI — all are first-class economic participants
-- **Any currency**: Bitcoin/Lightning is native and preferred, but any payment method (Twint, PayPal, Monero, local methods worldwide) is supported
+- **Bitcoin now, broader rails later**: Lightning and on-chain Bitcoin are the only live settlement rails. Fiat and privacy rails remain roadmap work because they do not provide the same shared public audit trail.
 - **Full economic spectrum**: From gifts (no strings) to loans (some strings) to investments (more strings)
 - **Private where needed, transparent where chosen**: E2E encrypted messaging, on-chain transparency when appropriate
 
 ## What Works Today
 
 - **Commerce**: Products and services with Bitcoin Lightning payments
-- **Funding**: Transparent project funding, cause support, wishlists, and research funding
+- **Funding**: Account-free Bitcoin support for public projects and other supportable entities
 - **Lending**: Peer-to-peer loans with repayment tracking
 - **Assets**: Real estate, collateral, and rentable asset management
 - **Groups**: Organizations with shared wallets, governance proposals, and collective decision-making
