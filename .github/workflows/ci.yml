@@ -41,28 +41,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Docs hygiene checks
-        # Don't swallow failures with `|| echo` — that turned this into a no-op
-        # gate. If docs checks legitimately need to be advisory, mark the step
-        # `continue-on-error: true` so the noise is explicit in the UI.
-        run: npm run ci:docs
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Route integrity audit
-        # Every declared route (ROUTES/API_ROUTES/entity registry) and every
-        # emitted internal link must resolve to a real route file. Static,
-        # fast — prevents the internal-link → 404 class of bug.
-        run: npm run audit:routes
-
-      - name: Lint
-        # Catches the bug class that landed on main as `IntegrationNote` —
-        # eslint would have flagged the undefined identifier before merge.
-        run: npm run lint
-
-      - name: Unit tests
-        run: npm run test:unit -- --watchAll=false
+      - name: Verify (docs + type-check + routes + lint + unit — same as local)
+        # SSOT for "green": the pre-build gate is defined ONCE as the `verify`
+        # npm script and called verbatim here, so `npm run verify` locally and CI
+        # can never drift. The chain (in order): ci:docs → type-check →
+        # audit:routes → lint → test:unit. Rationale for each check:
+        #   - ci:docs      : docs hygiene (slop scan + frontmatter). Fails hard,
+        #                    never swallowed with `|| echo` (that was a no-op gate).
+        #   - type-check   : tsc --noEmit.
+        #   - audit:routes : every declared route + emitted internal link must
+        #                    resolve to a real route file — kills the internal-link
+        #                    → 404 class of bug. Static, fast.
+        #   - lint         : eslint — catches the undefined-identifier class (e.g.
+        #                    the `IntegrationNote` bug that once landed on main).
+        #   - test:unit    : Jest unit suite (--watchAll=false).
+        # (Playwright/E2E stays a separate post-build gate below — it needs a
+        # running server + secrets, so it isn't part of the static verify bundle.)
+        run: npm run verify
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps

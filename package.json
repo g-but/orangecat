@@ -31,6 +31,7 @@
     "lint:check": "next lint",
     "lint:umlauts": "grep -rn --include='*.ts' --include='*.tsx' -E '(fuer|koennen|moeglich|muessen|wuerde|aehnlich|aerger|aendern|oeffnen|ueber|ueberall|zurueck|natuerlich|genuegt|Strasse|Gruesse)' src/ || echo 'No umlaut violations found'",
     "type-check": "tsc --noEmit --skipLibCheck --incremental false",
+    "verify": "npm run ci:docs && npm run type-check && npm run audit:routes && npm run lint && npm run test:unit -- --watchAll=false",
     "audit:schema": "node scripts/db/audit-schema-drift.mjs",
     "audit:routes": "node scripts/audit-routes.mjs",
     "gen:types": "bash scripts/db/gen-types.sh",
