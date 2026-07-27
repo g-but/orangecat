@@ -1,13 +1,15 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import { apiBadRequest, apiForbidden, apiSuccess } from '@/lib/api/standardResponse';
+import {
+  apiBadRequest,
+  apiForbidden,
+  apiServiceUnavailable,
+  apiSuccess,
+} from '@/lib/api/standardResponse';
 import { getEntityMetadata, isValidEntityType } from '@/config/entity-registry';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { getSellerUserId } from '@/domain/payments';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
-import {
-  signFleetCrownBuildIntent,
-  suggestedHandoffFor,
-} from '@/services/fleetcrown/build-intent';
+import { signFleetCrownBuildIntent, suggestedHandoffFor } from '@/services/fleetcrown/build-intent';
 import { ECOSYSTEM } from '@/config/ecosystem';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
@@ -51,20 +53,27 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
   const row = entity as unknown as Record<string, unknown>;
   const title = String(row[titleColumn] || meta.name);
-  const description =
-    typeof row.description === 'string' ? row.description.slice(0, 1200) : null;
+  const description = typeof row.description === 'string' ? row.description.slice(0, 1200) : null;
   const actor = await getOrCreateUserActor(request.user.id);
-  const token = signFleetCrownBuildIntent({
-    sub: actor.id,
-    entity: {
-      type: entityType,
-      id: body.entity_id,
-      title,
-      description,
-      publicUrl: new URL(body.source_path, ECOSYSTEM.orangeCat.siteUrl).toString(),
-    },
-    suggestedHandoff: suggestedHandoffFor(entityType, title),
-  });
+  let token: string;
+  try {
+    token = signFleetCrownBuildIntent({
+      sub: actor.id,
+      entity: {
+        type: entityType,
+        id: body.entity_id,
+        title,
+        description,
+        publicUrl: new URL(body.source_path, ECOSYSTEM.orangeCat.siteUrl).toString(),
+      },
+      suggestedHandoff: suggestedHandoffFor(entityType, title),
+    });
+  } catch {
+    // FLEETCROWN_BUILD_INTENT_SECRET not set on this deploy — the handoff is
+    // unavailable, not a server fault. Return 503 so the CTA can fall back to
+    // the plain FleetCrown link instead of surfacing a generic 500.
+    return apiServiceUnavailable('FleetCrown build handoff is not configured');
+  }
 
   const url = new URL('/integrations/orangecat/build', ECOSYSTEM.fleetCrown.siteUrl);
   url.searchParams.set('intent', token);

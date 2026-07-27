@@ -49,7 +49,7 @@ export const PUBLIC_API_INTEGRATION_SCOPE_TOKENS = [
   'stakeholders.write',
 ] as const;
 
-/** Non-entity v1 endpoints (publish bus, stakeholder graph, …). */
+/** Non-entity v1 endpoints (publish bus, stakeholder graph, discovery, …). */
 export const PUBLIC_API_INTEGRATION_ENDPOINTS = [
   {
     name: 'timeline.publish',
@@ -60,6 +60,16 @@ export const PUBLIC_API_INTEGRATION_ENDPOINTS = [
     name: 'stakeholders',
     methods: ['GET', 'POST'] as const,
     endpoint: `${PUBLIC_API_BASE}/stakeholders`,
+  },
+  {
+    name: 'search',
+    methods: ['GET'] as const,
+    endpoint: `${PUBLIC_API_BASE}/search`,
+  },
+  {
+    name: 'demand',
+    methods: ['GET'] as const,
+    endpoint: `${PUBLIC_API_BASE}/demand`,
   },
 ] as const;
 
@@ -74,12 +84,22 @@ export const PUBLIC_API_SCOPE_TOKENS: readonly string[] = [
 ];
 
 /**
- * Webhook event types that endpoints can subscribe to. Format mirrors
- * how entityPostHandler emits: `<entity>.created`. Future events
- * (`<entity>.updated`, `<entity>.deleted`) will append here. An endpoint
- * with `event_types=null` receives every event for its bound actor —
- * the explicit allowlist only gates the firing fan-out.
+ * Non-entity webhook events that carry an economic signal rather than an
+ * entity lifecycle change. `payment.settled` fires when a Bitcoin payment
+ * for one of the actor's entities settles — the same ground-truth signal
+ * that drives the FleetCrown entitlement rail, now also deliverable to any
+ * integrator's own endpoint via the generic webhook fan-out.
  */
-export const PUBLIC_API_WEBHOOK_EVENTS: readonly string[] = PUBLIC_API_ENTITY_TYPES.map(
-  t => `${t}.created`
-);
+export const PUBLIC_API_ECONOMIC_WEBHOOK_EVENTS = ['payment.settled'] as const;
+
+/**
+ * Webhook event types that endpoints can subscribe to. Entity events mirror
+ * how entityPostHandler emits: `<entity>.created` (future `<entity>.updated`
+ * / `<entity>.deleted` append there); economic events carry settlement
+ * signals. An endpoint with `event_types=null` receives every event for its
+ * bound actor — the explicit allowlist only gates the firing fan-out.
+ */
+export const PUBLIC_API_WEBHOOK_EVENTS: readonly string[] = [
+  ...PUBLIC_API_ENTITY_TYPES.map(t => `${t}.created`),
+  ...PUBLIC_API_ECONOMIC_WEBHOOK_EVENTS,
+];

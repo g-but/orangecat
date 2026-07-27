@@ -62,6 +62,13 @@ export default function FleetCrownBuildCta({
           source_path: sourcePath,
         }),
       });
+      // 503 = the signed handoff isn't configured on this deploy. That's not a
+      // failure the user should see — fall back to the plain FleetCrown link,
+      // exactly as the banner (no entity id) variant already does.
+      if (response.status === 503) {
+        window.location.assign(FLEETCROWN_BUILD_URL);
+        return;
+      }
       const body = (await response.json()) as {
         data?: { url?: string };
         error?: { message?: string };
