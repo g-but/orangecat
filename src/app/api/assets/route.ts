@@ -7,7 +7,6 @@ import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 // Uses generic entity list handler with actor_id ownership
 export const GET = createEntityListHandler({
   entityType: 'asset',
-  userIdField: 'actor_id',
   requireAuth: true,
   selectColumns:
     'id, title, type, status, estimated_value, currency, created_at, verification_status',

@@ -30,7 +30,6 @@ const EVENT_PUBLIC_STATUSES = EVENT_DRAFT_STATUSES.filter(
 // GET /api/events - Get all published events
 export const GET = createEntityListHandler({
   entityType: 'event',
-  userIdField: 'actor_id',
   publicStatuses: EVENT_PUBLIC_STATUSES,
   draftStatuses: EVENT_DRAFT_STATUSES,
   orderBy: 'start_date',

@@ -29,9 +29,10 @@ If you discover a security vulnerability in this project, please report it respo
 This project implements the following security measures:
 
 - Dependency scanning via Dependabot
-- Secret scanning enabled
+- Secret scanning enabled (gitleaks in CI, custom rules in `.gitleaks.toml`)
 - Code scanning (where applicable)
 - Signed commits required from maintainers
+- SSRF guard on user-supplied webhook URLs (`src/lib/security/ssrfGuard.ts`) — private/reserved addresses rejected at mint time and before every delivery
 
 ## Disclosure Policy
 

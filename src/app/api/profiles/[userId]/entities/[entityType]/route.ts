@@ -13,6 +13,7 @@ import { withOptionalAuth } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import {
   getTableName,
+  getUserIdField,
   isValidEntityType,
   EntityType,
   getEntityMetadata,
@@ -46,25 +47,6 @@ const ENTITY_COLUMNS: Record<EntityType, string> = {
   document: 'id, title, content, document_type, visibility, tags, created_at',
 };
 
-// Entities that should filter by actor_id or user_id
-const USER_ID_FIELD: Record<EntityType, string> = {
-  project: 'actor_id',
-  product: 'actor_id',
-  service: 'actor_id',
-  cause: 'actor_id',
-  ai_assistant: 'actor_id',
-  asset: 'actor_id',
-  loan: 'actor_id',
-  investment: 'actor_id',
-  event: 'actor_id',
-  wallet: 'profile_id',
-  group: 'created_by',
-  circle: 'actor_id',
-  research: 'user_id',
-  wishlist: 'actor_id',
-  document: 'actor_id',
-};
-
 // Entities that shouldn't appear on profile (e.g., groups have their own pages, documents are personal)
 const EXCLUDED_ENTITY_TYPES: EntityType[] = ['wallet', 'group', 'document'];
 
@@ -95,7 +77,9 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
     const { supabase } = request;
     const tableName = getTableName(entityType as EntityType);
     const columns = ENTITY_COLUMNS[entityType as EntityType];
-    const userIdField = USER_ID_FIELD[entityType as EntityType];
+    // Ownership column comes from the entity registry (SSOT) — this route
+    // previously kept its own copy of the mapping, which drifted
+    const userIdField = getUserIdField(entityType as EntityType);
 
     // Resolve user_id to actor_id for entities that use actor-based ownership
     let filterValue = userId;

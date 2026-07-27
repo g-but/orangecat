@@ -114,13 +114,14 @@ Mutating endpoints (POST, PUT, DELETE) **will** accept `Idempotency-Key: <client
 - Stored and transmitted as BTC numeric values with up to 8 decimals (`NUMERIC(18,8)` in the DB). Field name suffix: `_btc`.
 - Never use `_sats`. Never use floats without explicit decimal precision.
 
-## 11. Webhooks (planned — not yet built)
+## 11. Webhooks (shipped 2026-06)
 
-When OrangeCat emits webhooks to integrations:
+Endpoints are minted via `POST /api/webhook-endpoints` (session auth only) and delivered by the cron worker (`/api/cron/webhook-worker`, systemd timer on the box):
 
-- Payloads will be signed with HMAC-SHA-256 using the integration key as the secret. Verification header: `X-OrangeCat-Signature: t=<timestamp>,v1=<hex>`.
-- Failed deliveries retry with exponential backoff up to 24 hours.
-- Each event has a stable `type` string (e.g. `entity.created`, `payment.received`) and a `version` field tied to the API version.
+- Payloads are signed with HMAC-SHA-256 using the endpoint's secret (returned once at mint). Verification header: `X-OrangeCat-Signature: t=<unix_seconds>,v1=<hex>`; signed string is `${timestamp}.${rawBody}` with a 5-minute default tolerance. Receivers verify with `@orangecat/sdk` (`verifyWebhookSignature`).
+- Failed deliveries retry with exponential backoff, up to 6 attempts, then flip to `status='failed'`.
+- Each event has a stable `type` string from the `PUBLIC_API_WEBHOOK_EVENTS` allowlist (`src/config/public-api.ts`).
+- **URL policy (SSRF guard, 2026-07):** webhook URLs must be public https URLs. URLs pointing at localhost, private/reserved IP ranges (RFC1918, link-local/cloud-metadata, CGNAT), or hostnames resolving to them are rejected at mint time and re-checked before every delivery (`src/lib/security/ssrfGuard.ts`). Dev allows localhost receivers.
 
 ## 12. SDK / client guidance
 

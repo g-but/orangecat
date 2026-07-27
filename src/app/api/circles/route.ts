@@ -10,7 +10,6 @@ import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 // GET /api/circles - the authenticated actor's circles (plus public ones via RLS).
 export const GET = createEntityListHandler({
   entityType: 'circle',
-  userIdField: 'actor_id',
 });
 
 // POST /api/circles - create a circle (actor-owned).

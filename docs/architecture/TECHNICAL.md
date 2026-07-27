@@ -261,7 +261,7 @@ npm test -- --watch
 npm test -- path/to/test/file
 
 # Run only security tests
-npm test -- --testPathPattern="security|verification|validation"
+npm test -- --testPathPatterns "security|verification|validation"
 ```
 
 ### Test Coverage Goals

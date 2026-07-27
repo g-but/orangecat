@@ -96,19 +96,26 @@ export async function generateNudges(
     {};
   const ownEntityTitles: string[] = [];
   if (actor?.id) {
-    for (const { type } of ENTITY_SOURCE) {
-      const meta = ENTITY_REGISTRY[type];
-      const { data } = await supabase
-        .from(meta.tableName)
-        .select('id, title, status')
-        .eq('actor_id', actor.id);
+    // One query per entity type, fired in parallel — this endpoint is
+    // force-dynamic, so serial queries here directly slow every dashboard load
+    const results = await Promise.all(
+      ENTITY_SOURCE.map(async ({ type }) => {
+        const meta = ENTITY_REGISTRY[type];
+        const { data } = await supabase
+          .from(meta.tableName)
+          .select('id, title, status')
+          .eq('actor_id', actor.id);
+        return { type, data: data ?? [] };
+      })
+    );
+    for (const { type, data } of results) {
       created[type] = {
-        active: (data ?? []).filter((e: any) => e.status === 'active').length,
-        drafts: (data ?? [])
+        active: data.filter((e: any) => e.status === 'active').length,
+        drafts: data
           .filter((e: any) => e.status === 'draft')
           .map((e: any) => ({ id: e.id, title: e.title })),
       };
-      for (const e of data ?? []) {
+      for (const e of data) {
         if (e?.title) {
           ownEntityTitles.push(String(e.title).toLowerCase());
         }

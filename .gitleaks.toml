@@ -1,0 +1,25 @@
+# Gitleaks config — extends the default ruleset (used by the CI "security" job).
+#
+# Added because the default rules have no Supabase personal-access-token
+# pattern, which let real `sbp_` tokens sit in the tree unflagged until a
+# 2026-07 audit found them.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "supabase-personal-access-token"
+description = "Supabase personal access token (Management API)"
+regex = '''sbp_[a-f0-9]{40}'''
+keywords = ["sbp_"]
+
+# The two tokens below were committed historically, are DEAD (they targeted the
+# managed Supabase Cloud project retired 2026-06 — see CLAUDE.md), and were
+# scrubbed from the working tree in 2026-07. They remain in git history until a
+# history rewrite, so they are allowlisted here to keep the full-history scan
+# green while still catching any NEW token.
+[rules.allowlist]
+regexes = [
+  '''sbp_7bc7546939c5675c6146d5773f83f05b0131c614''',
+  '''sbp_8a9797e27e1e7b1819c04ce9e2ccee0cfb9ed85b''',
+]

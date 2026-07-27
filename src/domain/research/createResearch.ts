@@ -11,6 +11,7 @@ import { apiRateLimited, apiSuccess } from '@/lib/api/standardResponse';
 import { getTableName } from '@/config/entity-registry';
 import { STATUS } from '@/config/database-constants';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 import type { ResearchEntityCreate } from '@/types/research';
 import type { NextResponse } from 'next/server';
 
@@ -48,8 +49,13 @@ export async function createResearch(
   const fundingGoalBtc =
     (validatedData as { funding_goal_btc?: number }).funding_goal_btc || 0.00001;
 
+  // research_entities.actor_id is NOT NULL — an insert without it violates the
+  // constraint. Dual-write user_id + actor_id like ai_assistants does.
+  const actor = await getOrCreateUserActor(userId);
+
   const insertData = {
     user_id: userId,
+    actor_id: actor.id,
     title: validatedData.title,
     description: validatedData.description,
     field: validatedData.field,

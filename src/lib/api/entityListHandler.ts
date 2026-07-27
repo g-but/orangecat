@@ -57,7 +57,7 @@ interface EntityListHandlerConfig {
   additionalFilters?: Record<string, string>;
   /** Whether to use listEntitiesPage helper (for commerce entities) */
   useListHelper?: boolean;
-  /** Custom user ID field name (default: 'user_id') - e.g., 'owner_id' for assets */
+  /** Override ownership column (default: the entity's registry `userIdField`) */
   userIdField?: string;
   /** Additional filters for public listings (e.g., { is_public: true } for AI assistants) */
   publicFilters?: Record<string, unknown>;
@@ -90,7 +90,6 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
     orderDirection = 'desc',
     additionalFilters = {},
     useListHelper = false,
-    userIdField = 'user_id',
     publicFilters = {},
     requireAuth = false,
     selectColumns = '*',
@@ -98,6 +97,9 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
 
   const meta = getEntityMetadata(entityType);
   const table = tableName ?? meta.tableName;
+  // Ownership column comes from the registry (the SSOT) unless overridden —
+  // per-route literals drifted from the registry in the past
+  const userIdField = config.userIdField ?? meta.userIdField;
 
   return compose(
     withRequestId(),

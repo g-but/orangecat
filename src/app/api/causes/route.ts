@@ -16,7 +16,6 @@ import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 // GET /api/causes - Get all active causes
 export const GET = createEntityListHandler({
   entityType: 'cause',
-  userIdField: 'actor_id',
   useListHelper: true, // Uses listEntitiesPage for commerce entities
 });
 
