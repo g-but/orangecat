@@ -20,36 +20,15 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { logger } from '@/utils/logger';
 import type { PaymentIntent } from '@/domain/payments/types';
+import { parseFleetCrownPass } from '@/config/fleetcrown-passes';
 
 const FLEETCROWN_URL =
   process.env.FLEETCROWN_ENTITLEMENT_URL ||
   'https://fleetcrown.orangecat.ch/api/orangecat/entitlement';
 
-const PLANS = new Set(['personal', 'pro', 'team']);
-
-/** Extract {plan, periodDays} from a product's tags, or null if not a pass. */
-export function parseFleetCrownPass(tags: unknown): { plan: string; periodDays: number } | null {
-  if (!Array.isArray(tags)) {
-    return null;
-  }
-  let plan: string | null = null;
-  let periodDays: number | null = null;
-  for (const raw of tags) {
-    if (typeof raw !== 'string') {
-      continue;
-    }
-    const t = raw.trim();
-    const p = /^fleetcrown-plan:([a-z]+)$/.exec(t);
-    if (p && PLANS.has(p[1])) {
-      plan = p[1];
-    }
-    const d = /^fleetcrown-days:(\d{1,4})$/.exec(t);
-    if (d) {
-      periodDays = parseInt(d[1], 10);
-    }
-  }
-  return plan && periodDays ? { plan, periodDays } : null;
-}
+// parseFleetCrownPass + the plan set live in the config SSOT (the seed writes
+// the very tags this reads), re-exported here for existing importers.
+export { parseFleetCrownPass };
 
 const FLEETCROWN_EVENTS_URL =
   process.env.FLEETCROWN_EVENTS_URL || 'https://fleetcrown.orangecat.ch/api/orangecat/events';
