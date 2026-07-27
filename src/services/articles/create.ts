@@ -6,14 +6,8 @@
 
 import { timelineService } from '@/services/timeline';
 import { logger } from '@/utils/logger';
-import {
-  ARTICLE_EVENT_TYPE,
-  ARTICLE_LIMITS,
-  buildArticleSlug,
-  deriveExcerpt,
-  estimateReadingTime,
-  shortToken,
-} from '@/config/articles';
+import { ARTICLE_EVENT_TYPE, buildArticleSlug, shortToken } from '@/config/articles';
+import { buildArticleMetadata, validateArticleInput } from './write-shared';
 import type { CreateArticleInput } from './types';
 
 interface PublishArticleUser {
@@ -26,25 +20,12 @@ export async function publishArticle(
   user: PublishArticleUser,
   input: CreateArticleInput
 ): Promise<PublishArticleResult> {
-  const title = input.title.trim();
-  const body = input.body.trim();
-
-  if (!title) {
-    return { success: false, error: 'Give your article a title.' };
+  const validation = validateArticleInput(input, 'publish');
+  if (!validation.success) {
+    return validation;
   }
-  if (title.length > ARTICLE_LIMITS.title) {
-    return { success: false, error: `Title must be ${ARTICLE_LIMITS.title} characters or fewer.` };
-  }
-  if (body.length < ARTICLE_LIMITS.bodyMin) {
-    return { success: false, error: 'Write something before publishing.' };
-  }
-  if (body.length > ARTICLE_LIMITS.body) {
-    return { success: false, error: 'This article is too long to publish.' };
-  }
-
-  const excerpt = (input.excerpt?.trim() || deriveExcerpt(body)).slice(0, ARTICLE_LIMITS.excerpt);
+  const { title, body, excerpt, coverImage } = validation.value;
   const slug = buildArticleSlug(title, shortToken());
-  const coverImage = input.coverImage?.trim() || undefined;
 
   // Owner (profile) timeline + community feed when public — mirrors the short-post
   // distribution contexts so articles surface everywhere posts do.
@@ -64,16 +45,7 @@ export async function publishArticle(
     title,
     description: excerpt,
     visibility: input.visibility,
-    metadata: {
-      is_user_post: true,
-      is_article: true,
-      article: {
-        slug,
-        cover_image: coverImage,
-        reading_time: estimateReadingTime(body),
-        body,
-      },
-    },
+    metadata: buildArticleMetadata({ title, body, excerpt, coverImage, slug }),
     timelineContexts,
   });
 

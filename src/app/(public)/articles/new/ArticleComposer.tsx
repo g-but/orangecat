@@ -12,6 +12,7 @@ import { TIMELINE_SURFACE, TIMELINE_VISIBILITY_OPTIONS } from '@/config/timeline
 import { ARTICLE_COPY, ARTICLE_LIMITS, estimateReadingTime } from '@/config/articles';
 import { ROUTES } from '@/config/routes';
 import { publishArticle } from '@/services/articles/create';
+import { updateArticle } from '@/services/articles/update';
 import type { TimelineVisibility } from '@/types/timeline';
 import type { ArticleDraft } from '@/services/cat/writing-types';
 import ArticleMarkdown from '../[slug]/ArticleMarkdown';
@@ -30,13 +31,31 @@ interface DraftShape {
   visibility: TimelineVisibility;
 }
 
-export default function ArticleComposer({ user }: { user: { id: string } }) {
+/** Existing article passed when the composer is opened in edit mode. */
+export interface ArticleInitial {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  coverImage?: string;
+  body: string;
+  visibility: TimelineVisibility;
+}
+
+export default function ArticleComposer({
+  user,
+  initial,
+}: {
+  user: { id: string };
+  initial?: ArticleInitial;
+}) {
   const router = useRouter();
-  const [title, setTitle] = useState('');
-  const [excerpt, setExcerpt] = useState('');
-  const [coverImage, setCoverImage] = useState('');
-  const [body, setBody] = useState('');
-  const [visibility, setVisibility] = useState<TimelineVisibility>('public');
+  const isEditing = !!initial;
+  const [title, setTitle] = useState(initial?.title ?? '');
+  const [excerpt, setExcerpt] = useState(initial?.excerpt ?? '');
+  const [coverImage, setCoverImage] = useState(initial?.coverImage ?? '');
+  const [body, setBody] = useState(initial?.body ?? '');
+  const [visibility, setVisibility] = useState<TimelineVisibility>(initial?.visibility ?? 'public');
   const [tab, setTab] = useState<'write' | 'preview'>('write');
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +64,12 @@ export default function ArticleComposer({ user }: { user: { id: string } }) {
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const md = useMarkdownTextarea(bodyRef, body, setBody);
 
-  // Restore an in-progress draft once on mount.
+  // Restore an in-progress draft once on mount (new articles only — never clobber
+  // an article being edited with a stale local draft).
   useEffect(() => {
+    if (isEditing) {
+      return;
+    }
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) {
@@ -66,10 +89,13 @@ export default function ArticleComposer({ user }: { user: { id: string } }) {
     } catch {
       /* ignore corrupt draft */
     }
-  }, []);
+  }, [isEditing]);
 
-  // Autosave (debounced) whenever content changes.
+  // Autosave (debounced) whenever content changes (new articles only).
   useEffect(() => {
+    if (isEditing) {
+      return;
+    }
     if (!title && !body && !excerpt && !coverImage) {
       return;
     }
@@ -84,7 +110,7 @@ export default function ArticleComposer({ user }: { user: { id: string } }) {
       }
     }, 600);
     return () => clearTimeout(id);
-  }, [title, excerpt, coverImage, body, visibility]);
+  }, [isEditing, title, excerpt, coverImage, body, visibility]);
 
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
   const readingTime = wordCount ? estimateReadingTime(body) : 0;
@@ -123,13 +149,27 @@ export default function ArticleComposer({ user }: { user: { id: string } }) {
     }
     setPublishing(true);
     setError(null);
-    const result = await publishArticle(user, {
+    const payload = {
       title,
       body,
       excerpt: excerpt || undefined,
       coverImage: coverImage || undefined,
       visibility,
-    });
+    };
+
+    if (initial) {
+      const result = await updateArticle({ id: initial.id, slug: initial.slug }, payload);
+      if (!result.success) {
+        setError(result.error);
+        setPublishing(false);
+        return;
+      }
+      router.push(ROUTES.ARTICLE(initial.slug));
+      router.refresh();
+      return;
+    }
+
+    const result = await publishArticle(user, payload);
     if (!result.success) {
       setError(result.error);
       setPublishing(false);
@@ -147,23 +187,27 @@ export default function ArticleComposer({ user }: { user: { id: string } }) {
     <div className="min-h-screen bg-surface-page pt-20 pb-24 text-fg-primary">
       <div className="mx-auto w-full max-w-[720px] px-5">
         <Link
-          href={ROUTES.ARTICLES}
+          href={isEditing ? ROUTES.ARTICLE(initial!.slug) : ROUTES.ARTICLES}
           className="mb-6 inline-flex items-center gap-1.5 text-sm text-fg-secondary transition-colors hover:text-fg-primary"
         >
           <ArrowLeft className="h-4 w-4" />
-          {ARTICLE_COPY.reader.back}
+          {isEditing ? 'Back to article' : ARTICLE_COPY.reader.back}
         </Link>
 
         <header className="mb-5">
           <h1 className="text-2xl font-semibold tracking-display text-fg-primary">
-            {ARTICLE_COPY.new.heading}
+            {isEditing ? ARTICLE_COPY.edit.heading : ARTICLE_COPY.new.heading}
           </h1>
-          <p className="mt-1.5 text-sm text-fg-secondary">{ARTICLE_COPY.new.subheading}</p>
+          <p className="mt-1.5 text-sm text-fg-secondary">
+            {isEditing ? ARTICLE_COPY.edit.subheading : ARTICLE_COPY.new.subheading}
+          </p>
         </header>
 
-        <div className="mb-5">
-          <AiWriterPanel title={title} onApplyDraft={applyDraft} disabled={publishing} />
-        </div>
+        {!isEditing && (
+          <div className="mb-5">
+            <AiWriterPanel title={title} onApplyDraft={applyDraft} disabled={publishing} />
+          </div>
+        )}
 
         {restored && (
           <p className="mb-4 rounded-md border border-subtle bg-surface-raised/30 px-3 py-2 text-xs text-fg-secondary">
@@ -291,7 +335,13 @@ export default function ArticleComposer({ user }: { user: { id: string } }) {
             disabled={!canPublish}
             isLoading={publishing}
           >
-            {publishing ? ARTICLE_COPY.new.publishing : ARTICLE_COPY.new.publish}
+            {isEditing
+              ? publishing
+                ? ARTICLE_COPY.edit.saving
+                : ARTICLE_COPY.edit.save
+              : publishing
+                ? ARTICLE_COPY.new.publishing
+                : ARTICLE_COPY.new.publish}
           </Button>
         </div>
       </div>
