@@ -22,10 +22,27 @@ import { convertFromBTC } from '@/services/currency/rates';
 import { logger } from '@/utils/logger';
 
 /**
- * Platform margin on raw provider cost. The user's ledger is debited
+ * Platform markup on raw provider cost. The user's ledger is debited
  * cost × markup; the spread is the platform's revenue on intelligence.
+ *
+ * 40% (was a razor-thin 20%). The markup must cover more than margin: Lightning
+ * routing fees on top-up, BTC/USD drift between top-up and spend (a prepaid
+ * float held for days), and the occasional un-debited request. 20% went
+ * negative after fees + volatility; 40% keeps the credit rail actually
+ * break-even. Inference is cents/exchange, so this stays trivial to the user.
  */
-export const CREDIT_USAGE_MARKUP = 1.2;
+export const CREDIT_USAGE_MARKUP = 1.4;
+
+/**
+ * Extra safety applied ONLY to registry-ESTIMATE charges — i.e. when the
+ * provider didn't report a real cost and we fall back to the hand-maintained
+ * price table (`ai-models.ts`), which can lag real prices and silently
+ * under-bill. Provider-reported cost is ground truth and gets no pad.
+ */
+export const ESTIMATE_SAFETY_MULTIPLIER = 1.25;
+
+/** Retries for the post-response debit — idempotent per `ref`, so safe to retry. */
+const DEBIT_MAX_ATTEMPTS = 3;
 
 /**
  * Minimum balance (BTC) required to unlock platform-served frontier models —
@@ -89,27 +106,51 @@ export async function meterCreditUsage(
     return 0;
   }
 
+  const hasProviderCost = Number.isFinite(rawCostBtc) && (rawCostBtc ?? 0) > 0;
+
   let btcPriceUsd = 100000;
+  let liveRate = false;
   try {
     const usdPerBtc = await convertFromBTC(1, 'USD');
     if (Number.isFinite(usdPerBtc) && usdPerBtc > 0) {
       btcPriceUsd = usdPerBtc;
+      liveRate = true;
     }
   } catch {
-    /* keep conservative default */
+    /* fall through to the conservative default + the warning below */
   }
 
-  const meteredRawCostBtc =
-    Number.isFinite(rawCostBtc) && (rawCostBtc ?? 0) > 0
-      ? (rawCostBtc as number)
-      : calculateCostBtc(model, inputTokens, outputTokens, btcPriceUsd);
+  const meteredRawCostBtc = hasProviderCost
+    ? (rawCostBtc as number)
+    : calculateCostBtc(model, inputTokens, outputTokens, btcPriceUsd);
   if (meteredRawCostBtc <= 0) {
     return 0;
   }
-  const chargeBtc = ceilBtc(meteredRawCostBtc * CREDIT_USAGE_MARKUP);
 
-  const newBalance = await appendCreditEntry(admin, userId, {
-    kind: 'usage',
+  // Provider-reported cost is ground truth → charge margin only. A registry
+  // estimate is less reliable (hand-maintained prices lag), and doubly so if
+  // the live BTC/USD rate was unavailable — pad it and record the source so a
+  // low-confidence bill is auditable rather than a silent under-charge.
+  const effectiveMarkup = hasProviderCost
+    ? CREDIT_USAGE_MARKUP
+    : CREDIT_USAGE_MARKUP * ESTIMATE_SAFETY_MULTIPLIER;
+  const pricingSource = hasProviderCost
+    ? 'provider_reported'
+    : liveRate
+      ? 'registry_estimate'
+      : 'registry_estimate_norate';
+  if (!hasProviderCost && !liveRate) {
+    logger.warn(
+      'Cat credit debit priced from a registry estimate with no live BTC rate — used the conservative fallback',
+      { userId, model, ref, btcPriceUsd },
+      'CatCredits'
+    );
+  }
+
+  const chargeBtc = ceilBtc(meteredRawCostBtc * effectiveMarkup);
+
+  const entry = {
+    kind: 'usage' as const,
     amountBtc: -chargeBtc,
     ref,
     metadata: {
@@ -118,20 +159,28 @@ export async function meterCreditUsage(
       inputTokens,
       outputTokens,
       rawCostBtc: meteredRawCostBtc,
-      pricingSource:
-        Number.isFinite(rawCostBtc) && (rawCostBtc ?? 0) > 0
-          ? 'provider_reported'
-          : 'registry_estimate',
-      markup: CREDIT_USAGE_MARKUP,
+      pricingSource,
+      markup: effectiveMarkup,
       conversationId: conversationId ?? null,
     },
-  });
+  };
+
+  // The response is already served; retry the debit (idempotent per `ref`)
+  // before giving up, so a transient ledger blip doesn't hand out a free
+  // frontier call.
+  let newBalance: number | null = null;
+  for (let attempt = 1; attempt <= DEBIT_MAX_ATTEMPTS; attempt++) {
+    newBalance = await appendCreditEntry(admin, userId, entry);
+    if (newBalance !== null) {
+      break;
+    }
+  }
 
   if (newBalance === null) {
-    // Served but not billed (race/duplicate/transient). Reconcilable from logs.
-    logger.warn(
-      'Cat frontier usage debit failed — response served, ledger not debited',
-      { userId, model, chargeBtc, ref },
+    // Served but not billed after retries. Loud — this is lost revenue to reconcile.
+    logger.error(
+      'Cat frontier usage debit failed after retries — response served, ledger NOT debited',
+      { userId, model, chargeBtc, ref, attempts: DEBIT_MAX_ATTEMPTS },
       'CatCredits'
     );
     return 0;
