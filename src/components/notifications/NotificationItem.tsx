@@ -3,6 +3,7 @@
 import {
   Bell,
   Calendar,
+  Cat,
   Check,
   Bitcoin,
   Users,
@@ -45,6 +46,8 @@ interface NotificationItemProps {
   onMarkAsRead: (id: string) => void;
   onDelete: (id: string) => void;
   onClick: (notification: Notification) => void;
+  /** Open the Cat chat with this notification as a prepared question. */
+  onAskCat: (notification: Notification) => void;
 }
 
 export function NotificationItem({
@@ -52,6 +55,7 @@ export function NotificationItem({
   onMarkAsRead,
   onDelete,
   onClick,
+  onAskCat,
 }: NotificationItemProps) {
   return (
     <div
@@ -84,6 +88,18 @@ export function NotificationItem({
             </div>
 
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {notification.type !== 'message' && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    onAskCat(notification);
+                  }}
+                  className="flex min-h-11 min-w-11 items-center justify-center rounded-md p-1 hover:bg-surface-page"
+                  title="Ask the Cat about this"
+                >
+                  <Cat className="w-3 h-3 text-fg-primary" />
+                </button>
+              )}
               {!notification.is_read && (
                 <button
                   onClick={e => {

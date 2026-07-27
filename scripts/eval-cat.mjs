@@ -24,9 +24,14 @@
  *     consumed by it.
  *
  * On failure with CAT_EVAL_NOTIFY=1 (set by the systemd unit on the box), an
- * in-app notification row is inserted for the founder via the same schema the
+ * in-app notification is UPSERTED for the founder via the same schema the
  * NotificationDispatcher uses (notifications: user_id, type, message,
  * metadata{title,...}, is_read) and the failure is logged to stderr (journal).
+ * Upserted, not inserted: a repeated nightly failure updates the existing
+ * UNREAD row for the same title (bumping metadata.occurrences) instead of
+ * stacking a duplicate every night. The notification's action_url deep-links
+ * into the Cat chat with a prepared question, so the founder's first stop is
+ * the Cat (which can run a live provider health check), not journalctl.
  *
  * Env (all read from process.env, with .env.local as local-dev fallback):
  *   NEXT_PUBLIC_SUPABASE_URL / SUPABASE_URL     GoTrue + PostgREST host
@@ -398,44 +403,69 @@ async function cleanupEvalArtifacts(userId, conversationIds, runStartIso) {
 // Failure notification (mirrors NotificationDispatcher.createInAppNotification)
 // ---------------------------------------------------------------------------
 
-async function notifyFounder(summaryLine, report) {
+/**
+ * Insert-or-update the founder's in-app alert for one failure class (keyed by
+ * metadata title). Coalescing rule: if an UNREAD notification with the same
+ * title from this script already exists, update it in place and bump
+ * metadata.occurrences — never stack a duplicate row per night. action_url
+ * opens the Cat chat with a prepared question so the Cat (which can run live
+ * provider health probes) does the triage.
+ */
+async function upsertFounderNotification(title, message, extraMetadata = {}) {
+  const question = `Help me with this notification: ${title} — "${message}" What does it mean and what should I do?`;
+  const actionUrl = `/dashboard/cat?q=${encodeURIComponent(question)}`;
+  const existing = await rest(
+    'GET',
+    `notifications?user_id=eq.${NOTIFY_USER_ID}&type=eq.system&is_read=eq.false` +
+      `&metadata->>source=eq.eval-cat.mjs&metadata->>title=eq.${encodeURIComponent(title)}` +
+      `&select=id,metadata&order=created_at.desc&limit=1`
+  );
+  const baseMetadata = {
+    ...extraMetadata,
+    title,
+    source: 'eval-cat.mjs',
+    ranAt: new Date().toISOString(),
+  };
+  if (Array.isArray(existing) && existing.length > 0) {
+    const prev = existing[0];
+    const occurrences = (Number(prev.metadata?.occurrences) || 1) + 1;
+    await rest('PATCH', `notifications?id=eq.${prev.id}`, {
+      body: { message, action_url: actionUrl, metadata: { ...baseMetadata, occurrences } },
+      prefer: 'return=minimal',
+    });
+    return;
+  }
   await rest('POST', 'notifications', {
     body: {
       user_id: NOTIFY_USER_ID,
       type: 'system',
-      message: `Nightly Cat eval FAILED — ${summaryLine}. Check journalctl -u orangecat-cat-eval on the box.`,
-      action_url: null,
-      metadata: {
-        title: 'Cat eval regression',
-        source: 'eval-cat.mjs',
-        typeScore: report.scores.type,
-        whyScore: report.scores.why,
-        duplicateDrafts: report.scores.duplicates,
-        failedProbes: report.probes.filter(p => !p.typeOk || !p.whyOk).map(p => p.id),
-        ranAt: report.timestamp,
-      },
+      message,
+      action_url: actionUrl,
+      metadata: { ...baseMetadata, occurrences: 1 },
       is_read: false,
     },
     prefer: 'return=minimal',
   });
 }
 
+async function notifyFounder(summaryLine, report) {
+  await upsertFounderNotification(
+    'Cat eval regression',
+    `Nightly Cat eval FAILED — ${summaryLine}. Tap to have your Cat look into it.`,
+    {
+      typeScore: report.scores.type,
+      whyScore: report.scores.why,
+      duplicateDrafts: report.scores.duplicates,
+      failedProbes: report.probes.filter(p => !p.typeOk || !p.whyOk).map(p => p.id),
+    }
+  );
+}
+
 async function notifyFounderHarnessError(summaryLine) {
-  await rest('POST', 'notifications', {
-    body: {
-      user_id: NOTIFY_USER_ID,
-      type: 'system',
-      message: `Nightly Cat eval could not complete — ${summaryLine}. Check journalctl -u orangecat-cat-eval on the box.`,
-      action_url: null,
-      metadata: {
-        title: 'Cat eval harness error',
-        source: 'eval-cat.mjs',
-        ranAt: new Date().toISOString(),
-      },
-      is_read: false,
-    },
-    prefer: 'return=minimal',
-  });
+  await upsertFounderNotification(
+    'Cat eval harness error',
+    `Nightly Cat eval could not complete — ${summaryLine}. Tap to have your Cat diagnose the providers.`
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -581,17 +611,10 @@ main().catch(async err => {
   console.error(`eval-cat: harness error: ${err?.stack || err}`);
   if (NOTIFY) {
     try {
-      await rest('POST', 'notifications', {
-        body: {
-          user_id: NOTIFY_USER_ID,
-          type: 'system',
-          message: `Nightly Cat eval could not run: ${String(err).slice(0, 200)}`,
-          action_url: null,
-          metadata: { title: 'Cat eval harness error', source: 'eval-cat.mjs' },
-          is_read: false,
-        },
-        prefer: 'return=minimal',
-      });
+      await upsertFounderNotification(
+        'Cat eval harness error',
+        `Nightly Cat eval could not run: ${String(err).slice(0, 200)}`
+      );
     } catch {
       /* journal already has the primary error */
     }

@@ -67,6 +67,15 @@ const TOOL_TRIGGER_KEYWORDS = [
   'what can i do to earn',
   'ideas for me',
   'how can i participate',
+  // platform health / notifications / check_cat_health
+  'notification',
+  'diagnose',
+  'health check',
+  'not answering',
+  'not working',
+  'not responding',
+  'eval',
+  'harness',
 ];
 
 /**
@@ -273,6 +282,15 @@ export const PLATFORM_TOOL_DEFINITION = [
           },
         },
       },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'check_cat_health',
+      description:
+        "Live health check of the AI providers powering the Cat. Call when the user asks why the Cat/AI is failing, slow, or not answering, or asks about a system notification that mentions provider failures, eval/harness errors, or Cat health. Returns per-provider status (ok / rate-limited / auth failure / down) that explains what's wrong in actionable terms. Takes no arguments.",
+      parameters: { type: 'object', properties: {} },
     },
   },
 ];

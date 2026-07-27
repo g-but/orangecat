@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useNotifications, type Notification } from '@/hooks/useNotifications';
+import { useNotifications, notificationTitle, type Notification } from '@/hooks/useNotifications';
+import { ROUTES } from '@/config/routes';
 
 type UIFilter = 'all' | 'unread' | 'payments' | 'social' | 'messages';
 
@@ -81,6 +82,19 @@ export function useNotificationCenter({ onClose }: UseNotificationCenterParams) 
     }
   };
 
+  // Hand the notification to the Cat: open the chat with a prepared question so
+  // the Cat explains the alert and helps resolve it (its context includes the
+  // user's unread notifications, and system alerts can trigger a live health
+  // check). This is the "the Cat should be helping with this" path.
+  const handleAskCat = (notification: Notification) => {
+    const title = notificationTitle(notification);
+    const body =
+      notification.message && notification.message !== title ? ` — "${notification.message}"` : '';
+    const question = `Help me with this notification: ${title}${body}. What does it mean and what should I do?`;
+    router.push(`${ROUTES.DASHBOARD.CAT}?q=${encodeURIComponent(question)}`);
+    onClose();
+  };
+
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.is_read) {
       await handleMarkAsRead(notification.id);
@@ -113,6 +127,7 @@ export function useNotificationCenter({ onClose }: UseNotificationCenterParams) 
     handleDeleteNotification,
     handleClearRead,
     handleNotificationClick,
+    handleAskCat,
   };
 }
 
