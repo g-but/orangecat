@@ -13,6 +13,7 @@ import {
   checkFrontierAccess,
   isPlatformMeteredModel,
   CREDIT_USAGE_MARKUP,
+  ESTIMATE_SAFETY_MULTIPLIER,
   MIN_FRONTIER_BALANCE_BTC,
 } from '@/services/cat/credit-metering';
 import { calculateCostBtc, getFreeModels, getAvailableModels } from '@/config/ai-models';
@@ -109,10 +110,14 @@ describe('meterCreditUsage', () => {
     expect(entry.ref).toBe('cat_chat_abc');
     expect(entry.amountBtc).toBeCloseTo(-charged, 10);
 
-    // Charge covers the raw cost plus the platform margin.
+    // No provider-reported cost → registry estimate, which carries the extra
+    // safety pad on top of the platform markup.
     const raw = calculateCostBtc(PAID_MODEL, 100000, 100000, 100000);
-    expect(charged).toBeGreaterThanOrEqual(raw * CREDIT_USAGE_MARKUP - 1e-8);
-    expect(charged).toBeLessThan(raw * CREDIT_USAGE_MARKUP + 1e-7);
+    const expected = raw * CREDIT_USAGE_MARKUP * ESTIMATE_SAFETY_MULTIPLIER;
+    expect(charged).toBeGreaterThanOrEqual(expected - 1e-8);
+    expect(charged).toBeLessThan(expected + 1e-7);
+    expect(entry.metadata.pricingSource).toBe('registry_estimate');
+    expect(entry.metadata.markup).toBeCloseTo(CREDIT_USAGE_MARKUP * ESTIMATE_SAFETY_MULTIPLIER, 10);
   });
 
   it('never bills free or unknown models', async () => {
@@ -162,7 +167,7 @@ describe('meterCreditUsage', () => {
     expect(entry.metadata.pricingSource).toBe('provider_reported');
   });
 
-  it('returns 0 (never throws) when the ledger append fails', async () => {
+  it('returns 0 (never throws) but retries before giving up when the ledger keeps failing', async () => {
     appendCreditEntry.mockResolvedValue(null);
     await expect(
       meterCreditUsage(admin, 'u1', {
@@ -172,5 +177,19 @@ describe('meterCreditUsage', () => {
         ref: 'r3',
       })
     ).resolves.toBe(0);
+    // Retried the idempotent debit rather than handing out a free frontier call.
+    expect(appendCreditEntry.mock.calls.length).toBeGreaterThan(1);
+  });
+
+  it('recovers from a transient ledger failure and still bills', async () => {
+    appendCreditEntry.mockResolvedValueOnce(null).mockResolvedValueOnce(0.0005);
+    const charged = await meterCreditUsage(admin, 'u1', {
+      model: PAID_MODEL,
+      inputTokens: 100000,
+      outputTokens: 100000,
+      ref: 'retry-ref',
+    });
+    expect(charged).toBeGreaterThan(0);
+    expect(appendCreditEntry).toHaveBeenCalledTimes(2);
   });
 });
