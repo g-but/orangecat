@@ -43,6 +43,7 @@ import {
   notifyFleetCrownProjectFunding,
 } from '@/services/fleetcrown/entitlement-notify';
 import { grantSupporterPlan } from '@/services/supporter/grant';
+import { enqueuePaymentSettledWebhook } from '@/services/webhooks/paymentSettledWebhook';
 
 const METHOD_LABELS: Record<string, string> = {
   nwc: 'Lightning (NWC)',
@@ -293,8 +294,7 @@ export async function initiatePublicSupport(
       status: paymentIntent.status,
       expires_at: paymentIntent.expires_at,
       can_acknowledge:
-        paymentIntent.payment_method === 'lightning_address' &&
-        !paymentIntent.lnurl_verify_url,
+        paymentIntent.payment_method === 'lightning_address' && !paymentIntent.lnurl_verify_url,
     },
     status_token: token,
     qr_data: invoice.qr_data,
@@ -349,8 +349,7 @@ export async function checkPublicPaymentStatus(
   const result = await refreshPaymentStatus(admin, pi as PaymentIntent);
   return {
     ...result,
-    requires_recipient_confirmation:
-      result.status === STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
+    requires_recipient_confirmation: result.status === STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
   };
 }
 
@@ -397,11 +396,7 @@ export async function acknowledgePublicPayment(
     };
   }
 
-  await updatePaymentStatus(
-    admin,
-    paymentIntentId,
-    STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED
-  );
+  await updatePaymentStatus(admin, paymentIntentId, STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED);
   return {
     status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
     paid_at: null,
@@ -414,10 +409,10 @@ async function refreshPaymentStatus(
   pi: PaymentIntent
 ): Promise<PaymentStatusResult> {
   const terminalStatuses = new Set<PaymentIntentStatus>([
-      STATUS.PAYMENT_INTENTS.PAID,
-      STATUS.PAYMENT_INTENTS.EXPIRED,
-      STATUS.PAYMENT_INTENTS.FAILED,
-      STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
+    STATUS.PAYMENT_INTENTS.PAID,
+    STATUS.PAYMENT_INTENTS.EXPIRED,
+    STATUS.PAYMENT_INTENTS.FAILED,
+    STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
   ]);
   if (terminalStatuses.has(pi.status)) {
     return { status: pi.status, paid_at: pi.paid_at };
@@ -454,11 +449,7 @@ async function refreshPaymentStatus(
       onchainStatus === 'in_mempool' &&
       pi.status !== STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION
     ) {
-      await updatePaymentStatus(
-        supabase,
-        pi.id,
-        STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION
-      );
+      await updatePaymentStatus(supabase, pi.id, STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION);
       return { status: STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION, paid_at: null };
     }
   }
@@ -600,11 +591,7 @@ async function getEntityTitle(
   const admin = getAdminClient() as unknown as SupabaseClient;
   const meta = getEntityMetadata(entityType);
   const titleColumn = meta.titleColumn ?? 'title';
-  const { data } = await admin
-    .from(meta.tableName)
-    .select(titleColumn)
-    .eq('id', entityId)
-    .single();
+  const { data } = await admin.from(meta.tableName).select(titleColumn).eq('id', entityId).single();
 
   const row = data as unknown as Record<string, unknown> | null;
   const title = row?.[titleColumn];
@@ -706,6 +693,12 @@ async function handlePaymentConfirmed(
   // Fire-and-forget; the receiver drops events for unlinked entities.
   void notifyFleetCrownProjectFunding(paymentIntent).catch(err =>
     logger.warn('FleetCrown funding notify failed', { err }, 'paymentFlowService')
+  );
+
+  // Fan `payment.settled` out to the seller's own webhook endpoints — the
+  // generic, retried rail any integrator can subscribe to. Fire-and-forget.
+  void enqueuePaymentSettledWebhook(paymentIntent).catch(err =>
+    logger.warn('payment.settled webhook enqueue failed', { err }, 'paymentFlowService')
   );
 
   // Grant an OrangeCat Supporter plan if this product was a Supporter pass —
