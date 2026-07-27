@@ -92,7 +92,7 @@ export default function StoriesPageClient({ stories, categories }: StoriesPageCl
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     selectedCategory === category
                       ? 'bg-fg-primary text-fg-inverted'
-                      : 'bg-surface-raised text-fg-primary hover:bg-gray-200 dark:hover:bg-surface-raised/80'
+                      : 'bg-surface-raised text-fg-primary hover:bg-surface-overlay dark:hover:bg-surface-raised/80'
                   }`}
                 >
                   {category}

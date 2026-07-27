@@ -39,7 +39,7 @@ export function SortViewControl({
         variant={viewMode === 'grid' ? 'primary' : 'ghost'}
         size="sm"
         onClick={() => onViewModeChange('grid')}
-        className="flex-1 h-8"
+        className="flex-1 h-11"
       >
         <Grid3X3 className={`w-4 h-4${isMobile ? '' : ' mr-1'}`} />
         {!isMobile && 'Grid'}
@@ -48,7 +48,7 @@ export function SortViewControl({
         variant={viewMode === 'list' ? 'primary' : 'ghost'}
         size="sm"
         onClick={() => onViewModeChange('list')}
-        className="flex-1 h-8"
+        className="flex-1 h-11"
       >
         <List className={`w-4 h-4${isMobile ? '' : ' mr-1'}`} />
         {!isMobile && 'List'}

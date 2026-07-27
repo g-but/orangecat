@@ -56,7 +56,7 @@ export default function DiscoverTabs({
               key={id}
               onClick={() => onTabChange(id)}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+                'inline-flex items-center gap-1.5 rounded-full border px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
                   ? 'border-fg-primary bg-fg-primary text-fg-inverted'
                   : 'border-default bg-surface-base text-fg-secondary hover:bg-surface-raised hover:text-fg-primary'

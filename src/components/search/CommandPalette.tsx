@@ -143,7 +143,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             }
           }}
         />
-        <kbd className="hidden flex-shrink-0 rounded border border-subtle bg-surface-raised/40 px-1.5 py-0.5 text-[10px] text-fg-secondary sm:inline">
+        <kbd className="hidden flex-shrink-0 rounded border border-subtle bg-surface-raised/40 px-1.5 py-0.5 text-2xs text-fg-secondary sm:inline">
           ESC
         </kbd>
       </div>
@@ -151,7 +151,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       <Command.List className="max-h-[60vh] overflow-y-auto p-2">
         <Command.Empty className="px-3 py-8 text-center text-sm text-fg-secondary">
           No matches. Press{' '}
-          <kbd className="rounded border border-subtle bg-surface-raised/40 px-1.5 py-0.5 text-[10px]">
+          <kbd className="rounded border border-subtle bg-surface-raised/40 px-1.5 py-0.5 text-2xs">
             ⌘ Enter
           </kbd>{' '}
           to search Discover.
@@ -160,7 +160,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         {query.trim().length > 0 && (
           <Command.Group
             heading="Search"
-            className="text-[10px] uppercase tracking-wider text-fg-tertiary"
+            className="text-2xs uppercase tracking-wider text-fg-tertiary"
           >
             <PaletteRow
               icon={Search}
@@ -174,7 +174,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
         <Command.Group
           heading="Jump to"
-          className="mt-1 text-[10px] uppercase tracking-wider text-fg-tertiary"
+          className="mt-1 text-2xs uppercase tracking-wider text-fg-tertiary"
         >
           {pages.map(item => (
             <PaletteRow
@@ -190,7 +190,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
         <Command.Group
           heading="Create"
-          className="mt-1 text-[10px] uppercase tracking-wider text-fg-tertiary"
+          className="mt-1 text-2xs uppercase tracking-wider text-fg-tertiary"
         >
           {quickActions.map(item => (
             <PaletteRow
@@ -207,7 +207,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         {query.trim().length > 1 && hits.length > 0 && (
           <Command.Group
             heading="Results"
-            className="mt-1 text-[10px] uppercase tracking-wider text-fg-tertiary"
+            className="mt-1 text-2xs uppercase tracking-wider text-fg-tertiary"
           >
             {hits.map(hit => (
               <PaletteRow

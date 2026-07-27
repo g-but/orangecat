@@ -130,7 +130,7 @@ export function WalletCard({
           {isOwner && wallet.balance_updated_at && (
             <button
               onClick={onRefresh}
-              className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-surface-raised/50 text-fg-secondary hover:text-fg-primary transition-colors min-h-11 min-w-11 flex items-center justify-center"
+              className="p-1.5 rounded-md hover:bg-surface-overlay dark:hover:bg-surface-raised/50 text-fg-secondary hover:text-fg-primary transition-colors min-h-11 min-w-11 flex items-center justify-center"
               title="Refresh balance"
               aria-label="Refresh balance"
             >

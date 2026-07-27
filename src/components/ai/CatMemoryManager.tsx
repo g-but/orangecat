@@ -124,14 +124,14 @@ export function CatMemoryManager() {
               variant="outline"
               onClick={() => setConfirmClear(false)}
               disabled={isClearing}
-              className="h-8 px-3 text-sm"
+              className="h-11 px-3 text-sm"
             >
               Cancel
             </Button>
             <Button
               onClick={handleClearAll}
               disabled={isClearing}
-              className="h-8 gap-2 bg-status-negative px-3 text-sm text-fg-inverted hover:bg-status-negative/90"
+              className="h-11 gap-2 bg-status-negative px-3 text-sm text-fg-inverted hover:bg-status-negative/90"
             >
               {isClearing && <Loader2 className="h-4 w-4 animate-spin" />}
               Forget everything
@@ -149,7 +149,7 @@ export function CatMemoryManager() {
           <span className="flex items-center gap-2 text-sm text-status-negative">
             <AlertCircle className="h-4 w-4" /> {error}
           </span>
-          <Button variant="outline" onClick={load} className="h-8 px-3 text-sm">
+          <Button variant="outline" onClick={load} className="h-11 px-3 text-sm">
             Retry
           </Button>
         </div>

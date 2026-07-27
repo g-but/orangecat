@@ -54,7 +54,7 @@ function formatTimestamp(value: string | null): string {
 function StatusBadge({ status }: { status: DeliveryRow['status'] }) {
   if (status === 'delivered') {
     return (
-      <span className="inline-flex items-center gap-1 rounded bg-status-positive-subtle px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-status-positive">
+      <span className="inline-flex items-center gap-1 rounded bg-status-positive-subtle px-1.5 py-0.5 text-2xs font-medium uppercase tracking-wide text-status-positive">
         <CheckCircle2 className="h-3 w-3" />
         Delivered
       </span>
@@ -62,14 +62,14 @@ function StatusBadge({ status }: { status: DeliveryRow['status'] }) {
   }
   if (status === 'failed') {
     return (
-      <span className="inline-flex items-center gap-1 rounded bg-status-negative/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-status-negative">
+      <span className="inline-flex items-center gap-1 rounded bg-status-negative/10 px-1.5 py-0.5 text-2xs font-medium uppercase tracking-wide text-status-negative">
         <XCircle className="h-3 w-3" />
         Failed
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded bg-surface-raised px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-fg-secondary">
+    <span className="inline-flex items-center gap-1 rounded bg-surface-raised px-1.5 py-0.5 text-2xs font-medium uppercase tracking-wide text-fg-secondary">
       <Clock className="h-3 w-3" />
       Pending
     </span>
@@ -199,7 +199,7 @@ export default function WebhookDeliveriesDrawer({ endpointId }: Props) {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusBadge status={d.status} />
-                      <code className="rounded bg-surface-raised px-1 text-[10px]">
+                      <code className="rounded bg-surface-raised px-1 text-2xs">
                         {d.event_type}
                       </code>
                       {d.response_status !== null && (
@@ -209,7 +209,7 @@ export default function WebhookDeliveriesDrawer({ endpointId }: Props) {
                         <span className="text-fg-secondary">attempt {d.attempt_count}</span>
                       )}
                     </div>
-                    <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-fg-secondary">
+                    <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-2xs text-fg-secondary">
                       <span>Enqueued {formatTimestamp(d.created_at)}</span>
                       <span>Last attempt {formatTimestamp(d.last_attempt_at)}</span>
                       {d.status === 'pending' && d.next_attempt_at && (
@@ -234,19 +234,19 @@ export default function WebhookDeliveriesDrawer({ endpointId }: Props) {
                       </button>
                     </div>
                     <div>
-                      <div className="mb-1 text-[10px] uppercase tracking-wide text-fg-secondary">
+                      <div className="mb-1 text-2xs uppercase tracking-wide text-fg-secondary">
                         Sent payload
                       </div>
-                      <pre className="max-h-64 overflow-auto rounded border border-subtle bg-surface-page p-2 text-[10px] leading-snug text-fg-primary">
+                      <pre className="max-h-64 overflow-auto rounded border border-subtle bg-surface-page p-2 text-2xs leading-snug text-fg-primary">
                         {prettyPrintPayload(d.payload)}
                       </pre>
                     </div>
                     {d.response_body && (
                       <div>
-                        <div className="mb-1 text-[10px] uppercase tracking-wide text-fg-secondary">
+                        <div className="mb-1 text-2xs uppercase tracking-wide text-fg-secondary">
                           Receiver response
                         </div>
-                        <pre className="max-h-32 overflow-auto rounded border border-subtle bg-surface-page p-2 text-[10px] leading-snug text-fg-primary">
+                        <pre className="max-h-32 overflow-auto rounded border border-subtle bg-surface-page p-2 text-2xs leading-snug text-fg-primary">
                           {d.response_body}
                         </pre>
                       </div>

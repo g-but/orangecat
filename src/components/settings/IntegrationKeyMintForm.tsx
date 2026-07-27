@@ -42,7 +42,7 @@ function ScopeRow({ label, readToken, writeToken, selectedScopes, onToggle }: Sc
           checked={selectedScopes.has(readToken)}
           onChange={() => onToggle(readToken)}
         />
-        <code className="rounded bg-surface-raised px-1 text-[10px]">{readToken}</code>
+        <code className="rounded bg-surface-raised px-1 text-2xs">{readToken}</code>
       </label>
       <label className="flex items-center gap-1.5 text-fg-primary">
         <input
@@ -50,7 +50,7 @@ function ScopeRow({ label, readToken, writeToken, selectedScopes, onToggle }: Sc
           checked={selectedScopes.has(writeToken)}
           onChange={() => onToggle(writeToken)}
         />
-        <code className="rounded bg-surface-raised px-1 text-[10px]">{writeToken}</code>
+        <code className="rounded bg-surface-raised px-1 text-2xs">{writeToken}</code>
       </label>
     </>
   );
@@ -179,7 +179,7 @@ export default function IntegrationKeyMintForm({
                 />
               ))}
             </div>
-            <p className="mt-2 text-[10px] text-fg-secondary">
+            <p className="mt-2 text-2xs text-fg-secondary">
               {selectedScopes.size === 0
                 ? 'No scopes picked — the key will be unable to do anything.'
                 : `Selected: ${selectedScopes.size} of ${PUBLIC_API_SCOPE_TOKENS.length}.`}
