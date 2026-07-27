@@ -39,7 +39,6 @@ export const ROUTE_CONTEXTS = {
     '/channel',
     '/browse',
     '/categories',
-    '/stories',
     '/events',
     '/products',
     '/services',
