@@ -157,7 +157,7 @@ export function AIKeyManager({
                       aria-label="Move up"
                       disabled={index === 0 || isLoading}
                       onClick={() => reorderTo(index, index - 1)}
-                      className="rounded p-0.5 hover:text-fg-primary disabled:opacity-30"
+                      className="rounded p-2 hover:text-fg-primary disabled:opacity-30"
                     >
                       <ChevronUp className="h-4 w-4" />
                     </button>
@@ -167,7 +167,7 @@ export function AIKeyManager({
                       aria-label="Move down"
                       disabled={index === chain.length - 1 || isLoading}
                       onClick={() => reorderTo(index, index + 1)}
-                      className="rounded p-0.5 hover:text-fg-primary disabled:opacity-30"
+                      className="rounded p-2 hover:text-fg-primary disabled:opacity-30"
                     >
                       <ChevronDown className="h-4 w-4" />
                     </button>

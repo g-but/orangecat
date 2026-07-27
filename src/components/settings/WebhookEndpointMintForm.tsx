@@ -118,7 +118,7 @@ export default function WebhookEndpointMintForm({
                 checked={selectedEvents.has(eventName)}
                 onChange={() => onToggleEvent(eventName)}
               />
-              <code className="rounded bg-surface-raised px-1 text-[10px]">{eventName}</code>
+              <code className="rounded bg-surface-raised px-1 text-2xs">{eventName}</code>
             </label>
           ))}
         </div>

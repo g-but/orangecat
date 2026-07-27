@@ -109,6 +109,11 @@ const eslintConfig = [
           message:
             'Arbitrary hex color in dark: variant — define a CSS custom property in globals.css and use a semantic Tailwind class instead.',
         },
+        {
+          selector: 'Literal[value=/\\btext-\\[10px\\]/]',
+          message:
+            "Arbitrary text-[10px] — use the text-2xs token (10px, defined in tailwind.config.ts). It exists for exactly this; don't bypass it.",
+        },
       ],
       // Lock @deprecated count at 0.
       'no-warning-comments': ['error', { terms: ['@deprecated'], location: 'anywhere' }],

@@ -51,7 +51,7 @@ export default function WebhookEndpointRow({
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-fg-primary">{endpoint.name}</span>
             {isRevoked && (
-              <span className="rounded bg-surface-raised px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-fg-secondary">
+              <span className="rounded bg-surface-raised px-1.5 py-0.5 text-2xs uppercase tracking-wide text-fg-secondary">
                 Revoked
               </span>
             )}

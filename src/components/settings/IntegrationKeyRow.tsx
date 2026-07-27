@@ -35,12 +35,12 @@ export default function IntegrationKeyRow({
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-fg-primary">{key.name}</span>
           {key.is_test && (
-            <span className="rounded bg-status-warning-subtle px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-status-warning">
+            <span className="rounded bg-status-warning-subtle px-1.5 py-0.5 text-2xs font-medium uppercase tracking-wide text-status-warning">
               Sandbox
             </span>
           )}
           {isRevoked && (
-            <span className="rounded bg-surface-raised px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-fg-secondary">
+            <span className="rounded bg-surface-raised px-1.5 py-0.5 text-2xs uppercase tracking-wide text-fg-secondary">
               Revoked
             </span>
           )}

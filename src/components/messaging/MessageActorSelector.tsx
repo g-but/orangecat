@@ -36,7 +36,7 @@ export function MessageActorSelector({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-surface-raised hover:bg-gray-200 dark:hover:bg-surface-raised/80 transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-surface-raised hover:bg-surface-overlay dark:hover:bg-surface-raised/80 transition-colors"
           >
             <Avatar className="h-4 w-4">
               <AvatarImage src={selectedActor.avatar_url || undefined} />
