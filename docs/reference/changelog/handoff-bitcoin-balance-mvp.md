@@ -225,7 +225,7 @@ progress % = (amount_raised / goal_amount) × 100
 - ✅ Storage bucket `project-media` created
 - ✅ Storage policies applied
 
-### Vercel
+### Deployment (Hetzner)
 
 - ⏳ Not deployed yet (branch only)
 
@@ -252,7 +252,7 @@ progress % = (amount_raised / goal_amount) × 100
 - [ ] Historical balance snapshots (`project_balance_history` table)
 - [ ] Goal achievement events (`project_goal_events` table)
 - [ ] "Then vs now" donation values
-- [ ] Automatic refresh (Vercel cron job)
+- [ ] Automatic refresh (scheduled cron job)
 - [ ] Additional currencies (JPY, CNY, INR)
 - [ ] Private media (signed GET URLs)
 
@@ -360,7 +360,7 @@ A: Risk mitigation. Renaming requires updating all queries. We alias in TypeScri
 A: Future-proofing. If we switch to private buckets with signed URLs, we don't need to backfill. URLs are derived at read-time.
 
 **Q: Why manual refresh instead of cron?**
-A: Cost and simplicity for MVP. Vercel cron costs money on Hobby plan. Manual refresh is sufficient for initial validation.
+A: Simplicity for MVP. Manual refresh is sufficient for initial validation; a scheduled cron on the Hetzner box can be added later.
 
 **Q: Why only 3 images?**
 A: GoFundMe-style design + MVP scope. Database constraint ensures enforcement.
@@ -373,7 +373,7 @@ A: GoFundMe-style design + MVP scope. Database constraint ensures enforcement.
 - **Migration status**: ✅ Applied to dev Supabase
 - **Code status**: ✅ Committed and pushed
 - **Testing status**: ⏳ Awaiting manual testing
-- **Deployment status**: ⏳ Not deployed to Vercel yet
+- **Deployment status**: ⏳ Not deployed to production (Hetzner) yet
 
 **Next person**: Run manual tests (checklist above), then deploy to staging.
 
