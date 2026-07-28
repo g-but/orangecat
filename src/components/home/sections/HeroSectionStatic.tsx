@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Globe, Cat, Plus } from 'lucide-react';
+import { ArrowRight, Globe, Cat } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { BrandMarkIcon } from '@/components/shell/BrandMarkIcon';
 import { ROUTES } from '@/config/routes';
@@ -22,7 +22,7 @@ export default function HeroSectionStatic() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-base border border-default mb-6">
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 bg-status-positive rounded-full" />
-                <span className="text-sm font-medium text-fg-primary">Create anything</span>
+                <span className="text-sm font-medium text-fg-primary">Your AI economic agent</span>
               </div>
               <span className="text-fg-tertiary">•</span>
               <span className="text-sm font-medium text-fg-primary">Any identity</span>
@@ -32,28 +32,28 @@ export default function HeroSectionStatic() {
 
             {/* Main Headline — display typography (Space Grotesk) per migration 7/N */}
             <h1 className="font-heading tracking-display text-3xl sm:text-5xl lg:text-6xl font-bold text-fg-primary leading-[1.05] mb-4 sm:mb-6">
-              Everyone Can <span className="text-fg-primary">Make Things.</span>
+              Turn who you are <span className="text-fg-primary">into income.</span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-lg sm:text-xl lg:text-2xl text-fg-secondary leading-relaxed mb-3 sm:mb-4">
-              Create products, services, projects, causes, events, and groups — with your own AI,
-              under any identity, funded in Bitcoin.
+              Your Cat interviews you, sets up your services, products, and projects, and surfaces
+              real ways to earn — funded in Bitcoin, under any identity.
             </p>
 
             {/* Supporting text */}
             <p className="text-base sm:text-lg text-fg-secondary leading-relaxed mb-6 sm:mb-8">
-              OrangeCat gives every person and organization an AI agent to create and participate in
-              the full economic spectrum. No gatekeepers. No fees. Bitcoin and Lightning are the
-              live settlement rails.
+              It doesn&apos;t wait for you. The Cat proposes opportunities grounded in what you
+              already have and helps you act on them. And when an idea needs building, hand it to
+              FleetCrown to run the work.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Link href={ROUTES.AUTH} className="w-full sm:w-auto">
                 <Button variant="accent" size="lg" className="w-full sm:w-auto">
-                  <Plus className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  Start Creating
+                  <Cat className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  Meet your Cat
                   <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </Link>
@@ -93,9 +93,9 @@ export default function HeroSectionStatic() {
                 {/* Platform capabilities */}
                 <div className="space-y-2">
                   {[
-                    'Create products, projects, causes',
-                    'Bitcoin and Lightning payments',
-                    'AI-powered by your Cat',
+                    'Interviews you, sets up your offerings',
+                    'Suggests ways to earn from what you have',
+                    'Funded in Bitcoin, non-custodial',
                   ].map(feature => (
                     <div
                       key={feature}
@@ -137,10 +137,13 @@ export default function HeroSectionStatic() {
 
                 <div className="flex flex-wrap gap-2 text-xs font-medium">
                   <span className="rounded-full border border-default bg-surface-raised/40 px-2.5 py-1 text-fg-primary">
-                    AI-powered
+                    Proactive agent
                   </span>
                   <span className="rounded-full border border-default bg-surface-raised/40 px-2.5 py-1 text-fg-primary">
                     Non-custodial
+                  </span>
+                  <span className="rounded-full border border-default bg-surface-raised/40 px-2.5 py-1 text-fg-primary">
+                    Builds on FleetCrown
                   </span>
                 </div>
               </div>
