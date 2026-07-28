@@ -8,8 +8,10 @@
  * notification for free when it settles.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { resolveUserWallet } from '@/domain/payments/walletResolutionService';
 import {
   initiateTip as initiateTipPayment,
@@ -23,6 +25,16 @@ const METHOD_LABELS: Record<ResolvedWallet['method'], string> = {
   lightning_address: 'Lightning',
   onchain: 'On-chain Bitcoin',
 };
+
+/**
+ * Resolve the recipient's receiving wallet with the service-role client — same
+ * as the public-support flow. This keeps tips working WITHOUT depending on
+ * wallet rows being anon-readable (so `wallets_select` RLS can be tightened),
+ * and it decrypts the NWC URI server-side only.
+ */
+function resolveRecipientWallet(userId: string): Promise<ResolvedWallet | null> {
+  return resolveUserWallet(getAdminClient() as unknown as SupabaseClient, userId);
+}
 
 interface TipRecipient {
   userId: string;
@@ -62,7 +74,7 @@ export async function getTipReceiveInfo(
   if (!recipient) {
     return null;
   }
-  const wallet = await resolveUserWallet(supabase, recipient.userId);
+  const wallet = await resolveRecipientWallet(recipient.userId);
   return {
     canReceive: !!wallet,
     recipientName: recipient.displayName,
@@ -99,7 +111,7 @@ export async function initiateTip(
     return { ok: false, error: 'That person could not be found.' };
   }
 
-  const wallet = await resolveUserWallet(supabase, recipient.userId);
+  const wallet = await resolveRecipientWallet(recipient.userId);
   if (!wallet) {
     return {
       ok: false,

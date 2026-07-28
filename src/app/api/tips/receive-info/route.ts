@@ -6,6 +6,7 @@
 
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 import {
   apiBadRequest,
   apiInternalError,
@@ -17,6 +18,12 @@ import { logger } from '@/utils/logger';
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate-limit the enumeration oracle (canReceive + rail per username).
+    const rl = await rateLimit(request);
+    if (!rl.success) {
+      return createRateLimitResponse(rl);
+    }
+
     const username = new URL(request.url).searchParams.get('username')?.trim();
     if (!username) {
       return apiBadRequest('Missing username');

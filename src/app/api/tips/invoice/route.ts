@@ -1,15 +1,16 @@
 /**
  * POST /api/tips/invoice { username, amountBtc } — mint a non-custodial Bitcoin
  * tip request against the recipient's own wallet. Anonymous tippers are allowed
- * (easy UX); IP rate-limited to protect recipients' NWC relays from invoice-
- * generation abuse. Persists an entity-less payment_intent so the tip can be
- * tracked + the recipient notified on settlement; OrangeCat never touches funds.
+ * (easy UX); rate-limited per-IP AND per-recipient to protect recipients' NWC
+ * relays from invoice-generation abuse (an attacker rotating IPs can't flood one
+ * victim). Persists an entity-less payment_intent so the tip can be tracked + the
+ * recipient notified on settlement; OrangeCat never touches funds.
  */
 
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/supabase/server';
-import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
+import { rateLimit, rateLimitTipRecipient, createRateLimitResponse } from '@/lib/rate-limit';
 import { apiBadRequest, apiError, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
 import { TIP_MAX_BTC, TIP_MIN_BTC } from '@/config/tips';
 import { initiateTip } from '@/domain/tips/tip-service';
@@ -30,6 +31,13 @@ export async function POST(request: NextRequest) {
     const parsed = bodySchema.safeParse(await request.json().catch(() => ({})));
     if (!parsed.success) {
       return apiBadRequest('Invalid request', parsed.error.flatten());
+    }
+
+    // Per-recipient cap: bounds invoice generation against any one victim's
+    // wallet/relay regardless of the tipper's IP.
+    const recipientRl = await rateLimitTipRecipient(parsed.data.username);
+    if (!recipientRl.success) {
+      return createRateLimitResponse(recipientRl);
     }
 
     const supabase = await createServerClient();

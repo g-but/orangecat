@@ -14,6 +14,9 @@ import {
 jest.mock('@/domain/payments/walletResolutionService', () => ({
   resolveUserWallet: jest.fn(),
 }));
+jest.mock('@/lib/supabase/admin', () => ({
+  getAdminClient: jest.fn(() => ({})),
+}));
 jest.mock('@/domain/payments/paymentFlowService', () => ({
   initiateTip: jest.fn(),
   checkPublicPaymentStatus: jest.fn(),

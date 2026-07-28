@@ -92,6 +92,11 @@ const createUpstashLimiter = (
 const upstashGeneralLimiter = createUpstashLimiter('general', 100, '15 m');
 const upstashSocialLimiter = createUpstashLimiter('social', 10, '1 m');
 const upstashWriteLimiter = createUpstashLimiter('write', 30, '1 m');
+// Caps how often a SINGLE recipient's wallet/relay can be hit by anonymous
+// tip-invoice generation, regardless of the tipper's IP — so one attacker
+// (even rotating IPs) can't flood a victim's NWC relay. Generous enough to
+// absorb a legitimately viral post's concurrent tippers.
+const upstashTipRecipientLimiter = createUpstashLimiter('tip-recipient', 20, '5 m');
 
 // ==================== FALLBACK IN-MEMORY LIMITER ====================
 
@@ -144,6 +149,10 @@ class InMemoryRateLimiter {
 const fallbackGeneralLimiter = new InMemoryRateLimiter();
 const fallbackSocialLimiter = new InMemoryRateLimiter({ windowMs: 60 * 1000, maxRequests: 10 });
 const fallbackWriteLimiter = new InMemoryRateLimiter({ windowMs: 60 * 1000, maxRequests: 30 });
+const fallbackTipRecipientLimiter = new InMemoryRateLimiter({
+  windowMs: 5 * 60 * 1000,
+  maxRequests: 20,
+});
 
 // ==================== RATE LIMIT FUNCTIONS ====================
 
@@ -194,6 +203,23 @@ export async function rateLimitSocialAsync(userId: string): Promise<RateLimitRes
   }
 
   return fallbackSocialLimiter.check(key);
+}
+
+/**
+ * Rate limit anonymous tip-invoice generation PER RECIPIENT (by username).
+ * 20 invoices per 5 minutes against any one recipient — protects a victim's
+ * wallet/relay from invoice-spam even when the attacker rotates IPs. Apply this
+ * IN ADDITION to the per-IP `rateLimit`.
+ */
+export async function rateLimitTipRecipient(username: string): Promise<RateLimitResult> {
+  const key = `tip-recipient:${username.toLowerCase()}`;
+
+  if (upstashTipRecipientLimiter) {
+    const result = await upstashTipRecipientLimiter.limit(key);
+    return toRateLimitResult(result);
+  }
+
+  return fallbackTipRecipientLimiter.check(key);
 }
 
 /**
