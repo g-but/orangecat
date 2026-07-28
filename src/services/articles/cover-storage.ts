@@ -1,9 +1,8 @@
 /**
  * Upload an article cover image. Reuses the public BANNERS bucket with a
- * `${userId}/…` path — a cover is a banner-class hero image, and the userId
- * prefix matches the bucket's existing owner-scoped RLS, so no new bucket or
- * storage-policy change is needed. Returns a public URL to store in
- * `metadata.article.cover_image`.
+ * `${userId}/…` path — a cover is a banner-class hero image, matching the same
+ * upload path avatars/banners already use (no new bucket needed). Returns a
+ * public URL to store in `metadata.article.cover_image`.
  */
 
 import supabase from '@/lib/supabase/browser';
@@ -12,7 +11,9 @@ import { STORAGE_BUCKETS } from '@/config/database-tables';
 import type { FileUploadResult } from '@/types/storage';
 
 const BUCKET = STORAGE_BUCKETS.BANNERS;
-const MAX_SIZE = 8 * 1024 * 1024; // 8MB — covers are large hero images
+// Must not exceed the banners bucket's server-side file_size_limit (5MB) — a
+// larger file passes this check then fails at the bucket with a cryptic error.
+const MAX_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
 
 export const COVER_ACCEPT = ALLOWED_TYPES.join(',');
@@ -36,7 +37,8 @@ export async function uploadArticleCover(userId: string, file: File): Promise<Fi
 
   try {
     const ext = file.name.split('.').pop() || 'jpg';
-    // userId first segment → satisfies the bucket's owner-scoped RLS.
+    // userId first segment namespaces each author's uploads (same convention as
+    // avatars/banners). Timestamp keeps successive covers from colliding.
     const fileName = `${userId}/article-cover_${Date.now()}.${ext}`;
 
     const { error } = await supabase.storage.from(BUCKET).upload(fileName, file, {
