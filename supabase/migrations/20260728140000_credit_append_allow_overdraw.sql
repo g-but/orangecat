@@ -17,10 +17,14 @@
 --
 -- Safe to apply while the credits engine is dormant (PLATFORM_NWC_URI unset,
 -- all balances 0) — and it changes no behaviour for callers that don't opt in.
+--
+-- Idempotent: DROP IF EXISTS clears the old 5-arg signature (no-op if already
+-- gone), and CREATE OR REPLACE installs/updates the 6-arg one whether or not it
+-- already exists — so re-running (e.g. after a manual apply) never collides.
 
 DROP FUNCTION IF EXISTS public.cat_credit_append(uuid, text, numeric, text, jsonb);
 
-CREATE FUNCTION public.cat_credit_append(
+CREATE OR REPLACE FUNCTION public.cat_credit_append(
   p_user_id uuid,
   p_kind text,
   p_amount_btc numeric,
