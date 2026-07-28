@@ -57,6 +57,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
+    // Only public groups are indexable — a private/unlisted group reachable by
+    // direct URL must not be indexed (its name/description would leak into SERPs).
+    robots: g.visibility === 'public' ? undefined : { index: false, follow: false },
     alternates: { canonical: url },
     openGraph: {
       title: `${g.name} — ${APP_NAME}`,

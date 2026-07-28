@@ -119,6 +119,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
+    // Only published (active) projects are indexable — a draft/paused/archived
+    // project reachable by direct URL must not be indexed.
+    robots: project.status === 'active' ? undefined : { index: false, follow: false },
     alternates: {
       canonical: url,
     },
