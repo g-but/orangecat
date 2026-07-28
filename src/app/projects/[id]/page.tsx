@@ -8,6 +8,8 @@ import { getTableName } from '@/config/entity-registry';
 import { safeJsonLdString } from '@/lib/seo/structured-data';
 import { APP_NAME, SITE_URL } from '@/config/brand';
 import { resolveSellerReceiveInfo } from '@/domain/payments';
+import { getEntityFundingStats } from '@/services/wallets/funding-stats';
+import { computeAmountRaised } from '@/lib/projectGoal';
 
 const ProjectPageClient = dynamic(() => import('@/components/project/ProjectPageClient'), {
   loading: () => (
@@ -181,12 +183,22 @@ export default async function PublicProjectPage({ params }: PageProps) {
     }
   }
 
+  // Honest funding total: the settled `contributions` ledger via
+  // get_entity_funding_stats — NOT the `raised_amount` column, which no code
+  // ever writes. Converted to the goal currency so the figure and progress bar
+  // are real. Returns 0 for a private fundraise or one with no verified
+  // contributions (better than showing a fabricated number).
+  const fundingStats = await getEntityFundingStats(supabase, 'project', id);
+  const settledRaisedBtc = fundingStats?.totalBtc ?? 0;
+  const settledRaised = await computeAmountRaised(settledRaisedBtc, project.currency ?? 'BTC');
+
   // Ensure non-nullable fields match ProjectPageClient's Project interface
   const projectWithProfile = {
     ...project,
     description: project.description ?? '',
     currency: project.currency ?? 'BTC',
-    raised_amount: project.raised_amount ?? 0,
+    raised_amount: settledRaised,
+    settled_raised_btc: settledRaisedBtc,
     profiles: profile ?? undefined,
   };
   const sellerReceive = await resolveSellerReceiveInfo(supabase, 'project', id);
@@ -194,7 +206,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
   // Generate JSON-LD structured data for SEO
   const creatorName = profile?.name || profile?.username || 'Creator';
   const _progress = project.goal_amount
-    ? Math.round((Number(project.raised_amount || 0) / Number(project.goal_amount)) * 100)
+    ? Math.round((Number(settledRaised) / Number(project.goal_amount)) * 100)
     : 0;
 
   const structuredData = {
@@ -216,10 +228,10 @@ export default async function PublicProjectPage({ params }: PageProps) {
           value: project.goal_amount,
           currency: project.currency || 'BTC',
         },
-        ...(project.raised_amount && {
+        ...(settledRaised > 0 && {
           amountRaised: {
             '@type': 'MonetaryAmount',
-            value: project.raised_amount,
+            value: settledRaised,
             currency: project.currency || 'BTC',
           },
         }),
