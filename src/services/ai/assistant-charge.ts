@@ -99,10 +99,17 @@ export async function settleAssistantCharge(
     args;
 
   // 1. Debit the payer. Idempotent on (kind, ref) = ('usage', messageId).
+  // Post-serve settlement → allowOverdraw: the message is already served, so the
+  // charge must land even into a negative balance. Affordability is only
+  // pre-checked (checkAffordability), so N concurrent messages can all pass the
+  // check and serve before any debit; without this they'd all serve free once
+  // the balance couldn't cover them. Recording every charge drives the balance
+  // negative and the next affordability check then blocks until top-up.
   const newBalance = await appendCreditEntry(admin, payerUserId, {
     kind: 'usage',
     amountBtc: -chargeBtc,
     ref: messageId,
+    allowOverdraw: true,
     metadata: { assistantId, model, totalTokens },
   });
   if (newBalance === null) {

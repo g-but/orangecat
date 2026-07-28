@@ -109,6 +109,9 @@ describe('meterCreditUsage', () => {
     expect(entry.kind).toBe('usage');
     expect(entry.ref).toBe('cat_chat_abc');
     expect(entry.amountBtc).toBeCloseTo(-charged, 10);
+    // Post-serve settlement must always record the charge — even past the
+    // gated balance — so a low-balance user can't get unlimited free calls.
+    expect(entry.allowOverdraw).toBe(true);
 
     // No provider-reported cost → registry estimate, which carries the extra
     // safety pad on top of the platform markup.

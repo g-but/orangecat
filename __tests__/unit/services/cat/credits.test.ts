@@ -58,6 +58,7 @@ describe('appendCreditEntry', () => {
       p_amount_btc: 0.001,
       p_ref: 'ph_1',
       p_metadata: { source: 'lightning' },
+      p_allow_overdraw: false, // a top-up (credit) never overdraws
     });
   });
 
