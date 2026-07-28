@@ -90,7 +90,7 @@ jobs:
         # so a broken artifact path can never break deploys (worst case = today).
         if: steps.guard.outputs.ok == 'true' && github.event_name == 'workflow_run'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: standalone-${{ github.event.workflow_run.head_sha }}
           path: .next/standalone
