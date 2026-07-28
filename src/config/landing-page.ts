@@ -359,7 +359,8 @@ export const SECTION_HEADERS = {
   },
   howItWorks: {
     title: 'Meet Your Cat',
-    subtitle: 'Your AI economic agent handles the complexity. You focus on what matters.',
+    subtitle:
+      'Your AI economic agent finds you ways to earn and sets them up. You decide what to pursue.',
   },
   exampleUseCases: {
     title: 'Built for Makers',

@@ -27,6 +27,7 @@ export function WalletForm({
     description: initialData?.description || '',
     address_or_xpub: initialData?.address_or_xpub || '',
     lightning_address: initialData?.lightning_address || '',
+    nwc_connection_uri: initialData?.nwc_connection_uri || '',
     category: initialData?.category || 'general',
     category_icon: initialData?.category_icon,
     behavior_type: initialData?.behavior_type || 'general',
@@ -46,9 +47,21 @@ export function WalletForm({
       return;
     }
 
-    // Require either an on-chain address/xpub or a Lightning address
-    if (!formData.address_or_xpub?.trim() && !formData.lightning_address?.trim()) {
-      setError('Either a Bitcoin address/xpub or a Lightning address is required');
+    // Require at least one receive method: on-chain, Lightning address, or NWC
+    if (
+      !formData.address_or_xpub?.trim() &&
+      !formData.lightning_address?.trim() &&
+      !formData.nwc_connection_uri?.trim()
+    ) {
+      setError('Provide a Bitcoin address/xpub, a Lightning address, or an NWC connection');
+      return;
+    }
+
+    if (
+      formData.nwc_connection_uri?.trim() &&
+      !formData.nwc_connection_uri.trim().startsWith('nostr+walletconnect://')
+    ) {
+      setError('NWC connection must start with nostr+walletconnect://');
       return;
     }
 
@@ -176,6 +189,25 @@ export function WalletForm({
         />
         <p className="text-xs text-fg-secondary mt-1">
           Lightning address for instant, low-fee payments (e.g., you@getalby.com)
+        </p>
+      </div>
+
+      {/* Nostr Wallet Connect (optional) */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium dark:text-fg-primary mb-2">
+          Nostr Wallet Connect (optional)
+        </label>
+        <Input
+          type="password"
+          value={formData.nwc_connection_uri || ''}
+          onChange={e => setFormData({ ...formData, nwc_connection_uri: e.target.value })}
+          onFocus={() => onFieldFocus?.('label')}
+          placeholder="nostr+walletconnect://..."
+          autoComplete="off"
+        />
+        <p className="text-xs text-fg-secondary mt-1">
+          Connect a wallet (Alby, Mutiny, …) to receive automatically — the highest-priority payout
+          rail. The connection secret is stored securely and never shown again.
         </p>
       </div>
 

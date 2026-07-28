@@ -13,6 +13,8 @@ import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
 import ProfileWalletsTab from '@/components/profile/ProfileWalletsTab';
 import ProfileEntityTab from '@/components/profile/ProfileEntityTab';
 import ProfileArticlesTab from '@/components/profile/ProfileArticlesTab';
+import ProfileOfferings from '@/components/profile/ProfileOfferings';
+import type { EconomicProfile } from '@/services/cat/economic-profile';
 import {
   Users,
   User,
@@ -65,6 +67,8 @@ interface ProfileLayoutProps {
   className?: string;
   /** Server-side own-profile detection (avoids hydration flash) */
   serverIsOwnProfile?: boolean;
+  /** The Cat's extracted "what I can offer" signals for this profile. */
+  economicProfile?: EconomicProfile | null;
 }
 
 export default function ProfileLayout({
@@ -77,6 +81,7 @@ export default function ProfileLayout({
   onModeChange: _onModeChange,
   className,
   serverIsOwnProfile,
+  economicProfile,
 }: ProfileLayoutProps) {
   const { user } = useAuth();
   const isOwnProfile = serverIsOwnProfile ?? profile.id === user?.id;
@@ -229,6 +234,7 @@ export default function ProfileLayout({
                 {profile.bio}
               </p>
             )}
+            <ProfileOfferings economicProfile={economicProfile} isOwnProfile={isOwnProfile} />
             {profile.website && (
               <a
                 href={profile.website}

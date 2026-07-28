@@ -5,12 +5,14 @@ import { Project } from '@/types/database';
 import ProfileLayout from '@/components/profile/ProfileLayout';
 import type { EntityType } from '@/config/entity-registry';
 import type { Article } from '@/services/articles/types';
+import type { EconomicProfile } from '@/services/cat/economic-profile';
 
 interface ProfilePageClientProps {
   profile: ScalableProfile;
   projects?: Project[];
   articles?: Article[];
   isOwnProfile?: boolean;
+  economicProfile?: EconomicProfile | null;
   stats: {
     projectCount: number;
     totalRaised: number;
@@ -26,6 +28,7 @@ export default function ProfilePageClient({
   projects,
   articles,
   isOwnProfile,
+  economicProfile,
   stats,
 }: ProfilePageClientProps) {
   return (
@@ -35,6 +38,7 @@ export default function ProfilePageClient({
       articles={articles}
       stats={stats}
       serverIsOwnProfile={isOwnProfile}
+      economicProfile={economicProfile}
     />
   );
 }

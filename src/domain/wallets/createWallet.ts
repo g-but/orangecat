@@ -25,12 +25,12 @@ import { apiError, apiBadRequest, apiForbidden, apiCreated } from '@/lib/api/sta
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { getTableName } from '@/config/entity-registry';
 import { walletCreateSchema } from '@/lib/validation/finance';
+import { encrypt } from '@/domain/payments/encryptionService';
 import type { z } from 'zod';
 
 type WalletCreateInput = z.infer<typeof walletCreateSchema>;
 
 interface CreateWalletResult {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response: NextResponse<any>;
 }
 
@@ -87,6 +87,29 @@ export async function createWallet(
     response: null;
   };
 
+  // NWC URIs carry a spending secret — encrypt at rest (walletResolutionService
+  // decrypts on read). Never log the URI. A missing PAYMENT_ENCRYPTION_KEY is an
+  // ops gap, not a user error: fail clean instead of 500-ing.
+  let encryptedNwc: string | null = null;
+  if (sanitized.nwc_connection_uri) {
+    try {
+      encryptedNwc = encrypt(sanitized.nwc_connection_uri);
+    } catch (encryptError) {
+      logger.error(
+        'wallet nwc encrypt failed',
+        { message: encryptError instanceof Error ? encryptError.message : 'unknown' },
+        'createWallet'
+      );
+      return {
+        response: apiError(
+          'Nostr Wallet Connect is not available on this deployment yet.',
+          'NWC_UNAVAILABLE',
+          400
+        ),
+      };
+    }
+  }
+
   // Insert wallet
   try {
     const { data: wallet, error } = (await supabase
@@ -107,6 +130,7 @@ export async function createWallet(
         goal_currency: sanitized.goal_currency || null,
         goal_deadline: sanitized.goal_deadline || null,
         lightning_address: body.lightning_address?.trim() || null,
+        nwc_connection_uri: encryptedNwc,
         is_primary: body.is_primary !== undefined ? body.is_primary : isFirstWallet,
         balance_btc: 0,
       })
@@ -155,7 +179,6 @@ async function verifyOwnership(
   supabase: SupabaseClient,
   user: User,
   body: WalletCreateInput
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<NextResponse<any> | null> {
   if (body.profile_id) {
     if (body.profile_id !== user.id) {
@@ -192,7 +215,6 @@ interface PreCheckOk {
   response: null;
 }
 interface PreCheckFail {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response: NextResponse<any>;
 }
 

@@ -199,6 +199,8 @@ export interface WalletFormData {
   description?: string | null;
   address_or_xpub?: string | null;
   lightning_address?: string | null;
+  /** Nostr Wallet Connect URI (write-only secret). */
+  nwc_connection_uri?: string | null;
   category: WalletCategory;
   category_icon?: string;
   behavior_type: WalletBehaviorType;
@@ -249,7 +251,6 @@ function isValidBitcoinAddress(
   network: 'mainnet' | 'testnet' = 'mainnet'
 ): boolean {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return validateBitcoinAddress(address, network as any);
   } catch {
     return false;
@@ -328,6 +329,7 @@ export function sanitizeWalletInput(data: WalletFormData): WalletFormData {
     label: data.label.trim().slice(0, MAX_LABEL_LENGTH),
     description: data.description?.trim().slice(0, MAX_DESCRIPTION_LENGTH) || undefined,
     address_or_xpub: data.address_or_xpub?.trim() ?? null,
+    nwc_connection_uri: data.nwc_connection_uri?.trim() || null,
     category_icon: (ALLOWED_CATEGORY_ICONS as readonly string[]).includes(data.category_icon || '')
       ? data.category_icon
       : WALLET_CATEGORIES[data.category].icon,

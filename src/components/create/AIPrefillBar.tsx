@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Sparkles, Loader2, AlertCircle, Lightbulb, CheckCircle2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
@@ -19,7 +20,13 @@ export function AIPrefillBar({
   mode = 'create',
 }: AIPrefillBarProps) {
   const isEdit = mode === 'edit';
-  const [description, setDescription] = useState('');
+  // Seed the AI-fill box from a ?description= param on create — this is how the
+  // onboarding "paste who you are → offers → Create this" flow lands a proposed
+  // offering here ready to generate, closing the loop without retyping.
+  const searchParams = useSearchParams();
+  const [description, setDescription] = useState(() =>
+    mode === 'create' ? (searchParams.get('description') ?? '') : ''
+  );
   const [refineInput, setRefineInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRefining, setIsRefining] = useState(false);
