@@ -33,7 +33,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
   if (!article) {
-    return { title: 'Article not found' };
+    // generateMetadata resolves before the page's streaming boundary, so a
+    // notFound() here can still send a real 404 status — unlike the same call
+    // inside the (streamed) page body, which the root loading.tsx forces to a
+    // 200 + auto-noindex "soft 404". Falls back to that safe behavior if
+    // metadata itself streams.
+    notFound();
   }
 
   const isIndexable = article.visibility === 'public';
