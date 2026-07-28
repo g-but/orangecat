@@ -114,6 +114,18 @@ const eslintConfig = [
           message:
             "Arbitrary text-[10px] — use the text-2xs token (10px, defined in tailwind.config.ts). It exists for exactly this; don't bypass it.",
         },
+        {
+          // Close the keystroke-hijack class (2026-07 dogfood): a global keyboard
+          // shortcut's "is the user typing?" guard must inspect the COMPOSED path
+          // leaf, not e.target. When a keystroke crosses a shadow-DOM boundary
+          // (e.g. the embedded FleetCrown feedback widget), e.target is retargeted
+          // to the shadow host, so the guard misreads a text field as "not typing"
+          // and the shortcut fires and eats the keystroke. Pass e.composedPath()[0].
+          selector:
+            "CallExpression[callee.name='isTypingTarget'] > MemberExpression.arguments[property.name='target']",
+          message:
+            'Pass the composed-path leaf to isTypingTarget (e.composedPath()[0] ?? e.target), not a bare e.target — a bare .target is shadow-DOM-blind and reintroduces the keystroke-hijack bug.',
+        },
       ],
       // Lock @deprecated count at 0.
       'no-warning-comments': ['error', { terms: ['@deprecated'], location: 'anywhere' }],
