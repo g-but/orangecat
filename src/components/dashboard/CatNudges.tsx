@@ -20,9 +20,10 @@ interface Nudge {
   cta_url: string | null;
 }
 
-// The dashboard shows only the top suggestions (API returns them ordered by
-// confidence score, highest first) — two focused cards beat a wall of five.
-const DASHBOARD_NUDGE_CAP = 2;
+// Show the Cat's top proactive suggestions (API returns them ordered by
+// confidence score, highest first). This is the agent's main in-app "here's
+// how to earn next" surface, so give it room beyond a token two.
+const DASHBOARD_NUDGE_CAP = 4;
 
 export function CatNudges() {
   const [nudges, setNudges] = useState<Nudge[] | null>(null);
@@ -74,7 +75,8 @@ export function CatNudges() {
     <section className="rounded-lg border border-default bg-surface-base p-5">
       <div className="mb-3 flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-accent-warm" />
-        <h2 className="text-sm font-semibold text-fg-primary">From your Cat</h2>
+        <h2 className="text-sm font-semibold text-fg-primary">Your Cat suggests</h2>
+        <span className="text-xs text-fg-tertiary">— ways to earn, grounded in what you have</span>
       </div>
       <div className="space-y-2">
         {nudges.map(n => (

@@ -19,6 +19,8 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { ENTITY_REGISTRY, ENTITY_TYPES, type EntityType } from '@/config/entity-registry';
 import { STATUS, ENTITY_STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { generateNudges } from '@/services/cat/nudges';
 
 const LOG_SOURCE = 'DigestBuilder';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.ch';
@@ -298,6 +300,47 @@ function generateSuggestions(context: {
   return suggestions.slice(0, 3);
 }
 
+/**
+ * The weekly digest's proactive half. Prefer the Cat's real nudge engine
+ * (generateNudges — grounded, LLM-backed activation/connection/growth
+ * suggestions) so the Cat's intelligence actually reaches the one unprompted
+ * channel it has. Fall back to the deterministic rules above when the engine
+ * yields nothing (thin context, no AI key configured, or a transient failure),
+ * so the digest is never worse than before.
+ */
+async function buildDigestSuggestions(
+  admin: SupabaseClient,
+  userId: string,
+  fallbackContext: {
+    hasWallet: boolean;
+    entities: Array<{ title: string; type: string; status: string }>;
+    profileBio: string | null;
+    hasPayments: boolean;
+  }
+): Promise<Array<{ text: string; actionLabel: string; actionUrl: string }>> {
+  try {
+    const nudges = await generateNudges(admin, userId);
+    if (nudges.length > 0) {
+      return nudges.slice(0, 3).map(n => ({
+        text: n.title ? `${n.title} — ${n.body}` : n.body,
+        actionLabel: n.cta_label || 'Open OrangeCat',
+        actionUrl: n.cta_url
+          ? n.cta_url.startsWith('http')
+            ? n.cta_url
+            : `${APP_URL}${n.cta_url}`
+          : `${APP_URL}/dashboard`,
+      }));
+    }
+  } catch (err) {
+    logger.warn(
+      'digest: nudge engine failed, using deterministic fallback',
+      { err: String(err) },
+      LOG_SOURCE
+    );
+  }
+  return generateSuggestions(fallbackContext);
+}
+
 // =====================================================================
 // MAIN BUILDER
 // =====================================================================
@@ -352,8 +395,9 @@ export async function buildWeeklyDigest(userId: string): Promise<WeeklyDigestDat
     hasStats = true;
   }
 
-  // Generate suggestions
-  const suggestions = generateSuggestions({
+  // Generate suggestions — the Cat's real nudge engine first, deterministic
+  // rules as a floor (see buildDigestSuggestions).
+  const suggestions = await buildDigestSuggestions(admin, userId, {
     hasWallet,
     entities,
     profileBio: profile.bio,
