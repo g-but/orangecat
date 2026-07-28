@@ -20,7 +20,16 @@ export function getInitial(str: string | null | undefined, fallback = 'U'): stri
   return str?.charAt(0)?.toUpperCase() || fallback;
 }
 
-export function truncateAddress(address: string, startChars = 8, endChars = startChars): string {
+export function truncateAddress(
+  address: string | null | undefined,
+  startChars = 8,
+  endChars = startChars
+): string {
+  // Null-safe: Lightning-only / NWC-only wallets have no on-chain address, and
+  // a null here used to crash the whole wallets page.
+  if (!address) {
+    return '';
+  }
   if (address.length <= startChars + endChars + 3) {
     return address;
   }

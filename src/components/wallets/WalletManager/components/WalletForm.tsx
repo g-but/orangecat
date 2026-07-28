@@ -8,8 +8,7 @@
  */
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Zap } from 'lucide-react';
-import Link from 'next/link';
+import { ChevronDown, ChevronRight, Check, Wallet, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -18,8 +17,18 @@ import {
   WALLET_CATEGORIES,
   WalletCategory,
   validateAddressOrXpub,
+  classifyWalletInput,
+  type WalletInputKind,
 } from '@/types/wallet';
 import type { WalletFormProps } from '../types';
+
+/** Friendly label + hint for whatever the user pasted. */
+const DETECTED: Record<Exclude<WalletInputKind, 'unknown'>, string> = {
+  lightning: 'Lightning address',
+  onchain: 'Bitcoin address',
+  xpub: 'Bitcoin extended key',
+  nwc: 'Wallet connection',
+};
 
 export function WalletForm({
   initialData,
@@ -49,6 +58,31 @@ export function WalletForm({
     !!initialData?.address_or_xpub || !!initialData?.nwc_connection_uri
   );
   const [showDetails, setShowDetails] = useState(false);
+  const [showGetWallet, setShowGetWallet] = useState(false);
+
+  // The whole point: paste ANYTHING your wallet gives you — a Lightning address,
+  // a Bitcoin address, an xpub, or a wallet-connect link — and we route it to
+  // the right field for you. No need to know which is which.
+  const [walletInput, setWalletInput] = useState(
+    initialData?.lightning_address ||
+      initialData?.address_or_xpub ||
+      initialData?.nwc_connection_uri ||
+      ''
+  );
+  const detected = classifyWalletInput(walletInput);
+
+  const handleWalletInput = (value: string) => {
+    setWalletInput(value);
+    const kind = classifyWalletInput(value);
+    // Route to the matching receive field; clear the others so exactly one is set.
+    // 'unknown' (still typing / unrecognized) clears all — submit then guides them.
+    setFormData(fd => ({
+      ...fd,
+      lightning_address: kind === 'lightning' ? value.trim() : '',
+      address_or_xpub: kind === 'onchain' || kind === 'xpub' ? value.trim() : '',
+      nwc_connection_uri: kind === 'nwc' ? value.trim() : '',
+    }));
+  };
 
   const handleSubmit = async () => {
     setError(null);
@@ -59,7 +93,11 @@ export function WalletForm({
       !formData.lightning_address?.trim() &&
       !formData.nwc_connection_uri?.trim()
     ) {
-      setError('Add a Lightning address (or an on-chain address / NWC) so people can pay you.');
+      setError(
+        walletInput.trim()
+          ? "Hmm, we couldn't recognize that. Paste a Lightning address (you@wallet.com), a Bitcoin address, or a nostr+walletconnect:// link — or tap “Don't have a wallet?” below."
+          : 'Add your wallet so people can pay you — paste a Lightning address, a Bitcoin address, or a wallet-connect link.'
+      );
       return;
     }
 
@@ -109,25 +147,68 @@ export function WalletForm({
 
       {error && <div className="oc-error-surface mb-4 px-4 py-2">{error}</div>}
 
-      {/* Primary path: Lightning address (email-like, approachable) */}
+      {/* Smart "paste anything" input — auto-routes Lightning / on-chain / NWC. */}
       <div className="mb-4">
         <label className="mb-2 flex items-center gap-1.5 text-sm font-medium text-fg-primary">
-          <Zap className="h-4 w-4 text-bitcoinOrange" />
-          Your Lightning address
+          <Wallet className="h-4 w-4 text-bitcoinOrange" />
+          Your wallet
         </label>
         <Input
-          value={formData.lightning_address || ''}
-          onChange={e => setFormData({ ...formData, lightning_address: e.target.value })}
+          value={walletInput}
+          onChange={e => handleWalletInput(e.target.value)}
           onFocus={() => onFieldFocus?.('lightningAddress')}
-          placeholder="you@primal.net"
-          inputMode="email"
+          placeholder="you@wallet.com  ·  bc1q…  ·  nostr+walletconnect://…"
+          autoComplete="off"
         />
-        <p className="mt-1.5 text-xs text-fg-secondary">
-          It works like an email address for Bitcoin — instant and near-zero fee.{' '}
-          <Link href="/wallets" className="text-accent-warm underline hover:text-accent-warm-hover">
-            Don&apos;t have one? Get set up in a minute →
-          </Link>
-        </p>
+        {detected !== 'unknown' ? (
+          <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-status-positive">
+            <Check className="h-3.5 w-3.5" />
+            {DETECTED[detected]} — looks good
+          </p>
+        ) : (
+          <p className="mt-1.5 text-xs text-fg-secondary">
+            Paste whatever your wallet gives you — a Lightning address (like an email for Bitcoin),
+            a Bitcoin address, or a connection link. We&apos;ll sort out the rest.
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setShowGetWallet(v => !v)}
+          className="mt-2 text-xs font-medium text-accent-warm underline hover:text-accent-warm-hover"
+        >
+          Don&apos;t have a wallet? Get one free →
+        </button>
+        {showGetWallet && (
+          <div className="mt-2 space-y-2 rounded-md border border-subtle bg-surface-base p-3 text-xs">
+            <p className="text-fg-secondary">
+              Pick one, create a free account, then copy your <strong>Lightning address</strong>{' '}
+              back into the box above:
+            </p>
+            <a
+              href="https://primal.net"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between rounded border border-subtle px-2.5 py-1.5 text-fg-primary hover:border-strong"
+            >
+              <span>
+                <strong>Primal</strong> — phone app, gives you a <code>you@primal.net</code> address
+              </span>
+              <ExternalLink className="h-3 w-3 flex-shrink-0 text-fg-tertiary" />
+            </a>
+            <a
+              href="https://coinos.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between rounded border border-subtle px-2.5 py-1.5 text-fg-primary hover:border-strong"
+            >
+              <span>
+                <strong>Coinos</strong> — works in your browser, nothing to download
+              </span>
+              <ExternalLink className="h-3 w-3 flex-shrink-0 text-fg-tertiary" />
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Advanced rails: on-chain address / xpub + Nostr Wallet Connect */}

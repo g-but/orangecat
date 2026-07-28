@@ -227,6 +227,34 @@ interface ValidationResult {
   type?: WalletType;
 }
 
+/** What a pasted wallet string turned out to be — so the UI can route it to the
+ *  right receive field without the user knowing Bitcoin-address vs Lightning
+ *  address vs NWC. 'unknown' = not recognized (yet). */
+export type WalletInputKind = 'onchain' | 'xpub' | 'lightning' | 'nwc' | 'unknown';
+
+/**
+ * Classify anything a user pastes into the "add wallet" box. The whole point is
+ * that they paste WHATEVER their wallet gives them and it just works.
+ */
+export function classifyWalletInput(raw: string): WalletInputKind {
+  const v = (raw ?? '').trim();
+  if (!v) {
+    return 'unknown';
+  }
+  if (v.toLowerCase().startsWith('nostr+walletconnect://')) {
+    return 'nwc';
+  }
+  // Lightning address / LNURL: local@domain.tld
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+    return 'lightning';
+  }
+  const res = validateAddressOrXpub(v);
+  if (res.valid) {
+    return res.type === 'xpub' ? 'xpub' : 'onchain';
+  }
+  return 'unknown';
+}
+
 /**
  * Detect wallet type from address/xpub string
  */

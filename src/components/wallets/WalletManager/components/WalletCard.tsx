@@ -47,9 +47,34 @@ export function WalletCard({
   const categoryInfo = WALLET_CATEGORIES[wallet.category];
   const progressPercent = wallet.goal_amount ? (wallet.balance_btc / wallet.goal_amount) * 100 : 0;
 
+  // The public receive handle to show + copy. A wallet may have an on-chain
+  // address, a Lightning address, or only a wallet connection (NWC — no public
+  // handle). Handle all three so a Lightning/NWC-only wallet renders instead of
+  // crashing the page on a null address.
+  const receiveHandle = wallet.address_or_xpub
+    ? {
+        label: wallet.wallet_type === 'xpub' ? 'Extended Public Key' : 'Bitcoin Address',
+        display: truncateAddress(wallet.address_or_xpub, 20, 10),
+        copyValue: wallet.address_or_xpub,
+      }
+    : wallet.lightning_address
+      ? {
+          label: 'Lightning Address',
+          display: wallet.lightning_address,
+          copyValue: wallet.lightning_address,
+        }
+      : {
+          label: 'Connected wallet',
+          display: 'Auto-receive via a connected wallet',
+          copyValue: null as string | null,
+        };
+
   const handleCopy = async () => {
+    if (!receiveHandle.copyValue) {
+      return;
+    }
     try {
-      await navigator.clipboard.writeText(wallet.address_or_xpub);
+      await navigator.clipboard.writeText(receiveHandle.copyValue);
       toast.success('Copied to clipboard!');
     } catch {
       toast.error('Failed to copy to clipboard');
@@ -167,24 +192,24 @@ export function WalletCard({
         </div>
       )}
 
-      {/* Address (truncated) */}
+      {/* Receive handle (address / lightning / connection) */}
       <div className="pt-4 border-t border-default">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-fg-secondary">
-            {wallet.wallet_type === 'xpub' ? 'Extended Public Key' : 'Bitcoin Address'}
-          </span>
-          <button
-            onClick={handleCopy}
-            className="p-1.5 rounded-md hover:bg-surface-raised text-fg-secondary hover:text-bitcoinOrange transition-colors flex items-center gap-1 min-h-11"
-            title="Copy address"
-            aria-label="Copy address"
-          >
-            <Copy className="w-4 h-4" />
-            <span className="text-xs hidden sm:inline">Copy</span>
-          </button>
+          <span className="text-xs font-medium text-fg-secondary">{receiveHandle.label}</span>
+          {receiveHandle.copyValue && (
+            <button
+              onClick={handleCopy}
+              className="p-1.5 rounded-md hover:bg-surface-raised text-fg-secondary hover:text-bitcoinOrange transition-colors flex items-center gap-1 min-h-11"
+              title="Copy"
+              aria-label="Copy"
+            >
+              <Copy className="w-4 h-4" />
+              <span className="text-xs hidden sm:inline">Copy</span>
+            </button>
+          )}
         </div>
         <code className="text-xs text-fg-primary block font-mono break-all bg-surface-raised p-2 rounded border dark:border-default">
-          {truncateAddress(wallet.address_or_xpub, 20, 10)}
+          {receiveHandle.display}
         </code>
       </div>
     </div>
