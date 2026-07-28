@@ -40,6 +40,8 @@ interface Project {
   created_at: string;
   updated_at: string;
   // Extended fields that may be present
+  /** Honest settled-contributions total in BTC (from get_entity_funding_stats). */
+  settled_raised_btc?: number | null;
   bitcoin_balance_btc?: number | null;
   bitcoin_balance_updated_at?: string | null;
   supporters_count?: number | null;
@@ -181,6 +183,7 @@ export default function ProjectPageClient({ project, sellerReceive }: ProjectPag
                 last_support_at: project.last_support_at || null,
                 user_id: project.user_id,
               }}
+              settledRaisedBtc={project.settled_raised_btc || 0}
               isOwner={isOwner}
             />
 

@@ -26,10 +26,13 @@ interface Props {
     last_support_at?: string | null;
     user_id?: string;
   };
+  /** Honest settled-contributions total in BTC (get_entity_funding_stats). Drives
+   *  "amount raised" — NOT the cached on-chain balance, which is Lightning-blind. */
+  settledRaisedBtc?: number;
   isOwner?: boolean;
 }
 
-export default function ProjectSummaryRail({ project, isOwner }: Props) {
+export default function ProjectSummaryRail({ project, settledRaisedBtc = 0, isOwner }: Props) {
   const { formatAmountBtc } = useDisplayCurrency();
   const goalCurrency = project.goal_currency || project.currency || PLATFORM_DEFAULT_CURRENCY;
   const [amountRaised, setAmountRaised] = useState<number>(0);
@@ -41,14 +44,17 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
     project.bitcoin_balance_updated_at || null
   );
 
+  // "Amount raised" comes from the settled-contributions ledger (includes
+  // Lightning), converted to the goal currency — NOT the cached on-chain
+  // balance below (which misses Lightning and can be stale). Refreshing the
+  // balance updates the balance line only, never this figure.
   useEffect(() => {
     const init = async () => {
-      const btc = bitcoinBalanceBtc;
-      const amt = await computeAmountRaised(btc, goalCurrency);
+      const amt = await computeAmountRaised(settledRaisedBtc, goalCurrency);
       setAmountRaised(amt);
     };
     init();
-  }, [bitcoinBalanceBtc, goalCurrency]);
+  }, [settledRaisedBtc, goalCurrency]);
 
   const progress = useMemo(() => {
     const goal = project.goal_amount || 0;
