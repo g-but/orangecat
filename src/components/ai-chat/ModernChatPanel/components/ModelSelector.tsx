@@ -220,7 +220,7 @@ export function ModelSelector({
                         applyCustom();
                       }
                     }}
-                    placeholder="e.g. anthropic/claude-3.5-sonnet"
+                    placeholder="e.g. anthropic/claude-sonnet-5"
                     className="min-w-0 flex-1 rounded-md border border-subtle bg-surface-base px-2 py-1.5 text-sm text-fg-primary placeholder:text-fg-tertiary"
                     aria-label="Custom model id"
                   />

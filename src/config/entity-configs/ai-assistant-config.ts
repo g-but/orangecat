@@ -18,6 +18,7 @@ import { createEntityConfig } from './base-config-factory';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { WalletSelectorField } from '@/components/create/wallet-selector';
 import { AI_COMPUTE_PROVIDER_TYPES } from '@/config/ai-assistants';
+import { getAvailableModels } from '@/config/ai-models';
 
 // ==================== CONSTANTS ====================
 
@@ -37,14 +38,12 @@ const AI_CATEGORIES = [
   'Other',
 ];
 
+// Options derive from the model registry (SSOT) so this dropdown can never
+// drift from what the platform actually serves. 'any' and 'local' are routing
+// sentinels, not models.
 const MODEL_PREFERENCES = [
   { value: 'any', label: 'Any - Let the system choose' },
-  { value: 'gpt-4', label: 'GPT-4' },
-  { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
-  { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
-  { value: 'claude-3-opus', label: 'Claude 3 Opus' },
-  { value: 'claude-3-sonnet', label: 'Claude 3 Sonnet' },
-  { value: 'claude-3-haiku', label: 'Claude 3 Haiku' },
+  ...getAvailableModels().map(m => ({ value: m.id, label: m.name })),
   { value: 'local', label: 'Local Model' },
 ];
 

@@ -160,3 +160,50 @@ describe('OpenRouterService streamChatCompletion cost', () => {
     expect(finalUsage?.costBtc).toBe(expectedBtc);
   });
 });
+
+describe('OpenRouterService sampling-param gating', () => {
+  let fetchSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    fetchSpy = jest.spyOn(global, 'fetch');
+  });
+
+  afterEach(() => {
+    fetchSpy.mockRestore();
+  });
+
+  function sentBody(): Record<string, unknown> {
+    const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    return JSON.parse(init.body as string);
+  }
+
+  it('omits temperature for models with supportsTemperature=false', async () => {
+    fetchSpy.mockResolvedValue(
+      mockJsonResponse(completionBody({ prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 }))
+    );
+
+    const svc = new OpenRouterService('sk-test', { btcPriceUsd: BTC_PRICE_USD });
+    await svc.chatCompletion({
+      model: 'anthropic/claude-opus-5',
+      messages: [{ role: 'user', content: 'hi' }],
+      temperature: 0.2,
+    });
+
+    expect(sentBody()).not.toHaveProperty('temperature');
+  });
+
+  it('keeps temperature for models without the flag', async () => {
+    fetchSpy.mockResolvedValue(
+      mockJsonResponse(completionBody({ prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 }))
+    );
+
+    const svc = new OpenRouterService('sk-test', { btcPriceUsd: BTC_PRICE_USD });
+    await svc.chatCompletion({
+      model: PAID_MODEL,
+      messages: [{ role: 'user', content: 'hi' }],
+      temperature: 0.2,
+    });
+
+    expect(sentBody()).toHaveProperty('temperature', 0.2);
+  });
+});
