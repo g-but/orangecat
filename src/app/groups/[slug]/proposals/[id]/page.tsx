@@ -8,6 +8,8 @@
  * Last Modified Summary: Initial implementation
  */
 
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { ProposalDetail } from '@/components/groups/proposals/ProposalDetail';
 import { createServerClient } from '@/lib/supabase/server';
 import { checkGroupPermission } from '@/services/groups/permissions';
@@ -16,6 +18,11 @@ import { getGroupBySlug } from '@/services/groups/queries/groups';
 interface PageProps {
   params: Promise<{ slug: string; id: string }>;
 }
+
+// Group governance is member-facing, not search content — never index proposals.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function ProposalPage({ params }: PageProps) {
   const { slug, id } = await params;
@@ -27,11 +34,7 @@ export default async function ProposalPage({ params }: PageProps) {
   // Get group
   const groupResult = await getGroupBySlug(slug);
   if (!groupResult.success || !groupResult.group) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-status-negative">Group not found</p>
-      </div>
-    );
+    notFound();
   }
 
   const group = groupResult.group;

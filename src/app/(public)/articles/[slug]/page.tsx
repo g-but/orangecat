@@ -46,6 +46,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: article.title,
     description: article.excerpt,
     robots: isIndexable ? undefined : { index: false, follow: false },
+    // Slugs are user-authored (title + random suffix) and duplicate-prone —
+    // pin the canonical URL so near-duplicate titles don't split ranking.
+    alternates: { canonical: `${SITE_URL}/articles/${article.slug}` },
     openGraph: {
       title: article.title,
       description: article.excerpt,
