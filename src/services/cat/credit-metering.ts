@@ -153,6 +153,11 @@ export async function meterCreditUsage(
     kind: 'usage' as const,
     amountBtc: -chargeBtc,
     ref,
+    // Post-serve settlement: the frontier response was already streamed, so the
+    // charge must land even if it exceeds the gated balance (the 100-sat gate
+    // can't cover a large single request). Without this, a low-balance user got
+    // unlimited free frontier calls — the debit was rejected and never written.
+    allowOverdraw: true,
     metadata: {
       source: 'cat_chat',
       model,

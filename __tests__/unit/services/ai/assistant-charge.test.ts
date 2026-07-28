@@ -133,12 +133,17 @@ describe('settleAssistantCharge', () => {
     expect(debit[2].kind).toBe('usage');
     expect(debit[2].amountBtc).toBeCloseTo(-0.001, 10);
     expect(debit[2].ref).toBe('msg-1');
+    // Message already served → the charge must land even into a negative
+    // balance (closes the concurrent-message TOCTOU free-ride).
+    expect(debit[2].allowOverdraw).toBe(true);
 
     // Grant: creator gets exactly 95% of the gross, tagged as assistant revenue.
     const grant = appendCreditEntry.mock.calls[1] as [unknown, string, any];
     expect(grant[1]).toBe('creator');
     expect(grant[2].kind).toBe('grant');
     expect(grant[2].amountBtc).toBeCloseTo(0.00095, 10); // 0.001 * 0.95
+    // A credit (creator payout) must NEVER overdraw — only served debits do.
+    expect(grant[2].allowOverdraw).toBeFalsy();
     expect(grant[2].ref).toBe('msg-1:creator');
     expect(grant[2].metadata.grossBtc).toBe(0.001);
 

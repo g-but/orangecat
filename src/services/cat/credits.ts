@@ -14,7 +14,6 @@
  * usage metering are wired in later phases on top of appendCreditEntry.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
@@ -99,6 +98,14 @@ export async function appendCreditEntry(
     amountBtc: number;
     ref?: string | null;
     metadata?: Record<string, unknown> | null;
+    /**
+     * Settle an already-served charge: record the debit even if it drives the
+     * balance below zero. ONLY for post-serve settlements (frontier metering,
+     * assistant per-message) — the compute was delivered, so not billing it is
+     * lost revenue. Leave false for pre-authorization and for credits (top-ups,
+     * creator payouts), which must never overdraw.
+     */
+    allowOverdraw?: boolean;
   }
 ): Promise<number | null> {
   try {
@@ -108,6 +115,7 @@ export async function appendCreditEntry(
       p_amount_btc: entry.amountBtc,
       p_ref: entry.ref ?? null,
       p_metadata: entry.metadata ?? null,
+      p_allow_overdraw: entry.allowOverdraw ?? false,
     });
     if (error) {
       // 23514 check_violation = insufficient_credits (expected, not exceptional).
