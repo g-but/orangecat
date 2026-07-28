@@ -6,9 +6,10 @@
  * OWN wallet (NWC / Lightning address / on-chain) and never touches the funds.
  * Zero platform fee — the tipper pays exactly the amount they choose.
  *
- * v1 shows the payment request (QR + copy) so any Bitcoin wallet can pay it; it
- * does not record the tip server-side (that needs a schema change). Keep the copy
- * honest: we help you pay the writer directly, we don't hold or take a cut.
+ * A tip is minted as an entity-less payment_intent (intent_kind='tip'), so it
+ * rides the shared settle path: the tipper sees live confirmation and the
+ * recipient gets the standard "you got paid" notification. Keep the copy honest:
+ * we help you pay the writer directly, we don't hold or take a cut.
  */
 
 import { CONTRIBUTION_QUICK_AMOUNTS_BTC, DEFAULT_CONTRIBUTION_BTC } from './payment-presets';
@@ -36,4 +37,12 @@ export const TIP_COPY = {
   disclaimer: 'Paid directly to them. OrangeCat takes 0% and never touches your funds.',
   again: 'Change amount',
   done: 'Done',
+  /** Live confirmation once the tip settles on-rail. */
+  paidTitle: 'Tip received!',
+  paidBody: (name: string) => `Paid straight to ${name}'s wallet. Zero fee, zero middleman.`,
+  expiredTitle: 'This tip request expired',
+  expiredBody: 'No Bitcoin was sent. You can start a new tip anytime.',
 } as const;
+
+/** How often the dialog polls for tip settlement, in milliseconds. */
+export const TIP_POLL_INTERVAL_MS = 3000;

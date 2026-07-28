@@ -11,6 +11,7 @@ import { checkPaymentStatus } from '@/domain/payments/paymentFlowService';
 import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 import { checkOnchainPaymentStatus } from '@/domain/payments/paymentStatusService';
+import { NotificationDispatcher } from '@/services/notifications/dispatcher';
 
 jest.mock('@/utils/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
@@ -28,9 +29,11 @@ jest.mock('@/domain/payments/paymentStatusService', () => ({
 
 const errorMock = logger.error as jest.Mock;
 const onchainMock = checkOnchainPaymentStatus as jest.Mock;
+const dispatchMock = NotificationDispatcher.dispatch as jest.Mock;
 
 const PI_ID = 'pi-1';
 const BUYER = 'buyer-1';
+const SELLER = 'seller-1';
 
 const onchainIntent = {
   id: PI_ID,
@@ -65,6 +68,37 @@ function makeSupabase(orderUpdateError: unknown) {
   return { from: jest.fn(() => builder), rpc } as never;
 }
 
+/** A tip intent: entity-less, kind='tip'. Confirming it must NOT touch orders or
+ *  getEntityMetadata (which would throw on a null entity_type). */
+const tipIntent = {
+  id: PI_ID,
+  buyer_id: null,
+  seller_id: SELLER,
+  status: STATUS.PAYMENT_INTENTS.INVOICE_READY,
+  payment_method: 'onchain',
+  intent_kind: 'tip',
+  onchain_address: 'bc1qtip',
+  entity_type: null,
+  entity_id: null,
+  amount_btc: 0.0005,
+  description: 'Tip for Bob',
+  paid_at: null,
+  expires_at: null,
+};
+
+/** Builder returning `intent`; the tip path only awaits ONE update (mark paid). */
+function makeSupabaseReturning(intent: unknown) {
+  const builder: Record<string, unknown> = {};
+  for (const m of ['select', 'update', 'eq', 'in']) {
+    builder[m] = jest.fn(() => builder);
+  }
+  builder.single = jest.fn(() => Promise.resolve({ data: intent, error: null }));
+  builder.then = (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) =>
+    Promise.resolve({ error: null }).then(resolve, reject);
+  const rpc = jest.fn(() => Promise.resolve({ error: null }));
+  return { from: jest.fn(() => builder), rpc } as never;
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   onchainMock.mockResolvedValue('confirmed');
@@ -87,5 +121,25 @@ describe('handlePaymentConfirmed via checkPaymentStatus (onchain confirmed)', ()
       expect.stringContaining('reconciliation'),
       expect.objectContaining({ paymentIntentId: PI_ID })
     );
+  });
+});
+
+describe('handlePaymentConfirmed — tip branch', () => {
+  it('settles an entity-less tip and notifies the recipient (no entity side-effects)', async () => {
+    const supabase = makeSupabaseReturning(tipIntent);
+    // The recipient (seller) polling their own tip; a null entity_type must not throw.
+    const res = await checkPaymentStatus(supabase, PI_ID, SELLER);
+
+    expect(res.status).toBe(STATUS.PAYMENT_INTENTS.PAID);
+    expect(dispatchMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: SELLER,
+        type: 'payment',
+        title: expect.stringContaining('tip'),
+        data: expect.objectContaining({ kind: 'tip', amount_btc: 0.0005 }),
+      })
+    );
+    // No reconciliation error path — a tip has no order to get stuck.
+    expect(errorMock).not.toHaveBeenCalled();
   });
 });

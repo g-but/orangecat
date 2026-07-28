@@ -33,6 +33,7 @@ import type {
   PaymentIntent,
   InitiatePublicSupportInput,
   InitiatePublicSupportResult,
+  InitiateTipInput,
   PublicPaymentStatusResult,
 } from './types';
 import { logger } from '@/utils/logger';
@@ -295,6 +296,83 @@ export async function initiatePublicSupport(
       expires_at: paymentIntent.expires_at,
       can_acknowledge:
         paymentIntent.payment_method === 'lightning_address' && !paymentIntent.lnurl_verify_url,
+    },
+    status_token: token,
+    qr_data: invoice.qr_data,
+    method_label: METHOD_LABELS[wallet.method] || wallet.method,
+    expires_in_seconds: expiresInSeconds,
+  } as InitiatePublicSupportResult;
+}
+
+/**
+ * Initiate a tip — an unconditional, account-free Bitcoin gift to a PERSON.
+ *
+ * Unlike public support, a tip has no entity: it creates an entity-less
+ * payment_intent (intent_kind='tip') against the recipient's OWN wallet, so it
+ * settles non-custodially and rides the exact same status-poll + settle path.
+ * When it settles, {@link handlePaymentConfirmed} notifies the recipient. The
+ * caller (tips domain) resolves the recipient + wallet; this only mints the
+ * intent. Returns the same public shape as support: a bearer status token the
+ * anonymous tipper polls with.
+ */
+export async function initiateTip(
+  input: InitiateTipInput
+): Promise<InitiatePublicSupportResult> {
+  const { recipientUserId, recipientName, wallet, amountBtc } = input;
+  const description = `Tip for ${recipientName}`;
+  const invoice = await generateInvoice(wallet, amountBtc, description);
+  const token = randomBytes(32).toString('base64url');
+  const expiresAt =
+    invoice.expires_at ?? new Date(Date.now() + PUBLIC_SUPPORT_EXPIRY_MS).toISOString();
+  const admin = getAdminClient() as unknown as SupabaseClient;
+
+  const { data: paymentIntent, error: paymentError } = await admin
+    .from(DATABASE_TABLES.PAYMENT_INTENTS)
+    .insert({
+      buyer_id: null,
+      seller_id: recipientUserId,
+      entity_type: null,
+      entity_id: null,
+      amount_btc: amountBtc,
+      payment_method: wallet.method,
+      intent_kind: 'tip',
+      receiving_wallet_id: wallet.wallet_id,
+      bolt11: invoice.bolt11,
+      payment_hash: invoice.payment_hash,
+      onchain_address: invoice.onchain_address,
+      lnurl_verify_url: invoice.lnurl_verify_url,
+      status:
+        invoice.bolt11 || invoice.onchain_address
+          ? STATUS.PAYMENT_INTENTS.INVOICE_READY
+          : STATUS.PAYMENT_INTENTS.CREATED,
+      description,
+      expires_at: expiresAt,
+      public_status_token_hash: hashPublicStatusToken(token),
+    })
+    .select()
+    .single();
+
+  if (paymentError || !paymentIntent) {
+    logger.error('Failed to create tip payment intent', { error: paymentError });
+    throw new Error('Failed to create tip payment intent');
+  }
+
+  const expiresInSeconds = Math.max(
+    0,
+    Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)
+  );
+
+  return {
+    payment_intent: {
+      id: paymentIntent.id,
+      amount_btc: Number(paymentIntent.amount_btc),
+      payment_method: paymentIntent.payment_method,
+      status: paymentIntent.status,
+      expires_at: paymentIntent.expires_at,
+      // Tips v1 confirm only on auto-detected rails (NWC / LUD-21 verify /
+      // on-chain). A bare Lightning address with no verify URL simply shows the
+      // QR without live confirmation — no manual "I paid" override.
+      can_acknowledge: false,
     },
     status_token: token,
     qr_data: invoice.qr_data,
@@ -636,6 +714,25 @@ async function handlePaymentConfirmed(
 
   // Mark payment intent as paid
   await updatePaymentStatus(supabase, piId, 'paid');
+
+  // A tip is a person-to-person gift with no entity — none of the entity-scoped
+  // side-effects below apply (and getEntityMetadata would throw on a null type).
+  // Notify the recipient and fan the settlement out to their webhooks, then stop.
+  if (paymentIntent.intent_kind === 'tip') {
+    const tipAmount = paymentIntent.amount_btc;
+    void NotificationDispatcher.dispatch({
+      userId: paymentIntent.seller_id,
+      type: 'payment',
+      title: `You received a tip: ${tipAmount} BTC`,
+      message: `Someone sent you a ${tipAmount} BTC tip — paid straight to your wallet.`,
+      data: { paymentIntentId: piId, amount_btc: tipAmount, kind: 'tip' },
+      actionUrl: '/dashboard',
+    });
+    void enqueuePaymentSettledWebhook(paymentIntent).catch(err =>
+      logger.warn('payment.settled webhook enqueue failed (tip)', { err }, 'paymentFlowService')
+    );
+    return;
+  }
 
   const meta = getEntityMetadata(entityType);
 

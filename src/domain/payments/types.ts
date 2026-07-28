@@ -12,7 +12,7 @@ import { STATUS } from '@/config/database-constants';
 // =====================================================================
 
 export type PaymentMethod = 'nwc' | 'lightning_address' | 'onchain';
-export type PaymentIntentKind = 'purchase' | 'support';
+export type PaymentIntentKind = 'purchase' | 'support' | 'tip';
 
 // =====================================================================
 // PAYMENT INTENT
@@ -143,6 +143,16 @@ export interface InitiatePublicSupportResult {
 
 export interface PublicPaymentStatusResult extends PaymentStatusResult {
   requires_recipient_confirmation: boolean;
+}
+
+export interface InitiateTipInput {
+  /** Auth user id of the person being tipped (the payment intent's seller_id). */
+  recipientUserId: string;
+  /** Display name, for the invoice/description. */
+  recipientName: string;
+  /** The recipient's own resolved wallet — funds go straight here. */
+  wallet: ResolvedWallet;
+  amountBtc: number;
 }
 
 /** Resolved wallet info for a seller */
