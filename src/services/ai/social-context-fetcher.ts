@@ -153,7 +153,7 @@ export async function fetchInboundActivityForCat(
               status,
               customer:customer_actor_id(
                 display_name,
-                username
+                slug
               )
             `
             )
@@ -186,8 +186,11 @@ export async function fetchInboundActivityForCat(
         starts_at: string;
         ends_at: string | null;
         status: string;
-        // Supabase returns one-to-one FK joins as arrays; take first element
-        customer: { display_name: string | null; username: string | null }[] | null;
+        // Supabase returns one-to-one FK joins as arrays; take first element.
+        // The actor's handle is `slug` — the actors table has no `username`
+        // column (that lives on profiles), which used to make this whole
+        // sub-query error out on every Cat context build.
+        customer: { display_name: string | null; slug: string | null }[] | null;
       }) => {
         const customer = Array.isArray(b.customer) ? b.customer[0] : b.customer;
         return {
@@ -195,7 +198,7 @@ export async function fetchInboundActivityForCat(
           ends_at: b.ends_at,
           status: b.status,
           customer_display_name: customer?.display_name ?? null,
-          customer_username: customer?.username ?? null,
+          customer_username: customer?.slug ?? null,
         };
       }
     );
