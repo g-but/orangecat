@@ -1,9 +1,9 @@
 /**
- * POST /api/tips/invoice { username, amountBtc } — generate a non-custodial
- * Bitcoin payment request to the recipient's own wallet. Anonymous tippers are
- * allowed (easy UX); IP rate-limited to protect recipients' NWC relays from
- * invoice-generation abuse. Nothing is written to the DB and OrangeCat never
- * touches the funds.
+ * POST /api/tips/invoice { username, amountBtc } — mint a non-custodial Bitcoin
+ * tip request against the recipient's own wallet. Anonymous tippers are allowed
+ * (easy UX); IP rate-limited to protect recipients' NWC relays from invoice-
+ * generation abuse. Persists an entity-less payment_intent so the tip can be
+ * tracked + the recipient notified on settlement; OrangeCat never touches funds.
  */
 
 import type { NextRequest } from 'next/server';
@@ -12,7 +12,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 import { apiBadRequest, apiError, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
 import { TIP_MAX_BTC, TIP_MIN_BTC } from '@/config/tips';
-import { generateTipInvoice } from '@/domain/tips/tip-service';
+import { initiateTip } from '@/domain/tips/tip-service';
 import { logger } from '@/utils/logger';
 
 const bodySchema = z.object({
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createServerClient();
-    const result = await generateTipInvoice(supabase, parsed.data.username, parsed.data.amountBtc);
+    const result = await initiateTip(supabase, parsed.data.username, parsed.data.amountBtc);
     if (!result.ok) {
       return apiError(result.error, 'TIP_UNAVAILABLE', 400);
     }

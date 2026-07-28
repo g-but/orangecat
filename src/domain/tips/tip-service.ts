@@ -1,15 +1,20 @@
 /**
- * Tip service — resolve a person by username and generate a non-custodial
- * Bitcoin payment request against THEIR own wallet. Reuses the payment stack's
- * wallet resolution + invoice generation (SSOT) so a tip pays exactly like any
- * other payment on the platform: NWC > Lightning address > on-chain, zero fee,
- * OrangeCat never in the money path.
+ * Tip service — resolve a person by username and mint a non-custodial Bitcoin
+ * tip against THEIR own wallet. A tip is a first-class payment_intent
+ * (intent_kind='tip'): it reuses the payment stack's wallet resolution, invoice
+ * generation, status polling AND settle path (SSOT), so it pays exactly like any
+ * other payment — NWC > Lightning address > on-chain, zero fee, OrangeCat never
+ * in the money path — and the recipient gets the standard "you got paid"
+ * notification for free when it settles.
  */
 
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { resolveUserWallet } from '@/domain/payments/walletResolutionService';
-import { generateInvoice } from '@/domain/payments/invoiceGenerationService';
+import {
+  initiateTip as initiateTipPayment,
+  checkPublicPaymentStatus,
+} from '@/domain/payments/paymentFlowService';
 import type { ResolvedWallet } from '@/domain/payments/types';
 import { logger } from '@/utils/logger';
 
@@ -66,9 +71,11 @@ export async function getTipReceiveInfo(
 }
 
 export interface TipInvoice {
+  /** payment_intents row id — the tipper polls status with this + statusToken. */
+  intentId: string;
+  /** Opaque bearer token to poll settlement without an account. */
+  statusToken: string;
   qrData: string;
-  bolt11: string | null;
-  onchainAddress: string | null;
   methodLabel: string;
   recipientName: string;
   amountBtc: number;
@@ -77,8 +84,12 @@ export interface TipInvoice {
 
 type TipInvoiceResult = { ok: true; invoice: TipInvoice } | { ok: false; error: string };
 
-/** Build a payment request for `amountBtc` to the recipient's own wallet. */
-export async function generateTipInvoice(
+/**
+ * Mint a tip payment request for `amountBtc` to the recipient's own wallet.
+ * Persists an entity-less payment_intent so the payment can be tracked, the
+ * tipper shown live confirmation, and the recipient notified on settlement.
+ */
+export async function initiateTip(
   supabase: AnySupabaseClient,
   username: string,
   amountBtc: number
@@ -97,29 +108,51 @@ export async function generateTipInvoice(
   }
 
   try {
-    const inv = await generateInvoice(
+    const res = await initiateTipPayment({
+      recipientUserId: recipient.userId,
+      recipientName: recipient.displayName,
       wallet,
       amountBtc,
-      `Tip for ${recipient.displayName} on OrangeCat`
-    );
-    const expiresInSeconds = inv.expires_at
-      ? Math.max(0, Math.floor((new Date(inv.expires_at).getTime() - Date.now()) / 1000))
-      : null;
-
+    });
     return {
       ok: true,
       invoice: {
-        qrData: inv.qr_data,
-        bolt11: inv.bolt11,
-        onchainAddress: inv.onchain_address,
-        methodLabel: METHOD_LABELS[wallet.method],
+        intentId: res.payment_intent.id,
+        statusToken: res.status_token,
+        qrData: res.qr_data,
+        methodLabel: res.method_label,
         recipientName: recipient.displayName,
         amountBtc,
-        expiresInSeconds,
+        expiresInSeconds: res.expires_in_seconds,
       },
     };
   } catch (err) {
-    logger.error('Failed to generate tip invoice', { err: String(err), username }, 'Tips');
+    logger.error('Failed to initiate tip', { err: String(err), username }, 'Tips');
     return { ok: false, error: 'Could not create a tip request right now. Please try again.' };
   }
+}
+
+export type TipStatus = 'pending' | 'paid' | 'expired' | 'failed';
+
+export interface TipStatusResult {
+  status: TipStatus;
+  paidAt: string | null;
+}
+
+/**
+ * Poll a tip's settlement using its bearer token. Wraps the generic public
+ * payment-status check (NWC lookup / LUD-21 verify / on-chain), collapsing the
+ * intent's status vocabulary to what the tip UI needs.
+ */
+export async function getTipStatus(intentId: string, token: string): Promise<TipStatusResult> {
+  const res = await checkPublicPaymentStatus(intentId, token);
+  const status: TipStatus =
+    res.status === 'paid'
+      ? 'paid'
+      : res.status === 'expired'
+        ? 'expired'
+        : res.status === 'failed'
+          ? 'failed'
+          : 'pending';
+  return { status, paidAt: res.paid_at ?? null };
 }

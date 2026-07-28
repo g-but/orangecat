@@ -3,9 +3,9 @@
  * shapes (erased at compile — no server code pulled into the bundle).
  */
 
-import type { TipInvoice, TipReceiveInfo } from '@/domain/tips/tip-service';
+import type { TipInvoice, TipReceiveInfo, TipStatusResult } from '@/domain/tips/tip-service';
 
-export type { TipInvoice, TipReceiveInfo } from '@/domain/tips/tip-service';
+export type { TipInvoice, TipReceiveInfo, TipStatusResult } from '@/domain/tips/tip-service';
 
 async function readJson(
   res: Response
@@ -38,4 +38,18 @@ export async function fetchTipInvoice(username: string, amountBtc: number): Prom
     throw new Error(errorMessage(json, 'Could not create a tip request.'));
   }
   return (json.data as { invoice: TipInvoice }).invoice;
+}
+
+/** Poll whether a tip has settled, using the intent id + bearer token. */
+export async function fetchTipStatus(intentId: string, token: string): Promise<TipStatusResult> {
+  const res = await fetch('/api/tips/status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ intentId, token }),
+  });
+  const json = await readJson(res);
+  if (!res.ok || !json.success) {
+    throw new Error(errorMessage(json, 'Could not check tip status.'));
+  }
+  return json.data as TipStatusResult;
 }
