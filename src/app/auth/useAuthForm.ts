@@ -6,6 +6,7 @@ import { signInAnonymously } from '@/services/supabase/auth';
 import { getReadableError } from '@/utils/getReadableError';
 import supabase from '@/lib/supabase/browser';
 import { useAuthSubmission } from './useAuthSubmission';
+import type { Provider } from '@supabase/supabase-js';
 import { OAUTH_TO_SUPABASE, type OAuthProvider } from './oauth-provider-map';
 
 export type { OAuthProvider };
@@ -145,13 +146,10 @@ export function useAuthForm() {
   const handleOAuthSignIn = async (provider: OAuthProvider) => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        // Map app id → GoTrue/supabase key (X is `twitter` upstream).
-        provider: OAUTH_TO_SUPABASE[provider] as
-          | 'google'
-          | 'github'
-          | 'facebook'
-          | 'apple'
-          | 'twitter',
+        // Map app id → GoTrue/supabase key (X is `twitter`, LinkedIn is
+        // `linkedin_oidc`). Cast to supabase-js's own Provider union derived
+        // from the map (SSOT) rather than a hardcoded list.
+        provider: OAUTH_TO_SUPABASE[provider] as Provider,
         options: { redirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) {
