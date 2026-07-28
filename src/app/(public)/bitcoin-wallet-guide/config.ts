@@ -17,23 +17,44 @@ export interface WalletOption {
 
 export const walletOptions: WalletOption[] = [
   {
+    id: 'primal',
+    name: 'Primal',
+    type: 'mobile',
+    description:
+      'The fastest way to start receiving on OrangeCat. Install it and you get a Lightning address (like name@primal.net) in about a minute — exactly what OrangeCat needs to receive tips and funding.',
+    pros: [
+      'Gives you a Lightning address in ~1 minute',
+      'Instant, near-zero-fee receiving',
+      'Beautiful, genuinely beginner-friendly app',
+      'Works directly with your OrangeCat address',
+    ],
+    cons: ['Mobile only', 'Starts custodial — you can move to self-custody later'],
+    difficulty: 'beginner',
+    downloadUrl: 'https://primal.net/downloads',
+    supportedPlatforms: ['iOS', 'Android'],
+    features: ['Lightning address', 'Instant receiving', 'Beginner-friendly'],
+    recommended: true,
+  },
+  {
     id: 'brave',
     name: 'Brave Wallet',
     type: 'browser',
-    description: 'Built-in wallet in the Brave browser. Simple, secure, and perfect for beginners.',
+    description:
+      'Built-in wallet in the Brave browser. Good for holding on-chain Bitcoin, but it has no Lightning support — so it cannot receive Lightning tips or back a name@orangecat.ch address.',
     pros: [
       'Already built into Brave browser',
       'No additional downloads needed',
       'Self-custody - you control your keys',
       'Multi-chain support (Bitcoin, Ethereum, Solana)',
-      'Easy to use interface',
     ],
-    cons: ['Only available in Brave browser', 'Relatively new compared to other wallets'],
+    cons: [
+      'No Lightning support — cannot receive Lightning tips or a Lightning address',
+      'Only available in Brave browser',
+    ],
     difficulty: 'beginner',
     downloadUrl: 'https://brave.com/',
     supportedPlatforms: ['Windows', 'macOS', 'Linux', 'iOS', 'Android'],
     features: ['Self-custody', 'Multi-chain', 'Browser integrated', 'Open source'],
-    recommended: true,
   },
   {
     id: 'blue-wallet',

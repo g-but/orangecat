@@ -71,7 +71,7 @@ export const metadata: Metadata = {
   },
   description: APP_DESCRIPTION,
   keywords:
-    'AI economic agent, bitcoin, finance, community, fund, invest, lend, products, services, lightning network, peer-to-peer, pseudonymous, any currency',
+    'AI economic agent, bitcoin, finance, community, fund, invest, lend, products, services, lightning network, peer-to-peer, pseudonymous, non-custodial',
   metadataBase: new URL(SITE_URL),
   openGraph: {
     type: 'website',
@@ -84,7 +84,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'OrangeCat - Your AI Economic Agent',
-    description: 'Fund, lend, invest, trade, and govern with any identity, any currency.',
+    description: 'Fund, lend, invest, trade, and govern with any identity, settled in Bitcoin.',
   },
   manifest: '/manifest.json',
   icons: {
@@ -121,7 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   url: SITE_URL,
                   logo: `${SITE_URL}/images/orange-cat-logo.svg`,
                   description:
-                    'Fund, lend, invest, trade, and govern with any identity, any currency.',
+                    'Fund, lend, invest, trade, and govern with any identity, settled in Bitcoin.',
                   sameAs: [],
                 },
                 {
