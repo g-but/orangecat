@@ -20,7 +20,7 @@ import { ROUTES } from '@/config/routes';
 
 const HIGHLIGHTS = [
   { icon: TrendingUp, label: 'Full economic spectrum — exchange, fund, lend, invest, govern' },
-  { icon: Globe, label: 'Any currency, any identity — Bitcoin native, fiat where it makes sense' },
+  { icon: Globe, label: 'Bitcoin & Lightning native — instant, near-zero-fee, non-custodial' },
   { icon: Shield, label: 'Pseudonymous by default — real identity opt-in, never required' },
 ] as const;
 
@@ -53,8 +53,8 @@ export function AuthHeroPanel() {
         </h1>
 
         <p className="mb-10 text-lg leading-relaxed text-fg-secondary">
-          Fund, lend, invest, trade, and govern — with any identity, any currency, any counterparty.
-          No gatekeepers.
+          Fund, lend, invest, trade, and govern — with any identity, any counterparty, settled in
+          Bitcoin. No gatekeepers.
         </p>
 
         <ul className="space-y-3">

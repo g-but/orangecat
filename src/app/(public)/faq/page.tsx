@@ -152,7 +152,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: 'What is the Lightning Network?',
         answer:
-          "The Lightning Network is a payment layer built on top of Bitcoin. It enables near-instant transactions with fees of a fraction of a cent — far cheaper and faster than on-chain Bitcoin. Think of it as Bitcoin's payment rails for everyday transactions. OrangeCat supports Lightning addresses (e.g. yourname@orangecat.ch) for easy receiving.",
+          "The Lightning Network is a payment layer built on top of Bitcoin. It enables near-instant transactions with fees of a fraction of a cent — far cheaper and faster than on-chain Bitcoin. Think of it as Bitcoin's payment rails for everyday transactions. Once you connect a Lightning-capable wallet, your username becomes a Lightning address (e.g. yourname@orangecat.ch) people can pay you at.",
       },
       {
         question: 'Does OrangeCat hold my Bitcoin?',

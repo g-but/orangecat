@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: `${siteName} - Your AI Economic Agent`,
-    description: 'Exchange, fund, lend, invest, and govern — with any identity, in any currency.',
+    description: 'Exchange, fund, lend, invest, and govern — with any identity, settled in Bitcoin.',
     type: 'website',
     locale: 'en_US',
     siteName: siteName,
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: `${siteName} - Your AI Economic Agent`,
-    description: 'Exchange, fund, lend, invest, and govern — with any identity, in any currency.',
+    description: 'Exchange, fund, lend, invest, and govern — with any identity, settled in Bitcoin.',
   },
   robots: {
     index: true,
