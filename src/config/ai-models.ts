@@ -48,6 +48,12 @@ export interface AIModelMetadata {
   isFree?: boolean;
   /** Rate limit info for free models */
   rateLimit?: string;
+  /**
+   * Whether the model accepts a non-default `temperature`. Absent = true.
+   * Current Anthropic frontier models (Sonnet 5, Opus 4.8, Opus 5, Fable 5)
+   * reject non-default sampling params, so requests must omit the param.
+   */
+  supportsTemperature?: boolean;
 }
 
 // ==================== MODEL REGISTRY ====================
@@ -204,6 +210,7 @@ export const AI_MODEL_REGISTRY: Record<string, AIModelMetadata> = {
     tier: 'standard',
     recommendedFor: ['coding', 'agents', 'professional writing', 'research'],
     isAvailable: true,
+    supportsTemperature: false,
   },
 
   // ==================== PREMIUM TIER ====================
@@ -222,6 +229,23 @@ export const AI_MODEL_REGISTRY: Record<string, AIModelMetadata> = {
     tier: 'premium',
     recommendedFor: ['complex reasoning', 'research', 'high-stakes coding'],
     isAvailable: true,
+    supportsTemperature: false,
+  },
+
+  'anthropic/claude-opus-5': {
+    id: 'anthropic/claude-opus-5',
+    name: 'Claude Opus 5',
+    provider: 'Anthropic',
+    description: 'Newest Anthropic flagship for the hardest reasoning and agentic work',
+    contextWindow: 1000000,
+    maxOutputTokens: 8192,
+    inputCostPer1M: 5.0,
+    outputCostPer1M: 25.0,
+    capabilities: ['text', 'vision', 'function_calling', 'streaming'],
+    tier: 'premium',
+    recommendedFor: ['complex reasoning', 'agents', 'research', 'high-stakes coding'],
+    isAvailable: true,
+    supportsTemperature: false,
   },
 
   'anthropic/claude-fable-5': {
@@ -237,6 +261,7 @@ export const AI_MODEL_REGISTRY: Record<string, AIModelMetadata> = {
     tier: 'premium',
     recommendedFor: ['autonomous agents', 'long-running tasks', 'deep research'],
     isAvailable: true,
+    supportsTemperature: false,
   },
 };
 

@@ -190,7 +190,9 @@ export class OpenRouterService {
     const request: OpenRouterRequest = {
       model,
       messages: fullMessages,
-      temperature,
+      // Some models (registry: supportsTemperature=false) 400 on a non-default
+      // temperature — omit the param entirely for those.
+      ...(modelMeta.supportsTemperature !== false && { temperature }),
       max_tokens: maxTokens || modelMeta.maxOutputTokens,
       stream: false,
     };
@@ -264,7 +266,7 @@ export class OpenRouterService {
       body: JSON.stringify({
         model,
         messages: fullMessages,
-        temperature,
+        ...(modelMeta.supportsTemperature !== false && { temperature }),
         max_tokens: maxTokens || modelMeta.maxOutputTokens,
         stream: true,
       }),
