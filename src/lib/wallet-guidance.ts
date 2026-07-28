@@ -19,6 +19,7 @@ import {
   Coins,
   PiggyBank,
   RefreshCcw,
+  Zap,
 } from 'lucide-react';
 import type { FieldGuidanceContent, DefaultContent } from '@/lib/project-guidance';
 
@@ -26,6 +27,7 @@ export type WalletFieldType =
   | 'category'
   | 'label'
   | 'description'
+  | 'lightningAddress'
   | 'addressOrXpub'
   | 'goalAmount'
   | 'goalCurrency'
@@ -76,6 +78,19 @@ export const walletGuidanceContent: Record<NonNullable<WalletFieldType>, FieldGu
       'Food and basic groceries while I am between jobs.',
       'Emergency medical costs for ongoing treatment.',
     ],
+  },
+  lightningAddress: {
+    icon: React.createElement(Zap, { className: 'w-5 h-5 text-fg-primary' }),
+    title: 'Your Lightning Address',
+    description:
+      'The easiest way to get paid. A Lightning address looks and works like an email address — people send Bitcoin to it instantly, with almost no fee. This is the recommended option for most people.',
+    tips: [
+      'It looks like an email: name@provider.com',
+      "Don't have one yet? Apps like Primal or Coinos give you one for free in about a minute",
+      'Payments arrive instantly — great for tips and everyday support',
+      'Paste it exactly as your wallet app shows it',
+    ],
+    examples: ['you@primal.net', 'you@coinos.io', 'you@getalby.com'],
   },
   addressOrXpub: {
     icon: React.createElement(KeyRound, { className: 'w-5 h-5 text-fg-primary' }),
