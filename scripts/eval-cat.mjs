@@ -87,9 +87,12 @@ const EVAL_PROVIDER =
 // Pin one provider/model for repeatability: the gate measures the Cat judgment
 // pipeline (rubric, tools, prefill, why-line), not whichever free-model fallback
 // is least congested tonight.
+// NOTE: free OpenRouter model IDs rot upstream. gpt-oss-120b:free was retired
+// and 404'd every probe for nights ("8/8 failed at the provider layer") —
+// keep this in sync with DEFAULT_FREE_MODEL_ID in src/config/ai-models.ts.
 const EVAL_MODEL =
   process.env.CAT_EVAL_MODEL ||
-  (EVAL_PROVIDER === 'groq' ? 'llama-3.3-70b-versatile' : 'openai/gpt-oss-120b:free');
+  (EVAL_PROVIDER === 'groq' ? 'llama-3.3-70b-versatile' : 'openai/gpt-oss-20b:free');
 const NOTIFY = process.env.CAT_EVAL_NOTIFY === '1';
 const NOTIFY_USER_ID =
   process.env.CAT_EVAL_NOTIFY_USER_ID || 'cec88bc9-557f-452b-92f1-e093092fecd6'; // founder mao

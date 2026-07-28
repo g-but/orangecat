@@ -11,6 +11,8 @@
  * result is safe to surface to an authenticated user (and to the model).
  */
 
+import { DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
+
 export type ProbeClass =
   | 'ok'
   | 'rate_limit'
@@ -125,11 +127,14 @@ export function probeGroq(): Promise<ProbeResult> {
 }
 
 export function probeOpenRouter(): Promise<ProbeResult> {
+  // Probe with the registry's default free model — a hardcoded ID here rots
+  // (llama-3.3-70b-instruct:free was retired upstream and made this probe
+  // report OpenRouter as down when only the model was gone).
   return probeProvider(
     'openrouter',
     'OPENROUTER_API_KEY',
     'https://openrouter.ai/api/v1/chat/completions',
-    'meta-llama/llama-3.3-70b-instruct:free'
+    DEFAULT_FREE_MODEL_ID
   );
 }
 

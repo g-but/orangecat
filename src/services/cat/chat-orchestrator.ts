@@ -71,44 +71,14 @@ export type CatChatBody = z.infer<typeof catChatBodySchema>;
 export const EMPTY_REPLY_FALLBACK =
   "I couldn't put together a reply to that. Could you rephrase or add a bit more detail?";
 
-/**
- * Provider-agnostic rate-limit detection. Every AI provider error class we ship
- * (GroqAPIError, OpenRouterAPIError, OpenAICompatibleAPIError) carries a
- * `statusCode` field — 429 means rate limit, full stop. Some providers also
- * surface a `type: 'rate_limit'` discriminator. Check both first because
- * they're cheap and unambiguous; fall back to message-pattern matching.
- */
-export function isAiRateLimitError(error: unknown): boolean {
-  if (typeof error === 'object' && error !== null) {
-    const e = error as { statusCode?: number; type?: string };
-    if (e.statusCode === 429) {
-      return true;
-    }
-    if (e.type === 'rate_limit') {
-      return true;
-    }
-  }
-
-  // Message-pattern fallback. Different providers phrase rate-limit
-  // messages differently — Groq says "rate limit" or "tokens per minute,"
-  // OpenRouter says "rate-limited upstream," Together says "too many
-  // requests" or "rate limit exceeded." Match all common variants.
-  if (error instanceof Error) {
-    const msg = error.message.toLowerCase();
-    if (
-      msg.includes('rate limit') ||
-      msg.includes('rate-limit') ||
-      msg.includes('ratelimit') ||
-      msg.includes('tokens per minute') ||
-      msg.includes('request too large') ||
-      msg.includes('too many requests') ||
-      msg.includes('429')
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
+// Error classification lives in ai-error-classes.ts (pure, unit-testable).
+// Re-exported here so existing importers (cat/chat route) stay unchanged.
+import { isAiRateLimitError, isFallbackWorthyError } from './ai-error-classes';
+export {
+  isAiRateLimitError,
+  isAiModelUnavailableError,
+  isFallbackWorthyError,
+} from './ai-error-classes';
 
 /**
  * Execute all exec_action blocks parsed from an AI response.
@@ -386,9 +356,10 @@ export async function orchestrateCatChat(
             }
           };
 
-          // Walk the fallback chain on rate-limit. Each provider gets one
-          // attempt. We can only swap providers BEFORE any content streams
-          // — otherwise the client sees half a response and then a switch.
+          // Walk the fallback chain on rate-limit or dead-model errors. Each
+          // provider gets one attempt. We can only swap providers BEFORE any
+          // content streams — otherwise the client sees half a response and
+          // then a switch.
           let lastErr: unknown = null;
           try {
             await consumeStream();
@@ -398,7 +369,7 @@ export async function orchestrateCatChat(
           let fallbackIndex = 0;
           while (
             lastErr &&
-            isAiRateLimitError(lastErr) &&
+            isFallbackWorthyError(lastErr) &&
             !streamStarted &&
             fallbackIndex < fallbacks.length
           ) {
@@ -573,7 +544,7 @@ export async function orchestrateCatChat(
     lastErr = err;
   }
   let fallbackIndex = 0;
-  while (!result && lastErr && isAiRateLimitError(lastErr) && fallbackIndex < fallbacks.length) {
+  while (!result && lastErr && isFallbackWorthyError(lastErr) && fallbackIndex < fallbacks.length) {
     const next = fallbacks[fallbackIndex++];
     logger.info(
       'Cat chat (non-streaming): rate-limited, trying next fallback',

@@ -9,31 +9,33 @@ import { getModelDisplayName, AI_MODEL_REGISTRY } from '@/config/ai-models';
 
 describe('getModelDisplayName', () => {
   it('returns the registry name for an exact id', () => {
-    expect(getModelDisplayName('openai/gpt-oss-120b:free')).toBe(
-      AI_MODEL_REGISTRY['openai/gpt-oss-120b:free'].name
+    expect(getModelDisplayName('openai/gpt-oss-20b:free')).toBe(
+      AI_MODEL_REGISTRY['openai/gpt-oss-20b:free'].name
     );
   });
 
   it('resolves dated snapshot ids to the registered model name', () => {
     // Providers can append snapshot suffixes to current free-model ids too.
-    expect(getModelDisplayName('meta-llama/llama-4-scout-20260402:free')).toBe(
-      AI_MODEL_REGISTRY['meta-llama/llama-4-scout:free'].name
+    expect(getModelDisplayName('nvidia/nemotron-3-super-120b-a12b-20260402:free')).toBe(
+      AI_MODEL_REGISTRY['nvidia/nemotron-3-super-120b-a12b:free'].name
     );
   });
 
   it('matches only at segment boundaries (20b must not swallow 120b)', () => {
-    expect(getModelDisplayName('openai/gpt-oss-120b-0525:free')).toBe(
-      AI_MODEL_REGISTRY['openai/gpt-oss-120b:free'].name
-    );
     expect(getModelDisplayName('openai/gpt-oss-20b-0525:free')).toBe(
+      AI_MODEL_REGISTRY['openai/gpt-oss-20b:free'].name
+    );
+    // gpt-oss-120b is no longer registered — it must prettify, NOT resolve to
+    // the 20b entry via a substring match.
+    expect(getModelDisplayName('openai/gpt-oss-120b-0525:free')).not.toBe(
       AI_MODEL_REGISTRY['openai/gpt-oss-20b:free'].name
     );
   });
 
   it('resolves a shorter reported id to the registered variant', () => {
     // Server may strip a suffix relative to the registry key.
-    expect(getModelDisplayName('meta-llama/llama-3.3-70b-instruct')).toBe(
-      AI_MODEL_REGISTRY['meta-llama/llama-3.3-70b-instruct:free'].name
+    expect(getModelDisplayName('google/gemma-4-26b-a4b-it')).toBe(
+      AI_MODEL_REGISTRY['google/gemma-4-26b-a4b-it:free'].name
     );
   });
 

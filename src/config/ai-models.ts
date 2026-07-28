@@ -55,24 +55,11 @@ export interface AIModelMetadata {
 export const AI_MODEL_REGISTRY: Record<string, AIModelMetadata> = {
   // ==================== FREE TIER ====================
   // No API cost - rate limited (50/day on free accounts, 1000/day with $10+ credits)
-  // Refreshed 2026-07-08 against live OpenRouter model pages/docs.
-
-  'openai/gpt-oss-120b:free': {
-    id: 'openai/gpt-oss-120b:free',
-    name: 'GPT-OSS 120B (Free)',
-    provider: 'OpenAI',
-    description: 'Best free general model for coding, reasoning, and tool-friendly chat',
-    contextWindow: 131072,
-    maxOutputTokens: 8192,
-    inputCostPer1M: 0,
-    outputCostPer1M: 0,
-    capabilities: ['text', 'function_calling', 'json_mode', 'streaming'],
-    tier: 'free',
-    recommendedFor: ['coding', 'complex reasoning', 'general chat'],
-    isAvailable: true,
-    isFree: true,
-    rateLimit: '50-1000/day',
-  },
+  // Refreshed 2026-07-28 against the LIVE OpenRouter catalog (GET /api/v1/models).
+  // Free model IDs rot: gpt-oss-120b:free, llama-3.3-70b-instruct:free and
+  // llama-4-scout:free were all retired upstream and started returning 404,
+  // which (before the model-gone fallback fix) took the whole platform chain
+  // down. Only list IDs verified against the live catalog.
 
   'openai/gpt-oss-20b:free': {
     id: 'openai/gpt-oss-20b:free',
@@ -91,35 +78,52 @@ export const AI_MODEL_REGISTRY: Record<string, AIModelMetadata> = {
     rateLimit: '50-1000/day',
   },
 
-  'meta-llama/llama-3.3-70b-instruct:free': {
-    id: 'meta-llama/llama-3.3-70b-instruct:free',
-    name: 'Llama 3.3 70B (Free)',
-    provider: 'Meta',
-    description: 'Strong multilingual free model for analysis and everyday coding',
-    contextWindow: 65536,
-    maxOutputTokens: 8192,
+  'nvidia/nemotron-3-super-120b-a12b:free': {
+    id: 'nvidia/nemotron-3-super-120b-a12b:free',
+    name: 'Nemotron 3 Super 120B (Free)',
+    provider: 'NVIDIA',
+    description: 'Best free general model for coding, reasoning, and tool-friendly chat',
+    contextWindow: 262144,
+    maxOutputTokens: 32768,
     inputCostPer1M: 0,
     outputCostPer1M: 0,
-    capabilities: ['text', 'streaming'],
+    capabilities: ['text', 'function_calling', 'json_mode', 'streaming'],
     tier: 'free',
-    recommendedFor: ['general purpose', 'multilingual chat', 'analysis'],
+    recommendedFor: ['coding', 'complex reasoning', 'general chat'],
     isAvailable: true,
     isFree: true,
     rateLimit: '50-1000/day',
   },
 
-  'meta-llama/llama-4-scout:free': {
-    id: 'meta-llama/llama-4-scout:free',
-    name: 'Llama 4 Scout (Free)',
-    provider: 'Meta',
-    description: 'Free multimodal long-context model for image-aware and document-heavy prompts',
-    contextWindow: 10000000,
-    maxOutputTokens: 8192,
+  'google/gemma-4-26b-a4b-it:free': {
+    id: 'google/gemma-4-26b-a4b-it:free',
+    name: 'Gemma 4 26B (Free)',
+    provider: 'Google',
+    description: 'Strong multilingual free model with vision for analysis and everyday chat',
+    contextWindow: 262144,
+    maxOutputTokens: 32768,
     inputCostPer1M: 0,
     outputCostPer1M: 0,
-    capabilities: ['text', 'vision', 'streaming'],
+    capabilities: ['text', 'vision', 'function_calling', 'json_mode', 'streaming'],
     tier: 'free',
-    recommendedFor: ['vision tasks', 'huge context', 'multimodal chat'],
+    recommendedFor: ['general purpose', 'multilingual chat', 'vision tasks'],
+    isAvailable: true,
+    isFree: true,
+    rateLimit: '50-1000/day',
+  },
+
+  'nvidia/nemotron-3-ultra-550b-a55b:free': {
+    id: 'nvidia/nemotron-3-ultra-550b-a55b:free',
+    name: 'Nemotron 3 Ultra 550B (Free)',
+    provider: 'NVIDIA',
+    description: 'Free long-context heavyweight for document-heavy and complex reasoning prompts',
+    contextWindow: 1000000,
+    maxOutputTokens: 65536,
+    inputCostPer1M: 0,
+    outputCostPer1M: 0,
+    capabilities: ['text', 'function_calling', 'streaming'],
+    tier: 'free',
+    recommendedFor: ['huge context', 'complex reasoning', 'document analysis'],
     isAvailable: true,
     isFree: true,
     rateLimit: '50-1000/day',
@@ -368,10 +372,10 @@ export function calculateCostBtc(
 // ==================== CONSTANTS ====================
 
 /** Default model for Auto mode fallback (free model) */
-export const DEFAULT_MODEL_ID = 'meta-llama/llama-3.3-70b-instruct:free';
+export const DEFAULT_MODEL_ID = 'openai/gpt-oss-20b:free';
 
 /** Default free model for platform usage */
-export const DEFAULT_FREE_MODEL_ID = 'openai/gpt-oss-120b:free';
+export const DEFAULT_FREE_MODEL_ID = 'openai/gpt-oss-20b:free';
 
 /** Default BTC price for cost calculations (updated periodically) */
 export const DEFAULT_BTC_PRICE_USD = 100000;
