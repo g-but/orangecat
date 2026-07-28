@@ -11,10 +11,17 @@ export const OAUTH_TO_SUPABASE = {
   facebook: 'facebook',
   apple: 'apple',
   x: 'twitter',
+  // LinkedIn uses GoTrue's OIDC provider key (`linkedin_oidc`); the legacy
+  // `linkedin` provider was removed upstream.
+  linkedin: 'linkedin_oidc',
 } as const;
 
 /** App-level OAuth provider id — derived from the map (SSOT). */
 export type OAuthProvider = keyof typeof OAUTH_TO_SUPABASE;
+
+/** GoTrue/supabase-js provider key — derived from the map (SSOT), so adding a
+ *  provider above extends every consumer's type instead of a hardcoded union. */
+export type SupabaseOAuthProvider = (typeof OAUTH_TO_SUPABASE)[OAuthProvider];
 
 export const OAUTH_PROVIDER_IDS = Object.keys(OAUTH_TO_SUPABASE) as OAuthProvider[];
 
