@@ -211,6 +211,18 @@ export const walletCreateSchema = z
       .nullable(),
     address_or_xpub: z.string().max(200).optional().nullable(),
     lightning_address: z.string().max(200).optional().nullable(),
+    // Nostr Wallet Connect URI — the payment engine's highest-priority receive
+    // rail (walletResolutionService prefers it), but until now there was no
+    // self-serve way to save one. It carries a secret, so it's write-only:
+    // validated for shape here, never echoed back or logged.
+    nwc_connection_uri: z
+      .string()
+      .max(2000)
+      .refine(v => v.startsWith('nostr+walletconnect://'), {
+        message: 'NWC URI must start with nostr+walletconnect://',
+      })
+      .optional()
+      .nullable(),
 
     // Category
     category: z.enum(WALLET_CATEGORY_VALUES).default('general'),
@@ -242,9 +254,10 @@ export const walletCreateSchema = z
   .refine(
     data =>
       (data.address_or_xpub && data.address_or_xpub.length > 0) ||
-      (data.lightning_address && data.lightning_address.length > 0),
+      (data.lightning_address && data.lightning_address.length > 0) ||
+      (data.nwc_connection_uri && data.nwc_connection_uri.length > 0),
     {
-      message: 'Either a Bitcoin address/xpub or a Lightning address is required',
+      message: 'Provide a Bitcoin address/xpub, a Lightning address, or an NWC connection',
       path: ['address_or_xpub'],
     }
   );
