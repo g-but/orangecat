@@ -7,6 +7,7 @@ import Loading from '@/components/Loading';
 import { cn } from '@/lib/utils';
 import { GRADIENTS } from '@/config/gradients';
 import { WalletManager } from '@/components/wallets/WalletManager';
+import { LightningAddressCard } from '@/components/wallets/LightningAddressCard';
 import { DuplicateWalletDialog } from '@/components/wallets/DuplicateWalletDialog';
 import type { WalletFieldType } from '@/lib/wallet-guidance';
 import { useWallets } from './hooks/useWallets';
@@ -100,6 +101,12 @@ export default function DashboardWalletsPage() {
 
           {/* Main Content - Wallet Manager */}
           <div className="lg:col-span-7 lg:order-1 order-1">
+            {/* The user's <username>@orangecat.ch Lightning address — shown
+                first so people actually learn they have one. */}
+            <div className="mb-6">
+              <LightningAddressCard username={profile?.username} wallets={walletsState} />
+            </div>
+
             <div className="bg-surface-base rounded-lg shadow-sm border border-default p-4 sm:p-6">
               <WalletManager
                 wallets={walletsState}

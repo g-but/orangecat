@@ -21,6 +21,26 @@ jest.mock('@/domain/payments/paymentFlowService', () => ({
   initiateTip: jest.fn(),
   checkPublicPaymentStatus: jest.fn(),
 }));
+// The dispatcher transitively imports the Resend email client, which cannot
+// load in the jest environment — and we want to assert dispatch calls anyway.
+jest.mock('@/services/notifications/dispatcher', () => ({
+  NotificationDispatcher: { dispatch: jest.fn().mockResolvedValue(undefined) },
+}));
+// Dead-end dedup reads recent notifications through fromTable; default: none.
+const mockDedupLimit = jest.fn().mockResolvedValue({ data: [] });
+jest.mock('@/lib/supabase/untyped', () => ({
+  fromTable: jest.fn(() => ({
+    select: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    gte: jest.fn().mockReturnThis(),
+    limit: mockDedupLimit,
+  })),
+}));
+
+import { NotificationDispatcher } from '@/services/notifications/dispatcher';
+
+/** The dead-end notification is fire-and-forget — let its microtasks settle. */
+const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
 const mockResolveWallet = resolveUserWallet as jest.MockedFunction<typeof resolveUserWallet>;
 const mockInitiateTipPayment = initiateTipPayment as jest.MockedFunction<typeof initiateTipPayment>;
@@ -58,6 +78,43 @@ describe('getTipReceiveInfo', () => {
       'alice'
     );
     expect(info).toEqual({ canReceive: false, recipientName: 'Alice', methodLabel: undefined });
+  });
+
+  it('notifies the would-be recipient of a tip dead end (fire-and-forget)', async () => {
+    mockResolveWallet.mockResolvedValue(null);
+    await getTipReceiveInfo(
+      supabaseWith({ id: 'u1', username: 'alice', display_name: 'Alice' }),
+      'alice'
+    );
+    await flush();
+    expect(NotificationDispatcher.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'u1', type: 'tip_dead_end' })
+    );
+  });
+
+  it('dedupes the dead-end notification when a recent one exists', async () => {
+    mockResolveWallet.mockResolvedValue(null);
+    mockDedupLimit.mockResolvedValueOnce({ data: [{ id: 'n1' }] });
+    await getTipReceiveInfo(
+      supabaseWith({ id: 'u1', username: 'alice', display_name: 'Alice' }),
+      'alice'
+    );
+    await flush();
+    expect(NotificationDispatcher.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('does not notify when the person CAN receive', async () => {
+    mockResolveWallet.mockResolvedValue({
+      method: 'lightning_address',
+      wallet_id: 'w1',
+      lightning_address: 'a@b.c',
+    });
+    await getTipReceiveInfo(
+      supabaseWith({ id: 'u1', username: 'alice', display_name: 'Alice' }),
+      'alice'
+    );
+    await flush();
+    expect(NotificationDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
   it('reports the rail label when a wallet exists', async () => {

@@ -36,6 +36,10 @@ const EMAIL_ENABLED_TYPES: Record<string, boolean> = {
   project_funded: true,
   booking_request: true,
   booking_update: true,
+  // Growth loop: "someone tried to tip you" is exactly the moment to reach a
+  // user who hasn't set up receiving — and they may not visit the app to see
+  // the in-app notification. Deduped at the dispatch site (7 days).
+  tip_dead_end: true,
   // Onboarding drip emails are dispatched directly by the scheduler,
   // not through this config, since they use custom templates.
 };

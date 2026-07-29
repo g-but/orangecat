@@ -12,6 +12,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getAdminClient } from '@/lib/supabase/admin';
+import { fromTable } from '@/lib/supabase/untyped';
+import { NotificationDispatcher } from '@/services/notifications/dispatcher';
+import { ROUTES } from '@/config/routes';
 import { resolveUserWallet } from '@/domain/payments/walletResolutionService';
 import {
   initiateTip as initiateTipPayment,
@@ -65,6 +68,45 @@ export interface TipReceiveInfo {
   methodLabel?: string;
 }
 
+/**
+ * Growth loop: a visitor opened the tip dialog for someone who can't receive
+ * yet. Tell the would-be recipient — this is the strongest possible nudge to
+ * set up receiving ("someone literally tried to pay you"). Deduped to at most
+ * one notification per recipient per window so an enumeration crawl (or an
+ * eager fan) can't spam them. Fire-and-forget: never blocks or fails the
+ * public receive-info request.
+ */
+const TIP_DEAD_END_DEDUP_DAYS = 7;
+
+async function notifyTipDeadEnd(userId: string): Promise<void> {
+  try {
+    const admin = getAdminClient();
+    const since = new Date(
+      Date.now() - TIP_DEAD_END_DEDUP_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
+    const { data: recent } = await fromTable(admin, DATABASE_TABLES.NOTIFICATIONS)
+      .select('id')
+      .eq('user_id', userId)
+      .eq('type', 'tip_dead_end')
+      .gte('created_at', since)
+      .limit(1);
+    if (recent && recent.length > 0) {
+      return;
+    }
+
+    await NotificationDispatcher.dispatch({
+      userId,
+      type: 'tip_dead_end',
+      title: 'Someone tried to tip you Bitcoin',
+      message:
+        "A visitor wanted to send you a Bitcoin tip, but you don't have a wallet that can receive yet. Add one to start receiving — it takes about a minute.",
+      actionUrl: ROUTES.DASHBOARD.WALLETS,
+    });
+  } catch (err) {
+    logger.warn('Failed to send tip dead-end notification', { err: String(err), userId }, 'Tips');
+  }
+}
+
 /** Public, secret-free: can this person receive tips, and via what rail. */
 export async function getTipReceiveInfo(
   supabase: AnySupabaseClient,
@@ -75,6 +117,11 @@ export async function getTipReceiveInfo(
     return null;
   }
   const wallet = await resolveRecipientWallet(recipient.userId);
+  if (!wallet) {
+    // Someone is looking at this person's tip dialog and hitting a dead end —
+    // notify them (deduped) so a lost tip becomes an activation nudge.
+    void notifyTipDeadEnd(recipient.userId);
+  }
   return {
     canReceive: !!wallet,
     recipientName: recipient.displayName,
