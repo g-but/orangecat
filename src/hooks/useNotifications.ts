@@ -23,7 +23,8 @@ export interface Notification {
     | 'task_completed'
     | 'task_broadcast'
     | 'booking_request'
-    | 'booking_update';
+    | 'booking_update'
+    | 'tip_dead_end';
   message: string;
   action_url: string | null;
   is_read: boolean;
