@@ -665,3 +665,37 @@ export function renderActivitySummary(stats: FullUserContext['stats']): string |
 
   return `## Activity Summary\nThe user has: ${statParts.join(', ')}.`;
 }
+
+/**
+ * Outcome feedback loop — what actually happened to what Cat created with this
+ * user (published? funded?), derived from real platform state (see
+ * cat/track-record.ts). Renders only when there's at least one proposal in the
+ * window: cold-start users get the interview flow instead, and snapshot
+ * contexts (field undefined) stay byte-identical.
+ */
+export function renderTrackRecord(tr: FullUserContext['trackRecord']): string | null {
+  if (!tr || tr.proposed === 0) {
+    return null;
+  }
+
+  const lines: string[] = [
+    `## Track Record (last ${tr.windowDays} days — real outcomes, not guesses)`,
+    `Created together: ${tr.proposed} · published: ${tr.published} · funded: ${tr.funded}` +
+      (tr.totalFundedBtc > 0 ? ` (${tr.totalFundedBtc} BTC total)` : ''),
+  ];
+
+  for (const e of tr.entries) {
+    const outcome =
+      e.status === null
+        ? 'deleted'
+        : e.fundedBtc > 0
+          ? `${e.status}, received ${e.fundedBtc} BTC (${e.payments} payment${e.payments > 1 ? 's' : ''})`
+          : e.status;
+    lines.push(`- ${e.entityType} "${e.title}" — ${outcome}`);
+  }
+
+  lines.push(
+    `_Ground your advice in these outcomes: lean into what published and got funded; nudge stalled drafts toward publishing or retiring. Never claim an outcome not listed here._`
+  );
+  return lines.join('\n');
+}

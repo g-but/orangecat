@@ -29,6 +29,7 @@ import { currencyConverter } from '@/services/currency/rates';
 
 import { fetchEntitiesForCat } from './entity-context-fetcher';
 import { getEconomicProfile } from '@/services/cat/economic-profile';
+import { getCatTrackRecord } from '@/services/cat/track-record';
 import {
   fetchConversationsForCat,
   fetchInboundActivityForCat,
@@ -385,6 +386,7 @@ export async function fetchFullContextForCat(
     stakeholders,
     githubRepos,
     economicProfile,
+    trackRecord,
   ] = await Promise.all([
     fetchProfileForCat(supabase, userId),
     fetchDocumentsForCat(supabase, userId),
@@ -400,6 +402,7 @@ export async function fetchFullContextForCat(
     fetchStakeholdersForCat(supabase, userId),
     fetchGitHubReposForCat(supabase, userId),
     getEconomicProfile(supabase, userId),
+    getCatTrackRecord(supabase, userId),
   ]);
 
   const runtime = await fetchRuntimeContextForCat(supabase, userId, runtimeHints, profile);
@@ -416,6 +419,7 @@ export async function fetchFullContextForCat(
   return {
     profile,
     economicProfile,
+    trackRecord,
     documents,
     entities,
     tasks,
