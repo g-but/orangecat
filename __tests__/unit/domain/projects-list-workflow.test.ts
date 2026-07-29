@@ -8,6 +8,13 @@ jest.mock('@/services/actors/getOrCreateUserActor', () => ({
   getOrCreateUserActor: jest.fn().mockResolvedValue({ id: 'a1' }),
 }));
 
+// Funding enrichment converts settled BTC totals via the currency service —
+// keep the test deterministic (identity conversion, no rate fetch).
+jest.mock('@/services/currency', () => ({
+  currencyConverter: { getRates: jest.fn().mockResolvedValue({}) },
+  convertBtcTo: (amountBtc: number) => amountBtc,
+}));
+
 import { createServerClient } from '@/lib/supabase/server';
 
 describe('Project list workflow', () => {
@@ -58,13 +65,19 @@ describe('Project list workflow', () => {
     jest.clearAllMocks();
   });
 
-  it('lists active projects and maps profile info', async () => {
+  it('lists active projects and maps funding from the settled ledger, not the dead column', async () => {
     const dataQuery = makeChainableQuery({ data: dataRows, error: null });
     const countQuery = makeChainableQuery({ count: 2, error: null });
 
     const from = jest.fn().mockReturnValueOnce(dataQuery).mockReturnValueOnce(countQuery);
+    // Settled funding stats: only p2 has real contributions. The raised_amount
+    // column value (1200 on p2) must be IGNORED — nothing ever writes it.
+    const rpc = jest.fn().mockResolvedValue({
+      data: [{ entity_id: 'p2', total_btc: 0.01, contributor_count: 2, named_supporter_count: 1 }],
+      error: null,
+    });
 
-    (createServerClient as jest.Mock).mockResolvedValue({ from });
+    (createServerClient as jest.Mock).mockResolvedValue({ from, rpc });
 
     const result = await listProjectsPage(20, 0);
 
@@ -72,7 +85,11 @@ describe('Project list workflow', () => {
     expect(result.items).toHaveLength(2);
     expect(result.items[0].profiles?.username).toBe('alice');
     expect(result.items[0].raised_amount).toBe(0);
-    expect(result.items[1].raised_amount).toBe(1200);
+    expect(result.items[0].supporters_count).toBe(0);
+    // p2: settled ledger total (0.01 BTC, identity-converted) — NOT the dead 1200.
+    expect(result.items[1].raised_amount).toBe(0.01);
+    expect(result.items[1].settled_raised_btc).toBe(0.01);
+    expect(result.items[1].supporters_count).toBe(2);
   });
 
   it('applies user filter when userId is provided', async () => {
