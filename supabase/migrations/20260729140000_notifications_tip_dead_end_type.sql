@@ -3,6 +3,9 @@
 -- "someone tried to tip you — turn on receiving" (deduped, growth loop).
 -- Extends the list from 20260721000000 (which added 'match').
 
+-- migration-safety: contract-ok widen-only CHECK swap — the new constraint is a
+-- strict superset of the old list, so every insert the previous release makes
+-- still passes; rollback-safe by construction.
 ALTER TABLE public.notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
 ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check CHECK (
   type = ANY (ARRAY[
