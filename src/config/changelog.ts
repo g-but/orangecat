@@ -30,6 +30,18 @@ export const CHANGELOG_TAGS: Record<ChangelogTag, { label: string }> = {
 /** Newest first. */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: '2026-07-29',
+    tag: 'feature',
+    title: 'Your Cat learns from real outcomes',
+    summary:
+      'Cat now sees what actually happened to what you created together — published, funded, settled — and grounds its advice in those outcomes instead of guesses.',
+    items: [
+      'New Track Record in the Cat hub’s Context tab: created → published → funded, with settled Bitcoin per entity.',
+      'The same record is part of Cat’s own context, so suggestions lean on what worked for you.',
+      'Fixed: actions that asked for your confirmation could fail outright; confirmations now work.',
+    ],
+  },
+  {
     date: '2026-07-22',
     tag: 'feature',
     title: 'Discover, sharper and searchable',
