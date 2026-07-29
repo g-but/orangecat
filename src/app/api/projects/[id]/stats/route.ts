@@ -3,8 +3,9 @@ import { withOptionalAuth } from '@/lib/api/withAuth';
 import { apiSuccess, apiNotFound, handleApiError } from '@/lib/api/standardResponse';
 import { getTableName } from '@/config/entity-registry';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
-import { DATABASE_TABLES } from '@/config/database-tables';
 import { ENTITY_STATUS } from '@/config/database-constants';
+import { getEntityFundingStats } from '@/services/wallets/funding-stats';
+import { convertBtcTo, currencyConverter } from '@/services/currency';
 
 const DEFAULT_CAMPAIGN_DURATION_DAYS = 30;
 
@@ -27,7 +28,7 @@ export const GET = withOptionalAuth(
         title,
         description,
         goal_amount,
-        raised_amount,
+        currency,
         bitcoin_address,
         status,
         created_at,
@@ -44,18 +45,21 @@ export const GET = withOptionalAuth(
         return apiNotFound('Project not found');
       }
 
-      // Get real supporter count from project_support table
-      const { count: supportCount } = await supabase
-        .from(DATABASE_TABLES.PROJECT_SUPPORT)
-        .select('*', { count: 'exact', head: true })
-        .eq('project_id', projectId);
-      const supporterCount = supportCount ?? 0;
+      // Honest funding figures: the settled `contributions` ledger is the only
+      // source of raised/supporter numbers. (The raised_amount column is dead,
+      // and project_support rows are unverified self-reports — neither is money.)
+      const fundingStats = await getEntityFundingStats(supabase, 'project', projectId);
+      const raisedBtc = fundingStats?.totalBtc ?? 0;
+      const supporterCount = fundingStats?.contributorCount ?? 0;
+      const goalCurrency = ((project.currency as string) || 'BTC').toUpperCase();
+      if (raisedBtc > 0 && goalCurrency !== 'BTC') {
+        await currencyConverter.getRates().catch(() => undefined);
+      }
+      const raisedAmount = raisedBtc > 0 ? convertBtcTo(raisedBtc, goalCurrency) : 0;
 
       // Calculate progress
       const progressPercent =
-        project.goal_amount > 0
-          ? Math.min((project.raised_amount / project.goal_amount) * 100, 100)
-          : 0;
+        project.goal_amount > 0 ? Math.min((raisedAmount / project.goal_amount) * 100, 100) : 0;
 
       // Calculate days remaining (default campaign duration from creation date)
       const createdDate = new Date(project.created_at);
@@ -73,12 +77,12 @@ export const GET = withOptionalAuth(
         1,
         Math.ceil((now.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000))
       );
-      const dailyFundingRate = project.raised_amount / daysSinceCreation;
+      const dailyFundingRate = raisedAmount / daysSinceCreation;
 
       // Get project category and related projects
       const { data: relatedProjectsData, error: _relatedError } = await supabase
         .from(getTableName('project'))
-        .select('id, title, raised_amount')
+        .select('id, title')
         .eq('category', project.category || '')
         .neq('id', projectId)
         .limit(5);
@@ -91,12 +95,12 @@ export const GET = withOptionalAuth(
         title: project.title,
         fundingMetrics: {
           goalAmount: project.goal_amount,
-          raisedAmount: project.raised_amount,
+          raisedAmount,
+          raisedBtc,
           progressPercent: Math.round(progressPercent * 100) / 100,
-          remaining: Math.max(0, project.goal_amount - project.raised_amount),
+          remaining: Math.max(0, project.goal_amount - raisedAmount),
           supporterCount,
-          averageContribution:
-            supporterCount > 0 ? Math.round(project.raised_amount / supporterCount) : 0,
+          averageContribution: supporterCount > 0 ? Math.round(raisedAmount / supporterCount) : 0,
         },
         timeMetrics: {
           createdAt: project.created_at,
@@ -110,9 +114,8 @@ export const GET = withOptionalAuth(
         },
         performanceMetrics: {
           dailyFundingRate: Math.round(dailyFundingRate),
-          projectedTotal: Math.round(project.raised_amount + dailyFundingRate * daysRemaining),
-          willReachGoal:
-            project.raised_amount + dailyFundingRate * daysRemaining >= project.goal_amount,
+          projectedTotal: Math.round(raisedAmount + dailyFundingRate * daysRemaining),
+          willReachGoal: raisedAmount + dailyFundingRate * daysRemaining >= project.goal_amount,
           category: project.category || 'uncategorized',
           categoryRank,
         },

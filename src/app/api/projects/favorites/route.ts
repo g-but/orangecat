@@ -3,6 +3,7 @@ import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { enrichProjectsWithSettledFunding } from '@/services/wallets/project-funding';
 
 type ProjectRow = {
   id: string;
@@ -106,8 +107,15 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
       }
     }
 
+    // Honest funding figures from the settled ledger (raised_amount is a dead
+    // column — favorites cards would otherwise show 0 regardless of funding).
+    const enrichedProjects = await enrichProjectsWithSettledFunding(
+      supabase,
+      (projects || []) as unknown as Array<ProjectRow & { currency?: string | null }>
+    );
+
     // Map projects with favorite metadata and profiles
-    const projectsWithFavorite = (projects || []).map((project: ProjectRow) => ({
+    const projectsWithFavorite = enrichedProjects.map((project: ProjectRow) => ({
       ...project,
       favorited_at: (favorites as FavoriteRow[]).find(f => f.project_id === project.id)?.created_at,
       profiles: project.user_id ? profilesMap.get(project.user_id) : null,

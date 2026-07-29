@@ -6,6 +6,7 @@ import { getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 import { STORAGE_BUCKETS } from '@/config/database-tables';
 import { ENTITY_STATUS } from '@/config/database-constants';
+import { enrichProjectsWithSettledFunding } from '@/services/wallets/project-funding';
 
 interface RouteContext {
   params: Promise<{ userId: string }>;
@@ -76,8 +77,15 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
       updated_at: string;
       project_media: { id: string; storage_path: string; position: number }[] | null;
     };
+    // Honest funding figures from the settled ledger — raised_amount is a dead
+    // column nothing writes, so cards fed by this route would otherwise show 0.
+    const enrichedProjects = await enrichProjectsWithSettledFunding(
+      supabase,
+      (projects || []) as ProjectWithMedia[]
+    );
+
     // Process projects to get first media URL
-    const projectsWithMedia = (projects || []).map((project: ProjectWithMedia) => {
+    const projectsWithMedia = enrichedProjects.map((project: ProjectWithMedia) => {
       if (project.project_media && project.project_media.length > 0) {
         // Get first media item (sorted by position)
         const firstMedia = project.project_media.sort(

@@ -4,6 +4,8 @@ import { STATUS } from '@/config/database-constants';
 import type { ProjectData } from '@/lib/validation';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { createServerClient } from '@/lib/supabase/server';
+import { enrichProjectsWithSettledFunding } from '@/services/wallets/project-funding';
 
 export async function listProjectsPage(
   limit: number,
@@ -29,11 +31,14 @@ export async function listProjectsPage(
     publicStatuses: [PROJECT_STATUS.ACTIVE],
   });
 
-  // Ensure raised_amount defaults to 0
-  const items = result.items.map((project: Record<string, unknown>) => ({
-    ...project,
-    raised_amount: project.raised_amount ?? 0,
-  }));
+  // Honest funding figures from the settled ledger — the raised_amount column
+  // is dead (nothing writes it), so lists fed by this service would show 0
+  // regardless of real funding.
+  const supabase = (await createServerClient()) as unknown as AnySupabaseClient;
+  const items = await enrichProjectsWithSettledFunding(
+    supabase,
+    result.items as Array<{ id: string; currency?: string | null }>
+  );
 
   return { items, total: result.total };
 }

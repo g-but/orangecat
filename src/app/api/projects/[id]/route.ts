@@ -9,6 +9,7 @@ import {
 } from '@/lib/api/buildUpdatePayload';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { enrichProjectsWithSettledFunding } from '@/services/wallets/project-funding';
 
 // Post-process GET: Fetch profile and add to response
 async function postProcessProjectGet(
@@ -69,9 +70,14 @@ async function postProcessProjectGet(
     }
   }
 
+  // Honest funding figures from the settled ledger — the raised_amount column
+  // is dead, so API consumers would otherwise see 0 regardless of funding.
+  const [enriched] = await enrichProjectsWithSettledFunding(supabase, [
+    project as { id: string; currency?: string | null },
+  ]);
+
   return {
-    ...project,
-    raised_amount: (project.raised_amount as number) ?? 0,
+    ...(enriched ?? project),
     profiles: profile,
   };
 }

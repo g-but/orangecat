@@ -29,7 +29,13 @@ export interface SearchFundingPage {
   category: string | null;
   status: string;
   goal_amount: number | null;
+  /** Settled-ledger total in the project's own currency (never the dead DB column). */
   raised_amount: number;
+  /** Settled-ledger total in BTC — canonical unit for viewer-currency display. */
+  settled_raised_btc?: number;
+  /** Settled contributions count — the honest supporters figure. */
+  supporters_count?: number;
+  currency?: string | null;
   created_at: string;
   updated_at: string;
   banner_url?: string | null;
@@ -92,7 +98,8 @@ export interface RawSearchProject {
   category: string | null;
   status: string;
   goal_amount: number | null;
-  raised_amount: number | null;
+  /** Dead DB column — never written; real totals come from funding enrichment. */
+  raised_amount?: number | null;
   currency?: string | null;
   created_at: string;
   updated_at: string;

@@ -9,6 +9,10 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { PROJECT_STATUS, PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import { getTableName } from '@/config/entity-registry';
+import {
+  enrichProjectsWithSettledFunding,
+  type SettledProjectFunding,
+} from '@/services/wallets/project-funding';
 import type { SearchFundingPage, SearchFilters, RawSearchProject } from '../types';
 import { sanitizeQuery, buildProfileMap } from './helpers';
 
@@ -45,11 +49,7 @@ export async function searchFundingPages(
       if (!error && data) {
         let results = data as RawSearchProject[];
         results = applyProjectFilters(results, filters);
-
-        const userIds = [...new Set(results.map(p => p.user_id))];
-        const profileMap = await buildProfileMap(userIds);
-
-        return results.map(project => transformProject(project, profileMap));
+        return finishProjects(results, filters);
       }
     } catch (rpcError) {
       logger.warn('PostGIS RPC not available, using application filtering', rpcError, 'Search');
@@ -76,10 +76,7 @@ export async function searchFundingPages(
           );
         }
 
-        const userIds = [...new Set(results.map(p => p.user_id))];
-        const profileMap = await buildProfileMap(userIds);
-
-        return results.map(project => transformProject(project, profileMap));
+        return finishProjects(results, filters);
       }
     } catch (rpcError) {
       logger.warn('Full-text search RPC not available, using ILIKE', rpcError, 'Search');
@@ -112,11 +109,34 @@ export async function searchFundingPages(
     return [];
   }
 
-  const filteredProjects = rawProjects as RawSearchProject[];
-  const userIds = [...new Set(filteredProjects.map(p => p.user_id))];
+  return finishProjects(rawProjects as RawSearchProject[], filters);
+}
+
+/**
+ * Shared tail for every search path: enrich with settled-ledger funding
+ * (raised_amount is a dead DB column — the honest figure comes from the batch
+ * funding-stats RPC), apply funding-range filters against the REAL totals,
+ * then attach creator profiles and shape the result.
+ */
+async function finishProjects(
+  results: RawSearchProject[],
+  filters?: SearchFilters
+): Promise<SearchFundingPage[]> {
+  let enriched = await enrichProjectsWithSettledFunding(supabase, results);
+
+  // Funding filters must run AFTER enrichment — the DB column is never written,
+  // so filtering on it at the SQL layer matched nothing (or everything).
+  if (filters?.minFunding !== undefined) {
+    enriched = enriched.filter(p => p.raised_amount >= filters.minFunding!);
+  }
+  if (filters?.maxFunding !== undefined) {
+    enriched = enriched.filter(p => p.raised_amount <= filters.maxFunding!);
+  }
+
+  const userIds = [...new Set(enriched.map(p => p.user_id))];
   const profileMap = await buildProfileMap(userIds);
 
-  return filteredProjects.map(project => transformProject(project, profileMap));
+  return enriched.map(project => transformProject(project, profileMap));
 }
 
 /**
@@ -151,12 +171,8 @@ function applyProjectFilters(
   if (filters.hasGoal) {
     filtered = filtered.filter(p => p.goal_amount !== null);
   }
-  if (filters.minFunding !== undefined) {
-    filtered = filtered.filter(p => (p.raised_amount || 0) >= filters.minFunding!);
-  }
-  if (filters.maxFunding !== undefined) {
-    filtered = filtered.filter(p => (p.raised_amount || 0) <= filters.maxFunding!);
-  }
+  // minFunding/maxFunding are applied post-enrichment in finishProjects — the
+  // raw raised_amount column is dead and would filter dishonestly here.
   if (filters.dateRange) {
     filtered = filtered.filter(
       p => p.created_at >= filters.dateRange!.start && p.created_at <= filters.dateRange!.end
@@ -194,13 +210,8 @@ function applyProjectQueryFilters(
     projectQuery = projectQuery.not('goal_amount', 'is', null);
   }
 
-  if (filters.minFunding !== undefined) {
-    projectQuery = projectQuery.gte('raised_amount', filters.minFunding);
-  }
-
-  if (filters.maxFunding !== undefined) {
-    projectQuery = projectQuery.lte('raised_amount', filters.maxFunding);
-  }
+  // minFunding/maxFunding are applied post-enrichment in finishProjects — the
+  // raised_amount column is dead, so a SQL-level gte/lte lies.
 
   if (filters.dateRange) {
     projectQuery = projectQuery
@@ -215,7 +226,7 @@ function applyProjectQueryFilters(
  * Transform a raw project row into a SearchFundingPage.
  */
 function transformProject(
-  project: RawSearchProject,
+  project: RawSearchProject & SettledProjectFunding,
   profileMap: Map<
     string,
     { id: string; username: string | null; name: string | null; avatar_url: string | null }
@@ -226,7 +237,6 @@ function transformProject(
   const { cover_image_url: _coverImg, ...rest } = project;
   return {
     ...rest,
-    raised_amount: project.raised_amount || 0,
     banner_url: coverImageUrl,
     featured_image_url: coverImageUrl,
     profiles: profileMap.get(project.user_id),

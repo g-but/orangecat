@@ -9,6 +9,7 @@ import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import { getTableName } from '@/config/entity-registry';
+import { enrichProjectsWithSettledFunding } from '@/services/wallets/project-funding';
 import type {
   SearchProfile,
   SearchFundingPage,
@@ -31,7 +32,7 @@ export async function getTrending(): Promise<{
         .select(
           `
           id, user_id, title, description, bitcoin_address,
-          created_at, updated_at, category, status, goal_amount, raised_amount,
+          created_at, updated_at, category, status, goal_amount, currency,
           cover_image_url
         `
         )
@@ -50,15 +51,17 @@ export async function getTrending(): Promise<{
     let projects: SearchFundingPage[] = [];
     if (!projectsData.error && projectsData.data) {
       const projectResults = projectsData.data as RawSearchProject[];
-      const userIds = [...new Set(projectResults.map(p => p.user_id))];
+      // Honest funding figures come from the settled ledger, not the dead
+      // raised_amount column — one batch RPC for all trending cards.
+      const enriched = await enrichProjectsWithSettledFunding(supabase, projectResults);
+      const userIds = [...new Set(enriched.map(p => p.user_id))];
       const profileMap = await buildProfileMap(userIds);
 
-      projects = projectResults.map(project => {
+      projects = enriched.map(project => {
         const coverImageUrl = project.cover_image_url;
         const { cover_image_url: _coverImg, ...rest } = project;
         return {
           ...rest,
-          raised_amount: project.raised_amount || 0,
           banner_url: coverImageUrl,
           featured_image_url: coverImageUrl,
           profiles: profileMap.get(project.user_id),
