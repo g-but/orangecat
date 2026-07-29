@@ -29,6 +29,7 @@ export function WalletManager({
   maxWallets = 10,
   isOwner = false,
   onFieldFocus,
+  unusableConnectionWalletIds,
 }: WalletManagerProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -109,6 +110,7 @@ export function WalletManager({
               }
             }}
             onFieldFocus={onFieldFocus}
+            isConnectionUnusable={unusableConnectionWalletIds?.includes(wallet.id)}
           />
         ))}
       </div>

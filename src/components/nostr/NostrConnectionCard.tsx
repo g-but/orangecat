@@ -51,7 +51,9 @@ export function NostrConnectionCard() {
           Nostr
         </CardTitle>
         <CardDescription>
-          Connect your Nostr identity for portable profiles and Lightning payments via NWC.
+          Connect your Nostr identity for a portable profile. A wallet connection added here stays
+          in this browser — it shows your balance and pays from it, but it does not set up
+          receiving. To get paid, add the wallet above.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

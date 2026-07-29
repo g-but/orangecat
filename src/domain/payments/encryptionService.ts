@@ -47,6 +47,24 @@ export function encrypt(plaintext: string): string {
 /**
  * Decrypt a base64-encoded ciphertext produced by encrypt().
  */
+/**
+ * Can this deployment actually use the stored ciphertext? A stored NWC URI is
+ * useless if the key is missing or was rotated (e.g. written by a dev machine
+ * whose key production doesn't have) — the payment path silently falls back to
+ * another rail, so the UI must be able to detect and disclose it.
+ */
+export function canDecrypt(encoded: string | null | undefined): boolean {
+  if (!encoded) {
+    return false;
+  }
+  try {
+    decrypt(encoded);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function decrypt(encoded: string): string {
   const key = getKey();
   const packed = Buffer.from(encoded, 'base64');

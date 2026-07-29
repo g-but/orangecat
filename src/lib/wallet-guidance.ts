@@ -138,11 +138,11 @@ export const walletGuidanceContent: Record<NonNullable<WalletFieldType>, FieldGu
 export const walletDefaultContent: DefaultContent = {
   title: 'What is a Wallet on OrangeCat?',
   description:
-    'A wallet on OrangeCat is a funding bucket connected to your own Bitcoin wallet. Each wallet can represent a concrete need such as rent, food, or a savings goal.',
+    'A wallet on OrangeCat is how you get paid: a pointer to a Bitcoin wallet you already control. Add several when you want to track separate needs — rent, food, or a savings goal.',
   features: [
     {
       icon: React.createElement(Wallet, { className: 'w-4 h-4 text-fg-primary' }),
-      text: 'Connect addresses or xpubs from wallets you control',
+      text: 'A Lightning address gets you paid in seconds and switches on your @orangecat.ch address',
     },
     {
       icon: React.createElement(PiggyBank, { className: 'w-4 h-4 text-fg-primary' }),
