@@ -14,7 +14,6 @@
  * the rest of Cat Credits is unaffected. See docs/architecture/CAT_CREDITS.md.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getAdminClient } from '@/lib/supabase/admin';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -159,18 +158,31 @@ export async function checkTopUp(userId: string, topupId: string): Promise<TopUp
   try {
     const invoice = await client.lookupInvoice(topup.payment_hash);
     if (invoice.settled_at) {
-      // Credit the OWNER (idempotent on payment_hash), then mark paid.
-      await appendCreditEntry(admin, topup.user_id, {
+      // Credit the OWNER first — idempotent on payment_hash (unique ref in the
+      // ledger), so a retried settlement never double-credits. Mark paid ONLY if
+      // the credit actually landed: if the append fails (transient DB error), we
+      // must NOT flip status to paid, or the next poll short-circuits on 'paid'
+      // and the user's Lightning payment is lost with no credit. Leaving it
+      // pending lets the next poll retry the (idempotent) credit.
+      const balanceBtc = await appendCreditEntry(admin, topup.user_id, {
         kind: 'topup',
         amountBtc: topup.amount_btc,
         ref: topup.payment_hash,
         metadata: { source: 'lightning', topupId: topup.id },
       });
+      if (balanceBtc === null) {
+        logger.warn(
+          'top-up settled but crediting failed — staying pending for retry',
+          { topupId: topup.id },
+          'CatCredits'
+        );
+        return { status: 'pending' };
+      }
       await admin
         .from(DATABASE_TABLES.CAT_CREDIT_TOPUPS)
         .update({ status: 'paid', paid_at: new Date().toISOString() })
         .eq('id', topup.id);
-      return { status: 'paid', balanceBtc: await getCreditBalance(admin, topup.user_id) };
+      return { status: 'paid', balanceBtc };
     }
   } catch (err) {
     // Transient relay/lookup failure — report pending; client polls again.
