@@ -16,6 +16,7 @@ import AvatarLink from '@/components/ui/AvatarLink';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { usePostCardActions } from './usePostCardActions';
+import ReplyAiButton from './ReplyAiButton';
 import { TIMELINE_SURFACE } from '@/config/timeline';
 
 interface PostCardProps {
@@ -205,7 +206,13 @@ export function PostCard({
                     disabled={isReplying}
                     autoFocus
                   />
-                  <div className="flex justify-end mt-2">
+                  <div className="flex items-center justify-between gap-2 mt-2">
+                    <ReplyAiButton
+                      parentText={event.description || event.title || ''}
+                      parentAuthor={event.actor?.username || event.actor?.name}
+                      onDraft={setReplyText}
+                      disabled={isReplying}
+                    />
                     <Button
                       onClick={handleReplySubmit}
                       disabled={!replyText.trim() || isReplying}

@@ -8,6 +8,13 @@ import { useCallback, type RefObject } from 'react';
  * onChange, then restores the selection on the next frame (the textarea DOM node
  * is stable via the ref, so the caret survives React's re-render).
  */
+export interface EditorSelection {
+  start: number;
+  end: number;
+  /** The selected substring ('' when the caret is collapsed). */
+  text: string;
+}
+
 export interface MarkdownActions {
   /** Wrap the selection with `before`/`after` (e.g. ** ** ); inserts `placeholder` if empty. */
   wrap: (before: string, after?: string, placeholder?: string) => void;
@@ -15,6 +22,12 @@ export interface MarkdownActions {
   prefixLines: (prefix: string) => void;
   /** Insert a markdown link around the selection. */
   insertLink: () => void;
+  /** Current selection (or collapsed caret). Reads live from the DOM node. */
+  getSelection: () => EditorSelection;
+  /** Replace [start, end) with `replacement`; caret lands at the end of the insert. */
+  replaceRange: (start: number, end: number, replacement: string) => void;
+  /** Insert `text` at the caret / after the selection; caret lands after it. */
+  insertAtCursor: (text: string) => void;
 }
 
 export function useMarkdownTextarea(
@@ -89,5 +102,35 @@ export function useMarkdownTextarea(
     apply(next, urlStart, urlStart + 3);
   }, [apply, ref, value]);
 
-  return { wrap, prefixLines, insertLink };
+  const getSelection = useCallback((): EditorSelection => {
+    const el = ref.current;
+    if (!el) {
+      return { start: 0, end: 0, text: '' };
+    }
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    return { start, end, text: value.slice(start, end) };
+  }, [ref, value]);
+
+  const replaceRange = useCallback(
+    (start: number, end: number, replacement: string) => {
+      const next = value.slice(0, start) + replacement + value.slice(end);
+      const caret = start + replacement.length;
+      apply(next, caret, caret);
+    },
+    [apply, value]
+  );
+
+  const insertAtCursor = useCallback(
+    (text: string) => {
+      const el = ref.current;
+      const at = el ? el.selectionEnd : value.length;
+      const next = value.slice(0, at) + text + value.slice(at);
+      const caret = at + text.length;
+      apply(next, caret, caret);
+    },
+    [apply, ref, value]
+  );
+
+  return { wrap, prefixLines, insertLink, getSelection, replaceRange, insertAtCursor };
 }

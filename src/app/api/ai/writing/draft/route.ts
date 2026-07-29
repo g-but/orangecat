@@ -9,13 +9,17 @@ import { z } from 'zod';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createRateLimitResponse, rateLimitWriteAsync } from '@/lib/rate-limit';
 import { apiBadRequest, apiError, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
-import { draftArticle, draftPost } from '@/services/cat/writing-engine';
+import { draftArticle, draftPost, draftReply } from '@/services/cat/writing-engine';
 import { logger } from '@/utils/logger';
 
 const bodySchema = z.object({
-  mode: z.enum(['post', 'article']),
+  mode: z.enum(['post', 'article', 'reply']),
   topic: z.string().trim().max(300).optional(),
   focus: z.string().trim().max(200).optional(),
+  // Reply mode: the post being answered + how to engage it.
+  parentText: z.string().trim().max(4000).optional(),
+  parentAuthor: z.string().trim().max(120).optional(),
+  intent: z.enum(['thoughtful', 'add', 'question', 'agree', 'pushback']).optional(),
 });
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
@@ -31,11 +35,24 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       return apiBadRequest('Invalid request', parsed.error.flatten());
     }
 
-    const { mode, topic, focus } = parsed.data;
-    const draft =
-      mode === 'article'
-        ? await draftArticle(supabase, user.id, { topic, focus })
-        : await draftPost(supabase, user.id, { topic, focus });
+    const { mode, topic, focus, parentText, parentAuthor, intent } = parsed.data;
+
+    if (mode === 'reply' && !parentText) {
+      return apiBadRequest('Nothing to reply to — the post text is missing.');
+    }
+
+    let draft;
+    if (mode === 'article') {
+      draft = await draftArticle(supabase, user.id, { topic, focus });
+    } else if (mode === 'reply') {
+      draft = await draftReply(supabase, user.id, {
+        parentText: parentText ?? '',
+        parentAuthor,
+        intent,
+      });
+    } else {
+      draft = await draftPost(supabase, user.id, { topic, focus });
+    }
 
     if (!draft) {
       return apiError(

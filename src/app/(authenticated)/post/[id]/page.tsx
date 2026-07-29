@@ -165,6 +165,8 @@ export default function PostPage() {
               showBanner={false}
               onPostCreated={handleReplyCreated}
               parentEventId={mainPost.id}
+              parentPostText={mainPost.description || mainPost.title}
+              parentAuthorName={mainPost.actor.username || mainPost.actor.name}
             />
           </div>
         )}

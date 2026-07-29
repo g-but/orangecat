@@ -19,7 +19,10 @@ import ArticleMarkdown from '../[slug]/ArticleMarkdown';
 import MarkdownToolbar from '@/components/articles/MarkdownToolbar';
 import { useMarkdownTextarea } from '@/components/articles/useMarkdownTextarea';
 import AiWriterPanel from '@/components/articles/AiWriterPanel';
+import ArticleAiControls from '@/components/articles/ArticleAiControls';
 import CoverImageUpload from '@/components/articles/CoverImageUpload';
+import ImageSuggestPicker from '@/components/articles/ImageSuggestPicker';
+import type { StockImage } from '@/services/images/types';
 
 const DRAFT_KEY = 'oc:draft:article';
 
@@ -60,6 +63,8 @@ export default function ArticleComposer({
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
+  // Which target the AI image picker is open for (null = closed).
+  const [imagePicker, setImagePicker] = useState<null | 'cover' | 'inline'>(null);
 
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const md = useMarkdownTextarea(bodyRef, body, setBody);
@@ -124,6 +129,16 @@ export default function ArticleComposer({
     setBody(draft.body);
     setTab('write');
     setRestored(false);
+  }
+
+  function handlePickImage(img: StockImage) {
+    if (imagePicker === 'cover') {
+      setCoverImage(img.fullUrl);
+    } else if (imagePicker === 'inline') {
+      md.insertAtCursor(`\n\n![${img.title}](${img.fullUrl})\n\n`);
+      setTab('write');
+    }
+    setImagePicker(null);
   }
 
   function handleBodyKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -262,8 +277,39 @@ export default function ArticleComposer({
               onChange={setCoverImage}
               userId={user.id}
               disabled={publishing}
+              onSuggest={() => setImagePicker(imagePicker === 'cover' ? null : 'cover')}
             />
+            {imagePicker === 'cover' && (
+              <ImageSuggestPicker
+                title={title}
+                body={body}
+                heading="Choose a cover image"
+                onPick={handlePickImage}
+                onClose={() => setImagePicker(null)}
+              />
+            )}
             <div>
+              <ArticleAiControls
+                md={md}
+                title={title}
+                body={body}
+                setTitle={setTitle}
+                setExcerpt={setExcerpt}
+                setBody={setBody}
+                disabled={publishing}
+                onInsertImage={() => setImagePicker(imagePicker === 'inline' ? null : 'inline')}
+              />
+              {imagePicker === 'inline' && (
+                <div className="mb-2">
+                  <ImageSuggestPicker
+                    title={title}
+                    body={body}
+                    heading="Insert an image"
+                    onPick={handlePickImage}
+                    onClose={() => setImagePicker(null)}
+                  />
+                </div>
+              )}
               <MarkdownToolbar actions={md} disabled={publishing} />
               <Textarea
                 ref={bodyRef}
