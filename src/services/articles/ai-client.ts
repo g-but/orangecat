@@ -78,6 +78,8 @@ export function reviseArticleText(opts: {
   title?: string;
   topic?: string;
   instruction?: string;
+  /** 'post' for short timeline posts (short + length-clamped); default 'article'. */
+  kind?: 'post' | 'article';
 }): Promise<string> {
   return postJson<{ result: string }>('/api/ai/writing/revise', opts).then(d => d.result);
 }

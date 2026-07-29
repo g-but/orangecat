@@ -13,6 +13,7 @@
 
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { ARTICLE_LIMITS } from '@/config/articles';
+import { TIMELINE_CONTENT_LIMITS } from '@/config/timeline';
 import { callPlatformJson, parseJsonLoose } from './platform-llm';
 import { GROUNDING_RULES, buildVoiceContext } from './writing-context';
 import type { ReviseAction, TonePreset } from './writing-types';
@@ -40,12 +41,31 @@ const ACTION_INSTRUCTIONS: Record<Exclude<ReviseAction, 'tone' | 'outline'>, str
 
 const REVISE_SYSTEM_PREAMBLE = `You are the writing companion inside OrangeCat, editing a long-form article the user is writing. You transform the user's OWN text — you never lecture, never add meta-commentary, never wrap the result in quotes or code fences. Return only the revised prose as Markdown.`;
 
+/**
+ * Short-post preamble. The same actions (improve/tighten/tone…) apply, but the
+ * output must stay a short social post — never balloon into an article. Used
+ * when the composer is a timeline post/reply rather than the article editor.
+ */
+function preambleForKind(kind: ReviseKind): string {
+  if (kind === 'post') {
+    return `You are the writing companion inside OrangeCat, editing a SHORT social post (tweet-length) the user is writing. You transform the user's OWN text — never lecture, never add meta-commentary, never wrap it in quotes or code fences, no Markdown headings or lists. Keep it a short post under ${TIMELINE_CONTENT_LIMITS.post} characters; NEVER expand it into an essay. Return only the post text.`;
+  }
+  return REVISE_SYSTEM_PREAMBLE;
+}
+
+function bodyLimitForKind(kind: ReviseKind): number {
+  return kind === 'post' ? TIMELINE_CONTENT_LIMITS.post : ARTICLE_LIMITS.body;
+}
+
 /** Clamp text sent to the model — a runaway body shouldn't blow the token budget. */
 const MAX_INPUT_CHARS = 8000;
 
 function clampInput(text: string): string {
   return text.length > MAX_INPUT_CHARS ? text.slice(0, MAX_INPUT_CHARS) : text;
 }
+
+/** Whether we're editing a long-form article body or a short timeline post. */
+export type ReviseKind = 'post' | 'article';
 
 export interface ReviseInput {
   action: ReviseAction;
@@ -59,6 +79,8 @@ export interface ReviseInput {
   topic?: string;
   /** Optional free-form steer ("make it less salesy"). */
   instruction?: string;
+  /** Long-form article (default) vs a short post — changes framing + length clamp. */
+  kind?: ReviseKind;
 }
 
 /**
@@ -84,14 +106,15 @@ export async function reviseText(
       ? TONE_INSTRUCTIONS[input.tone ?? 'casual']
       : ACTION_INSTRUCTIONS[input.action];
 
+  const kind = input.kind ?? 'article';
   const { recentBlob } = await buildVoiceContext(supabase, userId);
-  const system = `${REVISE_SYSTEM_PREAMBLE}
+  const system = `${preambleForKind(kind)}
 
 TASK: ${directive}
 ${input.instruction ? `The user also asked: ${input.instruction}\n` : ''}
 ${GROUNDING_RULES}
 
-Output ONLY JSON: {"result":"the revised markdown"}.`;
+Output ONLY JSON: {"result":"the revised ${kind === 'post' ? 'post' : 'markdown'}"}.`;
 
   const user = `${input.title ? `Article title: ${input.title}\n` : ''}The author's recent posts (their voice — match it):
 ${recentBlob}
@@ -107,10 +130,10 @@ Return the ${input.action === 'continue' ? 'continuation' : 'revised text'} as J
   const parsed = parseJsonLoose<{ result?: unknown }>(raw);
   const result = typeof parsed?.result === 'string' ? parsed.result.trim() : '';
   if (!result) {
-    logger.warn('writing-revise: empty result', { action: input.action }, 'WritingRevise');
+    logger.warn('writing-revise: empty result', { action: input.action, kind }, 'WritingRevise');
     return null;
   }
-  return result.slice(0, ARTICLE_LIMITS.body);
+  return result.slice(0, bodyLimitForKind(kind));
 }
 
 async function outlineForTopic(

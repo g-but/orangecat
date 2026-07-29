@@ -30,6 +30,8 @@ const bodySchema = z.object({
   title: z.string().trim().max(300).optional(),
   topic: z.string().trim().max(300).optional(),
   instruction: z.string().trim().max(300).optional(),
+  /** 'post' (short) vs 'article' (long-form, default) — changes framing + length. */
+  kind: z.enum(['post', 'article']).optional(),
 });
 
 const AI_UNAVAILABLE =
@@ -47,7 +49,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     if (!parsed.success) {
       return apiBadRequest('Invalid request', parsed.error.flatten());
     }
-    const { action, text, tone, title, topic, instruction } = parsed.data;
+    const { action, text, tone, title, topic, instruction, kind } = parsed.data;
 
     // Title suggestions return a list; everything else returns transformed text.
     if (action === 'title') {
@@ -78,6 +80,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       title,
       topic,
       instruction,
+      kind,
     });
     if (!result) {
       return apiError(AI_UNAVAILABLE, 'AI_UNAVAILABLE', 503) as NextResponse;
