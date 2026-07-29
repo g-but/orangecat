@@ -17,9 +17,9 @@
  * users can view/delete everything Cat remembers (Settings → AI).
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { MEMORY_IMPORT_CATEGORIES } from '@/config/cat-memory-import';
 import { embeddingsEnabled, embedText, embedTexts } from '@/services/ai/embeddings';
 import { logger } from '@/utils/logger';
 
@@ -324,4 +324,185 @@ export async function deleteAllMemories(
     return false;
   }
   return true;
+}
+
+// ─── Import (bring memory from another AI) ─────────────────────────────────────
+
+/** Cap facts accepted from a single paste — a one-time bulk import, kept sane. */
+const MAX_IMPORT_FACTS = 200;
+/** Imported entries may be a full sentence — allow more than a chat-distilled fact. */
+const MAX_IMPORT_FACT_CHARS = 500;
+/** Batch size for embedding many candidates without oversized requests. */
+const IMPORT_EMBED_BATCH = 100;
+
+const IMPORT_HEADER_SET = new Set<string>(MEMORY_IMPORT_CATEGORIES.map(c => c.toLowerCase()));
+
+export interface MemoryImportResult {
+  /** Candidate facts found in the pasted text. */
+  total: number;
+  /** Newly stored (after dedup). */
+  imported: number;
+  /** Dropped because an equivalent memory already existed. */
+  skipped: number;
+  /** False when no embeddings provider is configured — imported facts are stored
+   *  but won't be recalled semantically until one is set. */
+  embeddingsEnabled: boolean;
+}
+
+/** Some assistants answer with a JSON array of strings — accept that shape too. */
+function tryParseJsonArray(raw: string): string[] {
+  const cleaned = raw.replace(/```(?:json)?/gi, '').trim();
+  const match = cleaned.match(/\[[\s\S]*\]/);
+  if (!match) {
+    return [];
+  }
+  try {
+    const arr = JSON.parse(match[0]);
+    return Array.isArray(arr) ? arr.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Strip list markers, numbering, markdown headings/bold from a line. */
+function stripLineDecorations(line: string): string {
+  return line
+    .replace(/^\s*#{1,6}\s*/, '') // markdown heading
+    .replace(/^\s*[-*•·]\s+/, '') // bullet
+    .replace(/^\s*\d+[.)]\s+/, '') // "1. " / "1) "
+    .replace(/\*\*/g, '') // bold
+    .replace(/^\s*[-–—]\s*/, '') // stray leading dash (e.g. exposed after a date strip)
+    .trim();
+}
+
+/** Remove a leading date tag like "[2026-01-01] - " or "[unknown] - ". */
+function stripDatePrefix(line: string): string {
+  return line.replace(/^\[[^\]]*\]\s*[-–—:]\s*/, '').trim();
+}
+
+/** True when a line is just a category heading (e.g. "Projects", "**Identity**:"). */
+function isImportHeader(line: string): boolean {
+  const normalized = stripLineDecorations(line).replace(/:$/, '').trim().toLowerCase();
+  return IMPORT_HEADER_SET.has(normalized);
+}
+
+/**
+ * Turn a pasted memory export (from any AI) into a clean list of fact strings.
+ * Defensive: accepts a JSON array, or category-grouped markdown/bulleted/dated
+ * lines. Strips headers, bullets, numbering and date tags; dedupes and caps.
+ */
+export function parseImportedMemories(raw: string): string[] {
+  if (!raw || !raw.trim()) {
+    return [];
+  }
+  const jsonFacts = tryParseJsonArray(raw);
+  const isJson = jsonFacts.length > 0;
+  const lines = isJson ? jsonFacts : raw.replace(/```(?:json|markdown)?/gi, '').split('\n');
+
+  const seen = new Set<string>();
+  const facts: string[] = [];
+  for (const rawLine of lines) {
+    let line = (rawLine ?? '').trim();
+    if (!line) {
+      continue;
+    }
+    if (!isJson) {
+      if (isImportHeader(line)) {
+        continue;
+      }
+      line = stripDatePrefix(stripLineDecorations(line));
+      line = stripLineDecorations(line); // a date strip can expose a leading dash
+    }
+    const lower = line.toLowerCase();
+    if (!line || line.length < 3 || lower === '(none)' || lower === 'none') {
+      continue;
+    }
+    const key = lower.slice(0, MAX_IMPORT_FACT_CHARS);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    facts.push(line.slice(0, MAX_IMPORT_FACT_CHARS));
+    if (facts.length >= MAX_IMPORT_FACTS) {
+      break;
+    }
+  }
+  return facts;
+}
+
+/**
+ * Import durable facts from a memory export the user pasted from another AI.
+ * Embeds each (for recall + dedup), skips ones already equivalent to a stored
+ * memory, inserts the rest as `source: 'import'`, and prunes to the per-user cap.
+ * Degrades gracefully: with no embeddings provider, facts are still stored
+ * (embeddingsEnabled=false in the result) but can't be recalled by meaning yet.
+ */
+export async function importMemories(
+  supabase: AnySupabaseClient,
+  userId: string,
+  rawText: string
+): Promise<MemoryImportResult> {
+  const facts = parseImportedMemories(rawText);
+  const useEmbeddings = embeddingsEnabled();
+  const result: MemoryImportResult = {
+    total: facts.length,
+    imported: 0,
+    skipped: 0,
+    embeddingsEnabled: useEmbeddings,
+  };
+  if (facts.length === 0) {
+    return result;
+  }
+
+  const vectors: (number[] | null)[] = [];
+  if (useEmbeddings) {
+    for (let i = 0; i < facts.length; i += IMPORT_EMBED_BATCH) {
+      vectors.push(...(await embedTexts(facts.slice(i, i + IMPORT_EMBED_BATCH))));
+    }
+  } else {
+    for (let i = 0; i < facts.length; i++) {
+      vectors.push(null);
+    }
+  }
+
+  const toInsert: Array<{
+    user_id: string;
+    content: string;
+    embedding: string | null;
+    source: string;
+    source_conversation_id: null;
+  }> = [];
+  for (let i = 0; i < facts.length; i++) {
+    const vec = vectors[i];
+    if (vec) {
+      const { data: near } = await supabase.rpc('match_cat_memories', {
+        p_user_id: userId,
+        query_embedding: JSON.stringify(vec),
+        match_count: 1,
+        min_similarity: DEDUP_SIMILARITY,
+      });
+      if (Array.isArray(near) && near.length > 0) {
+        result.skipped++;
+        continue; // already remember something equivalent
+      }
+    }
+    toInsert.push({
+      user_id: userId,
+      content: facts[i],
+      embedding: vec ? JSON.stringify(vec) : null,
+      source: 'import',
+      source_conversation_id: null,
+    });
+  }
+
+  if (toInsert.length > 0) {
+    const { error } = await supabase.from(DATABASE_TABLES.CAT_MEMORIES).insert(toInsert);
+    if (error) {
+      logger.warn('Failed to insert imported cat memories', { error }, 'CatMemory');
+      return result;
+    }
+    result.imported = toInsert.length;
+    await pruneIfNeeded(supabase, userId);
+  }
+  return result;
 }

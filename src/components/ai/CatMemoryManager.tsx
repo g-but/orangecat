@@ -21,7 +21,12 @@ interface Memory {
   created_at: string;
 }
 
-export function CatMemoryManager() {
+interface CatMemoryManagerProps {
+  /** Bump to force a reload — e.g. after an import adds new memories. */
+  reloadKey?: number;
+}
+
+export function CatMemoryManager({ reloadKey = 0 }: CatMemoryManagerProps = {}) {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +54,7 @@ export function CatMemoryManager() {
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, reloadKey]);
 
   const handleDelete = useCallback(async (id: string) => {
     setDeletingId(id);

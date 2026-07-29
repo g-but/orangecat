@@ -14,6 +14,7 @@
  * right-sidebar guidance (added noise).
  */
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Bot, Check, Server, Terminal, AlertCircle } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
@@ -24,10 +25,12 @@ import Loading from '@/components/Loading';
 import { AIKeyManager } from '@/components/ai/AIKeyManager';
 import { CatCreditsPanel } from '@/components/ai/CatCreditsPanel';
 import { CatMemoryManager } from '@/components/ai/CatMemoryManager';
+import { CatMemoryImport } from '@/components/ai/CatMemoryImport';
 import { getProvidersByCategory } from '@/data/aiProviders';
 
 export default function AISettingsPage() {
   const { user, hydrated, isLoading: authLoading } = useRequireAuth();
+  const [memoryReloadKey, setMemoryReloadKey] = useState(0);
 
   const {
     keys,
@@ -137,7 +140,10 @@ export default function AISettingsPage() {
         </section>
 
         {/* ── Memory ────────────────────────────────────────────────────── */}
-        <CatMemoryManager />
+        <CatMemoryManager reloadKey={memoryReloadKey} />
+
+        {/* ── Import memory from another AI ──────────────────────────────── */}
+        <CatMemoryImport onImported={() => setMemoryReloadKey(k => k + 1)} />
 
         {/* ── Local ─────────────────────────────────────────────────────── */}
         <section className="rounded-lg border border-default bg-surface-base p-6">
