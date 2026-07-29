@@ -3,7 +3,7 @@
  * Displays a single wallet with balance, actions, and address
  */
 
-import { Pencil, Trash2, Star, RefreshCw, Copy } from 'lucide-react';
+import { Pencil, Trash2, Star, RefreshCw, Copy, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { WALLET_CATEGORIES } from '@/types/wallet';
 import { WalletForm } from './WalletForm';
@@ -21,6 +21,7 @@ export function WalletCard({
   onDelete,
   onRefresh,
   onFieldFocus,
+  isConnectionUnusable = false,
 }: WalletCardProps) {
   if (isEditing && isOwner) {
     return (
@@ -47,6 +48,12 @@ export function WalletCard({
   const categoryInfo = WALLET_CATEGORIES[wallet.category];
   const progressPercent = wallet.goal_amount ? (wallet.balance_btc / wallet.goal_amount) * 100 : 0;
 
+  // Balance is read from the blockchain against `address_or_xpub`. A Lightning
+  // or connection-only wallet has no such address, so its stored balance is
+  // structurally always 0 — rendering "Current Balance 0 BTC" there states a
+  // fact we never measured. Show the balance only where it is actually tracked.
+  const tracksOnChainBalance = !!wallet.address_or_xpub;
+
   // The public receive handle to show + copy. A wallet may have an on-chain
   // address, a Lightning address, or only a wallet connection (NWC — no public
   // handle). Handle all three so a Lightning/NWC-only wallet renders instead of
@@ -65,7 +72,9 @@ export function WalletCard({
         }
       : {
           label: 'Connected wallet',
-          display: 'Auto-receive via a connected wallet',
+          display: isConnectionUnusable
+            ? 'Connection unavailable — payments skip this wallet'
+            : 'Receives Lightning payments via the connected wallet',
           copyValue: null as string | null,
         };
 
@@ -148,33 +157,37 @@ export function WalletCard({
         )}
       </div>
 
-      {/* Balance */}
-      <div className="bg-surface-raised rounded-lg p-3 sm:p-4 mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-fg-primary">Current Balance</span>
-          {isOwner && wallet.balance_updated_at && (
-            <button
-              onClick={onRefresh}
-              className="p-1.5 rounded-md hover:bg-surface-overlay dark:hover:bg-surface-raised/50 text-fg-secondary hover:text-fg-primary transition-colors min-h-11 min-w-11 flex items-center justify-center"
-              title="Refresh balance"
-              aria-label="Refresh balance"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-        <div className="text-2xl sm:text-3xl font-bold text-bitcoinOrange">
-          {displayBTC(wallet.balance_btc)}
-        </div>
-        {wallet.balance_updated_at && (
-          <div className="text-xs text-fg-secondary mt-2">
-            Updated {new Date(wallet.balance_updated_at).toLocaleString()}
+      {/* Balance — on-chain wallets only (see tracksOnChainBalance) */}
+      {tracksOnChainBalance && (
+        <div className="bg-surface-raised rounded-lg p-3 sm:p-4 mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-fg-primary">Current Balance</span>
+            {/* Refresh was previously gated on balance_updated_at, so a wallet
+                that had never been checked offered no way to check it. */}
+            {isOwner && (
+              <button
+                onClick={onRefresh}
+                className="p-1.5 rounded-md hover:bg-surface-overlay dark:hover:bg-surface-raised/50 text-fg-secondary hover:text-fg-primary transition-colors min-h-11 min-w-11 flex items-center justify-center"
+                title="Refresh balance"
+                aria-label="Refresh balance"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            )}
           </div>
-        )}
-      </div>
+          <div className="text-2xl sm:text-3xl font-bold text-bitcoinOrange">
+            {displayBTC(wallet.balance_btc)}
+          </div>
+          <div className="text-xs text-fg-secondary mt-2">
+            {wallet.balance_updated_at
+              ? `Updated ${new Date(wallet.balance_updated_at).toLocaleString()}`
+              : 'Not checked yet — refresh to read it from the blockchain'}
+          </div>
+        </div>
+      )}
 
-      {/* Goal progress */}
-      {wallet.goal_amount && (
+      {/* Goal progress — tracked from the on-chain balance, so same condition */}
+      {tracksOnChainBalance && wallet.goal_amount && (
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
             <span className="text-fg-secondary font-medium">Goal</span>
@@ -194,6 +207,15 @@ export function WalletCard({
 
       {/* Receive handle (address / lightning / connection) */}
       <div className="pt-4 border-t border-default">
+        {isConnectionUnusable && (
+          <p className="mb-3 flex items-start gap-1.5 rounded-md bg-surface-raised p-2 text-xs text-status-warning">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+            <span>
+              This connection can’t be used by OrangeCat, so incoming payments skip this wallet.
+              Edit it and paste the connection string again.
+            </span>
+          </p>
+        )}
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-fg-secondary">{receiveHandle.label}</span>
           {receiveHandle.copyValue && (

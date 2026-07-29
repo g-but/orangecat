@@ -26,7 +26,7 @@ export function WalletsHelpSection({ isDesktop }: WalletsHelpSectionProps) {
           </p>
           {/* Mobile: Show only key point, Desktop: Show all */}
           <p className="lg:hidden text-xs text-fg-secondary mt-1">
-            Use xpub/ypub/zpub for best tracking • Never paste seed phrase
+            Lightning arrives in seconds • Never paste your seed phrase
           </p>
         </div>
         <svg
@@ -42,22 +42,26 @@ export function WalletsHelpSection({ isDesktop }: WalletsHelpSectionProps) {
         <div className="text-sm text-fg-primary">
           <ul className="list-disc list-inside space-y-1.5">
             <li>
-              <strong>Recommended:</strong> Use extended public keys (xpub, ypub, zpub) to
-              automatically track all addresses and transactions
+              <strong>A Lightning address is the easiest way to get paid</strong> — it looks like an
+              email, and payments land in seconds. It also switches on your{' '}
+              <code className="font-mono text-xs">@orangecat.ch</code> address above.
             </li>
-            <li>Single addresses (1..., 3..., bc1...) work too, but only track one address</li>
+            <li>
+              An on-chain address (1..., 3..., bc1...) works too, but payments take ~10 minutes and
+              can&apos;t answer Lightning.
+            </li>
             <li>Never paste your seed phrase here – only public data</li>
-            <li>Mark wallets as active to display them on your public profile</li>
+            <li>Active wallets appear on the Wallets tab of your public profile</li>
           </ul>
           <details className="mt-3">
             <summary className="cursor-pointer text-fg-primary hover:underline underline-offset-4 text-xs font-medium">
-              Why use extended public keys?
+              What about extended public keys (xpub/ypub/zpub)?
             </summary>
             <p className="mt-2 text-xs text-fg-secondary pl-4">
-              Bitcoin wallets generate new addresses after each transaction for privacy. With an
-              extended public key (xpub/ypub/zpub), we can automatically track all these addresses
-              and show your complete balance and transaction history. A single address only shows
-              transactions to that one address.
+              Optional, and only for on-chain tracking. Bitcoin wallets generate a new address after
+              each transaction for privacy; an extended public key lets OrangeCat follow all of them
+              and show a complete balance, where a single address only shows its own. It does not
+              affect how you get paid — and it can&apos;t receive Lightning.
             </p>
           </details>
         </div>

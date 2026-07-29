@@ -63,10 +63,17 @@ export async function resolveLnurlRecipient(username: string): Promise<LnurlReci
  */
 export async function resolveLnurlWallet(userId: string): Promise<ResolvedWallet | null> {
   const wallet = await resolveUserWallet(admin(), userId);
-  if (!wallet || wallet.method === 'onchain') {
-    return null;
-  }
-  return wallet;
+  return isLightningCapable(wallet) ? wallet : null;
+}
+
+/**
+ * THE rule for "can this resolved wallet serve a Lightning address" — exported
+ * so owner-facing UI can answer the question with the exact predicate the
+ * public LNURL endpoint uses, instead of guessing from field presence. If these
+ * ever diverge, the wallet page starts lying about whether payments work.
+ */
+export function isLightningCapable(wallet: ResolvedWallet | null): boolean {
+  return !!wallet && wallet.method !== 'onchain';
 }
 
 /** LUD-06/16 metadata array (stringified) shown by the payer's wallet. */

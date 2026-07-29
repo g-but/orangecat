@@ -16,6 +16,12 @@ export interface WalletManagerProps {
   maxWallets?: number;
   isOwner?: boolean;
   onFieldFocus?: (field: WalletFieldType) => void;
+  /**
+   * Wallets whose stored connection this deployment cannot use — the payment
+   * path silently skips them, so the card must say so instead of implying the
+   * wallet is ready to receive.
+   */
+  unusableConnectionWalletIds?: string[];
 }
 
 export interface WalletCardProps {
@@ -28,6 +34,8 @@ export interface WalletCardProps {
   onDelete: () => void;
   onRefresh: () => Promise<void>;
   onFieldFocus?: (field: WalletFieldType) => void;
+  /** This wallet's stored connection can't be used — payments skip it. */
+  isConnectionUnusable?: boolean;
 }
 
 export interface WalletFormProps {

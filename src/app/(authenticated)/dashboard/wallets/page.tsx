@@ -13,6 +13,7 @@ import type { WalletFieldType } from '@/lib/wallet-guidance';
 import { useWallets } from './hooks/useWallets';
 import { useWalletOperations } from './hooks/useWalletOperations';
 import { useResponsiveLayout } from './hooks/useResponsiveLayout';
+import { useReceiveStatus } from './hooks/useReceiveStatus';
 import { NostrConnectionCard } from '@/components/nostr/NostrConnectionCard';
 import { WalletsPageHeader } from './components/WalletsPageHeader';
 import { WalletsHelpSection } from './components/WalletsHelpSection';
@@ -68,6 +69,18 @@ export default function DashboardWalletsPage() {
     setWallets: setWalletsState,
   });
 
+  // What the SERVER says about being paid — the page must never assert a
+  // receiving capability the payment path doesn't actually have. Re-checked
+  // whenever the wallet set changes.
+  const walletsSignature = walletsState
+    .filter(w => w.is_active)
+    .map(w => w.id)
+    .join(',');
+  const { status: receiveStatus, isLoading: receiveStatusLoading } = useReceiveStatus(
+    walletsSignature,
+    !!user?.id
+  );
+
   // Loading state with timeout protection
   if (authLoading || isLoading) {
     return <Loading message="Loading your wallets..." />;
@@ -93,7 +106,7 @@ export default function DashboardWalletsPage() {
     <div className={cn(GRADIENTS.pageBg, 'min-h-screen')}>
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         {/* Page Header */}
-        <WalletsPageHeader isDesktop={isDesktop} />
+        <WalletsPageHeader />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Desktop: Guidance Sidebar */}
@@ -104,7 +117,7 @@ export default function DashboardWalletsPage() {
             {/* The user's <username>@orangecat.ch Lightning address — shown
                 first so people actually learn they have one. */}
             <div className="mb-6">
-              <LightningAddressCard username={profile?.username} wallets={walletsState} />
+              <LightningAddressCard status={receiveStatus} isLoading={receiveStatusLoading} />
             </div>
 
             <div className="bg-surface-base rounded-lg shadow-sm border border-default p-4 sm:p-6">
@@ -119,6 +132,7 @@ export default function DashboardWalletsPage() {
                 maxWallets={10}
                 isOwner={!!user?.id && !!profile?.id}
                 onFieldFocus={setFocusedField}
+                unusableConnectionWalletIds={receiveStatus?.unusableConnectionWalletIds}
               />
             </div>
 
