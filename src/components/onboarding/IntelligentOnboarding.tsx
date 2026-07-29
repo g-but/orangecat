@@ -29,6 +29,8 @@ import { ROUTES } from '@/config/routes';
 import { FEATURES } from '@/config/features';
 import { ONBOARDING_METHOD } from '@/config/onboarding';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { useCatHealth } from '@/hooks/useCatHealth';
+import { CatStatusNote } from '@/components/ai-chat/CatStatusNote';
 import type { ProposedOffer } from '@/services/cat/offer-engine';
 
 const EXAMPLE_PROMPTS = [
@@ -49,6 +51,10 @@ export default function IntelligentOnboarding() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [offers, setOffers] = useState<ProposedOffer[] | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
+  // When offers come back empty, the platform LLM being down produces the exact
+  // same empty result as genuinely thin input — probe Cat's health to tell them
+  // apart instead of blaming the user.
+  const { health, probe } = useCatHealth();
 
   const canSubmit = description.trim().length > 0 && displayName.trim().length > 0;
 
@@ -86,7 +92,12 @@ export default function IntelligentOnboarding() {
       if (!res.ok) {
         throw new Error(data?.error || `Request failed (${res.status})`);
       }
-      setOffers(Array.isArray(data.offers) ? data.offers : []);
+      const list: ProposedOffer[] = Array.isArray(data.offers) ? data.offers : [];
+      setOffers(list);
+      // Empty could mean "AI is down", not "you gave me too little" — find out.
+      if (list.length === 0) {
+        void probe();
+      }
     } catch (err) {
       logger.error('Failed to generate offers from onboarding', err, 'IntelligentOnboarding');
       setGenError('Could not generate suggestions right now — you can still chat with your Cat.');
@@ -149,18 +160,25 @@ export default function IntelligentOnboarding() {
           <div className="space-y-4">
             {offers.length === 0 ? (
               <div className="rounded-md border border-subtle bg-surface-page p-6 text-center">
-                <p className="text-fg-secondary mb-4">
-                  Cat needs a little more to go on. Tell it more in a chat and it&apos;ll suggest
-                  offerings as you talk.
-                </p>
-                <Button
-                  onClick={handleStartChat}
-                  disabled={isRedirecting}
-                  className="bg-fg-primary text-fg-inverted hover:bg-fg-primary/90"
-                >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Chat with Cat
-                </Button>
+                {health && !health.catCanAnswer ? (
+                  // Real cause: the AI layer is down, not thin input.
+                  <CatStatusNote health={health} />
+                ) : (
+                  <>
+                    <p className="text-fg-secondary mb-4">
+                      Cat needs a little more to go on. Tell it more in a chat and it&apos;ll
+                      suggest offerings as you talk.
+                    </p>
+                    <Button
+                      onClick={handleStartChat}
+                      disabled={isRedirecting}
+                      className="bg-fg-primary text-fg-inverted hover:bg-fg-primary/90"
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Chat with Cat
+                    </Button>
+                  </>
+                )}
               </div>
             ) : (
               <>

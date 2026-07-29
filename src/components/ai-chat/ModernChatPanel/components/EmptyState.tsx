@@ -2,8 +2,12 @@
  * EMPTY STATE — shown before the first message
  */
 
+import Link from 'next/link';
+import { Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CAT_HUB_COPY } from '@/config/cat-hub';
+import { ROUTES } from '@/config/routes';
+import { useCatMemoryCount } from '@/hooks/useCatMemoryCount';
 
 interface EmptyStateProps {
   suggestions: string[];
@@ -24,6 +28,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   const isFocus = variant === 'focus';
   const title = isNewUser ? CAT_HUB_COPY.greetingNewUser : CAT_HUB_COPY.greeting;
+  const memoryCount = useCatMemoryCount();
 
   return (
     <div className={cn('oc-chat-empty', !isFocus && 'py-12')}>
@@ -59,6 +64,16 @@ export function EmptyState({
                 </button>
               ))}
         </div>
+      )}
+
+      {memoryCount > 0 && (
+        <Link
+          href={ROUTES.SETTINGS_AI}
+          className="mt-6 inline-flex items-center gap-1.5 text-xs text-fg-tertiary transition-colors hover:text-fg-secondary"
+        >
+          <Brain className="h-3.5 w-3.5" />
+          Cat remembers {memoryCount} thing{memoryCount === 1 ? '' : 's'} about you
+        </Link>
       )}
     </div>
   );

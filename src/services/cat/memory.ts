@@ -274,11 +274,18 @@ async function pruneIfNeeded(supabase: AnySupabaseClient, userId: string): Promi
 
 // ─── Management (list / delete) ───────────────────────────────────────────────
 
-/** List a user's memories, newest first (for the Settings → AI manager). */
-export async function listMemories(
+/** A load either succeeds with memories or fails — never conflate the two. */
+export type ListMemoriesResult = { ok: true; memories: CatMemory[] } | { ok: false; error: string };
+
+/**
+ * List a user's memories, newest first, distinguishing "genuinely empty" from
+ * "query failed" so a caller at a UI boundary can show a real error instead of
+ * a misleading "no memories yet" empty state.
+ */
+export async function listMemoriesResult(
   supabase: AnySupabaseClient,
   userId: string
-): Promise<CatMemory[]> {
+): Promise<ListMemoriesResult> {
   const { data, error } = await supabase
     .from(DATABASE_TABLES.CAT_MEMORIES)
     .select('id, content, created_at')
@@ -287,9 +294,22 @@ export async function listMemories(
     .limit(MAX_MEMORIES_PER_USER);
   if (error) {
     logger.warn('listMemories failed', { error }, 'CatMemory');
-    return [];
+    return { ok: false, error: error.message };
   }
-  return (data ?? []) as CatMemory[];
+  return { ok: true, memories: (data ?? []) as CatMemory[] };
+}
+
+/**
+ * Convenience wrapper for grounding callers (offer/writing context) that
+ * legitimately degrade to an empty list on failure — they only feed the model
+ * "(none)". UI boundaries should use listMemoriesResult to surface real errors.
+ */
+export async function listMemories(
+  supabase: AnySupabaseClient,
+  userId: string
+): Promise<CatMemory[]> {
+  const result = await listMemoriesResult(supabase, userId);
+  return result.ok ? result.memories : [];
 }
 
 /** Delete one memory the user owns. RLS guarantees cross-user safety. */

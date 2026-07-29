@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { logger } from '@/utils/logger';
 import type { ModelTier } from '@/config/ai-models';
 import type { UserApiKey } from '@/components/ai/AIKeyManager';
 import { API_ROUTES } from '@/config/api-routes';
@@ -41,13 +40,6 @@ export interface AISettingsState {
   primaryKey: UserApiKey | null;
 }
 
-interface PlatformUsage {
-  daily_requests: number;
-  daily_limit: number;
-  requests_remaining: number;
-  can_use_platform: boolean;
-}
-
 // ==================== HOOK ====================
 
 export function useAISettings() {
@@ -59,7 +51,6 @@ export function useAISettings() {
     hasByok: false,
     primaryKey: null,
   });
-  const [platformUsage, setPlatformUsage] = useState<PlatformUsage | null>(null);
 
   // Fetch preferences and keys
   const fetchData = useCallback(async () => {
@@ -115,26 +106,10 @@ export function useAISettings() {
     }
   }, []);
 
-  // Fetch platform usage. Route returns the standard apiSuccess envelope —
-  // unwrap `.data` before storing so consumers see `daily_requests` etc. at
-  // the top level of `platformUsage`.
-  const fetchPlatformUsage = useCallback(async () => {
-    try {
-      const response = await fetch(API_ROUTES.AI.PLATFORM_USAGE);
-      if (response.ok) {
-        const body = await response.json();
-        setPlatformUsage(body?.data ?? body);
-      }
-    } catch (err) {
-      logger.error('Failed to fetch platform usage', err, 'AI');
-    }
-  }, []);
-
   // Initial fetch
   useEffect(() => {
     fetchData();
-    fetchPlatformUsage();
-  }, [fetchData, fetchPlatformUsage]);
+  }, [fetchData]);
 
   const {
     updatePreferences,
@@ -192,11 +167,9 @@ export function useAISettings() {
   return {
     // State
     ...state,
-    platformUsage,
 
     // Actions
     fetchData,
-    fetchPlatformUsage,
     updatePreferences,
     addKey,
     deleteKey,

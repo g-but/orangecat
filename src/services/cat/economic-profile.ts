@@ -159,7 +159,18 @@ export async function getEconomicProfile(
       .select('skills, assets, goals, constraints, asked_for, motivation, stage')
       .eq('user_id', userId)
       .maybeSingle();
-    if (error || !data) {
+    if (error) {
+      // A query error (vs. an absent row) means the economic layer is degraded —
+      // e.g. the table migration is lagging on the box. Left silent, this starves
+      // nudges/offers and looks identical to "user hasn't filled it in". Signal it.
+      logger.warn(
+        'getEconomicProfile query failed — economic context will be empty (migration lag?)',
+        { error },
+        'EconomicProfile'
+      );
+      return null;
+    }
+    if (!data) {
       return null;
     }
     const row = data as Record<string, unknown>;
