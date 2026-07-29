@@ -28,7 +28,7 @@ const WRITING_QUALITY_RULES = `WRITING QUALITY (this is where output usually fai
 - But DO write real prose for free-text fields. A description is written copy, not an echo of the title.
 - Bad: title "Photography", description "I offer photography." That is a failure. Write at least 3 full sentences a stranger would find useful: what this is, who it is for, and what to expect.
 - Never restate the title as the first sentence of the description.
-- Write plainly and specifically. No hype words ("amazing", "revolutionary", "world-class"), no exclamation marks, no emoji, no placeholder text like "Lorem" or "TBD".
+- Write plainly and specifically. No hype words ("amazing", "revolutionary", "world-class"), no exclamation marks, no emoji, and never leave filler or placeholder text in a field.
 - Write in the same language the user wrote in.`;
 
 const BITCOIN_RULES = `BITCOIN AND MONEY:
