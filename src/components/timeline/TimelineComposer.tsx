@@ -25,6 +25,7 @@ import {
 } from './ComposerShared';
 import PostAiButton from './PostAiButton';
 import ReplyAiButton from './ReplyAiButton';
+import PostAiEditMenu from './PostAiEditMenu';
 
 export interface TimelineComposerProps {
   targetOwnerId?: string;
@@ -205,6 +206,13 @@ const TimelineComposer = React.memo(function TimelineComposer({
                   parentText={parentPostText}
                   parentAuthor={parentAuthorName}
                   onDraft={postComposer.setContent}
+                  disabled={postComposer.isPosting}
+                />
+              )}
+              {postComposer.content.trim() && (
+                <PostAiEditMenu
+                  text={postComposer.content}
+                  onRevised={postComposer.setContent}
                   disabled={postComposer.isPosting}
                 />
               )}
