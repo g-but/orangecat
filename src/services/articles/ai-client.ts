@@ -7,6 +7,7 @@ import type {
   ArticleDraft,
   PostDraft,
   ProposedTopic,
+  ReplyIntent,
   ReviseAction,
   TonePreset,
   WritingKind,
@@ -49,6 +50,21 @@ export function fetchPostDraft(opts: { topic?: string; focus?: string }): Promis
   return postJson<{ draft: PostDraft }>('/api/ai/writing/draft', { mode: 'post', ...opts }).then(
     d => d.draft
   );
+}
+
+/**
+ * Draft a reply to someone else's post, grounded in that post + the user's own
+ * context and voice. `intent` steers how it engages (add a point, ask, push back…).
+ */
+export function fetchReplyDraft(opts: {
+  parentText: string;
+  parentAuthor?: string;
+  intent?: ReplyIntent;
+}): Promise<PostDraft> {
+  return postJson<{ draft: PostDraft }>('/api/ai/writing/draft', {
+    mode: 'reply',
+    ...opts,
+  }).then(d => d.draft);
 }
 
 /**

@@ -24,6 +24,7 @@ import {
   ContextIndicator,
 } from './ComposerShared';
 import PostAiButton from './PostAiButton';
+import ReplyAiButton from './ReplyAiButton';
 
 export interface TimelineComposerProps {
   targetOwnerId?: string;
@@ -37,6 +38,9 @@ export interface TimelineComposerProps {
   buttonText?: string;
   showBanner?: boolean;
   parentEventId?: string;
+  /** In reply mode: the post being answered, so AI can draft a grounded reply. */
+  parentPostText?: string;
+  parentAuthorName?: string;
   simpleMode?: boolean;
 }
 
@@ -52,6 +56,8 @@ const TimelineComposer = React.memo(function TimelineComposer({
   buttonText = TIMELINE_COPY.postButton,
   showBanner = true,
   parentEventId,
+  parentPostText,
+  parentAuthorName,
   simpleMode = true,
 }: TimelineComposerProps) {
   const { user, profile } = useAuth();
@@ -193,6 +199,14 @@ const TimelineComposer = React.memo(function TimelineComposer({
             <div className="flex flex-wrap items-center gap-2">
               {!parentEventId && (
                 <PostAiButton onDraft={postComposer.setContent} disabled={postComposer.isPosting} />
+              )}
+              {parentEventId && parentPostText && (
+                <ReplyAiButton
+                  parentText={parentPostText}
+                  parentAuthor={parentAuthorName}
+                  onDraft={postComposer.setContent}
+                  disabled={postComposer.isPosting}
+                />
               )}
               {!simpleMode && <TextFormatToolbar onFormat={handleFormat} />}
 

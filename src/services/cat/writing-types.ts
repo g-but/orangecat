@@ -44,3 +44,13 @@ export type ReviseAction =
   | 'outline';
 
 export type TonePreset = 'casual' | 'formal' | 'punchy' | 'warm';
+
+/**
+ * How an AI-drafted reply should engage the post it answers:
+ * - thoughtful → substantive response that moves the conversation forward
+ * - add        → a specific point/example the post didn't mention
+ * - question   → one genuine question inviting the author to say more
+ * - agree      → affirm and build on it with your own experience
+ * - pushback   → respectful disagreement, no hostility
+ */
+export type ReplyIntent = 'thoughtful' | 'add' | 'question' | 'agree' | 'pushback';

@@ -17,7 +17,13 @@ import { ARTICLE_LIMITS } from '@/config/articles';
 import { TIMELINE_CONTENT_LIMITS } from '@/config/timeline';
 import { callPlatformJson, parseJsonLoose } from './platform-llm';
 import { GROUNDING_RULES, buildWriterContext, contextPrompt } from './writing-context';
-import type { ArticleDraft, PostDraft, ProposedTopic, WritingKind } from './writing-types';
+import type {
+  ArticleDraft,
+  PostDraft,
+  ProposedTopic,
+  ReplyIntent,
+  WritingKind,
+} from './writing-types';
 import { logger } from '@/utils/logger';
 
 export type { ArticleDraft, PostDraft, ProposedTopic, WritingKind } from './writing-types';
@@ -123,6 +129,60 @@ Output ONLY JSON: {"text":"the post"}.`;
   const text = typeof parsed?.text === 'string' ? parsed.text.trim() : '';
   if (!text) {
     logger.warn('writing-engine: empty post draft', {}, 'WritingEngine');
+    return null;
+  }
+  return { text: text.slice(0, TIMELINE_CONTENT_LIMITS.editPost) };
+}
+
+// ---------------------------------------------------------------------------
+// Reply draft — help the user comment on someone else's post
+// ---------------------------------------------------------------------------
+
+const REPLY_INTENTS: Record<ReplyIntent, string> = {
+  thoughtful:
+    'Add a thoughtful, substantive response that genuinely moves the conversation forward.',
+  add: 'Add a specific point, example, or angle the post did NOT already mention.',
+  question: 'Ask ONE genuine, specific question that invites the author to say more.',
+  agree: 'Affirm the point and build on it with your own concrete experience or example.',
+  pushback:
+    'Offer respectful disagreement — name clearly where you see it differently, without hostility or snark.',
+};
+
+export async function draftReply(
+  supabase: AnySupabaseClient,
+  userId: string,
+  opts: { parentText: string; parentAuthor?: string; intent?: ReplyIntent }
+): Promise<PostDraft | null> {
+  const parentText = opts.parentText.trim().slice(0, 4000);
+  if (!parentText) {
+    return null;
+  }
+  const intent = opts.intent ?? 'thoughtful';
+  const ctx = await buildWriterContext(supabase, userId);
+  const system = `You are the user's writing companion inside OrangeCat. Write ONE reply the user can post to the conversation below, in THEIR authentic voice, as a real contribution. ${REPLY_INTENTS[intent]}
+
+- React to what the post ACTUALLY says — do not restate or summarise it back.
+- Keep it under ${TIMELINE_CONTENT_LIMITS.post} characters. No hashtags, no emoji spam, no "Great post!" filler.
+- Sound like a real person joining the discussion, not a brand.
+
+${GROUNDING_RULES}
+
+Output ONLY JSON: {"text":"the reply"}.`;
+
+  const userPrompt = `${contextPrompt(ctx)}
+
+The post you are replying to${opts.parentAuthor ? ` (by @${opts.parentAuthor})` : ''}:
+"""
+${parentText}
+"""
+
+Write the reply as JSON.`;
+
+  const raw = await callPlatformJson(system, userPrompt, { temperature: 0.8, maxTokens: 600 });
+  const parsed = parseJsonLoose<{ text?: unknown }>(raw);
+  const text = typeof parsed?.text === 'string' ? parsed.text.trim() : '';
+  if (!text) {
+    logger.warn('writing-engine: empty reply draft', { intent }, 'WritingEngine');
     return null;
   }
   return { text: text.slice(0, TIMELINE_CONTENT_LIMITS.editPost) };
