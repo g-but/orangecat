@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { ImagePlus, Link2, Loader2, X } from 'lucide-react';
+import { ImagePlus, Link2, Loader2, Sparkles, X } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
 import { COVER_ACCEPT, COVER_MAX_MB, uploadArticleCover } from '@/services/articles/cover-storage';
@@ -16,11 +16,14 @@ export default function CoverImageUpload({
   onChange,
   userId,
   disabled,
+  onSuggest,
 }: {
   value: string;
   onChange: (url: string) => void;
   userId: string;
   disabled?: boolean;
+  /** When provided, shows a "Suggest with AI" button that opens the image picker. */
+  onSuggest?: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -145,7 +148,17 @@ export default function CoverImageUpload({
         className="hidden"
         onChange={e => handleFile(e.target.files?.[0])}
       />
-      <div className="mt-2">
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        {onSuggest && (
+          <button
+            type="button"
+            onClick={onSuggest}
+            disabled={disabled}
+            className="inline-flex items-center gap-1 text-xs font-medium text-accent-warm hover:text-accent-warm-hover disabled:opacity-50"
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Suggest with AI
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setUrlMode(true)}

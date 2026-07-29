@@ -47,6 +47,7 @@ export default function ArticleAiControls({
   setExcerpt,
   setBody,
   disabled,
+  onInsertImage,
 }: {
   md: MarkdownActions;
   title: string;
@@ -55,6 +56,8 @@ export default function ArticleAiControls({
   setExcerpt: (v: string) => void;
   setBody: (v: string) => void;
   disabled?: boolean;
+  /** When provided, adds an "Insert an image" action that opens the image picker. */
+  onInsertImage?: () => void;
 }) {
   const ai = useArticleAi({ md, title, body, setTitle, setExcerpt, setBody });
   const anyBusy = ai.busy !== null || !!disabled;
@@ -124,6 +127,11 @@ export default function ArticleAiControls({
             <DropdownMenuItem className={item} onSelect={() => ai.makeExcerpt()}>
               Write the excerpt
             </DropdownMenuItem>
+            {onInsertImage && (
+              <DropdownMenuItem className={item} onSelect={() => onInsertImage()}>
+                Insert an image
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 
