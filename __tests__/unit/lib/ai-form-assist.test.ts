@@ -10,6 +10,7 @@ import { mergePrefillResult } from '@/lib/ai/form-prefill-service';
 import {
   AI_ADJUSTMENTS,
   AI_ADJUSTMENT_CHIP_LIMIT,
+  AI_TRANSLATION_LANGUAGES,
   USER_OVERRIDABLE_FIELDS,
   getAdjustmentById,
   getAdjustmentsForFields,
@@ -123,6 +124,18 @@ describe('getAdjustmentsForFields — suggestions follow the actual form', () =>
 
   it('always offers unscoped adjustments', () => {
     expect(getAdjustmentsForFields([]).map(a => a.id)).toContain('fill-blanks');
+  });
+
+  it('derives a translation adjustment per configured language, not a hardcoded one', () => {
+    const ids = AI_ADJUSTMENTS.map(a => a.id);
+
+    for (const language of AI_TRANSLATION_LANGUAGES) {
+      expect(ids).toContain(`description-translate-${language.label.toLowerCase()}`);
+    }
+    // The primary language is offered up front, within the visible chip budget
+    expect(getAdjustmentsForFields([descriptionField]).map(a => a.id)).toContain(
+      `description-translate-${AI_TRANSLATION_LANGUAGES[0].label.toLowerCase()}`
+    );
   });
 
   it('caps how many chips a form shows', () => {

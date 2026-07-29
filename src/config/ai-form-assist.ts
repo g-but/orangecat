@@ -71,8 +71,44 @@ export interface AiAdjustment {
   appliesTo?: AdjustmentScope;
 }
 
+/** A language a listing can be mirrored into, alongside the original text. */
+interface AiTranslationLanguage {
+  /** Chip label — "Add {label} version" */
+  label: string;
+  /** How the AI should be told to write it, including any spelling conventions */
+  instruction: string;
+}
+
 /**
- * The adjustments people actually ask for, most-frequent first.
+ * Languages offered as a one-click "add a translation" adjustment.
+ *
+ * Switzerland has four national languages, so which one is offered is a config
+ * decision, not something to bake into a component. Order is priority: the
+ * first is offered up front, the rest sit further down the chip list.
+ * German carries the house spelling rule (ss, never ß).
+ */
+export const AI_TRANSLATION_LANGUAGES: readonly AiTranslationLanguage[] = [
+  {
+    label: 'German',
+    instruction:
+      'German, using Swiss conventions: write "ss" instead of "ß", and keep the umlauts ä, ö and ü',
+  },
+  { label: 'French', instruction: 'French' },
+];
+
+function translationAdjustment(language: AiTranslationLanguage): AiAdjustment {
+  return {
+    id: `description-translate-${language.label.toLowerCase()}`,
+    label: `Add ${language.label} version`,
+    instruction: `Rewrite the description so it contains the original text first, then a blank line, then a faithful translation of the same text into ${language.instruction}. Keep both versions equally complete and do not add facts to either one.`,
+    appliesTo: { fieldNames: ['description'] },
+  };
+}
+
+const TRANSLATION_ADJUSTMENTS = AI_TRANSLATION_LANGUAGES.map(translationAdjustment);
+
+/**
+ * The adjustments people actually ask for, most-valuable first.
  *
  * Ordering is the display order; `AI_ADJUSTMENT_CHIP_LIMIT` caps how many a
  * form shows so the bar stays a bar and not a menu.
@@ -85,19 +121,34 @@ export const AI_ADJUSTMENTS: readonly AiAdjustment[] = [
       'Rewrite the description so it is substantially longer and more useful — at least three or four sentences. Cover what is offered, what makes it worth choosing, and what the buyer can expect. Keep every fact that is already there and do not invent new facts such as prices, dates, locations, credentials or guarantees.',
     appliesTo: { fieldNames: ['description'] },
   },
-  {
-    id: 'description-bilingual-de',
-    label: 'Add German version',
-    instruction:
-      'Rewrite the description so it contains the English text first, then a blank line, then a faithful German translation of the same text. Keep both versions equally complete. Use Swiss German spelling conventions: write "ss" instead of "ß", and keep the umlauts ä, ö and ü.',
-    appliesTo: { fieldNames: ['description'] },
-  },
+  // Primary translation language up front; the rest land after the staples.
+  ...TRANSLATION_ADJUSTMENTS.slice(0, 1),
   {
     id: 'description-shorter',
     label: 'Shorter description',
     instruction:
       'Tighten the description to two crisp sentences. Keep the concrete details and drop the filler. Do not remove any factual information such as prices, dates or what is included.',
     appliesTo: { fieldNames: ['description'] },
+  },
+  {
+    id: 'title-sharper',
+    label: 'Better title',
+    instruction:
+      'Rewrite the title so it is specific and scannable — what it is, for whom. Under 60 characters, no marketing filler, no trailing punctuation. Leave the other fields as they are.',
+    appliesTo: { fieldNames: ['title', 'name'] },
+  },
+  {
+    id: 'fill-blanks',
+    label: 'Fill in the blanks',
+    instruction:
+      'Fill in every field that is still empty, inferring sensible values from what is already filled in. Leave all fields that already have a value exactly as they are. Do not invent prices, dates or contact details — leave those empty if they are not implied by the rest of the form.',
+  },
+  {
+    id: 'tags-suggest',
+    label: 'Better tags',
+    instruction:
+      'Replace the tags with five to eight specific, lowercase keywords someone would actually search for to find this. No generic words like "quality" or "best".',
+    appliesTo: { fieldTypes: ['tags'] },
   },
   {
     id: 'tone-professional',
@@ -113,26 +164,7 @@ export const AI_ADJUSTMENTS: readonly AiAdjustment[] = [
       'Rewrite the free-text fields in a warmer, more personal tone — speak directly to the reader as "you". Keep all facts unchanged.',
     appliesTo: { fieldNames: ['description'] },
   },
-  {
-    id: 'title-sharper',
-    label: 'Better title',
-    instruction:
-      'Rewrite the title so it is specific and scannable — what it is, for whom. Under 60 characters, no marketing filler, no trailing punctuation. Leave the other fields as they are.',
-    appliesTo: { fieldNames: ['title', 'name'] },
-  },
-  {
-    id: 'tags-suggest',
-    label: 'Better tags',
-    instruction:
-      'Replace the tags with five to eight specific, lowercase keywords someone would actually search for to find this. No generic words like "quality" or "best".',
-    appliesTo: { fieldTypes: ['tags'] },
-  },
-  {
-    id: 'fill-blanks',
-    label: 'Fill in the blanks',
-    instruction:
-      'Fill in every field that is still empty, inferring sensible values from what is already filled in. Leave all fields that already have a value exactly as they are. Do not invent prices, dates or contact details — leave those empty if they are not implied by the rest of the form.',
-  },
+  ...TRANSLATION_ADJUSTMENTS.slice(1),
 ];
 
 /** How many adjustment chips a form shows at once. */
