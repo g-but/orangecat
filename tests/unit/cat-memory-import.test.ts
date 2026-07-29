@@ -1,4 +1,5 @@
 import { parseImportedMemories } from '@/services/cat/memory';
+import { formatMemoriesForExport } from '@/config/cat-memory-import';
 
 /**
  * Parser for pasted memory exports from other AIs. Pure function — no DB/embeds.
@@ -42,9 +43,12 @@ describe('parseImportedMemories', () => {
   });
 
   it('drops "(none)" placeholders and exact duplicates', () => {
-    const raw = ['# Career', '(none)', 'Ex-banker turned engineer', 'Ex-banker turned engineer'].join(
-      '\n'
-    );
+    const raw = [
+      '# Career',
+      '(none)',
+      'Ex-banker turned engineer',
+      'Ex-banker turned engineer',
+    ].join('\n');
     expect(parseImportedMemories(raw)).toEqual(['Ex-banker turned engineer']);
   });
 
@@ -63,5 +67,27 @@ describe('parseImportedMemories', () => {
   it('caps the number of imported facts at 200', () => {
     const raw = Array.from({ length: 500 }, (_, i) => `Fact number ${i}`).join('\n');
     expect(parseImportedMemories(raw)).toHaveLength(200);
+  });
+});
+
+/**
+ * Export is the "right of exit" half — its output must round-trip back through
+ * the importer unchanged, so memory is portable to any AI (or back to OrangeCat).
+ */
+describe('formatMemoriesForExport round-trips through parseImportedMemories', () => {
+  it('re-parses to exactly the same facts', () => {
+    const facts = [
+      'Name is George, based in Zürich, Switzerland',
+      'Building OrangeCat, a Bitcoin-native platform',
+      'Prefers Lightning over on-chain payments',
+    ];
+    const exported = formatMemoriesForExport(facts);
+    expect(parseImportedMemories(exported)).toEqual(facts);
+  });
+
+  it('drops blank entries and trims on export', () => {
+    expect(formatMemoriesForExport(['  Likes concise answers  ', '', '   '])).toBe(
+      'Likes concise answers'
+    );
   });
 });

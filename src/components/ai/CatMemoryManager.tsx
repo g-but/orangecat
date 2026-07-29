@@ -9,11 +9,12 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { Brain, Trash2, Loader2, AlertCircle } from 'lucide-react';
+import { Brain, Trash2, Loader2, AlertCircle, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import Button from '@/components/ui/Button';
 import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
+import { formatMemoriesForExport, MEMORY_EXPORT_FILENAME } from '@/config/cat-memory-import';
 
 interface Memory {
   id: string;
@@ -75,6 +76,22 @@ export function CatMemoryManager({ reloadKey = 0 }: CatMemoryManagerProps = {}) 
     }
   }, []);
 
+  const handleExport = useCallback(() => {
+    const text = formatMemoriesForExport(memories.map(m => m.content));
+    // Portable, re-importable: download the exact plain-line shape the importer
+    // accepts, so the user can take their memory anywhere. Their right of exit.
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = MEMORY_EXPORT_FILENAME;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${memories.length} ${memories.length === 1 ? 'memory' : 'memories'}`);
+  }, [memories]);
+
   const handleClearAll = useCallback(async () => {
     setIsClearing(true);
     try {
@@ -103,13 +120,22 @@ export function CatMemoryManager({ reloadKey = 0 }: CatMemoryManagerProps = {}) 
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-fg-primary">What Cat remembers</h2>
             {memories.length > 0 && !confirmClear && (
-              <button
-                type="button"
-                onClick={() => setConfirmClear(true)}
-                className="text-sm text-fg-secondary underline hover:text-status-negative"
-              >
-                Forget everything
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleExport}
+                  className="inline-flex items-center gap-1 text-sm text-fg-secondary hover:text-fg-primary"
+                >
+                  <Download className="h-4 w-4" /> Export
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmClear(true)}
+                  className="text-sm text-fg-secondary underline hover:text-status-negative"
+                >
+                  Forget everything
+                </button>
+              </div>
             )}
           </div>
           <p className="mt-1 text-sm text-fg-secondary">

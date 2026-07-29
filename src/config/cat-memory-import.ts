@@ -20,6 +20,22 @@ export const MEMORY_IMPORT_CATEGORIES = [
   'Preferences',
 ] as const;
 
+/** Filename for the downloadable memory export. */
+export const MEMORY_EXPORT_FILENAME = 'orangecat-cat-memory.txt';
+
+/**
+ * Format stored memories into the portable, re-importable shape — one fact per
+ * line. This is the "right of exit" half: the output round-trips straight back
+ * through parseImportedMemories(), into another AI, or back into OrangeCat.
+ * Deliberately plain text (no headers/JSON) so it's maximally portable.
+ */
+export function formatMemoriesForExport(contents: string[]): string {
+  return contents
+    .map(c => c.trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
 export const MEMORY_IMPORT_PROMPT = `Export everything you've learned and stored about me from our past conversations, so I can bring it to another AI assistant. Preserve my own words where possible, especially instructions and preferences.
 
 ## Categories (output in this order):
