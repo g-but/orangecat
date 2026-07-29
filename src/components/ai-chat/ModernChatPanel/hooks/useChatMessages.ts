@@ -5,6 +5,7 @@ import { API_ROUTES } from '@/config/api-routes';
 import { isCatHubPath } from '@/config/routes';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { STORAGE_KEYS } from '@/config/storage-keys';
+import type { CatPageDescriptor } from '@/config/cat-page-context';
 import type {
   Message,
   CatAction,
@@ -80,6 +81,12 @@ interface UseChatMessagesOptions {
    * so the owner can adopt it (highlight in the rail, route later sends to it).
    */
   onConversationCreated?: (id: string) => void;
+  /**
+   * The page the user is currently on, when Cat runs as a global overlay. Sent
+   * with each message so Cat knows what the user is looking at. Omitted on the
+   * standalone Cat hub (there is no "page behind" it).
+   */
+  pageContext?: CatPageDescriptor | null;
 }
 
 /** Create a conversation row on the server; null on failure (send falls back to default). */
@@ -104,6 +111,7 @@ export function useChatMessages({
   onMessageSent,
   onConversationStarted,
   onConversationCreated,
+  pageContext,
 }: UseChatMessagesOptions) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -118,6 +126,9 @@ export function useChatMessages({
   onConversationStartedRef.current = onConversationStarted;
   const onConversationCreatedRef = useRef(onConversationCreated);
   onConversationCreatedRef.current = onConversationCreated;
+  // Live page context — read at send time so navigating with Cat open stays current.
+  const pageContextRef = useRef(pageContext);
+  pageContextRef.current = pageContext;
   const preferredCurrency = useUserCurrency();
 
   // Conversation created lazily on the first send of a fresh draft. `pending`
@@ -199,6 +210,8 @@ export function useChatMessages({
             preferredCurrency,
             locale: readLocale(),
             lastVisitedPath: readLastVisitedPath(),
+            currentPath: pageContextRef.current?.path,
+            currentEntity: pageContextRef.current?.entity,
             conversationId: activeConversationId ?? undefined,
           }),
           signal: abortController.signal,

@@ -45,6 +45,8 @@ interface ModernChatPanelProps {
   onConversationStarted?: () => void;
   /** Fires when the first send of a fresh draft created a conversation — adopt it. */
   onConversationCreated?: (id: string) => void;
+  /** Current page the user is on (global overlay) so Cat is page-aware. */
+  pageContext?: import('@/config/cat-page-context').CatPageDescriptor | null;
   className?: string;
 }
 
@@ -59,6 +61,7 @@ export function ModernChatPanel({
   conversationId,
   onConversationStarted,
   onConversationCreated,
+  pageContext,
   className,
 }: ModernChatPanelProps = {}) {
   const router = useRouter();
@@ -113,6 +116,7 @@ export function ModernChatPanel({
     },
     onConversationStarted,
     onConversationCreated,
+    pageContext,
   });
 
   const { suggestions, hasContext, isLoadingSuggestions } = useSuggestions();

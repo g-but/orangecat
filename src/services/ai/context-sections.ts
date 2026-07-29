@@ -90,7 +90,14 @@ export function renderCurrentSession(r: FullUserContext['runtime']): string | nu
   lines.push(
     `**Locale**: ${r.locale} — reply in the language and conventions of this locale unless the user writes in another language.`
   );
-  if (r.lastVisitedPath) {
+  if (r.currentPath) {
+    const entity = r.currentEntity
+      ? ` — a ${r.currentEntity.type} (ref \`${r.currentEntity.ref}\`)`
+      : '';
+    lines.push(
+      `**Currently viewing**: \`${r.currentPath}\`${entity}. The user opened you WHILE on this page — if their question is about it ("this", "here", "them"), ground your answer in it. Use your lookup/search tools to pull the specifics of that ${r.currentEntity ? r.currentEntity.type : 'page'} rather than guessing.`
+    );
+  } else if (r.lastVisitedPath) {
     lines.push(
       `**Just came from**: \`${r.lastVisitedPath}\` — if relevant to their question, reference what's on that page.`
     );

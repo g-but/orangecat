@@ -243,6 +243,10 @@ export interface RuntimeContextHints {
   locale?: string;
   /** Same-origin path of the page user came from. Stripped if it looks unsafe. */
   lastVisitedPath?: string;
+  /** Same-origin path of the page the user is on NOW (global Cat overlay). */
+  currentPath?: string;
+  /** Entity the current page is about, if the client recognised one. */
+  currentEntity?: { type: string; ref: string };
 }
 
 /**
@@ -267,6 +271,24 @@ function sanitizeLastVisitedPath(path: string | undefined): string | undefined {
   return path;
 }
 
+/**
+ * Sanitize the client-supplied "currently viewing" entity. Both fields are short
+ * and URL-safe; anything else is dropped rather than fed to Cat.
+ */
+function sanitizeCurrentEntity(
+  entity: { type?: unknown; ref?: unknown } | undefined
+): { type: string; ref: string } | undefined {
+  if (!entity || typeof entity.type !== 'string' || typeof entity.ref !== 'string') {
+    return undefined;
+  }
+  const type = entity.type.trim().slice(0, 32);
+  const ref = entity.ref.trim().slice(0, 120);
+  if (!/^[a-z_]+$/i.test(type) || !ref) {
+    return undefined;
+  }
+  return { type, ref };
+}
+
 async function fetchRuntimeContextForCat(
   supabase: AnySupabaseClient,
   userId: string,
@@ -289,6 +311,8 @@ async function fetchRuntimeContextForCat(
       : 'en-US';
 
   const lastVisitedPath = sanitizeLastVisitedPath(hints?.lastVisitedPath);
+  const currentPath = sanitizeLastVisitedPath(hints?.currentPath);
+  const currentEntity = currentPath ? sanitizeCurrentEntity(hints?.currentEntity) : undefined;
 
   // Current actor: for Tier 1 we always use the individual actor. Group-context
   // switching plumbs through later (Tier 5), with its own server-side validation
@@ -335,6 +359,8 @@ async function fetchRuntimeContextForCat(
     locale,
     currentActor,
     lastVisitedPath,
+    currentPath,
+    currentEntity,
     btcRate,
   };
 }

@@ -210,6 +210,14 @@ export interface RuntimeContext {
    */
   lastVisitedPath?: string;
   /**
+   * The page the user is looking at RIGHT NOW, when Cat is opened as a global
+   * overlay on top of a page (not the standalone Cat hub). Makes Cat aware of
+   * "this project / this article" the user is currently viewing.
+   */
+  currentPath?: string;
+  /** The entity the current page is about, if recognised (type + id/slug). */
+  currentEntity?: { type: string; ref: string };
+  /**
    * Live BTC exchange-rate snapshot so Cat quotes real numbers for BTC⇄fiat
    * conversions instead of recalling a stale rate from training data.
    */
