@@ -454,6 +454,21 @@ export async function importMemories(
     return result;
   }
 
+  // Exact-content dedup against what's already stored. Semantic dedup below
+  // catches near-duplicates, but only when embeddings are on — this keeps the
+  // "skips what it already knows" promise true even with no provider, and makes
+  // re-importing the same paste a safe no-op.
+  const { data: existingRows } = await supabase
+    .from(DATABASE_TABLES.CAT_MEMORIES)
+    .select('content')
+    .eq('user_id', userId)
+    .limit(MAX_MEMORIES_PER_USER);
+  const existing = new Set<string>(
+    ((existingRows as Array<{ content: string }> | null) ?? []).map(r =>
+      r.content.trim().toLowerCase()
+    )
+  );
+
   const vectors: (number[] | null)[] = [];
   if (useEmbeddings) {
     for (let i = 0; i < facts.length; i += IMPORT_EMBED_BATCH) {
@@ -473,6 +488,11 @@ export async function importMemories(
     source_conversation_id: null;
   }> = [];
   for (let i = 0; i < facts.length; i++) {
+    const exactKey = facts[i].trim().toLowerCase();
+    if (existing.has(exactKey)) {
+      result.skipped++;
+      continue; // already stored verbatim
+    }
     const vec = vectors[i];
     if (vec) {
       const { data: near } = await supabase.rpc('match_cat_memories', {
@@ -486,6 +506,8 @@ export async function importMemories(
         continue; // already remember something equivalent
       }
     }
+    // Guard against exact dupes within this same paste when embeddings are off.
+    existing.add(exactKey);
     toInsert.push({
       user_id: userId,
       content: facts[i],
