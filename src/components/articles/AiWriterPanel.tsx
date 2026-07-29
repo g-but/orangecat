@@ -7,9 +7,11 @@ import { fetchArticleDraft, fetchWritingTopics } from '@/services/articles/ai-cl
 import type { ArticleDraft, ProposedTopic } from '@/services/cat/writing-types';
 
 /**
- * One-click AI writing for the article composer. "Write a full draft" fills the
- * whole editor; "Suggest topics" grounds ideas in the user's own interests and
- * drafts the one they pick. Fails soft — errors surface inline, never block.
+ * One-click AI writing for the article composer. Give it a topic (or leave it
+ * blank and it grounds in what you care about): "Write a full draft" fills the
+ * whole editor; "Suggest topics" proposes ideas from your own interests and
+ * drafts the one you pick. Fails soft — errors and empty results surface inline,
+ * never block.
  */
 export default function AiWriterPanel({
   title,
@@ -20,17 +22,22 @@ export default function AiWriterPanel({
   onApplyDraft: (draft: ArticleDraft) => void;
   disabled?: boolean;
 }) {
+  const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState<null | 'draft' | 'topics' | string>(null);
   const [topics, setTopics] = useState<ProposedTopic[]>([]);
+  const [noTopics, setNoTopics] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const anyBusy = busy !== null || disabled;
+  // The prompt box is the primary steer; fall back to the title field.
+  const steer = prompt.trim() || title.trim();
 
   async function writeDraft(topic?: string) {
     setBusy(topic ?? 'draft');
     setError(null);
+    setNoTopics(false);
     try {
-      const draft = await fetchArticleDraft({ topic: topic || title.trim() || undefined });
+      const draft = await fetchArticleDraft({ topic: topic || steer || undefined });
       onApplyDraft(draft);
       setTopics([]);
     } catch (e) {
@@ -43,8 +50,15 @@ export default function AiWriterPanel({
   async function loadTopics() {
     setBusy('topics');
     setError(null);
+    setNoTopics(false);
     try {
-      setTopics(await fetchWritingTopics({ kind: 'article', count: 5 }));
+      const found = await fetchWritingTopics({
+        kind: 'article',
+        count: 5,
+        focus: prompt.trim() || undefined,
+      });
+      setTopics(found);
+      setNoTopics(found.length === 0);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not suggest topics. Please try again.');
     } finally {
@@ -61,10 +75,26 @@ export default function AiWriterPanel({
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-fg-primary">Write with AI</p>
           <p className="text-xs text-fg-secondary">
-            Grounded in what you care about and what you've written before.
+            Grounded in what you care about and what you&apos;ve written before.
           </p>
 
-          <div className="mt-3 flex flex-wrap gap-2">
+          <input
+            type="text"
+            value={prompt}
+            onChange={e => setPrompt(e.target.value)}
+            disabled={anyBusy}
+            placeholder="What do you want to write about? (optional)"
+            aria-label="What do you want to write about?"
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                void writeDraft();
+              }
+            }}
+            className="mt-3 w-full rounded-md border border-default bg-surface-page px-3 py-2 text-sm text-fg-primary placeholder:text-fg-tertiary focus:border-accent-warm focus:outline-none disabled:opacity-50"
+          />
+
+          <div className="mt-2.5 flex flex-wrap gap-2">
             <button
               type="button"
               disabled={anyBusy}
@@ -76,7 +106,7 @@ export default function AiWriterPanel({
               ) : (
                 <PenLine className="h-4 w-4" />
               )}
-              {title.trim() ? 'Write a full draft' : 'Write me a draft'}
+              {steer ? 'Write a full draft' : 'Write me a draft'}
             </button>
             <button
               type="button"
@@ -122,6 +152,13 @@ export default function AiWriterPanel({
                 </li>
               ))}
             </ul>
+          )}
+
+          {noTopics && (
+            <p className="mt-2 text-xs text-fg-secondary">
+              Couldn&apos;t suggest topics from your context yet. Add a hint above (a theme or
+              keyword) and try again — or just write a draft.
+            </p>
           )}
 
           {error && <p className="mt-2 text-xs text-status-negative">{error}</p>}

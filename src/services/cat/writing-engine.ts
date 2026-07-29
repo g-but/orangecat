@@ -13,94 +13,16 @@
  */
 
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-import { fetchFullContextForCat } from '@/services/ai/document-context';
-import { buildFullContextString } from '@/services/ai/context-string-builder';
-import { getUserActorId } from '@/domain/actors';
-import { TIMELINE_TABLES } from '@/config/database-tables';
 import { ARTICLE_LIMITS } from '@/config/articles';
 import { TIMELINE_CONTENT_LIMITS } from '@/config/timeline';
-import { listMemories } from './memory';
 import { callPlatformJson, parseJsonLoose } from './platform-llm';
+import { GROUNDING_RULES, buildWriterContext, contextPrompt } from './writing-context';
 import type { ArticleDraft, PostDraft, ProposedTopic, WritingKind } from './writing-types';
 import { logger } from '@/utils/logger';
 
 export type { ArticleDraft, PostDraft, ProposedTopic, WritingKind } from './writing-types';
 
 const MAX_TOPICS = 8;
-
-const GROUNDING_RULES = `GROUNDING RULES (hard constraints):
-- Ground everything in something SPECIFIC and REAL from the context below (their work, skills, entities, stated interests, or the posts they've already written).
-- NEVER invent facts, statistics, quotes, events, or people. If the context is thin, write about the themes that ARE present rather than fabricating detail.
-- Write in the user's own voice — match the tone of the posts they've already written when samples are provided.
-- Money is Bitcoin (BTC) or a fiat currency; NEVER write "sats" or "satoshis".
-- No clichés, no clickbait, no hashtag spam, no corporate filler. Sound like a real, thoughtful person.`;
-
-async function fetchRecentAuthored(supabase: AnySupabaseClient, actorId: string): Promise<string> {
-  try {
-    const { data } = await supabase
-      .from(TIMELINE_TABLES.EVENTS)
-      .select('title, description, metadata')
-      .eq('actor_id', actorId)
-      .eq('metadata->>is_user_post', 'true')
-      .eq('is_deleted', false)
-      .order('event_timestamp', { ascending: false })
-      .limit(20);
-
-    const rows = (data ?? []) as Array<{
-      title: string | null;
-      description: string | null;
-      metadata: { is_article?: boolean } | null;
-    }>;
-    const lines = rows
-      .map(r => {
-        const text = (r.description || r.title || '').replace(/\s+/g, ' ').trim().slice(0, 200);
-        if (!text) {
-          return '';
-        }
-        return `- ${r.metadata?.is_article ? '[article] ' : ''}${text}`;
-      })
-      .filter(Boolean);
-    return lines.length ? lines.join('\n') : '(none yet)';
-  } catch {
-    return '(none yet)';
-  }
-}
-
-async function buildWriterContext(
-  supabase: AnySupabaseClient,
-  userId: string
-): Promise<{ contextBlob: string; memoryBlob: string; recentBlob: string }> {
-  const [context, memories, actorId] = await Promise.all([
-    fetchFullContextForCat(supabase, userId),
-    listMemories(supabase, userId),
-    getUserActorId(supabase, userId),
-  ]);
-  const contextBlob = buildFullContextString(context);
-  const memoryBlob = memories.length
-    ? memories
-        .slice(0, 40)
-        .map(m => `- ${m.content}`)
-        .join('\n')
-    : '(none)';
-  const recentBlob = actorId ? await fetchRecentAuthored(supabase, actorId) : '(none yet)';
-  return { contextBlob, memoryBlob, recentBlob };
-}
-
-function contextPrompt(
-  ctx: { contextBlob: string; memoryBlob: string; recentBlob: string },
-  focus?: string
-): string {
-  return `Everything OrangeCat knows about this user:
-
-${ctx.contextBlob}
-
-DURABLE MEMORIES:
-${ctx.memoryBlob}
-
-POSTS THEY'VE ALREADY WRITTEN (their voice — match this tone):
-${ctx.recentBlob}
-${focus ? `\nThe user asked to focus on: ${focus}\n` : ''}`;
-}
 
 // ---------------------------------------------------------------------------
 // Topic suggestions

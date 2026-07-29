@@ -19,6 +19,7 @@ import ArticleMarkdown from '../[slug]/ArticleMarkdown';
 import MarkdownToolbar from '@/components/articles/MarkdownToolbar';
 import { useMarkdownTextarea } from '@/components/articles/useMarkdownTextarea';
 import AiWriterPanel from '@/components/articles/AiWriterPanel';
+import ArticleAiControls from '@/components/articles/ArticleAiControls';
 import CoverImageUpload from '@/components/articles/CoverImageUpload';
 
 const DRAFT_KEY = 'oc:draft:article';
@@ -264,6 +265,15 @@ export default function ArticleComposer({
               disabled={publishing}
             />
             <div>
+              <ArticleAiControls
+                md={md}
+                title={title}
+                body={body}
+                setTitle={setTitle}
+                setExcerpt={setExcerpt}
+                setBody={setBody}
+                disabled={publishing}
+              />
               <MarkdownToolbar actions={md} disabled={publishing} />
               <Textarea
                 ref={bodyRef}
