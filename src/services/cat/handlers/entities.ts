@@ -4,13 +4,14 @@ import { resolvePublishStatus } from '@/config/entity-status';
 import type { ActionHandler } from './types';
 
 export const entityHandlers: Record<string, ActionHandler> = {
-  create_product: async (supabase, _userId, actorId, params) => {
+  create_product: async (supabase, userId, actorId, params) => {
     // DB column is `price` (numeric), not `price_btc`
     const price = (params.price_btc as number | null) ?? (params.price as number | null) ?? null;
 
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.product.tableName)
       .insert({
+        user_id: userId,
         actor_id: actorId,
         title: params.title,
         description: params.description || null,
@@ -69,7 +70,7 @@ export const entityHandlers: Record<string, ActionHandler> = {
     };
   },
 
-  create_service: async (supabase, _userId, actorId, params) => {
+  create_service: async (supabase, userId, actorId, params) => {
     // DB columns are `hourly_rate` and `fixed_price` (no _btc suffix)
     const priceField = params.hourly_rate
       ? { hourly_rate: params.hourly_rate as number }
@@ -82,6 +83,7 @@ export const entityHandlers: Record<string, ActionHandler> = {
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.service.tableName)
       .insert({
+        user_id: userId,
         actor_id: actorId,
         title: params.title,
         description: params.description || null,
@@ -107,7 +109,7 @@ export const entityHandlers: Record<string, ActionHandler> = {
     };
   },
 
-  create_project: async (supabase, _userId, actorId, params) => {
+  create_project: async (supabase, userId, actorId, params) => {
     // DB columns are `goal_amount` + `currency`, not `goal_btc`
     const goalAmount =
       (params.goal_btc as number | null) ?? (params.goal_amount as number | null) ?? null;
@@ -115,6 +117,7 @@ export const entityHandlers: Record<string, ActionHandler> = {
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.project.tableName)
       .insert({
+        user_id: userId,
         actor_id: actorId,
         title: params.title,
         description: params.description || null,
@@ -137,7 +140,7 @@ export const entityHandlers: Record<string, ActionHandler> = {
     };
   },
 
-  create_cause: async (supabase, _userId, actorId, params) => {
+  create_cause: async (supabase, userId, actorId, params) => {
     // DB column is `cause_category` (not `category`); target_amount is the funding goal
     const targetAmount =
       (params.goal_btc as number | null) ??
@@ -147,6 +150,7 @@ export const entityHandlers: Record<string, ActionHandler> = {
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.cause.tableName)
       .insert({
+        user_id: userId,
         actor_id: actorId,
         title: params.title,
         description: params.description || null,
@@ -170,10 +174,11 @@ export const entityHandlers: Record<string, ActionHandler> = {
     };
   },
 
-  create_event: async (supabase, _userId, actorId, params) => {
+  create_event: async (supabase, userId, actorId, params) => {
     const { data, error } = await supabase
       .from(ENTITY_REGISTRY.event.tableName)
       .insert({
+        user_id: userId,
         actor_id: actorId,
         title: params.title,
         description: params.description || null,

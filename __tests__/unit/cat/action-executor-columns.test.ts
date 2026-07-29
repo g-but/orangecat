@@ -136,6 +136,8 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.fulfillment_type).toBe('manual');
       expect(Array.isArray(insert!.images)).toBe(true);
       expect(insert!.actor_id).toBe(ACTOR_ID);
+      // user_id is NOT NULL + owner RLS checks it — dual-write (July 2026 fix)
+      expect(insert!.user_id).toBe(USER_ID);
       expect(insert!.status).toBe('draft');
     });
 
@@ -167,6 +169,9 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.hourly_rate).toBe(0.0005);
       expect(insert!.hourly_rate_btc).toBeUndefined();
       expect(insert!.currency).toBe('BTC');
+      expect(insert!.actor_id).toBe(ACTOR_ID);
+      // user_id is NOT NULL + owner RLS checks it — dual-write (July 2026 fix)
+      expect(insert!.user_id).toBe(USER_ID);
       expect(insert!.service_location_type).toBe('remote');
       expect(Array.isArray(insert!.images)).toBe(true);
       expect(Array.isArray(insert!.portfolio_links)).toBe(true);
@@ -213,6 +218,8 @@ describe('Cat action-executor — correct DB column names', () => {
       expect((insert as Record<string, unknown>).goal_btc).toBeUndefined();
       expect(insert!.currency).toBe('BTC');
       expect(insert!.actor_id).toBe(ACTOR_ID);
+      // user_id is NOT NULL + owner RLS checks it — dual-write (July 2026 fix)
+      expect(insert!.user_id).toBe(USER_ID);
     });
 
     it('falls back to goal_amount param when no goal_btc', async () => {
@@ -242,6 +249,8 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.goal_amount).toBeUndefined();
       expect(insert!.currency).toBe('BTC');
       expect(insert!.actor_id).toBe(ACTOR_ID);
+      // user_id is NOT NULL + owner RLS checks it — dual-write (July 2026 fix)
+      expect(insert!.user_id).toBe(USER_ID);
     });
 
     it('accepts explicit cause_category param', async () => {
@@ -278,6 +287,8 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.start_date).toBe('2026-06-01T18:00:00Z');
       expect(insert!.location).toBe('Zurich');
       expect(insert!.actor_id).toBe(ACTOR_ID);
+      // user_id is NOT NULL + owner RLS checks it — dual-write (July 2026 fix)
+      expect(insert!.user_id).toBe(USER_ID);
       expect(insert!.status).toBe('draft');
     });
   });
