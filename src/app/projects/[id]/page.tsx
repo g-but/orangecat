@@ -199,6 +199,9 @@ export default async function PublicProjectPage({ params }: PageProps) {
     currency: project.currency ?? 'BTC',
     raised_amount: settledRaised,
     settled_raised_btc: settledRaisedBtc,
+    // Honest supporters figure: settled contributions only — never emoji
+    // reactions, comments, or self-reported support rows.
+    supporters_count: fundingStats?.contributorCount ?? 0,
     profiles: profile ?? undefined,
   };
   const sellerReceive = await resolveSellerReceiveInfo(supabase, 'project', id);

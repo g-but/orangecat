@@ -24,11 +24,11 @@ interface ProjectCardProps extends Omit<
   EntityCardProps,
   'id' | 'title' | 'headerSlot' | 'progressSlot' | 'metricsSlot' | 'footerSlot'
 > {
+  // currency + supporters_count now live on SearchFundingPage itself (settled
+  // funding enrichment); only card-local extras remain here.
   project: SearchFundingPage & {
-    currency?: string;
     tags?: string[] | null;
     cover_image_url?: string | null;
-    supporters_count?: number;
   };
   showProgress?: boolean;
   showMetrics?: boolean;
@@ -56,7 +56,9 @@ export function ProjectCard({
   const { formatAmountBtc, displayCurrency } = useDisplayCurrency();
   const { convertToBTC } = useCurrencyConversion();
   const goalBtc = convertToBTC(goalAmount, projectCurrency);
-  const currentBtc = convertToBTC(currentAmount, projectCurrency);
+  // Prefer the settled-ledger BTC figure (canonical unit) over converting the
+  // project-currency amount back — avoids a lossy round-trip through rates.
+  const currentBtc = project.settled_raised_btc ?? convertToBTC(currentAmount, projectCurrency);
   const formattedCurrent = formatAmountBtc(currentBtc);
   const formattedGoal = formatAmountBtc(goalBtc);
   const amountColorClass =

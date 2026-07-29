@@ -20,6 +20,7 @@ import {
 } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 import { ENTITY_STATUS } from '@/config/database-constants';
+import { enrichProjectsWithSettledFunding } from '@/services/wallets/project-funding';
 
 // Entity-specific column selections for optimal queries
 const ENTITY_COLUMNS: Record<EntityType, string> = {
@@ -118,11 +119,21 @@ export const GET = withOptionalAuth(async (request, context: RouteContext) => {
       return apiInternalError(`Failed to fetch ${entityType}s`);
     }
 
+    // Projects: replace the dead raised_amount column with the settled-ledger
+    // total so profile tabs show honest funding figures.
+    const entities =
+      entityType === 'project'
+        ? await enrichProjectsWithSettledFunding(
+            supabase,
+            (data || []) as unknown as Array<{ id: string; currency?: string | null }>
+          )
+        : data || [];
+
     const metadata = getEntityMetadata(entityType as EntityType);
 
     return apiSuccess(
       {
-        data: data || [],
+        data: entities,
         entityType,
         metadata: {
           name: metadata.name,

@@ -57,3 +57,43 @@ export async function getEntityFundingStats(
     namedSupporterCount: Number(row.named_supporter_count ?? 0),
   };
 }
+
+/**
+ * Batch variant for list surfaces: settled funding stats for many entities in
+ * ONE RPC (`get_entities_funding_stats`) — no N+1 per card. Entities that are
+ * private or have no settled contributions are simply absent from the map.
+ * Never throws — logs and returns an empty map so lists degrade to zeros.
+ */
+export async function getEntitiesFundingStats(
+  supabase: AnySupabaseClient,
+  entityType: EntityType,
+  entityIds: string[]
+): Promise<Map<string, EntityFundingStats>> {
+  const map = new Map<string, EntityFundingStats>();
+  if (entityIds.length === 0) {
+    return map;
+  }
+
+  const { data, error } = await supabase.rpc('get_entities_funding_stats', {
+    p_entity_type: entityType,
+    p_entity_ids: entityIds,
+  });
+
+  if (error) {
+    logger.warn(
+      'Failed to load batch entity funding stats',
+      { entityType, count: entityIds.length, error },
+      'Wallets'
+    );
+    return map;
+  }
+
+  for (const row of (data as Array<Record<string, unknown>> | null) ?? []) {
+    map.set(String(row.entity_id), {
+      totalBtc: Number(row.total_btc ?? 0),
+      contributorCount: Number(row.contributor_count ?? 0),
+      namedSupporterCount: Number(row.named_supporter_count ?? 0),
+    });
+  }
+  return map;
+}

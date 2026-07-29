@@ -11,6 +11,7 @@ import { listArticlesByAuthor } from '@/services/articles/get-article';
 import { safeJsonLdString } from '@/lib/seo/structured-data';
 import type { ScalableProfile } from '@/services/profile/types';
 import { mapProjectRow } from '@/types/project';
+import { enrichProjectsWithSettledFunding } from '@/services/wallets/project-funding';
 import { ROUTES } from '@/config/routes';
 import { APP_NAME, APP_KICKER, SITE_URL } from '@/config/brand';
 import { applyProfilePrivacy } from '@/config/profile-privacy';
@@ -188,7 +189,15 @@ export default async function PublicProfilePage({ params }: PageProps) {
     .neq('status', 'draft') // Exclude drafts from public profile
     .neq('show_on_profile', false) // Respect user's visibility preference (null = true by default)
     .order('created_at', { ascending: false });
-  const projects = (projectsData || []).map(mapProjectRow);
+  // Honest funding figures from the settled ledger — the raised_amount column
+  // is dead (never written), so profile stats would otherwise always read 0.
+  const enrichedProjects = await enrichProjectsWithSettledFunding(
+    supabase,
+    (projectsData || []) as unknown as Array<
+      Parameters<typeof mapProjectRow>[0] & { id: string; currency?: string | null }
+    >
+  );
+  const projects = enrichedProjects.map(mapProjectRow);
 
   // Fetch follower count
   const { count: followerCount } = await supabase
@@ -236,7 +245,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   // Calculate statistics
   const projectCount = projects?.length || 0;
-  const totalRaised = projects?.reduce((sum, p) => sum + (Number(p.raised_amount) || 0), 0) || 0;
+  // Sum in BTC (the canonical unit) — the overview tab formats this figure with
+  // formatAmountBtc. Summing per-project raised_amount would mix currencies.
+  const totalRaised = enrichedProjects.reduce((sum, p) => sum + (p.settled_raised_btc || 0), 0);
 
   // Check if viewing own profile (server-side, avoids hydration flash)
   const {
