@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import Loading from '@/components/Loading';
@@ -77,6 +77,13 @@ export function EntityForm<T extends Record<string, unknown>>({
   } = useEntityFormState({ config, initialValues, userCurrency, userId: user?.id, mode });
 
   const [createdEntity, setCreatedEntity] = useState<{ id: string; title: string } | null>(null);
+
+  // Flat field list for the AI bar: it offers only the adjustments this form's
+  // fields support, and names changed fields by their label.
+  const aiAssistFields = useMemo(
+    () => config.fieldGroups.flatMap(group => group.fields ?? []),
+    [config.fieldGroups]
+  );
 
   const handleFieldBlur = useCallback(
     (fieldName: string) => validateField(fieldName),
@@ -157,6 +164,7 @@ export function EntityForm<T extends Record<string, unknown>>({
         disabled={formState.isSubmitting}
         existingData={formState.data}
         mode={mode}
+        fields={aiAssistFields}
       />
 
       <FormFieldGroups

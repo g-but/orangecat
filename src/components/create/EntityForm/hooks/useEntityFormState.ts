@@ -112,14 +112,20 @@ export function useEntityFormState<T extends Record<string, unknown>>({
   }, []);
 
   const handleAIPrefill = useCallback(
-    (data: Record<string, unknown>, confidence: Record<string, FieldConfidence>) => {
+    (
+      data: Record<string, unknown>,
+      confidence: Record<string, FieldConfidence>,
+      changedFields: string[]
+    ) => {
       setFormState(prev => ({
         ...prev,
         data: { ...prev.data, ...data } as T,
         isDirty: true,
       }));
-      const newFields = new Set<string>(Object.keys(data));
-      setAiGeneratedFields({ fields: newFields, confidence });
+      // Highlight only what the AI actually wrote. `data` carries the whole
+      // form (including the user's own untouched values), so keying off it
+      // flagged every field as AI-generated.
+      setAiGeneratedFields({ fields: new Set<string>(changedFields), confidence });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     []

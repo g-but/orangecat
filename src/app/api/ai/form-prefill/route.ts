@@ -31,6 +31,11 @@ const requestSchema = z.object({
   entityType: z.string().min(1, 'Entity type is required'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   existingData: z.record(z.unknown()).optional(),
+  /**
+   * `fill` protects what the user already typed; `refine` lets the AI rewrite
+   * it. A refine request that arrives as `fill` can never change anything.
+   */
+  intent: z.enum(['fill', 'refine']).default('fill'),
 });
 
 /**
@@ -57,7 +62,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       return apiValidationError('Invalid request', parseResult.error.flatten().fieldErrors);
     }
 
-    const { entityType, description, existingData } = parseResult.data;
+    const { entityType, description, existingData, intent } = parseResult.data;
 
     // Validate entity type
     if (!isValidEntityType(entityType)) {
@@ -75,13 +80,20 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       {
         userId: user.id,
         entityType,
+        intent,
         descriptionLength: description.length,
       },
       'AI'
     );
 
     // Generate form prefill using AI
-    const result = await generateFormPrefill(entityType, description, entityConfig, existingData);
+    const result = await generateFormPrefill({
+      entityType,
+      description,
+      entityConfig,
+      existingData,
+      intent,
+    });
 
     if (!result.success) {
       logger.warn(
@@ -102,15 +114,17 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       {
         userId: user.id,
         entityType,
-        fieldsGenerated: Object.keys(result.data).length,
+        intent,
+        fieldsChanged: result.changedFields?.length ?? 0,
       },
       'AI'
     );
 
-    // Return flat structure — AIPrefillBar reads result.data and result.confidence directly
+    // Return flat structure — AIPrefillBar reads result.data/changedFields/confidence directly
     return NextResponse.json({
       success: true,
       data: result.data,
+      changedFields: result.changedFields ?? [],
       confidence: result.confidence,
     });
   } catch (error) {

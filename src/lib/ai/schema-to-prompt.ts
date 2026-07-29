@@ -6,6 +6,7 @@
  */
 
 import type { EntityType } from '@/config/entity-registry';
+import { AI_ENTITY_INSTRUCTIONS, AI_UNIVERSAL_INSTRUCTIONS } from '@/config/ai-form-assist';
 import type { FieldConfig, FieldGroup } from '@/components/create/types';
 
 /**
@@ -147,55 +148,12 @@ export function formatFieldsForPrompt(descriptions: FieldDescription[]): string 
 }
 
 /**
- * Get common field names that typically need special handling
+ * Per-entity rules the AI needs to fill this form correctly.
+ *
+ * The content lives in `@/config/ai-form-assist` (AI_ENTITY_INSTRUCTIONS) —
+ * this is just the lookup, so adding an entity type never means adding a
+ * branch here.
  */
 export function getSpecialFieldInstructions(entityType: EntityType): string {
-  const instructions: string[] = [];
-
-  // Bitcoin-specific instructions
-  instructions.push(
-    'For Bitcoin prices: Express amounts in BTC as decimal values (e.g., 0.001 BTC). Never use satoshis. Common price points: 0.00005 BTC (~$5), 0.0003 BTC (~$30), 0.001 BTC (~$100).'
-  );
-
-  // Entity-specific instructions
-  switch (entityType) {
-    case 'product':
-      instructions.push(
-        'For product_type: Choose "physical" for tangible goods, "digital" for downloads/files, or "service" for service-based products.'
-      );
-      instructions.push(
-        'For inventory_count: Use -1 for unlimited inventory, or a positive number for limited stock.'
-      );
-      break;
-    case 'service':
-      instructions.push(
-        'For services: Provide either hourly_rate OR fixed_price (or both). Duration is in minutes.'
-      );
-      break;
-    case 'event':
-      instructions.push('For events: start_date is required. Use ISO format (YYYY-MM-DDTHH:mm).');
-      break;
-    case 'loan':
-      instructions.push(
-        'For loans: original_amount is what you need to borrow in BTC. Interest rates are annual percentages (e.g., 5 for 5%).'
-      );
-      break;
-    case 'investment':
-      instructions.push(
-        'For investments: target_amount is the total raise goal in BTC. minimum_investment is the minimum ticket size in BTC.'
-      );
-      break;
-    case 'research':
-      instructions.push(
-        'For research: funding_goal_btc is the funding target. field and methodology must use the exact option values shown above (not labels).'
-      );
-      break;
-    case 'wishlist':
-      instructions.push(
-        'For wishlists: type must be one of: general, birthday, wedding, baby_shower, graduation, personal. visibility: public, unlisted, or private.'
-      );
-      break;
-  }
-
-  return instructions.join('\n');
+  return [...AI_UNIVERSAL_INSTRUCTIONS, ...(AI_ENTITY_INSTRUCTIONS[entityType] ?? [])].join('\n');
 }
