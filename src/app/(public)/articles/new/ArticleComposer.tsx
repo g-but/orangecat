@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Eye, PenLine } from 'lucide-react';
+import { ArrowLeft, Eye, PenLine, Trash2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
@@ -15,21 +15,19 @@ import { publishArticle } from '@/services/articles/create';
 import { updateArticle } from '@/services/articles/update';
 import type { TimelineVisibility } from '@/types/timeline';
 import type { ArticleDraft } from '@/services/cat/writing-types';
+import {
+  deleteLocalDraft,
+  listLocalDrafts,
+  newDraftId,
+  saveLocalDraft,
+  type LocalArticleDraft,
+} from '@/services/articles/local-drafts';
+import { formatRelativeTime } from '@/utils/dates';
 import ArticleMarkdown from '../[slug]/ArticleMarkdown';
 import MarkdownToolbar from '@/components/articles/MarkdownToolbar';
 import { useMarkdownTextarea } from '@/components/articles/useMarkdownTextarea';
 import AiWriterPanel from '@/components/articles/AiWriterPanel';
 import CoverImageUpload from '@/components/articles/CoverImageUpload';
-
-const DRAFT_KEY = 'oc:draft:article';
-
-interface DraftShape {
-  title: string;
-  excerpt: string;
-  coverImage: string;
-  body: string;
-  visibility: TimelineVisibility;
-}
 
 /** Existing article passed when the composer is opened in edit mode. */
 export interface ArticleInitial {
@@ -60,35 +58,31 @@ export default function ArticleComposer({
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
+  const [draftId, setDraftId] = useState(() => newDraftId());
+  const [otherDrafts, setOtherDrafts] = useState<LocalArticleDraft[]>([]);
 
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const md = useMarkdownTextarea(bodyRef, body, setBody);
 
-  // Restore an in-progress draft once on mount (new articles only — never clobber
-  // an article being edited with a stale local draft).
+  // Restore the most recent draft once on mount (new articles only — never
+  // clobber an article being edited with a stale local draft). Older drafts
+  // stay listed so starting a new article never destroys an in-progress one.
   useEffect(() => {
     if (isEditing) {
       return;
     }
-    try {
-      const raw = localStorage.getItem(DRAFT_KEY);
-      if (!raw) {
-        return;
-      }
-      const d = JSON.parse(raw) as Partial<DraftShape>;
-      if (d.title || d.body) {
-        setTitle(d.title ?? '');
-        setExcerpt(d.excerpt ?? '');
-        setCoverImage(d.coverImage ?? '');
-        setBody(d.body ?? '');
-        if (d.visibility) {
-          setVisibility(d.visibility);
-        }
-        setRestored(true);
-      }
-    } catch {
-      /* ignore corrupt draft */
+    const drafts = listLocalDrafts();
+    const [latest, ...rest] = drafts;
+    if (latest) {
+      setTitle(latest.title);
+      setExcerpt(latest.excerpt);
+      setCoverImage(latest.coverImage);
+      setBody(latest.body);
+      setVisibility(latest.visibility);
+      setDraftId(latest.id);
+      setRestored(true);
     }
+    setOtherDrafts(rest);
   }, [isEditing]);
 
   // Autosave (debounced) whenever content changes (new articles only).
@@ -100,17 +94,29 @@ export default function ArticleComposer({
       return;
     }
     const id = setTimeout(() => {
-      try {
-        localStorage.setItem(
-          DRAFT_KEY,
-          JSON.stringify({ title, excerpt, coverImage, body, visibility } satisfies DraftShape)
-        );
-      } catch {
-        /* storage full / disabled — non-fatal */
-      }
+      saveLocalDraft({
+        id: draftId,
+        title,
+        excerpt,
+        coverImage,
+        body,
+        visibility,
+        updatedAt: Date.now(),
+      });
     }, 600);
     return () => clearTimeout(id);
-  }, [isEditing, title, excerpt, coverImage, body, visibility]);
+  }, [isEditing, draftId, title, excerpt, coverImage, body, visibility]);
+
+  // Grow the body textarea with its content so the page scrolls, never an inner
+  // box — long-form writing shouldn't happen inside a fixed scroll trap.
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) {
+      return;
+    }
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [body, tab]);
 
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
   const readingTime = wordCount ? estimateReadingTime(body) : 0;
@@ -124,6 +130,37 @@ export default function ArticleComposer({
     setBody(draft.body);
     setTab('write');
     setRestored(false);
+  }
+
+  /** Delete the current draft and reset to a blank one; other drafts survive. */
+  function discardCurrentDraft() {
+    deleteLocalDraft(draftId);
+    setTitle('');
+    setExcerpt('');
+    setCoverImage('');
+    setBody('');
+    setVisibility('public');
+    setDraftId(newDraftId());
+    setRestored(false);
+    setOtherDrafts(listLocalDrafts());
+  }
+
+  /** Switch to another saved draft; the current one is already autosaved. */
+  function loadDraft(draft: LocalArticleDraft) {
+    setTitle(draft.title);
+    setExcerpt(draft.excerpt);
+    setCoverImage(draft.coverImage);
+    setBody(draft.body);
+    setVisibility(draft.visibility);
+    setDraftId(draft.id);
+    setRestored(true);
+    setTab('write');
+    setOtherDrafts(listLocalDrafts().filter(d => d.id !== draft.id));
+  }
+
+  function deleteOtherDraft(id: string) {
+    deleteLocalDraft(id);
+    setOtherDrafts(prev => prev.filter(d => d.id !== id));
   }
 
   function handleBodyKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -140,6 +177,20 @@ export default function ArticleComposer({
     } else if (k === 'k') {
       e.preventDefault();
       md.insertLink();
+    } else if (k === 's') {
+      // Flush the draft now instead of letting the browser offer to save the page.
+      e.preventDefault();
+      if (!isEditing && (title || body || excerpt || coverImage)) {
+        saveLocalDraft({
+          id: draftId,
+          title,
+          excerpt,
+          coverImage,
+          body,
+          visibility,
+          updatedAt: Date.now(),
+        });
+      }
     }
   }
 
@@ -175,11 +226,7 @@ export default function ArticleComposer({
       setPublishing(false);
       return;
     }
-    try {
-      localStorage.removeItem(DRAFT_KEY);
-    } catch {
-      /* ignore */
-    }
+    deleteLocalDraft(draftId);
     router.push(ROUTES.ARTICLE(result.slug));
   }
 
@@ -210,9 +257,49 @@ export default function ArticleComposer({
         )}
 
         {restored && (
-          <p className="mb-4 rounded-md border border-subtle bg-surface-raised/30 px-3 py-2 text-xs text-fg-secondary">
-            Restored your saved draft.
-          </p>
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-md border border-subtle bg-surface-raised/30 px-3 py-2 text-xs text-fg-secondary">
+            <span>Restored your saved draft.</span>
+            <button
+              type="button"
+              onClick={discardCurrentDraft}
+              className="shrink-0 font-medium text-fg-secondary underline-offset-2 transition-colors hover:text-status-negative hover:underline"
+            >
+              Discard draft
+            </button>
+          </div>
+        )}
+
+        {otherDrafts.length > 0 && (
+          <div className="mb-4 rounded-md border border-subtle bg-surface-raised/30 px-3 py-2">
+            <p className="mb-1.5 text-xs font-medium text-fg-secondary">
+              {otherDrafts.length === 1 ? 'Another draft' : `${otherDrafts.length} more drafts`}
+            </p>
+            <ul className="space-y-1">
+              {otherDrafts.map(draft => (
+                <li key={draft.id} className="flex items-center gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => loadDraft(draft)}
+                    className="min-w-0 flex-1 truncate text-left text-fg-primary underline-offset-2 hover:underline"
+                    title="Open this draft"
+                  >
+                    {draft.title.trim() || 'Untitled draft'}
+                  </button>
+                  <span className="shrink-0 text-fg-tertiary">
+                    {formatRelativeTime(new Date(draft.updatedAt))}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => deleteOtherDraft(draft.id)}
+                    className="shrink-0 text-fg-tertiary transition-colors hover:text-status-negative"
+                    aria-label="Delete draft"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         {/* Write / Preview tabs */}
@@ -274,7 +361,7 @@ export default function ArticleComposer({
                 rows={18}
                 maxLength={ARTICLE_LIMITS.body}
                 aria-label="Article body"
-                className="rounded-t-none font-mono text-sm leading-6"
+                className="resize-none overflow-hidden rounded-t-none font-mono text-sm leading-6"
               />
             </div>
           </div>
