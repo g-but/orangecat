@@ -164,7 +164,8 @@ describe('checkTopUp', () => {
     getPlatformNwcClient.mockResolvedValue(
       nwcClient({ lookupInvoice: jest.fn().mockResolvedValue({ settled_at: 1_700_000_000 }) })
     );
-    getCreditBalance.mockResolvedValue(0.0005);
+    // The new balance comes straight from the atomic append (no extra read).
+    appendCreditEntry.mockResolvedValue(0.0005);
 
     const res = await checkTopUp('owner', 'tp1');
     expect(res).toEqual({ status: 'paid', balanceBtc: 0.0005 });
@@ -175,6 +176,38 @@ describe('checkTopUp', () => {
     expect(entry.kind).toBe('topup');
     expect(entry.amountBtc).toBe(0.0005);
     expect(entry.ref).toBe('ph_abc'); // idempotency key = payment hash
+  });
+
+  it('stays pending (never marks paid) when a settled invoice fails to credit — no lost payment', async () => {
+    // Settlement detected, but the atomic credit append fails (transient DB
+    // error → null). The top-up must NOT be flipped to 'paid', or the next poll
+    // short-circuits and the user's paid sats vanish with no credit. Staying
+    // pending lets the next poll retry the idempotent credit.
+    let paidUpdate = false;
+    adminFrom.mockImplementation(() => ({
+      insert: () => adminFrom(),
+      select: () => adminFrom(),
+      eq: () => adminFrom(),
+      order: () => adminFrom(),
+      limit: () => adminFrom(),
+      maybeSingle: async () => ({ data: pendingRow }),
+      single: async () => ({ data: pendingRow }),
+      update: (patch: { status?: string }) => {
+        if (patch?.status === 'paid') {
+          paidUpdate = true;
+        }
+        return adminFrom();
+      },
+      then: (resolve: (v: unknown) => unknown) => resolve({ data: null, error: null }),
+    }));
+    getPlatformNwcClient.mockResolvedValue(
+      nwcClient({ lookupInvoice: jest.fn().mockResolvedValue({ settled_at: 1_700_000_000 }) })
+    );
+    appendCreditEntry.mockResolvedValue(null); // crediting failed
+
+    await expect(checkTopUp('owner', 'tp1')).resolves.toEqual({ status: 'pending' });
+    expect(appendCreditEntry).toHaveBeenCalledTimes(1);
+    expect(paidUpdate).toBe(false); // critically, never marked paid
   });
 
   it('stays pending on a transient lookup failure (client polls again)', async () => {
