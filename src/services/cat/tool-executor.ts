@@ -134,11 +134,11 @@ INSTRUCTIONS (hard constraints):
           return;
         }
         try {
-          const prefill = await generateFormPrefill(
-            offer.entityType,
-            offer.description,
-            entityConfig
-          );
+          const prefill = await generateFormPrefill({
+            entityType: offer.entityType,
+            description: offer.description,
+            entityConfig,
+          });
           if (!prefill.success) {
             return;
           }
@@ -319,7 +319,7 @@ Explain this to the user in plain language: which provider is healthy, degraded,
     }
 
     try {
-      const prefill = await generateFormPrefill(entityType, description, entityConfig);
+      const prefill = await generateFormPrefill({ entityType, description, entityConfig });
       if (!prefill.success) {
         onToolCall?.({
           id: toolCall.id,

@@ -376,9 +376,14 @@ export type FieldConfidence = number;
 export interface AIPrefillResponse {
   /** Whether the prefill was successful */
   success: boolean;
-  /** Generated field values */
+  /** Full set of form values to apply */
   data: Record<string, unknown>;
-  /** Confidence scores for each generated field (0-1) */
+  /**
+   * Fields the AI actually changed. Everything else in `data` is the user's
+   * own value carried through, so only these should be flagged as AI-written.
+   */
+  changedFields?: string[];
+  /** Confidence scores for each changed field (0-1) */
   confidence: Record<string, FieldConfidence>;
   /** Optional error message if unsuccessful */
   error?: string;
@@ -401,7 +406,11 @@ export interface AIPrefillBarProps {
   /** Entity type being created */
   entityType: string;
   /** Callback when AI generates field values */
-  onPrefill: (data: Record<string, unknown>, confidence: Record<string, FieldConfidence>) => void;
+  onPrefill: (
+    data: Record<string, unknown>,
+    confidence: Record<string, FieldConfidence>,
+    changedFields: string[]
+  ) => void;
   /** Whether form is currently submitting */
   disabled?: boolean;
   /** Existing form data (to preserve user input) */
@@ -412,6 +421,12 @@ export interface AIPrefillBarProps {
    * change you want" since the fields are already populated.
    */
   mode?: 'create' | 'edit';
+  /**
+   * The form's own fields. Drives which one-click adjustments are offered, so
+   * the bar suggests things this specific form can actually do (see
+   * `getAdjustmentsForFields`) and can name changed fields by their label.
+   */
+  fields?: Array<Pick<FieldConfig, 'name' | 'label' | 'type'>>;
 }
 
 /**

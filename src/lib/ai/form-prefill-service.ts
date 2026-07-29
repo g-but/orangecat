@@ -8,6 +8,7 @@
 import type { EntityType } from '@/config/entity-registry';
 import { isValidEntityType } from '@/config/entity-registry';
 import type { AIPrefillResponse, EntityConfig } from '@/components/create/types';
+import { USER_OVERRIDABLE_FIELDS, type AiAssistIntent } from '@/config/ai-form-assist';
 import { logger } from '@/utils/logger';
 import {
   extractFieldDescriptions,
@@ -34,18 +35,84 @@ interface FormPrefillConfig {
   temperature?: number;
 }
 
+export interface FormPrefillRequest {
+  /** Entity type being filled (validated against the registry) */
+  entityType: string;
+  /** What the user typed: a description to fill from, or a change to apply */
+  description: string;
+  /** Form definition — supplies the field list the AI may write to */
+  entityConfig: EntityConfig;
+  /** Current form values */
+  existingData?: Record<string, unknown>;
+  /** Fill an empty form, or revise the values already in it. Default `fill`. */
+  intent?: AiAssistIntent;
+  /** Provider/model overrides */
+  config?: FormPrefillConfig;
+}
+
+/**
+ * Decide the final form values, and report which fields actually changed.
+ *
+ * This is the SSOT for "who wins on conflict", and it is why refinement used
+ * to silently do nothing: existing values unconditionally overwrote the AI's
+ * output, so a request to rewrite a non-empty description could never take
+ * effect.
+ *
+ * - `fill`   — the user's own input is protected; the AI only lands in gaps
+ *   (plus the price/currency fields, which carry template defaults rather than
+ *   user intent — see USER_OVERRIDABLE_FIELDS).
+ * - `refine` — the AI wins for the fields it returns, since changing them is
+ *   the entire request. Fields it omits keep their current values.
+ */
+export function mergePrefillResult(
+  aiData: Record<string, unknown>,
+  existingData: Record<string, unknown> | undefined,
+  intent: AiAssistIntent
+): { data: Record<string, unknown>; changedFields: string[] } {
+  const existing = existingData ?? {};
+
+  if (intent === 'refine') {
+    const changedFields = Object.keys(aiData).filter(
+      key => !valuesEqual(aiData[key], existing[key])
+    );
+    return { data: { ...existing, ...aiData }, changedFields };
+  }
+
+  const data: Record<string, unknown> = { ...aiData };
+  for (const [key, value] of Object.entries(existing)) {
+    const userProvided = value !== '' && value !== null && value !== undefined;
+    if (userProvided && !USER_OVERRIDABLE_FIELDS.includes(key)) {
+      data[key] = value;
+    }
+  }
+  const changedFields = Object.keys(aiData).filter(key => !valuesEqual(data[key], existing[key]));
+  return { data, changedFields };
+}
+
+/** Structural equality good enough for form values (scalars, arrays, plain objects). */
+function valuesEqual(a: unknown, b: unknown): boolean {
+  if (a === b) {
+    return true;
+  }
+  if (typeof a === 'object' && typeof b === 'object' && a !== null && b !== null) {
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+  return false;
+}
+
 /**
  * Server-side form prefill service
  *
  * This should be called from an API route, not directly from the client.
  */
-export async function generateFormPrefill(
-  entityType: string,
-  description: string,
-  entityConfig: EntityConfig,
-  existingData?: Record<string, unknown>,
-  config?: FormPrefillConfig
-): Promise<AIPrefillResponse> {
+export async function generateFormPrefill({
+  entityType,
+  description,
+  entityConfig,
+  existingData,
+  intent = 'fill',
+  config,
+}: FormPrefillRequest): Promise<AIPrefillResponse> {
   // Validate entity type
   if (!isValidEntityType(entityType)) {
     return {
@@ -73,13 +140,14 @@ export async function generateFormPrefill(
     const specialInstructions = getSpecialFieldInstructions(entityType as EntityType);
 
     // Build prompts
-    const systemPrompt = getSystemPrompt(entityType as EntityType);
+    const systemPrompt = getSystemPrompt(entityType as EntityType, intent);
     const userPrompt = getUserPrompt(
       entityType as EntityType,
       description,
       fieldsPrompt,
       specialInstructions,
-      existingData
+      existingData,
+      intent
     );
 
     // Determine provider: Groq first, OpenRouter fallback
@@ -123,7 +191,9 @@ export async function generateFormPrefill(
           { role: 'user', content: userPrompt },
         ],
         temperature: config?.temperature ?? 0.3,
-        max_tokens: config?.maxTokens ?? 1000,
+        // Headroom for genuinely written descriptions (and bilingual ones) —
+        // 1000 truncated the JSON mid-string on multi-field forms.
+        max_tokens: config?.maxTokens ?? 2000,
         ...(useGroq ? {} : { response_format: { type: 'json_object' } }),
       }),
     });
@@ -163,23 +233,20 @@ export async function generateFormPrefill(
       };
     }
 
-    // Merge with existing data (preserve user's input)
-    const mergedData = { ...parsed.data };
-    if (existingData) {
-      for (const [key, value] of Object.entries(existingData)) {
-        if (value !== '' && value !== null && value !== undefined) {
-          // User's existing data takes precedence
-          mergedData[key] = value;
-          // Mark preserved fields with high confidence
-          parsed.confidence[key] = 1.0;
-        }
-      }
-    }
+    const { data, changedFields } = mergePrefillResult(parsed.data, existingData, intent);
+
+    // Confidence is reported only for fields the AI actually changed — a
+    // preserved value is the user's, not an AI guess, and marking it 1.0 made
+    // the form highlight untouched fields as AI-generated.
+    const confidence = Object.fromEntries(
+      changedFields.map(field => [field, parsed.confidence[field] ?? 0.7])
+    );
 
     return {
       success: true,
-      data: mergedData,
-      confidence: parsed.confidence,
+      data,
+      changedFields,
+      confidence,
     };
   } catch (error) {
     logger.error('Form prefill error', error, 'AI');

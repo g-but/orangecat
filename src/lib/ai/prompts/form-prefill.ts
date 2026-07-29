@@ -1,39 +1,43 @@
 /**
  * Form Prefill Prompt Templates
  *
- * AI prompts for generating form field values from natural language descriptions.
+ * AI prompts for generating (intent `fill`) and revising (intent `refine`)
+ * form field values from natural language.
+ *
+ * The two intents need genuinely different prompts: filling means "extract
+ * what is stated and leave everything else alone", refining means "the user is
+ * asking you to change something that is already there". Sharing one prompt is
+ * why refinement used to be a no-op.
  */
 
 import type { EntityType } from '@/config/entity-registry';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { USER_OVERRIDABLE_FIELDS, type AiAssistIntent } from '@/config/ai-form-assist';
 import { logger } from '@/utils/logger';
 
 /**
- * System prompt for form prefill AI
+ * Rules for anything the AI *writes* as prose, as opposed to *extracts* as fact.
+ *
+ * This block exists because "only output what you can confidently extract"
+ * produces descriptions like "I offer photography." for a service titled
+ * Photography — technically faithful, useless to a buyer. Facts must not be
+ * invented; sentences must still be written.
  */
-export function getSystemPrompt(entityType: EntityType): string {
-  const meta = ENTITY_REGISTRY[entityType];
-  const entityName = meta?.name || entityType;
+const WRITING_QUALITY_RULES = `WRITING QUALITY (this is where output usually fails — read carefully):
+- Facts and prose are different things. NEVER invent a FACT: prices, dates, locations, stock levels, delivery times, credentials, guarantees, contact details. If a fact is not in the user's text, leave that field out.
+- But DO write real prose for free-text fields. A description is written copy, not an echo of the title.
+- Bad: title "Photography", description "I offer photography." That is a failure. Write at least 3 full sentences a stranger would find useful: what this is, who it is for, and what to expect.
+- Never restate the title as the first sentence of the description.
+- Write plainly and specifically. No hype words ("amazing", "revolutionary", "world-class"), no exclamation marks, no emoji, and never leave filler or placeholder text in a field.
+- Write in the same language the user wrote in.`;
 
-  return `You are a helpful assistant for OrangeCat, an AI-powered platform for economic activity.
-
-Your task is to extract structured data from a user's natural language description to help them create a ${entityName} listing.
-
-IMPORTANT CONTEXT:
+const BITCOIN_RULES = `BITCOIN AND MONEY:
 - OrangeCat settles payments in Bitcoin/Lightning; fiat currencies are for pricing and display only
 - Express Bitcoin amounts in BTC (e.g., 0.001 BTC) EVERYWHERE — in prices and in any title/description text. NEVER write "sats" or "satoshis"; rephrase to BTC even if the user's description used sats.
-- Keep fiat prices in their original currency (CHF, USD, EUR, etc.)
-- Price examples: "0.001 BTC", "CHF 50", "$25", "€100"
+- Keep fiat prices in the currency the user mentioned — do not convert
+- Price examples: "0.001 BTC", "CHF 50", "$25", "€100"`;
 
-RULES:
-1. Only output valid JSON - no markdown, no explanations
-2. Only include fields you can confidently extract from the description
-3. Include a "confidence" object with scores (0-1) for each field
-4. Do not make up information not in the description
-5. For unclear values, omit them rather than guess
-6. Keep prices in the currency the user mentioned — do not convert
-
-OUTPUT FORMAT:
+const OUTPUT_FORMAT = `OUTPUT FORMAT:
 {
   "data": {
     "field_name": "value",
@@ -44,20 +48,86 @@ OUTPUT FORMAT:
     ...
   }
 }`;
+
+/**
+ * System prompt for form prefill / refinement
+ */
+export function getSystemPrompt(entityType: EntityType, intent: AiAssistIntent = 'fill'): string {
+  const meta = ENTITY_REGISTRY[entityType];
+  const entityName = meta?.name || entityType;
+
+  const task =
+    intent === 'refine'
+      ? `The user already has a filled-in ${entityName} form and is asking you to CHANGE it. Apply the change they describe and return the updated values.
+
+REVISION RULES:
+1. The instruction describes a change to make. Make it — never return the current values unchanged.
+2. Return a field ONLY if its value should change. Omit every field that stays the same.
+3. Return complete replacement values, never diffs, fragments or instructions.
+4. Change only what the instruction implies. Do not quietly rewrite unrelated fields.
+5. Never shorten, truncate or downgrade a field you were not asked to change.`
+      : `Extract structured data from the user's natural language description to help them create a ${entityName} listing.
+
+RULES:
+1. Only include fields you can confidently derive from the description
+2. Do not make up factual information that is not in the description
+3. For unclear values, omit them rather than guess`;
+
+  return `You are the form-filling assistant for OrangeCat, an AI-powered platform for economic activity.
+
+${task}
+
+ALWAYS:
+- Output valid JSON only — no markdown, no explanations
+- Include a "confidence" object with a score (0-1) for every field you return
+
+${WRITING_QUALITY_RULES}
+
+${BITCOIN_RULES}
+
+${OUTPUT_FORMAT}`;
+}
+
+/** Drop empty/absent values so prompts only carry real content. */
+function nonEmptyEntries(data?: Record<string, unknown>): Record<string, unknown> {
+  if (!data) {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== '' && v !== null && v !== undefined)
+  );
 }
 
 /**
- * Build the user prompt with field definitions and description
+ * Build the user prompt with field definitions and the user's request
  */
 export function getUserPrompt(
   entityType: EntityType,
   userDescription: string,
   fieldsDescription: string,
   specialInstructions: string,
-  existingData?: Record<string, unknown>
+  existingData?: Record<string, unknown>,
+  intent: AiAssistIntent = 'fill'
 ): string {
   const meta = ENTITY_REGISTRY[entityType];
   const entityName = meta?.name || entityType;
+  const currentValues = nonEmptyEntries(existingData);
+  const special = specialInstructions ? `\nSpecial instructions:\n${specialInstructions}\n` : '';
+
+  if (intent === 'refine') {
+    return `I am editing my ${entityName} listing.
+
+CURRENT FORM VALUES:
+${JSON.stringify(currentValues, null, 2)}
+
+THE CHANGE I WANT:
+"${userDescription}"
+
+Available fields for this ${entityName}:
+${fieldsDescription}
+${special}
+Apply my change to the current values. Output ONLY valid JSON with "data" and "confidence" objects, containing only the fields whose values should change.`;
+  }
 
   let prompt = `I want to create a ${entityName} listing.
 
@@ -66,19 +136,17 @@ Here's my description:
 
 Available fields for this ${entityName}:
 ${fieldsDescription}
+${special}`;
 
-${specialInstructions ? `Special instructions:\n${specialInstructions}\n` : ''}`;
-
-  if (existingData && Object.keys(existingData).length > 0) {
+  if (Object.keys(currentValues).length > 0) {
     // Price and currency are always overridable — if the user mentions them in their description,
     // the AI should pick them up rather than keeping template defaults.
-    const userOverridableFields = new Set(['price', 'currency', 'hourly_rate', 'fixed_price']);
-    const nonEmptyData = Object.entries(existingData).filter(
-      ([k, v]) => v !== '' && v !== null && v !== undefined && !userOverridableFields.has(k)
+    const preserved = Object.fromEntries(
+      Object.entries(currentValues).filter(([k]) => !USER_OVERRIDABLE_FIELDS.includes(k))
     );
-    if (nonEmptyData.length > 0) {
+    if (Object.keys(preserved).length > 0) {
       prompt += `\nPreserve these existing values (do not overwrite):
-${JSON.stringify(Object.fromEntries(nonEmptyData), null, 2)}\n`;
+${JSON.stringify(preserved, null, 2)}\n`;
     }
   }
 
@@ -164,69 +232,5 @@ export function parseAIResponse(
   } catch (error) {
     logger.error('Failed to parse AI response', error, 'AI');
     return null;
-  }
-}
-
-/**
- * Get example descriptions for different entity types (for UI hints)
- */
-export function getExampleDescriptions(entityType: EntityType): string[] {
-  switch (entityType) {
-    case 'product':
-      return [
-        'I want to sell handmade ceramic mugs for CHF 45 each',
-        'Digital download of my artwork collection, $15',
-        'Vintage hardware wallets, limited stock of 5 units, 0.005 BTC each',
-      ];
-    case 'service':
-      return [
-        'Consulting sessions, CHF 150/hour',
-        'Web development services starting at 0.01 BTC',
-        'Lightning Network integration help, 2 hour minimum',
-      ];
-    case 'event':
-      return [
-        'Bitcoin meetup next Saturday at the local cafe',
-        'Online workshop about Lightning Network, January 15th at 7pm',
-        'Hackathon weekend event with 0.1 BTC prize pool',
-      ];
-    case 'project':
-      return [
-        'Building an open-source Bitcoin wallet app, goal of 0.5 BTC',
-        'Documentary about Bitcoin adoption in Africa',
-        'Community education program for local merchants',
-      ];
-    case 'cause':
-      return [
-        'Supporting Bitcoin education in underserved communities',
-        'Funding for open-source development',
-        'Help me replace my hardware wallet that was stolen',
-      ];
-    case 'loan':
-      return [
-        'Need CHF 5,000 for 3 months to expand my business',
-        'Looking to refinance my existing loan at a better rate',
-        'Small business loan for mining equipment, 0.1 BTC',
-      ];
-    case 'investment':
-      return [
-        'Seeking 0.5 BTC in equity investment for my app, revenue-share model',
-        'Raising 1 BTC for solar farm expansion, 8% annual return',
-        'Looking for seed funding 0.25 BTC minimum investment',
-      ];
-    case 'research':
-      return [
-        'Bitcoin adoption study in emerging markets, goal 0.5 BTC',
-        'Computational biology research on protein folding, mixed methods',
-        'Economic impact of decentralized finance on local communities',
-      ];
-    case 'wishlist':
-      return [
-        'Birthday wishlist for my 30th in June',
-        'Wedding registry — we need kitchen essentials and a honeymoon fund',
-        'Personal wishlist for books and electronics',
-      ];
-    default:
-      return ['Describe what you want to create...'];
   }
 }
