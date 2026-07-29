@@ -9,7 +9,7 @@
  * exactly what Cat has learned (privacy-first, ChatGPT-style memory controls).
  */
 
-import { listMemories, deleteMemory, deleteAllMemories } from '@/services/cat/memory';
+import { listMemoriesResult, deleteMemory, deleteAllMemories } from '@/services/cat/memory';
 import { apiSuccess, apiError, apiRateLimited, handleApiError } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
@@ -17,8 +17,15 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
   try {
-    const memories = await listMemories(supabase, user.id);
-    return apiSuccess({ memories });
+    const result = await listMemoriesResult(supabase, user.id);
+    if (!result.ok) {
+      return apiError(
+        'Could not load memories right now. Please try again.',
+        'INTERNAL_ERROR',
+        500
+      );
+    }
+    return apiSuccess({ memories: result.memories });
   } catch (error) {
     return handleApiError(error);
   }

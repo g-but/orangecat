@@ -6,6 +6,7 @@
 import { useRouter } from 'next/navigation';
 import { AlertCircle, Key, X } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
+import { CatStatusButton } from '@/components/ai-chat/CatStatusNote';
 
 interface ErrorDisplayProps {
   error: string;
@@ -43,6 +44,7 @@ export function ErrorDisplay({ error, onRetry, onDismiss }: ErrorDisplayProps) {
                 Try again
               </button>
             )}
+            <CatStatusButton />
           </div>
         </div>
         {onDismiss && (

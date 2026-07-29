@@ -7,16 +7,7 @@
 
 'use client';
 
-import {
-  Search,
-  History,
-  TrendingUp,
-  Users,
-  Target,
-  Clock,
-  ArrowUpRight,
-  Sparkles,
-} from 'lucide-react';
+import { Search, History, TrendingUp, Users, Target, Clock, ArrowUpRight } from 'lucide-react';
 
 interface DropdownItemProps {
   onClick: () => void;
@@ -166,7 +157,7 @@ export function TrendingSearchesSection({
     <div className="p-3 border-b border-subtle">
       <div className="flex items-center mb-2">
         <h4 className="text-xs font-medium text-fg-primary uppercase tracking-wide flex items-center gap-1">
-          <Sparkles className="w-3 h-3" />
+          <TrendingUp className="w-3 h-3" />
           Trending
         </h4>
       </div>

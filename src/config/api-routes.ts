@@ -20,6 +20,7 @@ export const API_ROUTES = {
     CREDITS_TOPUP: '/api/cat/credits/topup',
     MEMORIES: '/api/cat/memories',
     MEMORIES_IMPORT: '/api/cat/memories/import',
+    DIAGNOSE: '/api/cat/diagnose',
     NUDGES: '/api/cat/nudges',
     CONVERSATIONS: '/api/cat/conversations',
     CONVERSATION: (id: string) => `/api/cat/conversations/${id}`,
@@ -90,7 +91,6 @@ export const API_ROUTES = {
   },
   AI: {
     FORM_PREFILL: '/api/ai/form-prefill',
-    PLATFORM_USAGE: '/api/ai/platform-usage',
   },
   AUTH: {
     CALLBACK: '/api/auth/callback',
