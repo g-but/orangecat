@@ -105,31 +105,11 @@ Object.defineProperty(process.env, 'SUPABASE_SERVICE_ROLE_KEY', {
 // Mock fetch globally
 global.fetch = jest.fn();
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-  length: 0,
-  key: jest.fn(),
-};
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-});
-
-// Mock sessionStorage
-const sessionStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-  length: 0,
-  key: jest.fn(),
-};
-Object.defineProperty(window, 'sessionStorage', {
-  value: sessionStorageMock,
-});
+// localStorage / sessionStorage are already replaced above with spy-able,
+// store-backed mocks (createStorageMock) — these are just handles to them.
+// One mock, one source of truth: don't define a second stub here.
+const localStorageMock = window.localStorage as unknown as ReturnType<typeof createStorageMock>;
+const sessionStorageMock = window.sessionStorage as unknown as ReturnType<typeof createStorageMock>;
 
 // Mock window.location
 delete (window as any).location;
@@ -351,7 +331,10 @@ beforeEach(() => {
   // Reset all mocks
   jest.clearAllMocks();
 
-  // Reset localStorage and sessionStorage
+  // Empty the storage backing stores, then reset call history, so every test
+  // starts with clean storage and clean spies.
+  localStorageMock.clear();
+  sessionStorageMock.clear();
   if (localStorageMock.getItem?.mockClear) {
     localStorageMock.getItem.mockClear();
     localStorageMock.setItem.mockClear();
