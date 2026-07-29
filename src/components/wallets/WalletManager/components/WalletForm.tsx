@@ -36,6 +36,7 @@ export function WalletForm({
   onCancel,
   submitLabel = 'Save',
   onFieldFocus,
+  hasSavedConnection = false,
 }: WalletFormProps) {
   const [formData, setFormData] = useState<WalletFormData>({
     label: initialData?.label || '',
@@ -55,7 +56,7 @@ export function WalletForm({
   // The advanced (technical) rails — reveal only if the user already has one
   // saved (editing) or explicitly asks for them.
   const [showAdvanced, setShowAdvanced] = useState(
-    !!initialData?.address_or_xpub || !!initialData?.nwc_connection_uri
+    !!initialData?.address_or_xpub || !!initialData?.nwc_connection_uri || hasSavedConnection
   );
   const [showDetails, setShowDetails] = useState(false);
   const [showGetWallet, setShowGetWallet] = useState(false);
@@ -87,8 +88,15 @@ export function WalletForm({
   const handleSubmit = async () => {
     setError(null);
 
+    // Editing a wallet whose only handle is a saved connection: the secret is
+    // never sent to the browser, so an empty input means "keep what's stored",
+    // not "clear it". Omit the handle fields entirely so the server leaves them
+    // untouched instead of nulling a working connection.
+    const keepsSavedConnection = hasSavedConnection && !walletInput.trim();
+
     // The one hard requirement: a way to actually get paid.
     if (
+      !keepsSavedConnection &&
       !formData.address_or_xpub?.trim() &&
       !formData.lightning_address?.trim() &&
       !formData.nwc_connection_uri?.trim()
@@ -124,6 +132,11 @@ export function WalletForm({
       category: formData.category || 'general',
       behavior_type: formData.behavior_type || 'general',
     };
+    if (keepsSavedConnection) {
+      delete payload.address_or_xpub;
+      delete payload.lightning_address;
+      delete payload.nwc_connection_uri;
+    }
 
     setIsSubmitting(true);
     try {

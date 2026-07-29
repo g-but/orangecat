@@ -10,6 +10,7 @@ import { WalletForm } from './WalletForm';
 import type { WalletCardProps } from '../types';
 import { truncateAddress } from '@/utils/string';
 import { displayBTC } from '@/services/currency/formatting';
+import { getWalletReceiveHandle } from '@/lib/wallet-receive-handle';
 
 export function WalletCard({
   wallet,
@@ -30,6 +31,10 @@ export function WalletCard({
           label: wallet.label,
           description: wallet.description || '',
           address_or_xpub: wallet.address_or_xpub,
+          // Carry the Lightning address through: without it the edit form
+          // opened empty and refused to save, so a wrong Lightning address
+          // could never be corrected and a wallet could not be renamed.
+          lightning_address: wallet.lightning_address,
           category: wallet.category,
           category_icon: wallet.category_icon,
           behavior_type: wallet.behavior_type || 'general',
@@ -41,6 +46,10 @@ export function WalletCard({
         onSubmit={onUpdate}
         onCancel={onCancelEdit}
         submitLabel="Save Changes"
+        // The stored connection is a secret we never send to the browser, so it
+        // cannot be prefilled: tell the form it exists instead, so editing a
+        // label doesn't demand the URI again (or silently drop it).
+        hasSavedConnection={!!wallet.nwc_connection_uri}
       />
     );
   }
@@ -48,35 +57,29 @@ export function WalletCard({
   const categoryInfo = WALLET_CATEGORIES[wallet.category];
   const progressPercent = wallet.goal_amount ? (wallet.balance_btc / wallet.goal_amount) * 100 : 0;
 
-  // Balance is read from the blockchain against `address_or_xpub`. A Lightning
-  // or connection-only wallet has no such address, so its stored balance is
-  // structurally always 0 — rendering "Current Balance 0 BTC" there states a
-  // fact we never measured. Show the balance only where it is actually tracked.
-  const tracksOnChainBalance = !!wallet.address_or_xpub;
 
   // The public receive handle to show + copy. A wallet may have an on-chain
   // address, a Lightning address, or only a wallet connection (NWC — no public
   // handle). Handle all three so a Lightning/NWC-only wallet renders instead of
   // crashing the page on a null address.
-  const receiveHandle = wallet.address_or_xpub
-    ? {
-        label: wallet.wallet_type === 'xpub' ? 'Extended Public Key' : 'Bitcoin Address',
-        display: truncateAddress(wallet.address_or_xpub, 20, 10),
-        copyValue: wallet.address_or_xpub,
-      }
-    : wallet.lightning_address
-      ? {
-          label: 'Lightning Address',
-          display: wallet.lightning_address,
-          copyValue: wallet.lightning_address,
-        }
-      : {
-          label: 'Connected wallet',
-          display: isConnectionUnusable
+  const handle = getWalletReceiveHandle(wallet);
+  // Balance is read from the blockchain against `address_or_xpub`. A Lightning
+  // or connection-only wallet has no such address, so its stored balance is
+  // structurally always 0 — rendering "Current Balance 0 BTC" there states a
+  // fact we never measured. Show the balance only where it is actually tracked.
+  const tracksOnChainBalance = handle.kind === 'onchain';
+  const receiveHandle = {
+    label: handle.label,
+    display:
+      handle.kind === 'onchain' && handle.value
+        ? truncateAddress(handle.value, 20, 10)
+        : handle.kind === 'connection'
+          ? isConnectionUnusable
             ? 'Connection unavailable — payments skip this wallet'
-            : 'Receives Lightning payments via the connected wallet',
-          copyValue: null as string | null,
-        };
+            : 'Receives Lightning payments via the connected wallet'
+          : (handle.value ?? ''),
+    copyValue: handle.value,
+  };
 
   const handleCopy = async () => {
     if (!receiveHandle.copyValue) {

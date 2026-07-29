@@ -44,6 +44,11 @@ export interface WalletFormProps {
   onCancel: () => void;
   submitLabel?: string;
   onFieldFocus?: (field: WalletFieldType) => void;
+  /**
+   * This wallet already has a stored connection (whose secret never reaches the
+   * browser). An empty input then means "keep it", not "clear it".
+   */
+  hasSavedConnection?: boolean;
 }
 
 export interface WalletManagerState {

@@ -11,6 +11,7 @@ import { Wallet, WALLET_CATEGORIES } from '@/types/wallet';
 import BitcoinDonationCard from '@/components/bitcoin/BitcoinDonationCard';
 import BitcoinWalletStatsCompact from '@/components/bitcoin/BitcoinWalletStatsCompact';
 import { WalletsSkeleton } from '@/components/profile/ProfileSkeleton';
+import { getWalletReceiveHandle } from '@/lib/wallet-receive-handle';
 
 interface ProfileWalletSectionProps {
   wallets: Wallet[];
@@ -61,6 +62,7 @@ export default function ProfileWalletSection({
               const progressPercent = wallet.goal_amount
                 ? (wallet.balance_btc / wallet.goal_amount) * 100
                 : 0;
+              const handle = getWalletReceiveHandle(wallet);
 
               return (
                 <div key={wallet.id} className="oc-surface p-6 oc-card-link">
@@ -82,16 +84,19 @@ export default function ProfileWalletSection({
                     </div>
                   </div>
 
-                  {/* Balance */}
-                  <div className="bg-surface-raised rounded-lg p-3 mb-3">
-                    <div className="text-sm text-fg-secondary mb-1">Current Balance</div>
-                    <div className="text-xl font-bold text-bitcoinOrange">
-                      {formatAmountBtc(wallet.balance_btc)}
+                  {/* Balance — read from the chain against the wallet's
+                      address, so it means nothing for a Lightning wallet. */}
+                  {handle.kind === 'onchain' && (
+                    <div className="bg-surface-raised rounded-lg p-3 mb-3">
+                      <div className="text-sm text-fg-secondary mb-1">Current Balance</div>
+                      <div className="text-xl font-bold text-bitcoinOrange">
+                        {formatAmountBtc(wallet.balance_btc)}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Goal progress */}
-                  {wallet.goal_amount && (
+                  {/* Goal progress — tracked from the on-chain balance */}
+                  {handle.kind === 'onchain' && wallet.goal_amount && (
                     <div className="mb-3">
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-fg-secondary">Goal</span>
@@ -112,67 +117,76 @@ export default function ProfileWalletSection({
                     </div>
                   )}
 
-                  {/* QR Code for easy scanning */}
-                  <div className="mb-4 flex justify-center">
-                    <div className="bg-surface-base p-3 rounded-lg border-2 border-default shadow-sm">
-                      <QRCodeSVG
-                        value={`bitcoin:${wallet.address_or_xpub}`}
-                        size={120}
-                        level="H"
-                        includeMargin={false}
-                      />
+                  {/* QR — only when there is something scannable (a Lightning
+                      or connection wallet has no bitcoin: URI). */}
+                  {handle.qrValue && (
+                    <div className="mb-4 flex justify-center">
+                      <div className="bg-surface-base p-3 rounded-lg border-2 border-default shadow-sm">
+                        <QRCodeSVG
+                          value={handle.qrValue}
+                          size={120}
+                          level="H"
+                          includeMargin={false}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Address with copy button */}
+                  {/* Public receive handle — whatever rail this wallet uses */}
                   <div className="pt-3 border-t">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-fg-secondary">
-                        {wallet.wallet_type === 'xpub' ? 'Extended Public Key' : 'Bitcoin Address'}
-                      </span>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(wallet.address_or_xpub);
-                          toast.success('Address copied to clipboard');
-                        }}
-                        className="text-xs text-fg-primary hover:text-fg-primary font-medium"
-                        aria-label="Copy wallet address"
-                      >
-                        <Copy className="w-3 h-3 inline mr-1" />
-                        Copy
-                      </button>
+                      <span className="text-xs text-fg-secondary">{handle.label}</span>
+                      {handle.value && (
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(handle.value as string);
+                            toast.success('Copied to clipboard');
+                          }}
+                          className="text-xs text-fg-primary hover:text-fg-primary font-medium"
+                          aria-label={`Copy ${handle.label}`}
+                        >
+                          <Copy className="w-3 h-3 inline mr-1" />
+                          Copy
+                        </button>
+                      )}
                     </div>
                     <code
                       className="text-xs text-fg-primary block font-mono break-all bg-surface-raised p-2 rounded cursor-pointer hover:bg-surface-raised/80 transition-colors"
                       onClick={() => {
-                        navigator.clipboard.writeText(wallet.address_or_xpub);
-                        toast.success('Address copied to clipboard');
+                        if (handle.value) {
+                          navigator.clipboard.writeText(handle.value);
+                          toast.success('Copied to clipboard');
+                        }
                       }}
-                      title="Click to copy address"
+                      title={handle.value ? 'Click to copy' : undefined}
                     >
-                      {truncateAddress(wallet.address_or_xpub, 20, 10)}
+                      {handle.kind === 'onchain' && handle.value
+                        ? truncateAddress(handle.value, 20, 10)
+                        : (handle.value ?? 'Receives Lightning payments')}
                     </code>
                   </div>
 
-                  {/* Send Button */}
-                  <div className="mt-3 pt-3 border-t">
-                    <Button
-                      onClick={() => {
-                        const bitcoinUri = `bitcoin:${wallet.address_or_xpub}`;
-                        window.location.href = bitcoinUri;
-                        // Fallback: show toast if wallet doesn't open
-                        setTimeout(() => {
-                          toast.info(
-                            "If your wallet didn't open, copy the address and paste it manually"
-                          );
-                        }, 500);
-                      }}
-                      className="w-full bg-bitcoinOrange hover:bg-bitcoinOrange/90 text-white"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Send with Wallet
-                    </Button>
-                  </div>
+                  {/* Send Button — needs a payable URI. An xpub or a wallet
+                      connection has none, and `bitcoin:null` opened nothing. */}
+                  {handle.qrValue && (
+                    <div className="mt-3 pt-3 border-t">
+                      <Button
+                        onClick={() => {
+                          window.location.href = handle.qrValue as string;
+                          // Fallback: show toast if wallet doesn't open
+                          setTimeout(() => {
+                            toast.info(
+                              "If your wallet didn't open, copy the address and paste it manually"
+                            );
+                          }, 500);
+                        }}
+                        className="w-full bg-bitcoinOrange hover:bg-bitcoinOrange/90 text-white"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Send with Wallet
+                      </Button>
+                    </div>
+                  )}
                 </div>
               );
             })}

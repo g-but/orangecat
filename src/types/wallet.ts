@@ -3,7 +3,11 @@
 import { validate as validateBitcoinAddress } from 'bitcoin-address-validation';
 import bs58check from 'bs58check';
 
-type WalletType = 'address' | 'xpub';
+// Reality check: the DB holds wallet_type='lightning' rows (a Lightning address
+// or a wallet connection has no on-chain address at all), so the union and the
+// nullability below must admit them — they did not, which is why the update
+// path could not be typed correctly.
+type WalletType = 'address' | 'xpub' | 'lightning';
 
 export const WALLET_BEHAVIOR_TYPE_VALUES = [
   'general',
@@ -135,9 +139,11 @@ export interface Wallet {
   label: string;
   description: string | null;
 
-  address_or_xpub: string;
+  address_or_xpub: string | null;
   wallet_type: WalletType;
   lightning_address: string | null;
+  /** Encrypted at rest; never rendered. Present only on owner reads. */
+  nwc_connection_uri?: string | null;
 
   category: WalletCategory;
   category_icon: string;

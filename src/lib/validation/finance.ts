@@ -267,7 +267,14 @@ export const walletUpdateSchema = z
   .object({
     label: z.string().min(1, 'Label cannot be empty').max(100).optional(),
     description: z.string().max(500).optional().nullable(),
-    address_or_xpub: z.string().min(1).max(200).optional(),
+    // All three receive handles are editable. They were previously absent from
+    // this schema, so Zod stripped them and PATCH silently reported success
+    // while changing nothing — a user could never correct a wrong Lightning
+    // address or replace a broken wallet connection. Empty string clears the
+    // handle (the form sets exactly one and clears the others).
+    address_or_xpub: z.string().max(200).optional().nullable(),
+    lightning_address: z.string().max(200).optional().nullable(),
+    nwc_connection_uri: z.string().max(1000).optional().nullable(),
     category: z.enum(WALLET_CATEGORY_VALUES).optional(),
     category_icon: z.enum(ALLOWED_CATEGORY_ICONS).optional(),
     goal_amount: z.number().positive().max(1_000_000_000).optional().nullable(),

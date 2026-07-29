@@ -6,6 +6,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { validateAddressOrXpub, detectWalletType, type Wallet } from '@/types/wallet';
+import { isValidLightningAddress } from '@/lib/validation/base';
+import { encrypt } from '@/domain/payments/encryptionService';
 import { logger } from '@/utils/logger';
 import { apiBadRequest, apiForbidden, apiNotFound } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -107,14 +109,67 @@ export function buildWalletUpdates(
   }
 
   if (body.address_or_xpub !== undefined) {
-    const validation = validateAddressOrXpub(body.address_or_xpub);
-    if (!validation.valid) {
-      return { updates: null, error: apiBadRequest(validation.error || 'Invalid address or xpub') };
+    const address = body.address_or_xpub?.trim() ?? '';
+    if (address) {
+      const validation = validateAddressOrXpub(address);
+      if (!validation.valid) {
+        return {
+          updates: null,
+          error: apiBadRequest(validation.error || 'Invalid address or xpub'),
+        };
+      }
+      updates.address_or_xpub = address;
+      updates.wallet_type = detectWalletType(address);
+    } else {
+      // Cleared — the wallet now receives by another rail.
+      updates.address_or_xpub = null;
     }
-    updates.address_or_xpub = body.address_or_xpub.trim();
-    updates.wallet_type = detectWalletType(body.address_or_xpub);
+    // The cached chain balance belongs to the old address either way.
     updates.balance_btc = 0;
     updates.balance_updated_at = null;
+  }
+
+  if (body.lightning_address !== undefined) {
+    const lightningAddress = body.lightning_address?.trim() ?? '';
+    if (lightningAddress && !isValidLightningAddress(lightningAddress)) {
+      return {
+        updates: null,
+        error: apiBadRequest('Lightning address must look like name@wallet.com'),
+      };
+    }
+    updates.lightning_address = lightningAddress || null;
+    if (lightningAddress) {
+      updates.wallet_type = 'lightning';
+    }
+  }
+
+  if (body.nwc_connection_uri !== undefined) {
+    const uri = body.nwc_connection_uri?.trim() ?? '';
+    if (!uri) {
+      updates.nwc_connection_uri = null;
+    } else if (!uri.startsWith('nostr+walletconnect://')) {
+      return {
+        updates: null,
+        error: apiBadRequest('Wallet connection must start with nostr+walletconnect://'),
+      };
+    } else {
+      // The URI carries a spending secret — encrypt at rest, exactly as
+      // createWallet does. A missing key is an ops gap, not a user error.
+      try {
+        updates.nwc_connection_uri = encrypt(uri);
+        updates.wallet_type = 'lightning';
+      } catch (encryptError) {
+        logger.error(
+          'wallet nwc encrypt failed on update',
+          { message: encryptError instanceof Error ? encryptError.message : 'unknown' },
+          'updateWallet'
+        );
+        return {
+          updates: null,
+          error: apiBadRequest('Wallet connections are not available on this deployment yet.'),
+        };
+      }
+    }
   }
 
   updates.updated_at = new Date().toISOString();
