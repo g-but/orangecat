@@ -14,12 +14,22 @@
 -- Both tables are strictly owner-scoped (user_id = auth.uid()), matching the
 -- existing SELECT policies and the platform convention (see cat_memories).
 
+-- Idempotent: at least one of these policies already existed on the box, so the
+-- bare CREATE aborted the transaction and blocked EVERY deploy (the migration
+-- runner rolls back and refuses to swap the release). Postgres has no
+-- CREATE POLICY IF NOT EXISTS, so drop-then-create is the repo convention
+-- (see 20260711000000_loan_offers_select_policy_recursion_fix). Safe to
+-- re-run, and correct on a fresh database.
+
+DROP POLICY IF EXISTS "Users can insert own cat action log" ON public.cat_action_log;
 CREATE POLICY "Users can insert own cat action log" ON public.cat_action_log
   FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
 
+DROP POLICY IF EXISTS "Users can update own cat action log" ON public.cat_action_log;
 CREATE POLICY "Users can update own cat action log" ON public.cat_action_log
   FOR UPDATE USING (user_id = (SELECT auth.uid()))
   WITH CHECK (user_id = (SELECT auth.uid()));
 
+DROP POLICY IF EXISTS "Users can insert own pending cat actions" ON public.cat_pending_actions;
 CREATE POLICY "Users can insert own pending cat actions" ON public.cat_pending_actions
   FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
