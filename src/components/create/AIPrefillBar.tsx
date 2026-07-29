@@ -11,6 +11,23 @@ import Button from '@/components/ui/Button';
 import type { AIPrefillBarProps, AIPrefillResponse } from './types';
 import { getExampleDescriptions } from '@/lib/ai/prompts/form-prefill';
 import type { EntityType } from '@/config/entity-registry';
+import { PREFILL_MIN_INPUT_LENGTH, type PrefillMode } from '@/config/ai-prefill';
+
+/**
+ * Fields whose returned value actually differs from what is in the form.
+ *
+ * A refinement that changes nothing is a failure, not a success — reporting
+ * "Form updated" over an unchanged form is how the original bug stayed
+ * invisible. Values include arrays (tags), so compare structurally.
+ */
+function changedFieldCount(
+  returned: Record<string, unknown>,
+  current: Record<string, unknown> | undefined
+): number {
+  return Object.entries(returned).filter(
+    ([key, value]) => JSON.stringify(current?.[key] ?? null) !== JSON.stringify(value ?? null)
+  ).length;
+}
 
 export function AIPrefillBar({
   entityType,
@@ -38,6 +55,9 @@ export function AIPrefillBar({
   const callAI = useCallback(
     async (prompt: string, isRefinement: boolean) => {
       const setter = isRefinement ? setIsRefining : setIsGenerating;
+      // Editing an existing entity is a refinement even on the first call — the
+      // box asks for "the change you want", not a fresh description.
+      const prefillMode: PrefillMode = isRefinement || isEdit ? 'refine' : 'generate';
       setter(true);
       setError(null);
 
@@ -49,6 +69,7 @@ export function AIPrefillBar({
             entityType,
             description: prompt.trim(),
             existingData,
+            mode: prefillMode,
           }),
         });
 
@@ -63,12 +84,23 @@ export function AIPrefillBar({
           throw new Error(result.error || 'Failed to generate form data');
         }
 
+        const changed = changedFieldCount(result.data, existingData);
+
+        // Never report success over an unchanged form. Keep the instruction in
+        // the box so the user can rephrase instead of retyping it.
+        if (prefillMode === 'refine' && changed === 0) {
+          setError(
+            "AI couldn't apply that change — try naming the field, e.g. \"rewrite the description in English and German\"."
+          );
+          return;
+        }
+
         onPrefill(result.data, result.confidence);
         setHasFilled(true);
 
         if (isRefinement) {
           setRefineInput('');
-          toast.success('Form updated');
+          toast.success(changed === 1 ? '1 field updated' : `${changed} fields updated`);
         } else {
           toast.success(
             isEdit ? 'Changes applied — review below' : 'Form filled — review and adjust below',
@@ -86,11 +118,12 @@ export function AIPrefillBar({
   );
 
   const handleGenerate = useCallback(() => {
-    if (!description.trim() || description.trim().length < 10) {
+    const min = PREFILL_MIN_INPUT_LENGTH[isEdit ? 'refine' : 'generate'];
+    if (description.trim().length < min) {
       setError(
         isEdit
-          ? 'Please describe the change you want (at least 10 characters)'
-          : 'Please describe what you want to create (at least 10 characters)'
+          ? `Please describe the change you want (at least ${min} characters)`
+          : `Please describe what you want to create (at least ${min} characters)`
       );
       return;
     }
@@ -98,7 +131,7 @@ export function AIPrefillBar({
   }, [description, callAI, isEdit]);
 
   const handleRefine = useCallback(() => {
-    if (!refineInput.trim()) {
+    if (refineInput.trim().length < PREFILL_MIN_INPUT_LENGTH.refine) {
       return;
     }
     callAI(refineInput, true);

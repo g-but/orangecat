@@ -21,17 +21,43 @@ import { NextResponse } from 'next/server';
 import { generateFormPrefill } from '@/lib/ai/form-prefill-service';
 import { getEntityConfig } from '@/config/entity-configs/get-config';
 import { isValidEntityType, type EntityType } from '@/config/entity-registry';
+import {
+  DEFAULT_PREFILL_MODE,
+  PREFILL_MIN_INPUT_LENGTH,
+  PREFILL_MODES,
+  type PrefillMode,
+} from '@/config/ai-prefill';
 import { logger } from '@/utils/logger';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 
 /**
  * Request validation schema
+ *
+ * `mode` distinguishes filling an empty form from editing a filled one. It
+ * defaults to `generate` so older clients keep their existing behaviour.
+ * The length floor is per-mode: refinement instructions ("shorter", "in German
+ * too") are legitimately short and were being rejected by a flat 10-char rule.
  */
-const requestSchema = z.object({
-  entityType: z.string().min(1, 'Entity type is required'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  existingData: z.record(z.unknown()).optional(),
-});
+const requestSchema = z
+  .object({
+    entityType: z.string().min(1, 'Entity type is required'),
+    description: z.string().min(1, 'Description is required'),
+    existingData: z.record(z.unknown()).optional(),
+    mode: z.enum(PREFILL_MODES as unknown as [PrefillMode, ...PrefillMode[]]).optional(),
+  })
+  .superRefine((value, ctx) => {
+    const min = PREFILL_MIN_INPUT_LENGTH[value.mode ?? DEFAULT_PREFILL_MODE];
+    if (value.description.trim().length < min) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.too_small,
+        minimum: min,
+        type: 'string',
+        inclusive: true,
+        path: ['description'],
+        message: `Must be at least ${min} characters`,
+      });
+    }
+  });
 
 /**
  * POST /api/ai/form-prefill
@@ -58,6 +84,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     }
 
     const { entityType, description, existingData } = parseResult.data;
+    const mode: PrefillMode = parseResult.data.mode ?? DEFAULT_PREFILL_MODE;
 
     // Validate entity type
     if (!isValidEntityType(entityType)) {
@@ -75,13 +102,21 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       {
         userId: user.id,
         entityType,
+        mode,
         descriptionLength: description.length,
       },
       'AI'
     );
 
     // Generate form prefill using AI
-    const result = await generateFormPrefill(entityType, description, entityConfig, existingData);
+    const result = await generateFormPrefill(
+      entityType,
+      description,
+      entityConfig,
+      existingData,
+      undefined,
+      mode
+    );
 
     if (!result.success) {
       logger.warn(
@@ -89,6 +124,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         {
           userId: user.id,
           entityType,
+          mode,
           error: result.error,
         },
         'AI'
@@ -102,6 +138,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       {
         userId: user.id,
         entityType,
+        mode,
         fieldsGenerated: Object.keys(result.data).length,
       },
       'AI'

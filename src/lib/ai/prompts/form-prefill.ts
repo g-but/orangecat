@@ -6,34 +6,16 @@
 
 import type { EntityType } from '@/config/entity-registry';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { DEFAULT_PREFILL_MODE, type PrefillMode } from '@/config/ai-prefill';
 import { logger } from '@/utils/logger';
 
-/**
- * System prompt for form prefill AI
- */
-export function getSystemPrompt(entityType: EntityType): string {
-  const meta = ENTITY_REGISTRY[entityType];
-  const entityName = meta?.name || entityType;
-
-  return `You are a helpful assistant for OrangeCat, an AI-powered platform for economic activity.
-
-Your task is to extract structured data from a user's natural language description to help them create a ${entityName} listing.
-
-IMPORTANT CONTEXT:
+const BITCOIN_CONTEXT = `IMPORTANT CONTEXT:
 - OrangeCat settles payments in Bitcoin/Lightning; fiat currencies are for pricing and display only
 - Express Bitcoin amounts in BTC (e.g., 0.001 BTC) EVERYWHERE — in prices and in any title/description text. NEVER write "sats" or "satoshis"; rephrase to BTC even if the user's description used sats.
 - Keep fiat prices in their original currency (CHF, USD, EUR, etc.)
-- Price examples: "0.001 BTC", "CHF 50", "$25", "€100"
+- Price examples: "0.001 BTC", "CHF 50", "$25", "€100"`;
 
-RULES:
-1. Only output valid JSON - no markdown, no explanations
-2. Only include fields you can confidently extract from the description
-3. Include a "confidence" object with scores (0-1) for each field
-4. Do not make up information not in the description
-5. For unclear values, omit them rather than guess
-6. Keep prices in the currency the user mentioned — do not convert
-
-OUTPUT FORMAT:
+const OUTPUT_FORMAT = `OUTPUT FORMAT:
 {
   "data": {
     "field_name": "value",
@@ -44,6 +26,62 @@ OUTPUT FORMAT:
     ...
   }
 }`;
+
+/**
+ * System prompt for form prefill AI.
+ *
+ * The two modes are deliberately different instructions, not cosmetic wording.
+ * In `refine` the user is editing values that already exist, so the model is
+ * told to rewrite them — the `generate` rules ("only what you can extract",
+ * "do not make up information") would make an instruction like "make the
+ * description longer" impossible to satisfy.
+ */
+export function getSystemPrompt(
+  entityType: EntityType,
+  mode: PrefillMode = DEFAULT_PREFILL_MODE
+): string {
+  const meta = ENTITY_REGISTRY[entityType];
+  const entityName = meta?.name || entityType;
+
+  if (mode === 'refine') {
+    return `You are a helpful assistant for OrangeCat, an AI-powered platform for economic activity.
+
+The user has a ${entityName} listing form in front of them, already filled in. They will give you an instruction describing how they want it changed. Your task is to APPLY that instruction and return the new values.
+
+${BITCOIN_CONTEXT}
+
+RULES:
+1. Only output valid JSON - no markdown, no explanations
+2. Return ONLY the fields the instruction changes, each with its complete new value (not a diff, not a fragment)
+3. You MUST overwrite existing values when the instruction asks for it — that is the entire point of the request. Never echo a field back unchanged.
+4. Follow the instruction literally, including any request about language, length, tone or detail:
+   - "longer"/"more detail" means substantially expand the text, not reword it
+   - "shorter" means genuinely cut it down
+   - If specific languages are named (e.g. English and German), include ALL of them in the same field value, each version clearly separated
+5. Expanding text is expected to add plausible, concrete detail consistent with the values already in the form. Do not invent facts that contradict them (prices, dates, categories), and never change a field the instruction did not ask about.
+6. Keep prices in the currency already set unless the instruction says otherwise — do not convert
+7. Respect each field's stated constraints and length limits; where no limit is given, keep a description to a few short paragraphs at most
+8. Include a "confidence" object with scores (0-1) for each field you return
+9. If the instruction cannot be applied to any of the available fields, return an empty "data" object rather than guessing
+
+${OUTPUT_FORMAT}`;
+  }
+
+  return `You are a helpful assistant for OrangeCat, an AI-powered platform for economic activity.
+
+Your task is to extract structured data from a user's natural language description to help them create a ${entityName} listing.
+
+${BITCOIN_CONTEXT}
+
+RULES:
+1. Only output valid JSON - no markdown, no explanations
+2. Only include fields you can confidently extract from the description
+3. Include a "confidence" object with scores (0-1) for each field
+4. Do not make up information not in the description
+5. For unclear values, omit them rather than guess
+6. Keep prices in the currency the user mentioned — do not convert
+
+${OUTPUT_FORMAT}`;
 }
 
 /**
@@ -51,14 +89,33 @@ OUTPUT FORMAT:
  */
 export function getUserPrompt(
   entityType: EntityType,
+  userInput: string,
+  fieldsDescription: string,
+  specialInstructions: string,
+  existingData?: Record<string, unknown>,
+  mode: PrefillMode = DEFAULT_PREFILL_MODE
+): string {
+  const meta = ENTITY_REGISTRY[entityType];
+  const entityName = meta?.name || entityType;
+
+  return mode === 'refine'
+    ? buildRefinePrompt(entityName, userInput, fieldsDescription, specialInstructions, existingData)
+    : buildGeneratePrompt(
+        entityName,
+        userInput,
+        fieldsDescription,
+        specialInstructions,
+        existingData
+      );
+}
+
+function buildGeneratePrompt(
+  entityName: string,
   userDescription: string,
   fieldsDescription: string,
   specialInstructions: string,
   existingData?: Record<string, unknown>
 ): string {
-  const meta = ENTITY_REGISTRY[entityType];
-  const entityName = meta?.name || entityType;
-
   let prompt = `I want to create a ${entityName} listing.
 
 Here's my description:
@@ -69,23 +126,65 @@ ${fieldsDescription}
 
 ${specialInstructions ? `Special instructions:\n${specialInstructions}\n` : ''}`;
 
-  if (existingData && Object.keys(existingData).length > 0) {
-    // Price and currency are always overridable — if the user mentions them in their description,
-    // the AI should pick them up rather than keeping template defaults.
-    const userOverridableFields = new Set(['price', 'currency', 'hourly_rate', 'fixed_price']);
-    const nonEmptyData = Object.entries(existingData).filter(
-      ([k, v]) => v !== '' && v !== null && v !== undefined && !userOverridableFields.has(k)
-    );
-    if (nonEmptyData.length > 0) {
-      prompt += `\nPreserve these existing values (do not overwrite):
-${JSON.stringify(Object.fromEntries(nonEmptyData), null, 2)}\n`;
-    }
+  const filled = nonEmptyEntries(existingData, PRICE_FIELDS);
+  if (filled.length > 0) {
+    prompt += `\nPreserve these existing values (do not overwrite):
+${JSON.stringify(Object.fromEntries(filled), null, 2)}\n`;
   }
 
   prompt += `
 Extract the relevant field values from my description. Output ONLY valid JSON with "data" and "confidence" objects.`;
 
   return prompt;
+}
+
+function buildRefinePrompt(
+  entityName: string,
+  instruction: string,
+  fieldsDescription: string,
+  specialInstructions: string,
+  existingData?: Record<string, unknown>
+): string {
+  // Every filled field is shown, prices included: in refine mode the current
+  // values are context for the edit, never a set of values to protect.
+  const current = nonEmptyEntries(existingData);
+
+  return `I am editing my ${entityName} listing.
+
+${
+  current.length > 0
+    ? `These are the values currently in the form:
+${JSON.stringify(Object.fromEntries(current), null, 2)}`
+    : 'The form is currently empty.'
+}
+
+This is what I want you to change:
+"${instruction}"
+
+Available fields for this ${entityName}:
+${fieldsDescription}
+
+${specialInstructions ? `Special instructions:\n${specialInstructions}\n` : ''}
+Apply my instruction to the current values. Output ONLY valid JSON with "data" (every field you changed, each holding its complete new value) and "confidence" objects. Do not include fields my instruction did not ask you to change.`;
+}
+
+/**
+ * Price and currency are always overridable in `generate` — if the user mentions
+ * them in their description, the AI should pick them up rather than keeping
+ * template defaults.
+ */
+const PRICE_FIELDS = new Set(['price', 'currency', 'hourly_rate', 'fixed_price']);
+
+function nonEmptyEntries(
+  data: Record<string, unknown> | undefined,
+  exclude?: Set<string>
+): [string, unknown][] {
+  if (!data) {
+    return [];
+  }
+  return Object.entries(data).filter(
+    ([k, v]) => v !== '' && v !== null && v !== undefined && !exclude?.has(k)
+  );
 }
 
 /**

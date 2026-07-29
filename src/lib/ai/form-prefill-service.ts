@@ -7,6 +7,12 @@
 
 import type { EntityType } from '@/config/entity-registry';
 import { isValidEntityType } from '@/config/entity-registry';
+import {
+  DEFAULT_PREFILL_MODE,
+  PREFILL_MAX_TOKENS,
+  PREFILL_MIN_INPUT_LENGTH,
+  type PrefillMode,
+} from '@/config/ai-prefill';
 import type { AIPrefillResponse, EntityConfig } from '@/components/create/types';
 import { logger } from '@/utils/logger';
 import {
@@ -44,7 +50,8 @@ export async function generateFormPrefill(
   description: string,
   entityConfig: EntityConfig,
   existingData?: Record<string, unknown>,
-  config?: FormPrefillConfig
+  config?: FormPrefillConfig,
+  mode: PrefillMode = DEFAULT_PREFILL_MODE
 ): Promise<AIPrefillResponse> {
   // Validate entity type
   if (!isValidEntityType(entityType)) {
@@ -56,13 +63,17 @@ export async function generateFormPrefill(
     };
   }
 
-  // Validate description
-  if (!description || description.trim().length < 10) {
+  // Validate input length (a refinement instruction is legitimately short)
+  const minLength = PREFILL_MIN_INPUT_LENGTH[mode];
+  if (!description || description.trim().length < minLength) {
     return {
       success: false,
       data: {},
       confidence: {},
-      error: 'Please provide a longer description (at least 10 characters)',
+      error:
+        mode === 'refine'
+          ? `Please describe the change you want (at least ${minLength} characters)`
+          : `Please provide a longer description (at least ${minLength} characters)`,
     };
   }
 
@@ -73,13 +84,14 @@ export async function generateFormPrefill(
     const specialInstructions = getSpecialFieldInstructions(entityType as EntityType);
 
     // Build prompts
-    const systemPrompt = getSystemPrompt(entityType as EntityType);
+    const systemPrompt = getSystemPrompt(entityType as EntityType, mode);
     const userPrompt = getUserPrompt(
       entityType as EntityType,
       description,
       fieldsPrompt,
       specialInstructions,
-      existingData
+      existingData,
+      mode
     );
 
     // Determine provider: Groq first, OpenRouter fallback
@@ -123,7 +135,7 @@ export async function generateFormPrefill(
           { role: 'user', content: userPrompt },
         ],
         temperature: config?.temperature ?? 0.3,
-        max_tokens: config?.maxTokens ?? 1000,
+        max_tokens: config?.maxTokens ?? PREFILL_MAX_TOKENS,
         ...(useGroq ? {} : { response_format: { type: 'json_object' } }),
       }),
     });
@@ -163,7 +175,19 @@ export async function generateFormPrefill(
       };
     }
 
-    // Merge with existing data (preserve user's input)
+    // In `refine` the user's instruction IS a request to change filled fields,
+    // so the AI's values are returned untouched. Re-applying existingData here
+    // (as generate does) silently reverted every edit — "make the description
+    // longer" came back as the original description, with a success toast.
+    if (mode === 'refine') {
+      return {
+        success: true,
+        data: parsed.data,
+        confidence: parsed.confidence,
+      };
+    }
+
+    // In `generate` the user typed those values themselves; never clobber them.
     const mergedData = { ...parsed.data };
     if (existingData) {
       for (const [key, value] of Object.entries(existingData)) {

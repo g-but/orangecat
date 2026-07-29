@@ -20,6 +20,7 @@ import { ReactNode, ComponentType } from 'react';
 import { LucideIcon } from 'lucide-react';
 import { ZodType, ZodTypeDef } from 'zod';
 import type { EntityType } from '@/config/entity-registry';
+import type { PrefillMode } from '@/config/ai-prefill';
 
 // ==================== FIELD TYPES ====================
 
@@ -359,10 +360,15 @@ export interface UseTemplateSelectionReturn<T extends Record<string, unknown>> {
 export interface AIPrefillRequest {
   /** Entity type to generate fields for */
   entityType: string;
-  /** User's natural language description */
+  /** User's natural language description (generate) or edit instruction (refine) */
   description: string;
-  /** Any fields already filled (to preserve user input) */
+  /**
+   * Fields already filled. In `generate` these are preserved; in `refine` they
+   * are the values the instruction operates on and may be rewritten.
+   */
   existingData?: Record<string, unknown>;
+  /** Which intent this request is. Defaults to `generate`. */
+  mode?: PrefillMode;
 }
 
 /**
