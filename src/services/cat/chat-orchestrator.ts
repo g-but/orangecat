@@ -58,6 +58,9 @@ export const catChatBodySchema = z.object({
   preferredCurrency: z.string().max(8).optional(),
   locale: z.string().max(20).optional(),
   lastVisitedPath: z.string().max(200).optional(),
+  /** The page the user is on right now (global Cat overlay), + its entity if any. */
+  currentPath: z.string().max(200).optional(),
+  currentEntity: z.object({ type: z.string().max(32), ref: z.string().max(120) }).optional(),
 });
 
 export type CatChatBody = z.infer<typeof catChatBodySchema>;
@@ -194,6 +197,8 @@ export async function orchestrateCatChat(
     preferredCurrency,
     locale,
     lastVisitedPath,
+    currentPath,
+    currentEntity,
     conversationId: requestedConversationId,
   } = body;
 
@@ -237,6 +242,8 @@ export async function orchestrateCatChat(
       preferredCurrency,
       locale,
       lastVisitedPath,
+      currentPath,
+      currentEntity,
     }),
     recallMemories(supabase, user.id, message),
   ]);
@@ -522,7 +529,6 @@ export async function orchestrateCatChat(
       },
     });
     return applyRateLimitHeaders(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       new Response(readable, {
         status: 200,
         headers: {
