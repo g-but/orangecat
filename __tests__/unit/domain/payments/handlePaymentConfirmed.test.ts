@@ -56,9 +56,13 @@ const onchainIntent = {
  *   [ intent status update, order update ].  rpc() resolves cleanly.
  */
 function makeSupabase(orderUpdateError: unknown) {
-  const awaitQueue: Array<{ error: unknown }> = [{ error: null }, { error: orderUpdateError }];
+  // [ paid-transition claim (returns the row = we won), order update ]
+  const awaitQueue: Array<{ data?: unknown; error: unknown }> = [
+    { data: [{ id: PI_ID }], error: null },
+    { error: orderUpdateError },
+  ];
   const builder: Record<string, unknown> = {};
-  for (const m of ['select', 'update', 'eq', 'in']) {
+  for (const m of ['select', 'update', 'eq', 'neq', 'in']) {
     builder[m] = jest.fn(() => builder);
   }
   builder.single = jest.fn(() => Promise.resolve({ data: onchainIntent, error: null }));
@@ -89,12 +93,14 @@ const tipIntent = {
 /** Builder returning `intent`; the tip path only awaits ONE update (mark paid). */
 function makeSupabaseReturning(intent: unknown) {
   const builder: Record<string, unknown> = {};
-  for (const m of ['select', 'update', 'eq', 'in']) {
+  for (const m of ['select', 'update', 'eq', 'neq', 'in']) {
     builder[m] = jest.fn(() => builder);
   }
   builder.single = jest.fn(() => Promise.resolve({ data: intent, error: null }));
+  // Awaited writes resolve as a won claim (the conditional paid-transition
+  // returns the row it updated).
   builder.then = (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) =>
-    Promise.resolve({ error: null }).then(resolve, reject);
+    Promise.resolve({ data: [{ id: PI_ID }], error: null }).then(resolve, reject);
   const rpc = jest.fn(() => Promise.resolve({ error: null }));
   return { from: jest.fn(() => builder), rpc } as never;
 }

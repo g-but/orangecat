@@ -93,15 +93,17 @@ describe('checkPaymentStatus — lightning_address + verify URL', () => {
   function makeSupabase(intent: Record<string, unknown>) {
     const update = jest.fn();
     const builder: Record<string, unknown> = {};
-    for (const m of ['select', 'update', 'eq', 'in']) {
+    for (const m of ['select', 'update', 'eq', 'neq', 'in']) {
       builder[m] = jest.fn((...args: unknown[]) => {
         if (m === 'update') update(...args);
         return builder;
       });
     }
     builder.single = jest.fn(() => Promise.resolve({ data: intent, error: null }));
+    // The paid transition is a conditional UPDATE … .neq('status','paid').select('id'):
+    // a returned row means THIS caller won the claim and owns the side-effects.
     builder.then = (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) =>
-      Promise.resolve({ error: null }).then(resolve, reject);
+      Promise.resolve({ data: [{ id: intent.id }], error: null }).then(resolve, reject);
     return { client: { from: jest.fn(() => builder) } as never, update };
   }
 

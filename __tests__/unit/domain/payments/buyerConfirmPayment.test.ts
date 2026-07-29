@@ -43,10 +43,15 @@ function makeSupabase(opts: {
   intent: Record<string, unknown> | null;
   statusUpdateError?: unknown;
 }) {
-  const awaitQueue: Array<{ error: unknown }> = [{ error: opts.statusUpdateError ?? null }];
+  // The status flip is now a claim: it returns the row when this caller won it.
+  const awaitQueue: Array<{ data?: unknown; error: unknown }> = [
+    opts.statusUpdateError
+      ? { data: null, error: opts.statusUpdateError }
+      : { data: [{ id: PI_ID }], error: null },
+  ];
 
   const builder: Record<string, unknown> = {};
-  for (const m of ['select', 'update', 'eq', 'in']) {
+  for (const m of ['select', 'update', 'eq', 'neq', 'in']) {
     builder[m] = jest.fn(() => builder);
   }
   builder.single = jest.fn(() => Promise.resolve({ data: opts.intent, error: null }));

@@ -702,7 +702,49 @@ async function updatePaymentStatus(
 }
 
 /**
+ * Claim the transition to `paid`, exactly once.
+ *
+ * Settlement is observed, never owned: OrangeCat is non-custodial, so the truth
+ * lives in the recipient's wallet and we learn about it by asking (a browser
+ * poll, a background sweep, a recipient confirming). Any number of observers
+ * may therefore report the same payment at the same moment.
+ *
+ * A plain `UPDATE … SET status='paid'` let every one of them proceed to the
+ * side-effects: inventory would be decremented twice (overselling), Supporter
+ * plans granted twice, the recipient notified twice, webhooks fanned twice.
+ *
+ * The row's own status is the lock. A conditional update is atomic in Postgres,
+ * so exactly one caller can move a not-yet-paid intent to paid, and only that
+ * caller is entitled to run the settlement side-effects.
+ *
+ * @returns true when THIS caller won the transition; false when someone else
+ *          already settled it (a safe, silent no-op).
+ */
+async function claimPaidTransition(
+  supabase: SupabaseClient,
+  paymentIntentId: string
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from(DATABASE_TABLES.PAYMENT_INTENTS)
+    .update({ status: STATUS.PAYMENT_INTENTS.PAID, paid_at: new Date().toISOString() })
+    .eq('id', paymentIntentId)
+    .neq('status', STATUS.PAYMENT_INTENTS.PAID)
+    .select('id');
+
+  // Same reasoning as updatePaymentStatus: a swallowed error here would leave
+  // money state diverging from reality while the caller reports success.
+  if (error) {
+    logger.error('Failed to claim paid transition', { paymentIntentId, error });
+    throw new Error('Failed to update payment status');
+  }
+
+  return (data?.length ?? 0) > 0;
+}
+
+/**
  * Handle side-effects when a payment is confirmed as paid.
+ *
+ * Runs at most once per payment intent — see {@link claimPaidTransition}.
  */
 async function handlePaymentConfirmed(
   supabase: SupabaseClient,
@@ -712,8 +754,18 @@ async function handlePaymentConfirmed(
   const entityType = paymentIntent.entity_type as EntityType;
   const entityId = paymentIntent.entity_id;
 
-  // Mark payment intent as paid
-  await updatePaymentStatus(supabase, piId, 'paid');
+  // Mark payment intent as paid — and only continue if we were the observer
+  // that actually moved it there. Losing the race means another poller (or the
+  // recipient's confirmation) already ran every side-effect below.
+  const claimed = await claimPaidTransition(supabase, piId);
+  if (!claimed) {
+    logger.info(
+      'Payment already settled by another observer — skipping duplicate side-effects',
+      { paymentIntentId: piId },
+      'paymentFlowService'
+    );
+    return;
+  }
 
   // A tip is a person-to-person gift with no entity — none of the entity-scoped
   // side-effects below apply (and getEntityMetadata would throw on a null type).
