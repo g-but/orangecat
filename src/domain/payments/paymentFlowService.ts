@@ -496,10 +496,13 @@ async function refreshPaymentStatus(
     return { status: pi.status, paid_at: pi.paid_at };
   }
 
-  if (pi.expires_at && new Date(pi.expires_at) < new Date()) {
-    await updatePaymentStatus(supabase, pi.id, STATUS.PAYMENT_INTENTS.EXPIRED);
-    return { status: STATUS.PAYMENT_INTENTS.EXPIRED, paid_at: null };
-  }
+  // NOTE: expiry is evaluated AFTER asking the rail, at the end of this
+  // function. Declaring "expired" first meant a payment that landed in the last
+  // seconds before expiry — with nobody polling at that moment — was recorded as
+  // expired even though the money had arrived in the recipient's wallet. The
+  // invoice deadline governs whether a NEW payment can be made; it says nothing
+  // about whether one already was, and verify endpoints still report settled
+  // afterwards. Ask first, expire only on a genuine no.
 
   if (pi.payment_method === 'nwc' && pi.payment_hash) {
     const paid = await checkNWCPaymentStatus(supabase, pi);
@@ -532,7 +535,27 @@ async function refreshPaymentStatus(
     }
   }
 
+  // The rail says no payment arrived. Only now is expiry the truth.
+  if (pi.expires_at && new Date(pi.expires_at) < new Date()) {
+    await updatePaymentStatus(supabase, pi.id, STATUS.PAYMENT_INTENTS.EXPIRED);
+    return { status: STATUS.PAYMENT_INTENTS.EXPIRED, paid_at: null };
+  }
+
   return { status: pi.status, paid_at: pi.paid_at };
+}
+
+/**
+ * Reconcile one payment intent against its rail — the single detection path,
+ * shared by the payer's browser poll and the background sweep.
+ *
+ * Deliberately NOT a second implementation: a copy would drift, and then two
+ * parts of the product would disagree about whether money arrived.
+ */
+export async function reconcilePaymentIntent(
+  supabase: SupabaseClient,
+  pi: PaymentIntent
+): Promise<PaymentStatusResult> {
+  return refreshPaymentStatus(supabase, pi);
 }
 
 /**
