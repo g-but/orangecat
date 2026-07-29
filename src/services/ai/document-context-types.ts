@@ -247,6 +247,13 @@ export interface FullUserContext {
   stakeholders: StakeholderSummary[];
   githubRepos: GitHubRepoSummary[];
   paymentCapabilities: PaymentCapabilities;
+  /**
+   * Outcome feedback loop: what actually happened to the entities Cat created
+   * with this user (published? funded?), derived from cat_action_log + entity
+   * state + settled payments. Optional: only the full Cat context fetch
+   * populates it; null when the signal is unavailable.
+   */
+  trackRecord?: import('@/services/cat/track-record').CatTrackRecord | null;
   /** Runtime session context — what's true RIGHT NOW. See RuntimeContext for fields. */
   runtime: RuntimeContext;
   stats: {
