@@ -30,6 +30,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { CatTrackRecordCard } from '@/components/ai-chat/CatTrackRecordCard';
 import { ROUTES } from '@/config/routes';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
@@ -116,6 +117,9 @@ export function CatContextTab() {
           )}
         </div>
       )}
+
+      {/* Outcome feedback loop: what Cat-created entities actually did */}
+      <CatTrackRecordCard />
 
       {/* Add context button */}
       <div className="flex items-center justify-between gap-3 rounded-md border border-subtle bg-surface-raised/30 p-4">
