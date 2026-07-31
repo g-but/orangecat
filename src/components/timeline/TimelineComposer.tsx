@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Globe, ImagePlus, Loader2, Lock, X } from 'lucide-react';
+import { Globe, Lock } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { usePostComposer } from '@/hooks/usePostComposerNew';
 import { useContentEditableEditor } from '@/hooks/useContentEditableEditor';
@@ -26,10 +26,11 @@ import {
 import PostAiButton from './PostAiButton';
 import ReplyAiButton from './ReplyAiButton';
 import PostAiEditMenu from './PostAiEditMenu';
-import ImageSuggestPicker from '@/components/images/ImageSuggestPicker';
-import { uploadUserImage } from '@/services/images/upload';
-import { toPostImageMeta } from '@/types/timeline';
-import type { StockImage } from '@/services/images/types';
+import {
+  ComposerImageAttachment,
+  ComposerImageChip,
+  useComposerImage,
+} from './ComposerImageAttachment';
 
 export interface TimelineComposerProps {
   targetOwnerId?: string;
@@ -67,8 +68,6 @@ const TimelineComposer = React.memo(function TimelineComposer({
 }: TimelineComposerProps) {
   const { user, profile } = useAuth();
   const [showProjects, setShowProjects] = useState(false);
-  const [showImagePicker, setShowImagePicker] = useState(false);
-  const [pastingImage, setPastingImage] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
@@ -111,37 +110,13 @@ const TimelineComposer = React.memo(function TimelineComposer({
     ? TIMELINE_COPY.composePlaceholder
     : `Write on ${targetName}...`;
 
-  // Pasting a screenshot/photo into the editor attaches it directly —
-  // zero clicks, same upload path as the picker's Upload tab.
-  const handlePasteFiles = useCallback(
-    async (files: File[]) => {
-      const file = files[0];
-      if (!file || !user?.id || pastingImage) {
-        return;
-      }
-      setPastingImage(true);
-      const result = await uploadUserImage(user.id, file, 'post-image');
-      setPastingImage(false);
-      if (result.success && result.url) {
-        postComposer.setImage(
-          toPostImageMeta({
-            fullUrl: result.url,
-            title: file.name.replace(/\.[^.]+$/, ''),
-            creator: null,
-            license: '',
-            sourceUrl: null,
-          })
-        );
-      }
-    },
-    [user?.id, postComposer, pastingImage]
-  );
+  const composerImage = useComposerImage({ userId: user?.id, setImage: postComposer.setImage });
 
   const { editorRef, handleInput, handlePaste, handleKeyDown, handleFormat } =
     useContentEditableEditor({
       content: postComposer.content,
       onContentChange: postComposer.setContent,
-      onPasteFiles: handlePasteFiles,
+      onPasteFiles: composerImage.handlePasteFiles,
       onSubmit: () => {
         if (!postComposer.isPosting && postComposer.content.trim()) {
           postComposer.handlePost();
@@ -166,14 +141,6 @@ const TimelineComposer = React.memo(function TimelineComposer({
   const handleOpenProjects = useCallback(() => {
     setShowProjects(true);
   }, []);
-
-  const handlePickImage = useCallback(
-    (img: StockImage) => {
-      postComposer.setImage(toPostImageMeta(img));
-      setShowImagePicker(false);
-    },
-    [postComposer]
-  );
 
   const isButtonDisabled = useMemo(
     () =>
@@ -235,44 +202,16 @@ const TimelineComposer = React.memo(function TimelineComposer({
             />
           )}
 
-          {pastingImage && (
-            <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-fg-tertiary">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Adding photo…
-            </div>
-          )}
-
-          {postComposer.image && (
-            <div className="relative mt-3 inline-block max-w-full">
-              {/* eslint-disable-next-line @next/next/no-img-element -- may be an external (Openverse) host, not in next/image remotePatterns */}
-              <img
-                src={postComposer.image.url}
-                alt={postComposer.image.alt}
-                className="max-h-56 max-w-full rounded-lg border border-subtle object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => postComposer.setImage(null)}
-                disabled={postComposer.isPosting}
-                aria-label="Remove image"
-                className="absolute right-2 top-2 rounded-full border border-subtle bg-surface-base/90 p-1 text-fg-primary transition-colors hover:bg-surface-base"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-
-          {showImagePicker && !postComposer.image && (
-            <div className="mt-3">
-              <ImageSuggestPicker
-                title=""
-                body={postComposer.content}
-                heading="Add an image"
-                onPick={handlePickImage}
-                onClose={() => setShowImagePicker(false)}
-              />
-            </div>
-          )}
+          <ComposerImageAttachment
+            image={postComposer.image}
+            isPasting={composerImage.isPasting}
+            showPicker={composerImage.showPicker}
+            content={postComposer.content}
+            disabled={postComposer.isPosting}
+            onPick={composerImage.handlePick}
+            onRemove={() => postComposer.setImage(null)}
+            onClosePicker={composerImage.closePicker}
+          />
 
           <ComposerMessages error={postComposer.error} success={postComposer.postSuccess} />
 
@@ -296,21 +235,11 @@ const TimelineComposer = React.memo(function TimelineComposer({
                   disabled={postComposer.isPosting}
                 />
               )}
-              <button
-                type="button"
-                onClick={() => setShowImagePicker(v => !v)}
+              <ComposerImageChip
+                active={composerImage.showPicker || Boolean(postComposer.image)}
                 disabled={postComposer.isPosting}
-                className={cn(
-                  TIMELINE_SURFACE.chip,
-                  (showImagePicker || postComposer.image) && TIMELINE_SURFACE.chipActive,
-                  'gap-1.5'
-                )}
-                title="Add a free image (AI-suggested from your post)"
-                aria-expanded={showImagePicker}
-              >
-                <ImagePlus className="h-4 w-4" />
-                Image
-              </button>
+                onToggle={composerImage.togglePicker}
+              />
               {!simpleMode && <TextFormatToolbar onFormat={handleFormat} />}
 
               {!simpleMode && allowProjectSelection && postComposer.userProjects.length > 0 && (

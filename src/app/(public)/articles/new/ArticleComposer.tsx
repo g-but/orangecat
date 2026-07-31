@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Eye, PenLine } from 'lucide-react';
@@ -21,18 +21,9 @@ import { useMarkdownTextarea } from '@/components/articles/useMarkdownTextarea';
 import AiWriterPanel from '@/components/articles/AiWriterPanel';
 import ArticleAiControls from '@/components/articles/ArticleAiControls';
 import CoverImageUpload from '@/components/articles/CoverImageUpload';
+import { useArticleLocalDraft } from '@/hooks/useArticleLocalDraft';
 import ImageSuggestPicker from '@/components/images/ImageSuggestPicker';
 import type { StockImage } from '@/services/images/types';
-
-const DRAFT_KEY = 'oc:draft:article';
-
-interface DraftShape {
-  title: string;
-  excerpt: string;
-  coverImage: string;
-  body: string;
-  visibility: TimelineVisibility;
-}
 
 /** Existing article passed when the composer is opened in edit mode. */
 export interface ArticleInitial {
@@ -62,60 +53,25 @@ export default function ArticleComposer({
   const [tab, setTab] = useState<'write' | 'preview'>('write');
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [restored, setRestored] = useState(false);
   // Which target the AI image picker is open for (null = closed).
   const [imagePicker, setImagePicker] = useState<null | 'cover' | 'inline'>(null);
 
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const md = useMarkdownTextarea(bodyRef, body, setBody);
 
-  // Restore an in-progress draft once on mount (new articles only — never clobber
-  // an article being edited with a stale local draft).
-  useEffect(() => {
-    if (isEditing) {
-      return;
-    }
-    try {
-      const raw = localStorage.getItem(DRAFT_KEY);
-      if (!raw) {
-        return;
+  const localDraft = useArticleLocalDraft({
+    enabled: !isEditing,
+    draft: { title, excerpt, coverImage, body, visibility },
+    onRestore: d => {
+      setTitle(d.title ?? '');
+      setExcerpt(d.excerpt ?? '');
+      setCoverImage(d.coverImage ?? '');
+      setBody(d.body ?? '');
+      if (d.visibility) {
+        setVisibility(d.visibility);
       }
-      const d = JSON.parse(raw) as Partial<DraftShape>;
-      if (d.title || d.body) {
-        setTitle(d.title ?? '');
-        setExcerpt(d.excerpt ?? '');
-        setCoverImage(d.coverImage ?? '');
-        setBody(d.body ?? '');
-        if (d.visibility) {
-          setVisibility(d.visibility);
-        }
-        setRestored(true);
-      }
-    } catch {
-      /* ignore corrupt draft */
-    }
-  }, [isEditing]);
-
-  // Autosave (debounced) whenever content changes (new articles only).
-  useEffect(() => {
-    if (isEditing) {
-      return;
-    }
-    if (!title && !body && !excerpt && !coverImage) {
-      return;
-    }
-    const id = setTimeout(() => {
-      try {
-        localStorage.setItem(
-          DRAFT_KEY,
-          JSON.stringify({ title, excerpt, coverImage, body, visibility } satisfies DraftShape)
-        );
-      } catch {
-        /* storage full / disabled — non-fatal */
-      }
-    }, 600);
-    return () => clearTimeout(id);
-  }, [isEditing, title, excerpt, coverImage, body, visibility]);
+    },
+  });
 
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
   const readingTime = wordCount ? estimateReadingTime(body) : 0;
@@ -128,7 +84,7 @@ export default function ArticleComposer({
     }
     setBody(draft.body);
     setTab('write');
-    setRestored(false);
+    localDraft.dismissRestored();
   }
 
   function handlePickImage(img: StockImage) {
@@ -191,7 +147,7 @@ export default function ArticleComposer({
       return;
     }
     try {
-      localStorage.removeItem(DRAFT_KEY);
+      localDraft.clearDraft();
     } catch {
       /* ignore */
     }
@@ -224,7 +180,7 @@ export default function ArticleComposer({
           </div>
         )}
 
-        {restored && (
+        {localDraft.restored && (
           <p className="mb-4 rounded-md border border-subtle bg-surface-raised/30 px-3 py-2 text-xs text-fg-secondary">
             Restored your saved draft.
           </p>
