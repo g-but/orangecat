@@ -1,15 +1,16 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Search, Loader2, X, ImageOff } from 'lucide-react';
+import { Search, Loader2, X, ImageOff, Sparkles } from 'lucide-react';
 import { suggestArticleImages } from '@/services/articles/image-client';
+import ImageGeneratePanel from '@/components/images/ImageGeneratePanel';
 import type { StockImage } from '@/services/images/types';
 import { cn } from '@/lib/utils';
 
 /**
- * AI image picker: on open it turns the given text into concrete search terms
- * and shows royalty-free (CC0 / public-domain) candidates; the user can also
- * search manually or click a suggested term. Picking one hands back the
+ * AI image picker with two modes: Search (Openverse CC0/public-domain, AI
+ * turns the given text into search terms) and Generate (the user's OWN
+ * OpenAI/xAI key — see ImageGeneratePanel). Picking either way hands back a
  * full-res URL. Used for article covers, inline article images, and the
  * timeline post composer.
  */
@@ -26,6 +27,7 @@ export default function ImageSuggestPicker({
   onPick: (image: StockImage) => void;
   onClose: () => void;
 }) {
+  const [mode, setMode] = useState<'search' | 'generate'>('search');
   const [images, setImages] = useState<StockImage[]>([]);
   const [queries, setQueries] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,98 +70,137 @@ export default function ImageSuggestPicker({
         </button>
       </div>
 
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          if (manual.trim()) {
-            void load(manual.trim());
-          }
-        }}
-        className="mb-2 flex gap-2"
-      >
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-tertiary" />
-          <input
-            type="text"
-            value={manual}
-            onChange={e => setManual(e.target.value)}
-            placeholder="Search free images…"
-            aria-label="Search images"
-            className="w-full rounded-md border border-default bg-surface-page py-1.5 pl-8 pr-3 text-sm text-fg-primary placeholder:text-fg-tertiary focus:border-accent-warm focus:outline-none"
-          />
-        </div>
+      <div className="mb-2 flex gap-1.5" role="tablist" aria-label="Image source">
         <button
-          type="submit"
-          disabled={!manual.trim() || loading}
-          className="rounded-md border border-default px-3 py-1.5 text-sm font-medium text-fg-primary transition-colors hover:bg-surface-raised disabled:opacity-50"
+          type="button"
+          role="tab"
+          aria-selected={mode === 'search'}
+          onClick={() => setMode('search')}
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors',
+            mode === 'search'
+              ? 'border-default bg-surface-raised font-medium text-fg-primary'
+              : 'border-subtle text-fg-secondary hover:border-default hover:text-fg-primary'
+          )}
         >
-          Search
+          <Search className="h-3.5 w-3.5" />
+          Search free photos
         </button>
-      </form>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'generate'}
+          onClick={() => setMode('generate')}
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors',
+            mode === 'generate'
+              ? 'border-default bg-surface-raised font-medium text-fg-primary'
+              : 'border-subtle text-fg-secondary hover:border-default hover:text-fg-primary'
+          )}
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          Generate
+        </button>
+      </div>
 
-      {queries.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          {queries.map(q => (
-            <button
-              key={q}
-              type="button"
-              onClick={() => {
-                setManual(q);
-                void load(q);
-              }}
-              className="rounded-full border border-subtle px-2.5 py-1 text-xs text-fg-secondary transition-colors hover:border-default hover:text-fg-primary"
-            >
-              {q}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="flex items-center justify-center gap-2 py-10 text-sm text-fg-tertiary">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Finding images…
-        </div>
-      ) : error ? (
-        <p className="py-6 text-center text-xs text-status-negative">{error}</p>
-      ) : images.length === 0 ? (
-        <div className="flex flex-col items-center gap-1.5 py-8 text-center text-fg-tertiary">
-          <ImageOff className="h-6 w-6" />
-          <p className="text-xs">No images found. Try a different search term.</p>
-        </div>
+      {mode === 'generate' ? (
+        <ImageGeneratePanel initialPrompt={title || body} onPick={onPick} />
       ) : (
-        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {images.map(img => (
-            <li key={img.id}>
-              <button
-                type="button"
-                onClick={() => onPick(img)}
-                className={cn(
-                  'group block w-full overflow-hidden rounded-md border border-subtle transition-colors hover:border-accent-warm'
-                )}
-                title={img.creator ? `${img.title} · ${img.creator}` : img.title}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={img.thumbUrl}
-                  alt={img.title}
-                  loading="lazy"
-                  className="aspect-[4/3] w-full bg-surface-page object-cover"
-                />
-                <span className="block truncate px-1.5 py-1 text-left text-2xs text-fg-tertiary">
-                  {img.creator
-                    ? `${img.creator} · ${img.license.toUpperCase()}`
-                    : img.license.toUpperCase()}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+        <>
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              if (manual.trim()) {
+                void load(manual.trim());
+              }
+            }}
+            className="mb-2 flex gap-2"
+          >
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-tertiary" />
+              <input
+                type="text"
+                value={manual}
+                onChange={e => setManual(e.target.value)}
+                placeholder="Search free images…"
+                aria-label="Search images"
+                className="w-full rounded-md border border-default bg-surface-page py-1.5 pl-8 pr-3 text-sm text-fg-primary placeholder:text-fg-tertiary focus:border-accent-warm focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!manual.trim() || loading}
+              className="rounded-md border border-default px-3 py-1.5 text-sm font-medium text-fg-primary transition-colors hover:bg-surface-raised disabled:opacity-50"
+            >
+              Search
+            </button>
+          </form>
 
-      <p className="mt-2 text-2xs text-fg-tertiary">
-        Free to use (CC0 / public domain) via Openverse.
-      </p>
+          {queries.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {queries.map(q => (
+                <button
+                  key={q}
+                  type="button"
+                  onClick={() => {
+                    setManual(q);
+                    void load(q);
+                  }}
+                  className="rounded-full border border-subtle px-2.5 py-1 text-xs text-fg-secondary transition-colors hover:border-default hover:text-fg-primary"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-10 text-sm text-fg-tertiary">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Finding images…
+            </div>
+          ) : error ? (
+            <p className="py-6 text-center text-xs text-status-negative">{error}</p>
+          ) : images.length === 0 ? (
+            <div className="flex flex-col items-center gap-1.5 py-8 text-center text-fg-tertiary">
+              <ImageOff className="h-6 w-6" />
+              <p className="text-xs">No images found. Try a different search term.</p>
+            </div>
+          ) : (
+            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {images.map(img => (
+                <li key={img.id}>
+                  <button
+                    type="button"
+                    onClick={() => onPick(img)}
+                    className={cn(
+                      'group block w-full overflow-hidden rounded-md border border-subtle transition-colors hover:border-accent-warm'
+                    )}
+                    title={img.creator ? `${img.title} · ${img.creator}` : img.title}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.thumbUrl}
+                      alt={img.title}
+                      loading="lazy"
+                      className="aspect-[4/3] w-full bg-surface-page object-cover"
+                    />
+                    <span className="block truncate px-1.5 py-1 text-left text-2xs text-fg-tertiary">
+                      {img.creator
+                        ? `${img.creator} · ${img.license.toUpperCase()}`
+                        : img.license.toUpperCase()}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <p className="mt-2 text-2xs text-fg-tertiary">
+            Free to use (CC0 / public domain) via Openverse.
+          </p>
+        </>
+      )}
     </div>
   );
 }
