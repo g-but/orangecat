@@ -55,6 +55,10 @@ module.exports = {
     '^vitest$': '<rootDir>/__mocks__/vitest.js',
     '^isows/(.*)$': '<rootDir>/__mocks__/isows.js',
     '^bitcoin-address-validation$': '<rootDir>/__mocks__/bitcoin-address-validation.js',
-    '^bs58check$': '<rootDir>/__mocks__/bs58check.js',
+    // NOTE: bs58check is deliberately NOT mocked. It is a cryptographic
+    // encoder that bitcoinjs-lib uses internally to produce legacy/P2SH
+    // addresses; stubbing it made address-derivation tests pass against
+    // 'mockedEncodedValue' instead of the BIP spec vectors. The ESM issue the
+    // mock worked around is handled by transformIgnorePatterns above.
   },
 };

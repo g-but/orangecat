@@ -35,7 +35,16 @@ const nextConfig = {
   // 'standalone' output is what the Hetzner self-host needs — opt in via
   // SELF_HOST=1 at build time.
   ...(process.env.SELF_HOST ? { output: 'standalone' } : {}),
-  serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr'],
+  // tiny-secp256k1 is wasm-backed — bundling it breaks the .wasm file's path,
+  // so it (and the bitcoin libs that wrap it) must stay external and load from
+  // node_modules at runtime (output file tracing carries them into standalone).
+  serverExternalPackages: [
+    '@supabase/supabase-js',
+    '@supabase/ssr',
+    'tiny-secp256k1',
+    'bip32',
+    'bitcoinjs-lib',
+  ],
 
   // Image optimization
   images: {

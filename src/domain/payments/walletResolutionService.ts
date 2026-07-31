@@ -12,6 +12,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { decrypt } from './encryptionService';
+import { deriveOnchainAddress } from './addressDerivation';
 import { detectWalletType } from '@/types/wallet';
 import type { ResolvedWallet } from './types';
 import { logger } from '@/utils/logger';
@@ -216,28 +217,39 @@ interface WalletRow {
 }
 
 /**
- * The on-chain address a payer can actually send to, or null if there isn't one.
+ * Classify `address_or_xpub` into what it actually is.
  *
- * `address_or_xpub` holds either. An extended public key is NOT a payment
- * address: it is the key you derive addresses FROM, and nothing in this
- * codebase derives (bip32 and bitcoinjs-lib are dependencies, but no module
- * imports them). Handing an xpub to the payer produces `bitcoin:xpub6...`, a QR
- * that no wallet can pay — while the UI reports the seller as ready to receive.
+ * A plain address is payable as-is. An extended public key is NOT an address —
+ * it is the key you derive addresses FROM — so it must never be handed to a
+ * payer verbatim (`bitcoin:xpub6...` is a QR no wallet can pay; that shipped
+ * once). An xpub wallet is still a valid on-chain destination: resolution
+ * carries the key, and `materializeOnchainAddress` derives a fresh address at
+ * invoice-creation time.
  *
- * Refusing to receive is worse for the user than a broken QR only if the QR
- * works. This one never does, so say so instead: an xpub-only wallet resolves
- * to no payment method, the same answer the owner's own receive status gives.
- *
- * The real fix is per-intent derivation from the xpub, which would also make
- * on-chain detection sound (a never-reused address identifies its payment
- * unambiguously; a static one cannot). That is a feature, not a guard.
+ * Derivation happens ONLY at invoice creation, never here: resolution also
+ * backs read-only surfaces (the owner's receive status), and allocating an
+ * index per status check would burn through the wallet's gap limit.
  */
-function toPayableOnchainAddress(value?: string | null): string | null {
+function classifyOnchain(value?: string | null): { address?: string; xpub?: string } {
   if (!value) {
-    return null;
+    return {};
   }
   const trimmed = value.trim();
-  return detectWalletType(trimmed) === 'address' ? trimmed : null;
+  if (!trimmed) {
+    return {};
+  }
+  return detectWalletType(trimmed) === 'address' ? { address: trimmed } : { xpub: trimmed };
+}
+
+function onchainResolution(walletId: string, value?: string | null): ResolvedWallet | null {
+  const { address, xpub } = classifyOnchain(value);
+  if (address) {
+    return { method: 'onchain', wallet_id: walletId, onchain_address: address };
+  }
+  if (xpub) {
+    return { method: 'onchain', wallet_id: walletId, onchain_xpub: xpub };
+  }
+  return null;
 }
 
 /**
@@ -263,12 +275,47 @@ function pickMethodFromWallet(wallet: WalletRow): ResolvedWallet | null {
     };
   }
 
-  const onchainAddress = toPayableOnchainAddress(wallet.address_or_xpub);
-  if (onchainAddress) {
-    return { method: 'onchain', wallet_id: wallet.id, onchain_address: onchainAddress };
+  return onchainResolution(wallet.id, wallet.address_or_xpub);
+}
+
+/**
+ * Turn a resolved on-chain wallet into one carrying a concrete, payable,
+ * NEVER-REUSED address. Call this at invoice creation — and only there.
+ *
+ * For an xpub wallet this atomically claims the next derivation index
+ * (`allocate_derivation_index`, service-role RPC) and derives external-chain
+ * address 0/index. Uniqueness per intent is what makes on-chain settlement
+ * detection sound: (address, amount, window) matching can only be trusted when
+ * nobody else ever pays that address — the reused-address false-settle of
+ * 2026-07-31 is the counterexample.
+ *
+ * Throws rather than degrades: an invoice we cannot mint an address for must
+ * fail loudly, not fall back to something unpayable or ambiguous.
+ */
+export async function materializeOnchainAddress(wallet: ResolvedWallet): Promise<ResolvedWallet> {
+  if (wallet.method !== 'onchain' || wallet.onchain_address) {
+    return wallet;
+  }
+  if (!wallet.onchain_xpub) {
+    throw new Error('On-chain wallet has neither an address nor an extended public key');
   }
 
-  return null;
+  const admin = getAdminClient() as unknown as SupabaseClient;
+  const { data: index, error } = await admin.rpc('allocate_derivation_index', {
+    p_wallet_id: wallet.wallet_id,
+  });
+  if (error || typeof index !== 'number') {
+    logger.error('Failed to allocate derivation index', { walletId: wallet.wallet_id, error });
+    throw new Error('Failed to allocate a receiving address');
+  }
+
+  const address = deriveOnchainAddress(wallet.onchain_xpub, index);
+  logger.info(
+    'Derived per-invoice on-chain address',
+    { walletId: wallet.wallet_id, index },
+    'addressDerivation'
+  );
+  return { ...wallet, onchain_address: address };
 }
 
 /**
@@ -360,31 +407,23 @@ export async function resolveUserWallet(
     };
   }
 
-  // Check for on-chain address
+  // Check for on-chain destination (a plain address, or an xpub that
+  // materializeOnchainAddress will derive from at invoice time).
   const onchainWallet = wallets.find(
     w =>
-      toPayableOnchainAddress(w.address_or_xpub) &&
-      (w.wallet_type === 'onchain' || w.wallet_type === 'both')
+      onchainResolution(w.id, w.address_or_xpub) &&
+      (w.wallet_type === 'onchain' || w.wallet_type === 'both' || w.wallet_type === 'xpub')
   );
   if (onchainWallet) {
-    return {
-      method: 'onchain',
-      wallet_id: onchainWallet.id,
-      onchain_address: toPayableOnchainAddress(onchainWallet.address_or_xpub)!,
-    };
+    return onchainResolution(onchainWallet.id, onchainWallet.address_or_xpub);
   }
 
-  // Fallback: the first wallet holding a payable address. This is where an
-  // xpub-only wallet used to leak through — the branch above filters on
-  // wallet_type, but this one never did, so `bitcoin:xpub6...` reached the
-  // payer as a QR no wallet could pay.
-  const fallback = wallets.find(w => toPayableOnchainAddress(w.address_or_xpub));
-  if (fallback) {
-    return {
-      method: 'onchain',
-      wallet_id: fallback.id,
-      onchain_address: toPayableOnchainAddress(fallback.address_or_xpub)!,
-    };
+  // Fallback: the first wallet holding any on-chain destination.
+  for (const w of wallets) {
+    const resolved = onchainResolution(w.id, w.address_or_xpub);
+    if (resolved) {
+      return resolved;
+    }
   }
 
   return null;

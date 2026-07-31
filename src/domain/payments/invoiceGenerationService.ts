@@ -8,6 +8,7 @@
  */
 
 import { NWCClient } from '@/lib/nostr/nwc';
+import { materializeOnchainAddress } from './walletResolutionService';
 import type { ResolvedWallet } from './types';
 import { logger } from '@/utils/logger';
 import { bitcoinToSats } from '@/services/currency';
@@ -44,8 +45,14 @@ export async function generateInvoice(
     case 'lightning_address':
       return generateLightningAddressInvoice(wallet.lightning_address!, amountBtc, description);
 
-    case 'onchain':
-      return generateOnchainInvoice(wallet.onchain_address!, amountBtc, description);
+    case 'onchain': {
+      // A wallet configured with an xpub has no address yet — derive a fresh,
+      // never-reused one here, at the single point every invoice passes
+      // through. Uniqueness per invoice is what makes on-chain settlement
+      // detection sound.
+      const materialized = await materializeOnchainAddress(wallet);
+      return generateOnchainInvoice(materialized.onchain_address!, amountBtc, description);
+    }
 
     default:
       throw new Error(`Unsupported payment method: ${wallet.method}`);

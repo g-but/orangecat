@@ -165,4 +165,11 @@ export interface ResolvedWallet {
   lightning_address?: string;
   /** On-chain BTC address — only present for method=onchain */
   onchain_address?: string;
+  /**
+   * Extended public key (xpub/ypub/zpub) — method=onchain wallets configured
+   * with a key instead of a static address. Not payable itself: invoice
+   * creation must call materializeOnchainAddress() to derive a fresh,
+   * never-reused address from it.
+   */
+  onchain_xpub?: string;
 }
