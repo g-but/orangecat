@@ -37,14 +37,19 @@ jest.mock('@/domain/payments/paymentFlowService', () => ({
 
 const candidates: Array<Record<string, unknown>> = [];
 const polled: string[] = [];
+const orFilters: string[] = [];
 
 jest.mock('@/lib/supabase/admin', () => ({
   getAdminClient: () => ({
     from: () => {
       const builder: Record<string, unknown> = {};
-      for (const m of ['select', 'in', 'or', 'order']) {
+      for (const m of ['select', 'in', 'order']) {
         builder[m] = jest.fn(() => builder);
       }
+      builder.or = jest.fn((filter: string) => {
+        orFilters.push(filter);
+        return builder;
+      });
       builder.limit = jest.fn(() => Promise.resolve({ data: candidates, error: null }));
       builder.update = jest.fn(() => builder);
       builder.eq = jest.fn((_col: string, id: string) => {
@@ -80,6 +85,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   candidates.length = 0;
   polled.length = 0;
+  orFilters.length = 0;
   process.env.CRON_SECRET = 'right-secret';
   reconcileMock.mockResolvedValue({ status: STATUS.PAYMENT_INTENTS.INVOICE_READY, paid_at: null });
 });
@@ -94,6 +100,27 @@ describe('payment reconciliation sweep', () => {
   it('rejects a wrong secret', async () => {
     const res = await GET(request('wrong'));
     expect((res as unknown as { status: number }).status).toBe(401);
+  });
+
+  it('keeps watching on-chain intents, bounded by a horizon instead of a fake expiry', async () => {
+    await GET(request());
+
+    expect(orFilters).toHaveLength(1);
+    const filter = orFilters[0];
+
+    // On-chain is swept — it never reaches a terminal status, so the sweep is
+    // the only thing that will ever notice a late confirmation.
+    expect(filter).toContain('payment_method.eq.onchain');
+
+    // ...but not forever: the clause carries a created_at cutoff, so abandoned
+    // QRs stop costing mempool.space calls without the record ever claiming
+    // that no money arrived.
+    const cutoff = filter.match(/onchain[^)]*created_at\.gte\.([^,)]+)/)?.[1];
+    expect(cutoff).toBeDefined();
+
+    const ageDays = (Date.now() - new Date(cutoff as string).getTime()) / 86_400_000;
+    expect(ageDays).toBeGreaterThan(29);
+    expect(ageDays).toBeLessThan(31);
   });
 
   it('no-ops cleanly when nothing is pending', async () => {
