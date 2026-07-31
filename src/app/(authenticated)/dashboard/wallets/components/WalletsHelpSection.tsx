@@ -58,10 +58,11 @@ export function WalletsHelpSection({ isDesktop }: WalletsHelpSectionProps) {
               What about extended public keys (xpub/ypub/zpub)?
             </summary>
             <p className="mt-2 text-xs text-fg-secondary pl-4">
-              Optional, and only for on-chain tracking. Bitcoin wallets generate a new address after
-              each transaction for privacy; an extended public key lets OrangeCat follow all of them
-              and show a complete balance, where a single address only shows its own. It does not
-              affect how you get paid — and it can&apos;t receive Lightning.
+              The best way to receive on-chain. With an extended public key, OrangeCat derives a
+              fresh address for every payment request — the way Bitcoin wallets are designed to be
+              paid. Each payer sees their own address, which protects your privacy and lets us
+              reliably detect exactly which payment arrived. A single reused address can&apos;t do
+              either. It can&apos;t receive Lightning.
             </p>
           </details>
         </div>

@@ -1,22 +1,32 @@
 /**
- * An extended public key is not a payment address.
+ * An extended public key is not a payment address — it is the key you derive
+ * addresses FROM. Resolution therefore never outputs an xpub as the address:
+ * it carries the key (`onchain_xpub`), and `materializeOnchainAddress` derives
+ * a fresh, never-reused address at invoice-creation time.
  *
- * `address_or_xpub` holds either, and nothing in this codebase derives an
- * address from an xpub — `bip32` and `bitcoinjs-lib` are dependencies that no
- * module imports. Before this, an xpub-only wallet resolved to
- * `method: 'onchain'` with the xpub as the address, so the payer was shown
+ * The split matters twice over. Handing the raw xpub to a payer produced
  * `bitcoin:xpub6...` — a QR no wallet can pay — while the product reported the
- * seller as ready to receive. The wallets page recommends xpubs, so following
- * our own advice was the way to break receiving.
+ * seller ready to receive. And deriving at RESOLUTION time would burn a
+ * derivation index on every read-only status check, blowing through the
+ * recipient wallet's gap limit.
  */
 
-import { resolveUserWallet } from '@/domain/payments/walletResolutionService';
+import {
+  resolveUserWallet,
+  materializeOnchainAddress,
+} from '@/domain/payments/walletResolutionService';
+import type { ResolvedWallet } from '@/domain/payments/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 jest.mock('@/utils/logger', () => ({
   logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
 }));
 jest.mock('@/domain/payments/encryptionService', () => ({ decrypt: (v: string) => v }));
+
+const rpcMock = jest.fn();
+jest.mock('@/lib/supabase/admin', () => ({
+  getAdminClient: () => ({ rpc: rpcMock }),
+}));
 
 /** Minimal stub of the chained select used by resolveUserWallet. */
 function clientReturning(wallets: Array<Record<string, unknown>>): SupabaseClient {
@@ -33,23 +43,27 @@ function clientReturning(wallets: Array<Record<string, unknown>>): SupabaseClien
   return { from: () => builder } as unknown as SupabaseClient;
 }
 
-const XPUB =
-  'xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2jkwSB1icqYh2cfDfVxdx4df189oLKnC5fSwqPfgyP3hooxujYzAu3fDVmz';
+// BIP84 spec-vector zpub; 0/0 = bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu
+const ZPUB =
+  'zpub6rFR7y4Q2AijBEqTUquhVz398htDFrtymD9xYYfG1m4wAcvPhXNfE3EfH1r1ADqtfSdVCToUG868RvUUkgDKf31mGDtKsAYz2oz2AGutZYs';
 const ADDRESS = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
 
-describe('on-chain payment address resolution', () => {
-  it('refuses to hand an xpub to the payer as if it were an address', async () => {
+beforeEach(() => {
+  rpcMock.mockReset();
+});
+
+describe('on-chain resolution', () => {
+  it('carries an xpub as onchain_xpub, never as the payable address', async () => {
     const resolved = await resolveUserWallet(
-      clientReturning([{ id: 'w1', address_or_xpub: XPUB, wallet_type: 'xpub', is_primary: true }]),
+      clientReturning([{ id: 'w1', address_or_xpub: ZPUB, wallet_type: 'xpub', is_primary: true }]),
       'user-1'
     );
 
-    // No payment method at all is the honest answer — the same one the owner's
-    // receive status gives — rather than an unpayable bitcoin: URI.
-    expect(resolved).toBeNull();
+    expect(resolved).toMatchObject({ method: 'onchain', wallet_id: 'w1', onchain_xpub: ZPUB });
+    expect(resolved?.onchain_address).toBeUndefined();
   });
 
-  it('still resolves a real address', async () => {
+  it('still resolves a plain address directly', async () => {
     const resolved = await resolveUserWallet(
       clientReturning([
         { id: 'w1', address_or_xpub: ADDRESS, wallet_type: 'onchain', is_primary: true },
@@ -60,29 +74,59 @@ describe('on-chain payment address resolution', () => {
     expect(resolved).toMatchObject({ method: 'onchain', onchain_address: ADDRESS });
   });
 
-  it('skips an xpub wallet to reach a payable one behind it', async () => {
-    // The fallback branch used to take wallets[0] unconditionally, so an xpub
-    // sitting first shadowed a perfectly good address further down.
+  it('prefers Lightning over any on-chain destination, unchanged', async () => {
     const resolved = await resolveUserWallet(
       clientReturning([
-        { id: 'w1', address_or_xpub: XPUB, wallet_type: 'xpub', is_primary: true },
-        { id: 'w2', address_or_xpub: ADDRESS, wallet_type: 'general', is_primary: false },
-      ]),
-      'user-1'
-    );
-
-    expect(resolved).toMatchObject({ method: 'onchain', wallet_id: 'w2' });
-  });
-
-  it('prefers Lightning over an on-chain address, unchanged', async () => {
-    const resolved = await resolveUserWallet(
-      clientReturning([
-        { id: 'w1', address_or_xpub: ADDRESS, wallet_type: 'onchain', is_primary: true },
+        { id: 'w1', address_or_xpub: ZPUB, wallet_type: 'xpub', is_primary: true },
         { id: 'w2', lightning_address: 'mao@orangecat.ch', wallet_type: 'lightning' },
       ]),
       'user-1'
     );
 
     expect(resolved).toMatchObject({ method: 'lightning_address' });
+  });
+});
+
+describe('materializeOnchainAddress', () => {
+  it('claims an index atomically and derives the spec-vector address', async () => {
+    rpcMock.mockResolvedValue({ data: 0, error: null });
+
+    const wallet: ResolvedWallet = { method: 'onchain', wallet_id: 'w1', onchain_xpub: ZPUB };
+    const materialized = await materializeOnchainAddress(wallet);
+
+    expect(rpcMock).toHaveBeenCalledWith('allocate_derivation_index', { p_wallet_id: 'w1' });
+    expect(materialized.onchain_address).toBe('bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu');
+  });
+
+  it('derives a DIFFERENT address for the next allocated index', async () => {
+    rpcMock.mockResolvedValue({ data: 1, error: null });
+
+    const materialized = await materializeOnchainAddress({
+      method: 'onchain',
+      wallet_id: 'w1',
+      onchain_xpub: ZPUB,
+    });
+
+    expect(materialized.onchain_address).toBe('bc1qnjg0jd8228aq7egyzacy8cys3knf9xvrerkf9g');
+  });
+
+  it('passes a plain-address wallet through without touching the counter', async () => {
+    const wallet: ResolvedWallet = { method: 'onchain', wallet_id: 'w1', onchain_address: ADDRESS };
+    expect(await materializeOnchainAddress(wallet)).toBe(wallet);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it('leaves Lightning wallets alone', async () => {
+    const wallet: ResolvedWallet = { method: 'nwc', wallet_id: 'w1', nwc_uri: 'nostr+wc://x' };
+    expect(await materializeOnchainAddress(wallet)).toBe(wallet);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it('fails loudly when allocation fails — never falls back to something ambiguous', async () => {
+    rpcMock.mockResolvedValue({ data: null, error: { message: 'db down' } });
+
+    await expect(
+      materializeOnchainAddress({ method: 'onchain', wallet_id: 'w1', onchain_xpub: ZPUB })
+    ).rejects.toThrow('Failed to allocate a receiving address');
   });
 });
