@@ -8,9 +8,10 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { createApiKeyService } from '@/services/ai/api-key-service';
+import { createApiKeyService, hasActiveByok } from '@/services/ai/api-key-service';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
+import { WIRED_PROVIDER_IDS } from '@/data/aiProviders';
 import { logger } from '@/utils/logger';
 import {
   apiSuccess,
@@ -22,9 +23,10 @@ import {
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 
 const addKeySchema = z.object({
-  provider: z
-    .enum(['openrouter', 'anthropic', 'openai', 'google', 'xai', 'groq', 'together', 'deepseek'])
-    .default('openrouter'),
+  // WIRED_PROVIDER_IDS is the SSOT for providers the chat pipeline can
+  // actually route — a previously hardcoded list here accepted providers
+  // (anthropic, google) that skipped validation and sat dead in the chain.
+  provider: z.enum(WIRED_PROVIDER_IDS).default('openrouter'),
   keyName: z.string().min(1).max(50).default('Default'),
   apiKey: z.string().min(10).max(500),
   isPrimary: z.boolean().default(true),
@@ -56,7 +58,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     return apiSuccess({
       keys,
       platformUsage,
-      hasByok: keys.some(k => k.is_valid && k.is_primary),
+      hasByok: hasActiveByok(keys),
     });
   } catch (error) {
     logger.error('Error fetching API keys', error, 'ApiKeysAPI');

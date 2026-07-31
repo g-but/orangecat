@@ -61,12 +61,6 @@ export function AIKeyCard({ apiKey: key, isLoading, onSetPrimary, onDelete }: AI
               <span>{keyProvider?.name || key.provider}</span>
               <span>•</span>
               <span className="font-mono">****{key.key_hint}</span>
-              {key.total_requests > 0 && (
-                <>
-                  <span>•</span>
-                  <span>{key.total_requests.toLocaleString()} requests</span>
-                </>
-              )}
             </div>
           </div>
         </div>

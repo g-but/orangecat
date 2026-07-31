@@ -12,6 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 import { logger } from '@/utils/logger';
 import { apiBadRequest, apiError, apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
@@ -21,7 +22,7 @@ import {
   rateLimitWriteAsync,
 } from '@/lib/rate-limit';
 
-const GROQ_TRANSCRIBE_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
+const GROQ_TRANSCRIBE_URL = `${PROVIDER_BASE_URLS.groq}/audio/transcriptions`;
 const GROQ_WHISPER_MODEL = 'whisper-large-v3-turbo';
 // Generous for short dictation; well under Groq's 25 MB limit. A minute of
 // opus/webm audio is ~0.5 MB, so 15 MB covers long messages with headroom.

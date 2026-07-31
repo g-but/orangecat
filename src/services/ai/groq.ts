@@ -10,6 +10,8 @@
  * Created: 2026-01-22
  */
 
+import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
+
 // ==================== TYPES ====================
 
 export interface GroqMessage {
@@ -162,7 +164,7 @@ export const GROQ_CHAT_MAX_TOKENS = 2048;
 
 export class GroqService {
   private apiKey: string;
-  private baseUrl = 'https://api.groq.com/openai/v1';
+  private baseUrl = PROVIDER_BASE_URLS.groq;
   private isByok: boolean;
 
   constructor(

@@ -4,11 +4,11 @@ import { useRef, useState } from 'react';
 import { ImagePlus, Link2, Loader2, Sparkles, X } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
-import { COVER_ACCEPT, COVER_MAX_MB, uploadArticleCover } from '@/services/articles/cover-storage';
+import { IMAGE_UPLOAD_ACCEPT, uploadUserImage } from '@/services/images/upload';
 
 /**
  * Article cover picker: drag-and-drop or click to upload (primary), with a
- * "paste a URL" fallback. Uploads via the cover-storage service and returns a
+ * "paste a URL" fallback. Uploads via the shared image-upload service and returns a
  * public URL through onChange. Design-token styling only.
  */
 export default function CoverImageUpload({
@@ -37,7 +37,7 @@ export default function CoverImageUpload({
     }
     setUploading(true);
     setError(null);
-    const result = await uploadArticleCover(userId, file);
+    const result = await uploadUserImage(userId, file, 'article-cover');
     if (result.success && result.url) {
       onChange(result.url);
     } else {
@@ -73,7 +73,7 @@ export default function CoverImageUpload({
         <input
           ref={inputRef}
           type="file"
-          accept={COVER_ACCEPT}
+          accept={IMAGE_UPLOAD_ACCEPT}
           className="hidden"
           onChange={e => handleFile(e.target.files?.[0])}
         />
@@ -138,13 +138,13 @@ export default function CoverImageUpload({
           {uploading ? 'Uploading…' : 'Add a cover image'}
         </span>
         <span className="text-xs text-fg-tertiary">
-          Drag & drop or click · JPEG, PNG, WebP up to {COVER_MAX_MB}MB
+          Drag & drop or click · large photos are resized automatically
         </span>
       </button>
       <input
         ref={inputRef}
         type="file"
-        accept={COVER_ACCEPT}
+        accept={IMAGE_UPLOAD_ACCEPT}
         className="hidden"
         onChange={e => handleFile(e.target.files?.[0])}
       />

@@ -11,6 +11,8 @@
  * Last Modified: 2026-01-08
  */
 
+import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
+
 import {
   getModelMetadata,
   calculateCostBtc,
@@ -122,7 +124,7 @@ interface OpenRouterError {
 
 export class OpenRouterService {
   private apiKey: string;
-  private baseUrl = 'https://openrouter.ai/api/v1';
+  private baseUrl = PROVIDER_BASE_URLS.openrouter;
   private btcPriceUsd: number;
   private siteUrl: string;
   private siteName: string;

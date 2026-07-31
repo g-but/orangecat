@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 import { supabase } from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { API_ROUTES } from '@/config/api-routes';
+import { unwrapApiResponse } from '@/lib/api/client-response';
 import type { AISettingsState, UserAIPreferences } from './useAISettings';
 import type { Dispatch, SetStateAction } from 'react';
 
@@ -75,11 +76,7 @@ export function useAISettingsMutations({
         body: JSON.stringify(params),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add key');
-      }
-
+      await unwrapApiResponse(response, 'Failed to add key');
       await fetchData();
     },
     [fetchData]
@@ -91,11 +88,7 @@ export function useAISettingsMutations({
         method: 'DELETE',
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete key');
-      }
-
+      await unwrapApiResponse(response, 'Failed to delete key');
       await fetchData();
     },
     [fetchData]
@@ -109,11 +102,7 @@ export function useAISettingsMutations({
         body: JSON.stringify({ isPrimary: true }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to set primary key');
-      }
-
+      await unwrapApiResponse(response, 'Failed to set primary key');
       await fetchData();
     },
     [fetchData]

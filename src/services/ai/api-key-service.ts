@@ -16,6 +16,8 @@ import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
+import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
+import { WIRED_PROVIDER_IDS } from '@/data/aiProviders';
 
 // ==================== TYPES ====================
 
@@ -134,14 +136,16 @@ function generateKeyHint(apiKey: string): string {
  * OpenRouter's `/auth/key` is special because it also returns the user's
  * remaining rate-limit budget, which we forward to the UI.
  */
-const PROVIDER_AUTH_ENDPOINTS: Record<string, string> = {
-  openrouter: 'https://openrouter.ai/api/v1/auth/key',
-  openai: 'https://api.openai.com/v1/models',
-  groq: 'https://api.groq.com/openai/v1/models',
-  together: 'https://api.together.xyz/v1/models',
-  deepseek: 'https://api.deepseek.com/v1/models',
-  xai: 'https://api.x.ai/v1/models',
-};
+const PROVIDER_AUTH_ENDPOINTS: Record<string, string> = Object.fromEntries(
+  WIRED_PROVIDER_IDS.map(id => [
+    id,
+    // OpenRouter's /auth/key also returns rate-limit budget; everyone else
+    // gets the cheapest authenticated endpoint, /models.
+    id === 'openrouter'
+      ? `${PROVIDER_BASE_URLS.openrouter}/auth/key`
+      : `${PROVIDER_BASE_URLS[id]}/models`,
+  ])
+);
 
 // ==================== SERVICE CLASS ====================
 
@@ -174,6 +178,16 @@ export class ApiKeyService {
     // Encrypt the key
     const encryptedKey = encryptApiKey(apiKey);
     const keyHint = generateKeyHint(apiKey);
+
+    // Only one primary may exist — multiple is_primary rows break
+    // getDecryptedKey's .single() and made "primary" ambiguous in the UI.
+    if (isPrimary) {
+      await this.supabase
+        .from(DATABASE_TABLES.USER_API_KEYS)
+        .update({ is_primary: false })
+        .eq('user_id', userId)
+        .eq('is_primary', true);
+    }
 
     // Store in database
     const { data, error } = await this.supabase
@@ -362,16 +376,6 @@ export class ApiKeyService {
   }
 
   /**
-   * Update key usage stats
-   */
-  async updateKeyUsage(keyId: string, tokensUsed: number = 0): Promise<void> {
-    await this.supabase.rpc('update_key_usage', {
-      p_key_id: keyId,
-      p_tokens_used: tokensUsed,
-    });
-  }
-
-  /**
    * Check if user has a valid BYOK
    */
   async hasValidKey(userId: string, provider: string = 'openrouter'): Promise<boolean> {
@@ -493,6 +497,15 @@ export class ApiKeyService {
 }
 
 // ==================== FACTORY ====================
+
+/**
+ * SSOT for "does this user bring their own key?" — the fallback chain walks
+ * every VALID key regardless of is_primary, so any valid key means BYOK.
+ * (The API route and the settings hook previously computed this differently.)
+ */
+export function hasActiveByok(keys: Array<Pick<UserApiKey, 'is_valid'>>): boolean {
+  return keys.some(k => k.is_valid);
+}
 
 export function createApiKeyService(supabase: AnySupabaseClient): ApiKeyService {
   return new ApiKeyService(supabase);

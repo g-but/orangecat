@@ -21,7 +21,7 @@ import { useMarkdownTextarea } from '@/components/articles/useMarkdownTextarea';
 import AiWriterPanel from '@/components/articles/AiWriterPanel';
 import ArticleAiControls from '@/components/articles/ArticleAiControls';
 import CoverImageUpload from '@/components/articles/CoverImageUpload';
-import ImageSuggestPicker from '@/components/articles/ImageSuggestPicker';
+import ImageSuggestPicker from '@/components/images/ImageSuggestPicker';
 import type { StockImage } from '@/services/images/types';
 
 const DRAFT_KEY = 'oc:draft:article';

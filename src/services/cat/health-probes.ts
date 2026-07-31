@@ -11,6 +11,8 @@
  * result is safe to surface to an authenticated user (and to the model).
  */
 
+import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
+
 export type ProbeClass =
   | 'ok'
   | 'rate_limit'
@@ -119,7 +121,7 @@ export function probeGroq(): Promise<ProbeResult> {
   return probeProvider(
     'groq',
     'GROQ_API_KEY',
-    'https://api.groq.com/openai/v1/chat/completions',
+    `${PROVIDER_BASE_URLS.groq}/chat/completions`,
     'llama-3.1-8b-instant'
   );
 }
@@ -128,7 +130,7 @@ export function probeOpenRouter(): Promise<ProbeResult> {
   return probeProvider(
     'openrouter',
     'OPENROUTER_API_KEY',
-    'https://openrouter.ai/api/v1/chat/completions',
+    `${PROVIDER_BASE_URLS.openrouter}/chat/completions`,
     'meta-llama/llama-3.3-70b-instruct:free'
   );
 }

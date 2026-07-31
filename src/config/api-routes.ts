@@ -92,6 +92,7 @@ export const API_ROUTES = {
   AI: {
     FORM_PREFILL: '/api/ai/form-prefill',
     IMAGES_GENERATE: '/api/ai/images/generate',
+    IMAGES_SUGGEST: '/api/ai/images/suggest',
   },
   AUTH: {
     CALLBACK: '/api/auth/callback',
@@ -117,7 +118,6 @@ export const API_ROUTES = {
   },
   USER: {
     API_KEYS: '/api/user/api-keys',
-    API_KEYS_VALIDATE: '/api/user/api-keys/validate',
     STATS: '/api/users/me/stats',
   },
   PAYMENTS: {

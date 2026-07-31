@@ -18,6 +18,7 @@
  */
 
 import type { AnySupabaseClient } from '@/lib/supabase/types';
+import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 import {
   messageMightNeedTools,
   hasCreateIntent,
@@ -116,10 +117,10 @@ export async function maybeEnrichWithSearchResults(
   let toolEndpoint: string;
   let toolKey: string | undefined;
   if (provider === 'groq') {
-    toolEndpoint = 'https://api.groq.com/openai/v1/chat/completions';
+    toolEndpoint = `${PROVIDER_BASE_URLS.groq}/chat/completions`;
     toolKey = groqKey ?? process.env.GROQ_API_KEY;
   } else if (provider === 'openrouter') {
-    toolEndpoint = 'https://openrouter.ai/api/v1/chat/completions';
+    toolEndpoint = `${PROVIDER_BASE_URLS.openrouter}/chat/completions`;
     toolKey = process.env.OPENROUTER_API_KEY;
   } else {
     return messages;

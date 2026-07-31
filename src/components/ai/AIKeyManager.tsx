@@ -17,22 +17,9 @@ import {
 import { AIKeyCard } from './AIKeyCard';
 import { AIKeyAddForm } from './AIKeyAddForm';
 
-export interface UserApiKey {
-  id: string;
-  user_id: string;
-  provider: string;
-  key_name: string;
-  key_hint: string;
-  is_valid: boolean;
-  is_primary: boolean;
-  sort_order: number;
-  last_validated_at: string | null;
-  last_used_at: string | null;
-  total_requests: number;
-  total_tokens_used: number;
-  created_at: string;
-  updated_at: string;
-}
+// Single definition lives with the service that owns the table.
+export type { UserApiKey } from '@/services/ai/api-key-service';
+import type { UserApiKey } from '@/services/ai/api-key-service';
 
 /** The free OrangeCat default's position in the chain (sentinel id). */
 const PLATFORM_ID = 'platform';

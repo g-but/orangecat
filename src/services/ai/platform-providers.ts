@@ -27,6 +27,7 @@ import {
   DEFAULT_GROQ_MODEL,
 } from '@/services/ai';
 import { getFreeModels, getModelMetadata, DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
+import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 import { createAutoRouter } from '@/services/ai/auto-router';
 
 import type { AiService } from './types';
@@ -86,7 +87,7 @@ export function buildPlatformProviders(message: string): PlatformProvider[] {
       providerId: 'together',
       aiService: createOpenAICompatibleServiceWithByok({
         apiKey: togetherKey,
-        baseUrl: 'https://api.together.xyz/v1',
+        baseUrl: PROVIDER_BASE_URLS.together,
         providerId: 'together',
       }),
       defaultModel: process.env.TOGETHER_DEFAULT_MODEL || TOGETHER_DEFAULT_MODEL,

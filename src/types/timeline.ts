@@ -113,8 +113,9 @@ export type TimelineVisibility = 'public' | 'followers' | 'private';
 
 /**
  * Image attached to a short post, stored verbatim at `metadata.image`
- * (snake_case to match the other metadata keys). Sourced from the CC0/PD
- * Openverse picker, so a remote URL — no upload pipeline involved.
+ * (snake_case to match the other metadata keys). The URL is either a CC0/PD
+ * Openverse remote, an AI-generated image persisted to our storage, or the
+ * user's own upload — the picker decides, this shape doesn't care.
  */
 export interface PostImageMeta {
   url: string;
@@ -123,6 +124,24 @@ export interface PostImageMeta {
   credit: string | null;
   license: string | null;
   source_url: string | null;
+}
+
+/** Writer-side mapping from a picker selection to `metadata.image` — kept
+ * next to the reader below so the two halves of the contract stay adjacent. */
+export function toPostImageMeta(img: {
+  fullUrl: string;
+  title: string;
+  creator: string | null;
+  license: string;
+  sourceUrl: string | null;
+}): PostImageMeta {
+  return {
+    url: img.fullUrl,
+    alt: img.title,
+    credit: img.creator,
+    license: img.license || null,
+    source_url: img.sourceUrl,
+  };
 }
 
 /** SSOT reader for `metadata.image` — every render surface goes through this. */

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Globe, ImagePlus, Lock, X } from 'lucide-react';
+import { Globe, ImagePlus, Loader2, Lock, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { usePostComposer } from '@/hooks/usePostComposerNew';
 import { useContentEditableEditor } from '@/hooks/useContentEditableEditor';
@@ -26,7 +26,9 @@ import {
 import PostAiButton from './PostAiButton';
 import ReplyAiButton from './ReplyAiButton';
 import PostAiEditMenu from './PostAiEditMenu';
-import ImageSuggestPicker from '@/components/articles/ImageSuggestPicker';
+import ImageSuggestPicker from '@/components/images/ImageSuggestPicker';
+import { uploadUserImage } from '@/services/images/upload';
+import { toPostImageMeta } from '@/types/timeline';
 import type { StockImage } from '@/services/images/types';
 
 export interface TimelineComposerProps {
@@ -66,6 +68,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
   const { user, profile } = useAuth();
   const [showProjects, setShowProjects] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
+  const [pastingImage, setPastingImage] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
@@ -108,10 +111,37 @@ const TimelineComposer = React.memo(function TimelineComposer({
     ? TIMELINE_COPY.composePlaceholder
     : `Write on ${targetName}...`;
 
+  // Pasting a screenshot/photo into the editor attaches it directly —
+  // zero clicks, same upload path as the picker's Upload tab.
+  const handlePasteFiles = useCallback(
+    async (files: File[]) => {
+      const file = files[0];
+      if (!file || !user?.id || pastingImage) {
+        return;
+      }
+      setPastingImage(true);
+      const result = await uploadUserImage(user.id, file, 'post-image');
+      setPastingImage(false);
+      if (result.success && result.url) {
+        postComposer.setImage(
+          toPostImageMeta({
+            fullUrl: result.url,
+            title: file.name.replace(/\.[^.]+$/, ''),
+            creator: null,
+            license: '',
+            sourceUrl: null,
+          })
+        );
+      }
+    },
+    [user?.id, postComposer, pastingImage]
+  );
+
   const { editorRef, handleInput, handlePaste, handleKeyDown, handleFormat } =
     useContentEditableEditor({
       content: postComposer.content,
       onContentChange: postComposer.setContent,
+      onPasteFiles: handlePasteFiles,
       onSubmit: () => {
         if (!postComposer.isPosting && postComposer.content.trim()) {
           postComposer.handlePost();
@@ -139,13 +169,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
 
   const handlePickImage = useCallback(
     (img: StockImage) => {
-      postComposer.setImage({
-        url: img.fullUrl,
-        alt: img.title,
-        credit: img.creator,
-        license: img.license,
-        source_url: img.sourceUrl,
-      });
+      postComposer.setImage(toPostImageMeta(img));
       setShowImagePicker(false);
     },
     [postComposer]
@@ -211,9 +235,16 @@ const TimelineComposer = React.memo(function TimelineComposer({
             />
           )}
 
+          {pastingImage && (
+            <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-fg-tertiary">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Adding photo…
+            </div>
+          )}
+
           {postComposer.image && (
             <div className="relative mt-3 inline-block max-w-full">
-              {/* eslint-disable-next-line @next/next/no-img-element -- external (Openverse) host, not in next/image remotePatterns */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- may be an external (Openverse) host, not in next/image remotePatterns */}
               <img
                 src={postComposer.image.url}
                 alt={postComposer.image.alt}

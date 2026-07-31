@@ -7,6 +7,7 @@
 
 import type { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { IMAGE_SEARCH_QUERY_MAX, IMAGES_PER_QUERY } from '@/config/images';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createRateLimitResponse, rateLimitWriteAsync } from '@/lib/rate-limit';
 import { apiBadRequest, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
@@ -19,7 +20,7 @@ const bodySchema = z.object({
   title: z.string().trim().max(300).optional(),
   body: z.string().trim().max(100_000).optional(),
   /** Explicit search term — skips AI query suggestion. */
-  query: z.string().trim().max(80).optional(),
+  query: z.string().trim().max(IMAGE_SEARCH_QUERY_MAX).optional(),
 });
 
 /** How many AI-suggested queries to actually search, and the total image cap. */
@@ -51,7 +52,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     // Search the top few queries and merge, de-duping by image id.
     const perQuery = await Promise.all(
-      queries.slice(0, QUERIES_TO_SEARCH).map(q => searchOpenverse(q, 8))
+      queries.slice(0, QUERIES_TO_SEARCH).map(q => searchOpenverse(q, IMAGES_PER_QUERY))
     );
     const seen = new Set<string>();
     const images: StockImage[] = [];

@@ -22,3 +22,13 @@ export interface ImageSuggestResult {
   queries: string[];
   images: StockImage[];
 }
+
+/**
+ * Mime → file-extension map for image formats the pipeline produces. The
+ * generation sniffer and the storage route both derive from this — one list.
+ */
+export const IMAGE_MIME_EXT: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+};
