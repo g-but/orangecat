@@ -11,6 +11,7 @@ import { AIFillPanel } from './AIFillPanel';
 import { AIRefinePanel } from './AIRefinePanel';
 import type { AIPrefillBarProps, AIPrefillResponse } from './types';
 import {
+  AI_ASSIST_MIN_INPUT_LENGTH,
   getAdjustmentsForFields,
   getExampleDescriptions,
   type AiAdjustment,
@@ -126,15 +127,16 @@ export function AIPrefillBar({
   );
 
   const handleGenerate = useCallback(() => {
-    if (description.trim().length < 10) {
-      setError('Please describe what you want to create (at least 10 characters)');
+    const min = AI_ASSIST_MIN_INPUT_LENGTH.fill;
+    if (description.trim().length < min) {
+      setError(`Please describe what you want to create (at least ${min} characters)`);
       return;
     }
     callAI(description, 'fill', TYPED_REQUEST);
   }, [description, callAI]);
 
   const handleRefine = useCallback(() => {
-    if (instruction.trim().length < 3) {
+    if (instruction.trim().length < AI_ASSIST_MIN_INPUT_LENGTH.refine) {
       return;
     }
     callAI(instruction, 'refine', TYPED_REQUEST);

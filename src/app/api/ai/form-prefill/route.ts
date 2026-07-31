@@ -23,20 +23,37 @@ import { getEntityConfig } from '@/config/entity-configs/get-config';
 import { isValidEntityType, type EntityType } from '@/config/entity-registry';
 import { logger } from '@/utils/logger';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
+import { AI_ASSIST_MIN_INPUT_LENGTH } from '@/config/ai-form-assist';
 
 /**
  * Request validation schema
  */
-const requestSchema = z.object({
-  entityType: z.string().min(1, 'Entity type is required'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  existingData: z.record(z.unknown()).optional(),
-  /**
-   * `fill` protects what the user already typed; `refine` lets the AI rewrite
-   * it. A refine request that arrives as `fill` can never change anything.
-   */
-  intent: z.enum(['fill', 'refine']).default('fill'),
-});
+const requestSchema = z
+  .object({
+    entityType: z.string().min(1, 'Entity type is required'),
+    description: z.string().min(1, 'Description is required'),
+    existingData: z.record(z.unknown()).optional(),
+    /**
+     * `fill` protects what the user already typed; `refine` lets the AI rewrite
+     * it. A refine request that arrives as `fill` can never change anything.
+     */
+    intent: z.enum(['fill', 'refine']).default('fill'),
+  })
+  // The floor depends on the intent — a refinement is an instruction, not a
+  // description, and "shorter" says everything it needs to in seven characters.
+  .superRefine((value, ctx) => {
+    const min = AI_ASSIST_MIN_INPUT_LENGTH[value.intent];
+    if (value.description.trim().length < min) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['description'],
+        message:
+          value.intent === 'refine'
+            ? `Describe the change you want (at least ${min} characters)`
+            : `Description must be at least ${min} characters`,
+      });
+    }
+  });
 
 /**
  * POST /api/ai/form-prefill
