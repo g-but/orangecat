@@ -97,10 +97,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     if (result.success) {
       return apiSuccess(result);
+    } else if (result.status === 'denied') {
+      // Denial reasons come from the permission service and are derived from
+      // the user's own settings ("exceeds your per-action cap of X BTC", "daily
+      // limit reached") — surfacing them is what makes caps actionable.
+      return apiForbidden(result.error || 'Action not permitted');
     } else {
-      const safeError =
-        result.status === 'denied' ? 'Action not permitted' : 'Action could not be executed';
-      return result.status === 'denied' ? apiForbidden(safeError) : apiBadRequest(safeError);
+      return apiBadRequest('Action could not be executed');
     }
   } catch (error) {
     logger.error('Execute cat action error', error, 'CatActionsAPI');
