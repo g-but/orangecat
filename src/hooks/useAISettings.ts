@@ -22,6 +22,8 @@ export interface UserAIPreferences {
   onboarding_completed: boolean;
   onboarding_completed_at: string | null;
   onboarding_step: number;
+  /** Consent: may Cat extract + store memories from conversations? Gates extractAndStoreMemories. */
+  memory_enabled: boolean;
   /** The free platform default's position in the Cat fallback chain (0 = first). */
   platform_chain_position: number;
   cached_total_requests: number;

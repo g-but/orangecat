@@ -11,6 +11,7 @@ import { SettingsEmailSection } from './SettingsEmailSection';
 import { SettingsPasswordSection } from './SettingsPasswordSection';
 import { SettingsSecuritySection } from './SettingsSecuritySection';
 import { SettingsDangerSection } from './SettingsDangerSection';
+import { SettingsDataSection } from './SettingsDataSection';
 import { SettingsModals } from './SettingsModals';
 
 const SETTINGS_SUB_PAGES: Array<{
@@ -114,6 +115,8 @@ export default function SettingsPage() {
               onViewRecoveryCodes={() => setShowRecoveryCodes(true)}
               onMFADisableComplete={refreshMFAStatus}
             />
+            <SettingsDataSection />
+
             <SettingsDangerSection isDeleting={isDeleting} onDelete={handleDeleteAccount} />
           </div>
         </div>

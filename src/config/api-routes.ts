@@ -168,6 +168,7 @@ export const API_ROUTES = {
     ACTIVITIES: (slug: string) => `${ENTITY_REGISTRY['group'].apiEndpoint}/${slug}/activities`,
   },
   JOBS: '/api/jobs',
+  ACCOUNT_EXPORT: '/api/account/export',
   DELETE_USER: '/api/delete-user',
   WAITLIST: '/api/waitlist',
   AI_ASSISTANTS: {
@@ -187,3 +188,6 @@ export const API_ROUTES = {
     RECEIVE_INFO: (id: string) => `/api/bookings/${id}/receive-info`,
   },
 } as const;
+
+/** Download filename served by API_ROUTES.ACCOUNT_EXPORT (and used by its UI button). */
+export const ACCOUNT_EXPORT_FILENAME = 'orangecat-account-export.json';
