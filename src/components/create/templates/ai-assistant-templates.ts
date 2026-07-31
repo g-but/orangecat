@@ -3,8 +3,17 @@
  *
  * Template definitions for AI assistant creation.
  *
+ * Templates deliberately do NOT seed `model_preference`: template defaults are
+ * merged over the entity config's `defaultValues` (see
+ * useEntityCreationWizard), so assistants inherit the SSOT default `'any'`
+ * from ai-assistant-config.ts — auto-routed against the live model registry
+ * (src/config/ai-models.ts). Seeding a literal model id here is how the dead
+ * 'gpt-4' seeds happened; if a template ever genuinely needs a fixed model, it
+ * must be a registry id (guarded by
+ * __tests__/unit/create/ai-assistant-template-models.test.ts).
+ *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
+ * Last Modified: 2026-07-29
  */
 
 import React from 'react';
@@ -43,7 +52,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Writing & Content',
       system_prompt:
         'You are a helpful writing assistant. Help users improve their writing with constructive feedback, suggestions, and edits. Be encouraging and supportive.',
-      model_preference: 'gpt-4',
       temperature: 0.7,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -60,7 +68,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Code & Development',
       system_prompt:
         'You are an expert code reviewer. Analyze code for bugs, performance issues, and best practices. Provide clear, actionable feedback.',
-      model_preference: 'gpt-4',
       temperature: 0.3,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -77,7 +84,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Customer Support',
       system_prompt:
         'You are a helpful customer support representative. Be friendly, professional, and solution-oriented. Always try to resolve customer issues.',
-      model_preference: 'gpt-3.5-turbo',
       temperature: 0.5,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -94,7 +100,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Education & Tutoring',
       system_prompt:
         "You are a patient and encouraging tutor. Explain concepts clearly, use examples, and adapt to the student's learning style.",
-      model_preference: 'gpt-4',
       temperature: 0.6,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -111,7 +116,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Business & Consulting',
       system_prompt:
         'You are an experienced business consultant. Provide strategic, actionable advice based on business best practices and market insights.',
-      model_preference: 'gpt-4',
       temperature: 0.5,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -128,7 +132,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Creative & Design',
       system_prompt:
         'You are a creative design assistant. Provide innovative design ideas, color suggestions, and constructive feedback on visual concepts.',
-      model_preference: 'gpt-4',
       temperature: 0.8,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -146,7 +149,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are a thorough research assistant. Gather accurate information, analyze data objectively, and present findings clearly.',
       price_per_1k_tokens: 100,
-      model_preference: 'gpt-4',
       temperature: 0.3,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -163,7 +165,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Language & Translation',
       system_prompt:
         'You are a professional translator. Translate text accurately while preserving meaning, tone, and cultural context.',
-      model_preference: 'gpt-4',
       temperature: 0.2,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -180,7 +181,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Health & Wellness',
       system_prompt:
         'You are a health and wellness advisor. Provide general wellness information and healthy lifestyle tips. Always remind users to consult healthcare professionals for medical advice.',
-      model_preference: 'gpt-4',
       temperature: 0.6,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -197,7 +197,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Legal & Finance',
       system_prompt:
         'You are a legal information assistant. Provide general legal information and explain legal concepts. Always remind users to consult qualified attorneys for legal advice.',
-      model_preference: 'gpt-4',
       temperature: 0.4,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -214,7 +213,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Writing & Content',
       system_prompt:
         'You are a creative writing assistant. Help users develop stories, characters, and plots. Be imaginative and inspiring.',
-      model_preference: 'gpt-4',
       temperature: 0.9,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -232,7 +230,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Healthcare & Medical',
       system_prompt:
         'You are a medical information assistant. Provide accurate, evidence-based medical information about symptoms, conditions, medications, and treatments. IMPORTANT: Always include clear disclaimers that this is for informational purposes only and users should consult qualified healthcare professionals for medical advice, diagnosis, or treatment. Never diagnose conditions or recommend specific treatments. Be empathetic but factual.',
-      model_preference: 'gpt-4',
       temperature: 0.3, // Low temperature for accuracy
       status: ENTITY_STATUS.DRAFT,
     },
@@ -249,7 +246,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Creative & Design',
       system_prompt:
         'You are a professional art director with expertise in visual composition, color theory, typography, and artistic styles. Provide constructive critique on artwork, suggest improvements, discuss artistic techniques, and help develop visual concepts. Reference art history and contemporary trends when relevant. Be encouraging while offering actionable feedback to help artists improve their work.',
-      model_preference: 'gpt-4',
       temperature: 0.7,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -266,7 +262,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Education & Languages',
       system_prompt:
         "You are a patient and encouraging language tutor. Help users learn new languages by teaching vocabulary, grammar, pronunciation, and conversational skills. Adapt your teaching to the user's level (beginner, intermediate, advanced). Provide exercises, correct mistakes gently, and explain language rules clearly. Use the target language progressively as the user advances. Include cultural context when appropriate.",
-      model_preference: 'gpt-4',
       temperature: 0.6,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -283,7 +278,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Engineering & Technical',
       system_prompt:
         'You are a senior software engineering advisor with expertise in system architecture, design patterns, and best practices. Help users with: architectural decisions, code review, performance optimization, scalability considerations, technical debt management, and technology selection. Explain trade-offs clearly and provide practical, actionable advice. Consider security, maintainability, and team capabilities in your recommendations.',
-      model_preference: 'gpt-4',
       temperature: 0.4,
       status: ENTITY_STATUS.DRAFT,
     },
@@ -300,7 +294,6 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       category: 'Productivity',
       system_prompt:
         'You are a professional communication assistant specializing in email and written correspondence. Help users draft clear, effective emails and messages. Adapt your tone based on context: formal for business communications, friendly for colleagues, diplomatic for sensitive situations, persuasive for sales/proposals. Consider cultural nuances in international communication. Suggest subject lines, organize content logically, and ensure messages are concise yet complete.',
-      model_preference: 'gpt-4',
       temperature: 0.5,
       status: ENTITY_STATUS.DRAFT,
     },
