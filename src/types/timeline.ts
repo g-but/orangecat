@@ -111,6 +111,28 @@ export type TimelineSubjectType =
  */
 export type TimelineVisibility = 'public' | 'followers' | 'private';
 
+/**
+ * Image attached to a short post, stored verbatim at `metadata.image`
+ * (snake_case to match the other metadata keys). Sourced from the CC0/PD
+ * Openverse picker, so a remote URL — no upload pipeline involved.
+ */
+export interface PostImageMeta {
+  url: string;
+  alt: string;
+  /** Creator attribution shown under the image when present. */
+  credit: string | null;
+  license: string | null;
+  source_url: string | null;
+}
+
+/** SSOT reader for `metadata.image` — every render surface goes through this. */
+export function getPostImage(metadata: Record<string, any> | undefined): PostImageMeta | null {
+  const img = metadata?.image;
+  return img && typeof img === 'object' && typeof img.url === 'string' && img.url
+    ? (img as PostImageMeta)
+    : null;
+}
+
 // ==================== CORE TIMELINE EVENT ====================
 
 /**
@@ -157,7 +179,7 @@ export interface TimelineEvent {
   updatedAt: string;
 
   // Metadata
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   metadata?: Record<string, any>;
   tags?: string[];
 
@@ -202,7 +224,7 @@ interface TimelineEmbed {
   url: string;
   title?: string;
   thumbnail?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   metadata?: Record<string, any>;
 }
 
@@ -388,7 +410,7 @@ export interface CreateTimelineEventRequest {
   quantity?: number;
   visibility?: TimelineVisibility;
   isFeatured?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   metadata?: Record<string, any>;
   tags?: string[];
   parentEventId?: string;
@@ -402,7 +424,7 @@ export interface TimelineEventResponse {
   success: boolean;
   event?: TimelineEvent | TimelineDisplayEvent;
   error?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   metadata?: Record<string, any>;
 }
 
@@ -428,7 +450,7 @@ export interface TimelineEventDb extends Omit<
   event_timestamp: string;
   created_at: string;
   updated_at: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   metadata?: Record<string, any>;
   tags?: string[];
   parent_event_id?: string;

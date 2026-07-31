@@ -9,7 +9,7 @@ import { ENTITY_STATUS } from '@/config/database-constants';
 import { TIMELINE_CONTENT_LIMITS } from '@/config/timeline';
 import { timelineService } from '@/services/timeline';
 import { offlineQueueService } from '@/lib/offline-queue';
-import type { TimelineSubjectType, TimelineDisplayEvent } from '@/types/timeline';
+import type { TimelineSubjectType, TimelineDisplayEvent, PostImageMeta } from '@/types/timeline';
 import {
   getEventIcon,
   getEventDisplayType,
@@ -67,6 +67,7 @@ interface CreateOptimisticEventParams {
   visibility: TimelineVisibility;
   selectedProjects: string[];
   parentEventId?: string;
+  image?: PostImageMeta;
 }
 
 /**
@@ -74,8 +75,16 @@ interface CreateOptimisticEventParams {
  * before the server confirms the post creation.
  */
 function createOptimisticEvent(params: CreateOptimisticEventParams): TimelineDisplayEvent {
-  const { user, content, subjectType, subjectId, visibility, selectedProjects, parentEventId } =
-    params;
+  const {
+    user,
+    content,
+    subjectType,
+    subjectId,
+    visibility,
+    selectedProjects,
+    parentEventId,
+    image,
+  } = params;
 
   const optimisticId = `optimistic-${Date.now()}-${Math.random()}`;
   const now = new Date().toISOString();
@@ -108,6 +117,7 @@ function createOptimisticEvent(params: CreateOptimisticEventParams): TimelineDis
       cross_posted_projects: selectedProjects.length > 0 ? selectedProjects : undefined,
       is_optimistic: true,
       is_reply: !!parentEventId,
+      ...(image ? { image } : {}),
     },
     parentEventId,
     eventTimestamp: now,
@@ -247,6 +257,7 @@ interface PostSubmitOptions {
   visibility: TimelineVisibility;
   selectedProjects: string[];
   parentEventId?: string;
+  image?: PostImageMeta;
   onOptimisticUpdate?: (event: TimelineDisplayEvent) => void;
 }
 
@@ -268,6 +279,7 @@ export async function submitPost(options: PostSubmitOptions): Promise<PostSubmit
     visibility,
     selectedProjects,
     parentEventId,
+    image,
     onOptimisticUpdate,
   } = options;
 
@@ -289,6 +301,7 @@ export async function submitPost(options: PostSubmitOptions): Promise<PostSubmit
     visibility,
     selectedProjects,
     parentEventId,
+    image,
   });
   onOptimisticUpdate?.(optimisticEvent);
 
@@ -310,7 +323,7 @@ export async function submitPost(options: PostSubmitOptions): Promise<PostSubmit
         title,
         description: postContent,
         visibility,
-        metadata: { is_user_post: true, is_reply: true },
+        metadata: { is_user_post: true, is_reply: true, ...(image ? { image } : {}) },
         parentEventId,
       })
     : await timelineService.createEventWithVisibility({
@@ -321,7 +334,11 @@ export async function submitPost(options: PostSubmitOptions): Promise<PostSubmit
         title,
         description: postContent,
         visibility,
-        metadata: { is_user_post: true, cross_posted_count: selectedProjects.length },
+        metadata: {
+          is_user_post: true,
+          cross_posted_count: selectedProjects.length,
+          ...(image ? { image } : {}),
+        },
         timelineContexts,
       });
 
@@ -347,6 +364,7 @@ export async function queueOfflinePost(options: PostSubmitOptions): Promise<void
     visibility,
     selectedProjects,
     parentEventId,
+    image,
     onOptimisticUpdate,
   } = options;
 
@@ -365,6 +383,7 @@ export async function queueOfflinePost(options: PostSubmitOptions): Promise<void
         is_user_post: true,
         cross_posted: subjectId && subjectId !== user.id,
         cross_posted_projects: selectedProjects.length > 0 ? selectedProjects : undefined,
+        ...(image ? { image } : {}),
       },
     },
     user.id
@@ -379,6 +398,7 @@ export async function queueOfflinePost(options: PostSubmitOptions): Promise<void
       visibility,
       selectedProjects,
       parentEventId,
+      image,
     });
     offlineEvent.id = `offline-${Date.now()}`;
     offlineEvent.metadata = {

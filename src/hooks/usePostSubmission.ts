@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { logger } from '@/utils/logger';
 import { TimelineVisibility } from '@/types/timeline';
-import type { TimelineDisplayEvent } from '@/types/timeline';
+import type { TimelineDisplayEvent, PostImageMeta } from '@/types/timeline';
 import {
   formatPostError,
   submitPost,
@@ -25,6 +25,7 @@ interface UsePostSubmissionOptions {
   visibility: TimelineVisibility;
   selectedProjects: string[];
   parentEventId: string | undefined;
+  image: PostImageMeta | undefined;
   onOptimisticUpdate: ((event: TimelineDisplayEvent) => void) | undefined;
   onSuccess: ((event?: TimelineDisplayEvent) => void) | undefined;
   contentValid: boolean;
@@ -41,6 +42,7 @@ export function usePostSubmission({
   visibility,
   selectedProjects,
   parentEventId,
+  image,
   onOptimisticUpdate,
   onSuccess,
   contentValid,
@@ -78,6 +80,7 @@ export function usePostSubmission({
         visibility,
         selectedProjects,
         parentEventId,
+        image,
         onOptimisticUpdate,
       });
       if (!result.success) {
@@ -104,6 +107,7 @@ export function usePostSubmission({
     visibility,
     selectedProjects,
     parentEventId,
+    image,
     onOptimisticUpdate,
     onSuccess,
     clearDraft,
@@ -124,6 +128,7 @@ export function usePostSubmission({
           visibility,
           selectedProjects,
           parentEventId,
+          image,
           onOptimisticUpdate,
         });
         setError(null);
@@ -168,6 +173,7 @@ export function usePostSubmission({
     selectedProjects,
     subjectType,
     subjectId,
+    image,
     onOfflineQueued,
   ]);
 

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { logger } from '@/utils/logger';
 import { useAuth } from '@/hooks/useAuth';
-import type { TimelineVisibility, TimelineDisplayEvent } from '@/types/timeline';
+import type { TimelineVisibility, TimelineDisplayEvent, PostImageMeta } from '@/types/timeline';
 import { usePostDraft } from '@/hooks/usePostDraft';
 import { fetchUserProjects, type UserProject } from '@/services/timeline/utils/post-composer';
 import { usePostSubmission } from './usePostSubmission';
@@ -29,6 +29,8 @@ interface PostComposerState {
   setVisibility: (visibility: TimelineVisibility) => void;
   selectedProjects: string[];
   setSelectedProjects: (projects: string[]) => void;
+  image: PostImageMeta | null;
+  setImage: (image: PostImageMeta | null) => void;
   userProjects: UserProject[];
   loadingProjects: boolean;
   isPosting: boolean;
@@ -64,6 +66,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<TimelineVisibility>(defaultVisibility || 'public');
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [image, setImage] = useState<PostImageMeta | null>(null);
   const [userProjects, setUserProjects] = useState<UserProject[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
 
@@ -97,6 +100,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
   const clearFormState = useCallback(() => {
     setContent('');
     setSelectedProjects([]);
+    setImage(null);
   }, []);
 
   const {
@@ -117,6 +121,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     visibility,
     selectedProjects,
     parentEventId,
+    image: image ?? undefined,
     onOptimisticUpdate,
     onSuccess,
     contentValid,
@@ -154,6 +159,8 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     setVisibility,
     selectedProjects,
     setSelectedProjects,
+    image,
+    setImage,
     userProjects,
     loadingProjects,
     isPosting,
