@@ -1,7 +1,9 @@
 /**
- * Server-side image generation against a user's OWN provider key
- * (OpenAI-compatible POST {baseUrl}/images/generations). BYOK-only — this is
- * never called with a platform key; see IMAGE_PROVIDER_RUNTIME.
+ * Server-side image generation against a user's OWN provider key. Two call
+ * styles (see IMAGE_PROVIDER_RUNTIME): OpenAI-style POST
+ * {baseUrl}/images/generations, or OpenRouter's /chat/completions with
+ * `modalities: ['image','text']` returning data-URI images. BYOK-only —
+ * this is never called with a platform key.
  */
 
 import { logger } from '@/utils/logger';
@@ -32,6 +34,19 @@ function sniffMimeType(bytes: Uint8Array): string {
 }
 
 export async function generateImageWithKey(opts: {
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+  prompt: string;
+  api: 'images' | 'chat';
+}): Promise<GenerateImageResult> {
+  if (opts.api === 'chat') {
+    return generateViaChat(opts);
+  }
+  return generateViaImagesEndpoint(opts);
+}
+
+async function generateViaImagesEndpoint(opts: {
   apiKey: string;
   baseUrl: string;
   model: string;
@@ -97,6 +112,75 @@ export async function generateImageWithKey(opts: {
   } catch (error) {
     const timedOut = error instanceof Error && error.name === 'TimeoutError';
     logger.warn('Image generation request failed', { model, error: String(error) }, 'ImageGen');
+    return {
+      ok: false,
+      error: timedOut ? 'generation timed out — try a simpler prompt' : 'request failed',
+    };
+  }
+}
+
+/**
+ * OpenRouter shape: a normal chat completion asked for image output; the
+ * generated image comes back as a base64 data URI at
+ * choices[0].message.images[n].image_url.url.
+ */
+async function generateViaChat(opts: {
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+  prompt: string;
+}): Promise<GenerateImageResult> {
+  const { apiKey, baseUrl, model, prompt } = opts;
+
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: prompt }],
+        modalities: ['image', 'text'],
+      }),
+      signal: AbortSignal.timeout(GENERATION_TIMEOUT_MS),
+    });
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as {
+        error?: { message?: string };
+      } | null;
+      const providerMessage = body?.error?.message || `provider returned ${response.status}`;
+      logger.warn(
+        'Image generation (chat) failed upstream',
+        { status: response.status, model, providerMessage },
+        'ImageGen'
+      );
+      return { ok: false, error: providerMessage };
+    }
+
+    const json = (await response.json().catch(() => null)) as {
+      choices?: Array<{ message?: { images?: Array<{ image_url?: { url?: string } }> } }>;
+    } | null;
+    const dataUri = json?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    if (!dataUri) {
+      return { ok: false, error: 'model returned no image — try a different prompt' };
+    }
+
+    const base64 = dataUri.includes(',') ? dataUri.slice(dataUri.indexOf(',') + 1) : dataUri;
+    const bytes = new Uint8Array(Buffer.from(base64, 'base64'));
+    if (bytes.length === 0) {
+      return { ok: false, error: 'model returned an empty image' };
+    }
+    return { ok: true, image: { bytes, mimeType: sniffMimeType(bytes) } };
+  } catch (error) {
+    const timedOut = error instanceof Error && error.name === 'TimeoutError';
+    logger.warn(
+      'Image generation (chat) request failed',
+      { model, error: String(error) },
+      'ImageGen'
+    );
     return {
       ok: false,
       error: timedOut ? 'generation timed out — try a simpler prompt' : 'request failed',

@@ -68,7 +68,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const imageKey = keys.find(k => k.provider in IMAGE_PROVIDER_RUNTIME);
     if (!imageKey) {
       return apiError(
-        'Image generation needs your own OpenAI or xAI API key. Add one in Settings → AI.',
+        'Image generation needs your own API key (OpenRouter, OpenAI, or xAI). Add one in Settings → AI.',
         'NO_IMAGE_KEY',
         400
       );
@@ -84,6 +84,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       baseUrl: runtime.baseUrl,
       model: runtime.defaultImageModel,
       prompt,
+      api: runtime.api,
     });
     if (!result.ok) {
       return apiError(`Image generation failed: ${result.error}`, 'UPSTREAM_ERROR', 502);

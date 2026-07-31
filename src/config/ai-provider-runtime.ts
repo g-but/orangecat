@@ -61,26 +61,40 @@ export function isOpenAICompatibleProvider(providerId: string): boolean {
 export interface ImageProviderRuntimeConfig {
   /** Model used for image generation when the user hasn't picked one. */
   defaultImageModel: string;
+  /**
+   * How the provider exposes image output: the OpenAI-style
+   * POST {baseUrl}/images/generations, or a /chat/completions call with
+   * `modalities: ['image','text']` (OpenRouter's shape).
+   */
+  api: 'images' | 'chat';
+  /** Only needed when the provider isn't in PROVIDER_RUNTIME (OpenRouter). */
+  baseUrl?: string;
 }
 
 /**
- * Providers whose keys can also generate images via the OpenAI-compatible
- * POST {baseUrl}/images/generations endpoint (base URL comes from
- * PROVIDER_RUNTIME above — same provider, same key).
+ * Providers whose keys can also generate images. Base URL comes from
+ * PROVIDER_RUNTIME above unless overridden — same provider, same key.
  *
  * BYOK-only by design: the platform free pool is text-only and must never
- * pay for image generation. OpenRouter is deliberately absent — its image
- * output rides /chat/completions with a different response shape.
+ * pay for image generation.
  */
 export const IMAGE_PROVIDER_RUNTIME: Record<string, ImageProviderRuntimeConfig> = {
-  openai: { defaultImageModel: 'gpt-image-1' },
-  xai: { defaultImageModel: 'grok-2-image' },
+  openai: { defaultImageModel: 'gpt-image-1', api: 'images' },
+  xai: { defaultImageModel: 'grok-2-image', api: 'images' },
+  openrouter: {
+    defaultImageModel: 'google/gemini-3.1-flash-image',
+    api: 'chat',
+    baseUrl: 'https://openrouter.ai/api/v1',
+  },
 };
 
 export function getImageProviderRuntime(
   providerId: string
-): (ImageProviderRuntimeConfig & ProviderRuntimeConfig) | null {
+): (ImageProviderRuntimeConfig & { baseUrl: string }) | null {
   const image = IMAGE_PROVIDER_RUNTIME[providerId];
-  const base = PROVIDER_RUNTIME[providerId];
-  return image && base ? { ...base, ...image } : null;
+  if (!image) {
+    return null;
+  }
+  const baseUrl = image.baseUrl ?? PROVIDER_RUNTIME[providerId]?.baseUrl;
+  return baseUrl ? { ...image, baseUrl } : null;
 }
