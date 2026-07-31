@@ -18,6 +18,7 @@
  */
 
 import { verifyCronSecret } from '@/lib/api/cronAuth';
+import { BUYER_CLAIM_GRACE_MS } from '@/domain/payments/intentExpiry';
 import { apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api/standardResponse';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
@@ -57,17 +58,26 @@ const SWEEPABLE_STATUSES = [
 const ONCHAIN_WATCH_HORIZON_DAYS = 30;
 
 /**
- * Built per-tick because the on-chain clause carries a moving cutoff.
+ * Built per-tick because two clauses carry moving cutoffs.
+ *
+ * The last clause is the one exception to "detectable only": a bare Lightning
+ * address is undetectable, but once its invoice is dead AND the buyer-claim
+ * window has closed, "expired" is a fact, not a guess — no new payment is
+ * possible and no claim is forthcoming. Sweeping those keeps the non-terminal
+ * pool from accumulating stale rows forever. The shared reconcile path applies
+ * the same rule, so including them here just gives it a caller.
  */
-function detectableRailsFilter(): string {
+function sweepCandidatesFilter(): string {
   const horizon = new Date(
     Date.now() - ONCHAIN_WATCH_HORIZON_DAYS * 24 * 60 * 60 * 1000
   ).toISOString();
+  const claimCutoff = new Date(Date.now() - BUYER_CLAIM_GRACE_MS).toISOString();
 
   return [
     'and(payment_method.eq.nwc,payment_hash.not.is.null)',
     'and(payment_method.eq.lightning_address,lnurl_verify_url.not.is.null)',
     `and(payment_method.eq.onchain,onchain_address.not.is.null,created_at.gte.${horizon})`,
+    `and(payment_method.eq.lightning_address,lnurl_verify_url.is.null,expires_at.lt.${claimCutoff})`,
   ].join(',');
 }
 
@@ -85,7 +95,7 @@ async function pickCandidates(admin: SupabaseClient, limit: number): Promise<Pay
     .from(DATABASE_TABLES.PAYMENT_INTENTS)
     .select('*')
     .in('status', SWEEPABLE_STATUSES)
-    .or(detectableRailsFilter())
+    .or(sweepCandidatesFilter())
     .order('last_polled_at', { ascending: true, nullsFirst: true })
     .limit(limit);
 
