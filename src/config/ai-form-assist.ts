@@ -50,6 +50,24 @@ export const USER_OVERRIDABLE_FIELDS: readonly string[] = [
   'fixed_price',
 ];
 
+/**
+ * Shortest input each intent accepts, enforced identically on client and server.
+ *
+ * The two floors differ because the two inputs differ: `fill` takes a
+ * description of a thing that does not exist yet and needs real substance to
+ * work from, while `refine` takes an instruction about a form that is already
+ * full — and "shorter", "longer" and "in german" are all perfectly clear at
+ * well under ten characters.
+ *
+ * One number per intent, in one place: the button and the API used to disagree
+ * (enabled at 3, rejected under 10), so the most natural way to ask for a small
+ * change failed with "Description must be at least 10 characters".
+ */
+export const AI_ASSIST_MIN_INPUT_LENGTH: Record<AiAssistIntent, number> = {
+  fill: 10,
+  refine: 3,
+};
+
 // ==================== ADJUSTMENTS ====================
 
 /** Which fields an adjustment is relevant to. Omit to always offer it. */

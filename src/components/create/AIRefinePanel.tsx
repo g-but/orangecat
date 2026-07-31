@@ -3,7 +3,7 @@
 import { Sparkles, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { AIAssistChip } from './AIAssistChip';
-import type { AiAdjustment } from '@/config/ai-form-assist';
+import { AI_ASSIST_MIN_INPUT_LENGTH, type AiAdjustment } from '@/config/ai-form-assist';
 
 interface AIRefinePanelProps {
   /** Already filtered to what this form's fields support */
@@ -74,7 +74,7 @@ export function AIRefinePanel({
           type="button"
           size="lg"
           onClick={onSubmit}
-          disabled={isBlocked || instruction.trim().length < 3}
+          disabled={isBlocked || instruction.trim().length < AI_ASSIST_MIN_INPUT_LENGTH.refine}
           className="w-full gap-2 sm:w-auto"
         >
           {isTyping ? (
