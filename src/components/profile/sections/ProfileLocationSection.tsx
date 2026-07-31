@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { ProfileLocationSectionProps } from '../types';
+import { coerceCoordinate } from '@/lib/validation/base';
 
 export function ProfileLocationSection({
   form,
@@ -150,8 +151,11 @@ export function ProfileLocationSection({
       <input type="hidden" {...form.register('location_country')} />
       <input type="hidden" {...form.register('location_city')} />
       <input type="hidden" {...form.register('location_zip')} />
-      <input type="hidden" {...form.register('latitude')} />
-      <input type="hidden" {...form.register('longitude')} />
+      {/* Numeric coords: coerce the hidden input's string ("" when unset) to a
+          number|null so the resolver's z.number() never sees "" — which would
+          silently block the whole save. */}
+      <input type="hidden" {...form.register('latitude', { setValueAs: coerceCoordinate })} />
+      <input type="hidden" {...form.register('longitude', { setValueAs: coerceCoordinate })} />
       <input type="hidden" {...form.register('location_context')} />
     </>
   );

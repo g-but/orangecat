@@ -127,6 +127,23 @@ export const optionalText = (maxLen?: number) => {
 export const optionalUrl = () => z.string().url().optional().nullable().or(z.literal(''));
 
 /**
+ * Coerce a coordinate value (latitude/longitude) to a number, or null when it
+ * is empty/blank/NaN. The location UI registers these as hidden text inputs, so
+ * an unset coordinate arrives as the string "" (or a numeric string once set).
+ * Used by `normalizeProfileData` to guarantee "" never reaches the numeric DB
+ * column, and available for the input layer to coerce at the source.
+ */
+export const coerceCoordinate = (val: unknown): number | null => {
+  if (val === '' || val === null || val === undefined) return null;
+  if (typeof val === 'number') return Number.isNaN(val) ? null : val;
+  if (typeof val === 'string') {
+    const n = Number(val.trim());
+    return val.trim() === '' || Number.isNaN(n) ? null : n;
+  }
+  return null;
+};
+
+/**
  * Zod schema for Lightning address validation
  * Use this in any schema that accepts Lightning addresses
  */
@@ -296,6 +313,14 @@ export function normalizeProfileData(data: unknown): ProfileData {
   if (!normalized.name || (typeof normalized.name === 'string' && normalized.name.trim() === '')) {
     normalized.name = normalized.username;
   }
+
+  // Coordinates arrive as "" from the hidden lat/long inputs when unset — map
+  // that (and any blank/NaN/numeric-string) to a number or null so it never
+  // reaches the numeric DB column as "". Defends the server path; the input
+  // layer (ProfileLocationSection) also coerces so the client resolver, which
+  // validates raw form values against z.number(), never sees "".
+  if ('latitude' in normalized) normalized.latitude = coerceCoordinate(normalized.latitude);
+  if ('longitude' in normalized) normalized.longitude = coerceCoordinate(normalized.longitude);
 
   // Auto-add https:// to website if protocol is missing
   if (normalized.website && typeof normalized.website === 'string') {
