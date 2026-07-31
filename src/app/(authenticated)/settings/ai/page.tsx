@@ -41,6 +41,7 @@ export default function AISettingsPage() {
     deleteKey,
     setPrimaryKey,
     reorderKeys,
+    updatePreferences,
   } = useAISettings();
 
   if (!hydrated || authLoading) {
@@ -140,7 +141,13 @@ export default function AISettingsPage() {
         </section>
 
         {/* ── Memory ────────────────────────────────────────────────────── */}
-        <CatMemoryManager reloadKey={memoryReloadKey} />
+        <CatMemoryManager
+          reloadKey={memoryReloadKey}
+          memoryEnabled={preferences?.memory_enabled !== false}
+          onToggleMemory={async enabled => {
+            await updatePreferences({ memory_enabled: enabled });
+          }}
+        />
 
         {/* ── Import memory from another AI ──────────────────────────────── */}
         <CatMemoryImport onImported={() => setMemoryReloadKey(k => k + 1)} />

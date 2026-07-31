@@ -172,9 +172,32 @@ function parseFacts(raw: string): string[] {
 }
 
 /**
+ * Consent gate: has this user turned memory off? Reads
+ * user_ai_preferences.memory_enabled (default true — a missing row or a
+ * failed read must never silently disable memory). Only consulted after the
+ * cheap guards pass, so it costs one indexed lookup per self-disclosure turn.
+ */
+export async function memoryConsentGranted(
+  supabase: AnySupabaseClient,
+  userId: string
+): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from(DATABASE_TABLES.USER_AI_PREFERENCES)
+      .select('memory_enabled')
+      .eq('user_id', userId)
+      .maybeSingle();
+    return (data as { memory_enabled?: boolean } | null)?.memory_enabled !== false;
+  } catch {
+    return true;
+  }
+}
+
+/**
  * Distil durable facts from one exchange and store the new ones. Best-effort
  * and non-blocking — call without awaiting on the response path. Skips silently
- * when embeddings are off, the message isn't self-disclosure, or the LLM/DB
+ * when embeddings are off, the message isn't self-disclosure, the user has
+ * turned memory off (user_ai_preferences.memory_enabled), or the LLM/DB
  * fails. Dedupes against existing memories by vector similarity.
  */
 export async function extractAndStoreMemories(
@@ -187,6 +210,9 @@ export async function extractAndStoreMemories(
   model: string
 ): Promise<void> {
   if (!embeddingsEnabled() || !looksLikeSelfDisclosure(userMessage)) {
+    return;
+  }
+  if (!(await memoryConsentGranted(supabase, userId))) {
     return;
   }
   try {

@@ -12,7 +12,6 @@
  * - A conversation's title is auto-set from its first user message
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
@@ -158,6 +157,23 @@ export async function deleteConversation(
     .from(DATABASE_TABLES.CAT_CONVERSATIONS)
     .delete()
     .eq('id', owned)
+    .eq('user_id', userId);
+  return !error;
+}
+
+/**
+ * Delete ALL of a user's Cat conversations (data-controls "delete all").
+ * Deleting the cat_conversations rows is sufficient — cat_messages has
+ * ON DELETE CASCADE on conversation_id, so messages go with them. Returns
+ * success.
+ */
+export async function deleteAllConversations(
+  supabase: AnySupabaseClient,
+  userId: string
+): Promise<boolean> {
+  const { error } = await supabase
+    .from(DATABASE_TABLES.CAT_CONVERSATIONS)
+    .delete()
     .eq('user_id', userId);
   return !error;
 }

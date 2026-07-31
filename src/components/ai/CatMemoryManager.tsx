@@ -25,9 +25,17 @@ interface Memory {
 interface CatMemoryManagerProps {
   /** Bump to force a reload — e.g. after an import adds new memories. */
   reloadKey?: number;
+  /** Consent state: is Cat allowed to store new memories? Omit to hide the toggle. */
+  memoryEnabled?: boolean;
+  /** Called with the new consent value when the user flips the toggle. */
+  onToggleMemory?: (enabled: boolean) => Promise<void> | void;
 }
 
-export function CatMemoryManager({ reloadKey = 0 }: CatMemoryManagerProps = {}) {
+export function CatMemoryManager({
+  reloadKey = 0,
+  memoryEnabled,
+  onToggleMemory,
+}: CatMemoryManagerProps = {}) {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -142,6 +150,32 @@ export function CatMemoryManager({ reloadKey = 0 }: CatMemoryManagerProps = {}) 
             Durable facts Cat has learned about you from your conversations, so it carries context
             across sessions. You control all of it — delete anything, anytime.
           </p>
+          {memoryEnabled !== undefined && onToggleMemory && (
+            <label className="mt-3 flex cursor-pointer items-center gap-3">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={memoryEnabled}
+                aria-label="Remember details from our conversations"
+                onClick={() => void onToggleMemory(!memoryEnabled)}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                  memoryEnabled ? 'bg-accent-warm' : 'bg-surface-raised border border-default'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                    memoryEnabled ? 'translate-x-[22px]' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
+              <span className="text-sm text-fg-primary">
+                Remember details from our conversations
+                <span className="block text-xs text-fg-tertiary">
+                  Off = Cat stops saving new memories. Existing ones stay until you delete them.
+                </span>
+              </span>
+            </label>
+          )}
         </div>
       </div>
 
