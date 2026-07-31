@@ -22,6 +22,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 jest.mock('@/services/cat/permission-service', () => ({
   CatPermissionService: jest.fn().mockImplementation(() => ({
     checkPermission: jest.fn().mockResolvedValue({ allowed: true, requiresConfirmation: false }),
+    checkSpendCaps: jest.fn().mockResolvedValue({ allowed: true }),
   })),
 }));
 

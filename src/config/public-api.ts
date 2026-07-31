@@ -47,10 +47,27 @@ export const PUBLIC_API_INTEGRATION_SCOPE_TOKENS = [
   'timeline.write',
   'stakeholders.read',
   'stakeholders.write',
+  'payments.read',
+  'payments.write',
 ] as const;
 
 /** Non-entity v1 endpoints (publish bus, stakeholder graph, discovery, …). */
 export const PUBLIC_API_INTEGRATION_ENDPOINTS = [
+  {
+    name: 'payments',
+    methods: ['POST'] as const,
+    endpoint: `${PUBLIC_API_BASE}/payments`,
+  },
+  {
+    name: 'payments.status',
+    methods: ['GET'] as const,
+    endpoint: `${PUBLIC_API_BASE}/payments/{id}`,
+  },
+  {
+    name: 'payments.public',
+    methods: ['POST'] as const,
+    endpoint: `${PUBLIC_API_BASE}/payments/public`,
+  },
   {
     name: 'timeline.publish',
     methods: ['POST'] as const,

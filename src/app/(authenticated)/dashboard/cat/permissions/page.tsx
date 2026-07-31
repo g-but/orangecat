@@ -12,6 +12,7 @@ import { TooltipProvider } from '@/components/ui/Tooltip';
 import type { PermissionData } from './types';
 import { PermissionStats } from './PermissionStats';
 import { CategoryRow } from './CategoryRow';
+import { SpendCapsCard } from './SpendCapsCard';
 import { PermissionPresets } from './PermissionPresets';
 import { PermissionInfo } from './PermissionInfo';
 
@@ -193,16 +194,24 @@ export default function CatPermissionsPage() {
 
           <div className="space-y-4">
             {summary.categories.map(cat => (
-              <CategoryRow
-                key={cat.category}
-                cat={cat}
-                actions={availableActions.filter(a => a.category === cat.category)}
-                isExpanded={expandedCategories.has(cat.category)}
-                saving={saving}
-                onToggleExpanded={toggleExpanded}
-                onToggleCategory={toggleCategory}
-                onToggleAction={toggleAction}
-              />
+              <div key={cat.category} className="space-y-4">
+                <CategoryRow
+                  cat={cat}
+                  actions={availableActions.filter(a => a.category === cat.category)}
+                  isExpanded={expandedCategories.has(cat.category)}
+                  saving={saving}
+                  onToggleExpanded={toggleExpanded}
+                  onToggleCategory={toggleCategory}
+                  onToggleAction={toggleAction}
+                />
+                {cat.category === 'payments' && cat.enabled && (
+                  <SpendCapsCard
+                    caps={data.spendCaps}
+                    disabled={saving !== null}
+                    onSaved={caps => setData(prev => (prev ? { ...prev, spendCaps: caps } : prev))}
+                  />
+                )}
+              </div>
             ))}
           </div>
 

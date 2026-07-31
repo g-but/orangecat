@@ -24,6 +24,7 @@ interface CatPermission {
   requires_confirmation: boolean; // Override: always confirm even if action doesn't require it
   daily_limit?: number; // Max executions per day (null = unlimited)
   max_btc_per_action?: number; // Max BTC per payment action (decimal, e.g. 0.001)
+  max_btc_per_day?: number; // Max total BTC across payment actions per day
   created_at: string;
   updated_at: string;
 }
@@ -34,6 +35,18 @@ interface PermissionCheck {
   requiresConfirmation: boolean;
   dailyUsage?: number;
   dailyLimit?: number;
+}
+
+export interface SpendCaps {
+  maxBtcPerAction: number | null;
+  maxBtcPerDay: number | null;
+}
+
+export interface SpendCapCheck {
+  allowed: boolean;
+  reason?: string;
+  /** BTC already spent (or in flight) today across payment actions. */
+  spentTodayBtc?: number;
 }
 
 interface UserPermissionSummary {
@@ -59,6 +72,23 @@ const DEFAULT_PERMISSIONS: Partial<Record<ActionCategory, boolean>> = {
   organization: false,
   settings: false,
 };
+
+/**
+ * Combine caps from the matched permission rows (specific action + category '*').
+ * The stricter (lower) non-null cap wins. Exported for tests.
+ */
+export function effectiveSpendCaps(
+  rows: { max_btc_per_action?: number | null; max_btc_per_day?: number | null }[]
+): SpendCaps {
+  const min = (values: (number | null | undefined)[]): number | null => {
+    const present = values.filter((v): v is number => typeof v === 'number' && v > 0);
+    return present.length > 0 ? Math.min(...present) : null;
+  };
+  return {
+    maxBtcPerAction: min(rows.map(r => r.max_btc_per_action)),
+    maxBtcPerDay: min(rows.map(r => r.max_btc_per_day)),
+  };
+}
 
 // ==================== SERVICE ====================
 
@@ -153,6 +183,104 @@ export class CatPermissionService {
   }
 
   /**
+   * Enforce BTC spend caps for a payment action.
+   *
+   * Caps live on cat_permissions rows: the matched specific-action row and/or the
+   * category-wide ('*') payments row. When both define a cap the stricter (lower)
+   * one wins. Daily spend is derived from cat_action_log.amount_btc — rows still
+   * 'executing' count toward the budget (a crash mid-payment may still have
+   * settled, so we fail safe).
+   */
+  async checkSpendCaps(
+    userId: string,
+    actionId: string,
+    amountBtc: number | null,
+    options: { excludeLogId?: string } = {}
+  ): Promise<SpendCapCheck> {
+    const action = CAT_ACTIONS[actionId];
+    if (!action || action.category !== 'payments' || !amountBtc || amountBtc <= 0) {
+      return { allowed: true };
+    }
+
+    const { data: rows } = await this.supabase
+      .from(DATABASE_TABLES.CAT_PERMISSIONS)
+      .select('action_id, max_btc_per_action, max_btc_per_day')
+      .eq('user_id', userId)
+      .eq('category', action.category)
+      .in('action_id', [actionId, '*']);
+
+    const caps = effectiveSpendCaps(rows ?? []);
+
+    if (caps.maxBtcPerAction !== null && amountBtc > caps.maxBtcPerAction) {
+      return {
+        allowed: false,
+        reason: `Amount ${amountBtc} BTC exceeds your per-action cap of ${caps.maxBtcPerAction} BTC. Raise the cap in Cat → Permissions if intended.`,
+      };
+    }
+
+    if (caps.maxBtcPerDay !== null) {
+      const spentTodayBtc = await this.getDailySpendBtc(userId, options.excludeLogId);
+      if (spentTodayBtc + amountBtc > caps.maxBtcPerDay) {
+        const remaining = Math.max(0, caps.maxBtcPerDay - spentTodayBtc);
+        return {
+          allowed: false,
+          reason: `This payment would exceed your daily budget of ${caps.maxBtcPerDay} BTC (${remaining} BTC remaining today).`,
+          spentTodayBtc,
+        };
+      }
+      return { allowed: true, spentTodayBtc };
+    }
+
+    return { allowed: true };
+  }
+
+  /**
+   * BTC spent (or in flight) today across all payment actions, from the action log.
+   */
+  async getDailySpendBtc(userId: string, excludeLogId?: string): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let query = this.supabase
+      .from(DATABASE_TABLES.CAT_ACTION_LOG)
+      .select('amount_btc')
+      .eq('user_id', userId)
+      .eq('category', 'payments')
+      .in('status', ['executing', 'completed'])
+      .gte('created_at', today.toISOString());
+
+    // The caller's own in-flight log row must not count against its budget check.
+    if (excludeLogId) {
+      query = query.neq('id', excludeLogId);
+    }
+
+    const { data } = await query;
+
+    return (data ?? []).reduce(
+      (sum: number, row: { amount_btc: number | null }) => sum + (row.amount_btc ?? 0),
+      0
+    );
+  }
+
+  /**
+   * Current spend caps for the payments category (the '*' row — what the UI edits).
+   */
+  async getSpendCaps(userId: string): Promise<SpendCaps> {
+    const { data } = await this.supabase
+      .from(DATABASE_TABLES.CAT_PERMISSIONS)
+      .select('max_btc_per_action, max_btc_per_day')
+      .eq('user_id', userId)
+      .eq('category', 'payments')
+      .eq('action_id', '*')
+      .maybeSingle();
+
+    return {
+      maxBtcPerAction: data?.max_btc_per_action ?? null,
+      maxBtcPerDay: data?.max_btc_per_day ?? null,
+    };
+  }
+
+  /**
    * Get daily usage count for an action
    */
   async getDailyUsage(userId: string, actionId: string): Promise<number> {
@@ -178,27 +306,36 @@ export class CatPermissionService {
     category: ActionCategory,
     options: {
       requiresConfirmation?: boolean;
-      dailyLimit?: number;
-      maxSatsPerAction?: number;
+      dailyLimit?: number | null;
+      maxBtcPerAction?: number | null;
+      maxBtcPerDay?: number | null;
     } = {}
   ): Promise<CatPermission> {
+    const record: Record<string, unknown> = {
+      user_id: userId,
+      action_id: actionId,
+      category,
+      granted: true,
+      requires_confirmation: options.requiresConfirmation ?? true,
+      updated_at: new Date().toISOString(),
+    };
+    // Limits/caps: omitted = leave as-is (a grant toggle must not wipe them);
+    // explicit null = clear.
+    if ('dailyLimit' in options) {
+      record.daily_limit = options.dailyLimit;
+    }
+    if ('maxBtcPerAction' in options) {
+      record.max_btc_per_action = options.maxBtcPerAction;
+    }
+    if ('maxBtcPerDay' in options) {
+      record.max_btc_per_day = options.maxBtcPerDay;
+    }
+
     const { data, error } = await this.supabase
       .from(DATABASE_TABLES.CAT_PERMISSIONS)
-      .upsert(
-        {
-          user_id: userId,
-          action_id: actionId,
-          category,
-          granted: true,
-          requires_confirmation: options.requiresConfirmation ?? true,
-          daily_limit: options.dailyLimit ?? null,
-          max_btc_per_action: options.maxSatsPerAction ?? null,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'user_id,action_id,category',
-        }
-      )
+      .upsert(record, {
+        onConflict: 'user_id,action_id,category',
+      })
       .select()
       .single();
 
@@ -241,7 +378,12 @@ export class CatPermissionService {
   async grantCategory(
     userId: string,
     category: ActionCategory,
-    options: { requiresConfirmation?: boolean; dailyLimit?: number } = {}
+    options: {
+      requiresConfirmation?: boolean;
+      dailyLimit?: number | null;
+      maxBtcPerAction?: number | null;
+      maxBtcPerDay?: number | null;
+    } = {}
   ): Promise<void> {
     await this.grantPermission(userId, '*', category, options);
   }

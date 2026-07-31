@@ -35,6 +35,7 @@ import {
   assetSchema,
   wishlistSchema,
 } from '@/lib/validation';
+import { paymentCreateSchema, publicSupportCreateSchema } from '@/lib/validation/finance';
 
 /**
  * Map public entity types to their request-body Zod schemas. Adding a
@@ -258,6 +259,141 @@ export function registerV1Routes(): void {
       },
     });
   }
+
+  // Payments — the machine-payable loop: discover (entity GET / search) →
+  // pay (POST /payments) → verify (GET /payments/{id} until status=paid).
+  const paymentIntentSchema = z
+    .object({
+      id: z.string().uuid(),
+      status: z
+        .enum([
+          'created',
+          'invoice_ready',
+          'paid',
+          'expired',
+          'failed',
+          'buyer_confirmed',
+          'pending_confirmation',
+        ])
+        .openapi({
+          description:
+            '`paid` is settlement — detected automatically via NWC lookup or LNURL verify. `buyer_confirmed` is an unverified manual claim awaiting recipient confirmation.',
+        }),
+      amount_btc: z.number().openapi({ description: 'Amount in BTC (decimal).' }),
+      bolt11: z.string().nullable().openapi({ description: 'Lightning invoice to pay.' }),
+      onchain_address: z.string().nullable(),
+      expires_at: z.string().datetime().nullable(),
+    })
+    .catchall(z.unknown())
+    .openapi('PaymentIntent');
+
+  const paymentCreateResponseSchema = z
+    .object({
+      payment_intent: paymentIntentSchema,
+      qr_data: z.string().openapi({ description: 'String to render as a payment QR code.' }),
+      method_label: z.string(),
+      expires_in_seconds: z.number().nullable(),
+    })
+    .catchall(z.unknown())
+    .openapi('PaymentCreateResponse');
+
+  openApiRegistry.registerPath({
+    method: 'post',
+    path: `${PUBLIC_API_BASE}/payments`,
+    summary: 'Initiate a payment for an entity',
+    description:
+      'Creates a payment intent and a Lightning invoice (or on-chain address) for a publicly visible entity — a fixed-price purchase creates an order, a contribution supports a project/cause. Requires the `payments.write` scope. Poll GET /api/v1/payments/{id} until `status` is `paid`. Account-less callers should use POST /api/v1/payments/public instead.',
+    tags: ['Payments'],
+    security: [{ IntegrationKey: [] }],
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: paymentCreateSchema.openapi('PaymentCreate') } },
+      },
+    },
+    responses: {
+      201: {
+        description: 'Payment intent created; pay the returned invoice.',
+        content: {
+          'application/json': {
+            schema: apiSuccessSchema(paymentCreateResponseSchema, 'PaymentCreateSuccess'),
+          },
+        },
+      },
+      ...COMMON_ERROR_RESPONSES,
+    },
+  });
+
+  openApiRegistry.registerPath({
+    method: 'get',
+    path: `${PUBLIC_API_BASE}/payments/{id}`,
+    summary: 'Check payment status (settlement verification)',
+    description:
+      'Returns the live status of a payment intent — NWC lookup / LNURL verify runs on read, so `paid` here means settled, not claimed. Only the buyer or seller can read an intent. Requires the `payments.read` scope.',
+    tags: ['Payments'],
+    security: [{ IntegrationKey: [] }],
+    request: {
+      params: z.object({ id: z.string().uuid().openapi({ description: 'Payment intent id.' }) }),
+    },
+    responses: {
+      200: {
+        description: 'Current payment status.',
+        content: {
+          'application/json': {
+            schema: apiSuccessSchema(paymentIntentSchema, 'PaymentStatusSuccess'),
+          },
+        },
+      },
+      401: COMMON_ERROR_RESPONSES[401],
+      403: COMMON_ERROR_RESPONSES[403],
+      404: COMMON_ERROR_RESPONSES[404],
+      429: COMMON_ERROR_RESPONSES[429],
+      500: COMMON_ERROR_RESPONSES[500],
+    },
+  });
+
+  openApiRegistry.registerPath({
+    method: 'post',
+    path: `${PUBLIC_API_BASE}/payments/public`,
+    summary: 'Initiate an account-less payment',
+    description:
+      'Anonymous support flow: no auth required. Returns the invoice plus a bearer `status_token`; poll GET /api/v1/payments/public/{id} with the `X-Payment-Token` header to verify settlement. Rate limited per IP.',
+    tags: ['Payments'],
+    request: {
+      body: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: publicSupportCreateSchema.openapi('PublicPaymentCreate'),
+          },
+        },
+      },
+    },
+    responses: {
+      201: {
+        description: 'Payment intent created; pay the invoice, keep the status token.',
+        content: {
+          'application/json': {
+            schema: apiSuccessSchema(
+              paymentCreateResponseSchema
+                .extend({
+                  status_token: z.string().openapi({
+                    description:
+                      'Bearer token for status polling — the only credential for this intent. Not recoverable if lost.',
+                  }),
+                })
+                .openapi('PublicPaymentCreateResponse'),
+              'PublicPaymentCreateSuccess'
+            ),
+          },
+        },
+      },
+      400: COMMON_ERROR_RESPONSES[400],
+      404: COMMON_ERROR_RESPONSES[404],
+      429: COMMON_ERROR_RESPONSES[429],
+      500: COMMON_ERROR_RESPONSES[500],
+    },
+  });
 
   // Publish bus — not an entity create, so registered explicitly. External
   // clients (FleetCrown) land a build event on a project's wall; idempotent +
