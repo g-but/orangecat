@@ -60,6 +60,9 @@ export interface Database {
           lightning_address: string | null;
           bitcoin_public_key: string | null;
           lightning_node_id: string | null;
+          // Maker profile: work status + concrete ways to help (see @/config/maker-status)
+          current_status: string | null;
+          help_wanted: string[] | null;
           // Status & Verification
           verification_status: string | null;
           verification_data: Json | null;
@@ -115,6 +118,9 @@ export interface Database {
           lightning_address?: string | null;
           bitcoin_public_key?: string | null;
           lightning_node_id?: string | null;
+          // Maker profile: work status + concrete ways to help (see @/config/maker-status)
+          current_status?: string | null;
+          help_wanted?: string[] | null;
           // Status & Verification
           verification_status?: string | null;
           verification_data?: Json | null;
@@ -170,6 +176,9 @@ export interface Database {
           lightning_address?: string | null;
           bitcoin_public_key?: string | null;
           lightning_node_id?: string | null;
+          // Maker profile: work status + concrete ways to help (see @/config/maker-status)
+          current_status?: string | null;
+          help_wanted?: string[] | null;
           // Status & Verification
           verification_status?: string | null;
           verification_data?: Json | null;

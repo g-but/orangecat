@@ -9,6 +9,7 @@ import { ProfileStorageService } from '@/services/profile/storage';
 import { SocialLink } from '@/types/social';
 import { profileSchema as serverProfileSchema } from '@/lib/validation';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import type { MakerStatus, HelpWantedOption } from '@/config/maker-status';
 import { ProfileFieldType } from '@/lib/profile-guidance';
 import { submitProfileForm } from './profileSubmitHandler';
 import type { ProfileFormValues } from '../types';
@@ -98,6 +99,8 @@ export function useProfileEditor({
       currency: (profile.currency as typeof PLATFORM_DEFAULT_CURRENCY) || PLATFORM_DEFAULT_CURRENCY,
       privacy_settings:
         (profile.privacy_settings as { hidden_fields?: string[] } | null | undefined) ?? undefined,
+      current_status: (profile.current_status as MakerStatus) || '',
+      help_wanted: (profile.help_wanted as HelpWantedOption[]) || [],
     },
   });
 
