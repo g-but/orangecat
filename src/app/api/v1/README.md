@@ -70,6 +70,19 @@ handlers currently require a session).
 | `/api/v1/assets`      | POST   | Create an asset              |
 | `/api/v1/wishlists`   | POST   | Create a wishlist            |
 
+### Payments (the machine-payable loop)
+
+| Endpoint                       | Method | Auth                     | What it does                                              |
+| ------------------------------ | ------ | ------------------------ | --------------------------------------------------------- |
+| `/api/v1/payments`             | POST   | key (`payments.write`)   | Create a payment intent + Lightning invoice for an entity |
+| `/api/v1/payments/{id}`        | GET    | key (`payments.read`)    | Live settlement status (NWC lookup / LNURL verify)        |
+| `/api/v1/payments/public`      | POST   | none (IP rate-limited)   | Account-less payment; returns invoice + status token      |
+| `/api/v1/payments/public/{id}` | GET    | `X-Payment-Token` header | Status polling for account-less payments                  |
+
+Together with entity list/get and `/api/v1/search`, this closes the agent
+buy loop: **discover → quote → pay → verify**. The full walkthrough with
+curl examples lives in [`docs/api/AGENTS.md`](../../../docs/api/AGENTS.md).
+
 ### Publish bus
 
 | Endpoint                   | Method | What it does                                          |

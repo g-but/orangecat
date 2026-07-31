@@ -30,6 +30,18 @@ export const CHANGELOG_TAGS: Record<ChangelogTag, { label: string }> = {
 /** Newest first. */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: '2026-07-31',
+    tag: 'feature',
+    title: 'Spending caps for Cat, and payments any machine can make',
+    summary:
+      'Two guardrails-and-rails updates: hard Bitcoin spending limits on Cat payment actions, and a documented API loop so any agent or script can discover, buy, and verify settlement.',
+    items: [
+      'Set a max-per-payment cap and a daily Bitcoin budget in Cat → Permissions; Cat cannot exceed them even after you confirm.',
+      'New public API endpoints: create a payment for any public listing and poll it until it settles — with an integration key or no account at all.',
+      'The full machine-buying walkthrough is in the live API spec at /api/v1/openapi.json.',
+    ],
+  },
+  {
     date: '2026-07-29',
     tag: 'feature',
     title: 'Your Cat learns from real outcomes',
