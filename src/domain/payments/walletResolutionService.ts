@@ -12,6 +12,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { decrypt } from './encryptionService';
+import { detectWalletType } from '@/types/wallet';
 import type { ResolvedWallet } from './types';
 import { logger } from '@/utils/logger';
 
@@ -215,6 +216,31 @@ interface WalletRow {
 }
 
 /**
+ * The on-chain address a payer can actually send to, or null if there isn't one.
+ *
+ * `address_or_xpub` holds either. An extended public key is NOT a payment
+ * address: it is the key you derive addresses FROM, and nothing in this
+ * codebase derives (bip32 and bitcoinjs-lib are dependencies, but no module
+ * imports them). Handing an xpub to the payer produces `bitcoin:xpub6...`, a QR
+ * that no wallet can pay — while the UI reports the seller as ready to receive.
+ *
+ * Refusing to receive is worse for the user than a broken QR only if the QR
+ * works. This one never does, so say so instead: an xpub-only wallet resolves
+ * to no payment method, the same answer the owner's own receive status gives.
+ *
+ * The real fix is per-intent derivation from the xpub, which would also make
+ * on-chain detection sound (a never-reused address identifies its payment
+ * unambiguously; a static one cannot). That is a feature, not a guard.
+ */
+function toPayableOnchainAddress(value?: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+  const trimmed = value.trim();
+  return detectWalletType(trimmed) === 'address' ? trimmed : null;
+}
+
+/**
  * Pick the best payment method from a SINGLE wallet row.
  * Priority: NWC > Lightning Address > On-chain. Returns null if the wallet has
  * no usable payment detail (or its NWC URI fails to decrypt).
@@ -237,8 +263,9 @@ function pickMethodFromWallet(wallet: WalletRow): ResolvedWallet | null {
     };
   }
 
-  if (wallet.address_or_xpub) {
-    return { method: 'onchain', wallet_id: wallet.id, onchain_address: wallet.address_or_xpub };
+  const onchainAddress = toPayableOnchainAddress(wallet.address_or_xpub);
+  if (onchainAddress) {
+    return { method: 'onchain', wallet_id: wallet.id, onchain_address: onchainAddress };
   }
 
   return null;
@@ -335,23 +362,28 @@ export async function resolveUserWallet(
 
   // Check for on-chain address
   const onchainWallet = wallets.find(
-    w => w.address_or_xpub && (w.wallet_type === 'onchain' || w.wallet_type === 'both')
+    w =>
+      toPayableOnchainAddress(w.address_or_xpub) &&
+      (w.wallet_type === 'onchain' || w.wallet_type === 'both')
   );
   if (onchainWallet) {
     return {
       method: 'onchain',
       wallet_id: onchainWallet.id,
-      onchain_address: onchainWallet.address_or_xpub!,
+      onchain_address: toPayableOnchainAddress(onchainWallet.address_or_xpub)!,
     };
   }
 
-  // Fallback: use first wallet's address_or_xpub if available
-  const fallback = wallets[0];
-  if (fallback.address_or_xpub) {
+  // Fallback: the first wallet holding a payable address. This is where an
+  // xpub-only wallet used to leak through — the branch above filters on
+  // wallet_type, but this one never did, so `bitcoin:xpub6...` reached the
+  // payer as a QR no wallet could pay.
+  const fallback = wallets.find(w => toPayableOnchainAddress(w.address_or_xpub));
+  if (fallback) {
     return {
       method: 'onchain',
       wallet_id: fallback.id,
-      onchain_address: fallback.address_or_xpub,
+      onchain_address: toPayableOnchainAddress(fallback.address_or_xpub)!,
     };
   }
 
