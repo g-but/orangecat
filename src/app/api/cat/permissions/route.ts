@@ -31,8 +31,10 @@ const grantPermissionSchema = z.object({
   actionId: z.string().min(1),
   category: categorySchema,
   requiresConfirmation: z.boolean().optional(),
-  dailyLimit: z.number().int().positive().optional(),
-  maxSatsPerAction: z.number().int().positive().optional(),
+  // Limits/caps: omitted = leave unchanged, null = clear. BTC decimals, not sats.
+  dailyLimit: z.number().int().positive().nullable().optional(),
+  maxBtcPerAction: z.number().positive().nullable().optional(),
+  maxBtcPerDay: z.number().positive().nullable().optional(),
 });
 
 const revokePermissionSchema = z.object({
@@ -60,7 +62,9 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
       ...value,
     }));
 
-    return apiSuccess({ summary, availableActions, categories });
+    const spendCaps = await permissionService.getSpendCaps(user.id);
+
+    return apiSuccess({ summary, availableActions, categories, spendCaps });
   } catch (error) {
     logger.error('Get cat permissions error', error, 'CatPermissionsAPI');
     return apiInternalError('Failed to get permissions');
@@ -81,8 +85,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       return apiBadRequest('Invalid request', parseResult.error.errors);
     }
 
-    const { actionId, category, requiresConfirmation, dailyLimit, maxSatsPerAction } =
-      parseResult.data;
+    const { actionId, category, requiresConfirmation, ...rawLimits } = parseResult.data;
 
     if (actionId !== '*') {
       const action = CAT_ACTIONS[actionId];
@@ -94,21 +97,39 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       }
     }
 
+    // Preserve omitted-vs-null semantics: only forward keys the client sent.
+    const limits: {
+      dailyLimit?: number | null;
+      maxBtcPerAction?: number | null;
+      maxBtcPerDay?: number | null;
+    } = {};
+    if ('dailyLimit' in body) {
+      limits.dailyLimit = rawLimits.dailyLimit ?? null;
+    }
+    if ('maxBtcPerAction' in body) {
+      limits.maxBtcPerAction = rawLimits.maxBtcPerAction ?? null;
+    }
+    if ('maxBtcPerDay' in body) {
+      limits.maxBtcPerDay = rawLimits.maxBtcPerDay ?? null;
+    }
+
     const permissionService = createPermissionService(supabase);
     if (actionId === '*') {
       await permissionService.grantCategory(user.id, category as ActionCategory, {
         requiresConfirmation: requiresConfirmation ?? true,
-        dailyLimit,
+        ...limits,
       });
     } else {
       await permissionService.grantPermission(user.id, actionId, category as ActionCategory, {
         requiresConfirmation: requiresConfirmation ?? true,
-        dailyLimit,
-        maxSatsPerAction,
+        ...limits,
       });
     }
 
-    return apiSuccess({ summary: await permissionService.getPermissionSummary(user.id) });
+    return apiSuccess({
+      summary: await permissionService.getPermissionSummary(user.id),
+      spendCaps: await permissionService.getSpendCaps(user.id),
+    });
   } catch (error) {
     logger.error('Grant cat permission error', error, 'CatPermissionsAPI');
     return apiInternalError('Failed to grant permission');

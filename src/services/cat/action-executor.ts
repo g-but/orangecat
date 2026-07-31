@@ -100,6 +100,23 @@ export class CatActionExecutor {
       };
     }
 
+    // 2b. Enforce BTC spend caps early so the user isn't asked to confirm a
+    // payment that will be denied anyway. performAction re-checks as the
+    // enforcement backstop (caps/budget can change between propose and confirm).
+    const spendCheck = await this.permissionService.checkSpendCaps(
+      userId,
+      actionId,
+      this.extractBtcAmount(action, parameters)
+    );
+    if (!spendCheck.allowed) {
+      return {
+        success: false,
+        actionId,
+        status: 'denied',
+        error: spendCheck.reason || 'Spend cap exceeded',
+      };
+    }
+
     // 3. If confirmation required, create pending action
     if (permission.requiresConfirmation) {
       const pendingAction = await this.createPendingAction(
@@ -289,6 +306,28 @@ export class CatActionExecutor {
 
     if (logError) {
       logger.error('Failed to create action log', { error: logError }, 'CatActionExecutor');
+    }
+
+    // Spend-cap backstop: this is the single choke point both the direct and the
+    // confirm-pending paths go through. Denials are logged for the audit trail.
+    const spendCheck = await this.permissionService.checkSpendCaps(
+      userId,
+      action.id,
+      this.extractBtcAmount(action, parameters),
+      { excludeLogId: logEntry?.id }
+    );
+    if (!spendCheck.allowed) {
+      const reason = spendCheck.reason || 'Spend cap exceeded';
+      if (logEntry) {
+        await this.updateActionLog(logEntry.id, 'failed', null, reason);
+      }
+      return {
+        success: false,
+        actionId: action.id,
+        status: 'denied',
+        error: reason,
+        logId: logEntry?.id,
+      };
     }
 
     const handler = ACTION_HANDLERS[action.id];

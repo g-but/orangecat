@@ -22,6 +22,11 @@ export interface CategorySummary {
   enabledActionCount: number;
 }
 
+export interface SpendCaps {
+  maxBtcPerAction: number | null;
+  maxBtcPerDay: number | null;
+}
+
 export interface PermissionData {
   summary: {
     categories: CategorySummary[];
@@ -31,4 +36,5 @@ export interface PermissionData {
   };
   availableActions: Action[];
   categories: Category[];
+  spendCaps: SpendCaps;
 }
