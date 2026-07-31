@@ -7,10 +7,11 @@ import type { StockImage } from '@/services/images/types';
 import { cn } from '@/lib/utils';
 
 /**
- * AI image picker: on open it turns the article into concrete search terms and
- * shows royalty-free (CC0 / public-domain) candidates; the user can also search
- * manually or click a suggested term. Picking one hands back the full-res URL.
- * Used for both the cover and inline body images.
+ * AI image picker: on open it turns the given text into concrete search terms
+ * and shows royalty-free (CC0 / public-domain) candidates; the user can also
+ * search manually or click a suggested term. Picking one hands back the
+ * full-res URL. Used for article covers, inline article images, and the
+ * timeline post composer.
  */
 export default function ImageSuggestPicker({
   title,

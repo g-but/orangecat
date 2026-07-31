@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, ExternalLink } from 'lucide-react';
-import { TimelineDisplayEvent } from '@/types/timeline';
+import { TimelineDisplayEvent, getPostImage } from '@/types/timeline';
 import { renderMarkdownToReact } from '@/utils/markdown';
 import { TIMELINE_SURFACE } from '@/config/timeline';
 import { getExternalAttribution } from '@/config/external-publish';
@@ -53,6 +53,9 @@ export function PostContent({ event }: PostContentProps) {
 
   // Threads-like: never show separate titles; keep posts conversational
   const _shouldShowTitle = false;
+
+  // Attached image (metadata.image, set via the composer's Openverse picker).
+  const postImage = getPostImage(event.metadata);
 
   return (
     <div className="space-y-2">
@@ -238,22 +241,24 @@ export function PostContent({ event }: PostContentProps) {
         </div>
       )}
 
-      {/* FUTURE: Add media rendering (images, videos, embeds) — requires media upload pipeline and storage bucket setup before attachments can be displayed */}
-      {(() => {
-        const attachments =
-          (event.metadata?.attachments as Array<{ type: string; filename: string }>) || [];
-        return attachments.length > 0 ? (
-          <div className="mt-3 space-y-2">
-            {attachments.map((attachment: { type: string; filename: string }, index: number) => (
-              <div key={index} className="rounded-md bg-surface-raised p-4">
-                <p className="text-sm text-fg-secondary">
-                  Media attachment: {attachment.type} - {attachment.filename}
-                </p>
-              </div>
-            ))}
-          </div>
-        ) : null;
-      })()}
+      {/* Attached image — plain <img>: Openverse hosts aren't in next/image remotePatterns */}
+      {postImage && !isRepost && (
+        <figure className="mt-3">
+          {/* eslint-disable-next-line @next/next/no-img-element -- external (Openverse) host */}
+          <img
+            src={postImage.url}
+            alt={postImage.alt || ''}
+            loading="lazy"
+            className="max-h-[28rem] w-auto max-w-full rounded-lg border border-subtle object-contain"
+          />
+          {postImage.credit && (
+            <figcaption className="mt-1 text-2xs text-fg-tertiary">
+              {postImage.credit}
+              {postImage.license ? ` · ${postImage.license.toUpperCase()}` : ''}
+            </figcaption>
+          )}
+        </figure>
+      )}
     </div>
   );
 }
