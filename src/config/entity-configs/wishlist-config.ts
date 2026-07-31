@@ -19,6 +19,7 @@ import {
 import type { FieldGroup } from '@/components/create/types';
 import { WISHLIST_TEMPLATES, type WishlistTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
+import { WALLET_FIELD_GROUP } from './wallet-field-group';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { WISHLIST_TYPES } from '@/config/wishlists';
 
@@ -98,6 +99,9 @@ const fieldGroups: FieldGroup[] = [
       },
     ],
   },
+  // Receiving wallet — contributors pay toward wishlist items; without this
+  // group the wishlist was supportable in the registry but unpayable in practice.
+  WALLET_FIELD_GROUP,
   {
     id: 'media',
     title: 'Cover Image',

@@ -9,6 +9,7 @@ import { CircleDashed } from 'lucide-react';
 import { circleSchema, type CircleFormData } from '@/lib/validation';
 import type { FieldGroup } from '@/components/create/types';
 import { createEntityConfig } from './base-config-factory';
+import { WALLET_FIELD_GROUP } from './wallet-field-group';
 
 const fieldGroups: FieldGroup[] = [
   {
@@ -67,6 +68,9 @@ const fieldGroups: FieldGroup[] = [
       },
     ],
   },
+  // Receiving wallet — circles are registry-supportable; without the selector
+  // there was no way to route support to one (same gap as research/wishlist).
+  WALLET_FIELD_GROUP,
 ];
 
 export const circleConfig = createEntityConfig<CircleFormData>({

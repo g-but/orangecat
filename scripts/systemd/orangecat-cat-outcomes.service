@@ -1,0 +1,18 @@
+# Nightly Cat OUTCOME gate — reality-graded funnel (proposed → published → funded).
+# Runs scripts/eval-cat-outcomes.mjs --gate (deployed to /opt/orangecat/scripts/
+# by scripts/deploy-selfhost.sh) against production. --gate exits non-zero when
+# assistant activity exists but zero actions were logged — the tripwire for the
+# silent dead-audit-pipeline class fixed in July 2026.
+#
+# SSOT: this file lives in the repo at scripts/systemd/ and is installed to
+# /etc/systemd/system/ by deploy-selfhost.sh — edit it here, not on the box.
+[Unit]
+Description=OrangeCat nightly Cat outcome gate (settlement-graded funnel)
+After=network-online.target
+Wants=network-online.target
+OnFailure=notify-failure@%n.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/opt/orangecat/app/.env
+ExecStart=/usr/bin/node /opt/orangecat/scripts/eval-cat-outcomes.mjs --gate

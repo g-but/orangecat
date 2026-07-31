@@ -24,6 +24,7 @@ import {
 } from '@/lib/entity-guidance/research-guidance';
 import type { FieldGroup, EntityTemplate } from '@/components/create/types';
 import { createEntityConfig } from './base-config-factory';
+import { WALLET_FIELD_GROUP } from './wallet-field-group';
 
 // ==================== FORM DATA TYPE ====================
 
@@ -148,6 +149,9 @@ const fieldGroups: FieldGroup[] = [
       },
     ],
   },
+  // Receiving wallet — without this, funders had no way to pay a research
+  // project (the only supportable entity type missing the selector).
+  WALLET_FIELD_GROUP,
   {
     id: 'team',
     title: 'Research Team',
