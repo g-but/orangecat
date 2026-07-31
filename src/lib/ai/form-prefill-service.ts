@@ -6,7 +6,11 @@
  */
 
 import type { AIPrefillResponse } from '@/components/create/types';
-import { USER_OVERRIDABLE_FIELDS, type AiAssistIntent } from '@/config/ai-form-assist';
+import {
+  AI_ASSIST_MIN_INPUT_LENGTH,
+  USER_OVERRIDABLE_FIELDS,
+  type AiAssistIntent,
+} from '@/config/ai-form-assist';
 import { logger } from '@/utils/logger';
 import { extractFieldDescriptions, formatFieldsForPrompt } from './schema-to-prompt';
 import { getSystemPrompt, getUserPrompt, parseAIResponse } from './prompts/form-prefill';
@@ -106,13 +110,19 @@ export async function generateFormPrefill({
   intent = 'fill',
   config,
 }: FormPrefillRequest): Promise<AIPrefillResponse> {
-  // Validate description
-  if (!description || description.trim().length < 10) {
+  // Same per-intent floor as the API schema (AI_ASSIST_MIN_INPUT_LENGTH) — a
+  // hardcoded 10 here used to reject the short refine instructions ("shorter")
+  // the route had just accepted.
+  const minLength = AI_ASSIST_MIN_INPUT_LENGTH[intent];
+  if (!description || description.trim().length < minLength) {
     return {
       success: false,
       data: {},
       confidence: {},
-      error: 'Please provide a longer description (at least 10 characters)',
+      error:
+        intent === 'refine'
+          ? `Describe the change you want (at least ${minLength} characters)`
+          : `Please provide a longer description (at least ${minLength} characters)`,
     };
   }
 

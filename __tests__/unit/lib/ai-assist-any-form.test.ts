@@ -9,6 +9,7 @@
 
 import { resolveAiAssistTarget } from '@/lib/ai/assist-target';
 import { sanitizeAiFields } from '@/lib/ai/sanitize-ai-fields';
+import { generateFormPrefill } from '@/lib/ai/form-prefill-service';
 import { AI_ASSIST_FORMS } from '@/config/ai-assist-forms';
 import { getExampleDescriptions } from '@/config/ai-form-assist';
 import { ENTITY_TYPES } from '@/config/entity-registry';
@@ -120,6 +121,47 @@ describe('sanitizeAiFields — declared fields are enforced, not requested', () 
 
   it('renders a number handed to a text field instead of losing it', () => {
     expect(sanitizeAiFields({ title: 2026 }, fields)).toEqual({ title: '2026' });
+  });
+});
+
+describe('generateFormPrefill — service floor follows the intent, like the route', () => {
+  // #508 lowered the ROUTE floor for refine to 3 but its test mocked this
+  // service, which still hard-rejected under 10 — so "shorter" passed the
+  // route and then died here. Both layers now read AI_ASSIST_MIN_INPUT_LENGTH.
+  const target = resolveAiAssistTarget('service');
+  const envKeys = ['GROQ_API_KEY', 'OPENROUTER_API_KEY'] as const;
+  const saved: Record<string, string | undefined> = {};
+
+  beforeAll(() => {
+    // No provider keys → a request that passes the length gate fails on
+    // provider config, proving the gate let it through without any network.
+    for (const key of envKeys) {
+      saved[key] = process.env[key];
+      delete process.env[key];
+    }
+  });
+
+  afterAll(() => {
+    for (const key of envKeys) {
+      if (saved[key] !== undefined) {
+        process.env[key] = saved[key];
+      }
+    }
+  });
+
+  it('does not reject a short refine instruction as "too short"', async () => {
+    const result = await generateFormPrefill({
+      target: target!,
+      description: 'shorter',
+      intent: 'refine',
+    });
+    expect(result.error).not.toMatch(/at least/);
+  });
+
+  it('still rejects a too-short fill description', async () => {
+    const result = await generateFormPrefill({ target: target!, description: 'hi' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('at least 10');
   });
 });
 
