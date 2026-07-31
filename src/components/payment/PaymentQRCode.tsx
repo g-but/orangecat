@@ -60,6 +60,7 @@ export function PaymentQRCode({
   }, [expiresInSeconds]);
 
   const isLightning = qrData.startsWith('LN') || qrData.startsWith('ln');
+  const isOnchain = qrData.startsWith('bitcoin:');
   const copyText = isLightning ? qrData.toLowerCase() : qrData;
 
   const handleCopy = () => void copy(copyText);
@@ -106,6 +107,16 @@ export function PaymentQRCode({
         >
           <Timer className="h-3 w-3" />
           {secondsLeft <= 0 ? 'Invoice expired' : `Expires in ${formatCountdown(secondsLeft)}`}
+        </p>
+      )}
+
+      {/* No countdown on-chain, because there is no deadline to count down to.
+          Say so, rather than leaving the payer to wonder whether the QR went
+          stale — a Bitcoin address keeps accepting payment indefinitely. */}
+      {expiresInSeconds === undefined && isOnchain && (
+        <p className="flex items-center gap-1 text-xs text-fg-tertiary">
+          <Timer className="h-3 w-3" />
+          No deadline — this address stays valid
         </p>
       )}
 

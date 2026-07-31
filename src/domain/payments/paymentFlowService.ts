@@ -20,6 +20,7 @@ import { convertToBTC } from '@/services/currency/rates';
 import type { CurrencyCode } from '@/config/currencies';
 import { resolveSellerWallet, getSellerUserId } from './walletResolutionService';
 import { generateInvoice } from './invoiceGenerationService';
+import { resolveIntentExpiry, expiresInSecondsFrom } from './intentExpiry';
 import {
   checkNWCPaymentStatus,
   checkOnchainPaymentStatus,
@@ -51,8 +52,6 @@ const METHOD_LABELS: Record<string, string> = {
   lightning_address: 'Lightning Address',
   onchain: 'On-chain Bitcoin',
 };
-
-const PUBLIC_SUPPORT_EXPIRY_MS = 60 * 60 * 1000;
 
 function hashPublicStatusToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -116,7 +115,7 @@ export async function initiatePayment(
           ? STATUS.PAYMENT_INTENTS.INVOICE_READY
           : STATUS.PAYMENT_INTENTS.CREATED,
       description,
-      expires_at: invoice.expires_at,
+      expires_at: resolveIntentExpiry(wallet.method, invoice.expires_at),
     })
     .select()
     .single();
@@ -175,11 +174,8 @@ export async function initiatePayment(
     contribution = data;
   }
 
-  // 8. Calculate expires_in_seconds
-  let expiresInSeconds: number | null = null;
-  if (invoice.expires_at) {
-    expiresInSeconds = Math.floor((new Date(invoice.expires_at).getTime() - Date.now()) / 1000);
-  }
+  // 8. Countdown for the payer — null on rails that never expire (on-chain).
+  const expiresInSeconds = expiresInSecondsFrom(paymentIntent.expires_at);
 
   return {
     payment_intent: paymentIntent,
@@ -231,8 +227,7 @@ export async function initiatePublicSupport(
   const description = `Support: ${entityTitle}`;
   const invoice = await generateInvoice(wallet, amountBtc, description);
   const token = randomBytes(32).toString('base64url');
-  const expiresAt =
-    invoice.expires_at ?? new Date(Date.now() + PUBLIC_SUPPORT_EXPIRY_MS).toISOString();
+  const expiresAt = resolveIntentExpiry(wallet.method, invoice.expires_at);
   const admin = getAdminClient() as unknown as SupabaseClient;
 
   const { data: paymentIntent, error: paymentError } = await admin
@@ -282,10 +277,7 @@ export async function initiatePublicSupport(
     throw new Error('Failed to create public contribution');
   }
 
-  const expiresInSeconds = Math.max(
-    0,
-    Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)
-  );
+  const expiresInSeconds = expiresInSecondsFrom(expiresAt);
 
   return {
     payment_intent: {
@@ -322,8 +314,7 @@ export async function initiateTip(
   const description = `Tip for ${recipientName}`;
   const invoice = await generateInvoice(wallet, amountBtc, description);
   const token = randomBytes(32).toString('base64url');
-  const expiresAt =
-    invoice.expires_at ?? new Date(Date.now() + PUBLIC_SUPPORT_EXPIRY_MS).toISOString();
+  const expiresAt = resolveIntentExpiry(wallet.method, invoice.expires_at);
   const admin = getAdminClient() as unknown as SupabaseClient;
 
   const { data: paymentIntent, error: paymentError } = await admin
@@ -357,10 +348,7 @@ export async function initiateTip(
     throw new Error('Failed to create tip payment intent');
   }
 
-  const expiresInSeconds = Math.max(
-    0,
-    Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)
-  );
+  const expiresInSeconds = expiresInSecondsFrom(expiresAt);
 
   return {
     payment_intent: {

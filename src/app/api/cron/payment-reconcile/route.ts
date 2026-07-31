@@ -41,11 +41,35 @@ const SWEEPABLE_STATUSES = [
  * is genuinely undetectable, and guessing would be worse than the honest
  * buyer-confirms → recipient-confirms fallback that already handles it.
  */
-const DETECTABLE_RAILS = [
-  'and(payment_method.eq.nwc,payment_hash.not.is.null)',
-  'and(payment_method.eq.lightning_address,lnurl_verify_url.not.is.null)',
-  'and(payment_method.eq.onchain,onchain_address.not.is.null)',
-].join(',');
+/**
+ * How long we keep asking the chain about an unpaid on-chain intent.
+ *
+ * On-chain intents never expire — a Bitcoin address does not stop accepting
+ * money, so recording "expired" would assert something we cannot know (see
+ * domain/payments/intentExpiry). But non-terminal must not mean watched
+ * forever: without a horizon, every abandoned QR ever generated would be
+ * re-polled against mempool.space for the life of the platform.
+ *
+ * So the bound lives here, in the operational layer, where it means "we stopped
+ * asking" — not in the record, where it would mean "no money arrived". 30 days
+ * is far beyond any real confirmation delay, including a stuck fee market.
+ */
+const ONCHAIN_WATCH_HORIZON_DAYS = 30;
+
+/**
+ * Built per-tick because the on-chain clause carries a moving cutoff.
+ */
+function detectableRailsFilter(): string {
+  const horizon = new Date(
+    Date.now() - ONCHAIN_WATCH_HORIZON_DAYS * 24 * 60 * 60 * 1000
+  ).toISOString();
+
+  return [
+    'and(payment_method.eq.nwc,payment_hash.not.is.null)',
+    'and(payment_method.eq.lightning_address,lnurl_verify_url.not.is.null)',
+    `and(payment_method.eq.onchain,onchain_address.not.is.null,created_at.gte.${horizon})`,
+  ].join(',');
+}
 
 const BATCH_SIZE = 25;
 /** Leave headroom under the systemd unit's 120s curl timeout. */
@@ -61,7 +85,7 @@ async function pickCandidates(admin: SupabaseClient, limit: number): Promise<Pay
     .from(DATABASE_TABLES.PAYMENT_INTENTS)
     .select('*')
     .in('status', SWEEPABLE_STATUSES)
-    .or(DETECTABLE_RAILS)
+    .or(detectableRailsFilter())
     .order('last_polled_at', { ascending: true, nullsFirst: true })
     .limit(limit);
 
