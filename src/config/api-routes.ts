@@ -91,6 +91,7 @@ export const API_ROUTES = {
   },
   AI: {
     FORM_PREFILL: '/api/ai/form-prefill',
+    IMAGES_GENERATE: '/api/ai/images/generate',
   },
   AUTH: {
     CALLBACK: '/api/auth/callback',

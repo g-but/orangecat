@@ -251,10 +251,9 @@ export function PostContent({ event }: PostContentProps) {
             loading="lazy"
             className="max-h-[28rem] w-auto max-w-full rounded-lg border border-subtle object-contain"
           />
-          {postImage.credit && (
+          {(postImage.credit || postImage.license) && (
             <figcaption className="mt-1 text-2xs text-fg-tertiary">
-              {postImage.credit}
-              {postImage.license ? ` · ${postImage.license.toUpperCase()}` : ''}
+              {[postImage.credit, postImage.license?.toUpperCase()].filter(Boolean).join(' · ')}
             </figcaption>
           )}
         </figure>

@@ -53,3 +53,34 @@ export function getProviderRuntime(providerId: string): ProviderRuntimeConfig | 
 export function isOpenAICompatibleProvider(providerId: string): boolean {
   return providerId in PROVIDER_RUNTIME;
 }
+
+// ---------------------------------------------------------------------------
+// Image generation (BYOK-only)
+// ---------------------------------------------------------------------------
+
+export interface ImageProviderRuntimeConfig {
+  /** Model used for image generation when the user hasn't picked one. */
+  defaultImageModel: string;
+}
+
+/**
+ * Providers whose keys can also generate images via the OpenAI-compatible
+ * POST {baseUrl}/images/generations endpoint (base URL comes from
+ * PROVIDER_RUNTIME above — same provider, same key).
+ *
+ * BYOK-only by design: the platform free pool is text-only and must never
+ * pay for image generation. OpenRouter is deliberately absent — its image
+ * output rides /chat/completions with a different response shape.
+ */
+export const IMAGE_PROVIDER_RUNTIME: Record<string, ImageProviderRuntimeConfig> = {
+  openai: { defaultImageModel: 'gpt-image-1' },
+  xai: { defaultImageModel: 'grok-2-image' },
+};
+
+export function getImageProviderRuntime(
+  providerId: string
+): (ImageProviderRuntimeConfig & ProviderRuntimeConfig) | null {
+  const image = IMAGE_PROVIDER_RUNTIME[providerId];
+  const base = PROVIDER_RUNTIME[providerId];
+  return image && base ? { ...base, ...image } : null;
+}
