@@ -9,6 +9,7 @@
  */
 
 import { logger } from '@/utils/logger';
+import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 
 // Capable, JSON-reliable defaults. Groq is fast + cheap for short work; the
 // OpenRouter free Maverick handles long-form with a large output budget. We use
@@ -42,7 +43,7 @@ function resolveProvider(_longform: boolean): Provider | null {
   // returned 404 in prod), so never route to it when Groq is available.
   if (groqKey) {
     return {
-      url: 'https://api.groq.com/openai/v1/chat/completions',
+      url: `${PROVIDER_BASE_URLS.groq}/chat/completions`,
       model: GROQ_MODEL,
       apiKey: groqKey,
       isOpenRouter: false,
@@ -56,7 +57,7 @@ function resolveProvider(_longform: boolean): Provider | null {
 
 function openRouter(apiKey: string, model: string): Provider {
   return {
-    url: 'https://openrouter.ai/api/v1/chat/completions',
+    url: `${PROVIDER_BASE_URLS.openrouter}/chat/completions`,
     model,
     apiKey,
     isOpenRouter: true,

@@ -19,7 +19,7 @@ export type GenerateImageResult =
   | { ok: true; image: GeneratedImage }
   | { ok: false; error: string };
 
-/** Sniff the actual format — providers return PNG, JPEG, or WebP. */
+/** Sniff the actual format (keys of IMAGE_MIME_EXT) — providers return PNG, JPEG, or WebP. */
 function sniffMimeType(bytes: Uint8Array): string {
   if (bytes[0] === 0x89 && bytes[1] === 0x50) {
     return 'image/png';

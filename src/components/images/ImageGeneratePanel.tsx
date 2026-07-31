@@ -7,6 +7,16 @@ import { fetchImageGenCapability, generateImage } from '@/services/images/genera
 import type { StockImage } from '@/services/images/types';
 import { ROUTES } from '@/config/routes';
 import { getAIProvider } from '@/data/aiProviders';
+import { IMAGE_PROVIDER_RUNTIME } from '@/config/ai-provider-runtime';
+import { IMAGE_PROMPT_LIMITS } from '@/config/images';
+
+// Derived from the runtime SSOT — adding an image provider updates this copy.
+const IMAGE_PROVIDER_NAMES = Object.keys(IMAGE_PROVIDER_RUNTIME)
+  .map(id => getAIProvider(id)?.name ?? id)
+  .join(', ');
+
+/** Provider errors that mean "your balance ran out", not "bad prompt". */
+const BALANCE_ERROR = /credit|billing|insufficient|quota|payment|top.?up|exceed|limit reached/i;
 
 /**
  * BYOK image generation panel for the shared image picker. Probes capability
@@ -24,7 +34,7 @@ export default function ImageGeneratePanel({
     canGenerate: boolean;
     provider: string | null;
   } | null>(null);
-  const [prompt, setPrompt] = useState(initialPrompt.slice(0, 300));
+  const [prompt, setPrompt] = useState(initialPrompt.slice(0, IMAGE_PROMPT_LIMITS.max));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ url: string; prompt: string } | null>(null);
@@ -43,7 +53,7 @@ export default function ImageGeneratePanel({
 
   async function handleGenerate() {
     const trimmed = prompt.trim();
-    if (!trimmed || busy) {
+    if (trimmed.length < IMAGE_PROMPT_LIMITS.min || busy) {
       return;
     }
     setBusy(true);
@@ -79,7 +89,7 @@ export default function ImageGeneratePanel({
           className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent-warm/90"
         >
           <Key className="h-3.5 w-3.5" />
-          Add a key (OpenRouter, OpenAI, or xAI)
+          Add a key ({IMAGE_PROVIDER_NAMES})
         </Link>
       </div>
     );
@@ -91,7 +101,7 @@ export default function ImageGeneratePanel({
         value={prompt}
         onChange={e => setPrompt(e.target.value)}
         rows={3}
-        maxLength={1000}
+        maxLength={IMAGE_PROMPT_LIMITS.max}
         placeholder="Describe the image you want…"
         aria-label="Image prompt"
         disabled={busy}
@@ -101,14 +111,36 @@ export default function ImageGeneratePanel({
         <button
           type="button"
           onClick={handleGenerate}
-          disabled={!prompt.trim() || busy}
+          disabled={prompt.trim().length < IMAGE_PROMPT_LIMITS.min || busy}
           className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-accent-warm/90 disabled:opacity-50"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           {busy ? 'Generating… ~30s' : result ? 'Generate again' : 'Generate'}
         </button>
-        {error && <span className="text-xs text-status-negative">{error}</span>}
       </div>
+      {error && (
+        <p className="text-xs text-status-negative">
+          {error}
+          {BALANCE_ERROR.test(error) &&
+            (() => {
+              const provider = getAIProvider(capability.provider ?? '');
+              const topUpUrl = provider?.billingUrl ?? provider?.apiKeyUrl;
+              return topUpUrl ? (
+                <>
+                  {' '}
+                  <a
+                    href={topUpUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-fg-primary underline underline-offset-4 hover:text-accent-warm"
+                  >
+                    Top up your {provider?.name} balance →
+                  </a>
+                </>
+              ) : null;
+            })()}
+        </p>
+      )}
 
       {result && !busy && (
         <div className="space-y-2">

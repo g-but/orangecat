@@ -20,19 +20,15 @@ import { apiBadRequest, apiError, apiInternalError, apiSuccess } from '@/lib/api
 import { createApiKeyService } from '@/services/ai/api-key-service';
 import { IMAGE_PROVIDER_RUNTIME, getImageProviderRuntime } from '@/config/ai-provider-runtime';
 import { generateImageWithKey } from '@/services/images/generate';
+import { IMAGE_MIME_EXT } from '@/services/images/types';
+import { IMAGE_PROMPT_LIMITS } from '@/config/images';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { STORAGE_BUCKETS } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
 const bodySchema = z.object({
-  prompt: z.string().trim().min(3).max(1000),
+  prompt: z.string().trim().min(IMAGE_PROMPT_LIMITS.min).max(IMAGE_PROMPT_LIMITS.max),
 });
-
-const MIME_EXT: Record<string, string> = {
-  'image/png': 'png',
-  'image/jpeg': 'jpg',
-  'image/webp': 'webp',
-};
 
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
@@ -67,8 +63,10 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const keys = await createApiKeyService(supabase).listDecryptedKeysOrdered(user.id);
     const imageKey = keys.find(k => k.provider in IMAGE_PROVIDER_RUNTIME);
     if (!imageKey) {
+      // No provider names here — the client derives them from
+      // IMAGE_PROVIDER_RUNTIME so the list can't drift.
       return apiError(
-        'Image generation needs your own API key (OpenRouter, OpenAI, or xAI). Add one in Settings → AI.',
+        'Image generation uses your own AI key. Add one in Settings → AI.',
         'NO_IMAGE_KEY',
         400
       );
@@ -93,7 +91,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     // Persist a stable copy — provider URLs/base64 are ephemeral. The admin
     // client bypasses RLS, so the path MUST be scoped to the authenticated
     // user id (mirrors the browser cover-upload path convention).
-    const ext = MIME_EXT[result.image.mimeType] ?? 'png';
+    const ext = IMAGE_MIME_EXT[result.image.mimeType] ?? 'png';
     const path = `${user.id}/ai-gen_${Date.now()}.${ext}`;
     const admin = getAdminClient();
     const { error: uploadError } = await admin.storage

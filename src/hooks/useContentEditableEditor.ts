@@ -14,6 +14,8 @@ interface UseContentEditableEditorOptions {
   maxHeight?: number;
   disabled?: boolean;
   sanitizer?: (html: string) => string;
+  /** When set, pasted image files are handed here instead of being dropped. */
+  onPasteFiles?: (files: File[]) => void;
 }
 
 interface UseContentEditableEditorReturn {
@@ -33,6 +35,7 @@ export function useContentEditableEditor({
   maxHeight = 480,
   disabled = false,
   sanitizer,
+  onPasteFiles,
 }: UseContentEditableEditorOptions): UseContentEditableEditorReturn {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isComposing, setIsComposing] = useState(false);
@@ -101,6 +104,14 @@ export function useContentEditableEditor({
         return;
       }
 
+      // A pasted screenshot/photo becomes an attachment, not stripped text.
+      const imageFiles = Array.from(e.clipboardData.files).filter(f => f.type.startsWith('image/'));
+      if (imageFiles.length > 0 && onPasteFiles) {
+        e.preventDefault();
+        onPasteFiles(imageFiles);
+        return;
+      }
+
       e.preventDefault();
       const text = e.clipboardData.getData('text/plain');
       document.execCommand('insertText', false, text);
@@ -109,7 +120,7 @@ export function useContentEditableEditor({
       const markdown = htmlToMarkdown(html);
       onContentChange(markdown);
     },
-    [onContentChange, sanitize]
+    [onContentChange, sanitize, onPasteFiles]
   );
 
   const handleFormat = useCallback(

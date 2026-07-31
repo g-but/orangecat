@@ -6,7 +6,7 @@
 import { Lightbulb } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
-import { aiProviders } from '@/data/aiProviders';
+import { wiredProviders } from '@/data/aiProviders';
 import { aiOnboardingContent } from '@/lib/ai-guidance';
 
 interface ProviderStepProps {
@@ -24,7 +24,7 @@ export function ProviderStep({ selectedProvider, onSelectProvider }: ProviderSte
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {aiProviders.map(p => (
+        {wiredProviders.map(p => (
           <Card
             key={p.id}
             className={cn(

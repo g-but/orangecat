@@ -3,22 +3,20 @@
 import { useRef, useState } from 'react';
 import { ImagePlus, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  IMAGE_UPLOAD_ACCEPT,
-  IMAGE_UPLOAD_MAX_MB,
-  uploadUserImage,
-} from '@/services/images/upload';
+import { IMAGE_UPLOAD_ACCEPT, uploadUserImage } from '@/services/images/upload';
 import type { StockImage } from '@/services/images/types';
+import { cn } from '@/lib/utils';
 
 /**
- * Own-photo upload for the shared image picker. Validates client-side,
- * uploads to the user's storage folder, and hands the picked image back in
- * the same StockImage shape the search/generate tabs use.
+ * Own-photo upload for the shared image picker: click, drag & drop, or paste.
+ * Oversized photos are downscaled client-side (see services/images/upload),
+ * then handed back in the same StockImage shape the search/generate tabs use.
  */
 export default function ImageUploadPanel({ onPick }: { onPick: (image: StockImage) => void }) {
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleFile(file: File | undefined) {
@@ -45,7 +43,42 @@ export default function ImageUploadPanel({ onPick }: { onPick: (image: StockImag
   }
 
   return (
-    <div className="flex flex-col items-center gap-3 py-6 text-center">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => !busy && inputRef.current?.click()}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          inputRef.current?.click();
+        }
+      }}
+      onDragOver={e => {
+        e.preventDefault();
+        setDragActive(true);
+      }}
+      onDragLeave={() => setDragActive(false)}
+      onDrop={e => {
+        e.preventDefault();
+        setDragActive(false);
+        void handleFile(e.dataTransfer.files?.[0]);
+      }}
+      onPaste={e => {
+        const file = Array.from(e.clipboardData.files).find(f => f.type.startsWith('image/'));
+        if (file) {
+          e.preventDefault();
+          void handleFile(file);
+        }
+      }}
+      aria-label="Upload an image — click, drag and drop, or paste"
+      className={cn(
+        'flex cursor-pointer flex-col items-center gap-2 rounded-md border border-dashed py-8 text-center transition-colors',
+        dragActive
+          ? 'border-accent-warm bg-surface-raised/60'
+          : 'border-default hover:border-interactive hover:bg-surface-raised/40',
+        (busy || !user?.id) && 'pointer-events-none opacity-60'
+      )}
+    >
       <input
         ref={inputRef}
         type="file"
@@ -57,19 +90,18 @@ export default function ImageUploadPanel({ onPick }: { onPick: (image: StockImag
           e.target.value = '';
         }}
       />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={busy || !user?.id}
-        className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-accent-warm/90 disabled:opacity-50"
-      >
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+      {busy ? (
+        <Loader2 className="h-6 w-6 animate-spin text-fg-tertiary" />
+      ) : (
+        <ImagePlus className="h-6 w-6 text-fg-tertiary" />
+      )}
+      <span className="text-sm font-medium text-fg-primary">
         {busy ? 'Uploading…' : 'Choose a photo'}
-      </button>
-      {error && <p className="text-xs text-status-negative">{error}</p>}
-      <p className="text-2xs text-fg-tertiary">
-        JPEG, PNG, WebP, or GIF — up to {IMAGE_UPLOAD_MAX_MB}MB.
-      </p>
+      </span>
+      <span className="text-2xs text-fg-tertiary">
+        Click, drag & drop, or paste · large photos are resized automatically
+      </span>
+      {error && <p className="px-4 text-xs text-status-negative">{error}</p>}
     </div>
   );
 }

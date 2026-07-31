@@ -1,14 +1,27 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Search, Loader2, X, ImageOff, Sparkles, Upload } from 'lucide-react';
-import { suggestArticleImages } from '@/services/articles/image-client';
+import { Search, Loader2, X, ImageOff, Sparkles, Upload, KeyRound } from 'lucide-react';
+import { suggestImages } from '@/services/images/suggest-client';
 import ImageGeneratePanel from '@/components/images/ImageGeneratePanel';
 import ImageUploadPanel from '@/components/images/ImageUploadPanel';
+import { fetchImageGenCapability } from '@/services/images/generate-client';
+import { IMAGE_SEARCH_QUERY_MAX } from '@/config/images';
 import type { StockImage } from '@/services/images/types';
 import { cn } from '@/lib/utils';
 
 type PickerMode = 'search' | 'generate' | 'upload';
+
+/** Last-used tab persists so habitual uploaders skip a click every time. */
+const MODE_STORAGE_KEY = 'oc-image-picker-mode';
+
+function loadSavedMode(): PickerMode {
+  if (typeof window === 'undefined') {
+    return 'search';
+  }
+  const saved = window.localStorage.getItem(MODE_STORAGE_KEY);
+  return saved === 'generate' || saved === 'upload' ? saved : 'search';
+}
 
 function ModeTab({
   active,
@@ -57,7 +70,9 @@ export default function ImageSuggestPicker({
   onPick: (image: StockImage) => void;
   onClose: () => void;
 }) {
-  const [mode, setMode] = useState<PickerMode>('search');
+  const [mode, setMode] = useState<PickerMode>(loadSavedMode);
+  const [searchStarted, setSearchStarted] = useState(false);
+  const [canGenerate, setCanGenerate] = useState<boolean | null>(null);
   const [images, setImages] = useState<StockImage[]>([]);
   const [queries, setQueries] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +84,7 @@ export default function ImageSuggestPicker({
       setLoading(true);
       setError(null);
       try {
-        const result = await suggestArticleImages(query ? { query } : { title, body });
+        const result = await suggestImages(query ? { query } : { title, body });
         setImages(result.images);
         setQueries(result.queries);
       } catch (e) {
@@ -81,10 +96,37 @@ export default function ImageSuggestPicker({
     [title, body]
   );
 
-  // Initial suggestions from the article itself.
+  // Search is lazy: the (LLM + Openverse) call only fires when the Search tab
+  // is actually shown — opening straight into Upload/Generate costs nothing.
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (mode === 'search' && !searchStarted) {
+      setSearchStarted(true);
+      void load();
+    }
+  }, [mode, searchStarted, load]);
+
+  // Cached capability probe (generate-client) so the Generate tab can show a
+  // key hint up front instead of a dead-end panel.
+  useEffect(() => {
+    let cancelled = false;
+    void fetchImageGenCapability().then(cap => {
+      if (!cancelled) {
+        setCanGenerate(cap.canGenerate);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function switchMode(next: PickerMode) {
+    setMode(next);
+    try {
+      window.localStorage.setItem(MODE_STORAGE_KEY, next);
+    } catch {
+      // Private-mode storage failures just lose the convenience.
+    }
+  }
 
   return (
     <div className="rounded-lg border border-default bg-surface-raised/30 p-3">
@@ -101,15 +143,19 @@ export default function ImageSuggestPicker({
       </div>
 
       <div className="mb-2 flex flex-wrap gap-1.5" role="tablist" aria-label="Image source">
-        <ModeTab active={mode === 'search'} onClick={() => setMode('search')}>
+        <ModeTab active={mode === 'search'} onClick={() => switchMode('search')}>
           <Search className="h-3.5 w-3.5" />
           Search free photos
         </ModeTab>
-        <ModeTab active={mode === 'generate'} onClick={() => setMode('generate')}>
-          <Sparkles className="h-3.5 w-3.5" />
+        <ModeTab active={mode === 'generate'} onClick={() => switchMode('generate')}>
+          {canGenerate === false ? (
+            <KeyRound className="h-3.5 w-3.5" />
+          ) : (
+            <Sparkles className="h-3.5 w-3.5" />
+          )}
           Generate
         </ModeTab>
-        <ModeTab active={mode === 'upload'} onClick={() => setMode('upload')}>
+        <ModeTab active={mode === 'upload'} onClick={() => switchMode('upload')}>
           <Upload className="h-3.5 w-3.5" />
           Upload
         </ModeTab>
@@ -135,6 +181,7 @@ export default function ImageSuggestPicker({
               <input
                 type="text"
                 value={manual}
+                maxLength={IMAGE_SEARCH_QUERY_MAX}
                 onChange={e => setManual(e.target.value)}
                 placeholder="Search free images…"
                 aria-label="Search images"

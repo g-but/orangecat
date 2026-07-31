@@ -35,6 +35,10 @@ module.exports = {
   },
   verbose: true,
   // Exclude Playwright tests from Jest
+  // Parallel-session worktrees under .claude/ carry their own __mocks__ and
+  // tests; without this they pollute the haste map (duplicate manual mocks
+  // silently mocking real modules) and break unrelated suites.
+  modulePathIgnorePatterns: ['<rootDir>/.claude/'],
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
     '<rootDir>/tests/e2e/',

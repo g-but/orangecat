@@ -22,13 +22,14 @@ import { getModelMetadata, DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
 import { getProviderRuntime, isOpenAICompatibleProvider } from '@/config/ai-provider-runtime';
 import { createAutoRouter } from '@/services/ai/auto-router';
 import { buildPlatformProviders } from '@/services/ai/platform-providers';
-import { OPENROUTER_KEY_HEADER } from '@/config/http-headers';
+import { GROQ_KEY_HEADER, OPENROUTER_KEY_HEADER } from '@/config/http-headers';
 import { ROUTES } from '@/config/routes';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
+import type { WiredProviderId } from '@/data/aiProviders';
 
-const GROQ_KEY_HEADER = 'x-groq-api-key';
-
-export type AIProvider = 'groq' | 'openrouter' | 'openai' | 'together' | 'deepseek' | 'xai';
+// The routable-provider union IS the wired list — hand-typing it twice let
+// the two drift.
+export type AIProvider = WiredProviderId;
 
 import type { AiService } from '@/services/ai/types';
 

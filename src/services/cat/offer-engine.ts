@@ -13,6 +13,7 @@
  */
 
 import type { AnySupabaseClient } from '@/lib/supabase/types';
+import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 import type { EntityType } from '@/config/entity-registry';
 import { PREFILLABLE_ENTITY_TYPES } from './tool-use-detection';
 import { fetchFullContextForCat } from '@/services/ai/document-context';
@@ -105,8 +106,8 @@ async function callOfferModel(
   }
 
   const url = useGroq
-    ? 'https://api.groq.com/openai/v1/chat/completions'
-    : 'https://openrouter.ai/api/v1/chat/completions';
+    ? `${PROVIDER_BASE_URLS.groq}/chat/completions`
+    : `${PROVIDER_BASE_URLS.openrouter}/chat/completions`;
   const model = useGroq ? GROQ_MODEL : OPENROUTER_MODEL;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

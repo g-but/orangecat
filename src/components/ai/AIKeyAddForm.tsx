@@ -16,7 +16,12 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import Button from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
-import { getAIProvider, validateApiKeyFormat, wiredProviders } from '@/data/aiProviders';
+import {
+  aiProviders,
+  getAIProvider,
+  validateApiKeyFormat,
+  wiredProviders,
+} from '@/data/aiProviders';
 import { ROUTES } from '@/config/routes';
 
 interface AIKeyAddFormProps {
@@ -26,6 +31,13 @@ interface AIKeyAddFormProps {
 }
 
 type FormState = 'idle' | 'submitting' | 'success';
+
+// Derived from the provider SSOT: direct (non-local) providers not yet wired.
+const wiredIds = new Set(wiredProviders.map(p => p.id));
+const unwiredDirectNames = aiProviders
+  .filter(p => p.type === 'direct' && !wiredIds.has(p.id))
+  .map(p => p.name)
+  .join(' + ');
 
 export function AIKeyAddForm({ onAdd, onCancel, onFieldFocus }: AIKeyAddFormProps) {
   const [selectedProvider, setSelectedProvider] = useState<string>('openrouter');
@@ -154,7 +166,7 @@ export function AIKeyAddForm({ onAdd, onCancel, onFieldFocus }: AIKeyAddFormProp
           </div>
           <p className="mt-2 text-xs text-fg-secondary">
             Want Claude or Gemini? Add an <strong className="text-fg-primary">OpenRouter</strong>{' '}
-            key — one key fronts all 200+ models. Direct Anthropic + Google support is on the
+            key — one key fronts all 200+ models. Direct {unwiredDirectNames} support is on the
             roadmap.
           </p>
         </div>

@@ -3,3 +3,4 @@
  * Keep lowercase to simplify case-insensitive lookups.
  */
 export const OPENROUTER_KEY_HEADER = 'x-openrouter-key';
+export const GROQ_KEY_HEADER = 'x-groq-api-key';

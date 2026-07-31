@@ -22,21 +22,35 @@ export interface ProviderRuntimeConfig {
   defaultModel: string;
 }
 
+/**
+ * SSOT for every provider's API base URL — including Groq and OpenRouter,
+ * whose bespoke service classes are not in PROVIDER_RUNTIME. Nothing outside
+ * src/config should spell out a provider host.
+ */
+export const PROVIDER_BASE_URLS = {
+  openai: 'https://api.openai.com/v1',
+  together: 'https://api.together.xyz/v1',
+  deepseek: 'https://api.deepseek.com/v1',
+  xai: 'https://api.x.ai/v1',
+  groq: 'https://api.groq.com/openai/v1',
+  openrouter: 'https://openrouter.ai/api/v1',
+} as const;
+
 export const PROVIDER_RUNTIME: Record<string, ProviderRuntimeConfig> = {
   openai: {
-    baseUrl: 'https://api.openai.com/v1',
+    baseUrl: PROVIDER_BASE_URLS.openai,
     defaultModel: 'gpt-4o-mini',
   },
   together: {
-    baseUrl: 'https://api.together.xyz/v1',
+    baseUrl: PROVIDER_BASE_URLS.together,
     defaultModel: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
   },
   deepseek: {
-    baseUrl: 'https://api.deepseek.com/v1',
+    baseUrl: PROVIDER_BASE_URLS.deepseek,
     defaultModel: 'deepseek-chat',
   },
   xai: {
-    baseUrl: 'https://api.x.ai/v1',
+    baseUrl: PROVIDER_BASE_URLS.xai,
     defaultModel: 'grok-2-latest',
   },
 };
@@ -84,7 +98,7 @@ export const IMAGE_PROVIDER_RUNTIME: Record<string, ImageProviderRuntimeConfig> 
   openrouter: {
     defaultImageModel: 'google/gemini-3.1-flash-image',
     api: 'chat',
-    baseUrl: 'https://openrouter.ai/api/v1',
+    baseUrl: PROVIDER_BASE_URLS.openrouter,
   },
 };
 

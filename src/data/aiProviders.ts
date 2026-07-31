@@ -48,6 +48,8 @@ export interface AIProvider {
   apiKeyUrl: string;
   /** Provider API docs (linked from settings for power users). */
   docsUrl: string;
+  /** Where to top up prepaid credits / manage billing (shown on quota errors). */
+  billingUrl?: string;
   /** Optional prefix the key must start with — used for format validation. */
   apiKeyPrefix?: string;
   /** Placeholder shown in the key input. */
@@ -63,6 +65,7 @@ export const aiProviders: AIProvider[] = [
     description: 'One key, 200+ models (Claude, GPT, Gemini, Llama, and more). Free pool included.',
     websiteUrl: 'https://openrouter.ai',
     apiKeyUrl: 'https://openrouter.ai/keys',
+    billingUrl: 'https://openrouter.ai/credits',
     docsUrl: 'https://openrouter.ai/docs',
     apiKeyPrefix: 'sk-or-',
     apiKeyExample: 'sk-or-v1-xxxxxxxxxxxxxxxx',
@@ -108,6 +111,7 @@ export const aiProviders: AIProvider[] = [
     description: 'GPT-4o and the OpenAI model family.',
     websiteUrl: 'https://openai.com',
     apiKeyUrl: 'https://platform.openai.com/api-keys',
+    billingUrl: 'https://platform.openai.com/settings/organization/billing/overview',
     docsUrl: 'https://platform.openai.com/docs',
     apiKeyPrefix: 'sk-',
     apiKeyExample: 'sk-proj-xxxxxxxxxxxxxxxx',
@@ -130,6 +134,7 @@ export const aiProviders: AIProvider[] = [
     description: 'Grok models — real-time X knowledge, fewer content restrictions.',
     websiteUrl: 'https://x.ai',
     apiKeyUrl: 'https://console.x.ai/api-keys',
+    billingUrl: 'https://console.x.ai',
     docsUrl: 'https://docs.x.ai',
     apiKeyPrefix: 'xai-',
     apiKeyExample: 'xai-xxxxxxxxxxxxxxxxxxxxxxxx',

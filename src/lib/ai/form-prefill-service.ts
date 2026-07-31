@@ -6,6 +6,7 @@
  */
 
 import type { AIPrefillResponse } from '@/components/create/types';
+import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 import {
   AI_ASSIST_MIN_INPUT_LENGTH,
   USER_OVERRIDABLE_FIELDS,
@@ -161,8 +162,8 @@ export async function generateFormPrefill({
 
     const model = config?.model || (useGroq ? DEFAULT_GROQ_MODEL : DEFAULT_OPENROUTER_MODEL);
     const baseUrl = useGroq
-      ? 'https://api.groq.com/openai/v1/chat/completions'
-      : 'https://openrouter.ai/api/v1/chat/completions';
+      ? `${PROVIDER_BASE_URLS.groq}/chat/completions`
+      : `${PROVIDER_BASE_URLS.openrouter}/chat/completions`;
 
     // Make API request
     const headers: Record<string, string> = {

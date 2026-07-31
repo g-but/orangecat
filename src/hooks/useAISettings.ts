@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import type { ModelTier } from '@/config/ai-models';
-import type { UserApiKey } from '@/components/ai/AIKeyManager';
+import { hasActiveByok, type UserApiKey } from '@/services/ai/api-key-service';
 import { API_ROUTES } from '@/config/api-routes';
 import { useAISettingsMutations } from './useAISettingsMutations';
 
@@ -96,7 +96,7 @@ export function useAISettings() {
         keys,
         isLoading: false,
         error: null,
-        hasByok: keys.some((k: UserApiKey) => k.is_valid),
+        hasByok: hasActiveByok(keys),
         primaryKey,
       });
     } catch (err) {
