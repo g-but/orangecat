@@ -4,6 +4,7 @@
  * view (joins actor data for the byline).
  */
 
+import { cache } from 'react';
 import { createServerClient } from '@/lib/supabase/server';
 import { getUserActorId } from '@/domain/actors';
 import { logger } from '@/utils/logger';
@@ -65,8 +66,12 @@ function rowToArticle(row: EnrichedArticleRow): Article | null {
 /**
  * Fetch a single article by slug. Non-public articles are returned only to their
  * author (the server client carries the viewer's session cookies), otherwise null.
+ *
+ * React cache(): generateMetadata and the page body both call this with the
+ * same slug in one request — without dedupe the DB round-trip (plus two auth
+ * lookups for non-public articles) ran twice before first paint.
  */
-export async function getArticleBySlug(slug: string): Promise<Article | null> {
+export const getArticleBySlug = cache(async (slug: string): Promise<Article | null> => {
   try {
     const supabase = await createServerClient();
     const { data, error } = await supabase
@@ -106,7 +111,7 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
     logger.error('Failed to fetch article by slug', { err, slug }, 'Articles');
     return null;
   }
-}
+});
 
 /**
  * Whether the current (session) viewer is the article's author. Compares actor
