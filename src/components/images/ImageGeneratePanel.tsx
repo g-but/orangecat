@@ -6,6 +6,7 @@ import { Key, Loader2, Sparkles } from 'lucide-react';
 import { fetchImageGenCapability, generateImage } from '@/services/images/generate-client';
 import type { StockImage } from '@/services/images/types';
 import { ROUTES } from '@/config/routes';
+import { getAIProvider } from '@/data/aiProviders';
 
 /**
  * BYOK image generation panel for the shared image picker. Probes capability
@@ -78,7 +79,7 @@ export default function ImageGeneratePanel({
           className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent-warm/90"
         >
           <Key className="h-3.5 w-3.5" />
-          Add an OpenAI or xAI key
+          Add a key (OpenRouter, OpenAI, or xAI)
         </Link>
       </div>
     );
@@ -138,7 +139,8 @@ export default function ImageGeneratePanel({
       )}
 
       <p className="text-2xs text-fg-tertiary">
-        Generated with your own {capability.provider === 'xai' ? 'xAI' : 'OpenAI'} key and labeled
+        Generated with your own{' '}
+        {getAIProvider(capability.provider ?? '')?.name ?? capability.provider} key and labeled
         AI-generated.
       </p>
     </div>
