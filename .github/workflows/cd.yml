@@ -54,6 +54,12 @@ jobs:
       # HERE at build time; the box's runtime .env can't reach the client bundle.)
       NEXT_PUBLIC_LIGHTNING_ADDRESS: ${{ vars.NEXT_PUBLIC_LIGHTNING_ADDRESS }}
       NEXT_PUBLIC_BITCOIN_ADDRESS: ${{ vars.NEXT_PUBLIC_BITCOIN_ADDRESS }}
+      # Flips the Cat Credits UI from "Activating" to "Live" (build-time, client
+      # bundle). Set the repo variable to true only once PLATFORM_NWC_URI exists
+      # in the box's runtime .env — the UI must never claim Live before the
+      # server can actually receive. Server-side receive is gated independently
+      # on PLATFORM_NWC_URI (runtime), so this flag is display-only.
+      NEXT_PUBLIC_CAT_CREDITS_LIVE: ${{ vars.NEXT_PUBLIC_CAT_CREDITS_LIVE }}
       OC_BOX: ${{ vars.OC_BOX || 'root@167.233.22.31' }}
     steps:
       - name: Guard — is the deploy key configured?
