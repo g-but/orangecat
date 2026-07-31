@@ -1,18 +1,48 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Search, Loader2, X, ImageOff, Sparkles } from 'lucide-react';
+import { Search, Loader2, X, ImageOff, Sparkles, Upload } from 'lucide-react';
 import { suggestArticleImages } from '@/services/articles/image-client';
 import ImageGeneratePanel from '@/components/images/ImageGeneratePanel';
+import ImageUploadPanel from '@/components/images/ImageUploadPanel';
 import type { StockImage } from '@/services/images/types';
 import { cn } from '@/lib/utils';
 
+type PickerMode = 'search' | 'generate' | 'upload';
+
+function ModeTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors',
+        active
+          ? 'border-default bg-surface-raised font-medium text-fg-primary'
+          : 'border-subtle text-fg-secondary hover:border-default hover:text-fg-primary'
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
 /**
- * AI image picker with two modes: Search (Openverse CC0/public-domain, AI
- * turns the given text into search terms) and Generate (the user's OWN
- * OpenAI/xAI key — see ImageGeneratePanel). Picking either way hands back a
- * full-res URL. Used for article covers, inline article images, and the
- * timeline post composer.
+ * Image picker with three modes: Search (Openverse CC0/public-domain, AI
+ * turns the given text into search terms), Generate (the user's OWN
+ * OpenRouter/OpenAI/xAI key — see ImageGeneratePanel), and Upload (own
+ * photo). Picking any way hands back a full-res URL. Used for article
+ * covers, inline article images, and the timeline post composer.
  */
 export default function ImageSuggestPicker({
   title,
@@ -27,7 +57,7 @@ export default function ImageSuggestPicker({
   onPick: (image: StockImage) => void;
   onClose: () => void;
 }) {
-  const [mode, setMode] = useState<'search' | 'generate'>('search');
+  const [mode, setMode] = useState<PickerMode>('search');
   const [images, setImages] = useState<StockImage[]>([]);
   const [queries, setQueries] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,40 +100,24 @@ export default function ImageSuggestPicker({
         </button>
       </div>
 
-      <div className="mb-2 flex gap-1.5" role="tablist" aria-label="Image source">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === 'search'}
-          onClick={() => setMode('search')}
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors',
-            mode === 'search'
-              ? 'border-default bg-surface-raised font-medium text-fg-primary'
-              : 'border-subtle text-fg-secondary hover:border-default hover:text-fg-primary'
-          )}
-        >
+      <div className="mb-2 flex flex-wrap gap-1.5" role="tablist" aria-label="Image source">
+        <ModeTab active={mode === 'search'} onClick={() => setMode('search')}>
           <Search className="h-3.5 w-3.5" />
           Search free photos
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === 'generate'}
-          onClick={() => setMode('generate')}
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors',
-            mode === 'generate'
-              ? 'border-default bg-surface-raised font-medium text-fg-primary'
-              : 'border-subtle text-fg-secondary hover:border-default hover:text-fg-primary'
-          )}
-        >
+        </ModeTab>
+        <ModeTab active={mode === 'generate'} onClick={() => setMode('generate')}>
           <Sparkles className="h-3.5 w-3.5" />
           Generate
-        </button>
+        </ModeTab>
+        <ModeTab active={mode === 'upload'} onClick={() => setMode('upload')}>
+          <Upload className="h-3.5 w-3.5" />
+          Upload
+        </ModeTab>
       </div>
 
-      {mode === 'generate' ? (
+      {mode === 'upload' ? (
+        <ImageUploadPanel onPick={onPick} />
+      ) : mode === 'generate' ? (
         <ImageGeneratePanel initialPrompt={title || body} onPick={onPick} />
       ) : (
         <>
