@@ -25,6 +25,7 @@ export default function EditTaskPage() {
     errors,
     handleChange,
     handleEstimatedMinutesChange,
+    handleAIPrefill,
     handleAddTag,
     handleRemoveTag,
     handleSubmit,
@@ -64,6 +65,8 @@ export default function EditTaskPage() {
             submitting={submitting}
             onChange={handleChange}
             onEstimatedMinutesChange={handleEstimatedMinutesChange}
+            onAIPrefill={handleAIPrefill}
+            aiMode="edit"
             onAddTag={handleAddTag}
             onRemoveTag={handleRemoveTag}
             onSubmit={handleSubmit}

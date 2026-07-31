@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { proposalSchema, type ProposalFormData } from '@/lib/validation/proposals';
 import {
@@ -22,7 +22,12 @@ import {
   type ProposalFieldType,
 } from '@/lib/entity-guidance/proposal-guidance';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { AIPrefillBar } from '@/components/create/AIPrefillBar';
+import { AI_ASSIST_FORMS } from '@/config/ai-assist-forms';
 import { ProposalFormFields } from './ProposalFormFields';
+
+/** Field names the AI may write — anything else it returns is ignored. */
+const PROPOSAL_AI_FIELD_NAMES = new Set(AI_ASSIST_FORMS.proposal.fields.map(field => field.name));
 
 interface CreateProposalDialogProps {
   open: boolean;
@@ -52,6 +57,24 @@ export function CreateProposalDialog({
       is_public: false,
     },
   });
+
+  // Live form values for the AI bar (useWatch, not form.watch — the latter is
+  // React-Compiler-incompatible).
+  const formValues = useWatch({ control: form.control });
+
+  // The server sanitizes values against the declared proposal fields; here we
+  // only route them into react-hook-form so validation and dirty state engage.
+  const handleAIPrefill = (data: Record<string, unknown>) => {
+    for (const [key, value] of Object.entries(data)) {
+      if (!PROPOSAL_AI_FIELD_NAMES.has(key) || value === null || value === undefined) {
+        continue;
+      }
+      form.setValue(key as keyof ProposalFormData, value as never, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  };
 
   const onSubmit = async (data: ProposalFormData) => {
     try {
@@ -112,6 +135,13 @@ export function CreateProposalDialog({
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
           <div className="lg:col-span-2">
+            <AIPrefillBar
+              formType="proposal"
+              onPrefill={handleAIPrefill}
+              disabled={submitting}
+              existingData={formValues}
+              fields={AI_ASSIST_FORMS.proposal.fields}
+            />
             <ProposalFormFields
               form={form}
               activeField={activeField}

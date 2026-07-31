@@ -16,7 +16,8 @@
  * are one config entry, not a new `case`.
  */
 
-import { ENTITY_REGISTRY, type EntityType } from '@/config/entity-registry';
+import { ENTITY_REGISTRY, isValidEntityType, type EntityType } from '@/config/entity-registry';
+import { getAssistFormConfig } from '@/config/ai-assist-forms';
 import type { FieldConfig, FieldInputType } from '@/components/create/types';
 
 // ==================== INTENT ====================
@@ -344,16 +345,19 @@ export const AI_FILL_EXAMPLES: Partial<Record<EntityType, string[]>> = {
 };
 
 /**
- * Starter examples for an entity type. Falls back to a prompt built from the
- * registry so every entity type gets something concrete.
+ * Starter examples for any AI-assistable form — an entity type or a
+ * standalone assist form (task, proposal). Entity types without their own
+ * entry fall back to a prompt built from the registry so every one gets
+ * something concrete.
  */
-export function getExampleDescriptions(entityType: EntityType): string[] {
-  const examples = AI_FILL_EXAMPLES[entityType];
-  if (examples && examples.length > 0) {
-    return examples;
+export function getExampleDescriptions(formType: string): string[] {
+  if (isValidEntityType(formType)) {
+    const examples = AI_FILL_EXAMPLES[formType];
+    if (examples && examples.length > 0) {
+      return examples;
+    }
+    const meta = ENTITY_REGISTRY[formType];
+    return [`Describe your ${meta.name.toLowerCase()} — ${meta.description.toLowerCase()}`];
   }
-  const meta = ENTITY_REGISTRY[entityType];
-  return meta
-    ? [`Describe your ${meta.name.toLowerCase()} — ${meta.description.toLowerCase()}`]
-    : [];
+  return getAssistFormConfig(formType)?.examples ?? [];
 }

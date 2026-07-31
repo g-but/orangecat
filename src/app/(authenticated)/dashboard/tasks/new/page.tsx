@@ -21,6 +21,7 @@ export default function NewTaskPage() {
     errors,
     handleChange,
     handleEstimatedMinutesChange,
+    handleAIPrefill,
     handleAddTag,
     handleRemoveTag,
     handleSubmit,
@@ -56,6 +57,8 @@ export default function NewTaskPage() {
             submitting={submitting}
             onChange={handleChange}
             onEstimatedMinutesChange={handleEstimatedMinutesChange}
+            onAIPrefill={handleAIPrefill}
+            aiMode="create"
             onAddTag={handleAddTag}
             onRemoveTag={handleRemoveTag}
             onSubmit={handleSubmit}

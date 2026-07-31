@@ -5,7 +5,7 @@ import { logger } from '@/utils/logger';
 import { ROUTES } from '@/config/routes';
 import { API_ROUTES } from '@/config/api-routes';
 import type { Task } from '@/lib/schemas/tasks';
-import type { TaskFormData } from '../../task-form-types';
+import { applyTaskAiData, type TaskFormData } from '../../task-form-types';
 
 export function useEditTaskForm(taskId: string, enabled: boolean) {
   const router = useRouter();
@@ -75,6 +75,11 @@ export function useEditTaskForm(taskId: string, enabled: boolean) {
 
   const handleEstimatedMinutesChange = (value: number | '') => {
     setFormData(prev => (prev ? { ...prev, estimated_minutes: value } : null));
+  };
+
+  const handleAIPrefill = (data: Record<string, unknown>) => {
+    setFormData(prev => (prev ? applyTaskAiData(prev, data) : null));
+    setErrors({});
   };
 
   const handleAddTag = () => {
@@ -166,6 +171,7 @@ export function useEditTaskForm(taskId: string, enabled: boolean) {
     errors,
     handleChange,
     handleEstimatedMinutesChange,
+    handleAIPrefill,
     handleAddTag,
     handleRemoveTag,
     handleSubmit,

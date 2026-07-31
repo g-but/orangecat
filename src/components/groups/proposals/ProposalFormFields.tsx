@@ -95,12 +95,14 @@ export function ProposalFormFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Type</FormLabel>
+              {/* Controlled (`value`, not `defaultValue`) — AI prefill sets this
+                  via form.setValue and the trigger must follow the form state. */}
               <Select
                 onValueChange={value => {
                   field.onChange(value);
                   setActiveField('proposal_type');
                 }}
-                defaultValue={field.value}
+                value={field.value}
                 onOpenChange={open => {
                   if (open) {
                     setActiveField('proposal_type');

@@ -5,17 +5,17 @@
  * Processes natural language descriptions and generates structured form data.
  */
 
-import type { EntityType } from '@/config/entity-registry';
-import { isValidEntityType } from '@/config/entity-registry';
-import type { AIPrefillResponse, EntityConfig } from '@/components/create/types';
-import { USER_OVERRIDABLE_FIELDS, type AiAssistIntent } from '@/config/ai-form-assist';
-import { logger } from '@/utils/logger';
+import type { AIPrefillResponse } from '@/components/create/types';
 import {
-  extractFieldDescriptions,
-  formatFieldsForPrompt,
-  getSpecialFieldInstructions,
-} from './schema-to-prompt';
+  AI_ASSIST_MIN_INPUT_LENGTH,
+  USER_OVERRIDABLE_FIELDS,
+  type AiAssistIntent,
+} from '@/config/ai-form-assist';
+import { logger } from '@/utils/logger';
+import { extractFieldDescriptions, formatFieldsForPrompt } from './schema-to-prompt';
 import { getSystemPrompt, getUserPrompt, parseAIResponse } from './prompts/form-prefill';
+import { sanitizeAiFields } from './sanitize-ai-fields';
+import type { AiAssistTarget } from './assist-target';
 
 // Default models for form prefill (fast, good at JSON generation)
 const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile';
@@ -36,12 +36,10 @@ interface FormPrefillConfig {
 }
 
 export interface FormPrefillRequest {
-  /** Entity type being filled (validated against the registry) */
-  entityType: string;
+  /** What form is being filled — resolve via `resolveAiAssistTarget` */
+  target: AiAssistTarget;
   /** What the user typed: a description to fill from, or a change to apply */
   description: string;
-  /** Form definition — supplies the field list the AI may write to */
-  entityConfig: EntityConfig;
   /** Current form values */
   existingData?: Record<string, unknown>;
   /** Fill an empty form, or revise the values already in it. Default `fill`. */
@@ -106,43 +104,38 @@ function valuesEqual(a: unknown, b: unknown): boolean {
  * This should be called from an API route, not directly from the client.
  */
 export async function generateFormPrefill({
-  entityType,
+  target,
   description,
-  entityConfig,
   existingData,
   intent = 'fill',
   config,
 }: FormPrefillRequest): Promise<AIPrefillResponse> {
-  // Validate entity type
-  if (!isValidEntityType(entityType)) {
+  // Same per-intent floor as the API schema (AI_ASSIST_MIN_INPUT_LENGTH) — a
+  // hardcoded 10 here used to reject the short refine instructions ("shorter")
+  // the route had just accepted.
+  const minLength = AI_ASSIST_MIN_INPUT_LENGTH[intent];
+  if (!description || description.trim().length < minLength) {
     return {
       success: false,
       data: {},
       confidence: {},
-      error: `Invalid entity type: ${entityType}`,
-    };
-  }
-
-  // Validate description
-  if (!description || description.trim().length < 10) {
-    return {
-      success: false,
-      data: {},
-      confidence: {},
-      error: 'Please provide a longer description (at least 10 characters)',
+      error:
+        intent === 'refine'
+          ? `Describe the change you want (at least ${minLength} characters)`
+          : `Please provide a longer description (at least ${minLength} characters)`,
     };
   }
 
   try {
-    // Extract field descriptions from the entity config
-    const fieldDescriptions = extractFieldDescriptions(entityConfig);
+    // Describe the declared fields for the prompt
+    const fieldDescriptions = extractFieldDescriptions(target.fields);
     const fieldsPrompt = formatFieldsForPrompt(fieldDescriptions);
-    const specialInstructions = getSpecialFieldInstructions(entityType as EntityType);
+    const specialInstructions = target.instructions.join('\n');
 
     // Build prompts
-    const systemPrompt = getSystemPrompt(entityType as EntityType, intent);
+    const systemPrompt = getSystemPrompt(target.name, intent);
     const userPrompt = getUserPrompt(
-      entityType as EntityType,
+      target.name,
       description,
       fieldsPrompt,
       specialInstructions,
@@ -233,7 +226,11 @@ export async function generateFormPrefill({
       };
     }
 
-    const { data, changedFields } = mergePrefillResult(parsed.data, existingData, intent);
+    // Enforce declared field types before merging — the prompt asks for option
+    // values / numbers / ISO dates, the sanitizer guarantees them.
+    const aiData = sanitizeAiFields(parsed.data, target.fields);
+
+    const { data, changedFields } = mergePrefillResult(aiData, existingData, intent);
 
     // Confidence is reported only for fields the AI actually changed — a
     // preserved value is the user's, not an AI guess, and marking it 1.0 made

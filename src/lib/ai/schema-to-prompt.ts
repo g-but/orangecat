@@ -1,13 +1,11 @@
 /**
  * Schema to Prompt Utilities
  *
- * Converts Zod schemas and entity configurations to human-readable
- * field descriptions for AI prompts.
+ * Converts declared form fields (entity configs or standalone AI-assist
+ * forms) to human-readable field descriptions for AI prompts.
  */
 
-import type { EntityType } from '@/config/entity-registry';
-import { AI_ENTITY_INSTRUCTIONS, AI_UNIVERSAL_INSTRUCTIONS } from '@/config/ai-form-assist';
-import type { FieldConfig, FieldGroup } from '@/components/create/types';
+import type { FieldConfig } from '@/components/create/types';
 
 /**
  * Field description for AI prompt
@@ -102,22 +100,10 @@ function fieldConfigToDescription(field: FieldConfig): FieldDescription {
 }
 
 /**
- * Extract field descriptions from an entity config
+ * Extract field descriptions from a declared field list
  */
-export function extractFieldDescriptions(config: {
-  fieldGroups: FieldGroup[];
-}): FieldDescription[] {
-  const descriptions: FieldDescription[] = [];
-
-  for (const group of config.fieldGroups) {
-    if (group.fields) {
-      for (const field of group.fields) {
-        descriptions.push(fieldConfigToDescription(field));
-      }
-    }
-  }
-
-  return descriptions;
+export function extractFieldDescriptions(fields: FieldConfig[]): FieldDescription[] {
+  return fields.map(fieldConfigToDescription);
 }
 
 /**
@@ -145,15 +131,4 @@ export function formatFieldsForPrompt(descriptions: FieldDescription[]): string 
   }
 
   return lines.join('\n');
-}
-
-/**
- * Per-entity rules the AI needs to fill this form correctly.
- *
- * The content lives in `@/config/ai-form-assist` (AI_ENTITY_INSTRUCTIONS) —
- * this is just the lookup, so adding an entity type never means adding a
- * branch here.
- */
-export function getSpecialFieldInstructions(entityType: EntityType): string {
-  return [...AI_UNIVERSAL_INSTRUCTIONS, ...(AI_ENTITY_INSTRUCTIONS[entityType] ?? [])].join('\n');
 }

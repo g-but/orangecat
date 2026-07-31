@@ -4,7 +4,13 @@ import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { TASK_DEFAULTS } from '@/config/tasks';
 import { API_ROUTES } from '@/config/api-routes';
-import type { TaskFormData, TaskCategory, TaskType, Priority } from '../task-form-types';
+import {
+  applyTaskAiData,
+  type TaskFormData,
+  type TaskCategory,
+  type TaskType,
+  type Priority,
+} from '../task-form-types';
 
 const INITIAL_FORM_DATA: TaskFormData = {
   title: '',
@@ -44,6 +50,11 @@ export function useNewTaskForm() {
 
   const handleEstimatedMinutesChange = (value: number | '') => {
     setFormData(prev => ({ ...prev, estimated_minutes: value }));
+  };
+
+  const handleAIPrefill = (data: Record<string, unknown>) => {
+    setFormData(prev => applyTaskAiData(prev, data));
+    setErrors({});
   };
 
   const handleAddTag = () => {
@@ -129,6 +140,7 @@ export function useNewTaskForm() {
     errors,
     handleChange,
     handleEstimatedMinutesChange,
+    handleAIPrefill,
     handleAddTag,
     handleRemoveTag,
     handleSubmit,
