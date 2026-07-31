@@ -10,8 +10,6 @@
  * why refinement used to be a no-op.
  */
 
-import type { EntityType } from '@/config/entity-registry';
-import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { USER_OVERRIDABLE_FIELDS, type AiAssistIntent } from '@/config/ai-form-assist';
 import { logger } from '@/utils/logger';
 
@@ -50,15 +48,15 @@ const OUTPUT_FORMAT = `OUTPUT FORMAT:
 }`;
 
 /**
- * System prompt for form prefill / refinement
+ * System prompt for form prefill / refinement.
+ *
+ * `formName` is the resolved human name of whatever form is being filled — an
+ * entity ("Service") or a standalone form ("Task", "Proposal").
  */
-export function getSystemPrompt(entityType: EntityType, intent: AiAssistIntent = 'fill'): string {
-  const meta = ENTITY_REGISTRY[entityType];
-  const entityName = meta?.name || entityType;
-
+export function getSystemPrompt(formName: string, intent: AiAssistIntent = 'fill'): string {
   const task =
     intent === 'refine'
-      ? `The user already has a filled-in ${entityName} form and is asking you to CHANGE it. Apply the change they describe and return the updated values.
+      ? `The user already has a filled-in ${formName} form and is asking you to CHANGE it. Apply the change they describe and return the updated values.
 
 REVISION RULES:
 1. The instruction describes a change to make. Make it — never return the current values unchanged.
@@ -66,7 +64,7 @@ REVISION RULES:
 3. Return complete replacement values, never diffs, fragments or instructions.
 4. Change only what the instruction implies. Do not quietly rewrite unrelated fields.
 5. Never shorten, truncate or downgrade a field you were not asked to change.`
-      : `Extract structured data from the user's natural language description to help them create a ${entityName} listing.
+      : `Extract structured data from the user's natural language description to help them create a ${formName}.
 
 RULES:
 1. Only include fields you can confidently derive from the description
@@ -102,20 +100,18 @@ function nonEmptyEntries(data?: Record<string, unknown>): Record<string, unknown
  * Build the user prompt with field definitions and the user's request
  */
 export function getUserPrompt(
-  entityType: EntityType,
+  formName: string,
   userDescription: string,
   fieldsDescription: string,
   specialInstructions: string,
   existingData?: Record<string, unknown>,
   intent: AiAssistIntent = 'fill'
 ): string {
-  const meta = ENTITY_REGISTRY[entityType];
-  const entityName = meta?.name || entityType;
   const currentValues = nonEmptyEntries(existingData);
   const special = specialInstructions ? `\nSpecial instructions:\n${specialInstructions}\n` : '';
 
   if (intent === 'refine') {
-    return `I am editing my ${entityName} listing.
+    return `I am editing my ${formName}.
 
 CURRENT FORM VALUES:
 ${JSON.stringify(currentValues, null, 2)}
@@ -123,18 +119,18 @@ ${JSON.stringify(currentValues, null, 2)}
 THE CHANGE I WANT:
 "${userDescription}"
 
-Available fields for this ${entityName}:
+Available fields for this ${formName}:
 ${fieldsDescription}
 ${special}
 Apply my change to the current values. Output ONLY valid JSON with "data" and "confidence" objects, containing only the fields whose values should change.`;
   }
 
-  let prompt = `I want to create a ${entityName} listing.
+  let prompt = `I want to create a ${formName}.
 
 Here's my description:
 "${userDescription}"
 
-Available fields for this ${entityName}:
+Available fields for this ${formName}:
 ${fieldsDescription}
 ${special}`;
 

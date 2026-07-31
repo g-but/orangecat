@@ -2,11 +2,11 @@
  * AI Form Prefill API Endpoint
  *
  * Generates form field values from natural language descriptions using AI.
- * Used by the entity creation forms to prefill fields based on user descriptions.
+ * Serves every AI-assistable form: registry entities (product, service, …)
+ * and standalone declared forms (task, proposal) — see
+ * `resolveAiAssistTarget` for how a form type becomes a field list.
  *
  * POST /api/ai/form-prefill
- *
- * Created: 2025-01-20
  */
 
 import { z } from 'zod';
@@ -19,8 +19,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { NextResponse } from 'next/server';
 import { generateFormPrefill } from '@/lib/ai/form-prefill-service';
-import { getEntityConfig } from '@/config/entity-configs/get-config';
-import { isValidEntityType, type EntityType } from '@/config/entity-registry';
+import { resolveAiAssistTarget } from '@/lib/ai/assist-target';
 import { logger } from '@/utils/logger';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { AI_ASSIST_MIN_INPUT_LENGTH } from '@/config/ai-form-assist';
@@ -30,7 +29,10 @@ import { AI_ASSIST_MIN_INPUT_LENGTH } from '@/config/ai-form-assist';
  */
 const requestSchema = z
   .object({
-    entityType: z.string().min(1, 'Entity type is required'),
+    /** Entity type or standalone assist-form id ("service", "task", …) */
+    formType: z.string().min(1).optional(),
+    /** Legacy name for formType — kept so in-flight clients keep working */
+    entityType: z.string().min(1).optional(),
     description: z.string().min(1, 'Description is required'),
     existingData: z.record(z.unknown()).optional(),
     /**
@@ -38,6 +40,10 @@ const requestSchema = z
      * it. A refine request that arrives as `fill` can never change anything.
      */
     intent: z.enum(['fill', 'refine']).default('fill'),
+  })
+  .refine(body => body.formType || body.entityType, {
+    message: 'formType is required',
+    path: ['formType'],
   })
   // The floor depends on the intent — a refinement is an instruction, not a
   // description, and "shorter" says everything it needs to in seven characters.
@@ -79,24 +85,19 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       return apiValidationError('Invalid request', parseResult.error.flatten().fieldErrors);
     }
 
-    const { entityType, description, existingData, intent } = parseResult.data;
+    const { description, existingData, intent } = parseResult.data;
+    const formType = parseResult.data.formType ?? parseResult.data.entityType ?? '';
 
-    // Validate entity type
-    if (!isValidEntityType(entityType)) {
-      return apiBadRequest(`Invalid entity type: ${entityType}`);
-    }
-
-    // Get entity configuration
-    const entityConfig = getEntityConfig(entityType as EntityType);
-    if (!entityConfig) {
-      return apiBadRequest(`No configuration found for entity type: ${entityType}`);
+    const target = resolveAiAssistTarget(formType);
+    if (!target) {
+      return apiBadRequest(`Unknown form type: ${formType}`);
     }
 
     logger.info(
       'AI form prefill request',
       {
         userId: user.id,
-        entityType,
+        formType,
         intent,
         descriptionLength: description.length,
       },
@@ -105,9 +106,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     // Generate form prefill using AI
     const result = await generateFormPrefill({
-      entityType,
+      target,
       description,
-      entityConfig,
       existingData,
       intent,
     });
@@ -117,7 +117,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         'AI form prefill failed',
         {
           userId: user.id,
-          entityType,
+          formType,
           error: result.error,
         },
         'AI'
@@ -130,7 +130,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       'AI form prefill success',
       {
         userId: user.id,
-        entityType,
+        formType,
         intent,
         fieldsChanged: result.changedFields?.length ?? 0,
       },

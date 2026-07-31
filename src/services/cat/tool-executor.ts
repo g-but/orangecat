@@ -8,7 +8,7 @@ import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { searchPlatform, type SearchType } from './platform-search';
 import { generateFormPrefill } from '@/lib/ai/form-prefill-service';
 import { generateOffers } from './offer-engine';
-import { getEntityConfig } from '@/config/entity-configs/get-config';
+import { resolveAiAssistTarget } from '@/lib/ai/assist-target';
 import { isValidEntityType, type EntityType } from '@/config/entity-registry';
 import { PREFILLABLE_ENTITY_TYPES } from './tool-use-detection';
 import { fetchWebsiteText, resolveRequestedUrl } from './website-analysis';
@@ -129,15 +129,14 @@ INSTRUCTIONS (hard constraints):
     let emitted = 0;
     await Promise.all(
       offers.map(async offer => {
-        const entityConfig = getEntityConfig(offer.entityType);
-        if (!entityConfig) {
+        const target = resolveAiAssistTarget(offer.entityType);
+        if (!target) {
           return;
         }
         try {
           const prefill = await generateFormPrefill({
-            entityType: offer.entityType,
+            target,
             description: offer.description,
-            entityConfig,
           });
           if (!prefill.success) {
             return;
@@ -303,8 +302,8 @@ Explain this to the user in plain language: which provider is healthy, degraded,
     }
 
     const entityType = requestedType as EntityType;
-    const entityConfig = getEntityConfig(entityType);
-    if (!entityConfig) {
+    const target = resolveAiAssistTarget(entityType);
+    if (!target) {
       onToolCall?.({
         id: toolCall.id,
         name: toolName,
@@ -319,7 +318,7 @@ Explain this to the user in plain language: which provider is healthy, degraded,
     }
 
     try {
-      const prefill = await generateFormPrefill({ entityType, description, entityConfig });
+      const prefill = await generateFormPrefill({ target, description });
       if (!prefill.success) {
         onToolCall?.({
           id: toolCall.id,

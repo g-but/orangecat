@@ -357,8 +357,8 @@ export interface UseTemplateSelectionReturn<T extends Record<string, unknown>> {
  * Request body for AI form prefill
  */
 export interface AIPrefillRequest {
-  /** Entity type to generate fields for */
-  entityType: string;
+  /** Form to generate fields for — an entity type or a declared assist-form id */
+  formType: string;
   /** User's natural language description */
   description: string;
   /** Any fields already filled (to preserve user input) */
@@ -403,8 +403,8 @@ export interface AIGeneratedFields {
  * Props for the AI prefill bar component
  */
 export interface AIPrefillBarProps {
-  /** Entity type being created */
-  entityType: string;
+  /** Form being filled — an entity type or a declared assist-form id (task, proposal) */
+  formType: string;
   /** Callback when AI generates field values */
   onPrefill: (
     data: Record<string, unknown>,

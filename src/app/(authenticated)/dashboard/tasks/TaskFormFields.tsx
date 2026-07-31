@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import { Save } from 'lucide-react';
 import {
@@ -8,6 +9,8 @@ import {
   TASK_CATEGORY_LABELS,
   PRIORITY_LABELS,
 } from '@/config/tasks';
+import { AI_ASSIST_FORMS } from '@/config/ai-assist-forms';
+import { AIPrefillBar } from '@/components/create/AIPrefillBar';
 import type { TaskFormData } from './task-form-types';
 
 interface TaskFormFieldsProps {
@@ -24,6 +27,10 @@ interface TaskFormFieldsProps {
   onRemoveTag: (tag: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
+  /** When provided, the AI assist bar renders and applies its output here (see applyTaskAiData) */
+  onAIPrefill?: (data: Record<string, unknown>) => void;
+  /** Which AI-assist framing to use — matches the page the form is on */
+  aiMode?: 'create' | 'edit';
   showTaskTypeHint?: boolean;
   submitLabel?: string;
 }
@@ -55,11 +62,36 @@ export function TaskFormFields({
   onRemoveTag,
   onSubmit,
   onCancel,
+  onAIPrefill,
+  aiMode = 'create',
   showTaskTypeHint = false,
   submitLabel = 'Save',
 }: TaskFormFieldsProps) {
+  // The AI only sees (and reports on) the fields it is declared to write to.
+  const aiExistingData = useMemo(
+    () =>
+      Object.fromEntries(
+        AI_ASSIST_FORMS.task.fields.map(field => [
+          field.name,
+          (formData as unknown as Record<string, unknown>)[field.name],
+        ])
+      ),
+    [formData]
+  );
+
   return (
     <form onSubmit={onSubmit} className="p-6 space-y-4">
+      {onAIPrefill && (
+        <AIPrefillBar
+          formType="task"
+          mode={aiMode}
+          onPrefill={data => onAIPrefill(data)}
+          disabled={submitting}
+          existingData={aiExistingData}
+          fields={AI_ASSIST_FORMS.task.fields}
+        />
+      )}
+
       <div>
         <label className="block text-sm font-medium text-fg-primary mb-1">
           Title <span className="text-status-negative">*</span>

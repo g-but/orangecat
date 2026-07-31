@@ -17,7 +17,6 @@ import {
   type AiAdjustment,
   type AiAssistIntent,
 } from '@/config/ai-form-assist';
-import type { EntityType } from '@/config/entity-registry';
 
 const EMPTY_FIELDS: NonNullable<AIPrefillBarProps['fields']> = [];
 
@@ -31,7 +30,7 @@ const TYPED_REQUEST = '__typed__';
  * AIRefinePanel.
  */
 export function AIPrefillBar({
-  entityType,
+  formType,
   onPrefill,
   disabled = false,
   existingData,
@@ -52,7 +51,7 @@ export function AIPrefillBar({
   const [hasFilled, setHasFilled] = useState(false);
   const [lastChanged, setLastChanged] = useState<string[] | null>(null);
 
-  const examples = getExampleDescriptions(entityType as EntityType);
+  const examples = getExampleDescriptions(formType);
 
   // Filtered against THIS form's fields, so a form without a description never
   // offers to lengthen one.
@@ -82,7 +81,7 @@ export function AIPrefillBar({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            entityType,
+            formType,
             description: prompt.trim(),
             existingData,
             intent,
@@ -123,7 +122,7 @@ export function AIPrefillBar({
         setPending(null);
       }
     },
-    [entityType, existingData, onPrefill]
+    [formType, existingData, onPrefill]
   );
 
   const handleGenerate = useCallback(() => {

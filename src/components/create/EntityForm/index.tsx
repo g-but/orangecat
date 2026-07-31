@@ -159,7 +159,7 @@ export function EntityForm<T extends Record<string, unknown>>({
                     and have the fields filled instead of typing each one. On edit
                     the bar refines the existing values (it receives existingData). */}
       <AIPrefillBar
-        entityType={config.type}
+        formType={config.type}
         onPrefill={handleAIPrefill}
         disabled={formState.isSubmitting}
         existingData={formState.data}
