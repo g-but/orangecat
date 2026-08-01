@@ -12,7 +12,7 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@supabase/.*|@playwright/.*|isows/.*|bitcoin-address-validation|base58-js|bs58check|bs58|safe-buffer|base-x))',
+    'node_modules/(?!(@supabase/.*|@playwright/.*|isows/.*|bs58check|bs58|safe-buffer|base-x))',
   ],
   testTimeout: 30000,
   collectCoverageFrom: [
@@ -58,11 +58,13 @@ module.exports = {
     '^next/server$': '<rootDir>/__mocks__/next-server.js',
     '^vitest$': '<rootDir>/__mocks__/vitest.js',
     '^isows/(.*)$': '<rootDir>/__mocks__/isows.js',
-    '^bitcoin-address-validation$': '<rootDir>/__mocks__/bitcoin-address-validation.js',
-    // NOTE: bs58check is deliberately NOT mocked. It is a cryptographic
-    // encoder that bitcoinjs-lib uses internally to produce legacy/P2SH
-    // addresses; stubbing it made address-derivation tests pass against
-    // 'mockedEncodedValue' instead of the BIP spec vectors. The ESM issue the
-    // mock worked around is handled by transformIgnorePatterns above.
+    // NOTE: crypto encoders/validators (bs58check, formerly
+    // bitcoin-address-validation) are deliberately NOT mocked — stubbing them
+    // made tests pass vacuously: derivation against 'mockedEncodedValue'
+    // instead of the BIP spec vectors, and validate() returning true for
+    // EVERY string. Address validation now goes through bitcoinjs-lib (CJS),
+    // so no ESM transform gymnastics are needed. Beware: the ts-jest
+    // `transform` above only compiles .ts/.tsx — an ESM-only .js dependency
+    // cannot be whitelisted into working via transformIgnorePatterns alone.
   },
 };
