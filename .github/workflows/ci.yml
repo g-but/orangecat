@@ -83,6 +83,10 @@ jobs:
           SELF_HOST: '1'
           NEXT_PUBLIC_LIGHTNING_ADDRESS: ${{ vars.NEXT_PUBLIC_LIGHTNING_ADDRESS }}
           NEXT_PUBLIC_BITCOIN_ADDRESS: ${{ vars.NEXT_PUBLIC_BITCOIN_ADDRESS }}
+          # Cat Credits go-live flag. This build step is the one that bakes the
+          # client bundle CD ships (artifact download, no rebuild) — a client
+          # var set only in cd.yml never reaches production.
+          NEXT_PUBLIC_CAT_CREDITS_LIVE: ${{ vars.NEXT_PUBLIC_CAT_CREDITS_LIVE }}
         run: npm run build
 
       - name: Assemble standalone (static + public)
