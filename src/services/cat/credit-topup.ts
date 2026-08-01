@@ -22,8 +22,8 @@ import { appendCreditEntry, getCreditBalance } from '@/services/cat/credits';
 import { logger } from '@/utils/logger';
 
 /** Top-up bounds in BTC (1-sat precision). 0.00001 BTC = 1k sats … 0.01 BTC = 1M sats. */
-export const MIN_TOPUP_BTC = 0.00001;
-export const MAX_TOPUP_BTC = 0.01;
+export { MIN_TOPUP_BTC, MAX_TOPUP_BTC } from '@/config/cat-plans';
+import { MIN_TOPUP_BTC, MAX_TOPUP_BTC } from '@/config/cat-plans';
 /** Invoice validity. */
 const INVOICE_EXPIRY_SECONDS = 3600;
 const SATS_PER_BTC = 100_000_000;

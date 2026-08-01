@@ -22,10 +22,7 @@ export type { UserApiKey } from '@/services/ai/api-key-service';
 import type { UserApiKey } from '@/services/ai/api-key-service';
 
 /** The free OrangeCat default's position in the chain (sentinel id). */
-const PLATFORM_ID = 'platform';
-
-/** A row in the merged fallback chain: a user key or the platform default. */
-type ChainItem = { kind: 'key'; key: UserApiKey } | { kind: 'platform' };
+import { buildChain, chainItemId, moveChainItem } from '@/services/ai/key-chain';
 
 interface AIKeyManagerProps {
   keys: UserApiKey[];
@@ -75,28 +72,17 @@ export function AIKeyManager({
     // via "Add another key" or navigates away via "Start chatting."
   };
 
-  // Reconstruct the merged chain from stored positions. Keys carry their
-  // sort_order; the platform default sits at platformPosition. Both share one
-  // 0-based index space, so sorting by it interleaves them correctly even
-  // after reordering leaves gaps in the key sort_orders.
-  const chain: ChainItem[] = [
-    ...keys.map(key => ({ order: key.sort_order, item: { kind: 'key', key } as ChainItem })),
-    { order: platformPosition, item: { kind: 'platform' } as ChainItem },
-  ]
-    .sort((a, b) => a.order - b.order)
-    .map(entry => entry.item);
-
-  const itemId = (it: ChainItem) => (it.kind === 'platform' ? PLATFORM_ID : it.key.id);
+  const chain = buildChain(keys, platformPosition);
 
   // Move the chain item at `from` to slot `to`, then persist the new order.
   const reorderTo = async (from: number, to: number) => {
-    if (!onReorder || from === to || to < 0 || to >= chain.length) {
+    if (!onReorder) {
       return;
     }
-    const next = [...chain];
-    const [moved] = next.splice(from, 1);
-    next.splice(to, 0, moved);
-    await onReorder(next.map(itemId));
+    const order = moveChainItem(chain, from, to);
+    if (order) {
+      await onReorder(order);
+    }
   };
 
   const canReorder = !!onReorder && chain.length > 1;
@@ -113,7 +99,7 @@ export function AIKeyManager({
             </p>
           )}
           {chain.map((it, index) => {
-            const id = itemId(it);
+            const id = chainItemId(it);
             const rowProps = canReorder
               ? {
                   draggable: !isLoading,
