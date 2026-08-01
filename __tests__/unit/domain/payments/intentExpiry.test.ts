@@ -9,7 +9,9 @@
 import {
   resolveIntentExpiry,
   expiresInSecondsFrom,
+  isBeyondClaimWindow,
   LIGHTNING_FALLBACK_EXPIRY_MS,
+  BUYER_CLAIM_GRACE_MS,
 } from '@/domain/payments/intentExpiry';
 
 describe('resolveIntentExpiry', () => {
@@ -45,6 +47,24 @@ describe('resolveIntentExpiry', () => {
     // depending on who was paying.
     expect(resolveIntentExpiry('onchain', null)).toBe(resolveIntentExpiry('onchain', null));
     expect(resolveIntentExpiry('onchain', null)).toBeNull();
+  });
+});
+
+describe('isBeyondClaimWindow', () => {
+  it('keeps the claim window open AFTER invoice expiry — paying and reporting are different acts', () => {
+    // Paid at T-5s, tab closed, reopened an hour after expiry: the claim must
+    // still be accepted. The recipient's confirmation is what settles it.
+    const expiredAnHourAgo = new Date(Date.now() - 3_600_000).toISOString();
+    expect(isBeyondClaimWindow(expiredAnHourAgo)).toBe(false);
+  });
+
+  it('closes the window once expiry AND the grace period are both past', () => {
+    const longDead = new Date(Date.now() - BUYER_CLAIM_GRACE_MS - 3_600_000).toISOString();
+    expect(isBeyondClaimWindow(longDead)).toBe(true);
+  });
+
+  it('never closes for intents without a deadline', () => {
+    expect(isBeyondClaimWindow(null)).toBe(false);
   });
 });
 

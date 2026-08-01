@@ -1,6 +1,6 @@
 // Fixed wallet types with proper validation
 
-import { validate as validateBitcoinAddress } from 'bitcoin-address-validation';
+import { bech32, bech32m } from 'bech32';
 import bs58check from 'bs58check';
 
 // Reality check: the DB holds wallet_type='lightning' rows (a Lightning address
@@ -280,12 +280,52 @@ export function detectWalletType(addressOrXpub: string): WalletType {
  * Validate Bitcoin address using proper checksum validation
  * Supports: P2PKH, P2SH, P2WPKH (bech32), P2TR (taproot)
  */
+/**
+ * Full cryptographic address validation — base58check checksum for legacy/P2SH,
+ * bech32/bech32m checksum for segwit/taproot — built on the two tiny CJS
+ * decoders already in the tree. Deliberately NOT bitcoinjs-lib here: taproot
+ * validation there requires initEccLib (wasm), and this function runs in the
+ * BROWSER (wallet form), where a wasm dependency is a bundle hazard. It also
+ * replaces the ESM-only bitcoin-address-validation package, which jest could
+ * never load (its global mock validated every string as true).
+ */
 function isValidBitcoinAddress(
   address: string,
   network: 'mainnet' | 'testnet' = 'mainnet'
 ): boolean {
+  // Bech32 (bc1q... segwit v0) / bech32m (bc1p... taproot v1+), per BIP173/350.
+  const hrp = network === 'testnet' ? 'tb' : 'bc';
+  if (address.toLowerCase().startsWith(`${hrp}1`)) {
+    for (const codec of [bech32, bech32m]) {
+      try {
+        const { prefix, words } = codec.decode(address);
+        if (prefix !== hrp) {
+          return false;
+        }
+        const version = words[0];
+        const program = codec.fromWords(words.slice(1));
+        // BIP350: version 0 must be bech32 (20/32-byte program); v1+ bech32m.
+        if (version === 0) {
+          return codec === bech32 && (program.length === 20 || program.length === 32);
+        }
+        return codec === bech32m && version <= 16 && program.length >= 2 && program.length <= 40;
+      } catch {
+        // Wrong codec for this checksum — try the other.
+      }
+    }
+    return false;
+  }
+
+  // Base58check: P2PKH / P2SH with version byte per network.
   try {
-    return validateBitcoinAddress(address, network as any);
+    const decoded = bs58check.decode(address);
+    if (decoded.length !== 21) {
+      return false;
+    }
+    const versionByte = decoded[0];
+    return network === 'testnet'
+      ? versionByte === 0x6f || versionByte === 0xc4
+      : versionByte === 0x00 || versionByte === 0x05;
   } catch {
     return false;
   }
@@ -296,9 +336,12 @@ function isValidBitcoinAddress(
  */
 function isValidXpub(xpub: string): boolean {
   try {
-    const validPrefixes = ['xpub', 'ypub', 'zpub', 'tpub', 'upub', 'vpub'];
+    // Mainnet only. Testnet keys (tpub/upub/vpub) used to be accepted here,
+    // which let a user save a key this platform can never derive a payable
+    // mainnet address from — receiving then failed at invoice time instead of
+    // at save time, where the mistake is actually fixable.
+    const validPrefixes = ['xpub', 'ypub', 'zpub'];
 
-    // Check prefix
     if (!validPrefixes.some(prefix => xpub.startsWith(prefix))) {
       return false;
     }
@@ -336,7 +379,8 @@ export function validateAddressOrXpub(
     if (!isValidXpub(trimmed)) {
       return {
         valid: false,
-        error: 'Invalid xpub format or checksum. Please verify your extended public key.',
+        error:
+          'Invalid extended public key. It must be a mainnet xpub, ypub, or zpub with a valid checksum — testnet keys (tpub/upub/vpub) cannot receive real Bitcoin here.',
       };
     }
     return { valid: true, type: 'xpub', error: null };

@@ -123,6 +123,24 @@ describe('payment reconciliation sweep', () => {
     expect(ageDays).toBeLessThan(31);
   });
 
+  it('sweeps stale undetectable Lightning intents only after the buyer-claim window closes', async () => {
+    await GET(request());
+    const filter = orFilters[0];
+
+    // Bare Lightning addresses are undetectable, so "expired" is only a fact
+    // once the invoice is dead AND the claim window has closed. The cutoff must
+    // trail expiry by the grace period — sweeping at expires_at would refuse a
+    // buyer's still-valid "I've paid" claim.
+    const cutoff = filter.match(
+      /lightning_address,lnurl_verify_url\.is\.null,expires_at\.lt\.([^,)]+)/
+    )?.[1];
+    expect(cutoff).toBeDefined();
+
+    const ageHours = (Date.now() - new Date(cutoff as string).getTime()) / 3_600_000;
+    expect(ageHours).toBeGreaterThan(47);
+    expect(ageHours).toBeLessThan(49);
+  });
+
   it('no-ops cleanly when nothing is pending', async () => {
     const res = await GET(request());
     expect((await body(res)).data).toMatchObject({ scanned: 0, settled: 0 });

@@ -20,7 +20,7 @@ import { convertToBTC } from '@/services/currency/rates';
 import type { CurrencyCode } from '@/config/currencies';
 import { resolveSellerWallet, getSellerUserId } from './walletResolutionService';
 import { generateInvoice } from './invoiceGenerationService';
-import { resolveIntentExpiry, expiresInSecondsFrom } from './intentExpiry';
+import { resolveIntentExpiry, expiresInSecondsFrom, isBeyondClaimWindow } from './intentExpiry';
 import {
   checkNWCPaymentStatus,
   checkOnchainPaymentStatus,
@@ -444,12 +444,20 @@ export async function acknowledgePublicPayment(
       requires_recipient_confirmation: false,
     };
   }
+  // Expiry bounds when the invoice could be PAID, not when payment can be
+  // REPORTED. A payer who paid just before the bolt11 died must still be able
+  // to say so — the claim is testimony the recipient confirms or declines, so
+  // accepting it late risks nothing. Refuse only once the claim window has
+  // also closed.
   if (
     pi.status === STATUS.PAYMENT_INTENTS.EXPIRED ||
     pi.status === STATUS.PAYMENT_INTENTS.FAILED ||
-    (pi.expires_at && new Date(pi.expires_at) < new Date())
+    isBeyondClaimWindow(pi.expires_at)
   ) {
-    if (pi.status !== STATUS.PAYMENT_INTENTS.EXPIRED) {
+    if (
+      pi.status !== STATUS.PAYMENT_INTENTS.EXPIRED &&
+      pi.status !== STATUS.PAYMENT_INTENTS.FAILED
+    ) {
       await updatePaymentStatus(admin, paymentIntentId, STATUS.PAYMENT_INTENTS.EXPIRED);
     }
     throw new Error('This payment request has expired');
@@ -521,6 +529,20 @@ async function refreshPaymentStatus(
       await updatePaymentStatus(supabase, pi.id, STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION);
       return { status: STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION, paid_at: null };
     }
+  }
+
+  // A bare Lightning address (no verify URL) is undetectable — no rail was
+  // asked above, so "expired" here would be a guess, and terminalizing early
+  // would refuse the buyer's own "I've paid" claim while the claim window is
+  // still open. Only once the invoice is dead AND the window has closed is
+  // "expired" a fact: no new payment possible, no claim forthcoming.
+  const undetectable = pi.payment_method === 'lightning_address' && !pi.lnurl_verify_url;
+  if (undetectable) {
+    if (isBeyondClaimWindow(pi.expires_at)) {
+      await updatePaymentStatus(supabase, pi.id, STATUS.PAYMENT_INTENTS.EXPIRED);
+      return { status: STATUS.PAYMENT_INTENTS.EXPIRED, paid_at: null };
+    }
+    return { status: pi.status, paid_at: pi.paid_at };
   }
 
   // The rail says no payment arrived. Only now is expiry the truth.
