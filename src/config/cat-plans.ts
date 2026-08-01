@@ -61,6 +61,16 @@ export interface CatPlan {
  * default in src/services/ai/api-key-service.ts:checkPlatformUsage so the
  * page never advertises a different number than the runtime enforces.
  */
+// ---------------------------------------------------------------------------
+// Cat Credits top-up bounds + UI presets — one place, so a preset can never
+// drift outside what the API accepts.
+// ---------------------------------------------------------------------------
+export const MIN_TOPUP_BTC = 0.00001;
+export const MAX_TOPUP_BTC = 0.01;
+export const TOPUP_PRESETS_BTC = ([0.0001, 0.0005, 0.001] as const).filter(
+  v => v >= MIN_TOPUP_BTC && v <= MAX_TOPUP_BTC
+);
+
 export const CAT_FREE_DAILY_LIMIT = 10;
 
 /**

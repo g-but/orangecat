@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import type { ModelTier } from '@/config/ai-models';
 import { hasActiveByok, type UserApiKey } from '@/services/ai/api-key-service';
+import { applyOrderToKeys, platformPositionFromOrder } from '@/services/ai/key-chain';
 import { API_ROUTES } from '@/config/api-routes';
 import { useAISettingsMutations } from './useAISettingsMutations';
 
@@ -131,26 +132,14 @@ export function useAISettings() {
   const reorderKeys = useCallback(
     async (orderedIds: string[]) => {
       setState(prev => {
-        // Optimistically stamp each item's new chain index (shared by keys via
-        // sort_order and the platform default via platform_chain_position) so
+        // Optimistic: stamp new chain indexes via the shared ordering rule so
         // the merged-chain UI reflects the move before the server round-trip.
-        const byId = new Map(prev.keys.map(k => [k.id, k]));
-        const reordered: UserApiKey[] = [];
-        orderedIds.forEach((id, idx) => {
-          if (id === 'platform') {
-            return;
-          }
-          const k = byId.get(id);
-          if (k) {
-            reordered.push({ ...k, sort_order: idx });
-          }
-        });
-        const platformIdx = orderedIds.indexOf('platform');
+        const platformIdx = platformPositionFromOrder(orderedIds);
         const preferences =
           prev.preferences && platformIdx >= 0
             ? { ...prev.preferences, platform_chain_position: platformIdx }
             : prev.preferences;
-        return { ...prev, keys: reordered, preferences };
+        return { ...prev, keys: applyOrderToKeys(prev.keys, orderedIds), preferences };
       });
       const res = await fetch(API_ROUTES.USER.API_KEYS, {
         method: 'PATCH',

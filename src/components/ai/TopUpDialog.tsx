@@ -18,7 +18,7 @@ import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
 
 /** Preset top-up amounts in BTC. */
-const PRESETS_BTC = [0.0001, 0.0005, 0.001];
+import { TOPUP_PRESETS_BTC as PRESETS_BTC } from '@/config/cat-plans';
 const POLL_MS = 3000;
 
 interface Invoice {

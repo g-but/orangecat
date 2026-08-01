@@ -18,6 +18,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 import { WIRED_PROVIDER_IDS } from '@/data/aiProviders';
+import { PLATFORM_CHAIN_ID } from '@/services/ai/key-chain';
 
 // ==================== TYPES ====================
 
@@ -315,7 +316,7 @@ export class ApiKeyService {
   async reorderKeys(userId: string, orderedIds: string[]): Promise<boolean> {
     for (let i = 0; i < orderedIds.length; i++) {
       const id = orderedIds[i];
-      if (id === 'platform') {
+      if (id === PLATFORM_CHAIN_ID) {
         // The free OrangeCat default — store its position in prefs.
         const { error } = await this.supabase
           .from(DATABASE_TABLES.USER_AI_PREFERENCES)

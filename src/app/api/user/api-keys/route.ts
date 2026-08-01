@@ -12,6 +12,7 @@ import { createApiKeyService, hasActiveByok } from '@/services/ai/api-key-servic
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { WIRED_PROVIDER_IDS } from '@/data/aiProviders';
+import { PLATFORM_CHAIN_ID } from '@/services/ai/key-chain';
 import { logger } from '@/utils/logger';
 import {
   apiSuccess,
@@ -36,7 +37,7 @@ const reorderSchema = z.object({
   // Each entry is a key id (uuid) or the literal 'platform' sentinel for the
   // free OrangeCat default's position in the chain.
   order: z
-    .array(z.union([z.string().uuid(), z.literal('platform')]))
+    .array(z.union([z.string().uuid(), z.literal(PLATFORM_CHAIN_ID)]))
     .min(1)
     .max(50),
 });
