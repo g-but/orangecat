@@ -11,67 +11,13 @@
  * composes those two existing endpoints; no new backend.
  */
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Gauge, KeyRound, Sparkles, Wallet } from 'lucide-react';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { useCatQuota } from '@/components/ai-chat/ModernChatPanel/hooks/useCatQuota';
-import { API_ROUTES } from '@/config/api-routes';
 import { ROUTES } from '@/config/routes';
 import { CAT_PLANS, PLAN_ID_BY_QUOTA_TIER, type CatPlanId } from '@/config/cat-plans';
-import { logger } from '@/utils/logger';
-
-/** "3h 24m" / "45m" from seconds — for the daily-reset countdown. */
-function formatCountdown(totalSeconds: number): string {
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.max(1, Math.floor((totalSeconds % 3600) / 60));
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
-}
-
-function useCreditBalance(): {
-  balanceBtc: number | null;
-  isLoading: boolean;
-  error: boolean;
-  retry: () => void;
-} {
-  const [balanceBtc, setBalanceBtc] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    let cancelled = false;
-    setIsLoading(true);
-    setError(false);
-    (async () => {
-      try {
-        const res = await fetch(API_ROUTES.CAT.CREDITS, { credentials: 'include' });
-        if (!res.ok) {
-          if (!cancelled) {
-            setError(true);
-          }
-          return;
-        }
-        const body = (await res.json()) as { success: boolean; data?: { balanceBtc: number } };
-        if (!cancelled && body.success && body.data) {
-          setBalanceBtc(body.data.balanceBtc);
-        }
-      } catch (fetchError) {
-        logger.warn('Usage page: credit balance fetch failed', { error: fetchError }, 'Usage');
-        if (!cancelled) {
-          setError(true);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [attempt]);
-  return { balanceBtc, isLoading, error, retry: () => setAttempt(a => a + 1) };
-}
+import { formatCountdown, useCreditBalance } from './useCreditBalance';
 
 export default function UsageSettingsPage() {
   const { quota, isLoading: quotaLoading } = useCatQuota();
