@@ -10,14 +10,16 @@
 
 import { logger } from '@/utils/logger';
 import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
+import { DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
 
 // Capable, JSON-reliable defaults. Groq is fast + cheap for short work; the
-// OpenRouter free Maverick handles long-form with a large output budget. We use
-// the SAME OpenRouter model the offer-engine proves works on the box — free
-// model IDs rot (a bare gpt-oss-120b:free returned 404 in prod), so we pin the
-// one that's verified live rather than trusting DEFAULT_FREE_MODEL_ID.
+// registry's free OpenRouter default is the fallback. Free model ids rot —
+// the pinned llama-4-maverick:free this file once carried 404'd too. The
+// registry is now the one place ids live, guarded by the free-model catalog
+// probe (health-probes.ts), so drift is detected there instead of re-pinned
+// here.
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const OPENROUTER_MODEL = 'meta-llama/llama-4-maverick:free';
+const OPENROUTER_MODEL = DEFAULT_FREE_MODEL_ID;
 
 export interface PlatformJsonOpts {
   temperature?: number;

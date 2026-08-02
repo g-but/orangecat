@@ -289,9 +289,13 @@ export async function orchestrateCatChat(
     const readable = new ReadableStream({
       async start(controller) {
         // Lifted outside the try block so the catch at the bottom can
-        // tell whether the failover attempt was reached. Block-scoped
+        // tell whether the failover attempt was reached (and which
+        // provider/model was active when the chain died). Block-scoped
         // `let` inside the try is invisible to the outer catch.
         let attemptedFallback = false;
+        let activeProvider = provider;
+        let activeModel = modelToUse;
+        let activeService = aiService;
         try {
           let usage:
             | {
@@ -332,14 +336,9 @@ export async function orchestrateCatChat(
             }
           );
 
-          // Track the *active* provider/model/service so we can swap to
-          // fallback (typically OpenRouter free) if primary rate-limits
-          // before emitting any content. After any content has streamed
-          // it's too late to swap cleanly without corrupting the response,
-          // so we only failover when nothing has been sent to the user yet.
-          let activeProvider = provider;
-          let activeModel = modelToUse;
-          let activeService = aiService;
+          // After any content has streamed it's too late to swap providers
+          // cleanly without corrupting the response, so we only failover
+          // when nothing has been sent to the user yet.
           let streamStarted = false;
 
           const emitDone = async () => {
@@ -393,9 +392,12 @@ export async function orchestrateCatChat(
             }
           };
 
-          // Walk the fallback chain on rate-limit. Each provider gets one
-          // attempt. We can only swap providers BEFORE any content streams
-          // — otherwise the client sees half a response and then a switch.
+          // Walk the fallback chain on ANY pre-stream failure — rate-limit,
+          // retired model id (404), upstream 5xx. A single dead link must
+          // never end the chat while a later link could serve it. Each
+          // provider gets one attempt. We can only swap providers BEFORE any
+          // content streams — otherwise the client sees half a response and
+          // then a switch.
           let lastErr: unknown = null;
           try {
             await consumeStream();
@@ -403,25 +405,27 @@ export async function orchestrateCatChat(
             lastErr = err;
           }
           let fallbackIndex = 0;
-          while (
-            lastErr &&
-            isAiRateLimitError(lastErr) &&
-            !streamStarted &&
-            fallbackIndex < fallbacks.length
-          ) {
+          while (lastErr && !streamStarted && fallbackIndex < fallbacks.length) {
             attemptedFallback = true;
+            const reason = isAiRateLimitError(lastErr) ? 'rate_limit' : 'provider_error';
             const next = fallbacks[fallbackIndex++];
+            logger.warn(
+              'Cat chat: provider failed, trying next fallback',
+              {
+                from: { provider: activeProvider, model: activeModel },
+                to: { provider: next.provider, model: next.modelToUse },
+                reason,
+                err: lastErr,
+                attempt: fallbackIndex,
+              },
+              'cat/chat'
+            );
             activeProvider = next.provider;
             activeModel = next.modelToUse;
             activeService = next.aiService;
-            logger.info(
-              'Cat chat: rate-limited, trying next fallback',
-              { from: provider, to: activeProvider, model: activeModel, attempt: fallbackIndex },
-              'cat/chat'
-            );
             controller.enqueue(
               encoder.encode(
-                `data: ${JSON.stringify({ fallback: { from: provider, to: activeProvider, model: activeModel, reason: 'rate_limit' } })}\n\n`
+                `data: ${JSON.stringify({ fallback: { from: provider, to: activeProvider, model: activeModel, reason } })}\n\n`
               )
             );
             controller.enqueue(
@@ -491,27 +495,33 @@ export async function orchestrateCatChat(
             await keyService.incrementPlatformUsage(user.id, 1, usage.totalTokens);
           }
         } catch (err) {
-          logger.error('Cat chat stream error', { err, attemptedFallback, hasByok }, 'cat/chat');
+          logger.error(
+            'Cat chat stream error',
+            { err, attemptedFallback, hasByok, provider: activeProvider, model: activeModel },
+            'cat/chat'
+          );
           // Honest error copy. Never echo raw err.message — it can contain
           // API keys (e.g. a malformed Authorization header leaks the
           // credential in the Headers.append error). Log server-side;
-          // return a structured, actionable error to the client.
+          // return a structured, actionable error to the client. Only claim
+          // what we actually know — "providers are down" when the real cause
+          // was a config bug erodes trust and sends users chasing outages.
           let errPayload: { error: string; code: string };
           if (isAiRateLimitError(err)) {
             errPayload = {
               error: hasByok
                 ? 'Your provider returned a rate-limit. Try again in a moment.'
-                : 'Cat is temporarily busy. Add your own Groq key in Settings to skip the cap.',
+                : 'Free AI capacity is maxed out right now. Try again in a minute — or add your own free Groq key in Settings → API Keys for capacity that’s all yours.',
               code: 'AI_RATE_LIMITED',
             };
           } else if (attemptedFallback) {
-            // Both primary AND failover threw. This is the "all providers
-            // down" path — common when the platform OpenRouter key is
-            // revoked or both quotas are exhausted at the same time.
+            // The whole chain threw — quota exhaustion, retired model ids,
+            // or a revoked platform key. From the user's side the action is
+            // the same; the details are in the server log either way.
             errPayload = {
               error: hasByok
-                ? 'Both providers are unreachable right now. Check your keys in Settings → API Keys.'
-                : 'Both Cat providers are temporarily down. Add your own free Groq key in Settings → API Keys to keep chatting.',
+                ? 'None of your providers could answer just now. Check your keys in Settings → API Keys, then try again.'
+                : 'Cat couldn’t reach an AI model just now — this is usually momentary. Try again; if it keeps happening, add your own free Groq key in Settings → API Keys.',
               code: 'ALL_PROVIDERS_DOWN',
             };
           } else {
@@ -562,9 +572,10 @@ export async function orchestrateCatChat(
       collectedPrefillProposals.push(proposal);
     }
   );
-  // Try primary; on rate-limit, walk the fallback chain. Non-streaming
-  // is even safer than streaming because each attempt is atomic — no
-  // partial-content corruption risk to worry about.
+  // Try primary; on ANY failure (rate-limit, retired model id, upstream
+  // 5xx), walk the fallback chain. Non-streaming is even safer than
+  // streaming because each attempt is atomic — no partial-content
+  // corruption risk to worry about.
   let activeProvider = provider;
   let result;
   let fellBackTo: FallbackProvider | null = null;
@@ -579,11 +590,18 @@ export async function orchestrateCatChat(
     lastErr = err;
   }
   let fallbackIndex = 0;
-  while (!result && lastErr && isAiRateLimitError(lastErr) && fallbackIndex < fallbacks.length) {
+  while (!result && lastErr && fallbackIndex < fallbacks.length) {
     const next = fallbacks[fallbackIndex++];
-    logger.info(
-      'Cat chat (non-streaming): rate-limited, trying next fallback',
-      { from: provider, to: next.provider, model: next.modelToUse, attempt: fallbackIndex },
+    logger.warn(
+      'Cat chat (non-streaming): provider failed, trying next fallback',
+      {
+        from: provider,
+        to: next.provider,
+        model: next.modelToUse,
+        reason: isAiRateLimitError(lastErr) ? 'rate_limit' : 'provider_error',
+        err: lastErr,
+        attempt: fallbackIndex,
+      },
       'cat/chat'
     );
     try {
