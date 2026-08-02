@@ -69,6 +69,11 @@ export const PUBLIC_API_INTEGRATION_ENDPOINTS = [
     endpoint: `${PUBLIC_API_BASE}/payments/public`,
   },
   {
+    name: 'payments.l402',
+    methods: ['GET'] as const,
+    endpoint: `${PUBLIC_API_BASE}/pay/{entity_type}/{entity_id}`,
+  },
+  {
     name: 'timeline.publish',
     methods: ['POST'] as const,
     endpoint: `${PUBLIC_API_BASE}/timeline/publish`,

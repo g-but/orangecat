@@ -177,6 +177,31 @@ export function apiError(
 }
 
 /**
+ * 402 Payment Required — the HTTP-402/L402 machine-payment convention.
+ * `details` carries the challenge (token, bolt11, amount…); `wwwAuthenticate`
+ * sets the header wallets/agents parse. Not logged as an error: a 402 is the
+ * protocol working, not a failure.
+ */
+export function apiPaymentRequired(
+  message: string,
+  details?: unknown,
+  wwwAuthenticate?: string
+): NextResponse<ApiErrorResponse> {
+  const response = NextResponse.json<ApiErrorResponse>(
+    {
+      success: false,
+      error: { code: 'PAYMENT_REQUIRED', message, details },
+      metadata: { timestamp: new Date().toISOString() },
+    },
+    { status: 402 }
+  );
+  if (wwwAuthenticate) {
+    response.headers.set('WWW-Authenticate', wwwAuthenticate);
+  }
+  return response;
+}
+
+/**
  * 400 Bad Request
  */
 export function apiBadRequest(
