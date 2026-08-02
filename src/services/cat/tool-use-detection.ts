@@ -4,6 +4,7 @@
  */
 
 import { CAT_CREATABLE_ENTITY_TYPES } from '@/types/cat';
+import { MY_DATA_TOPICS } from './my-data-topics';
 import { extractHttpUrls, isUrlOnlyMessage } from './website-analysis';
 
 /**
@@ -76,6 +77,33 @@ const TOOL_TRIGGER_KEYWORDS = [
   'not responding',
   'eval',
   'harness',
+  // read surface / query_my_data ("how am I doing?")
+  'how much',
+  'earning',
+  'earned',
+  'revenue',
+  'income',
+  'sales',
+  'sold',
+  'balance',
+  'my wallet',
+  'my listings',
+  'my products',
+  'my services',
+  'my projects',
+  'my causes',
+  'my events',
+  'my bookings',
+  'my tasks',
+  'my drafts',
+  'my stats',
+  'unread',
+  'overview',
+  'summary of my',
+  'status update',
+  'what do i have',
+  'show me my',
+  'catch me up',
 ];
 
 /**
@@ -301,6 +329,29 @@ export const PLATFORM_TOOL_DEFINITION = [
           },
         },
         required: ['facts'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'query_my_data',
+      description:
+        "Read the user's OWN live platform data and answer questions about it: their listings/entities, earnings and sales, upcoming bookings, wallet balances and goals, unread notifications, and open tasks. Use whenever the user asks about their own stuff or performance ('how much did I earn', 'what am I selling', 'any bookings coming up', 'catch me up'). Read-only — it changes nothing. Prefer topic 'overview' when the question spans several areas.",
+      parameters: {
+        type: 'object',
+        properties: {
+          topic: {
+            type: 'string',
+            enum: MY_DATA_TOPICS as unknown as string[],
+            description: 'Which slice of their data to read.',
+          },
+          days: {
+            type: 'number',
+            description: 'Look-back window in days for earnings (default 30, max 365).',
+          },
+        },
+        required: ['topic'],
       },
     },
   },

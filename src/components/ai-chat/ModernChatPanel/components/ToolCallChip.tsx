@@ -39,6 +39,12 @@ const TOOL_LABELS: Record<string, ToolLabel> = {
     noResults: 'Nothing to draft',
     failed: "Couldn't draft",
   },
+  query_my_data: {
+    running: 'Reading your data',
+    completed: () => 'Read your live data',
+    noResults: 'Nothing on file',
+    failed: "Couldn't read your data",
+  },
 };
 
 const DEFAULT_LABEL: ToolLabel = {
