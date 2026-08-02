@@ -18,15 +18,6 @@ jobs:
   build-and-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    # The P0 smoke suite mutates ONE shared E2E user on the shared backend
-    # (single-use recovery token, password change, notification counters).
-    # Overlapping runs clobber each other — GoTrue keeps one recovery token
-    # per user, so a later run's bootstrap invalidates an in-flight run's
-    # token, and a completed reset flips the shared password mid-run. Queue
-    # (never cancel) so at most one smoke job touches the fixtures at a time.
-    concurrency:
-      group: e2e-shared-fixtures
-      cancel-in-progress: false
     env:
       # Public Supabase vars are baked into the client bundle at build time.
       # Use repo secrets when present so P0 auth tests hit the real fixture DB.
