@@ -23,8 +23,8 @@ export default function EmptyState({
       <div className="oc-icon-tile mb-4 h-12 w-12">
         <Icon className="w-6 h-6 text-muted-dim" />
       </div>
-      <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
-      {description && <p className="text-muted-foreground mb-6 max-w-md">{description}</p>}
+      <h3 className="text-lg font-semibold text-fg-primary mb-2">{title}</h3>
+      {description && <p className="text-fg-secondary mb-6 max-w-md">{description}</p>}
       {action}
     </div>
   );

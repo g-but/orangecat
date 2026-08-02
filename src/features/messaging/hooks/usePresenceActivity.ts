@@ -62,6 +62,10 @@ export function usePresenceActivity({
     };
 
     const handleBeforeUnload = () => {
+      // Pre-existing dead endpoint: no /api/presence/offline handler exists, so this
+      // beacon 404s silently. Kept as a literal (not in API_ROUTES) so audit:routes
+      // doesn't declare a phantom route; remove or implement the handler to close this.
+      // eslint-disable-next-line no-restricted-syntax -- see above
       navigator.sendBeacon?.('/api/presence/offline', JSON.stringify({ userId }));
     };
 

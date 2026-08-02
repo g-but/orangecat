@@ -30,7 +30,7 @@ export default function StudyBitcoinPage() {
         description="From basics to advanced concepts, learn everything you need to know about Bitcoin and the future of money."
       >
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          <Button href="/bitcoin-wallet-guide" size="lg" className="min-h-12">
+          <Button href={ROUTES.BITCOIN_WALLET_GUIDE} size="lg" className="min-h-12">
             <Wallet className="w-5 h-5 mr-2" />
             Start with Wallets
           </Button>
@@ -131,7 +131,7 @@ export default function StudyBitcoinPage() {
             Bitcoin
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button href="/bitcoin-wallet-guide" size="lg" className="min-h-12">
+            <Button href={ROUTES.BITCOIN_WALLET_GUIDE} size="lg" className="min-h-12">
               <Wallet className="w-5 h-5 mr-2" />
               Get Your First Wallet
             </Button>

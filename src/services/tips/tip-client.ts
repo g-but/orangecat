@@ -3,6 +3,7 @@
  * shapes (erased at compile — no server code pulled into the bundle).
  */
 
+import { API_ROUTES } from '@/config/api-routes';
 import type { TipInvoice, TipReceiveInfo, TipStatusResult } from '@/domain/tips/tip-service';
 
 export type { TipInvoice, TipReceiveInfo, TipStatusResult } from '@/domain/tips/tip-service';
@@ -19,7 +20,7 @@ function errorMessage(json: { error?: unknown }, fallback: string): string {
 }
 
 export async function fetchTipReceiveInfo(username: string): Promise<TipReceiveInfo> {
-  const res = await fetch(`/api/tips/receive-info?username=${encodeURIComponent(username)}`);
+  const res = await fetch(`${API_ROUTES.TIPS.RECEIVE_INFO}?username=${encodeURIComponent(username)}`);
   const json = await readJson(res);
   if (!res.ok || !json.success) {
     throw new Error(errorMessage(json, 'Could not load tip info.'));
@@ -28,7 +29,7 @@ export async function fetchTipReceiveInfo(username: string): Promise<TipReceiveI
 }
 
 export async function fetchTipInvoice(username: string, amountBtc: number): Promise<TipInvoice> {
-  const res = await fetch('/api/tips/invoice', {
+  const res = await fetch(API_ROUTES.TIPS.INVOICE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, amountBtc }),
@@ -42,7 +43,7 @@ export async function fetchTipInvoice(username: string, amountBtc: number): Prom
 
 /** Poll whether a tip has settled, using the intent id + bearer token. */
 export async function fetchTipStatus(intentId: string, token: string): Promise<TipStatusResult> {
-  const res = await fetch('/api/tips/status', {
+  const res = await fetch(API_ROUTES.TIPS.STATUS, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ intentId, token }),

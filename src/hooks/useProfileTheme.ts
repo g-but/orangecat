@@ -2,6 +2,7 @@
 
 import { fromTable } from '@/lib/supabase/untyped';
 import { useEffect, useCallback, useRef } from 'react';
+import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
@@ -50,8 +51,8 @@ export function useProfileTheme() {
       const { error } = await fromTable(supabase, DATABASE_TABLES.PROFILES)
         .update({ preferences: { ...currentPrefs, theme: newTheme } })
         .eq('id', user.id);
-      if (error && process.env.NODE_ENV === 'development') {
-        console.warn('[useProfileTheme] failed to save theme preference:', error.message);
+      if (error) {
+        logger.warn('failed to save theme preference', error.message, 'useProfileTheme');
       }
     },
     [user?.id]

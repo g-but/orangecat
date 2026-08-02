@@ -52,16 +52,16 @@ export default function ProjectHeader({
   const router = useRouter();
   const statusInfo = getStatusInfo(project.status);
   const creatorProfileUrl = project.profiles?.username
-    ? `/profile/${project.profiles.username}`
+    ? ROUTES.PROFILE.VIEW(project.profiles.username)
     : project.profiles?.id
-      ? `/profile/${project.profiles.id}`
-      : `/profile/${project.user_id}`;
+      ? ROUTES.PROFILE.VIEW(project.profiles.id)
+      : ROUTES.PROFILE.VIEW(project.user_id);
 
   // Handle contact/message the project creator
   const handleContact = async () => {
     if (!user) {
       toast.info('Please sign in to send a message');
-      router.push(`/auth?mode=login&from=/projects/${project.id}`);
+      router.push(`${ROUTES.AUTH_LOGIN}&from=${ROUTES.PROJECTS.VIEW(project.id)}`);
       return;
     }
 
@@ -80,7 +80,7 @@ export default function ProjectHeader({
       }
 
       const { conversationId } = await response.json();
-      router.push(`/messages/${conversationId}`);
+      router.push(ROUTES.MESSAGE_CONVERSATION(conversationId));
     } catch {
       toast.error('Failed to start conversation. Please try again.');
     }

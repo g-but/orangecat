@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ArrowUpRight, Bot } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { API_ROUTES } from '@/config/api-routes';
 import { ORANGECAT_FLEETCROWN_INTEGRATION } from '@/config/entity-registry';
 import type { EntityType } from '@/config/entity-registry';
 
@@ -53,7 +54,7 @@ export default function FleetCrownBuildCta({
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('/api/integrations/fleetcrown/build-intents', {
+      const response = await fetch(API_ROUTES.INTEGRATIONS.FLEETCROWN_BUILD_INTENTS, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

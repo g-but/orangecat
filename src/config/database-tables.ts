@@ -164,6 +164,7 @@ export const DATABASE_TABLES = {
 
   // Search / embeddings
   CONTENT_EMBEDDINGS: 'content_embeddings',
+  MATCH_INTRODUCTIONS: 'match_introductions',
 
   // Collaboration
   PROJECT_ROLES: 'project_roles',

@@ -20,6 +20,7 @@ import Link from 'next/link';
 import { KeyRound, LogIn, Webhook } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useMessagingActors } from '@/features/messaging/hooks/useMessagingActors';
+import { PUBLIC_API_BASE, PUBLIC_API_OPENAPI_PATH } from '@/config/public-api';
 import { ROUTES } from '@/config/routes';
 import Loading from '@/components/Loading';
 import Button from '@/components/ui/Button';
@@ -76,7 +77,7 @@ export default function IntegrationsPage() {
         <p className="mt-2 text-xs text-fg-secondary">
           API contract:{' '}
           <a
-            href="/api/v1/openapi.json"
+            href={PUBLIC_API_OPENAPI_PATH}
             className="underline hover:text-fg-primary"
             target="_blank"
             rel="noreferrer"
@@ -85,7 +86,7 @@ export default function IntegrationsPage() {
           </a>{' '}
           ·{' '}
           <a
-            href="/api/v1"
+            href={PUBLIC_API_BASE}
             className="underline hover:text-fg-primary"
             target="_blank"
             rel="noreferrer"

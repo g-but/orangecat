@@ -90,7 +90,7 @@ export function NostrConnectionCard() {
                     {shortenNpub(npub)}
                     <button
                       onClick={handleCopyNpub}
-                      className="p-0.5 hover:text-fg-primary transition-colors"
+                      className="p-0.5 min-h-11 min-w-11 inline-flex items-center justify-center hover:text-fg-primary transition-colors"
                       title="Copy npub"
                     >
                       {copied ? (

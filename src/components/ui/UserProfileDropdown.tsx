@@ -179,14 +179,14 @@ export default function UserProfileDropdown({
           ref={buttonRef}
           onClick={toggle}
           disabled={false}
-          className="flex items-center space-x-2 text-foreground focus:outline-none disabled:opacity-50"
+          className="flex items-center space-x-2 text-fg-primary focus:outline-none disabled:opacity-50"
         >
           <span className="text-sm font-medium">{displayName}</span>
           <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-sm bg-card ring-1 ring-black ring-opacity-5 dark:ring-border dark:ring-opacity-100 z-50">
+          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-sm bg-surface-base ring-1 ring-black ring-opacity-5 dark:ring-border dark:ring-opacity-100 z-50">
             <div className="py-1" role="menu" aria-orientation="vertical">
               {menuItems.map(item => {
                 const Icon = item.icon;
@@ -194,7 +194,7 @@ export default function UserProfileDropdown({
                   <button
                     key={item.label}
                     onClick={() => handleNavigation(item.href)}
-                    className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted"
+                    className="flex items-center w-full px-4 py-2 text-sm text-fg-primary hover:bg-muted"
                     role="menuitem"
                   >
                     <Icon className="w-4 h-4 mr-3" />
@@ -205,7 +205,7 @@ export default function UserProfileDropdown({
               <hr className="my-1 border-border-subtle" />
               <button
                 onClick={handleSignOut}
-                className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted"
+                className="flex items-center w-full px-4 py-2 text-sm text-fg-primary hover:bg-muted"
                 role="menuitem"
               >
                 <LogOut className="w-4 h-4 mr-3" />

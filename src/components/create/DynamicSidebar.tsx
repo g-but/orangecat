@@ -17,7 +17,7 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle2, ArrowLeftRight, TrendingUp } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import type { FieldGuidanceContent, DefaultContent } from '@/lib/project-guidance';
-import { currencyConverter } from '@/services/currency';
+import { currencyConverter, formatCurrency } from '@/services/currency';
 import type { ExchangeRates } from '@/services/currency/types';
 
 export type FieldType = string | null;
@@ -85,7 +85,7 @@ function CurrencyBreakdown({ amount, currency }: { amount: number; currency: str
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
           <span className="text-fg-secondary">Bitcoin (BTC)</span>
-          <span className="font-mono font-semibold">₿ {btc.toFixed(8)}</span>
+          <span className="font-mono font-semibold">{formatCurrency(btc, 'BTC')}</span>
         </div>
         <div className="border-t border-subtle pt-2 space-y-1 text-xs">
           <div className="flex justify-between text-fg-secondary">
