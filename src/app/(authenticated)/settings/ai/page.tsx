@@ -86,8 +86,9 @@ export default function AISettingsPage() {
                 )}
               </div>
               <p className="mt-1 text-sm text-fg-secondary">
-                Free out of the box. OrangeCat picks the best open-source model on the free pool. No
-                setup, no key, daily cap. See{' '}
+                Free out of the box: Cat runs on <strong>OrangeCat&apos;s own provider keys</strong>{' '}
+                (Groq, OpenRouter and others) — you never add or pay for these. No setup, daily cap.
+                See{' '}
                 <Link href={ROUTES.PRICING} className="underline hover:no-underline">
                   pricing
                 </Link>{' '}
@@ -125,6 +126,12 @@ export default function AISettingsPage() {
                 Use any provider — direct or aggregator. You pay them, OrangeCat never sees your
                 bill. Want {CAT_FRONTIER_MODELS_OR}? Add an OpenRouter key — one key fronts all 200+
                 models.
+              </p>
+              <p className="mt-2 text-xs text-fg-tertiary">
+                Seeing Groq or OpenRouter in chat but nothing listed here? That&apos;s the free pool
+                running on <span className="font-medium text-fg-secondary">OrangeCat&apos;s</span>{' '}
+                keys. This section is only for keys <em>you</em> own — it&apos;s empty until you add
+                one.
               </p>
             </div>
           </div>
