@@ -92,11 +92,15 @@ export class CatActionExecutor {
     const permission = await this.permissionService.checkPermission(userId, actionId);
 
     if (!permission.allowed) {
+      const reason = permission.reason || 'Permission denied';
+      // Denials are audit rows too — without them the track record only ever
+      // sees wins, and the Cat re-proposes its losses forever.
+      await this.logDeniedAction(userId, action, parameters, reason, conversationId, messageId);
       return {
         success: false,
         actionId,
         status: 'denied',
-        error: permission.reason || 'Permission denied',
+        error: reason,
       };
     }
 
@@ -109,11 +113,13 @@ export class CatActionExecutor {
       this.extractBtcAmount(action, parameters)
     );
     if (!spendCheck.allowed) {
+      const reason = spendCheck.reason || 'Spend cap exceeded';
+      await this.logDeniedAction(userId, action, parameters, reason, conversationId, messageId);
       return {
         success: false,
         actionId,
         status: 'denied',
-        error: spendCheck.reason || 'Spend cap exceeded',
+        error: reason,
       };
     }
 
@@ -319,7 +325,7 @@ export class CatActionExecutor {
     if (!spendCheck.allowed) {
       const reason = spendCheck.reason || 'Spend cap exceeded';
       if (logEntry) {
-        await this.updateActionLog(logEntry.id, 'failed', null, reason);
+        await this.updateActionLog(logEntry.id, 'denied', null, reason);
       }
       return {
         success: false,
@@ -428,9 +434,39 @@ export class CatActionExecutor {
     };
   }
 
+  /**
+   * Audit a denial that happens BEFORE performAction opens a log row (early
+   * permission / spend-cap checks). One terminal insert, fire-and-safe: a
+   * failed write only warns — denying the action never depends on logging it.
+   */
+  private async logDeniedAction(
+    userId: string,
+    action: CatAction,
+    parameters: Record<string, unknown>,
+    reason: string,
+    conversationId?: string,
+    messageId?: string
+  ): Promise<void> {
+    const { error } = await this.supabase.from(DATABASE_TABLES.CAT_ACTION_LOG).insert({
+      user_id: userId,
+      action_id: action.id,
+      category: action.category,
+      parameters,
+      status: 'denied',
+      error_message: reason,
+      conversation_id: conversationId || null,
+      message_id: messageId || null,
+      completed_at: new Date().toISOString(),
+      amount_btc: this.extractBtcAmount(action, parameters),
+    });
+    if (error) {
+      logger.warn('Failed to log denied action', { error: error.message }, 'CatActionExecutor');
+    }
+  }
+
   private async updateActionLog(
     logId: string,
-    status: 'completed' | 'failed',
+    status: 'completed' | 'failed' | 'denied',
     result: unknown,
     errorMessage?: string
   ): Promise<void> {

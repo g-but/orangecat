@@ -113,6 +113,26 @@ export function CatTrackRecordCard() {
           </ul>
         </>
       )}
+
+      {/* Loss side — the same setbacks Cat sees in its context. Rendered even
+          when the funnel is empty: an all-denials record is still a record. */}
+      {record.setbacks &&
+        record.setbacks.failed + record.setbacks.denied + record.setbacks.unconfirmed > 0 && (
+          <div className="mt-4 border-t border-subtle pt-3">
+            <p className="text-xs text-fg-tertiary">
+              Setbacks: {record.setbacks.failed} failed · {record.setbacks.denied} denied ·{' '}
+              {record.setbacks.unconfirmed} unconfirmed
+            </p>
+            <ul className="mt-2 space-y-1">
+              {record.setbacks.recent.map((s, i) => (
+                <li key={`${s.actionId}-${s.at}-${i}`} className="text-xs text-fg-secondary">
+                  <span className="font-medium text-fg-primary">{s.actionId}</span> — {s.kind}
+                  {s.reason ? `: ${s.reason}` : ''}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
     </div>
   );
 }
