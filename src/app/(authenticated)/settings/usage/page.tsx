@@ -17,7 +17,7 @@ import { Gauge, KeyRound, Sparkles, Wallet } from 'lucide-react';
 import { useCatQuota } from '@/components/ai-chat/ModernChatPanel/hooks/useCatQuota';
 import { API_ROUTES } from '@/config/api-routes';
 import { ROUTES } from '@/config/routes';
-import { CAT_PLANS, type CatPlanId } from '@/config/cat-plans';
+import { CAT_PLANS, PLAN_ID_BY_QUOTA_TIER, type CatPlanId } from '@/config/cat-plans';
 import { logger } from '@/utils/logger';
 
 /** "3h 24m" / "45m" from seconds — for the daily-reset countdown. */
@@ -61,14 +61,8 @@ export default function UsageSettingsPage() {
   const { quota, isLoading: quotaLoading } = useCatQuota();
   const { balanceBtc } = useCreditBalance();
 
-  /** Which CAT_PLANS card is the user's current reality. */
-  const activePlanId: CatPlanId | null = quota
-    ? quota.tier === 'byok'
-      ? 'byok'
-      : quota.tier === 'pro'
-        ? 'supporter'
-        : 'free'
-    : null;
+  /** Which CAT_PLANS card is the user's current reality — via the SSOT map. */
+  const activePlanId: CatPlanId | null = quota ? PLAN_ID_BY_QUOTA_TIER[quota.tier] : null;
 
   const used = quota ? quota.dailyRequests : 0;
   const limit = quota ? quota.dailyLimit : 0;
