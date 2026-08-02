@@ -104,6 +104,15 @@ The live schema types WERE regenerated successfully (`npm run gen:types` → 7,6
 
 ⚠️ **Validated dead end:** routing those dynamic queries through the existing `fromTable()` untyped escape hatch makes it **worse** (errors 30 → 136), because `fromTable` returns `any` and that collapses generic inference in downstream helpers like `buildQuery`. The fix must keep the queries typed — e.g. narrow the table-name argument to a literal union, or give `buildQuery` an explicit type parameter — not erase the types.
 
+⚠️ **Second validated dead end (attempted and reverted the same evening):** narrowing `getTableName()` from `string` to the generated `TableName = keyof Database['public']['Tables']` union is *also* worse — **145 errors**. Bare `string` makes `.from()` instantiate one over-wide builder; a ~100-literal union makes it instantiate ~100 of them. Both exceed TS's instantiation depth.
+
+**Remaining viable directions (untried, in rough order of promise):**
+1. Narrow to only the ~14 **entity** tables. Needs literal types the registry currently erases (`ENTITY_REGISTRY: Record<EntityType, EntityMetadata>` widens `tableName` to `string`) — i.e. `as const satisfies Record<...>`, watching for readonly ripple on the `fields: [...]` arrays.
+2. Stop passing dynamic table names into typed `.from()` at all — a typed accessor per entity.
+3. Keep the hand-written `Database` interface but derive only the per-table `Row` types from the generated file.
+
+**Cost note for whoever picks it up:** `tsc --noEmit` against the full generated schema takes ~10 minutes per iteration on this machine. That feedback loop, not the edit count, is the real expense — budget accordingly and batch changes per run.
+
 This is a careful migration across every DB query surface, on money-adjacent code. It is the right next task, but it is its own task, not a sweep item.
 
 ### Remaining open (recorded, not started)
