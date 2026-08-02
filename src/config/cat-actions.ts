@@ -932,6 +932,30 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     ],
     enabled: true,
   },
+  forget_memories: {
+    id: 'forget_memories',
+    name: 'Forget About Me',
+    description:
+      "Delete stored facts the user says are wrong or wants removed — clears BOTH Cat's memories and the matching economic-profile entries. Use when the user says something you know about them is incorrect ('I don't speak French', 'remove the photography thing').",
+    category: 'context',
+    icon: Shield,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      {
+        name: 'facts',
+        type: 'array',
+        required: true,
+        description:
+          'The wrong or unwanted facts, one short phrase each, close to the user\'s wording (e.g. ["photography skills", "speaks French"]).',
+      },
+    ],
+    examples: [
+      "I don't actually speak French — remove that",
+      'The weekend availability thing is wrong, forget it',
+    ],
+    enabled: true,
+  },
   add_context: {
     id: 'add_context',
     name: 'Add Context',
