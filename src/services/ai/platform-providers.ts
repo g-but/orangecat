@@ -29,6 +29,7 @@ import {
 import { getFreeModels, getModelMetadata, DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
 import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 import { createAutoRouter } from '@/services/ai/auto-router';
+import { pruneDownLinks } from '@/services/ai/link-health';
 
 import type { AiService } from './types';
 
@@ -109,7 +110,9 @@ export function buildPlatformProviders(message: string): PlatformProvider[] {
     });
   }
 
-  return out;
+  // Skip links that failed in the last minute (circuit breaker) — but never
+  // prune to an empty chain; retrying dead links beats refusing to try.
+  return pruneDownLinks(out, p => ({ provider: p.providerId, model: p.defaultModel }));
 }
 
 /**

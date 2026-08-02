@@ -44,6 +44,8 @@ export interface FallbackProvider {
   modelToUse: string;
   aiService: AiService;
   reason: 'rate_limit';
+  /** Platform-served link (false = the user's own key). Drives circuit-breaker marking. */
+  hasByok: boolean;
 }
 
 interface ResolvedProvider {
@@ -327,7 +329,15 @@ export async function resolveProvider(
     const usage = await keyService.checkPlatformUsage(userId);
     if (!usage.can_use_platform) {
       return Response.json(
-        { success: false, error: 'Daily limit reached', retryAfter: 86400 },
+        {
+          success: false,
+          error: 'Daily limit reached',
+          code: 'DAILY_LIMIT',
+          message:
+            "You've used today's free Cat messages. Top up Cat Credits or add your own key — both remove the daily cap.",
+          retryAfter: 86400,
+          helpUrl: ROUTES.SETTINGS_AI,
+        },
         { status: 429 }
       );
     }
@@ -356,6 +366,7 @@ export async function resolveProvider(
     modelToUse: s.modelToUse,
     aiService: s.aiService,
     reason: 'rate_limit' as const,
+    hasByok: s.hasByok,
   }));
 
   return {
