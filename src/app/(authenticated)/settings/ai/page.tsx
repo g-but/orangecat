@@ -54,11 +54,22 @@ export default function AISettingsPage() {
   const localProviders = getProvidersByCategory('local');
 
   return (
-    <div className="space-y-6">
-      <p className="text-fg-primary">
-          Cat works any of three ways. Pick whichever fits — they&apos;re all first-class. OrangeCat
-          earns from platform activity, not from your AI bill.
-        </p>
+    <div className="space-y-12">
+      {/* ════ Group 1 · How Cat runs ═══════════════════════════════════════ */}
+      <section aria-labelledby="how-cat-runs" className="space-y-4">
+        <div>
+          <h2
+            id="how-cat-runs"
+            className="text-xs font-semibold uppercase tracking-caps text-fg-tertiary"
+          >
+            How Cat runs
+          </h2>
+          <p className="mt-1 text-sm text-fg-secondary">
+            Cat already works — free, no setup needed. Everything below is optional power: prepaid
+            credits, your own keys, or your own machine. OrangeCat earns from platform activity, not
+            from your AI bill.
+          </p>
+        </div>
 
         {/* ── Managed ───────────────────────────────────────────────────── */}
         <section className="rounded-lg border border-default bg-surface-base p-6">
@@ -129,18 +140,6 @@ export default function AISettingsPage() {
           />
         </section>
 
-        {/* ── Memory ────────────────────────────────────────────────────── */}
-        <CatMemoryManager
-          reloadKey={memoryReloadKey}
-          memoryEnabled={preferences?.memory_enabled !== false}
-          onToggleMemory={async enabled => {
-            await updatePreferences({ memory_enabled: enabled });
-          }}
-        />
-
-        {/* ── Import memory from another AI ──────────────────────────────── */}
-        <CatMemoryImport onImported={() => setMemoryReloadKey(k => k + 1)} />
-
         {/* ── Local ─────────────────────────────────────────────────────── */}
         <section className="rounded-lg border border-default bg-surface-base p-6">
           <div className="mb-4 flex items-start gap-3">
@@ -186,15 +185,42 @@ export default function AISettingsPage() {
             </p>
           </div>
         </section>
+      </section>
 
-        {/* Privacy footnote */}
-        <div className="rounded-md border border-subtle bg-surface-raised/30 p-4 text-sm text-fg-secondary">
-          <p>
-            <strong className="text-fg-primary">Privacy:</strong> keys are encrypted at rest, never
-            logged, and stripped of whitespace before use. Cat chats save to your history; clear
-            them anytime from the chat panel.
+      {/* ════ Group 2 · What Cat knows ═════════════════════════════════════ */}
+      <section aria-labelledby="what-cat-knows" className="space-y-4">
+        <div>
+          <h2
+            id="what-cat-knows"
+            className="text-xs font-semibold uppercase tracking-caps text-fg-tertiary"
+          >
+            What Cat knows
+          </h2>
+          <p className="mt-1 text-sm text-fg-secondary">
+            Cat&apos;s memory is yours: review it, delete any of it, export it, or bring context
+            over from another AI.
           </p>
         </div>
+
+        <CatMemoryManager
+          reloadKey={memoryReloadKey}
+          memoryEnabled={preferences?.memory_enabled !== false}
+          onToggleMemory={async enabled => {
+            await updatePreferences({ memory_enabled: enabled });
+          }}
+        />
+
+        <CatMemoryImport onImported={() => setMemoryReloadKey(k => k + 1)} />
+      </section>
+
+      {/* Privacy footnote */}
+      <div className="rounded-md border border-subtle bg-surface-raised/30 p-4 text-sm text-fg-secondary">
+        <p>
+          <strong className="text-fg-primary">Privacy:</strong> keys are encrypted at rest, never
+          logged, and stripped of whitespace before use. Cat chats save to your history; clear them
+          anytime from the chat panel.
+        </p>
+      </div>
     </div>
   );
 }

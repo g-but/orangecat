@@ -9,7 +9,15 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { Brain, Trash2, Loader2, AlertCircle, Download } from 'lucide-react';
+import {
+  Brain,
+  Trash2,
+  Loader2,
+  AlertCircle,
+  Download,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import Button from '@/components/ui/Button';
 import { logger } from '@/utils/logger';
@@ -21,6 +29,9 @@ interface Memory {
   content: string;
   created_at: string;
 }
+
+/** How many memories show before "Show all" — enough to prove the feature, few enough to scan. */
+const MEMORY_PREVIEW_COUNT = 3;
 
 interface CatMemoryManagerProps {
   /** Bump to force a reload — e.g. after an import adds new memories. */
@@ -42,6 +53,7 @@ export function CatMemoryManager({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -226,29 +238,51 @@ export function CatMemoryManager({
           </p>
         </div>
       ) : (
-        <ul className="space-y-2">
-          {memories.map(m => (
-            <li
-              key={m.id}
-              className="flex items-start justify-between gap-3 rounded-md border border-subtle bg-surface-raised/30 p-3"
-            >
-              <span className="text-sm text-fg-primary">{m.content}</span>
-              <button
-                type="button"
-                onClick={() => handleDelete(m.id)}
-                disabled={deletingId === m.id}
-                aria-label="Forget this memory"
-                className="shrink-0 rounded-md p-1 text-fg-tertiary hover:bg-surface-raised hover:text-status-negative disabled:opacity-40"
+        <>
+          {/* Preview a few, disclose the rest — a long memory list must not
+              dominate the settings page (it once dumped 20+ items inline). */}
+          <ul className="space-y-2">
+            {(showAll ? memories : memories.slice(0, MEMORY_PREVIEW_COUNT)).map(m => (
+              <li
+                key={m.id}
+                className="flex items-start justify-between gap-3 rounded-md border border-subtle bg-surface-raised/30 p-3"
               >
-                {deletingId === m.id ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
+                <span className="text-sm text-fg-primary">{m.content}</span>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(m.id)}
+                  disabled={deletingId === m.id}
+                  aria-label="Forget this memory"
+                  className="shrink-0 rounded-md p-1 text-fg-tertiary hover:bg-surface-raised hover:text-status-negative disabled:opacity-40"
+                >
+                  {deletingId === m.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {memories.length > MEMORY_PREVIEW_COUNT && (
+            <button
+              type="button"
+              onClick={() => setShowAll(v => !v)}
+              aria-expanded={showAll}
+              className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm text-fg-secondary hover:text-fg-primary"
+            >
+              {showAll ? (
+                <>
+                  <ChevronUp className="h-4 w-4" /> Show fewer
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4" /> Show all {memories.length} memories
+                </>
+              )}
+            </button>
+          )}
+        </>
       )}
     </section>
   );
