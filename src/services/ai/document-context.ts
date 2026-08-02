@@ -11,6 +11,8 @@
 
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { logger } from '@/utils/logger';
+import { getAdminClient } from '@/lib/supabase/admin';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { isCatHubPath } from '@/config/routes';
@@ -167,7 +169,10 @@ async function fetchWalletsForCat(
       return [];
     }
 
-    const { data: wallets, error } = await supabase
+    // No client-role SELECT grant on nwc_connection_uri (write-only secret);
+    // the Cat only needs presence, so read via service role and never let the
+    // encrypted value into the context assembly.
+    const { data: wallets, error } = await (getAdminClient() as unknown as SupabaseClient)
       .from(DATABASE_TABLES.WALLETS)
       .select(
         'label, description, category, behavior_type, goal_amount, goal_currency, goal_deadline, budget_amount, budget_period, is_primary, balance_btc, balance_updated_at, nwc_connection_uri, lightning_address'

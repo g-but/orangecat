@@ -15,7 +15,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
-import { DATABASE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, WALLET_CLIENT_COLUMNS } from '@/config/database-tables';
 import { refreshWalletBalance } from '@/domain/wallets/refreshBalance';
 
 interface RouteContext {
@@ -32,12 +32,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
   try {
     const { user, supabase } = request;
 
-    const { data: wallet, error: fetchError } = await supabase
+    const { data: wallet, error: fetchError } = (await supabase
       .from(DATABASE_TABLES.WALLETS)
-      .select('*')
+      .select(WALLET_CLIENT_COLUMNS)
       .eq('id', id)
       .eq('user_id', user.id)
-      .single();
+      .single()) as { data: Record<string, unknown> | null; error: unknown };
 
     if (fetchError || !wallet) {
       logger.error('Wallet not found for refresh', { walletId: id, userId: user.id });

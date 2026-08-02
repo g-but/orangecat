@@ -1,77 +1,50 @@
 /**
- * useSellerPaymentMethods — Checks what payment methods a seller supports
+ * useSellerPaymentMethods — can this seller be paid?
  *
- * Used to show/disable the PaymentButton on entity pages.
- * Returns whether the seller has any wallet connected.
+ * Used to show/disable the PaymentButton on entity pages. Asks the server
+ * (GET /api/payments/can-receive), which answers via the SAME wallet
+ * resolution the payment flow runs — the UI can never claim a capability the
+ * payment path doesn't have. Never reads wallet rows from the browser:
+ * wallet rows are owner-readable only, and another user's wallet details
+ * (xpub, addresses) must not reach the client.
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase/browser';
-import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface SellerPaymentInfo {
   hasWallet: boolean;
-  hasNWC: boolean;
-  hasLightningAddress: boolean;
-  hasOnchain: boolean;
   loading: boolean;
 }
 
 export function useSellerPaymentMethods(sellerProfileId: string | null): SellerPaymentInfo {
-  const [info, setInfo] = useState<SellerPaymentInfo>({
-    hasWallet: false,
-    hasNWC: false,
-    hasLightningAddress: false,
-    hasOnchain: false,
-    loading: true,
-  });
+  const [info, setInfo] = useState<SellerPaymentInfo>({ hasWallet: false, loading: true });
 
   useEffect(() => {
     if (!sellerProfileId) {
-      setInfo(prev => ({ ...prev, loading: false }));
+      setInfo({ hasWallet: false, loading: false });
       return;
     }
 
     let cancelled = false;
-    const profileId = sellerProfileId;
 
     async function check() {
-      type WalletRow = {
-        id: string;
-        wallet_type: string | null;
-        lightning_address: string | null;
-        address_or_xpub: string | null;
-      };
-      const { data: rawWallets } = await supabase
-        .from(DATABASE_TABLES.WALLETS)
-        .select('id, wallet_type, lightning_address, address_or_xpub')
-        .eq('profile_id', profileId!)
-        .eq('is_active', true);
-      if (cancelled) {
-        return;
+      try {
+        const res = await fetch(
+          `/api/payments/can-receive?profile_id=${encodeURIComponent(sellerProfileId!)}`
+        );
+        const body = res.ok ? await res.json() : null;
+        if (!cancelled) {
+          setInfo({ hasWallet: !!body?.data?.canReceive, loading: false });
+        }
+      } catch {
+        // Conservative default: claiming a working payment rail we could not
+        // verify is the failure mode to avoid.
+        if (!cancelled) {
+          setInfo({ hasWallet: false, loading: false });
+        }
       }
-      const wallets = (rawWallets || []) as WalletRow[];
-
-      if (wallets.length === 0) {
-        setInfo({
-          hasWallet: false,
-          hasNWC: false,
-          hasLightningAddress: false,
-          hasOnchain: false,
-          loading: false,
-        });
-        return;
-      }
-
-      setInfo({
-        hasWallet: true,
-        hasNWC: wallets.some(w => w.wallet_type === 'nwc'),
-        hasLightningAddress: wallets.some(w => !!w.lightning_address),
-        hasOnchain: wallets.some(w => !!w.address_or_xpub),
-        loading: false,
-      });
     }
 
     check();

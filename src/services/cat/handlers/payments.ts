@@ -128,7 +128,10 @@ export const paymentHandlers: Record<string, ActionHandler> = {
     }
 
     // 1. Get sender's NWC wallet (user can only read their own wallets via RLS)
-    const { data: senderWallets } = await supabase
+    // Own-secret read: the NWC URI has no client-role column grant (write-only
+    // for anon/authenticated), so read it via service role — scoped to the
+    // authenticated user's own profile_id established by the caller.
+    const { data: senderWallets } = await (getAdminClient() as unknown as SupabaseClient)
       .from(DATABASE_TABLES.WALLETS)
       .select('nwc_connection_uri')
       .eq('profile_id', userId)
@@ -259,7 +262,10 @@ export const paymentHandlers: Record<string, ActionHandler> = {
     }
 
     // 1. Get sender's NWC wallet
-    const { data: senderWallets } = await supabase
+    // Own-secret read: the NWC URI has no client-role column grant (write-only
+    // for anon/authenticated), so read it via service role — scoped to the
+    // authenticated user's own profile_id established by the caller.
+    const { data: senderWallets } = await (getAdminClient() as unknown as SupabaseClient)
       .from(DATABASE_TABLES.WALLETS)
       .select('nwc_connection_uri')
       .eq('profile_id', userId)
