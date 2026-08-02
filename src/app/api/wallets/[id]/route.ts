@@ -16,7 +16,7 @@ import {
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
-import { DATABASE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, WALLET_CLIENT_COLUMNS } from '@/config/database-tables';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { walletUpdateSchema } from '@/lib/validation/finance';
 import {
@@ -74,7 +74,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
       .from(DATABASE_TABLES.WALLETS)
       .update(updates)
       .eq('id', id)
-      .select()
+      .select(WALLET_CLIENT_COLUMNS)
       .single();
 
     if (updateError) {

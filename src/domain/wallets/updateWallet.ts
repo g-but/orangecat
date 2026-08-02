@@ -10,7 +10,7 @@ import { isValidLightningAddress } from '@/lib/validation/base';
 import { encrypt } from '@/domain/payments/encryptionService';
 import { logger } from '@/utils/logger';
 import { apiBadRequest, apiForbidden, apiNotFound } from '@/lib/api/standardResponse';
-import { DATABASE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, WALLET_CLIENT_COLUMNS } from '@/config/database-tables';
 import type { z } from 'zod';
 import type { walletUpdateSchema } from '@/lib/validation/finance';
 import type { NextResponse } from 'next/server';
@@ -46,7 +46,9 @@ export async function fetchWalletAndVerifyOwner(
 ): Promise<FetchResult | FetchError> {
   const { data: walletData, error: fetchError } = await supabase
     .from(DATABASE_TABLES.WALLETS)
-    .select('*, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)')
+    .select(
+      `${WALLET_CLIENT_COLUMNS}, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)`
+    )
     .eq('id', walletId)
     .single();
 

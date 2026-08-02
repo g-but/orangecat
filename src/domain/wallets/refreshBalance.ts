@@ -6,7 +6,7 @@
  */
 
 import { fetchBitcoinBalance } from '@/services/blockchain';
-import { DATABASE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, WALLET_CLIENT_COLUMNS } from '@/config/database-tables';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
 import { BITCOIN_FETCH_TIMEOUT_MS } from '@/lib/wallets/constants';
@@ -123,7 +123,7 @@ export async function refreshWalletBalance(
     .update({ balance_btc: totalBalanceBtc, balance_updated_at: new Date().toISOString() })
     .eq('id', walletId)
     .eq('user_id', userId)
-    .select()
+    .select(WALLET_CLIENT_COLUMNS)
     .single();
 
   if (updateError || !updatedWallet) {

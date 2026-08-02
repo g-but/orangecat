@@ -7,7 +7,7 @@
 import { type Wallet } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
-import { DATABASE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, WALLET_CLIENT_COLUMNS } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -173,7 +173,7 @@ export async function executeWalletTransfer(
 
   // Fetch updated wallet states
   const { data: updatedWalletsData } = await (supabase.from(DATABASE_TABLES.WALLETS) as AnyClient)
-    .select('*')
+    .select(WALLET_CLIENT_COLUMNS)
     .in('id', [fromWalletId, toWalletId]);
 
   await auditSuccess(AUDIT_ACTIONS.WALLET_BALANCE_REFRESHED, userId, 'wallet', fromWalletId, {

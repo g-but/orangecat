@@ -15,6 +15,7 @@ import {
   type Wallet,
 } from '@/types/wallet';
 import { logger } from '@/utils/logger';
+import { WALLET_CLIENT_COLUMNS } from '@/config/database-tables';
 import { MAX_WALLETS_PER_ENTITY } from '@/lib/wallets/constants';
 import {
   logWalletError,
@@ -134,7 +135,7 @@ export async function createWallet(
         is_primary: body.is_primary !== undefined ? body.is_primary : isFirstWallet,
         balance_btc: 0,
       })
-      .select()
+      .select(WALLET_CLIENT_COLUMNS)
       .single()) as { data: Wallet | null; error: { message: string; code?: string } | null };
 
     if (error) {

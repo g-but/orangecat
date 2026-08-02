@@ -485,11 +485,34 @@ export async function acknowledgePublicPayment(
   }
 
   await updatePaymentStatus(paymentIntentId, STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED);
+  notifyRecipientOfClaim(pi as PaymentIntent);
   return {
     status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
     paid_at: null,
     requires_recipient_confirmation: true,
   };
+}
+
+/**
+ * Tell the recipient a payer claims to have paid — fire-and-forget.
+ *
+ * A claim needs the recipient's action to settle (they confirm receipt in
+ * their wallet); a claim nobody sees rots in buyer_confirmed forever. Called
+ * only on the actual transition into BUYER_CONFIRMED, never on idempotent
+ * re-claims, so the recipient is notified at most once per intent.
+ */
+function notifyRecipientOfClaim(pi: PaymentIntent): void {
+  const entityTitle = pi.description?.split(': ')[1] || 'your listing';
+  void NotificationDispatcher.dispatch({
+    userId: pi.seller_id,
+    type: 'payment',
+    title: `Payment reported: ${pi.amount_btc} BTC`,
+    message: `A supporter says they've paid ${pi.amount_btc} BTC for ${entityTitle}. Check your wallet and confirm receipt.`,
+    data: { paymentIntentId: pi.id, amount_btc: pi.amount_btc, kind: 'buyer_claim' },
+    sourceEntityType: (pi.entity_type as EntityType) ?? undefined,
+    sourceEntityId: pi.entity_id ?? undefined,
+    actionUrl: '/dashboard',
+  });
 }
 
 async function refreshPaymentStatus(
@@ -609,6 +632,11 @@ export async function buyerConfirmPayment(
     return { status: STATUS.PAYMENT_INTENTS.PAID, paid_at: pi.paid_at };
   }
 
+  // Already claimed — idempotent, and no second notification to the recipient.
+  if (pi.status === STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED) {
+    return { status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED, paid_at: null };
+  }
+
   // Guard the trust boundary: only a bare Lightning address (no LUD-21 verify
   // URL) is genuinely undetectable. NWC (relay lookup), verify-capable Lightning
   // addresses, and on-chain (mempool confirmation) are all confirmed by
@@ -623,6 +651,7 @@ export async function buyerConfirmPayment(
 
   // Mark as buyer_confirmed — seller verifies in their wallet
   await updatePaymentStatus(paymentIntentId, STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED);
+  notifyRecipientOfClaim(pi as PaymentIntent);
 
   return { status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED, paid_at: null };
 }

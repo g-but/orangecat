@@ -145,6 +145,30 @@ describe('buyerConfirmPayment', () => {
     });
   });
 
+  it('notifies the recipient of the claim — once, on the actual transition', async () => {
+    const intent = { ...fixedPriceIntent, seller_id: 'seller-1', amount_btc: 0.0001 };
+    const { supabase } = makeCallerSupabase(intent);
+    await buyerConfirmPayment(supabase, PI_ID, BUYER);
+    expect(dispatchMock).toHaveBeenCalledTimes(1);
+    expect(dispatchMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'seller-1',
+        type: 'payment',
+        data: expect.objectContaining({ kind: 'buyer_claim' }),
+      })
+    );
+
+    // Re-claim is idempotent: no state write, no second notification.
+    dispatchMock.mockClear();
+    const { supabase: again } = makeCallerSupabase({
+      ...intent,
+      status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
+    });
+    const res = await buyerConfirmPayment(again, PI_ID, BUYER);
+    expect(res.status).toBe(STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED);
+    expect(dispatchMock).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['NWC', { payment_method: 'nwc', payment_hash: 'h' }],
     ['on-chain', { payment_method: 'onchain', onchain_address: 'bc1qxyz' }],

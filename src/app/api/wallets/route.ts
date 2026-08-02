@@ -13,6 +13,8 @@ import { applyRateLimitHeaders, rateLimitWriteAsync, retryAfterSeconds } from '@
 import { apiSuccess, apiRateLimited } from '@/lib/api/standardResponse';
 import { validateOneOfIds, getValidationError } from '@/lib/api/validation';
 import { getTableName } from '@/config/entity-registry';
+import { getAdminClient } from '@/lib/supabase/admin';
+import { WALLET_CLIENT_COLUMNS } from '@/config/database-tables';
 import { createWallet } from '@/domain/wallets/createWallet';
 
 // Public wallet fields (safe to return without auth)
@@ -37,9 +39,15 @@ export const GET = withOptionalAuth(async request => {
     }
 
     const isOwner = user ? isProfileOwner(user, profileId) : false;
-    const selectFields = isOwner ? '*' : PUBLIC_WALLET_FIELDS;
+    const selectFields = isOwner ? WALLET_CLIENT_COLUMNS : PUBLIC_WALLET_FIELDS;
 
-    let query = supabase
+    // Wallet rows are owner-readable only at the RLS level; the public wallet
+    // listing (profile wallets tab) is served through this route's CURATED
+    // field list via service role — the API is the one public surface, so raw
+    // PostgREST can no longer enumerate balances or other wallet internals.
+    const db = isOwner ? supabase : (getAdminClient() as unknown as typeof supabase);
+
+    let query = db
       .from(getTableName('wallet'))
       .select(selectFields)
       .eq('is_active', true)

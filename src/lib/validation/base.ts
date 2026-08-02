@@ -46,16 +46,10 @@ export function isValidLightningAddress(address: string): boolean {
 // GENERAL VALIDATORS
 // =============================================================================
 
-const BITCOIN_ADDRESS_PATTERNS = {
-  legacy: /^1[A-HJ-NP-Z0-9]{25,34}$/,
-  segwit: /^3[A-HJ-NP-Z0-9]{25,34}$/,
-  bech32: /^bc1[a-z0-9]{8,87}$/,
-  testnetLegacy: /^[mn][A-HJ-NP-Z0-9]{25,34}$/,
-  testnetSegwit: /^2[A-HJ-NP-Z0-9]{25,34}$/,
-  testnetBech32: /^tb1[a-z0-9]{8,87}$/,
-};
-
-const LIGHTNING_INVOICE_PATTERN = /^ln(bc|tb|tbs|bcrt)[0-9]+[munp]?[a-z0-9]+$/i;
+// NOTE: there is deliberately NO Bitcoin address/xpub validator here. Address
+// validation is cryptographic (checksums, network bytes) and lives in ONE
+// place: src/types/wallet.ts. A regex approximation that accepts typo'd
+// addresses is worse than none.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{3,30}$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -65,35 +59,6 @@ export function isValidUUID(value: string): boolean {
     return false;
   }
   return UUID_PATTERN.test(value.trim());
-}
-
-export function isValidBitcoinAddress(address: string, allowTestnet: boolean = false): boolean {
-  if (!address || typeof address !== 'string') {
-    return false;
-  }
-  const trimmed = address.trim();
-  if (allowTestnet) {
-    return (
-      BITCOIN_ADDRESS_PATTERNS.legacy.test(trimmed) ||
-      BITCOIN_ADDRESS_PATTERNS.segwit.test(trimmed) ||
-      BITCOIN_ADDRESS_PATTERNS.bech32.test(trimmed) ||
-      BITCOIN_ADDRESS_PATTERNS.testnetLegacy.test(trimmed) ||
-      BITCOIN_ADDRESS_PATTERNS.testnetSegwit.test(trimmed) ||
-      BITCOIN_ADDRESS_PATTERNS.testnetBech32.test(trimmed)
-    );
-  }
-  return (
-    BITCOIN_ADDRESS_PATTERNS.legacy.test(trimmed) ||
-    BITCOIN_ADDRESS_PATTERNS.segwit.test(trimmed) ||
-    BITCOIN_ADDRESS_PATTERNS.bech32.test(trimmed)
-  );
-}
-
-export function isValidLightningInvoice(invoice: string): boolean {
-  if (!invoice || typeof invoice !== 'string') {
-    return false;
-  }
-  return LIGHTNING_INVOICE_PATTERN.test(invoice.trim());
 }
 
 export function isValidEmail(email: string): boolean {

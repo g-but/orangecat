@@ -205,3 +205,18 @@ export const STORAGE_BUCKETS = {
   PROOFS: 'proofs',
   DOCUMENTS: 'documents',
 } as const;
+
+/**
+ * Every wallets column EXCEPT the write-only secret `nwc_connection_uri`.
+ *
+ * Client roles have a column-level SELECT grant for exactly this list
+ * (migration 20260802120000_wallets_select_lockdown) — `select('*')` on the
+ * wallets table therefore fails with permission-denied for anon/authenticated.
+ * Use this constant wherever a non-service-role client selects wallet rows.
+ */
+export const WALLET_CLIENT_COLUMNS =
+  'id, profile_id, project_id, user_id, label, description, address_or_xpub, ' +
+  'wallet_type, category, category_icon, behavior_type, budget_amount, ' +
+  'budget_period, goal_amount, goal_currency, goal_deadline, balance_btc, ' +
+  'balance_updated_at, is_active, display_order, is_primary, created_at, ' +
+  'updated_at, lightning_address, next_derivation_index';
