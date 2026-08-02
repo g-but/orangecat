@@ -5,7 +5,11 @@ import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import EntityListShell from '@/components/entity/EntityListShell';
-import { SETTINGS_SECTIONS, isSettingsSectionActive } from '@/config/settings-nav';
+import {
+  SETTINGS_SECTIONS,
+  RELATED_SETTINGS,
+  isSettingsSectionActive,
+} from '@/config/settings-nav';
 
 /**
  * SettingsShell — the one header + tab rail every /settings/* page renders
@@ -46,6 +50,23 @@ export default function SettingsShell({ children }: { children: ReactNode }) {
           })}
         </ul>
       </nav>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-3 text-sm">
+        <span className="text-fg-tertiary">Related:</span>
+        {RELATED_SETTINGS.map(item => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              title={item.description}
+              className="inline-flex min-h-11 items-center gap-1.5 text-fg-secondary underline-offset-4 hover:text-fg-primary hover:underline"
+            >
+              <Icon className="h-4 w-4" aria-hidden />
+              {item.label}
+            </Link>
+          );
+        })}
+      </div>
       <div className="pt-6">{children}</div>
     </EntityListShell>
   );

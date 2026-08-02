@@ -1,0 +1,7 @@
+# Gitleaks finding fingerprints to ignore (commit:file:rule:line).
+# Only for confirmed FALSE POSITIVES — never allowlist a real credential here.
+
+# Audit-report prose about rate-limiting coverage tripped generic-api-key.
+# Plain English sentence, no secret. Wording was changed afterwards, but the
+# flagged commit remains in branch history.
+80d70fb4e16687eecbd4d85a96c37b8c5bfe8376:docs/AUDIT_REPORT.md:generic-api-key:42

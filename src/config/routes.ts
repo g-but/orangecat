@@ -383,7 +383,7 @@ export const ROUTES = {
     RESEARCH: ENTITY_REGISTRY['research'].basePath,
     BOOKINGS: '/dashboard/bookings',
     CAT: '/dashboard/cat',
-    CAT_PERMISSIONS: '/dashboard/cat',
+    CAT_PERMISSIONS: '/dashboard/cat/permissions',
     // Post-auth landing for new users — Cat is the primary interface.
     CAT_WELCOME: '/dashboard/cat?welcome=true',
     DOCUMENTS: ENTITY_REGISTRY['document'].basePath,
