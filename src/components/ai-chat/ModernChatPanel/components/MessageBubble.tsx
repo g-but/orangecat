@@ -289,8 +289,8 @@ export function MessageBubble({
         {!isUser && message.fallback && displayContent && (
           <p className="mt-1 text-xs text-fg-tertiary italic">
             ↻ {PROVIDER_LABELS[message.fallback.from] ?? message.fallback.from} was rate-limited;
-            answered on {PROVIDER_LABELS[message.fallback.to] ?? message.fallback.to} (free)
-            instead.
+            answered on {PROVIDER_LABELS[message.fallback.to] ?? message.fallback.to} instead —
+            both run on OrangeCat&apos;s free pool, not your keys.
           </p>
         )}
 

@@ -213,6 +213,57 @@ Explain this to the user in plain language: which provider is healthy, degraded,
   }
 
   // ── search_platform ──────────────────────────────────────────────────────
+  // ── forget_memories ─────────────────────────────────────────────────────
+  // The ONLY way Cat can change stored memories. Returns exactly what was
+  // deleted vs not found so the model reports truth, never a claimed success.
+  if (toolName === 'forget_memories') {
+    const parsedArgs = (() => {
+      try {
+        return JSON.parse(toolCall.function.arguments ?? '{}') as { facts?: string[] };
+      } catch {
+        return {} as { facts?: string[] };
+      }
+    })();
+    const facts = Array.isArray(parsedArgs.facts)
+      ? parsedArgs.facts.filter((f): f is string => typeof f === 'string')
+      : [];
+
+    onToolCall?.({ id: toolCall.id, name: toolName, status: 'running', args: { facts } });
+
+    let content: string;
+    try {
+      const { forgetMemoriesMatching } = await import('./memory');
+      const outcome = await forgetMemoriesMatching(supabase, userId, facts);
+      content =
+        JSON.stringify(outcome) +
+        '\n\nReport ONLY what "deleted" confirms was removed, quoting the deleted memories. ' +
+        'For anything in "notFound", say plainly that no matching stored memory was found and ' +
+        'that the full list is at Settings → AI → What Cat remembers. Never claim other changes.';
+      if (outcome.deleted.length > 0) {
+        onToolCall?.({
+          id: toolCall.id,
+          name: toolName,
+          status: 'completed',
+          resultCount: outcome.deleted.length,
+          results: [],
+        });
+      } else {
+        onToolCall?.({ id: toolCall.id, name: toolName, status: 'no_results' });
+      }
+    } catch (err) {
+      content =
+        'Forgetting failed — no memories were changed. Tell the user the deletion did not go ' +
+        'through and that they can delete memories manually at Settings → AI → What Cat remembers.';
+      onToolCall?.({
+        id: toolCall.id,
+        name: toolName,
+        status: 'failed',
+        error: err instanceof Error ? err.message : 'unknown',
+      });
+    }
+    return { role: 'tool', tool_call_id: toolCall.id, content };
+  }
+
   if (toolName === 'search_platform') {
     const parsedArgs = (() => {
       try {
