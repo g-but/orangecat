@@ -53,7 +53,7 @@ export default function ArticleList({
               </div>
             </div>
             {article.coverImage && (
-              // eslint-disable-next-line @next/next/no-img-element
+              // eslint-disable-next-line @next/next/no-img-element -- cover may be an Openverse or user-pasted URL on any host; next/image would throw for hosts outside images.remotePatterns
               <img
                 src={article.coverImage}
                 alt=""

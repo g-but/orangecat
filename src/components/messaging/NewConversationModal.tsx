@@ -239,7 +239,7 @@ export default function NewConversationModal({
                     }
                   }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element -- Dynamic user avatar */}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- avatar_url is a free-form user URL (any host); next/image would throw for hosts outside images.remotePatterns */}
                   <img
                     src={p.avatar_url || '/default-avatar.svg'}
                     alt={p.name || p.username || 'User'}

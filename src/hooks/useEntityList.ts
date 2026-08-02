@@ -20,7 +20,6 @@ interface UseEntityListOptions<T = Record<string, unknown>> {
   limit?: number;
   enabled?: boolean;
   queryParams?: Record<string, string | number>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transformResponse?: (data: any) => { items: T[]; total: number };
 }
 

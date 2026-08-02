@@ -31,7 +31,6 @@ export const PAGE_SURFACE_CLASSES: Record<string, string> = {
   green: 'bg-surface-page',
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type EntityData = Record<string, any>;
 
 export interface EntityDetailConfig {

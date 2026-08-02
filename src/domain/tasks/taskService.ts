@@ -16,7 +16,6 @@ import type { TaskUpdateInput } from '@/lib/schemas/tasks';
 import { logger } from '@/utils/logger';
 import type { NextResponse } from 'next/server';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyResponse = NextResponse<any>;
 
 /** Map validated update input to DB column update object. */
@@ -72,7 +71,6 @@ export async function updateTask(
   id: string,
   updates: Record<string, unknown>
 ): Promise<AnyResponse> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: task, error } = await (supabase as any)
     .from(DATABASE_TABLES.TASKS)
     .update(updates)
@@ -114,7 +112,6 @@ export async function archiveTask(
     return apiForbidden('Only the creator can archive this task');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from(DATABASE_TABLES.TASKS)
     .update({ is_archived: true })

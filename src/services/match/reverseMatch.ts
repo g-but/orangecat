@@ -13,7 +13,6 @@
  * reconciles that fire on every write/update/quality-sweep never re-notify.
  * Fire-and-forget from reindexService.reconcileOne; never throws.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { NotificationDispatcher } from '@/services/notifications/dispatcher';

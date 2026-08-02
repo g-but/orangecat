@@ -9,7 +9,6 @@
  * this interface stays stable so no code debt is introduced by waiting.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { getTableName, getEntityMetadata } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';

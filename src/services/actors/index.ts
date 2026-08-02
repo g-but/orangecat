@@ -147,7 +147,6 @@ export async function getActorDisplayName(
       return 'Unknown';
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const actor = data as any;
     if (actor.actor_type === 'user') {
       return actor.profiles?.name || actor.profiles?.username || 'Unknown';

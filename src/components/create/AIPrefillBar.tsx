@@ -6,6 +6,7 @@ import { Sparkles, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
+import { unwrapApiResponse } from '@/lib/api/client-response';
 
 import { AIFillPanel } from './AIFillPanel';
 import { AIRefinePanel } from './AIRefinePanel';
@@ -88,15 +89,9 @@ export function AIPrefillBar({
           }),
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to generate form data');
-        }
-
-        const result: AIPrefillResponse = await response.json();
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to generate form data');
-        }
+        const result = await unwrapApiResponse<
+          Pick<AIPrefillResponse, 'data' | 'changedFields' | 'confidence'>
+        >(response, 'Failed to generate form data');
 
         const changedFields = result.changedFields ?? Object.keys(result.data);
         onPrefill(result.data, result.confidence, changedFields);

@@ -9,5 +9,4 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * database.ts. Using a single export here prevents the same type alias
  * from being redefined in every service file.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnySupabaseClient = SupabaseClient<any, any, any>;

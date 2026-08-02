@@ -50,7 +50,7 @@ export default function CoverImageUpload({
   if (value && !urlMode) {
     return (
       <div className="group relative overflow-hidden rounded-xl border border-subtle">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- value may be a user-pasted URL on any host (urlMode); next/image would throw for hosts outside images.remotePatterns */}
         <img src={value} alt="Cover preview" className="aspect-[2/1] w-full object-cover" />
         <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
           <button

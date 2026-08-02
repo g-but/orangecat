@@ -23,7 +23,6 @@ import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import EntityListShell from '@/components/entity/EntityListShell';
 
 export default function JobsPage() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

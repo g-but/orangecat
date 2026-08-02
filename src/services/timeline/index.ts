@@ -324,7 +324,6 @@ class TimelineService {
   /**
    * Get comments for an event
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getEventComments(eventId: string, limit: number = 50, offset: number = 0): Promise<any[]> {
     return getEventComments(eventId, limit, offset);
   }
@@ -346,7 +345,6 @@ class TimelineService {
   /**
    * Get replies to a comment
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getCommentReplies(commentId: string, limit: number = 20): Promise<any[]> {
     return getCommentReplies(commentId, limit);
   }

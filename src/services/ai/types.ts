@@ -8,13 +8,11 @@
  * they'd drift.
  */
 export interface AiService {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   streamChatCompletion(opts: {
     model: string;
     messages: any[];
     temperature: number;
   }): AsyncIterable<{ content?: string; usage?: unknown; done?: boolean }>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   chatCompletion(opts: { model: string; messages: any[]; temperature: number }): Promise<{
     content: string;
     model: string;
