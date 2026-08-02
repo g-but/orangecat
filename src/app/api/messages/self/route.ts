@@ -10,15 +10,18 @@ async function insertConversationAndParticipant(
   client: AnySupabaseClient,
   userId: string
 ): Promise<string> {
-  const { data: convIns, error: convErr } = await client
+  // The id is generated here, NOT read back from the insert: the conversations
+  // SELECT policy requires an active participant row, and that row cannot exist
+  // until the conversation does. `.insert().select()` therefore returned nothing
+  // under RLS and this whole path 500'd in production for anyone who did not
+  // already have a self-conversation.
+  const conversationId = crypto.randomUUID();
+  const { error: convErr } = await client
     .from(DATABASE_TABLES.CONVERSATIONS)
-    .insert({ created_by: userId, is_group: false })
-    .select('id')
-    .single();
-  if (convErr || !convIns?.id) {
-    throw convErr || new Error('conv insert failed');
+    .insert({ id: conversationId, created_by: userId, is_group: false });
+  if (convErr) {
+    throw convErr;
   }
-  const conversationId = convIns.id as string;
   const { error: partErr } = await client
     .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
     .insert({ conversation_id: conversationId, user_id: userId, role: 'member' });
