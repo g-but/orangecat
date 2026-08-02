@@ -1,20 +1,33 @@
 /**
- * Cat plans — SSOT for the pricing page and any in-product upgrade CTA.
+ * Cat plans — the ONE source of truth for everything pricing.
  *
- * Three plans, honest about what's shipped ("sell intelligence, not rails" —
- * P2P payments stay 0% forever; the platform earns on Cat Credits):
- *   - free    → what every user gets today (10 msgs/day on free models)
- *   - byok    → already implemented; zero platform cost; for power users
- *   - credits → pay-as-you-go frontier AI, billed in Bitcoin against a
- *               prepaid Cat Credit balance (ledger + metering are live in
- *               code; Lightning top-up activates with the platform wallet —
- *               flip CAT_CREDITS_LIVE when PLATFORM_NWC_URI is provisioned).
+ * Every fact about plans lives here: limits, prices, statuses, copy, CTAs,
+ * upsell strings, and the tier↔plan mapping. The layers around it each have
+ * exactly one job and never restate a fact:
  *
- * A flat Supporter subscription (CHF/month) may come later; it is deliberately
- * NOT a card until it can actually be bought.
+ *   config  (this file)         → WHAT the plans are. Numbers, copy, gates.
+ *   SQL     (check_platform_limit / increment_platform_usage /
+ *            user_plans.daily_limit in the baseline migration)
+ *                               → ENFORCES the free limit at the counter.
+ *                                 SQL can't import TS, so its literals are
+ *                                 machine-guarded by the drift test:
+ *                                 __tests__/unit/cat/plan-limit-drift.test.ts
+ *                                 — change a limit on either side alone and
+ *                                 CI fails, pointing here.
+ *   services (provider-resolver, api-key-service, supporter/grant,
+ *            credit-metering)   → APPLY the rules (BYOK bypass, metering,
+ *                                 grants). grant.ts imports
+ *                                 CAT_SUPPORTER_DAILY_LIMIT — never a literal.
+ *   UI      (/pricing, /settings/usage, QuotaMeter, CatSettingsTab)
+ *                               → RENDER only. No plan fact may be typed into
+ *                                 a component; import it from here.
  *
- * The /pricing page and QuotaMeter both read from this file. If the daily
- * limit changes, update CAT_FREE_DAILY_LIMIT here only — all fallbacks import it.
+ * Plans, honest about what's shipped ("sell intelligence, not rails" — P2P
+ * payments stay 0% forever; the platform earns on Cat Credits):
+ *   - free      → what every user gets today (CAT_FREE_DAILY_LIMIT msgs/day)
+ *   - supporter → flat CHF/mo pass, raises the cap (DB tier 'pro')
+ *   - byok      → your key, your bill, no cap, zero markup
+ *   - credits   → pay-as-you-go frontier AI against a prepaid BTC balance
  */
 
 import { ROUTES } from '@/config/routes';
@@ -180,3 +193,40 @@ export const CAT_PLANS: CatPlan[] = [
     badge: CAT_CREDITS_LIVE ? 'Live' : 'Activating',
   },
 ];
+
+/** Plan lookup by id — CAT_PLANS is short, a scan is fine. */
+export function getCatPlan(id: CatPlanId): CatPlan {
+  const plan = CAT_PLANS.find(p => p.id === id);
+  if (!plan) {
+    throw new Error(`Unknown Cat plan id: ${id}`);
+  }
+  return plan;
+}
+
+/**
+ * The naming seam, stated ONCE: the quota API / user_plans table speak in
+ * tiers ('free' | 'pro' | 'byok'), the product speaks in plans — and the
+ * paid tier is called 'pro' in the DB but sold as 'Supporter'. Every UI
+ * that needs "which plan card is this user on" goes through this map
+ * instead of re-deriving the ternary.
+ */
+export const PLAN_ID_BY_QUOTA_TIER = {
+  free: 'free',
+  pro: 'supporter',
+  byok: 'byok',
+} as const satisfies Record<'free' | 'pro' | 'byok', CatPlanId>;
+
+/**
+ * Canonical upsell copy — the "you can have more Cat" strings, written once.
+ * UI surfaces (QuotaMeter, CatSettingsTab, /settings/usage, error states)
+ * import these instead of each hand-writing a slightly different promise.
+ */
+export const CAT_UPSELL = {
+  /** Compact suffix for meters/tooltips. */
+  byokShort: 'Add your own API key for unlimited',
+  /** Full sentence for settings/explanatory surfaces. */
+  byokFull:
+    'Add your own API key for unlimited messages — you pay your provider directly, OrangeCat never marks it up.',
+  /** Link label for the BYOK CTA. */
+  byokAction: 'Add your key',
+} as const;
