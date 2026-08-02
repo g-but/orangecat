@@ -91,7 +91,7 @@ export default function AISettingsPage() {
                 <Link href={ROUTES.PRICING} className="underline hover:no-underline">
                   pricing
                 </Link>{' '}
-                for the Pro option (coming soon — it&apos;s a waitlist for now).
+                for every plan — Supporter, your own key, and Cat Credits.
               </p>
               <p className="mt-2 text-xs text-fg-tertiary">
                 Capability: <span className="font-medium text-fg-secondary">Capable</span> — great

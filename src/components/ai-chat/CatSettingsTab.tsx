@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { ROUTES } from '@/config/routes';
+import { CAT_UPSELL } from '@/config/cat-plans';
 
 export function CatSettingsTab() {
   const { hasByok } = useAISettings();
@@ -70,7 +71,7 @@ export function CatSettingsTab() {
                     : 'platform key, daily cap'}
                 </p>
                 <p className="text-xs text-fg-secondary">
-                  Add a free Groq key for unlimited use, or upgrade to Pro when it ships.
+                  {CAT_UPSELL.byokShort} — or see the plans for more ways to run Cat.
                 </p>
               </div>
             </div>
@@ -89,7 +90,7 @@ export function CatSettingsTab() {
               href={ROUTES.PRICING}
               className="flex min-h-11 items-center justify-between rounded-md border border-accent-warm/30 bg-accent-warm/10 px-3 py-2 transition-colors hover:bg-accent-warm/20"
             >
-              <span className="text-sm font-medium text-fg-primary">See Pro pricing</span>
+              <span className="text-sm font-medium text-fg-primary">See Cat plans</span>
               <ArrowUpRight className="h-4 w-4 text-accent-warm" />
             </Link>
           )}

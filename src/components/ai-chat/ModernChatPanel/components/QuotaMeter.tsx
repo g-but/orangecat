@@ -22,6 +22,7 @@
 import Link from 'next/link';
 import { KeyRound, Sparkles } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
+import { CAT_UPSELL } from '@/config/cat-plans';
 import { cn } from '@/lib/utils';
 import type { CatQuota } from '../hooks/useCatQuota';
 
@@ -66,8 +67,8 @@ export function QuotaMeter({ quota, className }: QuotaMeterProps) {
   // stays compact on small screens and spells itself out on ≥sm.
   const noun = isPro ? 'Cat messages' : 'free messages';
   const explanation = isCapped
-    ? `You've used all ${dailyLimit} ${noun} for today · Add your own API key for unlimited`
-    : `${requestsRemaining} of ${dailyLimit} ${noun} left today · Add your own API key for unlimited`;
+    ? `You've used all ${dailyLimit} ${noun} for today · ${CAT_UPSELL.byokShort}`
+    : `${requestsRemaining} of ${dailyLimit} ${noun} left today · ${CAT_UPSELL.byokShort}`;
 
   return (
     <span
@@ -111,7 +112,7 @@ export function QuotaMeter({ quota, className }: QuotaMeterProps) {
           className="whitespace-nowrap font-medium underline decoration-dotted underline-offset-2 hover:no-underline"
           title="Bring your own API key — unlimited messages, you pay your provider directly"
         >
-          Add your key →
+          {CAT_UPSELL.byokAction} →
         </Link>
       )}
     </span>

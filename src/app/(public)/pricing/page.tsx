@@ -5,6 +5,8 @@ import Button from '@/components/ui/Button';
 import { PageHeading } from '@/components/layout/PageHeading';
 import {
   CAT_PLANS,
+  CAT_FREE_DAILY_LIMIT,
+  CAT_SUPPORTER_DAILY_LIMIT,
   CAT_FRONTIER_MODELS_LIST,
   CAT_FRONTIER_MODELS_OR,
   type CatPlan,
@@ -15,15 +17,16 @@ import { cn } from '@/lib/utils';
 export const metadata = {
   title: 'Cat plans',
   description:
-    'OrangeCat Cat is free for everyone. Bring your own key, or join the Pro waitlist to help fund the platform AI budget.',
+    'OrangeCat Cat is free for everyone — 10 messages a day, no card. Go further with your own API key, Cat Credits, or a Supporter pass in Bitcoin.',
 };
 
 /**
- * /pricing — honest tier card layout. Free + BYOK are real and shipped;
- * Pro is a waitlist with no declared price (intentional: we want signal
- * before we price). One warm-accent CTA on the recommended (BYOK) tier;
- * everything else is monochrome surfaces per the FleetCrown-aligned
- * design tier.
+ * /pricing — honest tier card layout, rendered 1:1 from the CAT_PLANS SSOT
+ * (config/cat-plans.ts): every number, status, and CTA comes from there;
+ * this file owns layout only. "Pro" in the prose below refers to the FUTURE
+ * managed-frontier tier — distinct from the Supporter pass, which is a plan
+ * card. One warm-accent CTA on the recommended (BYOK) tier; everything else
+ * is monochrome surfaces per the FleetCrown-aligned design tier.
  */
 export default function PricingPage() {
   return (
@@ -73,9 +76,13 @@ export default function PricingPage() {
                 {CAT_FRONTIER_MODELS_OR} for you right now.
               </li>
               <li>
-                <strong className="text-fg-primary">Back us in Bitcoin</strong> — believe in where
-                this is heading? Become a founding supporter. It&apos;s a donation, not a
-                subscription — and supporters get first access the day Pro ships.
+                <strong className="text-fg-primary">Cat Credits</strong> — prepaid Bitcoin balance,
+                metered per message: managed frontier AI without a subscription.
+              </li>
+              <li>
+                <strong className="text-fg-primary">Become a Supporter</strong> — a flat monthly in
+                Bitcoin for a {Math.round(CAT_SUPPORTER_DAILY_LIMIT / CAT_FREE_DAILY_LIMIT)}× daily
+                cap, funding the platform AI budget — and first access the day Pro ships.
               </li>
             </ul>
           </div>
