@@ -140,6 +140,24 @@ const nextConfig = {
         destination: '/dashboard/cat',
         permanent: true,
       },
+      // Guessable aliases for the flagship Cat surface. "The Cat is the
+      // interface" — someone typing orangecat.ch/cat must land on the Cat,
+      // never on a 404. Same alias policy as the /login → /auth block above.
+      {
+        source: '/cat',
+        destination: '/dashboard/cat',
+        permanent: true,
+      },
+      {
+        source: '/chat',
+        destination: '/dashboard/cat',
+        permanent: true,
+      },
+      {
+        source: '/ai',
+        destination: '/dashboard/cat',
+        permanent: true,
+      },
     ];
   },
 
