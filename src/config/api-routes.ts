@@ -68,6 +68,7 @@ export const API_ROUTES = {
   RECEIVE: {
     REQUEST: '/api/receive/request',
   },
+  SEND: '/api/send',
   NOTIFICATIONS: {
     BASE: '/api/notifications',
     UNREAD: '/api/notifications/unread',

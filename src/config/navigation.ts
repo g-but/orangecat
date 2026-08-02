@@ -198,12 +198,13 @@ const simplifiedSections: NavSection[] = [
         requiresAuth: true,
       },
       {
-        // "Get paid" is a primary verb on an economic platform — one tap from
-        // anywhere to a scannable QR (the in-person receive flow).
-        name: 'Receive',
+        // Moving money is the defining verb on an economic platform, so it gets
+        // ONE primary entry covering both directions — the screens toggle
+        // between themselves rather than taking two rows in the sidebar.
+        name: 'Money',
         href: ROUTES.RECEIVE,
         icon: QrCode,
-        description: 'Show a QR to get paid',
+        description: 'Get paid or send Bitcoin',
         requiresAuth: true,
       },
       {
