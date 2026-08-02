@@ -77,7 +77,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
               profiles!follows_following_id_fkey (
                 id,
                 username,
-                display_name,
+                display_name:name,
                 bio,
                 avatar_url
               )
@@ -104,7 +104,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
               profiles!follows_follower_id_fkey (
                 id,
                 username,
-                display_name,
+                display_name:name,
                 bio,
                 avatar_url
               )
