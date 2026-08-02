@@ -8,6 +8,8 @@ import { ENTITY_REGISTRY } from '@/config/entity-registry';
 export const API_ROUTES = {
   CAT: {
     CHAT: '/api/cat/chat',
+    PREPARE: '/api/cat/prepare',
+    LOCAL_COMPLETE: '/api/cat/local-complete',
     TRANSCRIBE: '/api/cat/transcribe',
     SUGGESTIONS: '/api/cat/suggestions',
     HISTORY: '/api/cat/history',
