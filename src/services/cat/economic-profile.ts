@@ -238,6 +238,110 @@ export async function saveEconomicProfile(
   }
 }
 
+/** What a profile removal actually did — reported verbatim, never guessed. */
+export interface ProfileRemovalResult {
+  /** Human-readable entries that were removed (e.g. "skill: photography"). */
+  removed: string[];
+  /** Terms that matched nothing in the profile. */
+  notFound: string[];
+}
+
+function entryText(it: unknown): string {
+  if (typeof it === 'string') {
+    return it;
+  }
+  const o = it as { name?: string; text?: string };
+  return o?.name ?? o?.text ?? JSON.stringify(it);
+}
+
+function termMatches(term: string, text: string): boolean {
+  const t = term.toLowerCase();
+  const c = text.toLowerCase();
+  if (c.includes(t) || t.includes(c)) {
+    return true;
+  }
+  const sig = t.split(/[^a-z0-9äöüéèàç]+/).filter(w => w.length >= 4);
+  const hits = sig.filter(w => c.includes(w)).length;
+  return sig.length > 0 && (sig.length === 1 ? hits === 1 : hits >= 2);
+}
+
+/**
+ * Remove profile entries matching the given terms across every array
+ * dimension (skills, assets, goals, constraints, askedFor). Overwrites the
+ * row directly — saveEconomicProfile() merge-unions, which can never shrink.
+ * Same matching rules as memory forgetting so "photography doesn't apply"
+ * clears both stores identically.
+ */
+export async function removeFromEconomicProfile(
+  supabase: AnySupabaseClient,
+  userId: string,
+  terms: string[]
+): Promise<ProfileRemovalResult> {
+  const wanted = terms.map(t => t.trim()).filter(t => t.length >= 4);
+  const result: ProfileRemovalResult = { removed: [], notFound: [] };
+  if (wanted.length === 0) {
+    return result;
+  }
+  const current = await getEconomicProfile(supabase, userId);
+  if (!current) {
+    result.notFound.push(...wanted);
+    return result;
+  }
+
+  const matchedTerms = new Set<string>();
+  const dims: Array<{ label: string; key: 'skills' | 'assets' | 'goals' | 'constraints' | 'askedFor' }> = [
+    { label: 'skill', key: 'skills' },
+    { label: 'asset', key: 'assets' },
+    { label: 'goal', key: 'goals' },
+    { label: 'constraint', key: 'constraints' },
+    { label: 'asked-for', key: 'askedFor' },
+  ];
+  const next: Record<string, unknown[]> = {};
+  for (const dim of dims) {
+    const kept: unknown[] = [];
+    for (const item of current[dim.key] as unknown[]) {
+      const text = entryText(item);
+      const hit = wanted.find(t => termMatches(t, text));
+      if (hit) {
+        matchedTerms.add(hit);
+        result.removed.push(`${dim.label}: ${text}`);
+      } else {
+        kept.push(item);
+      }
+    }
+    next[dim.key] = kept;
+  }
+  result.notFound = wanted.filter(t => !matchedTerms.has(t));
+
+  if (result.removed.length === 0) {
+    return result;
+  }
+  try {
+    const { error } = await supabase.from(DATABASE_TABLES.USER_ECONOMIC_PROFILE).upsert(
+      {
+        user_id: userId,
+        skills: next.skills,
+        assets: next.assets,
+        goals: next.goals,
+        constraints: next.constraints,
+        asked_for: next.askedFor,
+        motivation: current.motivation,
+        stage: current.stage,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' }
+    );
+    if (error) {
+      logger.warn('removeFromEconomicProfile upsert failed', { error }, 'EconomicProfile');
+      return { removed: [], notFound: wanted };
+    }
+  } catch (err) {
+    logger.warn('removeFromEconomicProfile failed', { err: String(err) }, 'EconomicProfile');
+    return { removed: [], notFound: wanted };
+  }
+  return result;
+}
+
 /**
  * Normalize a loose object (LLM extraction or action params) into an EconomicProfile
  * patch: arrays accept plain strings or objects; scalars pass through when strings.

@@ -1,6 +1,11 @@
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { saveEconomicProfile, normalizeEconomicPatch } from '../economic-profile';
+import {
+  saveEconomicProfile,
+  normalizeEconomicPatch,
+  removeFromEconomicProfile,
+} from '../economic-profile';
+import { forgetMemoriesMatching } from '../memory';
 import type { ActionHandler } from './types';
 
 export const contextHandlers: Record<string, ActionHandler> = {
@@ -32,6 +37,50 @@ export const contextHandlers: Record<string, ActionHandler> = {
     return {
       success: true,
       data: { displayMessage: `🧭 Updated your economic profile${summary ? ` (${summary})` : ''}` },
+    };
+  },
+
+  // One user verb — "that's wrong, remove it" — must clear BOTH stores:
+  // free-form memories AND the structured economic profile. Splitting them
+  // is how Cat once "removed" a skill that kept driving suggestions.
+  forget_memories: async (supabase, userId, _actorId, params) => {
+    const facts = Array.isArray(params.facts)
+      ? (params.facts as unknown[]).filter((f): f is string => typeof f === 'string')
+      : [];
+    if (facts.length === 0) {
+      return { success: false, error: 'Nothing to forget — pass the wrong facts as short phrases.' };
+    }
+    const [mem, profile] = await Promise.all([
+      forgetMemoriesMatching(supabase, userId, facts),
+      removeFromEconomicProfile(supabase, userId, facts),
+    ]);
+    const removedCount = mem.deleted.length + profile.removed.length;
+    const stillUnknown = facts.filter(
+      f => mem.notFound.includes(f) && profile.notFound.includes(f)
+    );
+    if (removedCount === 0) {
+      return {
+        success: false,
+        error:
+          'No stored memory or profile entry matched — nothing was removed. The full list is at Settings → AI → What Cat remembers.',
+      };
+    }
+    const parts = [
+      mem.deleted.length > 0 && `${mem.deleted.length} memor${mem.deleted.length === 1 ? 'y' : 'ies'}`,
+      profile.removed.length > 0 && `${profile.removed.length} profile entr${profile.removed.length === 1 ? 'y' : 'ies'}`,
+    ]
+      .filter(Boolean)
+      .join(' and ');
+    return {
+      success: true,
+      data: {
+        displayMessage:
+          `🧹 Removed ${parts}.` +
+          (stillUnknown.length > 0 ? ` No match found for: ${stillUnknown.join(', ')}.` : ''),
+        deletedMemories: mem.deleted,
+        removedProfileEntries: profile.removed,
+        notFound: stillUnknown,
+      },
     };
   },
 
