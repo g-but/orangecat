@@ -715,6 +715,150 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     enabled: true,
   },
 
+  follow_user: {
+    id: 'follow_user',
+    name: 'Follow User',
+    description: 'Follow another user on OrangeCat (their posts appear in the timeline feed)',
+    category: 'communication',
+    icon: Users,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      { name: 'username', type: 'string', required: true, description: 'The @username to follow' },
+    ],
+    examples: ['Follow @alice', 'Follow that designer we found'],
+    enabled: true,
+  },
+
+  unfollow_user: {
+    id: 'unfollow_user',
+    name: 'Unfollow User',
+    description: 'Stop following a user',
+    category: 'communication',
+    icon: Users,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      {
+        name: 'username',
+        type: 'string',
+        required: true,
+        description: 'The @username to unfollow',
+      },
+    ],
+    examples: ['Unfollow @bob'],
+    enabled: true,
+  },
+
+  like_post: {
+    id: 'like_post',
+    name: 'Like Post',
+    description: 'Like a timeline post (pass the post id from context or search results)',
+    category: 'communication',
+    icon: Heart,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      { name: 'post_id', type: 'string', required: true, description: 'Timeline post/event id' },
+    ],
+    examples: ['Like that post', "Like @alice's update"],
+    enabled: true,
+  },
+
+  comment_on_post: {
+    id: 'comment_on_post',
+    name: 'Comment on Post',
+    description: 'Comment on a timeline post on behalf of the user (their words, confirmed)',
+    category: 'communication',
+    icon: MessageSquare,
+    riskLevel: 'medium',
+    requiresConfirmation: true,
+    parameters: [
+      { name: 'post_id', type: 'string', required: true, description: 'Timeline post/event id' },
+      { name: 'content', type: 'string', required: true, description: 'The comment text' },
+    ],
+    examples: ['Comment "congrats!" on that post', 'Reply to their update with my thoughts'],
+    enabled: true,
+  },
+
+  mark_notifications_read: {
+    id: 'mark_notifications_read',
+    name: 'Mark Notifications Read',
+    description: 'Clear the unread notification badge — marks all notifications as read',
+    category: 'context',
+    icon: Bell,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [],
+    examples: ['Mark my notifications as read', 'Clear my inbox badge'],
+    enabled: true,
+  },
+
+  book_service: {
+    id: 'book_service',
+    name: 'Book Service',
+    description:
+      "Request a booking for someone's service at a specific time (the provider must confirm). Take service_id from context or search results.",
+    category: 'payments',
+    icon: Calendar,
+    riskLevel: 'high',
+    requiresConfirmation: true,
+    parameters: [
+      { name: 'service_id', type: 'entity_id', required: true, description: 'The service to book' },
+      {
+        name: 'starts_at',
+        type: 'string',
+        required: true,
+        description: 'Start date-time (ISO 8601)',
+      },
+      {
+        name: 'ends_at',
+        type: 'string',
+        required: false,
+        description: 'End date-time (default: 1 hour after start)',
+      },
+      { name: 'notes', type: 'string', required: false, description: 'Note for the provider' },
+    ],
+    examples: ['Book that consultation for Tuesday 10:00', "Book @alice's design session"],
+    enabled: true,
+  },
+
+  accept_booking: {
+    id: 'accept_booking',
+    name: 'Accept Booking',
+    description: 'Confirm an incoming booking request on one of your services/assets',
+    category: 'payments',
+    icon: Calendar,
+    riskLevel: 'medium',
+    requiresConfirmation: false,
+    parameters: [
+      {
+        name: 'booking_id',
+        type: 'string',
+        required: true,
+        description: 'The booking id (from your bookings context)',
+      },
+    ],
+    examples: ['Accept the booking from @bob', 'Confirm that booking'],
+    enabled: true,
+  },
+
+  decline_booking: {
+    id: 'decline_booking',
+    name: 'Decline Booking',
+    description: 'Decline an incoming booking request',
+    category: 'payments',
+    icon: Calendar,
+    riskLevel: 'medium',
+    requiresConfirmation: true,
+    parameters: [
+      { name: 'booking_id', type: 'string', required: true, description: 'The booking id' },
+      { name: 'reason', type: 'string', required: false, description: 'Optional reason' },
+    ],
+    examples: ['Decline that booking', "Reject the request — I'm away that week"],
+    enabled: true,
+  },
+
   // ---------- PAYMENT ACTIONS ----------
 
   send_payment: {
