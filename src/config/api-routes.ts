@@ -69,6 +69,10 @@ export const API_ROUTES = {
     REQUEST: '/api/receive/request',
   },
   SEND: '/api/send',
+  PAYMENT_REQUESTS: {
+    BASE: '/api/payment-requests',
+    BY_ID: (id: string) => `/api/payment-requests/${id}`,
+  },
   NOTIFICATIONS: {
     BASE: '/api/notifications',
     UNREAD: '/api/notifications/unread',

@@ -12,20 +12,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, HandCoins } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import { cn } from '@/lib/utils';
 
 const TABS = [
   { href: ROUTES.RECEIVE, label: 'Receive', icon: ArrowDownLeft },
   { href: ROUTES.SEND, label: 'Send', icon: ArrowUpRight },
+  { href: ROUTES.REQUESTS, label: 'Request', icon: HandCoins },
 ] as const;
 
 export function MoneyTabs({ className }: { className?: string }) {
   const pathname = usePathname();
 
   return (
-    <div className={cn('grid grid-cols-2 gap-1 rounded-lg bg-surface-raised p-1', className)}>
+    <div className={cn('grid grid-cols-3 gap-1 rounded-lg bg-surface-raised p-1', className)}>
       {TABS.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
         return (
