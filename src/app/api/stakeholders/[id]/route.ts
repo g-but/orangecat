@@ -18,7 +18,9 @@ import {
   apiValidationError,
   apiNotFound,
   apiInternalError,
+  apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 
 const patchSchema = z
@@ -41,7 +43,13 @@ const patchSchema = z
 
 export const PATCH = withAuth(async (request: AuthenticatedRequest, context: unknown) => {
   try {
-    const { supabase } = request;
+    const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
+    }
+
     const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
 
@@ -102,7 +110,13 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: unk
 
 export const DELETE = withAuth(async (request: AuthenticatedRequest, context: unknown) => {
   try {
-    const { supabase } = request;
+    const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
+    }
+
     const { params } = context as { params: Promise<{ id: string }> };
     const { id } = await params;
 

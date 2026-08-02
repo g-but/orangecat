@@ -43,7 +43,7 @@ export default function PublicEntityOwnerCard({
           className={`flex items-center gap-3 -m-2 p-2 rounded-lg transition-colors ${isClickable ? 'hover:bg-surface-raised' : 'cursor-default'}`}
         >
           {owner.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
+            // eslint-disable-next-line @next/next/no-img-element -- avatar_url is a free-form user URL (any host); next/image would throw for hosts outside images.remotePatterns
             <img
               src={owner.avatar_url}
               alt={owner.name || owner.username || label}

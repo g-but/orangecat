@@ -193,7 +193,7 @@ export default function MessagePanel({
                 return;
               }
               setSelectedConversationId(conversationId);
-              router.push(`/messages?id=${conversationId}`, { scroll: false });
+              router.push(ROUTES.MESSAGES_WITH_CONVERSATION(conversationId), { scroll: false });
             }}
           />
         </div>
@@ -260,7 +260,7 @@ export default function MessagePanel({
           setSelectedConversationId(convId);
           setShowNewModal(false);
           setRefreshSignal(s => s + 1);
-          router.push(`/messages?id=${convId}`, { scroll: false });
+          router.push(ROUTES.MESSAGES_WITH_CONVERSATION(convId), { scroll: false });
         }}
       />
     </div>

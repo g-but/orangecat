@@ -125,7 +125,7 @@ export default function WebhookDeliveriesDrawer({ endpointId }: Props) {
       setError(null);
       try {
         const res = await fetch(
-          `/api/webhook-endpoints/${endpointId}/deliveries/${deliveryId}/replay`,
+          API_ROUTES.WEBHOOK_ENDPOINTS.DELIVERY_REPLAY(endpointId, deliveryId),
           { method: 'POST', credentials: 'include' }
         );
         if (!res.ok) {

@@ -7,6 +7,7 @@
  * Thin HTTP layer — business rules live in @/services/notifications/preferences.server.
  */
 
+import { z } from 'zod';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
@@ -24,6 +25,10 @@ import {
   updatePreferences,
   type PreferencesResult,
 } from '@/services/notifications/preferences.server';
+
+// Field-level rules live in updatePreferences (the service is the SSOT); this
+// guard only rejects malformed JSON / non-object bodies so they 400, not 500.
+const preferencesBodySchema = z.record(z.unknown());
 
 /** Map a domain PreferencesResult onto the matching HTTP response. */
 function toResponse<T>(result: PreferencesResult<T>) {
@@ -55,7 +60,11 @@ export const PUT = withAuth(async (req: AuthenticatedRequest) => {
       return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
     }
 
-    const body = (await req.json()) as NotificationPreferencesUpdate;
+    const parsed = preferencesBodySchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
+      return apiBadRequest('Request body must be a JSON object');
+    }
+    const body = parsed.data as NotificationPreferencesUpdate;
     const admin = createAdminClient() as unknown as AnySupabaseClient;
     return toResponse(await updatePreferences(admin, user.id, body));
   } catch (error) {

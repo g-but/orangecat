@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { PaymentQRCode } from './PaymentQRCode';
 import { PaymentStatusIndicator } from './PaymentStatusIndicator';
+import { PUBLIC_API_BASE } from '@/config/public-api';
 import { CONTRIBUTION_QUICK_AMOUNTS_BTC } from '@/config/payment-presets';
 import { displayBTC } from '@/services/currency';
 import type { EntityType } from '@/config/entity-registry';
@@ -66,7 +67,7 @@ export function PublicSupportPanel({
 
     let stopped = false;
     const check = async () => {
-      const response = await fetch(`/api/v1/payments/public/${intent.payment_intent.id}`, {
+      const response = await fetch(`${PUBLIC_API_BASE}/payments/public/${intent.payment_intent.id}`, {
         headers: { 'x-payment-token': intent.status_token },
         cache: 'no-store',
       });
@@ -100,7 +101,7 @@ export function PublicSupportPanel({
     setPhase('creating');
     setError('');
     try {
-      const response = await fetch('/api/v1/payments/public', {
+      const response = await fetch(`${PUBLIC_API_BASE}/payments/public`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -125,7 +126,7 @@ export function PublicSupportPanel({
     if (!intent) {
       return;
     }
-    const response = await fetch(`/api/v1/payments/public/${intent.payment_intent.id}`, {
+    const response = await fetch(`${PUBLIC_API_BASE}/payments/public/${intent.payment_intent.id}`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',

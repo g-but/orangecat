@@ -41,7 +41,7 @@ export function CollateralSelector({
   disabled = false,
 }: CollateralSelectorProps) {
   const { profile } = useAuth();
-  const { formatAmountBtc } = useDisplayCurrency();
+  const { formatAmountBtc, formatPrice } = useDisplayCurrency();
 
   const {
     assets,
@@ -69,7 +69,7 @@ export function CollateralSelector({
       id: a.id,
       label: a.title,
       sublabel: a.estimated_value
-        ? `${a.estimated_value.toLocaleString()} ${a.currency || PLATFORM_DEFAULT_CURRENCY}`
+        ? formatPrice(a.estimated_value, a.currency || PLATFORM_DEFAULT_CURRENCY)
         : undefined,
     }));
 
@@ -99,11 +99,7 @@ export function CollateralSelector({
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-fg-primary">Total Collateral Value</span>
               <span className="text-lg font-bold text-fg-primary">
-                {totalCollateral.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{' '}
-                {loanCurrency}
+                {formatPrice(totalCollateral, loanCurrency)}
               </span>
             </div>
             {loanAmount && coveragePercentage !== null && (
@@ -181,11 +177,7 @@ export function CollateralSelector({
                       </Badge>
                     </div>
                     <span className="text-xs text-fg-secondary">
-                      {item.value.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}{' '}
-                      {item.currency}
+                      {formatPrice(item.value, item.currency)}
                     </span>
                   </div>
                 </div>

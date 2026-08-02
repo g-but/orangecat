@@ -133,7 +133,7 @@ export function ComposerImageAttachment({
             onClick={onRemove}
             disabled={disabled}
             aria-label="Remove image"
-            className="absolute right-2 top-2 rounded-full border border-subtle bg-surface-base/90 p-1 text-fg-primary transition-colors hover:bg-surface-base"
+            className="absolute right-2 top-2 min-h-11 min-w-11 flex items-center justify-center rounded-full border border-subtle bg-surface-base/90 p-1 text-fg-primary transition-colors hover:bg-surface-base"
           >
             <X className="h-4 w-4" />
           </button>

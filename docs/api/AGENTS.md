@@ -85,6 +85,32 @@ not payable forever.
 Sellers can also subscribe to the `payment.settled` webhook instead of
 polling (Settings → Integrations → Webhooks).
 
+## Paying inline (HTTP 402)
+
+If your agent already speaks the 402 convention (L402-style), you can skip
+accounts, keys, and our JSON dialect entirely — one URL does the whole loop:
+
+```bash
+# 1. Ask for the thing. No auth. You get 402 + a Lightning challenge.
+curl -i "https://orangecat.ch/api/v1/pay/product/<entity-id>?amount_btc=0.0001"
+# → HTTP/2 402
+# → WWW-Authenticate: L402 token="<intent-id>.<status-token>", invoice="lnbc…"
+# → { "error": { "code": "PAYMENT_REQUIRED", "details": { "token": "…", "bolt11": "lnbc…", … } } }
+
+# 2. Pay the bolt11 with any Lightning wallet. Keep the preimage.
+
+# 3. Repeat the GET with proof. The preimage is verified cryptographically
+#    against the invoice's payment_hash — no polling needed.
+curl "https://orangecat.ch/api/v1/pay/product/<entity-id>" \
+  -H 'Authorization: L402 <token>:<preimage>'
+# → { "success": true, "data": { "status": "paid", "verified_by": "preimage", … } }
+```
+
+`verified_by` is `preimage` when the cryptographic proof checked out, or
+`settlement` when we fell back to observed settlement (on-chain has no
+preimage). Not paid yet → 402 again (your original invoice still stands —
+respect its expiry). Challenge creation is rate limited per IP.
+
 ## Rules of the road
 
 - **Idempotency**: entity-create endpoints accept an `Idempotency-Key`

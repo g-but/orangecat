@@ -69,7 +69,7 @@ export function CatCreditsPanel() {
     <section className="rounded-lg border border-default bg-surface-base p-6">
       <div className="mb-4 flex items-start gap-3">
         <div className="rounded-md bg-surface-raised p-2">
-          <Coins className="h-5 w-5 text-bitcoinOrange" />
+          <Coins className="h-5 w-5 text-fg-secondary" />
         </div>
         <div className="flex-1">
           <h2 className="text-lg font-semibold text-fg-primary">Cat Credits</h2>
@@ -87,7 +87,7 @@ export function CatCreditsPanel() {
           {isLoading ? (
             <Loader2 className="mt-1 h-5 w-5 animate-spin text-fg-secondary" />
           ) : (
-            <p className="mt-0.5 text-2xl font-semibold text-bitcoinOrange">
+            <p className="mt-0.5 text-2xl font-semibold text-fg-primary">
               {formatAmountBtc(balanceBtc)}
             </p>
           )}
@@ -99,7 +99,7 @@ export function CatCreditsPanel() {
           title={topupEnabled ? 'Top up with Lightning' : 'Lightning top-up is coming soon'}
           className={
             topupEnabled
-              ? 'rounded-md bg-bitcoinOrange px-4 py-2 text-sm font-medium text-white hover:bg-bitcoinOrange/90'
+              ? 'rounded-md bg-accent-warm px-4 py-2 text-sm font-medium text-white hover:bg-accent-warm-hover'
               : 'cursor-not-allowed rounded-md border border-subtle px-4 py-2 text-sm font-medium text-fg-tertiary opacity-60'
           }
         >

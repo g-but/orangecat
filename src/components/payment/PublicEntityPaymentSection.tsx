@@ -21,6 +21,8 @@ import { SellerWalletBanner } from './SellerWalletBanner';
 import { OwnerCollectPanel } from './OwnerCollectPanel';
 import { PublicPayPanel } from './PublicPayPanel';
 import { PublicSupportPanel } from './PublicSupportPanel';
+import { SharedWalletNotice } from './SharedWalletNotice';
+import type { SharedWalletUsage } from '@/domain/wallets/walletUsage';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { ROUTES } from '@/config/routes';
 
@@ -41,6 +43,11 @@ interface PublicEntityPaymentSectionProps {
    * the anonymous pay-direct panel. `address` is null for NWC-only sellers.
    */
   sellerReceive: { method: 'nwc' | 'lightning_address' | 'onchain'; address: string | null } | null;
+  /**
+   * How shared the resolved receiving wallet is (resolved server-side).
+   * Drives the backer-facing address-reuse disclosure next to the address.
+   */
+  sharedWalletUsage?: SharedWalletUsage | null;
   /** Fixed price converted to BTC, for the anonymous BIP21 amount. */
   priceAmountBtc?: number;
   /** Redirect path after sign-in */
@@ -56,6 +63,7 @@ export function PublicEntityPaymentSection({
   sellerProfileId,
   sellerUserId,
   sellerReceive,
+  sharedWalletUsage = null,
   priceAmountBtc,
   signInRedirect,
 }: PublicEntityPaymentSectionProps) {
@@ -115,6 +123,7 @@ export function PublicEntityPaymentSection({
             address={sellerReceive.address}
             signInHref={`${ROUTES.AUTH}?mode=login&from=${signInRedirect}`}
           />
+          <SharedWalletNotice usage={sharedWalletUsage} />
           {meta.canReceiveSupport && meta.paymentPattern === 'fixed_price' && (
             <PublicSupportPanel
               entityType={entityType}

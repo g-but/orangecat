@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import type { EntityDetailConfig } from '@/components/public/PublicEntityDetailPage';
 import { ROUTES } from '@/config/routes';
-import { displayBTC } from '@/services/currency';
+import { displayBTC, formatCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import {
   ASSET_TYPE_LABELS,
   ASSET_VERIFICATION_COLORS,
@@ -72,7 +73,7 @@ export const assetDetailConfig: EntityDetailConfig = {
             <div className="flex justify-between items-center">
               <span className="text-sm text-fg-secondary">Estimated Value</span>
               <span className="font-semibold">
-                {Number(entity.estimated_value).toLocaleString()} {String(entity.currency || 'CHF')}
+                {formatCurrency(Number(entity.estimated_value), String(entity.currency || PLATFORM_DEFAULT_CURRENCY))}
               </span>
             </div>
           )}

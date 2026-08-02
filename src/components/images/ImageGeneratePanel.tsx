@@ -144,7 +144,7 @@ export default function ImageGeneratePanel({
 
       {result && !busy && (
         <div className="space-y-2">
-          {/* eslint-disable-next-line @next/next/no-img-element -- freshly generated, stored on our own storage host */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- intrinsic dimensions unknown at render time and the layout sizes to the image (w-auto/max-h); next/image needs fixed dims or a sized fill container */}
           <img
             src={result.url}
             alt={result.prompt}

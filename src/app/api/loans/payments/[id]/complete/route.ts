@@ -6,7 +6,7 @@
  */
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
-import { loanDomainFailureResponse, parseLoanBody } from '@/lib/api/loanRoutes';
+import { loanDomainFailureResponse, loanWriteRateLimit, parseLoanBody } from '@/lib/api/loanRoutes';
 import { completeLoanPaymentSchema } from '@/config/loan-payments';
 import { completeLoanPayment } from '@/domain/loans/payments';
 import { logger } from '@/utils/logger';
@@ -19,6 +19,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest, { params }: R
   try {
     const { user, supabase } = request;
     const { id: paymentId } = await params;
+
+    const limited = await loanWriteRateLimit(user.id);
+    if (limited) {
+      return limited;
+    }
 
     // An empty body is valid here — completion without obligation creation.
     const parsed = await parseLoanBody(request, completeLoanPaymentSchema, { allowEmpty: true });

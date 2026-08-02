@@ -3,7 +3,7 @@ import { Skeleton } from '../Skeleton';
 
 export function ProjectCardSkeleton() {
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-border-subtle bg-card shadow-sm">
+    <div className="flex flex-col overflow-hidden rounded-lg border border-border-subtle bg-surface-base shadow-sm">
       <Skeleton className="aspect-[16/10] w-full rounded-t-lg" />
       <div className="flex flex-col gap-4 p-5">
         <Skeleton className="h-6 w-20 rounded-full" />
@@ -30,7 +30,7 @@ export function ProjectCardSkeleton() {
 
 export function TimelinePostSkeleton() {
   return (
-    <div className="flex gap-3 px-4 py-4 border-b border-border bg-card">
+    <div className="flex gap-3 px-4 py-4 border-b border-border bg-surface-base">
       <Skeleton className="h-11 w-11 rounded-full flex-shrink-0" />
       <div className="flex-1 space-y-3">
         <div className="flex items-center gap-2">
@@ -57,7 +57,6 @@ export function ProfileHeaderSkeleton() {
     <div className="relative">
       <Skeleton className="h-48 md:h-64 lg:h-80 w-full rounded-lg" />
       <div className="absolute -bottom-12 left-4 md:-bottom-16 md:left-8">
-        {/* eslint-disable-next-line no-restricted-syntax -- avatar photo ring uses white/gray-900 to separate from cover image; no semantic token covers this visual boundary */}
         <Skeleton className="h-24 w-24 md:h-32 md:w-32 rounded-lg border-4 border-card dark:border-border" />
       </div>
       <div className="mt-16 md:mt-20 space-y-4">
@@ -71,7 +70,7 @@ export function ProfileHeaderSkeleton() {
 
 export function DashboardStatSkeleton() {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-6">
+    <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface-base p-6">
       <Skeleton className="h-4 w-24 mb-2" />
       <Skeleton className="h-8 w-32" />
       <Skeleton className="h-3 w-20 mt-2" />
@@ -120,7 +119,7 @@ export function PageHeaderSkeleton() {
 export function LoanCardSkeleton({ viewMode = 'grid' }: { viewMode?: 'grid' | 'list' }) {
   if (viewMode === 'list') {
     return (
-      <div className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card">
+      <div className="flex items-center gap-4 p-4 rounded-lg border border-border bg-surface-base">
         <Skeleton className="w-12 h-12 rounded-full flex-shrink-0" />
         <div className="flex-1 min-w-0 space-y-2">
           <Skeleton className="h-5 w-48" />
@@ -135,7 +134,7 @@ export function LoanCardSkeleton({ viewMode = 'grid' }: { viewMode?: 'grid' | 'l
   }
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-border-subtle bg-card shadow-sm p-4">
+    <div className="flex flex-col overflow-hidden rounded-lg border border-border-subtle bg-surface-base shadow-sm p-4">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-8 rounded-full" />
@@ -172,7 +171,7 @@ export function LoanCardSkeleton({ viewMode = 'grid' }: { viewMode?: 'grid' | 'l
 export function ProfileCardSkeleton({ viewMode = 'grid' }: { viewMode?: 'grid' | 'list' }) {
   if (viewMode === 'list') {
     return (
-      <div className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card">
+      <div className="flex items-center gap-4 p-4 rounded-lg border border-border bg-surface-base">
         <Skeleton className="w-12 h-12 rounded-full flex-shrink-0" />
         <div className="flex-1 min-w-0 space-y-2">
           <div className="flex items-center gap-2">
@@ -188,7 +187,7 @@ export function ProfileCardSkeleton({ viewMode = 'grid' }: { viewMode?: 'grid' |
   }
 
   return (
-    <div className="p-6 rounded-lg border border-border bg-card">
+    <div className="p-6 rounded-lg border border-border bg-surface-base">
       <div className="text-center">
         <Skeleton className="w-20 h-20 rounded-full mx-auto mb-4" />
         <div className="flex items-center justify-center gap-2 mb-2">

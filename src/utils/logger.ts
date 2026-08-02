@@ -98,7 +98,6 @@ class Logger {
     if (LOGGER_CONFIG.environment === 'production') {
       const line = JSON.stringify(entry);
       if (level === 'error') {
-        // eslint-disable-next-line no-console
         console.error(line);
         // Forward to the error tracker when one is registered (see setErrorSink).
         try {
@@ -107,7 +106,6 @@ class Logger {
           // Never let error reporting break the request path.
         }
       } else {
-        // eslint-disable-next-line no-console
         console.warn(line);
       }
       return;
@@ -128,11 +126,9 @@ class Logger {
         console.info(prefix + sourceInfo + ':', message, payload);
         return;
       case 'warn':
-        // eslint-disable-next-line no-console
         console.warn(prefix + sourceInfo + ':', message, payload);
         return;
       case 'error':
-        // eslint-disable-next-line no-console
         console.error(prefix + sourceInfo + ':', message, payload);
         return;
     }

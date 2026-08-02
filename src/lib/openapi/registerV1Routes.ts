@@ -395,6 +395,90 @@ export function registerV1Routes(): void {
     },
   });
 
+  // HTTP 402 inline payment (L402-style) — the standards-shaped face of the
+  // machine-payable flow. One GET does both halves: challenge (no auth → 402
+  // with WWW-Authenticate: L402 token + invoice) and verify (Authorization:
+  // L402 <token>:<preimage> → 200 receipt, preimage checked against the
+  // invoice's payment_hash).
+  openApiRegistry.registerPath({
+    method: 'get',
+    path: `${PUBLIC_API_BASE}/pay/{entity_type}/{entity_id}`,
+    summary: 'Pay inline via HTTP 402 (L402-style)',
+    description:
+      'No account, no API key. GET with `?amount_btc=` returns **402 Payment Required** with a `WWW-Authenticate: L402 token="…", invoice="…"` challenge (Lightning bolt11). Pay it, then repeat the GET with `Authorization: L402 <token>:<preimage>` for a 200 receipt — the preimage is verified cryptographically against the invoice payment_hash (settlement status is the fallback for on-chain). Challenge creation is rate limited per IP.',
+    tags: ['Payments'],
+    request: {
+      params: z.object({
+        entity_type: z
+          .string()
+          .openapi({ description: 'Entity type (product, project, cause, …).' }),
+        entity_id: z.string().uuid(),
+      }),
+      query: z.object({
+        amount_btc: z.coerce.number().openapi({
+          description: 'Amount in BTC (0.000001–1). Required on the challenge request.',
+        }),
+      }),
+    },
+    responses: {
+      200: {
+        description: 'Payment verified — the receipt.',
+        content: {
+          'application/json': {
+            schema: apiSuccessSchema(
+              z
+                .object({
+                  status: z.string(),
+                  paid_at: z.string().datetime().nullable(),
+                  verified_by: z.enum(['preimage', 'settlement']),
+                  entity_type: z.string(),
+                  entity_id: z.string().uuid(),
+                })
+                .openapi('L402Receipt'),
+              'L402ReceiptSuccess'
+            ),
+          },
+        },
+      },
+      402: {
+        description:
+          'Payment required. `WWW-Authenticate` carries the L402 challenge; the body repeats the token, bolt11 invoice, amount, and expiry.',
+        content: {
+          'application/json': {
+            schema: z
+              .object({
+                success: z.literal(false),
+                error: z.object({
+                  code: z.literal('PAYMENT_REQUIRED'),
+                  message: z.string(),
+                  details: z
+                    .object({
+                      payment_intent_id: z.string().uuid(),
+                      token: z.string(),
+                      bolt11: z.string().nullable(),
+                      onchain_address: z.string().nullable(),
+                      amount_btc: z.number(),
+                      method_label: z.string(),
+                      expires_in_seconds: z.number().nullable(),
+                    })
+                    .partial()
+                    .openapi({
+                      description:
+                        'The challenge. On a not-paid-yet retry only `status` is present (the original challenge still stands).',
+                    }),
+                }),
+              })
+              .openapi('L402Challenge'),
+          },
+        },
+      },
+      400: COMMON_ERROR_RESPONSES[400],
+      404: COMMON_ERROR_RESPONSES[404],
+      429: COMMON_ERROR_RESPONSES[429],
+      500: COMMON_ERROR_RESPONSES[500],
+    },
+  });
+
   // Publish bus — not an entity create, so registered explicitly. External
   // clients (FleetCrown) land a build event on a project's wall; idempotent +
   // reconcilable by (source, external_id).

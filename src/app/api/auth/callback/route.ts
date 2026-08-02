@@ -1,10 +1,17 @@
 import { NextRequest } from 'next/server';
 import { apiBadRequest, apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
+import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
+    // Unauthenticated session mutation — per-IP limit against token-stuffing.
+    const rl = await rateLimit(request);
+    if (!rl.success) {
+      return createRateLimitResponse(rl);
+    }
+
     const supabase = await createServerClient();
 
     // Safely parse JSON with error handling

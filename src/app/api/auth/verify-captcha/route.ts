@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { verifyCaptchaToken } from '@/lib/captcha';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiBadRequest, apiInternalError } from '@/lib/api/standardResponse';
+import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 
 /**
  * POST /api/auth/verify-captcha
@@ -11,6 +12,13 @@ import { apiSuccess, apiBadRequest, apiInternalError } from '@/lib/api/standardR
  */
 export async function POST(request: NextRequest) {
   try {
+    // Unauthenticated + triggers an outbound Turnstile verification per call —
+    // per-IP limit so it can't be used as a verification-spam relay.
+    const rl = await rateLimit(request);
+    if (!rl.success) {
+      return createRateLimitResponse(rl);
+    }
+
     let body: { token?: string };
     try {
       body = await request.json();

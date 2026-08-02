@@ -269,6 +269,7 @@ export const ROUTES = {
   WALLETS: '/wallets',
   CREATE: '/create',
   STUDY_BITCOIN: '/study-bitcoin',
+  BITCOIN_WALLET_GUIDE: '/bitcoin-wallet-guide',
   ONBOARDING: {
     // /onboarding is a redirect-only entry point (legacy bookmarks).
     // The live surface is INTELLIGENT — the standard multi-step wizard
@@ -379,11 +380,13 @@ export const ROUTES = {
     WISHLISTS: ENTITY_REGISTRY['wishlist'].basePath,
     TASKS: '/dashboard/tasks',
     TASKS_NEW: '/dashboard/tasks/new',
+    TASKS_VIEW: (id: string) => `/dashboard/tasks/${id}`,
     TASKS_ANALYTICS: '/dashboard/tasks/analytics',
     RESEARCH: ENTITY_REGISTRY['research'].basePath,
     BOOKINGS: '/dashboard/bookings',
+    BOOKINGS_VIEW: (id: string) => `/dashboard/bookings/${id}`,
     CAT: '/dashboard/cat',
-    CAT_PERMISSIONS: '/dashboard/cat',
+    CAT_PERMISSIONS: '/dashboard/cat/permissions',
     // Post-auth landing for new users — Cat is the primary interface.
     CAT_WELCOME: '/dashboard/cat?welcome=true',
     DOCUMENTS: ENTITY_REGISTRY['document'].basePath,
@@ -409,6 +412,8 @@ export const ROUTES = {
 
   // Timeline routes
   TIMELINE: '/timeline',
+  /** Owner's "get paid" screen — one tap to a scannable QR. */
+  RECEIVE: '/receive',
   // Personalized "Following" home feed (people/projects you follow)
   FEED: '/home',
   // Open-roles collaborator board (project_roles)
@@ -417,6 +422,8 @@ export const ROUTES = {
   // Messages routes
   MESSAGES: '/messages',
   MESSAGE_CONVERSATION: (conversationId: string) => `/messages/${conversationId}`,
+  // Same conversation via query param (keeps the split-pane list view mounted)
+  MESSAGES_WITH_CONVERSATION: (conversationId: string) => `/messages?id=${conversationId}`,
 
   // Settings routes
   SETTINGS: '/settings',

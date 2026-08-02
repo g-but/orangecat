@@ -97,7 +97,9 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       );
     }
 
-    const rawBody = await request.json();
+    // Malformed JSON becomes null → walletCreateSchema (the validation SSOT,
+    // applied inside createWallet) rejects it with a 400 instead of a 500.
+    const rawBody = await request.json().catch(() => null);
     const { response } = await createWallet(supabase, user, rawBody);
     return applyRateLimitHeaders(response, rateLimitResult);
   } catch (error) {

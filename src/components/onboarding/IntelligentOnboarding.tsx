@@ -25,6 +25,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { ProfileService } from '@/services/profile';
 import { logger } from '@/utils/logger';
+import { API_ROUTES } from '@/config/api-routes';
+import { unwrapApiResponse } from '@/lib/api/client-response';
 import { ROUTES } from '@/config/routes';
 import { FEATURES } from '@/config/features';
 import { ONBOARDING_METHOD } from '@/config/onboarding';
@@ -83,15 +85,15 @@ export default function IntelligentOnboarding() {
     setIsGenerating(true);
     persistProfile();
     try {
-      const res = await fetch('/api/cat/offers-from-text', {
+      const res = await fetch(API_ROUTES.CAT.OFFERS_FROM_TEXT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: description.trim() }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.error || `Request failed (${res.status})`);
-      }
+      const data = await unwrapApiResponse<{ offers?: ProposedOffer[] }>(
+        res,
+        `Request failed (${res.status})`
+      );
       const list: ProposedOffer[] = Array.isArray(data.offers) ? data.offers : [];
       setOffers(list);
       // Empty could mean "AI is down", not "you gave me too little" — find out.

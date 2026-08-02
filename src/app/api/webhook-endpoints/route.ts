@@ -22,8 +22,10 @@ import {
   apiSuccess,
   apiUnauthorized,
   apiForbidden,
+  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import {
   createWebhookEndpoint,
   listWebhookEndpoints,
@@ -74,6 +76,10 @@ export const POST = compose(
     const user = await requireSessionUser();
     if (!user) {
       return apiUnauthorized();
+    }
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
     }
     const body = ctx.body as {
       name: string;

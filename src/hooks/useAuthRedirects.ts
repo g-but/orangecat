@@ -26,15 +26,20 @@ const HYDRATION_TIMEOUT_MS = 4_000;
  * HYDRATION_TIMEOUT_MS, so consumers can stop gating on `!hydrated` forever.
  * Shared by useRequireAuth and useAuth so both hook families honor the ceiling.
  */
-export function useHydrationCeiling(hydrated: boolean, isLoading: boolean): boolean {
+export function useHydrationCeiling(_hydrated: boolean, _isLoading: boolean): boolean {
   const [hydrationTimedOut, setHydrationTimedOut] = useState(false);
+  // ONE absolute timer from mount — deliberately not keyed on auth state.
+  // The previous version cleared + restarted the timer whenever hydrated/
+  // isLoading changed, so a FLAPPING auth store (a wedged Supabase session
+  // whose token refresh 400s and retries, toggling isLoading) reset the
+  // ceiling forever and auth-gated pages pinned on their spinner — the
+  // exact failure the ceiling exists to end. Firing after auth resolved
+  // normally is harmless: consumers read real state first and the flag only
+  // widens the exit. Params kept (unused) so call sites stay stable.
   useEffect(() => {
-    if (hydrated && !isLoading) {
-      return undefined;
-    }
     const timer = setTimeout(() => setHydrationTimedOut(true), HYDRATION_TIMEOUT_MS);
     return () => clearTimeout(timer);
-  }, [hydrated, isLoading]);
+  }, []);
   return hydrationTimedOut;
 }
 

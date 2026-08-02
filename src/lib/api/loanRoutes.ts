@@ -14,9 +14,11 @@ import {
   apiForbidden,
   apiInternalError,
   apiNotFound,
+  apiRateLimited,
   apiValidationError,
   type ApiErrorResponse,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 
 type ErrorResponse = NextResponse<ApiErrorResponse>;
@@ -49,6 +51,18 @@ export function loanDomainFailureResponse(
       logger.error(`${logLabel} failed`, { message: failure.message }, 'LoansAPI');
       return apiInternalError(failure.message);
   }
+}
+
+/**
+ * Per-user write quota shared by every mutating `/api/loans` route. Returns the
+ * 429 response to send, or null when the caller is within quota.
+ */
+export async function loanWriteRateLimit(userId: string): Promise<ErrorResponse | null> {
+  const rl = await rateLimitWriteAsync(userId);
+  if (!rl.success) {
+    return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
+  }
+  return null;
 }
 
 /**

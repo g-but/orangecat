@@ -78,7 +78,7 @@ export function CurrencyInput({
   return (
     <div className="space-y-2">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-foreground">
+        <label htmlFor={id} className="block text-sm font-medium text-fg-primary">
           {label}
         </label>
       )}
@@ -103,7 +103,7 @@ export function CurrencyInput({
               value={inputCurrency}
               onChange={e => handleCurrencyChange(e.target.value as Currency)}
               disabled={disabled}
-              className="px-3 py-2 border border-l-0 border-border-strong rounded-r-md bg-muted text-sm font-medium text-foreground focus:ring-2 focus:ring-ring focus:border-ring cursor-pointer"
+              className="px-3 py-2 border border-l-0 border-border-strong rounded-r-md bg-muted text-sm font-medium text-fg-primary focus:ring-2 focus:ring-ring focus:border-ring cursor-pointer"
             >
               {ALL_CURRENCIES.map(curr => (
                 <option key={curr} value={curr}>
@@ -112,7 +112,7 @@ export function CurrencyInput({
               ))}
             </select>
           ) : (
-            <div className="px-3 py-2 border border-l-0 border-border-strong rounded-r-md bg-muted text-sm font-medium text-foreground">
+            <div className="px-3 py-2 border border-l-0 border-border-strong rounded-r-md bg-muted text-sm font-medium text-fg-primary">
               {inputCurrency}
             </div>
           )}
@@ -120,10 +120,10 @@ export function CurrencyInput({
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}
-      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {hint && !error && <p className="text-xs text-fg-secondary">{hint}</p>}
 
       {isGoal && !error && !hint && value && value > 0 && (
-        <div className="text-xs text-muted-foreground mt-1">
+        <div className="text-xs text-fg-secondary mt-1">
           <span className="flex items-center gap-1">
             <Info className="w-3 h-3" />
             <span>{getGoalExplanation(inputCurrency)}</span>
@@ -135,7 +135,7 @@ export function CurrencyInput({
         <div className="mt-3 p-3 rounded-lg bg-bitcoinOrange/5 border border-bitcoinOrange/20">
           <div className="flex items-center gap-2 mb-2">
             <ArrowLeftRight className="w-4 h-4 text-bitcoinOrange" />
-            <span className="text-xs font-semibold text-foreground">
+            <span className="text-xs font-semibold text-fg-primary">
               Equivalent in other currencies
             </span>
           </div>
@@ -143,7 +143,7 @@ export function CurrencyInput({
           <div className="grid grid-cols-2 gap-2 text-xs">
             {inputCurrency !== 'BTC' && (
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground flex items-center gap-1">
+                <span className="text-fg-secondary flex items-center gap-1">
                   <Bitcoin className="w-3 h-3" />
                   BTC
                 </span>
@@ -157,8 +157,8 @@ export function CurrencyInput({
               .slice(0, inputCurrency === 'BTC' ? 3 : 2)
               .map(([curr, amount]) => (
                 <div key={curr} className="flex justify-between items-center">
-                  <span className="text-muted-foreground">{curr}</span>
-                  <span className="font-mono font-medium text-foreground">
+                  <span className="text-fg-secondary">{curr}</span>
+                  <span className="font-mono font-medium text-fg-primary">
                     {formatCurrency(amount, curr as Currency, { showSymbol: false })}
                   </span>
                 </div>
@@ -167,7 +167,7 @@ export function CurrencyInput({
 
           <div className="mt-2 pt-2 border-t border-bitcoinOrange/20 flex items-start gap-1">
             <Info className="w-3 h-3 text-bitcoinOrange mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-fg-secondary">
               All transactions settle in Bitcoin. Amounts shown are estimates based on current
               exchange rates.
             </p>

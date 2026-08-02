@@ -27,6 +27,8 @@ interface UseMessagesFetcherReturn {
   isLoadingMore: boolean;
   error: 'forbidden' | 'not_found' | 'network' | 'unknown' | null;
   loadMore: () => Promise<void>;
+  /** Re-run the initial fetch — for inline retry after a failed load. */
+  retry: () => Promise<void>;
 }
 
 export function useMessagesFetcher({
@@ -154,6 +156,10 @@ export function useMessagesFetcher({
     await fetchMessages(pagination.nextCursor);
   }, [pagination, isLoadingMore, fetchMessages]);
 
+  const retry = useCallback(async () => {
+    await fetchMessages();
+  }, [fetchMessages]);
+
   useEffect(() => {
     if (conversationId && enabled) {
       fetchMessages();
@@ -170,5 +176,6 @@ export function useMessagesFetcher({
     isLoadingMore,
     error,
     loadMore,
+    retry,
   };
 }

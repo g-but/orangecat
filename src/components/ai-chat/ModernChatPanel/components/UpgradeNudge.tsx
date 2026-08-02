@@ -56,7 +56,7 @@ export function UpgradeNudge() {
         type="button"
         onClick={dismiss}
         aria-label="Dismiss upgrade suggestion"
-        className="flex-shrink-0 rounded p-0.5 text-fg-tertiary hover:bg-surface-raised hover:text-fg-primary"
+        className="flex-shrink-0 min-h-11 min-w-11 flex items-center justify-center rounded p-0.5 text-fg-tertiary hover:bg-surface-raised hover:text-fg-primary"
       >
         <X className="h-3.5 w-3.5" />
       </button>

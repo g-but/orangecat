@@ -187,7 +187,7 @@ export function StatPill({ label, value }: { label: string; value: string }) {
 export function Avatar({ src, fallback }: { src?: string | null; fallback: string }) {
   if (src) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
+      // eslint-disable-next-line @next/next/no-img-element -- Satori/ImageResponse OG renderer: next/image cannot render here, only plain elements
       <img
         src={src}
         alt=""

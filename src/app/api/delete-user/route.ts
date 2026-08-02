@@ -10,14 +10,26 @@
  * remain orphaned-but-inaccessible; the account itself can no longer sign in.
  */
 
-import { apiSuccess, apiInternalError, handleApiError } from '@/lib/api/standardResponse';
+import {
+  apiSuccess,
+  apiInternalError,
+  apiRateLimited,
+  handleApiError,
+} from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { logger } from '@/utils/logger';
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
+    }
+
     const admin = getAdminClient();
 
     const { error } = await admin.auth.admin.deleteUser(user.id);

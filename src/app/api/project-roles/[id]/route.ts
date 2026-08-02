@@ -3,7 +3,8 @@
  * Update a role's status (project owner only).
  */
 import { NextRequest } from 'next/server';
-import { apiSuccess, apiError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiError, apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { getAuthenticatedUserId } from '@/lib/api/authHelpers';
 import { isRoleStatus } from '@/config/project-roles';
 import {
@@ -17,6 +18,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const userId = await getAuthenticatedUserId();
   if (!userId) {
     return apiError('Unauthorized', 'UNAUTHORIZED', 401);
+  }
+  const rl = await rateLimitWriteAsync(userId);
+  if (!rl.success) {
+    return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
   }
   try {
     const { id } = await params;

@@ -34,7 +34,6 @@ export function useNotificationsRealtime({ user, enabled, onInsert, onUpdate, on
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const channel = (supabase as any)
       // Channel name includes userId so simultaneous mounts in different
       // components don't collide.

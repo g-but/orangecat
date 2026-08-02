@@ -5,7 +5,12 @@ import { logger } from '@/utils/logger';
 import { ROUTES } from '@/config/routes';
 import { API_ROUTES } from '@/config/api-routes';
 import type { Task } from '@/lib/schemas/tasks';
-import { applyTaskAiData, type TaskFormData } from '../../task-form-types';
+import {
+  applyTaskAiData,
+  validateTaskForm,
+  taskFormToPayload,
+  type TaskFormData,
+} from '../../task-form-types';
 
 export function useEditTaskForm(taskId: string, enabled: boolean) {
   const router = useRouter();
@@ -100,24 +105,7 @@ export function useEditTaskForm(taskId: string, enabled: boolean) {
     if (!formData) {
       return false;
     }
-    const newErrors: Record<string, string> = {};
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
-    } else if (formData.title.length > 200) {
-      newErrors.title = 'Title must be at most 200 characters';
-    }
-    if (formData.description && formData.description.length > 2000) {
-      newErrors.description = 'Description must be at most 2000 characters';
-    }
-    if (formData.instructions && formData.instructions.length > 5000) {
-      newErrors.instructions = 'Instructions must be at most 5000 characters';
-    }
-    if (
-      formData.estimated_minutes &&
-      (formData.estimated_minutes < 1 || formData.estimated_minutes > 480)
-    ) {
-      newErrors.estimated_minutes = 'Estimated time must be between 1 and 480 minutes';
-    }
+    const newErrors = validateTaskForm(formData);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -133,19 +121,7 @@ export function useEditTaskForm(taskId: string, enabled: boolean) {
       const response = await fetch(API_ROUTES.TASKS.BY_ID(taskId), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formData.title.trim(),
-          description: formData.description.trim() || null,
-          instructions: formData.instructions.trim() || null,
-          task_type: formData.task_type,
-          schedule_cron: formData.schedule_cron.trim() || null,
-          schedule_human: formData.schedule_human.trim() || null,
-          category: formData.category,
-          tags: formData.tags,
-          priority: formData.priority,
-          estimated_minutes: formData.estimated_minutes || null,
-          project_id: formData.project_id || null,
-        }),
+        body: JSON.stringify(taskFormToPayload(formData)),
       });
       const data = await response.json();
       if (!response.ok) {

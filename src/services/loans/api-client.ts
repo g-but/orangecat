@@ -167,7 +167,10 @@ export async function updateLoanViaApi(
       if (!current.success || !current.loan) {
         return current;
       }
-      payload = loanToApiPayload({ ...current.loan, ...patch });
+      // The schema-derived patch allows explicit nulls for optional text
+      // fields; loanToApiPayload normalizes them via `?? null`, so the
+      // widened merge is safe to treat as a Loan here.
+      payload = loanToApiPayload({ ...current.loan, ...patch } as Loan);
     }
 
     const res = await fetch(API_ROUTES.LOANS.BY_ID(loanId), {

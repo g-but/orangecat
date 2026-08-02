@@ -22,7 +22,6 @@ type WalletWithRelations = Wallet & {
   projects?: { user_id: string } | null;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyResponse = NextResponse<any>;
 
 interface FetchResult {

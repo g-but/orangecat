@@ -156,7 +156,6 @@ export async function sendMessage({
 
       if (data?.id) {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: fullMessage } = (await supabase
             .from(DATABASE_TABLES.MESSAGE_DETAILS as any)
             .select('*')

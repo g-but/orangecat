@@ -5,8 +5,8 @@
  * Provides progressive disclosure with smart defaults.
  *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
- * Last Modified Summary: Initial creation - generates navigation from entity registry
+ * Last Modified: 2026-08-02
+ * Last Modified Summary: Collapse four copy-pasted section builders into one helper (jscpd dedup)
  */
 
 import { ComponentType, SVGProps } from 'react';
@@ -76,6 +76,50 @@ const FUND_ENTITIES: EntityType[] = ['project', 'cause', 'research', 'wishlist']
 const COORDINATE_ENTITIES: EntityType[] = ['group', 'circle', 'event'];
 const FINANCE_ENTITIES: EntityType[] = ['wallet', 'asset', 'loan', 'investment'];
 
+/** Sort navigation items by their entity's createPriority within a section. */
+function byCreatePriority(a: NavigationItem, b: NavigationItem): number {
+  const aType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === a.href);
+  const bType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === b.href);
+  const aPriority = aType ? ENTITY_REGISTRY[aType].createPriority : 999;
+  const bPriority = bType ? ENTITY_REGISTRY[bType].createPriority : 999;
+  return aPriority - bPriority;
+}
+
+/**
+ * Build one navigation section from a list of entity types.
+ * Returns null when the list is empty so callers can skip the section.
+ */
+function buildEntitySection(
+  id: string,
+  title: string,
+  priority: number,
+  types: EntityType[]
+): NavSection | null {
+  if (types.length === 0) {
+    return null;
+  }
+  return {
+    id,
+    title,
+    priority,
+    defaultExpanded: false, // Collapsed - progressive disclosure
+    collapsible: true,
+    requiresAuth: true,
+    items: types
+      .map(type => {
+        const entity = ENTITY_REGISTRY[type];
+        return {
+          name: entity.namePlural,
+          href: entity.basePath,
+          icon: entity.icon as ComponentType<SVGProps<SVGSVGElement>>,
+          description: entity.description,
+          requiresAuth: true,
+        } as NavigationItem;
+      })
+      .sort(byCreatePriority),
+  };
+}
+
 /**
  * Generate navigation items from entity registry
  *
@@ -88,125 +132,21 @@ const FINANCE_ENTITIES: EntityType[] = ['wallet', 'asset', 'loan', 'investment']
  * Applies progressive disclosure with smart defaults.
  */
 export function generateEntityNavigation(): NavSection[] {
-  const sections: NavSection[] = [];
+  // Group 1 filters through ENTITY_TYPES to preserve registry ordering;
+  // the other groups use their declared ordering (pre-createPriority sort).
+  const candidates = [
+    buildEntitySection(
+      'create',
+      'Create',
+      2,
+      ENTITY_TYPES.filter(type => CREATE_ENTITIES.includes(type))
+    ),
+    buildEntitySection('fund', 'Fund', 3, FUND_ENTITIES),
+    buildEntitySection('coordinate', 'Coordinate', 4, COORDINATE_ENTITIES),
+    buildEntitySection('finance', 'Finance', 5, FINANCE_ENTITIES),
+  ];
 
-  // Group 1: Create (Products, Services, AI Assistants, Wishlists)
-  // Semantic: Things you create/offer to others
-  const createEntities = ENTITY_TYPES.filter(type => CREATE_ENTITIES.includes(type));
-  if (createEntities.length > 0) {
-    sections.push({
-      id: 'create',
-      title: 'Create',
-      priority: 2,
-      defaultExpanded: false,
-      collapsible: true,
-      requiresAuth: true,
-      items: createEntities
-        .map(type => {
-          const entity = ENTITY_REGISTRY[type];
-          return {
-            name: entity.namePlural,
-            href: entity.basePath,
-            icon: entity.icon as ComponentType<SVGProps<SVGSVGElement>>,
-            description: entity.description,
-            requiresAuth: true,
-          } as NavigationItem;
-        })
-        .sort((a, b) => {
-          // Sort by entity priority within section
-          const aType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === a.href);
-          const bType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === b.href);
-          const aPriority = aType ? ENTITY_REGISTRY[aType].createPriority : 999;
-          const bPriority = bType ? ENTITY_REGISTRY[bType].createPriority : 999;
-          return aPriority - bPriority;
-        }),
-    });
-  }
-
-  // Group 2: Fund (Projects, Causes, Research)
-  // Semantic: Things that need funding/support
-  if (FUND_ENTITIES.length > 0) {
-    sections.push({
-      id: 'fund',
-      title: 'Fund',
-      priority: 3,
-      defaultExpanded: false,
-      collapsible: true,
-      requiresAuth: true,
-      items: FUND_ENTITIES.map(type => {
-        const entity = ENTITY_REGISTRY[type];
-        return {
-          name: entity.namePlural,
-          href: entity.basePath,
-          icon: entity.icon as ComponentType<SVGProps<SVGSVGElement>>,
-          description: entity.description,
-          requiresAuth: true,
-        } as NavigationItem;
-      }).sort((a, b) => {
-        const aType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === a.href);
-        const bType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === b.href);
-        const aPriority = aType ? ENTITY_REGISTRY[aType].createPriority : 999;
-        const bPriority = bType ? ENTITY_REGISTRY[bType].createPriority : 999;
-        return aPriority - bPriority;
-      }),
-    });
-  }
-
-  // Group 3: Coordinate (Groups, Events)
-  if (COORDINATE_ENTITIES.length > 0) {
-    sections.push({
-      id: 'coordinate',
-      title: 'Coordinate',
-      priority: 4,
-      defaultExpanded: false, // Collapsed - progressive disclosure
-      collapsible: true,
-      requiresAuth: true,
-      items: COORDINATE_ENTITIES.map(type => {
-        const entity = ENTITY_REGISTRY[type];
-        return {
-          name: entity.namePlural,
-          href: entity.basePath,
-          icon: entity.icon as ComponentType<SVGProps<SVGSVGElement>>,
-          description: entity.description,
-          requiresAuth: true,
-        } as NavigationItem;
-      }).sort((a, b) => {
-        const aType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === a.href);
-        const bType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === b.href);
-        const aPriority = aType ? ENTITY_REGISTRY[aType].createPriority : 999;
-        const bPriority = bType ? ENTITY_REGISTRY[bType].createPriority : 999;
-        return aPriority - bPriority;
-      }),
-    });
-  }
-
-  // Group 4: Finance (Wallets, Assets, Loans, Investments)
-  if (FINANCE_ENTITIES.length > 0) {
-    sections.push({
-      id: 'finance',
-      title: 'Finance',
-      priority: 5,
-      defaultExpanded: false, // Collapsed - progressive disclosure
-      collapsible: true,
-      requiresAuth: true,
-      items: FINANCE_ENTITIES.map(type => {
-        const entity = ENTITY_REGISTRY[type];
-        return {
-          name: entity.namePlural,
-          href: entity.basePath,
-          icon: entity.icon as ComponentType<SVGProps<SVGSVGElement>>,
-          description: entity.description,
-          requiresAuth: true,
-        } as NavigationItem;
-      }).sort((a, b) => {
-        const aType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === a.href);
-        const bType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === b.href);
-        const aPriority = aType ? ENTITY_REGISTRY[aType].createPriority : 999;
-        const bPriority = bType ? ENTITY_REGISTRY[bType].createPriority : 999;
-        return aPriority - bPriority;
-      }),
-    });
-  }
+  const sections = candidates.filter((section): section is NavSection => section !== null);
 
   return sections.sort((a, b) => a.priority - b.priority);
 }

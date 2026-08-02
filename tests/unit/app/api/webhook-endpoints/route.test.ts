@@ -12,6 +12,15 @@
  * Created: 2026-06-04
  */
 
+// Mocked so importing the route doesn't pull the real Upstash client (ESM-only
+// dep jest can't parse). Within-quota by default; branch tests set overrides.
+jest.mock('@/lib/rate-limit', () => ({
+  rateLimitWriteAsync: jest
+    .fn()
+    .mockResolvedValue({ success: true, limit: 30, remaining: 29, resetTime: Date.now() + 60_000 }),
+  retryAfterSeconds: jest.fn(() => 1),
+}));
+
 jest.mock('@/lib/supabase/server', () => ({
   createServerClient: jest.fn(),
 }));

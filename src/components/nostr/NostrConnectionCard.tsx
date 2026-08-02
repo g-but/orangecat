@@ -69,7 +69,7 @@ export function NostrConnectionCard() {
             <div className="flex items-center justify-between p-3 rounded-lg bg-surface-raised/40 border border-subtle">
               <div className="flex items-center gap-3 min-w-0">
                 {profile?.picture ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                  // eslint-disable-next-line @next/next/no-img-element -- Nostr profile picture: relay-published URL on any host; next/image would throw for hosts outside images.remotePatterns
                   <img
                     src={profile.picture}
                     alt={profile.display_name || profile.name || 'Nostr profile picture'}
@@ -90,7 +90,7 @@ export function NostrConnectionCard() {
                     {shortenNpub(npub)}
                     <button
                       onClick={handleCopyNpub}
-                      className="p-0.5 hover:text-fg-primary transition-colors"
+                      className="p-0.5 min-h-11 min-w-11 inline-flex items-center justify-center hover:text-fg-primary transition-colors"
                       title="Copy npub"
                     >
                       {copied ? (

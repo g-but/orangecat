@@ -3,6 +3,7 @@
  * typed drafts/topics, or throw a friendly Error the composer can surface.
  */
 
+import { API_ROUTES } from '@/config/api-routes';
 import type {
   ArticleDraft,
   PostDraft,
@@ -36,18 +37,18 @@ export function fetchWritingTopics(opts: {
   count?: number;
   focus?: string;
 }): Promise<ProposedTopic[]> {
-  return postJson<{ topics: ProposedTopic[] }>('/api/ai/writing/topics', opts).then(d => d.topics);
+  return postJson<{ topics: ProposedTopic[] }>(API_ROUTES.AI.WRITING.TOPICS, opts).then(d => d.topics);
 }
 
 export function fetchArticleDraft(opts: { topic?: string; focus?: string }): Promise<ArticleDraft> {
-  return postJson<{ draft: ArticleDraft }>('/api/ai/writing/draft', {
+  return postJson<{ draft: ArticleDraft }>(API_ROUTES.AI.WRITING.DRAFT, {
     mode: 'article',
     ...opts,
   }).then(d => d.draft);
 }
 
 export function fetchPostDraft(opts: { topic?: string; focus?: string }): Promise<PostDraft> {
-  return postJson<{ draft: PostDraft }>('/api/ai/writing/draft', { mode: 'post', ...opts }).then(
+  return postJson<{ draft: PostDraft }>(API_ROUTES.AI.WRITING.DRAFT, { mode: 'post', ...opts }).then(
     d => d.draft
   );
 }
@@ -61,7 +62,7 @@ export function fetchReplyDraft(opts: {
   parentAuthor?: string;
   intent?: ReplyIntent;
 }): Promise<PostDraft> {
-  return postJson<{ draft: PostDraft }>('/api/ai/writing/draft', {
+  return postJson<{ draft: PostDraft }>(API_ROUTES.AI.WRITING.DRAFT, {
     mode: 'reply',
     ...opts,
   }).then(d => d.draft);
@@ -81,12 +82,12 @@ export function reviseArticleText(opts: {
   /** 'post' for short timeline posts (short + length-clamped); default 'article'. */
   kind?: 'post' | 'article';
 }): Promise<string> {
-  return postJson<{ result: string }>('/api/ai/writing/revise', opts).then(d => d.result);
+  return postJson<{ result: string }>(API_ROUTES.AI.WRITING.REVISE, opts).then(d => d.result);
 }
 
 /** Suggest sharper headline options grounded in the article body. */
 export function suggestArticleTitles(body: string): Promise<string[]> {
-  return postJson<{ suggestions: string[] }>('/api/ai/writing/revise', {
+  return postJson<{ suggestions: string[] }>(API_ROUTES.AI.WRITING.REVISE, {
     action: 'title',
     text: body,
   }).then(d => d.suggestions);
@@ -94,7 +95,7 @@ export function suggestArticleTitles(body: string): Promise<string[]> {
 
 /** Generate a one-line excerpt/hook from the article body. */
 export function generateArticleExcerpt(body: string, title?: string): Promise<string> {
-  return postJson<{ result: string }>('/api/ai/writing/revise', {
+  return postJson<{ result: string }>(API_ROUTES.AI.WRITING.REVISE, {
     action: 'excerpt',
     text: body,
     title,

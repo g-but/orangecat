@@ -12,7 +12,12 @@
  */
 import { NextRequest } from 'next/server';
 import { resolveRequestAuth, hasScope } from '@/lib/api/resolveRequestAuth';
-import { apiCreated, apiSuccess, apiError } from '@/lib/api/standardResponse';
+import { apiCreated, apiSuccess, apiError, apiRateLimited } from '@/lib/api/standardResponse';
+import {
+  rateLimitIntegrationKeyWrite,
+  rateLimitWriteAsync,
+  retryAfterSeconds,
+} from '@/lib/rate-limit';
 import { externalPublishSchema, isAllowedSourceUrl } from '@/config/external-publish';
 import { ingestExternalEvent } from '@/services/timeline/externalPublish';
 import { logger } from '@/utils/logger';
@@ -32,6 +37,16 @@ export async function POST(request: NextRequest) {
   // an orphaned row.
   if (!auth.userId) {
     return apiError('Authenticated identity has no user id', 'UNAUTHORIZED', 401);
+  }
+
+  // Same bucket split as entityPostHandler: per-key for integration keys so
+  // one buggy key can't starve the user's other keys; per-user otherwise.
+  const rl =
+    auth.source === 'integration_key' && auth.integrationKeyId
+      ? await rateLimitIntegrationKeyWrite(auth.integrationKeyId)
+      : await rateLimitWriteAsync(auth.userId);
+  if (!rl.success) {
+    return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
   }
 
   let body: unknown;

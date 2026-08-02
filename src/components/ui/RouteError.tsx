@@ -39,7 +39,7 @@ export function RouteError({ error, reset, context }: RouteErrorProps) {
     <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
       <AlertCircle className="h-12 w-12 text-destructive mb-4" />
       <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-      <p className="text-muted-foreground mb-4 max-w-md">
+      <p className="text-fg-secondary mb-4 max-w-md">
         There was a problem loading this page. Please try again.
       </p>
 
@@ -60,7 +60,7 @@ export function RouteError({ error, reset, context }: RouteErrorProps) {
         </button>
         <Link
           href={recoveryHref}
-          className="inline-flex items-center gap-2 rounded-md border border-border-strong bg-card px-4 py-2 text-foreground transition-colors hover:bg-muted"
+          className="inline-flex items-center gap-2 rounded-md border border-border-strong bg-surface-base px-4 py-2 text-fg-primary transition-colors hover:bg-muted"
         >
           <Home className="h-4 w-4" />
           {recoveryLabel}

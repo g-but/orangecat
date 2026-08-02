@@ -12,8 +12,8 @@ export function Alert({ children, variant = 'info', className }: AlertProps) {
   const variants = {
     success: 'border-success/25 bg-success/10 text-success',
     error: 'border-destructive/25 bg-destructive/10 text-destructive',
-    warning: 'border-warning/30 bg-warning/10 text-foreground',
-    info: 'border-border-subtle bg-muted/30 text-foreground',
+    warning: 'border-warning/30 bg-warning/10 text-fg-primary',
+    info: 'border-border-subtle bg-muted/30 text-fg-primary',
     destructive: 'border-destructive/25 bg-destructive/10 text-destructive',
   };
 

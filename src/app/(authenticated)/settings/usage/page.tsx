@@ -11,55 +11,18 @@
  * composes those two existing endpoints; no new backend.
  */
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Gauge, KeyRound, Sparkles, Wallet } from 'lucide-react';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { useCatQuota } from '@/components/ai-chat/ModernChatPanel/hooks/useCatQuota';
-import { API_ROUTES } from '@/config/api-routes';
 import { ROUTES } from '@/config/routes';
 import { CAT_PLANS, PLAN_ID_BY_QUOTA_TIER, type CatPlanId } from '@/config/cat-plans';
-import { logger } from '@/utils/logger';
-
-/** "3h 24m" / "45m" from seconds — for the daily-reset countdown. */
-function formatCountdown(totalSeconds: number): string {
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.max(1, Math.floor((totalSeconds % 3600) / 60));
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
-}
-
-function useCreditBalance(): { balanceBtc: number | null; isLoading: boolean } {
-  const [balanceBtc, setBalanceBtc] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(API_ROUTES.CAT.CREDITS, { credentials: 'include' });
-        if (!res.ok) {
-          return;
-        }
-        const body = (await res.json()) as { success: boolean; data?: { balanceBtc: number } };
-        if (!cancelled && body.success && body.data) {
-          setBalanceBtc(body.data.balanceBtc);
-        }
-      } catch (error) {
-        logger.warn('Usage page: credit balance fetch failed', { error }, 'Usage');
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  return { balanceBtc, isLoading };
-}
+import { formatCountdown, useCreditBalance } from './useCreditBalance';
 
 export default function UsageSettingsPage() {
   const { quota, isLoading: quotaLoading } = useCatQuota();
-  const { balanceBtc } = useCreditBalance();
+  const { balanceBtc, error: creditError, retry: retryCredits } = useCreditBalance();
+  const { formatAmountBtc } = useDisplayCurrency();
 
   /** Which CAT_PLANS card is the user's current reality — via the SSOT map. */
   const activePlanId: CatPlanId | null = quota ? PLAN_ID_BY_QUOTA_TIER[quota.tier] : null;
@@ -195,16 +158,31 @@ export default function UsageSettingsPage() {
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="font-heading text-base font-semibold text-fg-primary">Cat Credits</h2>
-            <p className="mt-2 text-sm text-fg-secondary">
-              {balanceBtc !== null ? (
-                <>
-                  Balance:{' '}
-                  <span className="font-medium text-fg-primary">{balanceBtc.toFixed(8)} BTC</span>
-                </>
-              ) : (
-                'Prepaid balance for managed frontier models, billed per message.'
-              )}
-            </p>
+            {creditError ? (
+              <div className="oc-error-surface mt-2">
+                <p className="text-sm">Couldn&apos;t load your credit balance.</p>
+                <button
+                  type="button"
+                  onClick={retryCredits}
+                  className="mt-2 text-sm font-medium underline underline-offset-2"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-fg-secondary">
+                {balanceBtc !== null ? (
+                  <>
+                    Balance:{' '}
+                    <span className="font-medium text-fg-primary">
+                      {formatAmountBtc(balanceBtc)}
+                    </span>
+                  </>
+                ) : (
+                  'Prepaid balance for managed frontier models, billed per message.'
+                )}
+              </p>
+            )}
             <p className="mt-1 text-sm text-fg-tertiary">
               Top up and see the per-message ledger in{' '}
               <Link href={ROUTES.SETTINGS_AI} className="underline underline-offset-2">
@@ -251,6 +229,14 @@ export default function UsageSettingsPage() {
                 <span className="w-full text-sm text-fg-tertiary sm:w-auto sm:flex-1">
                   {plan.bullets[0]} · {plan.priceCopy}
                 </span>
+                {!isActive && plan.status === 'available' && (
+                  <Link
+                    href={plan.cta.href}
+                    className="text-sm text-fg-secondary underline underline-offset-2 hover:text-fg-primary"
+                  >
+                    {plan.cta.label} →
+                  </Link>
+                )}
               </li>
             );
           })}

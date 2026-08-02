@@ -15,7 +15,6 @@ import { satsToBitcoin } from '@/services/currency';
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 const API_TIMEOUT_MS = BITCOIN_FETCH_TIMEOUT_MS;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = any;
 
 async function fetchWithTimeout(

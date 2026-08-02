@@ -92,7 +92,7 @@ function QuestionCard({ question, onDismiss }: { question: SmartQuestion; onDism
 
         <button
           onClick={onDismiss}
-          className="p-1 text-fg-tertiary hover:text-fg-primary rounded opacity-0 group-hover:opacity-100 transition-opacity min-h-11 min-w-11 flex items-center justify-center"
+          className="p-1 text-fg-tertiary hover:text-fg-primary rounded min-h-11 min-w-11 flex items-center justify-center"
           aria-label="Dismiss question"
         >
           <X className="w-4 h-4" />

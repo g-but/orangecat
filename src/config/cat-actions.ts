@@ -33,6 +33,7 @@ import {
   ShieldAlert,
   type LucideIcon,
 } from 'lucide-react';
+import { API_ROUTES } from '@/config/api-routes';
 import { getApiEndpoint } from '@/config/entity-registry';
 
 // ==================== ACTION TYPES ====================
@@ -695,7 +696,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Send a thank you to my supporter',
       'Reach out to that Bitcoin developer',
     ],
-    apiEndpoint: '/api/messages',
+    apiEndpoint: API_ROUTES.MESSAGES.BASE,
     enabled: true,
   },
 
@@ -1019,7 +1020,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Set up a group for collaborators',
       'Start a company on OrangeCat',
     ],
-    apiEndpoint: '/api/groups',
+    apiEndpoint: API_ROUTES.GROUPS.BASE,
     enabled: true,
   },
 
@@ -1255,7 +1256,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'Add a high priority task to follow up with investors',
       'Remind me to update my service listing by Friday',
     ],
-    apiEndpoint: '/api/tasks',
+    apiEndpoint: API_ROUTES.TASKS.BASE,
     enabled: true,
   },
 
@@ -1286,7 +1287,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       'I finished the invoice task, mark it complete',
       'Done with that — check it off',
     ],
-    apiEndpoint: '/api/tasks/:id/complete',
+    apiEndpoint: API_ROUTES.TASKS.COMPLETE(':id'),
     enabled: true,
   },
 

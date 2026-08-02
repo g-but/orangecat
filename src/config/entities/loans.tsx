@@ -11,6 +11,7 @@ import { Loan } from '@/types/loans';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { formatCurrency } from '@/services/currency';
 import { ROUTES } from '@/config/routes';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { getStatusBadge } from '@/config/entity-status';
@@ -34,7 +35,7 @@ export const loanEntityConfig: EntityConfig<Loan> = {
   makeCardProps: loan => {
     // Build remaining balance label
     const balanceLabel = loan.remaining_balance
-      ? `${loan.remaining_balance.toLocaleString()} ${loan.currency || PLATFORM_DEFAULT_CURRENCY} remaining`
+      ? `${formatCurrency(loan.remaining_balance, loan.currency || PLATFORM_DEFAULT_CURRENCY)} remaining`
       : undefined;
 
     // Build metadata parts

@@ -174,7 +174,7 @@ export default function TaskAnalyticsPage() {
                 <div
                   key={item.task.id}
                   className="flex items-center gap-4 p-3 bg-surface-raised/50 rounded-lg hover:bg-surface-raised transition-colors cursor-pointer"
-                  onClick={() => router.push(`/dashboard/tasks/${item.task.id}`)}
+                  onClick={() => router.push(ROUTES.DASHBOARD.TASKS_VIEW(item.task.id))}
                 >
                   <FairnessIndicator level={item.fairnessLevel} />
                   <div className="flex-1 min-w-0">

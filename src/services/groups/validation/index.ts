@@ -10,15 +10,18 @@
  */
 
 import { z } from 'zod';
-import { GROUP_LABELS } from '@/config/group-labels';
-import { GOVERNANCE_PRESETS } from '@/config/governance-presets';
+import { GROUP_LABELS, type GroupLabel } from '@/config/group-labels';
+import { GOVERNANCE_PRESETS, type GovernancePreset } from '@/config/governance-presets';
 
 // Valid label values - auto-derived from config (SSOT)
 // Adding a new label to GROUP_LABELS automatically includes it here
-const validLabelsTuple = Object.keys(GROUP_LABELS) as [string, ...string[]]; // For zod.enum
+const validLabelsTuple = Object.keys(GROUP_LABELS) as [GroupLabel, ...GroupLabel[]]; // For zod.enum
 
 // Valid governance presets - auto-derived from config (SSOT)
-const validGovernancePresetsTuple = Object.keys(GOVERNANCE_PRESETS) as [string, ...string[]]; // For zod.enum
+const validGovernancePresetsTuple = Object.keys(GOVERNANCE_PRESETS) as [
+  GovernancePreset,
+  ...GovernancePreset[],
+]; // For zod.enum
 
 // Valid visibility values from config
 const validVisibilities = ['public', 'members_only', 'private'] as const;
@@ -61,3 +64,9 @@ export const updateGroupSchema = z.object({
 });
 
 export type CreateGroupSchemaType = z.infer<typeof createGroupSchema>;
+
+/**
+ * Input for creating a new group — derived from the Zod schema (SSOT).
+ * Re-exported from @/types/group for consumers of the types module.
+ */
+export type CreateGroupInput = CreateGroupSchemaType;

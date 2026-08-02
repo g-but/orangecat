@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { apiSuccess } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -17,7 +18,14 @@ export async function POST(request: Request) {
       data: { user },
     } = await auth.auth.getUser();
     if (!user) {
-      return NextResponse.json({ success: true });
+      return apiSuccess({ ok: true });
+    }
+
+    // Over-quota callers get the same always-success contract — just skip the
+    // write. Logging must never disrupt search, but writes stay bounded.
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      return apiSuccess({ ok: true });
     }
 
     const body = (await request.json().catch(() => ({}))) as {
@@ -29,7 +37,7 @@ export async function POST(request: Request) {
       .toLowerCase()
       .slice(0, 120);
     if (query.length < 2) {
-      return NextResponse.json({ success: true });
+      return apiSuccess({ ok: true });
     }
     const resultCount =
       typeof body.resultCount === 'number' && Number.isFinite(body.resultCount)
@@ -38,13 +46,12 @@ export async function POST(request: Request) {
 
     // search_queries isn't in the generated DB types yet; the admin client is the
     // only writer (RLS-on, no policies), so a loose cast here is intentional.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = createAdminClient() as any;
     await db.from(DATABASE_TABLES.SEARCH_QUERIES).insert({ query, result_count: resultCount });
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ ok: true });
   } catch (err) {
     logger.warn('search log failed', { err: String(err) }, 'Search');
-    return NextResponse.json({ success: true });
+    return apiSuccess({ ok: true });
   }
 }

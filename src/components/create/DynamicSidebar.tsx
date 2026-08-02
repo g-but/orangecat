@@ -14,10 +14,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, ArrowLeftRight, TrendingUp } from 'lucide-react';
-import Card from '@/components/ui/Card';
+import { ArrowLeftRight, TrendingUp } from 'lucide-react';
+import {
+  GuidanceDefaultCard,
+  GuidanceFallbackCard,
+  GuidanceFieldCard,
+} from '@/components/create/guidance-shared';
 import type { FieldGuidanceContent, DefaultContent } from '@/lib/project-guidance';
-import { currencyConverter } from '@/services/currency';
+import { currencyConverter, formatCurrency } from '@/services/currency';
 import type { ExchangeRates } from '@/services/currency/types';
 
 export type FieldType = string | null;
@@ -85,7 +89,7 @@ function CurrencyBreakdown({ amount, currency }: { amount: number; currency: str
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
           <span className="text-fg-secondary">Bitcoin (BTC)</span>
-          <span className="font-mono font-semibold">₿ {btc.toFixed(8)}</span>
+          <span className="font-mono font-semibold">{formatCurrency(btc, 'BTC')}</span>
         </div>
         <div className="border-t border-subtle pt-2 space-y-1 text-xs">
           <div className="flex justify-between text-fg-secondary">
@@ -128,21 +132,7 @@ export function DynamicSidebar<T extends string = string>({
   if (!activeField) {
     return (
       <div className={`sticky top-4 ${className}`}>
-        <div className="p-4 rounded-lg border border-subtle bg-surface-raised/40">
-          <h2 className="font-semibold text-fg-primary mb-2">{defaultContent.title}</h2>
-          <p className="text-sm text-fg-primary mb-3">{defaultContent.description}</p>
-          <ul className="text-sm text-fg-primary space-y-2">
-            {defaultContent.features.map((feature, index) => (
-              <li key={index} className="flex items-start gap-2">
-                <span className="mt-0.5 flex-shrink-0">{feature.icon}</span>
-                <span>{feature.text}</span>
-              </li>
-            ))}
-          </ul>
-          {defaultContent.hint && (
-            <p className="text-xs text-fg-secondary mt-3">{defaultContent.hint}</p>
-          )}
-        </div>
+        <GuidanceDefaultCard content={defaultContent} />
       </div>
     );
   }
@@ -154,70 +144,20 @@ export function DynamicSidebar<T extends string = string>({
     // Fallback if field not found
     return (
       <div className={`sticky top-4 ${className}`}>
-        <Card className="p-4">
-          <p className="text-sm text-fg-secondary">No guidance available for this field.</p>
-        </Card>
+        <GuidanceFallbackCard />
       </div>
     );
   }
 
   return (
     <div className={`sticky top-4 ${className}`}>
-      <Card className="p-4">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-3 pb-3 border-b border-subtle">
-          <div className="w-10 h-10 rounded-lg bg-surface-raised flex items-center justify-center flex-shrink-0">
-            {content.icon}
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-fg-primary">{content.title}</h3>
-            <p className="text-xs text-fg-secondary">Guidance</p>
-          </div>
-        </div>
-
-        {/* Description */}
-        <p className="text-sm text-fg-primary mb-3">{content.description}</p>
-
-        {/* Tips */}
-        <div>
-          <h4 className="text-xs font-semibold text-fg-primary uppercase tracking-wide mb-2">
-            Best Practices
-          </h4>
-          <ul className="space-y-1.5">
-            {content.tips.map((tip, index) => (
-              <li key={index} className="flex items-start gap-2 text-xs text-fg-secondary">
-                <CheckCircle2 className="w-4 h-4 text-status-positive mt-0.5 flex-shrink-0" />
-                <span>{tip}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Examples */}
-        {content.examples && content.examples.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-subtle">
-            <h4 className="text-xs font-semibold text-fg-primary uppercase tracking-wide mb-2">
-              Examples
-            </h4>
-            <div className="space-y-1.5">
-              {content.examples.map((example, index) => (
-                <div
-                  key={index}
-                  className="text-xs text-fg-secondary bg-surface-raised rounded px-2 py-1.5 border border-default"
-                >
-                  {example}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
+      <GuidanceFieldCard content={content}>
         {/* Currency Converter (only for project goal/currency fields with amount) */}
         {(activeField === 'goalAmount' || activeField === 'currency') &&
           goalAmount &&
           goalAmount > 0 &&
           goalCurrency && <CurrencyBreakdown amount={goalAmount} currency={goalCurrency} />}
-      </Card>
+      </GuidanceFieldCard>
     </div>
   );
 }

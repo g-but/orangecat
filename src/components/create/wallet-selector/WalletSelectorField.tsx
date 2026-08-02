@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Wallet as WalletIcon, PenLine, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/Input';
-import type { Wallet } from '@/types/wallet';
+import { detectWalletType, type Wallet } from '@/types/wallet';
 import { WalletCard } from './WalletCard';
 import { API_ROUTES } from '@/config/api-routes';
 
@@ -96,6 +96,42 @@ export function WalletSelectorField({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once after wallets load
   }, [wallets]);
 
+  // Reuse warning: attaching a wallet that already collects for other pages
+  // makes those pages publicly linkable on-chain. Warn at the moment of
+  // attachment — including the silent auto-preselect above — so reuse is a
+  // choice, not an accident. Best-effort: a failed lookup shows no warning.
+  const [reuseInfo, setReuseInfo] = useState<{ count: number; isXpubWallet: boolean } | null>(
+    null
+  );
+  useEffect(() => {
+    if (!selectedWalletId) {
+      setReuseInfo(null);
+      return;
+    }
+    const wallet = wallets.find(w => w.id === selectedWalletId);
+    const isXpubWallet = wallet?.address_or_xpub
+      ? detectWalletType(wallet.address_or_xpub) === 'xpub'
+      : false;
+    let cancelled = false;
+    fetch(`${API_ROUTES.ENTITY_WALLETS}?wallet_id=${selectedWalletId}`)
+      .then(res => (res.ok ? res.json() : null))
+      .then(result => {
+        if (cancelled || !result) {return;}
+        const rows: Array<{ entity_id: string }> = Array.isArray(result.data) ? result.data : [];
+        // In edit mode the entity's own existing link must not count as reuse.
+        const currentEntityId = formData.id as string | undefined;
+        const count = rows.filter(r => r.entity_id !== currentEntityId).length;
+        setReuseInfo({ count, isXpubWallet });
+      })
+      .catch(() => {
+        if (!cancelled) {setReuseInfo(null);}
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- formData.id is stable per form
+  }, [selectedWalletId, wallets]);
+
   const handleSelectWallet = (wallet: Wallet) => {
     setSelectedWalletId(wallet.id);
     onFieldChange('bitcoin_address', wallet.address_or_xpub);
@@ -165,17 +201,35 @@ export function WalletSelectorField({
 
       {/* Select mode */}
       {mode === 'select' && wallets.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {wallets.map(wallet => (
-            <WalletCard
-              key={wallet.id}
-              wallet={wallet}
-              selected={selectedWalletId === wallet.id}
-              onSelect={() => handleSelectWallet(wallet)}
-              disabled={disabled}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {wallets.map(wallet => (
+              <WalletCard
+                key={wallet.id}
+                wallet={wallet}
+                selected={selectedWalletId === wallet.id}
+                onSelect={() => handleSelectWallet(wallet)}
+                disabled={disabled}
+              />
+            ))}
+          </div>
+          {reuseInfo && reuseInfo.count > 0 && !reuseInfo.isXpubWallet && (
+            <p className="rounded-lg border border-status-warning/40 bg-status-warning-subtle px-3 py-2 text-xs text-fg-secondary">
+              This wallet already receives funds for {reuseInfo.count} other{' '}
+              {reuseInfo.count === 1 ? 'page' : 'pages'}. On-chain payments to the same address
+              are publicly linkable — anyone can connect these pages on the blockchain. For
+              separate identities, pick a different wallet, or use an xpub wallet to get a fresh
+              address per payment.
+            </p>
+          )}
+          {reuseInfo && reuseInfo.count > 0 && reuseInfo.isXpubWallet && (
+            <p className="text-xs text-fg-secondary">
+              This wallet collects for {reuseInfo.count} other{' '}
+              {reuseInfo.count === 1 ? 'page' : 'pages'}, but it derives a fresh address per
+              payment — payments aren&apos;t linkable on-chain.
+            </p>
+          )}
+        </>
       )}
 
       {/* Manual mode */}

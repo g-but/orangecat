@@ -1,9 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { LoanOffer } from '@/types/loans';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/Button';
+import EmptyState from '@/components/ui/EmptyState';
+import { ROUTES } from '@/config/routes';
 import { Target, TrendingUp, Edit, MessageSquare } from 'lucide-react';
 import { STATUS } from '@/config/database-constants';
 import { formatRelativeTime } from '@/utils/dates';
@@ -18,11 +21,17 @@ interface LoanOffersListProps {
 export function LoanOffersList({ offers, onOfferUpdated: _onOfferUpdated }: LoanOffersListProps) {
   if (offers.length === 0) {
     return (
-      <div className="text-center py-8">
-        <Target className="h-12 w-12 text-fg-secondary mx-auto mb-4" />
-        <h3 className="text-lg font-semibold">No offers yet</h3>
-        <p className="text-fg-secondary">Your offers will appear here</p>
-      </div>
+      <EmptyState
+        icon={Target}
+        title="No offers yet"
+        description="Offers you make on community loans will appear here."
+        action={
+          <Link href={ROUTES.DISCOVER_TYPE('loans')}>
+            <Button variant="outline">Browse loans</Button>
+          </Link>
+        }
+        className="py-8"
+      />
     );
   }
 

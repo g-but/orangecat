@@ -16,6 +16,7 @@ import { Asset } from '@/types/asset';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { formatCurrency } from '@/services/currency';
 import { ROUTES } from '@/config/routes';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { GRADIENTS } from '@/config/gradients';
@@ -39,7 +40,7 @@ export const assetEntityConfig: EntityConfig<Asset> = {
   makeCardProps: asset => {
     // Build value label
     const valueLabel = asset.estimated_value
-      ? `${asset.estimated_value.toLocaleString()} ${asset.currency || PLATFORM_DEFAULT_CURRENCY}`
+      ? formatCurrency(asset.estimated_value, asset.currency || PLATFORM_DEFAULT_CURRENCY)
       : undefined;
 
     // Format asset type for display
