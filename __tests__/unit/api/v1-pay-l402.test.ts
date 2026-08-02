@@ -181,6 +181,12 @@ describe('GET /api/v1/pay/{type}/{id}', () => {
     expect(body.data.verified_by).toBe('preimage');
     expect(body.data.status).toBe('paid');
     expect(mockCreateChallenge).not.toHaveBeenCalled();
+    // The route must hand the URL's entity to the verifier — that's what binds
+    // the receipt to the resource being paid for.
+    expect(mockVerify).toHaveBeenCalledWith(expect.anything(), {
+      entityType: 'product',
+      entityId: ENTITY_ID,
+    });
   });
 
   it('answers 402 again (no new intent) when the invoice is still unpaid', async () => {

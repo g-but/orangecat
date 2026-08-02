@@ -31,8 +31,9 @@ import {
   initiatePublicSupport,
   checkPublicPaymentStatus,
   hashPublicStatusToken,
+  settleVerifiedPayment,
 } from './paymentFlowService';
-import type { InitiatePublicSupportInput } from './types';
+import type { InitiatePublicSupportInput, PaymentIntent } from './types';
 
 export {
   parseL402Authorization,
@@ -103,34 +104,54 @@ export interface L402VerifyResult {
  * notices settlement); settled status is the fallback for hashless rails.
  * Throws 'Payment not found' when the token doesn't match — same opacity as
  * the public status endpoint.
+ *
+ * The receipt is bound to ONE resource: the intent's own entity must match the
+ * entity in the request URL. Without that check, one cheap payment mints valid
+ * receipts for every resource on the platform. A mismatch throws the same
+ * opaque error as a bad token, so probing can't confirm the token is valid
+ * elsewhere.
  */
-export async function verifyL402Payment(creds: L402Credentials): Promise<L402VerifyResult> {
+export async function verifyL402Payment(
+  creds: L402Credentials,
+  expected: { entityType: string; entityId: string }
+): Promise<L402VerifyResult> {
   const admin = getAdminClient() as unknown as SupabaseClient;
-  const { data: intent } = await admin
+  const { data } = await admin
     .from(DATABASE_TABLES.PAYMENT_INTENTS)
-    .select('id, payment_hash, status, paid_at')
+    .select('*')
     .eq('id', creds.paymentIntentId)
     .eq('public_status_token_hash', hashPublicStatusToken(creds.statusToken))
     .maybeSingle();
-  if (!intent) {
+  if (!data) {
+    throw new Error('Payment not found');
+  }
+  const intent = data as PaymentIntent;
+  if (intent.entity_type !== expected.entityType || intent.entity_id !== expected.entityId) {
     throw new Error('Payment not found');
   }
 
   if (intent.payment_hash && preimageMatchesHash(creds.preimage, intent.payment_hash)) {
+    // A valid preimage is cryptographic proof the invoice settled — so settle
+    // the ledger NOW (order → paid, inventory, notifications, webhooks) instead
+    // of returning a paid receipt over a row that still says invoice_ready.
+    // Idempotent: the paid transition itself is the lock, so a second retry or
+    // a concurrent poller is a safe no-op.
+    await settleVerifiedPayment(intent);
     return {
       ok: true,
       verified_by: 'preimage',
-      status: intent.status,
-      paid_at: intent.paid_at ?? null,
+      status: STATUS.PAYMENT_INTENTS.PAID,
+      paid_at: intent.paid_at ?? new Date().toISOString(),
     };
   }
 
   // No (or wrong) preimage proof — fall back to live settlement status, which
   // also runs the rail checks (LUD-21 / NWC / chain) and updates the row.
+  // Only PAID is settlement: BUYER_CONFIRMED is the payer's own unverified
+  // claim (reachable with the same bearer token this endpoint hands out) and
+  // must never mint a receipt.
   const refreshed = await checkPublicPaymentStatus(creds.paymentIntentId, creds.statusToken);
-  const settled =
-    refreshed.status === STATUS.PAYMENT_INTENTS.PAID ||
-    refreshed.status === STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED;
+  const settled = refreshed.status === STATUS.PAYMENT_INTENTS.PAID;
   return {
     ok: settled,
     verified_by: settled ? 'settlement' : undefined,

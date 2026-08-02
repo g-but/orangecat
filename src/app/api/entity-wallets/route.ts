@@ -6,7 +6,7 @@ import {
   apiBadRequest,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { DATABASE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, WALLET_CLIENT_COLUMNS } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { entityWalletLinkSchema } from '@/lib/validation/finance';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
@@ -57,7 +57,12 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
   // Get wallets linked to a specific entity, with joined wallet data
   const { data, error } = await supabase
     .from(DATABASE_TABLES.ENTITY_WALLETS)
-    .select(`*, wallet:${DATABASE_TABLES.WALLETS}(*)`)
+    // wallets(*) breaks under the column-grant lockdown (20260802120000): the
+    // authenticated role holds only WALLET_CLIENT_COLUMNS, and a star-select
+    // against a column-subset grant is 42501 — which made this endpoint error,
+    // the edit form lose the existing link, and saves create duplicate
+    // is_primary rows. Embed exactly the granted columns.
+    .select(`*, wallet:${DATABASE_TABLES.WALLETS}(${WALLET_CLIENT_COLUMNS})`)
     .eq('entity_type', entityType)
     .eq('entity_id', entityId);
 

@@ -46,7 +46,10 @@ export async function GET(
   const creds = parseL402Authorization(request.headers.get('authorization'));
   if (creds) {
     try {
-      const result = await verifyL402Payment(creds);
+      const result = await verifyL402Payment(creds, {
+        entityType: entity_type,
+        entityId: entity_id,
+      });
       if (result.ok) {
         return apiSuccess(
           {

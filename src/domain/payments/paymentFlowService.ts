@@ -824,6 +824,16 @@ async function claimPaidTransition(paymentIntentId: string): Promise<boolean> {
 }
 
 /**
+ * Settle a payment verified OUTSIDE the polling loop — e.g. an L402 preimage
+ * proof. Callers must hold cryptographic (or rail-confirmed) evidence of
+ * settlement; this is NOT a way to mark a payment paid on a caller's say-so.
+ * Idempotent via {@link claimPaidTransition}.
+ */
+export async function settleVerifiedPayment(paymentIntent: PaymentIntent): Promise<void> {
+  await handlePaymentConfirmed(paymentIntent);
+}
+
+/**
  * Handle side-effects when a payment is confirmed as paid.
  *
  * Runs at most once per payment intent — see {@link claimPaidTransition}.
