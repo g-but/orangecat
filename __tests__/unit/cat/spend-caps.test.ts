@@ -222,7 +222,7 @@ describe('CatActionExecutor spend-cap enforcement', () => {
     mockSendPaymentHandler.mockResolvedValue({ success: true, data: { status: 'paid' } });
   });
 
-  it('denies an over-cap payment before creating a pending action or log row', async () => {
+  it('denies an over-cap payment before creating a pending action, leaving a denied audit row', async () => {
     mockPermissionService.checkSpendCaps.mockResolvedValue({
       allowed: false,
       reason: 'Amount 0.5 BTC exceeds your per-action cap of 0.001 BTC.',
@@ -238,7 +238,14 @@ describe('CatActionExecutor spend-cap enforcement', () => {
     expect(result.status).toBe('denied');
     expect(result.error).toContain('per-action cap');
     expect(supabase._insertsByTable[DATABASE_TABLES.CAT_PENDING_ACTIONS]).toBeUndefined();
-    expect(supabase._insertsByTable[DATABASE_TABLES.CAT_ACTION_LOG]).toBeUndefined();
+    // Denials ARE audit rows now (loss side of the track record): one terminal
+    // 'denied' insert with the reason, instead of no trace at all.
+    const deniedRows = supabase._insertsByTable[DATABASE_TABLES.CAT_ACTION_LOG] as
+      | { status: string; error_message: string | null }[]
+      | undefined;
+    expect(deniedRows).toHaveLength(1);
+    expect(deniedRows?.[0]?.status).toBe('denied');
+    expect(deniedRows?.[0]?.error_message).toContain('per-action cap');
     expect(mockSendPaymentHandler).not.toHaveBeenCalled();
   });
 
@@ -264,12 +271,12 @@ describe('CatActionExecutor spend-cap enforcement', () => {
       0.005,
       { excludeLogId: 'log-1' }
     );
-    // Audit trail: the log row is marked failed with the denial reason
+    // Audit trail: the log row is marked denied with the reason
     const logUpdates = supabase._updatesByTable[DATABASE_TABLES.CAT_ACTION_LOG] as {
       status: string;
       error_message: string | null;
     }[];
-    expect(logUpdates?.at(-1)?.status).toBe('failed');
+    expect(logUpdates?.at(-1)?.status).toBe('denied');
     expect(logUpdates?.at(-1)?.error_message).toBe('daily budget exceeded');
   });
 

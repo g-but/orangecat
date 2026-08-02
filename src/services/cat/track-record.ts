@@ -37,6 +37,17 @@ export interface TrackRecordEntry {
   payments: number;
 }
 
+/** A concrete thing that went wrong — the loss side of the feedback loop. */
+export interface TrackRecordSetback {
+  actionId: string;
+  /** failed = handler errored · denied = permission/spend-cap refusal ·
+   *  expired/rejected = a confirmation the user never gave / turned down. */
+  kind: 'failed' | 'denied' | 'expired' | 'rejected';
+  /** Recorded reason, when one exists. */
+  reason: string | null;
+  at: string;
+}
+
 export interface CatTrackRecord {
   /** Completed create_* actions found in the window. */
   proposed: number;
@@ -47,6 +58,16 @@ export interface CatTrackRecord {
   totalFundedBtc: number;
   /** Most recent first; capped at MAX_ENTRIES. */
   entries: TrackRecordEntry[];
+  /** Failed + denied actions and expired/rejected confirmations in the window.
+   *  Without these the record is survivorship-biased: an agent that only
+   *  remembers wins re-proposes its losses forever. */
+  setbacks: {
+    failed: number;
+    denied: number;
+    unconfirmed: number;
+    /** Most recent first; capped at MAX_SETBACKS. */
+    recent: TrackRecordSetback[];
+  };
   windowDays: number;
 }
 
@@ -60,6 +81,14 @@ const MAX_ENTRIES = 12;
 const SETTLED_INTENT_STATUSES = ['paid', 'buyer_confirmed'];
 /** Entity status that counts as published. */
 const PUBLISHED_STATUS = 'active';
+/** Cap the setback list injected into context / returned to the UI. */
+const MAX_SETBACKS = 6;
+/** Log statuses that count as setbacks ('denied' exists from migration
+ *  20260802140000; on an un-migrated DB the .in() filter simply errors and the
+ *  whole setback block degrades to empty — the funnel is unaffected). */
+const SETBACK_LOG_STATUSES = ['failed', 'denied'];
+/** Pending-confirmation outcomes where the human said no (or nothing). */
+const UNCONFIRMED_STATUSES = ['expired', 'rejected'];
 
 /**
  * SSOT mapping: the Cat's entity-creating action ids are `create_<type>` for
@@ -105,6 +134,12 @@ export async function getCatTrackRecord(
     return null;
   }
 
+  // Loss side — failed/denied actions and unconfirmed proposals. Fetched
+  // before the empty-proposals early return: a Cat whose every action was
+  // denied has an EMPTY funnel and a full setback list, and that record is
+  // exactly the one it most needs to see.
+  const setbacks = await getSetbacks(supabase, userId, since);
+
   // Proposal side: completed create_* actions whose result carries the entity id.
   const proposals: Array<{ entityType: EntityType; entityId: string; createdAt: string }> = [];
   for (const row of (logRows || []) as LogRow[]) {
@@ -122,6 +157,7 @@ export async function getCatTrackRecord(
       funded: 0,
       totalFundedBtc: 0,
       entries: [],
+      setbacks,
       windowDays: WINDOW_DAYS,
     };
   }
@@ -200,6 +236,70 @@ export async function getCatTrackRecord(
     funded: entries.filter(e => e.fundedBtc > 0).length,
     totalFundedBtc: entries.reduce((sum, e) => sum + e.fundedBtc, 0),
     entries,
+    setbacks,
     windowDays: WINDOW_DAYS,
+  };
+}
+
+/**
+ * Derive the loss side: failed + denied log rows and expired/rejected pending
+ * confirmations. Both sources degrade to zero on any error (e.g. a DB that
+ * predates the 'denied' enum value) — the funnel never depends on them.
+ */
+async function getSetbacks(
+  supabase: AnySupabaseClient,
+  userId: string,
+  since: string
+): Promise<CatTrackRecord['setbacks']> {
+  const [logRes, pendingRes] = await Promise.all([
+    supabase
+      .from(DATABASE_TABLES.CAT_ACTION_LOG)
+      .select('action_id, status, error_message, created_at')
+      .eq('user_id', userId)
+      .in('status', SETBACK_LOG_STATUSES)
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(50),
+    supabase
+      .from(DATABASE_TABLES.CAT_PENDING_ACTIONS)
+      .select('action_id, status, rejection_reason, created_at')
+      .eq('user_id', userId)
+      .in('status', UNCONFIRMED_STATUSES)
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(50),
+  ]);
+
+  if (logRes.error) {
+    logger.warn('Setback log lookup failed', { error: logRes.error.message }, 'CatTrackRecord');
+  }
+  if (pendingRes.error) {
+    logger.warn(
+      'Setback pending lookup failed',
+      { error: pendingRes.error.message },
+      'CatTrackRecord'
+    );
+  }
+
+  const fromLog: TrackRecordSetback[] = (logRes.data || []).map(row => ({
+    actionId: row.action_id,
+    kind: row.status === 'denied' ? 'denied' : 'failed',
+    reason: row.error_message ?? null,
+    at: row.created_at,
+  }));
+  const fromPending: TrackRecordSetback[] = (pendingRes.data || []).map(row => ({
+    actionId: row.action_id,
+    kind: row.status === 'rejected' ? 'rejected' : 'expired',
+    reason: row.rejection_reason ?? null,
+    at: row.created_at,
+  }));
+
+  return {
+    failed: fromLog.filter(s => s.kind === 'failed').length,
+    denied: fromLog.filter(s => s.kind === 'denied').length,
+    unconfirmed: fromPending.length,
+    recent: [...fromLog, ...fromPending]
+      .sort((a, b) => b.at.localeCompare(a.at))
+      .slice(0, MAX_SETBACKS),
   };
 }

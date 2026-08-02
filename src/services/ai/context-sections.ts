@@ -678,12 +678,15 @@ export function renderActivitySummary(stats: FullUserContext['stats']): string |
 /**
  * Outcome feedback loop — what actually happened to what Cat created with this
  * user (published? funded?), derived from real platform state (see
- * cat/track-record.ts). Renders only when there's at least one proposal in the
- * window: cold-start users get the interview flow instead, and snapshot
- * contexts (field undefined) stay byte-identical.
+ * cat/track-record.ts). Renders when there's at least one proposal OR one
+ * setback in the window — an all-denials record is precisely the one the Cat
+ * most needs to see. Cold-start users (nothing either way) get the interview
+ * flow instead, and snapshot contexts (field undefined) stay byte-identical.
  */
 export function renderTrackRecord(tr: FullUserContext['trackRecord']): string | null {
-  if (!tr || tr.proposed === 0) {
+  const setbacks = tr?.setbacks;
+  const setbackCount = setbacks ? setbacks.failed + setbacks.denied + setbacks.unconfirmed : 0;
+  if (!tr || (tr.proposed === 0 && setbackCount === 0)) {
     return null;
   }
 
@@ -703,8 +706,17 @@ export function renderTrackRecord(tr: FullUserContext['trackRecord']): string | 
     lines.push(`- ${e.entityType} "${e.title}" — ${outcome}`);
   }
 
+  if (setbacks && setbackCount > 0) {
+    lines.push(
+      `Setbacks: ${setbacks.failed} failed · ${setbacks.denied} denied · ${setbacks.unconfirmed} unconfirmed`
+    );
+    for (const s of setbacks.recent) {
+      lines.push(`- ${s.actionId} — ${s.kind}${s.reason ? `: ${s.reason}` : ''}`);
+    }
+  }
+
   lines.push(
-    `_Ground your advice in these outcomes: lean into what published and got funded; nudge stalled drafts toward publishing or retiring. Never claim an outcome not listed here._`
+    `_Ground your advice in these outcomes: lean into what published and got funded; nudge stalled drafts toward publishing or retiring. Learn from the setbacks — don't re-propose an action that was denied or repeatedly left unconfirmed unless something changed (caps raised, permission granted, user asked). Never claim an outcome not listed here._`
   );
   return lines.join('\n');
 }

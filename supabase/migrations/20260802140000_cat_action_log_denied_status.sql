@@ -1,0 +1,12 @@
+-- Add 'denied' to cat_action_status so denials are first-class audit rows.
+--
+-- Before this, a permission- or spend-cap-denied action either never reached
+-- cat_action_log at all (the early checks in executeAction return before any
+-- write) or was logged as generic 'failed' (the performAction backstop). The
+-- Cat's track record could therefore only ever see wins — survivorship bias
+-- installed at the schema level. Denials become their own status so the
+-- outcome loop can feed "what the Cat was refused, and why" back into context.
+--
+-- ADD VALUE is append-only and safe on live enums; IF NOT EXISTS makes the
+-- migration replay-idempotent.
+ALTER TYPE public.cat_action_status ADD VALUE IF NOT EXISTS 'denied';

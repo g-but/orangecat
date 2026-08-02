@@ -68,6 +68,7 @@ describe('getCatTrackRecord', () => {
       funded: 0,
       totalFundedBtc: 0,
       entries: [],
+      setbacks: { failed: 0, denied: 0, unconfirmed: 0, recent: [] },
       windowDays: 90,
     });
   });
