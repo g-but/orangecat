@@ -15,17 +15,27 @@ import { FormErrorDisplay } from './components/FormErrorDisplay';
 import { ProfileFormActions } from './components/ProfileFormActions';
 import type { ModernProfileEditorProps } from './types';
 
-export default function ModernProfileEditor({
+interface ProfileEditorFormProps {
+  editor: ReturnType<typeof useProfileEditor>;
+  profile: ModernProfileEditorProps['profile'];
+  userEmail: ModernProfileEditorProps['userEmail'];
+  onFieldFocus: ModernProfileEditorProps['onFieldFocus'];
+  onCancel: ModernProfileEditorProps['onCancel'];
+  variant: 'inline' | 'modal';
+}
+
+/**
+ * Shared form body for both inline and modal rendering modes.
+ * The two modes only differ in their wrapper and form padding.
+ */
+function ProfileEditorForm({
+  editor,
   profile,
-  userId,
   userEmail,
-  onSave,
-  onCancel,
-  useWizard = false,
   onFieldFocus,
-  inline = false,
-}: ModernProfileEditorProps) {
-  // Use the extracted hook for all profile editing logic
+  onCancel,
+  variant,
+}: ProfileEditorFormProps) {
   const {
     form,
     isSaving,
@@ -41,7 +51,92 @@ export default function ModernProfileEditor({
     locationGroupLabel,
     setLocationGroupLabel,
     onSubmit,
-  } = useProfileEditor({
+  } = editor;
+
+  // Watch for username changes (needed for form validation)
+  const watchedUsername = form.watch('username');
+
+  return (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className={variant === 'inline' ? 'p-6 space-y-6' : 'space-y-6'}
+      >
+        {/* Form Errors */}
+        <FormErrorDisplay errors={form.formState.errors} />
+
+        {/* Profile Images Section */}
+        <ProfileImagesSection
+          profile={profile}
+          avatarPreview={avatarPreview}
+          bannerPreview={bannerPreview}
+          avatarInputRef={avatarInputRef}
+          bannerInputRef={bannerInputRef}
+          handleFileUpload={handleFileUpload}
+        />
+
+        {/* Form Fields */}
+        <div className="space-y-8">
+          {/* Profile Basic Section */}
+          <ProfileBasicSection
+            control={form.control}
+            onFieldFocus={onFieldFocus}
+            locationMode={locationMode}
+            setLocationMode={setLocationMode}
+            locationGroupLabel={locationGroupLabel}
+            setLocationGroupLabel={setLocationGroupLabel}
+            form={form}
+          />
+
+          {/* Status & How to Help Section */}
+          <ProfileStatusSection control={form.control} />
+
+          {/* Online Presence Section */}
+          <OnlinePresenceSection
+            control={form.control}
+            onFieldFocus={onFieldFocus}
+            socialLinks={socialLinks}
+            setSocialLinks={setSocialLinks}
+          />
+
+          {/* Contact Section */}
+          <ContactSection
+            control={form.control}
+            onFieldFocus={onFieldFocus}
+            userEmail={userEmail}
+          />
+
+          {/* Preferences Section */}
+          <PreferencesSection control={form.control} onFieldFocus={onFieldFocus} />
+
+          {/* Privacy Section — per-field visibility to visitors */}
+          <PrivacySection form={form} />
+        </div>
+
+        {/* Action Buttons */}
+        <ProfileFormActions
+          isSaving={isSaving}
+          isValid={!!watchedUsername?.trim()}
+          onCancel={onCancel}
+          variant={variant}
+        />
+      </form>
+    </Form>
+  );
+}
+
+export default function ModernProfileEditor({
+  profile,
+  userId,
+  userEmail,
+  onSave,
+  onCancel,
+  useWizard = false,
+  onFieldFocus,
+  inline = false,
+}: ModernProfileEditorProps) {
+  // Use the extracted hook for all profile editing logic
+  const editor = useProfileEditor({
     profile,
     userId,
     userEmail,
@@ -49,9 +144,6 @@ export default function ModernProfileEditor({
     onCancel,
     onFieldFocus,
   });
-
-  // Watch for username changes (needed for form validation)
-  const watchedUsername = form.watch('username');
 
   // Use wizard if requested
   if (useWizard) {
@@ -71,68 +163,14 @@ export default function ModernProfileEditor({
     // Inline mode: clean form layout without modal wrapper (page provides header/layout)
     return (
       <div className="bg-surface-base rounded-lg border border-default shadow-sm overflow-hidden">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-6">
-            {/* Form Errors */}
-            <FormErrorDisplay errors={form.formState.errors} />
-
-            {/* Profile Images Section */}
-            <ProfileImagesSection
-              profile={profile}
-              avatarPreview={avatarPreview}
-              bannerPreview={bannerPreview}
-              avatarInputRef={avatarInputRef}
-              bannerInputRef={bannerInputRef}
-              handleFileUpload={handleFileUpload}
-            />
-
-            {/* Form Fields */}
-            <div className="space-y-8">
-              {/* Profile Basic Section */}
-              <ProfileBasicSection
-                control={form.control}
-                onFieldFocus={onFieldFocus}
-                locationMode={locationMode}
-                setLocationMode={setLocationMode}
-                locationGroupLabel={locationGroupLabel}
-                setLocationGroupLabel={setLocationGroupLabel}
-                form={form}
-              />
-
-              {/* Status & How to Help Section */}
-              <ProfileStatusSection control={form.control} />
-
-              {/* Online Presence Section */}
-              <OnlinePresenceSection
-                control={form.control}
-                onFieldFocus={onFieldFocus}
-                socialLinks={socialLinks}
-                setSocialLinks={setSocialLinks}
-              />
-
-              {/* Contact Section */}
-              <ContactSection
-                control={form.control}
-                onFieldFocus={onFieldFocus}
-                userEmail={userEmail}
-              />
-
-              {/* Preferences Section */}
-              <PreferencesSection control={form.control} onFieldFocus={onFieldFocus} />
-
-              {/* Privacy Section — per-field visibility to visitors */}
-              <PrivacySection form={form} />
-            </div>
-
-            {/* Action Buttons */}
-            <ProfileFormActions
-              isSaving={isSaving}
-              isValid={!!watchedUsername?.trim()}
-              onCancel={onCancel}
-              variant="inline"
-            />
-          </form>
-        </Form>
+        <ProfileEditorForm
+          editor={editor}
+          profile={profile}
+          userEmail={userEmail}
+          onFieldFocus={onFieldFocus}
+          onCancel={onCancel}
+          variant="inline"
+        />
       </div>
     );
   }
@@ -143,68 +181,14 @@ export default function ModernProfileEditor({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogTitle>Edit profile</DialogTitle>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Form Errors */}
-            <FormErrorDisplay errors={form.formState.errors} />
-
-            {/* Profile Images Section */}
-            <ProfileImagesSection
-              profile={profile}
-              avatarPreview={avatarPreview}
-              bannerPreview={bannerPreview}
-              avatarInputRef={avatarInputRef}
-              bannerInputRef={bannerInputRef}
-              handleFileUpload={handleFileUpload}
-            />
-
-            {/* Form Fields */}
-            <div className="space-y-8">
-              {/* Profile Basic Section */}
-              <ProfileBasicSection
-                control={form.control}
-                onFieldFocus={onFieldFocus}
-                locationMode={locationMode}
-                setLocationMode={setLocationMode}
-                locationGroupLabel={locationGroupLabel}
-                setLocationGroupLabel={setLocationGroupLabel}
-                form={form}
-              />
-
-              {/* Status & How to Help Section */}
-              <ProfileStatusSection control={form.control} />
-
-              {/* Online Presence Section */}
-              <OnlinePresenceSection
-                control={form.control}
-                onFieldFocus={onFieldFocus}
-                socialLinks={socialLinks}
-                setSocialLinks={setSocialLinks}
-              />
-
-              {/* Contact Section */}
-              <ContactSection
-                control={form.control}
-                onFieldFocus={onFieldFocus}
-                userEmail={userEmail}
-              />
-
-              {/* Preferences Section */}
-              <PreferencesSection control={form.control} onFieldFocus={onFieldFocus} />
-
-              {/* Privacy Section — per-field visibility to visitors */}
-              <PrivacySection form={form} />
-            </div>
-
-            {/* Action Buttons */}
-            <ProfileFormActions
-              isSaving={isSaving}
-              isValid={!!watchedUsername?.trim()}
-              onCancel={onCancel}
-              variant="modal"
-            />
-          </form>
-        </Form>
+        <ProfileEditorForm
+          editor={editor}
+          profile={profile}
+          userEmail={userEmail}
+          onFieldFocus={onFieldFocus}
+          onCancel={onCancel}
+          variant="modal"
+        />
       </DialogContent>
     </Dialog>
   );
