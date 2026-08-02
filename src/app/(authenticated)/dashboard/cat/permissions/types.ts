@@ -11,6 +11,8 @@ export interface Action {
   category: string;
   riskLevel: 'low' | 'medium' | 'high';
   requiresConfirmation: boolean;
+  /** Effective trust level resolved server-side (row → category → default). */
+  autonomy: import('@/config/cat-autonomy').AutonomyLevel;
 }
 
 export interface CategorySummary {
