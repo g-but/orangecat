@@ -8,6 +8,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { API_ROUTES } from '@/config/api-routes';
 import { logger } from '@/utils/logger';
 
 export interface ReceiveStatus {
@@ -27,7 +28,7 @@ export function useReceiveStatus(walletsSignature: string, enabled: boolean) {
       return;
     }
     try {
-      const res = await fetch('/api/wallets/receive-status');
+      const res = await fetch(API_ROUTES.WALLETS.RECEIVE_STATUS);
       if (!res.ok) {
         throw new Error(`status ${res.status}`);
       }

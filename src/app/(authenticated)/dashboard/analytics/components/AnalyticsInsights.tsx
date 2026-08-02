@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { BarChart3, Activity, TrendingUp, Target, Users } from 'lucide-react';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { ROUTES } from '@/config/routes';
 import type { Project } from '@/stores/projectStore';
 
@@ -93,6 +94,7 @@ const CHART_COLORS = [
 ];
 
 function FundingProgressChart({ projects }: { projects: Project[] }) {
+  const { formatAmountBtc } = useDisplayCurrency();
   const projectsWithGoal = projects.filter(p => p.goal_amount && p.goal_amount > 0);
 
   if (projectsWithGoal.length === 0) {
@@ -142,8 +144,8 @@ function FundingProgressChart({ projects }: { projects: Project[] }) {
               />
             </div>
             <div className="flex justify-between mt-0.5">
-              <span className="text-xs text-fg-secondary">{raised.toFixed(4)} BTC raised</span>
-              <span className="text-xs text-fg-secondary">{goal.toFixed(4)} BTC goal</span>
+              <span className="text-xs text-fg-secondary">{formatAmountBtc(raised)} raised</span>
+              <span className="text-xs text-fg-secondary">{formatAmountBtc(goal)} goal</span>
             </div>
           </div>
         );

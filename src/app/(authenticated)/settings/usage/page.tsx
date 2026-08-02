@@ -14,6 +14,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Gauge, KeyRound, Sparkles, Wallet } from 'lucide-react';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { useCatQuota } from '@/components/ai-chat/ModernChatPanel/hooks/useCatQuota';
 import { API_ROUTES } from '@/config/api-routes';
 import { ROUTES } from '@/config/routes';
@@ -60,6 +61,7 @@ function useCreditBalance(): { balanceBtc: number | null; isLoading: boolean } {
 export default function UsageSettingsPage() {
   const { quota, isLoading: quotaLoading } = useCatQuota();
   const { balanceBtc } = useCreditBalance();
+  const { formatAmountBtc } = useDisplayCurrency();
 
   /** Which CAT_PLANS card is the user's current reality — via the SSOT map. */
   const activePlanId: CatPlanId | null = quota ? PLAN_ID_BY_QUOTA_TIER[quota.tier] : null;
@@ -199,7 +201,7 @@ export default function UsageSettingsPage() {
               {balanceBtc !== null ? (
                 <>
                   Balance:{' '}
-                  <span className="font-medium text-fg-primary">{balanceBtc.toFixed(8)} BTC</span>
+                  <span className="font-medium text-fg-primary">{formatAmountBtc(balanceBtc)}</span>
                 </>
               ) : (
                 'Prepaid balance for managed frontier models, billed per message.'

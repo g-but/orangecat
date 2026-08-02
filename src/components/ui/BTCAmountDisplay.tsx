@@ -86,7 +86,7 @@ export default function BTCAmountDisplay({
   }
 
   return (
-    <span className={`inline-flex items-center gap-1 text-xs text-muted-foreground ${className}`}>
+    <span className={`inline-flex items-center gap-1 text-xs text-fg-secondary ${className}`}>
       {showIcon && <Bitcoin className="w-3 h-3 text-bitcoinOrange" />}
       <span>{btcAmount}</span>
     </span>

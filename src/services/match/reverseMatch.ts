@@ -98,7 +98,7 @@ export async function introduceMatches(
 
       // Idempotency: introduce each (supply, demand) pair at most once. The
       // unique constraint turns a duplicate into an insert error we skip on.
-      const { error: dupErr } = await supabase.from('match_introductions').insert({
+      const { error: dupErr } = await supabase.from(DATABASE_TABLES.MATCH_INTRODUCTIONS).insert({
         supply_type: supply.entity_type,
         supply_id: supply.entity_id,
         demand_type: demand.entity_type,

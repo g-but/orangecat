@@ -275,7 +275,7 @@ export default function TasksPage() {
               task={task}
               onComplete={() => handleComplete(task.id)}
               onFlagAttention={() => handleFlagAttention(task.id)}
-              onClick={() => router.push(`/dashboard/tasks/${task.id}`)}
+              onClick={() => router.push(ROUTES.DASHBOARD.TASKS_VIEW(task.id))}
             />
           ))}
         </div>

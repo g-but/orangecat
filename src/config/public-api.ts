@@ -15,6 +15,13 @@ import type { EntityType } from '@/config/entity-registry';
 
 export const PUBLIC_API_VERSION = 'v1' as const;
 export const PUBLIC_API_BASE = `/api/${PUBLIC_API_VERSION}` as const;
+/**
+ * v1 OpenAPI document (served by src/app/api/v1/openapi.json/route.ts).
+ * Written as a static literal so audit:routes can resolve it; the type
+ * annotation compile-errors if it ever drifts from PUBLIC_API_BASE.
+ */
+export const PUBLIC_API_OPENAPI_PATH: `${typeof PUBLIC_API_BASE}/openapi.json` =
+  '/api/v1/openapi.json';
 
 /**
  * Entity types whose POST is part of the v1 contract.

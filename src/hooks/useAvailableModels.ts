@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { API_ROUTES } from '@/config/api-routes';
 import type { ModelAccess } from '@/services/cat/model-access';
 
 /**
@@ -17,7 +18,7 @@ export function useAvailableModels(): { access: ModelAccess | null; loading: boo
     let alive = true;
     (async () => {
       try {
-        const res = await fetch('/api/user/available-models');
+        const res = await fetch(API_ROUTES.USER.AVAILABLE_MODELS);
         if (!res.ok) {
           return;
         }

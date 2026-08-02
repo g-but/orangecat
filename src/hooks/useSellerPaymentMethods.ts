@@ -11,6 +11,7 @@
 
 'use client';
 
+import { API_ROUTES } from '@/config/api-routes';
 import { useState, useEffect } from 'react';
 
 interface SellerPaymentInfo {
@@ -32,7 +33,7 @@ export function useSellerPaymentMethods(sellerProfileId: string | null): SellerP
     async function check() {
       try {
         const res = await fetch(
-          `/api/payments/can-receive?profile_id=${encodeURIComponent(sellerProfileId!)}`
+          `${API_ROUTES.PAYMENTS.CAN_RECEIVE}?profile_id=${encodeURIComponent(sellerProfileId!)}`
         );
         const body = res.ok ? await res.json() : null;
         if (!cancelled) {

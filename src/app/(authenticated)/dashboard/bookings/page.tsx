@@ -9,6 +9,7 @@ import EntityListShell from '@/components/entity/EntityListShell';
 import { logger } from '@/utils/logger';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { STATUS } from '@/config/database-constants';
+import { ROUTES } from '@/config/routes';
 import { API_ROUTES } from '@/config/api-routes';
 import BookingTabs from './components/BookingTabs';
 import BookingCard from './components/BookingCard';
@@ -154,7 +155,7 @@ export default function BookingsDashboardPage() {
               processingId={processingId}
               formatBtc={formatAmountBtc}
               onAction={handleAction}
-              onViewDetails={id => router.push(`/dashboard/bookings/${id}`)}
+              onViewDetails={id => router.push(ROUTES.DASHBOARD.BOOKINGS_VIEW(id))}
             />
           ))}
         </div>

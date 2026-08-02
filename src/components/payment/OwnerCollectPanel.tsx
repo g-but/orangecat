@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { API_ROUTES } from '@/config/api-routes';
 import { ROUTES } from '@/config/routes';
 import type { EntityType } from '@/config/entity-registry';
 
@@ -59,7 +60,7 @@ export function OwnerCollectPanel({
   priceAmount,
   priceCurrency,
 }: OwnerCollectPanelProps) {
-  const { formatPrice } = useDisplayCurrency();
+  const { formatPrice, formatAmountBtc } = useDisplayCurrency();
   const { copied: linkCopied, copy: copyLink } = useCopyToClipboard();
   const { copied: addrCopied, copy: copyAddr } = useCopyToClipboard();
   const [shareUrl, setShareUrl] = useState('');
@@ -78,7 +79,7 @@ export function OwnerCollectPanel({
     let cancelled = false;
     setLoading(true);
     fetch(
-      `/api/payments/receive-info?entity_type=${encodeURIComponent(entityType)}&entity_id=${encodeURIComponent(entityId)}`
+      `${API_ROUTES.PAYMENTS.RECEIVE_INFO}?entity_type=${encodeURIComponent(entityType)}&entity_id=${encodeURIComponent(entityId)}`
     )
       .then(res => (res.ok ? res.json() : null))
       .then(body => {
@@ -103,7 +104,7 @@ export function OwnerCollectPanel({
 
   useEffect(() => {
     fetch(
-      `/api/payments/recipient-confirmations?entity_type=${encodeURIComponent(entityType)}&entity_id=${encodeURIComponent(entityId)}`
+      `${API_ROUTES.PAYMENTS.RECIPIENT_CONFIRMATIONS}?entity_type=${encodeURIComponent(entityType)}&entity_id=${encodeURIComponent(entityId)}`
     )
       .then(res => (res.ok ? res.json() : null))
       .then(body => setConfirmations((body?.data as RecipientConfirmation[]) ?? []))
@@ -112,7 +113,7 @@ export function OwnerCollectPanel({
 
   const confirmReceipt = async (id: string) => {
     setConfirmingId(id);
-    const response = await fetch(`/api/payments/${id}`, {
+    const response = await fetch(API_ROUTES.PAYMENTS.BY_ID(id), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ action: 'seller_confirm' }),
@@ -229,7 +230,7 @@ export function OwnerCollectPanel({
                   className="flex items-center justify-between gap-3 rounded-md border border-default p-3"
                 >
                   <span className="font-mono text-sm text-fg-primary">
-                    {Number(item.amount_btc)} BTC
+                    {formatAmountBtc(Number(item.amount_btc))}
                   </span>
                   <Button
                     size="sm"

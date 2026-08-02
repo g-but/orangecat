@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import { Target, Heart } from 'lucide-react';
 import { projectEntityConfig, type ProjectListItem } from '@/config/entities/projects';
 import { PROJECT_STATUS } from '@/config/project-statuses';
+import { API_ROUTES } from '@/config/api-routes';
 import { ROUTES } from '@/config/routes';
 
 export default function ProjectsDashboardPage() {
@@ -22,7 +23,7 @@ export default function ProjectsDashboardPage() {
           id: 'favorites',
           label: 'Favorites',
           icon: Heart,
-          apiEndpoint: '/api/projects/favorites',
+          apiEndpoint: API_ROUTES.PROJECTS.FAVORITES,
           allowBulkSelect: false,
           hideStatusFilter: true,
           emptyState: {

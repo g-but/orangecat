@@ -16,6 +16,7 @@
 
 import { useState } from 'react';
 import { Zap, Copy, Check, AlertTriangle } from 'lucide-react';
+import { API_ROUTES } from '@/config/api-routes';
 import type { ReceiveStatus } from '@/app/(authenticated)/dashboard/wallets/hooks/useReceiveStatus';
 
 interface LightningAddressCardProps {
@@ -65,7 +66,7 @@ export function LightningAddressCard({ status, isLoading }: LightningAddressCard
     setTestResult(null);
     try {
       const res = await fetch(
-        `/api/lnurlp/${encodeURIComponent(status.username ?? '')}/callback?amount=${TEST_AMOUNT_MSAT}`
+        `${API_ROUTES.LNURLP.CALLBACK(status.username ?? '')}?amount=${TEST_AMOUNT_MSAT}`
       );
       const body = (await res.json()) as { pr?: string; status?: string; reason?: string };
       setTestResult(

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/config/routes';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLayout';
@@ -118,7 +119,7 @@ export default function EventsPage() {
     if (session) {
       _router.push(`${ENTITY_REGISTRY['event'].publicBasePath}/create`);
     } else {
-      _router.push(`/auth?mode=login&redirect=${ENTITY_REGISTRY['event'].publicBasePath}/create`);
+      _router.push(`${ROUTES.AUTH_LOGIN}&redirect=${ENTITY_REGISTRY['event'].publicBasePath}/create`);
     }
   };
 

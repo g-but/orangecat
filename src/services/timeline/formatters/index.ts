@@ -10,6 +10,7 @@
  */
 
 import type { LucideIcon } from 'lucide-react';
+import { formatCurrency } from '@/services/currency';
 import {
   Heart,
   MessageCircle,
@@ -161,7 +162,7 @@ export function getEventDisplayType(eventType: TimelineEventType): string {
  */
 export function formatAmount(event: TimelineEvent): string | undefined {
   if (event.amountBtc) {
-    return `₿${event.amountBtc.toFixed(8)}`;
+    return formatCurrency(event.amountBtc, 'BTC');
   }
   return undefined;
 }

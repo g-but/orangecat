@@ -26,6 +26,7 @@ export const API_ROUTES = {
     NUDGES: '/api/cat/nudges',
     CONVERSATIONS: '/api/cat/conversations',
     CONVERSATION: (id: string) => `/api/cat/conversations/${id}`,
+    OFFERS_FROM_TEXT: '/api/cat/offers-from-text',
   },
   SEARCH: {
     LOG: '/api/search/log',
@@ -38,6 +39,8 @@ export const API_ROUTES = {
     BASE: '/api/webhook-endpoints',
     BY_ID: (id: string) => `/api/webhook-endpoints/${id}`,
     DELIVERIES: (id: string) => `/api/webhook-endpoints/${id}/deliveries`,
+    DELIVERY_REPLAY: (id: string, deliveryId: string) =>
+      `/api/webhook-endpoints/${id}/deliveries/${deliveryId}/replay`,
   },
   DISCOVER: {
     COUNTS: '/api/discover/counts',
@@ -59,6 +62,7 @@ export const API_ROUTES = {
     BASE: ENTITY_REGISTRY['wallet'].apiEndpoint,
     TRANSFER: '/api/wallets/transfer',
     ENTITY_VISIBILITY: '/api/wallets/entity-visibility',
+    RECEIVE_STATUS: '/api/wallets/receive-status',
   },
   ENTITY_WALLETS: '/api/entity-wallets',
   NOTIFICATIONS: {
@@ -95,6 +99,11 @@ export const API_ROUTES = {
     FORM_PREFILL: '/api/ai/form-prefill',
     IMAGES_GENERATE: '/api/ai/images/generate',
     IMAGES_SUGGEST: '/api/ai/images/suggest',
+    WRITING: {
+      TOPICS: '/api/ai/writing/topics',
+      DRAFT: '/api/ai/writing/draft',
+      REVISE: '/api/ai/writing/revise',
+    },
   },
   AUTH: {
     CALLBACK: '/api/auth/callback',
@@ -120,10 +129,26 @@ export const API_ROUTES = {
   },
   USER: {
     API_KEYS: '/api/user/api-keys',
+    AVAILABLE_MODELS: '/api/user/available-models',
     STATS: '/api/users/me/stats',
   },
   PAYMENTS: {
     BASE: '/api/payments',
+    BY_ID: (id: string) => `/api/payments/${id}`,
+    RECEIVE_INFO: '/api/payments/receive-info',
+    RECIPIENT_CONFIRMATIONS: '/api/payments/recipient-confirmations',
+    CAN_RECEIVE: '/api/payments/can-receive',
+  },
+  TIPS: {
+    RECEIVE_INFO: '/api/tips/receive-info',
+    INVOICE: '/api/tips/invoice',
+    STATUS: '/api/tips/status',
+  },
+  INTEGRATIONS: {
+    FLEETCROWN_BUILD_INTENTS: '/api/integrations/fleetcrown/build-intents',
+  },
+  LNURLP: {
+    CALLBACK: (username: string) => `/api/lnurlp/${encodeURIComponent(username)}/callback`,
   },
   PROJECTS: {
     BASE: ENTITY_REGISTRY['project'].apiEndpoint,
