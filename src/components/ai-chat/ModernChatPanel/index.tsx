@@ -12,8 +12,15 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
-import { useChatMessages, useSuggestions, usePendingActionsManager, useCatQuota } from './hooks';
+import {
+  useChatMessages,
+  useSuggestions,
+  usePendingActionsManager,
+  useCatQuota,
+  useMemoryNotes,
+} from './hooks';
 import { ChatHeader, ChatInput, EmptyState, ErrorDisplay, MessageBubble } from './components';
+import { MemoryNoteCard } from './components/MemoryNoteCard';
 import { PendingActionsCard } from '../PendingActionsCard';
 import type { CatAction } from './types';
 
@@ -94,6 +101,7 @@ export function ModernChatPanel({
   const isFocus = variant === 'focus';
 
   const { quota, refresh: refreshQuota } = useCatQuota();
+  const { memoryNotes, checkAfterSend, undoNote, dismissNote } = useMemoryNotes();
 
   const {
     messages,
@@ -113,6 +121,9 @@ export function ModernChatPanel({
     onPendingResult: () => refreshPendingActionsRef.current?.(),
     onMessageSent: () => {
       refreshQuota();
+      // New memories land a few seconds after the reply (detached extraction);
+      // poll so they surface as an undoable "Cat noted" card, never silently.
+      checkAfterSend();
       onMessageSent?.();
     },
     onConversationStarted,
@@ -270,6 +281,8 @@ export function ModernChatPanel({
                   ))}
                 </div>
               )}
+
+              <MemoryNoteCard notes={memoryNotes} onUndo={undoNote} onDismiss={dismissNote} />
 
               <div ref={messagesEndRef} />
             </div>

@@ -63,8 +63,10 @@ interface UserPermissionSummary {
   highRiskEnabled: boolean;
 }
 
-// Default permissions for new users - conservative by default
-const DEFAULT_PERMISSIONS: Partial<Record<ActionCategory, boolean>> = {
+// Default permissions for new users - conservative by default.
+// Exported so any surface that must show the EFFECTIVE level (settings UI via
+// the permissions API) resolves it exactly like checkPermission does.
+export const DEFAULT_PERMISSIONS: Partial<Record<ActionCategory, boolean>> = {
   context: true, // Can manage their own context
   entities: false, // Must explicitly enable
   communication: false,

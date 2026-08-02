@@ -5,7 +5,7 @@ import {
   normalizeEconomicPatch,
   removeFromEconomicProfile,
 } from '../economic-profile';
-import { forgetMemoriesMatching } from '../memory';
+import { forgetMemoriesMatching, rememberFacts, editMemoryMatching } from '../memory';
 import type { ActionHandler } from './types';
 
 export const contextHandlers: Record<string, ActionHandler> = {
@@ -48,7 +48,10 @@ export const contextHandlers: Record<string, ActionHandler> = {
       ? (params.facts as unknown[]).filter((f): f is string => typeof f === 'string')
       : [];
     if (facts.length === 0) {
-      return { success: false, error: 'Nothing to forget — pass the wrong facts as short phrases.' };
+      return {
+        success: false,
+        error: 'Nothing to forget — pass the wrong facts as short phrases.',
+      };
     }
     const [mem, profile] = await Promise.all([
       forgetMemoriesMatching(supabase, userId, facts),
@@ -65,21 +68,101 @@ export const contextHandlers: Record<string, ActionHandler> = {
           'No stored memory or profile entry matched — nothing was removed. The full list is at Settings → AI → What Cat remembers.',
       };
     }
-    const parts = [
-      mem.deleted.length > 0 && `${mem.deleted.length} memor${mem.deleted.length === 1 ? 'y' : 'ies'}`,
-      profile.removed.length > 0 && `${profile.removed.length} profile entr${profile.removed.length === 1 ? 'y' : 'ies'}`,
-    ]
-      .filter(Boolean)
-      .join(' and ');
+    // List exactly WHAT was removed, not just counts — the user must be able
+    // to spot an over-match at a glance (and re-add it), and a bare "removed
+    // 2 entries" hides which stored fact survived.
+    const removedAll = [...mem.deleted, ...profile.removed];
+    const MAX_LISTED = 8;
+    const listed = removedAll
+      .slice(0, MAX_LISTED)
+      .map(r => `"${r.length > 70 ? `${r.slice(0, 70)}…` : r}"`)
+      .join(', ');
+    const overflow =
+      removedAll.length > MAX_LISTED ? ` and ${removedAll.length - MAX_LISTED} more` : '';
     return {
       success: true,
       data: {
         displayMessage:
-          `🧹 Removed ${parts}.` +
-          (stillUnknown.length > 0 ? ` No match found for: ${stillUnknown.join(', ')}.` : ''),
+          `🧹 Removed ${listed}${overflow}.` +
+          (stillUnknown.length > 0
+            ? ` No stored match found for: ${stillUnknown.join(', ')} — check Settings → AI → What Cat remembers.`
+            : ''),
         deletedMemories: mem.deleted,
         removedProfileEntries: profile.removed,
         notFound: stillUnknown,
+      },
+    };
+  },
+
+  // Explicit "remember this" — a user command, not passive extraction. Also
+  // lifts any suppression a past forget left behind for the same fact.
+  remember_fact: async (supabase, userId, _actorId, params) => {
+    const facts = Array.isArray(params.facts)
+      ? (params.facts as unknown[]).filter((f): f is string => typeof f === 'string')
+      : [];
+    if (facts.length === 0) {
+      return { success: false, error: 'Nothing to remember — pass one or more short facts.' };
+    }
+    const result = await rememberFacts(supabase, userId, facts);
+    if (result.stored.length === 0 && result.duplicates.length === 0) {
+      return { success: false, error: 'Could not store the memory — nothing was saved.' };
+    }
+    const storedPart =
+      result.stored.length > 0
+        ? `🧠 Remembered: ${result.stored.map(s => `"${s}"`).join(', ')}.`
+        : '';
+    const dupPart =
+      result.duplicates.length > 0
+        ? ` Already knew: ${result.duplicates.map(s => `"${s}"`).join(', ')}.`
+        : '';
+    return {
+      success: true,
+      data: {
+        displayMessage: `${storedPart}${dupPart}`.trim(),
+        stored: result.stored,
+        duplicates: result.duplicates,
+      },
+    };
+  },
+
+  // Correct ONE stored memory in place. Ambiguity is surfaced, never guessed
+  // through — silently editing the wrong memory is a trust-killer.
+  edit_memory: async (supabase, userId, _actorId, params) => {
+    const match = typeof params.match === 'string' ? params.match : '';
+    const newContent = typeof params.new_content === 'string' ? params.new_content : '';
+    if (!match || !newContent) {
+      return {
+        success: false,
+        error: 'Pass "match" (which memory to change) and "new_content" (the corrected fact).',
+      };
+    }
+    const result = await editMemoryMatching(supabase, userId, match, newContent);
+    if (!result.ok) {
+      if (result.reason === 'ambiguous') {
+        return {
+          success: false,
+          error: `Several memories match: ${(result.candidates ?? [])
+            .map(c => `"${c}"`)
+            .join(
+              ', '
+            )}. Ask the user which one to change, then call edit_memory with more specific wording.`,
+        };
+      }
+      if (result.reason === 'not_found') {
+        return {
+          success: false,
+          error:
+            'No stored memory matched — nothing was changed. The full list is at Settings → AI → What Cat remembers.',
+        };
+      }
+      return { success: false, error: 'Updating the memory failed — nothing was changed.' };
+    }
+    return {
+      success: true,
+      data: {
+        displayMessage: `✏️ Updated memory: "${result.previous}" → "${result.updated}"`,
+        previous: result.previous,
+        updated: result.updated,
       },
     };
   },

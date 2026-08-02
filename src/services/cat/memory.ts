@@ -100,12 +100,81 @@ export interface ForgetResult {
   notFound: string[];
 }
 
-/** Semantic floor for treating a stored memory as "the fact the user means". */
-const FORGET_MATCH_SIMILARITY = 0.75;
+/**
+ * Semantic floor for treating a stored memory as "the fact the user means".
+ * Measured against prod embeddings (text-embedding-3-small): true targets of a
+ * short forget phrase score 0.39–0.61 ("speaking French" → "Knows French" =
+ * 0.61, "weekend availability constraint" → "Can only work on weekends." =
+ * 0.52) while unrelated memories stay ≤ 0.29. The original 0.75 floor was
+ * near-identical-text territory and never fired for real phrasings.
+ */
+const FORGET_MATCH_SIMILARITY = 0.45;
 /** Bound one forget call — the model should pass targeted facts, not essays. */
 const MAX_FORGET_FACTS = 10;
 /** Ignore degenerate fragments ("a", "is") that would text-match everything. */
 const MIN_FORGET_FRAGMENT_CHARS = 4;
+
+/**
+ * Light suffix-stripping stemmer so inflected forms match: "photography" and
+ * "photographer" both stem to "photograph", "ceramics" → "ceramic",
+ * "speaking"/"speaks" → "speak", "weekends" → "weekend". Deliberately
+ * conservative: strips only while ≥4 chars remain, and stems compare by
+ * EQUALITY — never substring — so "constraint" can't collide with
+ * "construction".
+ */
+const STEM_SUFFIXES = ['ing', 'ers', 'ed', 'er', 'es', 's', 'y', 'e'] as const;
+function stemWord(word: string): string {
+  let s = word;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const suffix of STEM_SUFFIXES) {
+      if (s.endsWith(suffix) && s.length - suffix.length >= 4) {
+        s = s.slice(0, -suffix.length);
+        changed = true;
+        break;
+      }
+    }
+  }
+  return s;
+}
+
+/** Significant stemmed words of a phrase (short glue words dropped). */
+function significantStems(text: string): Set<string> {
+  return new Set(
+    text
+      .toLowerCase()
+      .split(/[^a-z0-9äöüéèàç]+/)
+      .filter(t => t.length >= 4)
+      .map(stemWord)
+  );
+}
+
+/**
+ * Shared lexical predicate: does phrase `a` refer to (roughly) the same fact
+ * as phrase `b`? Containment in either direction, or a majority of `a`'s
+ * significant stemmed words appearing in `b` — the same rule the forget
+ * matcher uses, so "what gets forgotten" and "what stays suppressed" agree.
+ */
+function phrasesOverlap(a: string, b: string): boolean {
+  const na = a.toLowerCase();
+  const nb = b.toLowerCase();
+  if (nb.includes(na) || na.includes(nb)) {
+    return true;
+  }
+  const aStems = significantStems(na);
+  if (aStems.size === 0) {
+    return false;
+  }
+  const bStems = significantStems(nb);
+  let hits = 0;
+  for (const s of aStems) {
+    if (bStems.has(s)) {
+      hits++;
+    }
+  }
+  return hits >= Math.max(1, Math.ceil(aStems.size / 2));
+}
 
 /**
  * Delete stored memories matching the given facts. Matching is deliberately
@@ -141,21 +210,31 @@ export async function forgetMemoriesMatching(
   }
   const corpus = (rows ?? []) as Array<{ id: string; content: string }>;
 
+  const memoryStems = corpus.map(m => significantStems(m.content));
+
   const doomed = new Map<string, string>();
   for (const fact of wanted) {
     const norm = fact.toLowerCase();
-    const sigTokens = norm.split(/[^a-z0-9äöüéèàç]+/).filter(t => t.length >= 4);
+    const factStems = significantStems(norm);
+    // A MAJORITY of the fact's significant words must appear (stemmed) in the
+    // memory: 1 of 1, 1 of 2, 2 of 3, 2 of 4… Stemming is what lets
+    // "photography skills" hit "Is a professional photographer…" and
+    // "speaking French" hit "Knows French" — the exact phrasings that used to
+    // fall through and leave memories the user disowned in place.
+    const needed = Math.max(1, Math.ceil(factStems.size / 2));
     let matched = false;
-    for (const m of corpus) {
+    for (let i = 0; i < corpus.length; i++) {
+      const m = corpus[i];
       const c = m.content.toLowerCase();
+      let hits = 0;
+      for (const s of factStems) {
+        if (memoryStems[i].has(s)) {
+          hits++;
+        }
+      }
       // Containment either way ("photography" ⊂ "Has photography skills…"),
-      // or the fact's significant words appear in the memory (≥2 of them, or
-      // the only one for single-word facts) — "income on weekends" should hit
-      // "Wants to earn extra income on weekends." without exact phrasing.
-      const tokenHits = sigTokens.filter(t => c.includes(t)).length;
-      const tokenMatch =
-        sigTokens.length > 0 && (sigTokens.length === 1 ? tokenHits === 1 : tokenHits >= 2);
-      if (c.includes(norm) || norm.includes(c) || tokenMatch) {
+      // or the stemmed-majority rule above.
+      if (c.includes(norm) || norm.includes(c) || (factStems.size > 0 && hits >= needed)) {
         doomed.set(m.id, m.content);
         matched = true;
       }
@@ -195,8 +274,286 @@ export async function forgetMemoriesMatching(
       return { deleted: [], notFound: wanted };
     }
     result.deleted.push(...doomed.values());
+    // Remember WHAT was forgotten (suppression list) so passive extraction
+    // can't quietly re-learn a fact the user just disowned from old context.
+    await recordForgottenFacts(supabase, userId, [...doomed.values(), ...wanted]);
   }
   return result;
+}
+
+// ─── Suppression (deleted facts stay deleted) ────────────────────────────────
+
+/**
+ * A candidate this semantically close to a forgotten fact is the same fact
+ * being re-learned. Below the paraphrase band measured for forget matching
+ * (0.39–0.61) sits noise; re-extractions of the SAME fact land far higher, so
+ * 0.6 blocks them without suppressing genuinely new information.
+ */
+const SUPPRESS_SIMILARITY = 0.6;
+/** Bounded suppression list per user; oldest pruned beyond this. */
+const MAX_FORGOTTEN_PER_USER = 200;
+
+/** Best-effort: store forgotten contents + the user's phrasings, embedded. */
+async function recordForgottenFacts(
+  supabase: AnySupabaseClient,
+  userId: string,
+  phrases: string[]
+): Promise<void> {
+  try {
+    const unique = [...new Set(phrases.map(p => p.trim().slice(0, MAX_FACT_CHARS)))].filter(
+      p => p.length >= MIN_FORGET_FRAGMENT_CHARS
+    );
+    if (unique.length === 0) {
+      return;
+    }
+    const vectors = embeddingsEnabled() ? await embedTexts(unique) : unique.map(() => null);
+    const { error } = await supabase.from(DATABASE_TABLES.CAT_FORGOTTEN_FACTS).insert(
+      unique.map((content, i) => ({
+        user_id: userId,
+        content,
+        embedding: vectors[i] ? JSON.stringify(vectors[i]) : null,
+      }))
+    );
+    if (error) {
+      logger.warn('recordForgottenFacts insert failed', { error }, 'CatMemory');
+      return;
+    }
+    // Prune the oldest beyond the cap (same pattern as memory pruning).
+    const { count } = await supabase
+      .from(DATABASE_TABLES.CAT_FORGOTTEN_FACTS)
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+    if (count && count > MAX_FORGOTTEN_PER_USER) {
+      const { data: oldest } = await supabase
+        .from(DATABASE_TABLES.CAT_FORGOTTEN_FACTS)
+        .select('id')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true })
+        .limit(count - MAX_FORGOTTEN_PER_USER);
+      const ids = (oldest as Array<{ id: string }> | null)?.map(r => r.id) ?? [];
+      if (ids.length > 0) {
+        await supabase.from(DATABASE_TABLES.CAT_FORGOTTEN_FACTS).delete().in('id', ids);
+      }
+    }
+  } catch (err) {
+    logger.warn('recordForgottenFacts threw', { err }, 'CatMemory');
+  }
+}
+
+/** The user's current suppression phrases (newest first, bounded). */
+async function loadForgottenContents(
+  supabase: AnySupabaseClient,
+  userId: string
+): Promise<string[]> {
+  try {
+    const { data } = await supabase
+      .from(DATABASE_TABLES.CAT_FORGOTTEN_FACTS)
+      .select('content')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(MAX_FORGOTTEN_PER_USER);
+    return ((data ?? []) as Array<{ content: string }>).map(r => r.content);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Is this candidate fact one the user already asked us to forget?
+ * Lexical check against the suppression list, plus semantic check when a
+ * vector is available. Exported for the extraction path and tests.
+ */
+export async function isSuppressedFact(
+  supabase: AnySupabaseClient,
+  userId: string,
+  fact: string,
+  vec: number[] | null,
+  forgottenContents?: string[]
+): Promise<boolean> {
+  const contents = forgottenContents ?? (await loadForgottenContents(supabase, userId));
+  if (contents.some(c => phrasesOverlap(fact, c) || phrasesOverlap(c, fact))) {
+    return true;
+  }
+  if (vec) {
+    try {
+      const { data: near } = await supabase.rpc('match_cat_forgotten_facts', {
+        p_user_id: userId,
+        query_embedding: JSON.stringify(vec),
+        match_count: 1,
+        min_similarity: SUPPRESS_SIMILARITY,
+      });
+      if (Array.isArray(near) && near.length > 0) {
+        return true;
+      }
+    } catch (err) {
+      logger.warn('suppression RPC failed', { err }, 'CatMemory');
+    }
+  }
+  return false;
+}
+
+// ─── Explicit remember / edit ────────────────────────────────────────────────
+
+/** What an explicit remember request actually did. */
+export interface RememberResult {
+  stored: string[];
+  /** Facts skipped because an equivalent memory already exists. */
+  duplicates: string[];
+}
+
+const MAX_REMEMBER_FACTS = 5;
+
+/**
+ * Store facts the user EXPLICITLY asked Cat to remember. Unlike passive
+ * extraction this is a user command: it clears any matching suppression
+ * entries first (a deliberate statement outranks a past deletion), dedupes
+ * against existing memories, and reports exactly what happened.
+ */
+export async function rememberFacts(
+  supabase: AnySupabaseClient,
+  userId: string,
+  facts: string[]
+): Promise<RememberResult> {
+  const wanted = [...new Set(facts.map(f => f.trim().slice(0, MAX_FACT_CHARS)))]
+    .filter(f => f.length >= 3)
+    .slice(0, MAX_REMEMBER_FACTS);
+  const result: RememberResult = { stored: [], duplicates: [] };
+  if (wanted.length === 0) {
+    return result;
+  }
+
+  // A deliberate "remember this" lifts matching suppressions.
+  try {
+    const forgotten = await loadForgottenContents(supabase, userId);
+    const lifted = forgotten.filter(c => wanted.some(f => phrasesOverlap(f, c)));
+    if (lifted.length > 0) {
+      await supabase
+        .from(DATABASE_TABLES.CAT_FORGOTTEN_FACTS)
+        .delete()
+        .eq('user_id', userId)
+        .in('content', lifted);
+    }
+  } catch (err) {
+    logger.warn('lifting suppressions failed', { err }, 'CatMemory');
+  }
+
+  const vectors = embeddingsEnabled() ? await embedTexts(wanted) : wanted.map(() => null);
+  const toInsert: Array<{ content: string; embedding: string | null }> = [];
+  for (let i = 0; i < wanted.length; i++) {
+    const vec = vectors[i];
+    if (vec) {
+      const { data: near } = await supabase.rpc('match_cat_memories', {
+        p_user_id: userId,
+        query_embedding: JSON.stringify(vec),
+        match_count: 1,
+        min_similarity: DEDUP_SIMILARITY,
+      });
+      if (Array.isArray(near) && near.length > 0) {
+        result.duplicates.push(wanted[i]);
+        continue;
+      }
+    }
+    toInsert.push({ content: wanted[i], embedding: vec ? JSON.stringify(vec) : null });
+  }
+
+  if (toInsert.length > 0) {
+    const { error } = await supabase.from(DATABASE_TABLES.CAT_MEMORIES).insert(
+      toInsert.map(m => ({
+        user_id: userId,
+        content: m.content,
+        embedding: m.embedding,
+        source: 'user',
+        source_conversation_id: null,
+      }))
+    );
+    if (error) {
+      logger.warn('rememberFacts insert failed', { error }, 'CatMemory');
+      return { stored: [], duplicates: result.duplicates };
+    }
+    result.stored.push(...toInsert.map(m => m.content));
+    await pruneIfNeeded(supabase, userId);
+  }
+  return result;
+}
+
+/** What an edit request actually did. */
+export type EditMemoryResult =
+  | { ok: true; previous: string; updated: string }
+  | { ok: false; reason: 'not_found' | 'ambiguous' | 'failed'; candidates?: string[] };
+
+/**
+ * Correct ONE stored memory in place ("it's not 40 CHF, it's 45"). Finds the
+ * memory the user means with the same matching rules as forgetting; refuses
+ * (with the candidate list) when several match — silently editing the wrong
+ * memory is worse than asking the user to be specific.
+ */
+export async function editMemoryMatching(
+  supabase: AnySupabaseClient,
+  userId: string,
+  match: string,
+  newContent: string
+): Promise<EditMemoryResult> {
+  const wanted = match.trim();
+  const updated = newContent.trim().slice(0, MAX_FACT_CHARS);
+  if (wanted.length < MIN_FORGET_FRAGMENT_CHARS || updated.length < 3) {
+    return { ok: false, reason: 'not_found' };
+  }
+
+  const { data: rows, error } = await supabase
+    .from(DATABASE_TABLES.CAT_MEMORIES)
+    .select('id, content')
+    .eq('user_id', userId);
+  if (error) {
+    return { ok: false, reason: 'failed' };
+  }
+  const corpus = (rows ?? []) as Array<{ id: string; content: string }>;
+  let candidates = corpus.filter(m => phrasesOverlap(wanted, m.content));
+
+  if (candidates.length === 0 && embeddingsEnabled()) {
+    try {
+      const vec = await embedText(wanted);
+      if (vec) {
+        const { data: near } = await supabase.rpc('match_cat_memories', {
+          p_user_id: userId,
+          query_embedding: JSON.stringify(vec),
+          match_count: 2,
+          min_similarity: FORGET_MATCH_SIMILARITY,
+        });
+        const nearRows = (Array.isArray(near) ? near : []) as CatMemory[];
+        candidates = nearRows.map(n => ({ id: n.id, content: n.content }));
+      }
+    } catch (err) {
+      logger.warn('editMemory semantic match failed', { err }, 'CatMemory');
+    }
+  }
+
+  if (candidates.length === 0) {
+    return { ok: false, reason: 'not_found' };
+  }
+  if (candidates.length > 1) {
+    return {
+      ok: false,
+      reason: 'ambiguous',
+      candidates: candidates.slice(0, 5).map(c => c.content),
+    };
+  }
+
+  const target = candidates[0];
+  const vec = embeddingsEnabled() ? await embedText(updated) : null;
+  const { error: updateError } = await supabase
+    .from(DATABASE_TABLES.CAT_MEMORIES)
+    .update({
+      content: updated,
+      embedding: vec ? JSON.stringify(vec) : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .eq('id', target.id);
+  if (updateError) {
+    logger.warn('editMemoryMatching update failed', { error: updateError }, 'CatMemory');
+    return { ok: false, reason: 'failed' };
+  }
+  return { ok: true, previous: target.content, updated };
 }
 
 // ─── Extraction ─────────────────────────────────────────────────────────────
@@ -344,10 +701,17 @@ export async function extractAndStoreMemories(
 
     // Embed all candidates in one batch, then dedupe each against what we know.
     const vectors = await embedTexts(facts);
+    // One suppression-list read for the whole batch (not per candidate).
+    const forgottenContents = await loadForgottenContents(supabase, userId);
     const toInsert: Array<{ content: string; embedding: string }> = [];
     for (let i = 0; i < facts.length; i++) {
       const vec = vectors[i];
       if (!vec) {
+        continue;
+      }
+      // A fact the user explicitly forgot must not be re-learned from old
+      // context — that's the suppression contract of forget_memories.
+      if (await isSuppressedFact(supabase, userId, facts[i], vec, forgottenContents)) {
         continue;
       }
       const { data: near } = await supabase.rpc('match_cat_memories', {

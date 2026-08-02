@@ -8,12 +8,14 @@
 
 import { NextRequest } from 'next/server';
 import { createPermissionService } from '@/services/cat';
+import { DEFAULT_PERMISSIONS } from '@/services/cat/permission-service';
 import {
   CAT_ACTIONS,
   ACTION_CATEGORIES,
   ACTION_CATEGORY_KEYS,
   type ActionCategory,
 } from '@/config/cat-actions';
+import { toAutonomyLevel } from '@/config/cat-autonomy';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 import {
@@ -47,16 +49,33 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const permissionService = createPermissionService(supabase);
     const summary = await permissionService.getPermissionSummary(user.id);
+
+    // Resolve each action's EFFECTIVE autonomy level the same way the executor
+    // does (specific row → category row → registry default), so the settings
+    // screen shows what will actually happen, not the shipped defaults.
+    const stored = await permissionService.getUserPermissions(user.id);
+    const byAction = new Map(stored.filter(p => p.action_id !== '*').map(p => [p.action_id, p]));
+    const byCategory = new Map(
+      stored.filter(p => p.action_id === '*').map(p => [p.category as string, p])
+    );
+
     const availableActions = Object.values(CAT_ACTIONS)
       .filter(a => a.enabled)
-      .map(a => ({
-        id: a.id,
-        name: a.name,
-        description: a.description,
-        category: a.category,
-        riskLevel: a.riskLevel,
-        requiresConfirmation: a.requiresConfirmation,
-      }));
+      .map(a => {
+        const row = byAction.get(a.id) ?? byCategory.get(a.category);
+        const autonomy = row
+          ? toAutonomyLevel(row.granted, row.requires_confirmation)
+          : toAutonomyLevel(DEFAULT_PERMISSIONS[a.category] ?? false, a.requiresConfirmation);
+        return {
+          id: a.id,
+          name: a.name,
+          description: a.description,
+          category: a.category,
+          riskLevel: a.riskLevel,
+          requiresConfirmation: a.requiresConfirmation,
+          autonomy,
+        };
+      });
     const categories = Object.entries(ACTION_CATEGORIES).map(([key, value]) => ({
       id: key,
       ...value,
@@ -87,8 +106,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     const { actionId, category, requiresConfirmation, ...rawLimits } = parseResult.data;
 
+    const action = actionId === '*' ? null : CAT_ACTIONS[actionId];
     if (actionId !== '*') {
-      const action = CAT_ACTIONS[actionId];
       if (!action) {
         return apiBadRequest(`Unknown action: ${actionId}`);
       }
@@ -113,15 +132,21 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       limits.maxBtcPerDay = rawLimits.maxBtcPerDay ?? null;
     }
 
+    // High-risk actions (money, public posting) can never be set to run
+    // unconfirmed — the UI hides "Automatic" for them, and this is the
+    // server-side guarantee behind that promise.
+    const effectiveConfirmation =
+      action?.riskLevel === 'high' ? true : (requiresConfirmation ?? true);
+
     const permissionService = createPermissionService(supabase);
     if (actionId === '*') {
       await permissionService.grantCategory(user.id, category as ActionCategory, {
-        requiresConfirmation: requiresConfirmation ?? true,
+        requiresConfirmation: effectiveConfirmation,
         ...limits,
       });
     } else {
       await permissionService.grantPermission(user.id, actionId, category as ActionCategory, {
-        requiresConfirmation: requiresConfirmation ?? true,
+        requiresConfirmation: effectiveConfirmation,
         ...limits,
       });
     }

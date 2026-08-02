@@ -256,13 +256,16 @@ echo "=== ship ops scripts + nightly Cat-eval timer ==="
     scripts/systemd/orangecat-cat-outcomes.service \
     scripts/systemd/orangecat-cat-outcomes.timer \
     scripts/systemd/orangecat-data-invariants.service \
-    scripts/systemd/orangecat-data-invariants.timer "$OC_BOX:/tmp/"
+    scripts/systemd/orangecat-data-invariants.timer \
+    "scripts/systemd/orangecat-cron@cat-brief.timer" \
+    "scripts/systemd/orangecat-cron@cat-watches.timer" "$OC_BOX:/tmp/"
   ssh "${SSH_OPTS[@]}" "$OC_BOX" 'bash -s' <<'EVAL_UNITS'
 set -e
 changed=0
 for u in orangecat-cat-eval.service orangecat-cat-eval.timer \
          orangecat-cat-outcomes.service orangecat-cat-outcomes.timer \
-         orangecat-data-invariants.service orangecat-data-invariants.timer; do
+         orangecat-data-invariants.service orangecat-data-invariants.timer \
+         orangecat-cron@cat-brief.timer orangecat-cron@cat-watches.timer; do
   if ! cmp -s "/tmp/$u" "/etc/systemd/system/$u" 2>/dev/null; then
     install -m 644 "/tmp/$u" "/etc/systemd/system/$u"; changed=1
   fi
@@ -272,9 +275,13 @@ done
 systemctl enable --now orangecat-cat-eval.timer >/dev/null
 systemctl enable --now orangecat-cat-outcomes.timer >/dev/null
 systemctl enable --now orangecat-data-invariants.timer >/dev/null
+systemctl enable --now orangecat-cron@cat-brief.timer >/dev/null
+systemctl enable --now orangecat-cron@cat-watches.timer >/dev/null
 echo "cat-eval timer: $(systemctl is-enabled orangecat-cat-eval.timer) / $(systemctl is-active orangecat-cat-eval.timer)"
 echo "cat-outcomes timer: $(systemctl is-enabled orangecat-cat-outcomes.timer) / $(systemctl is-active orangecat-cat-outcomes.timer)"
 echo "data-invariants timer: $(systemctl is-enabled orangecat-data-invariants.timer) / $(systemctl is-active orangecat-data-invariants.timer)"
+echo "cat-brief timer: $(systemctl is-enabled 'orangecat-cron@cat-brief.timer') / $(systemctl is-active 'orangecat-cron@cat-brief.timer')"
+echo "cat-watches timer: $(systemctl is-enabled 'orangecat-cron@cat-watches.timer') / $(systemctl is-active 'orangecat-cron@cat-watches.timer')"
 EVAL_UNITS
 } || echo "WARN: cat-eval ship step failed (non-fatal)" >&2
 
