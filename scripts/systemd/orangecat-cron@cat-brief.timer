@@ -1,0 +1,12 @@
+# SSOT: repo scripts/systemd/ — installed by deploy-selfhost.sh.
+# Instance of the generic orangecat-cron@.service template (curls
+# /api/cron/cat-brief with CRON_SECRET). Morning brief for active Cat users.
+[Unit]
+Description=OrangeCat Cat daily brief (06:30 UTC)
+
+[Timer]
+OnCalendar=*-*-* 06:30:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

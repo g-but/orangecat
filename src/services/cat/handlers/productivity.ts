@@ -3,7 +3,114 @@ import { TASK_STATUSES } from '@/config/tasks';
 import { parseReminderDate } from './date-utils';
 import type { ActionHandler } from './types';
 
+const WATCH_KINDS = ['funding_reached', 'sale_received', 'booking_received'] as const;
+type WatchKind = (typeof WATCH_KINDS)[number];
+
 export const productivityHandlers: Record<string, ActionHandler> = {
+  // A watch is a reminder with a CONDITION instead of a date. Rows are
+  // evaluated by the cat-watches cron; firing delivers a notification.
+  create_watch: async (supabase, userId, _actorId, params) => {
+    const kind = params.kind as WatchKind;
+    if (!WATCH_KINDS.includes(kind)) {
+      return {
+        success: false,
+        error: `Unknown watch kind "${String(params.kind)}". Use one of: ${WATCH_KINDS.join(', ')}.`,
+      };
+    }
+    const label = typeof params.label === 'string' ? params.label.trim().slice(0, 200) : '';
+    if (!label) {
+      return {
+        success: false,
+        error: 'Pass "label" — what to tell the user when the watch fires.',
+      };
+    }
+    const targetBtc = typeof params.target_btc === 'number' ? params.target_btc : null;
+    const entityId = typeof params.entity_id === 'string' ? params.entity_id : null;
+    if (kind === 'funding_reached' && (!entityId || !targetBtc || targetBtc <= 0)) {
+      return {
+        success: false,
+        error:
+          'funding_reached needs entity_id (the entity being funded, from context) and target_btc > 0.',
+      };
+    }
+
+    const { data, error } = await supabase
+      .from(DATABASE_TABLES.CAT_WATCHES)
+      .insert({
+        user_id: userId,
+        kind,
+        label,
+        entity_type: typeof params.entity_type === 'string' ? params.entity_type : null,
+        entity_id: entityId,
+        target_btc: targetBtc,
+      })
+      .select()
+      .single();
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    const cadence =
+      kind === 'funding_reached'
+        ? ` (fires when funding reaches ${targetBtc} BTC; checked every 15 min)`
+        : ' (checked every 15 min)';
+    return {
+      success: true,
+      data: { ...data, displayMessage: `👁️ Watching: "${label}"${cadence}` },
+    };
+  },
+
+  cancel_watch: async (supabase, userId, _actorId, params) => {
+    const watchId = typeof params.watch_id === 'string' ? params.watch_id : null;
+    if (!watchId) {
+      // Without an id, cancel only when it's unambiguous; otherwise list them.
+      const { data } = await supabase
+        .from(DATABASE_TABLES.CAT_WATCHES)
+        .select('id, label')
+        .eq('user_id', userId)
+        .eq('status', 'active');
+      const active = (data ?? []) as Array<{ id: string; label: string }>;
+      if (active.length === 0) {
+        return { success: false, error: 'No active watches to cancel.' };
+      }
+      if (active.length > 1) {
+        return {
+          success: false,
+          error: `Several active watches: ${active
+            .map(w => `"${w.label}" (watch_id: ${w.id})`)
+            .join(', ')}. Ask which one, then call cancel_watch with that watch_id.`,
+        };
+      }
+      const { error } = await supabase
+        .from(DATABASE_TABLES.CAT_WATCHES)
+        .update({ status: 'cancelled' })
+        .eq('user_id', userId)
+        .eq('id', active[0].id);
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      return {
+        success: true,
+        data: { displayMessage: `🚫 Stopped watching: "${active[0].label}"` },
+      };
+    }
+
+    const { data, error } = await supabase
+      .from(DATABASE_TABLES.CAT_WATCHES)
+      .update({ status: 'cancelled' })
+      .eq('user_id', userId)
+      .eq('id', watchId)
+      .eq('status', 'active')
+      .select('label')
+      .single();
+    if (error || !data) {
+      return { success: false, error: 'No active watch with that id — nothing was cancelled.' };
+    }
+    return {
+      success: true,
+      data: { displayMessage: `🚫 Stopped watching: "${(data as { label: string }).label}"` },
+    };
+  },
+
   create_task: async (supabase, userId, _actorId, params) => {
     // DB columns: current_status (not status), task_type enum: one_time|recurring_scheduled|recurring_as_needed,
     // category enum: cleaning|maintenance|admin|inventory|it|kitchen|workshop|logistics|other,

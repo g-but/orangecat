@@ -1195,6 +1195,77 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     enabled: true,
   },
 
+  create_watch: {
+    id: 'create_watch',
+    name: 'Create Watch',
+    description:
+      'Watch a condition and notify the user when it becomes true: funding_reached (an entity\'s settled funding hits target_btc), sale_received (their next paid sale), or booking_received (their next incoming booking). Use when the user says "tell me when…" about money/sales/bookings. Checked every 15 minutes.',
+    category: 'context',
+    icon: Bell,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      {
+        name: 'kind',
+        type: 'string',
+        required: true,
+        description: 'funding_reached | sale_received | booking_received',
+      },
+      {
+        name: 'label',
+        type: 'string',
+        required: true,
+        description:
+          'What to tell the user when it fires, in their words (e.g. "Your project reached 0.05 BTC!")',
+      },
+      {
+        name: 'entity_id',
+        type: 'entity_id',
+        required: false,
+        description: 'Entity being funded (required for funding_reached — take it from context)',
+      },
+      {
+        name: 'entity_type',
+        type: 'string',
+        required: false,
+        description: 'Type of that entity (project, cause, …)',
+      },
+      {
+        name: 'target_btc',
+        type: 'btc',
+        required: false,
+        description: 'Funding target in BTC (required for funding_reached)',
+      },
+    ],
+    examples: [
+      'Tell me when my project reaches 0.05 BTC',
+      'Let me know when someone books me',
+      'Notify me on my next sale',
+    ],
+    enabled: true,
+  },
+
+  cancel_watch: {
+    id: 'cancel_watch',
+    name: 'Cancel Watch',
+    description:
+      'Stop an active watch. Pass watch_id when known; without it, the single active watch is cancelled, or the result lists the active watches to choose from.',
+    category: 'context',
+    icon: Bell,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      {
+        name: 'watch_id',
+        type: 'string',
+        required: false,
+        description: 'The watch UUID (from an earlier create_watch result or cancel_watch listing)',
+      },
+    ],
+    examples: ['Stop watching my project funding', 'Cancel that watch'],
+    enabled: true,
+  },
+
   // ---------- NOTIFICATION ACTIONS ----------
 
   set_reminder: {

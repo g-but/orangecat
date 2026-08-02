@@ -145,6 +145,7 @@ export const DATABASE_TABLES = {
   CAT_PENDING_ACTIONS: 'cat_pending_actions',
   CAT_MEMORIES: 'cat_memories',
   CAT_FORGOTTEN_FACTS: 'cat_forgotten_facts',
+  CAT_WATCHES: 'cat_watches',
   USER_ECONOMIC_PROFILE: 'user_economic_profile',
   CAT_CREDIT_ENTRIES: 'cat_credit_entries',
   CAT_CREDIT_TOPUPS: 'cat_credit_topups',
