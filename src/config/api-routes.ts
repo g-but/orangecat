@@ -65,6 +65,9 @@ export const API_ROUTES = {
     RECEIVE_STATUS: '/api/wallets/receive-status',
   },
   ENTITY_WALLETS: '/api/entity-wallets',
+  RECEIVE: {
+    REQUEST: '/api/receive/request',
+  },
   NOTIFICATIONS: {
     BASE: '/api/notifications',
     UNREAD: '/api/notifications/unread',
