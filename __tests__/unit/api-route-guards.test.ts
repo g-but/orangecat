@@ -44,10 +44,11 @@ const DELEGATED_REEXPORT = /export\s*\{[^}]*\}\s*from\s*['"]@\/app\/api\//;
 
 /**
  * Evidence of authentication. Factory tokens count because the factories
- * (entityCrudHandler / entityPostHandler) authenticate internally.
+ * (entityCrudHandler / entityPostHandler / taskActionRoute) authenticate
+ * internally.
  */
 const AUTH_TOKENS =
-  /withAuth|withOptionalAuth|createEntityCrudHandlers|createEntityPostHandler|entityPostHandler|resolveRequestAuth|verifyCronSecret|getAuthenticatedUserId|auth\.getUser|REINDEX_SECRET/;
+  /withAuth|withOptionalAuth|createEntityCrudHandlers|createEntityPostHandler|entityPostHandler|createTaskActionRoute|resolveRequestAuth|verifyCronSecret|getAuthenticatedUserId|auth\.getUser|REINDEX_SECRET/;
 
 /** Intentionally-public mutating routes. Every entry needs a reason. */
 const AUTH_ALLOWLIST: Record<string, string> = {
@@ -70,7 +71,8 @@ const AUTH_ALLOWLIST: Record<string, string> = {
  * limiter in @/lib/rate-limit (rateLimit*, apiRateLimited, loanWriteRateLimit)
  * and the factories, which rate-limit internally.
  */
-const RATE_LIMIT_TOKENS = /rateLimit|createEntityCrudHandlers|createEntityPostHandler/i;
+const RATE_LIMIT_TOKENS =
+  /rateLimit|createEntityCrudHandlers|createEntityPostHandler|createTaskActionRoute/i;
 
 /** Mutating routes intentionally left without a write quota. Reasons required. */
 const RATE_LIMIT_ALLOWLIST: Record<string, string> = {

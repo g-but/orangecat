@@ -78,23 +78,13 @@ export interface GroupWithRelations extends Group {
 }
 
 /**
- * Input for creating a new group
+ * Input for creating a new group.
+ *
+ * Derived from `createGroupSchema` (the Zod SSOT) — re-exported here so the
+ * types module stays the import surface. Slug is auto-generated if not
+ * provided.
  */
-export interface CreateGroupInput {
-  name: string;
-  slug?: string | null; // Auto-generated if not provided
-  description?: string | null;
-  label: GroupLabel;
-  tags?: string[];
-  avatar_url?: string | null;
-  banner_url?: string | null;
-  is_public?: boolean;
-  visibility?: GroupVisibility;
-  bitcoin_address?: string | null;
-  lightning_address?: string | null;
-  governance_preset?: GovernancePreset;
-  voting_threshold?: number | null;
-}
+export type { CreateGroupInput } from '@/services/groups/validation';
 
 /**
  * Input for updating a group

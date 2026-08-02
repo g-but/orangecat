@@ -9,47 +9,22 @@
  * Created: 2026-02-05
  */
 
-import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   apiNotFound,
-  apiValidationError,
   apiBadRequest,
   apiInternalError,
   apiSuccess,
-  apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
-import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { createTaskActionRoute } from '@/lib/api/taskActionRoute';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskCompletionSchema } from '@/lib/schemas/tasks';
 import { NotificationService } from '@/lib/services/notifications';
 import { logger } from '@/utils/logger';
 
-interface RouteContext {
-  params: Promise<{ id: string }>;
-}
-
-export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
-  const { id: taskId } = await context.params;
-  const idValidation = getValidationError(validateUUID(taskId, 'task ID'));
-  if (idValidation) {
-    return idValidation;
-  }
-  const { user, supabase } = request;
-  try {
-    const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {
-      return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
-    }
-
-    const body = await request.json().catch(() => ({}));
-    const result = taskCompletionSchema.safeParse(body);
-    if (!result.success) {
-      return apiValidationError('Validation failed', result.error.flatten());
-    }
-
-    const completionData = result.data;
-
+export const POST = createTaskActionRoute({
+  schema: taskCompletionSchema,
+  routeName: 'POST /api/tasks/[id]/complete',
+  handler: async ({ taskId, user, supabase, data: completionData }) => {
     const { data: task, error: taskError } = await supabase
       .from(DATABASE_TABLES.TASKS)
       .select('id, title, task_type, is_completed, created_by')
@@ -110,8 +85,5 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     }
 
     return apiSuccess({ completion }, { status: 201 });
-  } catch (err) {
-    logger.error('Exception in POST /api/tasks/[id]/complete', { error: err }, 'TasksAPI');
-    return apiInternalError();
-  }
+  },
 });

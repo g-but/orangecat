@@ -7,46 +7,18 @@
  * If omitted, broadcasts to ALL team members.
  */
 
-import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import {
-  apiNotFound,
-  apiValidationError,
-  apiInternalError,
-  apiSuccess,
-  apiRateLimited,
-} from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
-import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { apiNotFound, apiInternalError, apiSuccess } from '@/lib/api/standardResponse';
+import { createTaskActionRoute } from '@/lib/api/taskActionRoute';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { taskRequestSchema } from '@/lib/schemas/tasks';
 import { TASK_STATUSES, REQUEST_STATUSES } from '@/config/tasks';
 import { NotificationService } from '@/lib/services/notifications';
 import { logger } from '@/utils/logger';
 
-interface RouteContext {
-  params: Promise<{ id: string }>;
-}
-
-export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
-  const { id: taskId } = await context.params;
-  const idValidation = getValidationError(validateUUID(taskId, 'task ID'));
-  if (idValidation) {
-    return idValidation;
-  }
-  const { user, supabase } = request;
-  try {
-    const rl = await rateLimitWriteAsync(user.id);
-    if (!rl.success) {
-      return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
-    }
-
-    const body = await request.json().catch(() => ({}));
-    const result = taskRequestSchema.safeParse(body);
-    if (!result.success) {
-      return apiValidationError('Validation failed', result.error.flatten());
-    }
-    const d = result.data;
-
+export const POST = createTaskActionRoute({
+  schema: taskRequestSchema,
+  routeName: 'POST /api/tasks/[id]/request',
+  handler: async ({ taskId, user, supabase, data: d }) => {
     // Verify task exists
     const { data: task, error: taskError } = await supabase
       .from(DATABASE_TABLES.TASKS)
@@ -124,8 +96,5 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     }
 
     return apiSuccess({ request: taskRequest }, { status: 201 });
-  } catch (err) {
-    logger.error('Exception in POST /api/tasks/[id]/request', { error: err }, 'TasksAPI');
-    return apiInternalError();
-  }
+  },
 });
