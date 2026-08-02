@@ -7,6 +7,7 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
+import { z } from 'zod';
 import {
   apiSuccess,
   apiUnauthorized,
@@ -28,6 +29,10 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
+// Value membership + transition rules are checked below against the
+// entity-status config — this only pins the body shape.
+const statusBodySchema = z.object({ status: z.string().min(1) });
+
 // PATCH /api/projects/[id]/status - Update project status
 export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
@@ -45,15 +50,12 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     if (idValidation) {
       return idValidation;
     }
-    const body = await request.json();
-    const { status } = body;
-
-    // Validate status
-    if (!status || typeof status !== 'string') {
+    const parsed = statusBodySchema.safeParse(await request.json().catch(() => ({})));
+    if (!parsed.success) {
       return apiValidationError('Status is required');
     }
 
-    const normalizedStatus = status.toLowerCase() as ProjectStatus;
+    const normalizedStatus = parsed.data.status.toLowerCase() as ProjectStatus;
     if (!VALID_PROJECT_STATUSES.includes(normalizedStatus)) {
       return apiValidationError(
         `Invalid status. Must be one of: ${VALID_PROJECT_STATUSES.join(', ')}`

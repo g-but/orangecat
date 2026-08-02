@@ -17,6 +17,8 @@
 
 import { NextResponse } from 'next/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { generateOffers } from '@/services/cat/offer-engine';
@@ -33,6 +35,12 @@ export async function POST(request: Request) {
   } = await auth.auth.getUser();
   if (!user) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Every call triggers an LLM completion — per-user write limit.
+  const rl = await rateLimitWriteAsync(user.id);
+  if (!rl.success) {
+    return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
   }
 
   let body: unknown;

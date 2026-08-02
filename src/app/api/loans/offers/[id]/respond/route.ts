@@ -4,7 +4,7 @@
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
-import { loanDomainFailureResponse, parseLoanBody } from '@/lib/api/loanRoutes';
+import { loanDomainFailureResponse, loanWriteRateLimit, parseLoanBody } from '@/lib/api/loanRoutes';
 import { respondToLoanOfferSchema } from '@/config/loan-offers';
 import { respondToLoanOffer } from '@/domain/loans/offers';
 import { logger } from '@/utils/logger';
@@ -17,6 +17,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest, { params }: R
   try {
     const { user, supabase } = request;
     const { id: offerId } = await params;
+
+    const limited = await loanWriteRateLimit(user.id);
+    if (limited) {
+      return limited;
+    }
 
     const parsed = await parseLoanBody(request, respondToLoanOfferSchema);
     if (!parsed.ok) {

@@ -1,10 +1,21 @@
+import { z } from 'zod';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { logger } from '@/utils/logger';
-import { apiSuccess, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
+import {
+  apiSuccess,
+  apiBadRequest,
+  apiInternalError,
+  apiRateLimited,
+} from '@/lib/api/standardResponse';
 import { applyRateLimitHeaders, rateLimitSocialAsync, retryAfterSeconds } from '@/lib/rate-limit';
-import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
+
+const unfollowBodySchema = z.object({
+  following_id: z
+    .string({ required_error: 'following_id is required' })
+    .uuid('Invalid following_id format'),
+});
 
 async function handleUnfollow(request: AuthenticatedRequest) {
   try {
@@ -19,13 +30,11 @@ async function handleUnfollow(request: AuthenticatedRequest) {
       );
     }
 
-    const { following_id } = await request.json();
-
-    // Validate input using centralized validator
-    const validationError = getValidationError(validateUUID(following_id, 'following_id'));
-    if (validationError) {
-      return validationError;
+    const parsed = unfollowBodySchema.safeParse(await request.json().catch(() => ({})));
+    if (!parsed.success) {
+      return apiBadRequest(parsed.error.errors[0]?.message ?? 'Invalid following_id');
     }
+    const { following_id } = parsed.data;
 
     // Delete follow relationship
     const { error } = await supabase

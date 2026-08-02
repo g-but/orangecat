@@ -1,6 +1,7 @@
 import {
   apiBadRequest,
   apiNotFound,
+  apiRateLimited,
   apiSuccess,
 } from '@/lib/api/standardResponse';
 import {
@@ -9,6 +10,13 @@ import {
 } from '@/domain/payments';
 import { publicPaymentActionSchema } from '@/lib/validation/finance';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
+
+// Same per-IP keying as ../route.ts — anonymous callers, so IP is the only handle.
+function requestKey(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  return `public-payment-action:${forwarded || request.headers.get('x-real-ip') || 'anonymous'}`;
+}
 
 function readToken(request: Request): string | null {
   const token = request.headers.get('x-payment-token');
@@ -40,6 +48,14 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const limit = await rateLimitWriteAsync(requestKey(request));
+  if (!limit.success) {
+    return apiRateLimited(
+      'Too many payment requests. Please try again shortly.',
+      retryAfterSeconds(limit)
+    );
+  }
+
   const { id } = await context.params;
   const idError = getValidationError(validateUUID(id, 'payment ID'));
   if (idError) {

@@ -7,9 +7,16 @@ import {
   apiSuccess,
   apiInternalError,
 } from '@/lib/api/standardResponse';
+import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Unauthenticated session mutation — per-IP limit against token-stuffing.
+    const rl = await rateLimit(request);
+    if (!rl.success) {
+      return createRateLimitResponse(rl);
+    }
+
     let body: { accessToken?: string; refreshToken?: string };
     try {
       body = await request.json();

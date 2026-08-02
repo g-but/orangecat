@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { rateLimitWriteAsync } from '@/lib/rate-limit';
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -17,6 +18,13 @@ export async function POST(request: Request) {
       data: { user },
     } = await auth.auth.getUser();
     if (!user) {
+      return NextResponse.json({ success: true });
+    }
+
+    // Over-quota callers get the same always-success contract — just skip the
+    // write. Logging must never disrupt search, but writes stay bounded.
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
       return NextResponse.json({ success: true });
     }
 

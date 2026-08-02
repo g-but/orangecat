@@ -73,7 +73,6 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
       return apiRateLimited('Too many requests. Please slow down.', retryAfter);
     }
 
-    const _body = await request.json();
     const supabase = request.supabase;
 
     // Get group first
