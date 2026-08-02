@@ -53,7 +53,8 @@ const METHOD_LABELS: Record<string, string> = {
   onchain: 'On-chain Bitcoin',
 };
 
-function hashPublicStatusToken(token: string): string {
+/** SSOT for public status-token hashing — also consumed by the L402 surface. */
+export function hashPublicStatusToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
@@ -321,9 +322,7 @@ export async function initiatePublicSupport(
  * intent. Returns the same public shape as support: a bearer status token the
  * anonymous tipper polls with.
  */
-export async function initiateTip(
-  input: InitiateTipInput
-): Promise<InitiatePublicSupportResult> {
+export async function initiateTip(input: InitiateTipInput): Promise<InitiatePublicSupportResult> {
   const { recipientUserId, recipientName, wallet, amountBtc } = input;
   const description = `Tip for ${recipientName}`;
   const invoice = await generateInvoice(wallet, amountBtc, description);
