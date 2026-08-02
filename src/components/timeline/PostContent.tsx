@@ -165,7 +165,7 @@ export function PostContent({ event }: PostContentProps) {
           <div className="p-3 sm:p-4 space-y-2">
             <div className="flex items-start gap-3">
               <Link href={`/profiles/${originalAuthor.username}`} className="flex-shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element -- Dynamic user avatar */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- avatar_url is a free-form user URL (any host); next/image would throw for hosts outside images.remotePatterns */}
                 <img
                   src={originalAuthor.avatar}
                   alt={originalAuthor.name}
@@ -211,7 +211,7 @@ export function PostContent({ event }: PostContentProps) {
           <div className="p-3 sm:p-4 space-y-2">
             <div className="flex items-start gap-3">
               <Link href={`/profiles/${originalAuthor.username}`} className="flex-shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element -- Dynamic user avatar */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- avatar_url is a free-form user URL (any host); next/image would throw for hosts outside images.remotePatterns */}
                 <img
                   src={originalAuthor.avatar}
                   alt={originalAuthor.name}
@@ -244,7 +244,7 @@ export function PostContent({ event }: PostContentProps) {
       {/* Attached image — plain <img>: Openverse hosts aren't in next/image remotePatterns */}
       {postImage && !isRepost && (
         <figure className="mt-3">
-          {/* eslint-disable-next-line @next/next/no-img-element -- external (Openverse) host */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- external (Openverse) host, not in next/image remotePatterns */}
           <img
             src={postImage.url}
             alt={postImage.alt || ''}

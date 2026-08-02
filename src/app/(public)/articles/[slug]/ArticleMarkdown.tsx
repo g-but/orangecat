@@ -55,7 +55,7 @@ const components = {
   ),
   hr: () => <hr className="my-10 border-t border-subtle" />,
   img: ({ alt, ...props }: ComponentProps<'img'>) => (
-    // eslint-disable-next-line @next/next/no-img-element
+    // eslint-disable-next-line @next/next/no-img-element -- markdown-authored src: any host, unknown dimensions; next/image would throw for hosts outside images.remotePatterns
     <img
       alt={alt || ''}
       className="my-8 w-full rounded-lg border border-subtle"

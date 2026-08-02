@@ -11,7 +11,6 @@ import { resolveGroupBySlug } from '@/domain/groups/helpers.server';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = any;
 
 const MAX_LIMIT = 50;

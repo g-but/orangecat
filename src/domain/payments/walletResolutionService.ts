@@ -72,7 +72,6 @@ export async function resolveSellerWallet(
   }
 
   // The userIdField could be actor_id, user_id, or profile_id
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic column from entity registry
   const ownerId = (entity as any)[meta.userIdField] as string;
 
   // Step 2: Resolve the owner to an actor or user ID
@@ -169,7 +168,6 @@ export async function getSellerUserId(
     return null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic column from entity registry
   const ownerId = (entity as any)[meta.userIdField] as string;
 
   if (meta.userIdField === 'actor_id') {

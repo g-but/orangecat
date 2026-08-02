@@ -6,12 +6,10 @@
  * the cache is older than ~24h. Dismissed nudges never reappear (dedupe_key).
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextResponse } from 'next/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { apiRateLimited } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiSuccess, apiBadRequest, apiRateLimited } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
-import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { generateNudges } from '@/services/cat/nudges';
 import { logger } from '@/utils/logger';
@@ -20,15 +18,13 @@ export const dynamic = 'force-dynamic';
 
 const STALE_MS = 24 * 60 * 60 * 1000;
 
-export async function GET() {
-  const auth = await createServerClient();
-  const {
-    data: { user },
-  } = await auth.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-  }
+export const GET = withAuth(async (req: AuthenticatedRequest) => {
+  const { user } = req;
 
+  // Admin client kept on purpose: user_nudges has no RLS policies (RLS is not
+  // even enabled on it in the baseline schema), and generateNudges reads
+  // search_queries, which is RLS-on with zero policies — a session client would
+  // see nothing. Every user_nudges query below pins user_id explicitly.
   const db = createAdminClient() as any;
 
   const { data: existing } = await db
@@ -42,7 +38,8 @@ export async function GET() {
   const newest = existing?.[0]?.generated_at ? new Date(existing[0].generated_at).getTime() : 0;
   let stale = !existing?.length || Date.now() - newest > STALE_MS;
   if (!stale) {
-    const { data: prof } = await db
+    // Own-profile read — the session client's RLS (public profile select) covers it.
+    const { data: prof } = await req.supabase
       .from(DATABASE_TABLES.PROFILES)
       .select('updated_at')
       .eq('id', user.id)
@@ -53,7 +50,7 @@ export async function GET() {
   }
 
   if (!stale) {
-    return NextResponse.json({ success: true, nudges: existing, cached: true });
+    return apiSuccess({ nudges: existing, cached: true });
   }
 
   // Regenerate.
@@ -96,34 +93,30 @@ export async function GET() {
       .eq('user_id', user.id)
       .eq('status', 'active')
       .order('score', { ascending: false });
-    return NextResponse.json({ success: true, nudges: stored ?? [], cached: false });
+    return apiSuccess({ nudges: stored ?? [], cached: false });
   } catch (err) {
     logger.error('nudges generation failed', { err }, 'Nudges');
-    return NextResponse.json({ success: true, nudges: existing ?? [], cached: true });
+    return apiSuccess({ nudges: existing ?? [], cached: true });
   }
-}
+});
 
-export async function POST(request: Request) {
-  const auth = await createServerClient();
-  const {
-    data: { user },
-  } = await auth.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-  }
+export const POST = withAuth(async (req: AuthenticatedRequest) => {
+  const { user } = req;
   const rl = await rateLimitWriteAsync(user.id);
   if (!rl.success) {
     return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
   }
-  const body = await request.json().catch(() => ({}));
+  const body = await req.json().catch(() => ({}));
   if (body?.action !== 'dismiss' || !body?.id) {
-    return NextResponse.json({ success: false, error: 'Bad request' }, { status: 400 });
+    return apiBadRequest('Bad request');
   }
+  // Admin client kept on purpose: user_nudges has no RLS policies, so a session
+  // client has no owner scoping to lean on — the user_id filter below is the guard.
   const db = createAdminClient() as any;
   await db
     .from(DATABASE_TABLES.USER_NUDGES)
     .update({ status: 'dismissed', dismissed_at: new Date().toISOString() })
     .eq('user_id', user.id)
     .eq('id', body.id);
-  return NextResponse.json({ success: true });
-}
+  return apiSuccess({ dismissed: true });
+});

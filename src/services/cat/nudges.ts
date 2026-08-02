@@ -19,7 +19,6 @@
  * Results are cached in user_nudges; dismissed ones never reappear (dedupe_key).
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { ROUTES } from '@/config/routes';

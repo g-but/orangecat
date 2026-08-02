@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { ROUTES } from '@/config/routes';
 import { API_ROUTES } from '@/config/api-routes';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { fromAutonomyLevel, type AutonomyLevel } from '@/config/cat-autonomy';
 import Loading from '@/components/Loading';
 import { TooltipProvider } from '@/components/ui/Tooltip';
 import type { PermissionData } from './types';
@@ -91,14 +92,27 @@ export default function CatPermissionsPage() {
     }
   };
 
-  const toggleAction = async (actionId: string, category: string, enabled: boolean) => {
+  // Off / Ask first / Automatic → the two stored booleans (cat-autonomy SSOT).
+  const setActionAutonomy = async (actionId: string, category: string, level: AutonomyLevel) => {
     setSaving(actionId);
     const previousData = data;
+    // Optimistic: the ladder must feel instant; rolled back on failure.
+    setData(prev =>
+      prev
+        ? {
+            ...prev,
+            availableActions: prev.availableActions.map(a =>
+              a.id === actionId ? { ...a, autonomy: level } : a
+            ),
+          }
+        : prev
+    );
+    const { granted, requiresConfirmation } = fromAutonomyLevel(level);
     try {
       const res = await fetch(API_ROUTES.CAT.PERMISSIONS, {
-        method: enabled ? 'POST' : 'DELETE',
+        method: granted ? 'POST' : 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ actionId, category, requiresConfirmation: true }),
+        body: JSON.stringify({ actionId, category, requiresConfirmation }),
       });
       const json = await res.json();
       if (json.success && json.data?.summary) {
@@ -203,7 +217,7 @@ export default function CatPermissionsPage() {
                   saving={saving}
                   onToggleExpanded={toggleExpanded}
                   onToggleCategory={toggleCategory}
-                  onToggleAction={toggleAction}
+                  onSetAutonomy={setActionAutonomy}
                 />
                 {cat.category === 'payments' && cat.enabled && (
                   <SpendCapsCard

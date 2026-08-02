@@ -14,9 +14,7 @@ interface UseAuthSubmissionOptions {
   setMode: (mode: AuthMode) => void;
   setShowMFAVerify: (show: boolean) => void;
   rememberMe: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   signUp: (email: string, password: string) => Promise<any>;
 }
 

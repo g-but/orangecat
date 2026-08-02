@@ -1,6 +1,5 @@
 import { BookOpen, Wallet, Shield, TrendingUp, Globe, Zap, Lightbulb } from 'lucide-react';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type IconComponent = React.ComponentType<any>;
 
 export interface LearningPath {

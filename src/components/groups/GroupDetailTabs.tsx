@@ -61,7 +61,6 @@ export function GroupDetailTabs({
             <CardTitle>About</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* eslint-disable-next-line no-restricted-syntax -- body text; gray-300 dark (83%) sits between foreground (98%) and muted-foreground (53%), no semantic token covers this */}
             <p className="text-fg-primary dark:text-fg-tertiary whitespace-pre-wrap">
               {group.description || 'No description provided.'}
             </p>

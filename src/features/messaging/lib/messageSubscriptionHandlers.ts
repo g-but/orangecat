@@ -49,7 +49,6 @@ export async function handleMessageUpdate(
   callbacksRef: CallbacksRef
 ) {
   const { onNewMessage } = callbacksRef.current;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   debugLog('[useMessageSubscription] update', (payload.new as any)?.id);
   if (onNewMessage && payload.new) {
     try {

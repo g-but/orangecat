@@ -34,7 +34,7 @@ export function CatNudges() {
       .then(r => (r.ok ? r.json() : null))
       .then(d => {
         if (on && d?.success) {
-          setNudges((d.nudges || []).slice(0, DASHBOARD_NUDGE_CAP));
+          setNudges((d.data?.nudges || []).slice(0, DASHBOARD_NUDGE_CAP));
         }
       })
       .catch(() => {

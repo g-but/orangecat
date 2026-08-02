@@ -5,7 +5,6 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import type { EntitySummary, FullUserContext } from './document-context-types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyQuery = any;
 
 async function fetchEntityBatch(
@@ -21,7 +20,6 @@ async function fetchEntityBatch(
   },
   map: (row: Record<string, unknown>) => EntitySummary
 ): Promise<EntitySummary[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let q = (supabase as any)
     .from(opts.tableName)
     .select(opts.select)

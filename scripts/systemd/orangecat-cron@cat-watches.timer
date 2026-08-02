@@ -1,0 +1,12 @@
+# SSOT: repo scripts/systemd/ — installed by deploy-selfhost.sh.
+# Instance of the generic orangecat-cron@.service template (curls
+# /api/cron/cat-watches with CRON_SECRET). Evaluates active Cat watches.
+[Unit]
+Description=OrangeCat Cat watch evaluation (every 15 min)
+
+[Timer]
+OnCalendar=*:00/15
+Persistent=true
+
+[Install]
+WantedBy=timers.target

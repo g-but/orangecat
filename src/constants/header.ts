@@ -58,7 +58,6 @@ export const MOBILE_MENU = {
   MAX_WIDTH: 'max-w-[85vw] sm:max-w-sm',
   /** Position */
   POSITION: 'fixed top-16 bottom-0 left-0',
-  // eslint-disable-next-line no-restricted-syntax -- mobile menu uses gray-900 dark; bg-surface-base (3.9%) and bg-surface-raised (11%) diverge visually from the intended shade
   BACKGROUND: 'bg-surface-base dark:bg-surface-page',
   /** Shadow */
   SHADOW: 'shadow-sm',

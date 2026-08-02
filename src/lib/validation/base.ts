@@ -99,8 +99,12 @@ export const optionalUrl = () => z.string().url().optional().nullable().or(z.lit
  * column, and available for the input layer to coerce at the source.
  */
 export const coerceCoordinate = (val: unknown): number | null => {
-  if (val === '' || val === null || val === undefined) return null;
-  if (typeof val === 'number') return Number.isNaN(val) ? null : val;
+  if (val === '' || val === null || val === undefined) {
+    return null;
+  }
+  if (typeof val === 'number') {
+    return Number.isNaN(val) ? null : val;
+  }
   if (typeof val === 'string') {
     const n = Number(val.trim());
     return val.trim() === '' || Number.isNaN(n) ? null : n;
@@ -294,8 +298,12 @@ export function normalizeProfileData(data: unknown): ProfileData {
   // reaches the numeric DB column as "". Defends the server path; the input
   // layer (ProfileLocationSection) also coerces so the client resolver, which
   // validates raw form values against z.number(), never sees "".
-  if ('latitude' in normalized) normalized.latitude = coerceCoordinate(normalized.latitude);
-  if ('longitude' in normalized) normalized.longitude = coerceCoordinate(normalized.longitude);
+  if ('latitude' in normalized) {
+    normalized.latitude = coerceCoordinate(normalized.latitude);
+  }
+  if ('longitude' in normalized) {
+    normalized.longitude = coerceCoordinate(normalized.longitude);
+  }
 
   // Auto-add https:// to website if protocol is missing
   if (normalized.website && typeof normalized.website === 'string') {

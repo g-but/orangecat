@@ -47,7 +47,10 @@ export function applyTaskAiData(prev: TaskFormData, data: Record<string, unknown
   if (typeof data.schedule_human === 'string') {
     next.schedule_human = data.schedule_human;
   }
-  if (typeof data.task_type === 'string' && TASK_TYPE_OPTIONS.includes(data.task_type as TaskType)) {
+  if (
+    typeof data.task_type === 'string' &&
+    TASK_TYPE_OPTIONS.includes(data.task_type as TaskType)
+  ) {
     next.task_type = data.task_type as TaskType;
   }
   if (
@@ -66,4 +69,49 @@ export function applyTaskAiData(prev: TaskFormData, data: Record<string, unknown
     next.tags = data.tags.filter((tag): tag is string => typeof tag === 'string').slice(0, 10);
   }
   return next;
+}
+
+/**
+ * Validate task form state. Shared by the new-task and edit-task hooks so the
+ * field limits live in one place. Returns a field → message map (empty = valid).
+ */
+export function validateTaskForm(formData: TaskFormData): Record<string, string> {
+  const newErrors: Record<string, string> = {};
+  if (!formData.title.trim()) {
+    newErrors.title = 'Title is required';
+  } else if (formData.title.length > 200) {
+    newErrors.title = 'Title must be at most 200 characters';
+  }
+  if (formData.description && formData.description.length > 2000) {
+    newErrors.description = 'Description must be at most 2000 characters';
+  }
+  if (formData.instructions && formData.instructions.length > 5000) {
+    newErrors.instructions = 'Instructions must be at most 5000 characters';
+  }
+  if (
+    formData.estimated_minutes &&
+    (formData.estimated_minutes < 1 || formData.estimated_minutes > 480)
+  ) {
+    newErrors.estimated_minutes = 'Estimated time must be between 1 and 480 minutes';
+  }
+  return newErrors;
+}
+
+/**
+ * Map task form state to the API request body (POST and PATCH share the shape).
+ */
+export function taskFormToPayload(formData: TaskFormData) {
+  return {
+    title: formData.title.trim(),
+    description: formData.description.trim() || null,
+    instructions: formData.instructions.trim() || null,
+    task_type: formData.task_type,
+    schedule_cron: formData.schedule_cron.trim() || null,
+    schedule_human: formData.schedule_human.trim() || null,
+    category: formData.category,
+    tags: formData.tags,
+    priority: formData.priority,
+    estimated_minutes: formData.estimated_minutes || null,
+    project_id: formData.project_id || null,
+  };
 }

@@ -1,0 +1,63 @@
+name: Main Red Alert
+
+# A red main is invisible until someone else's PR inherits the failure.
+# That happened on 2026-08-02: a PR whose CI passed against an older base
+# merged and broke a lint gate added two hours earlier, main went red, and
+# nobody noticed until an unrelated PR failed on the same rule. Green CI on a
+# stale base is not evidence that main is green.
+#
+# This files (or updates) ONE issue the moment CI fails on main, and closes it
+# when main is green again — so "is main broken?" is answerable without
+# watching Actions.
+
+on:
+  workflow_run:
+    workflows: ['CI']
+    branches: [main]
+    types: [completed]
+
+permissions:
+  issues: write
+  actions: read
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: File or resolve the main-red issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          TITLE="🔴 main is red — CI failing on main"
+
+          # A cancelled run means a newer push superseded this one (the CI
+          # concurrency group cancels in-progress runs). That is not a failure,
+          # and treating it as one is how "cancelled" gets misread as "broken".
+          if [ "$CONCLUSION" != "failure" ]; then
+            existing=$(gh issue list -R "$REPO" --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')
+            if [ "$CONCLUSION" = "success" ] && [ -n "$existing" ]; then
+              gh issue close "$existing" -R "$REPO" \
+                --comment "main is green again as of ${RUN_SHA:0:8} — $RUN_URL"
+            fi
+            exit 0
+          fi
+
+          BODY=$(printf '%s\n' \
+            "CI failed on \`main\` at commit \`${RUN_SHA:0:8}\`." \
+            "" \
+            "Run: $RUN_URL" \
+            "" \
+            "**Every PR branched from this commit inherits the failure**, so fix or revert before merging anything else." \
+            "This issue closes itself when a CI run on main succeeds.")
+
+          existing=$(gh issue list -R "$REPO" --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" -R "$REPO" --body "$BODY"
+          else
+            gh issue create -R "$REPO" --title "$TITLE" --body "$BODY"
+          fi

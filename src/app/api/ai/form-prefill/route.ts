@@ -12,12 +12,12 @@
 import { z } from 'zod';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
+  apiSuccess,
   apiBadRequest,
   apiValidationError,
   apiRateLimited,
   apiInternalError,
 } from '@/lib/api/standardResponse';
-import { NextResponse } from 'next/server';
 import { generateFormPrefill } from '@/lib/ai/form-prefill-service';
 import { resolveAiAssistTarget } from '@/lib/ai/assist-target';
 import { logger } from '@/utils/logger';
@@ -137,9 +137,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       'AI'
     );
 
-    // Return flat structure — AIPrefillBar reads result.data/changedFields/confidence directly
-    return NextResponse.json({
-      success: true,
+    // Standard envelope — AIPrefillBar unwraps and reads data/changedFields/confidence.
+    return apiSuccess({
       data: result.data,
       changedFields: result.changedFields ?? [],
       confidence: result.confidence,

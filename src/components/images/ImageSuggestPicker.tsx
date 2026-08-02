@@ -239,7 +239,7 @@ export default function ImageSuggestPicker({
                     )}
                     title={img.creator ? `${img.title} · ${img.creator}` : img.title}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {/* eslint-disable-next-line @next/next/no-img-element -- Openverse thumbnails live on arbitrary external hosts; next/image would throw for hosts outside images.remotePatterns */}
                     <img
                       src={img.thumbUrl}
                       alt={img.title}

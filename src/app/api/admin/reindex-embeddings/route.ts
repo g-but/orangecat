@@ -10,7 +10,7 @@
  * embedding call; the reconciler converges the index in the background.
  */
 
-import { NextResponse } from 'next/server';
+import { apiSuccess, apiUnauthorized, apiServiceUnavailable } from '@/lib/api/standardResponse';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { embeddingsEnabled } from '@/services/ai/embeddings';
 import { reconcileOne, reconcileCorpus } from '@/services/search/reindexService';
@@ -21,16 +21,12 @@ export const maxDuration = 300;
 export async function POST(request: Request) {
   const secret = process.env.REINDEX_SECRET;
   if (!secret || request.headers.get('x-reindex-secret') !== secret) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    return apiUnauthorized();
   }
   if (!embeddingsEnabled()) {
-    return NextResponse.json(
-      { success: false, error: 'No embedding provider configured (set OPENAI_API_KEY).' },
-      { status: 503 }
-    );
+    return apiServiceUnavailable('No embedding provider configured (set OPENAI_API_KEY).');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
 
   // Single-row reconcile: the DB trigger POSTs {entity_type, entity_id} on each
@@ -43,10 +39,10 @@ export async function POST(request: Request) {
   }
   if (target?.entity_type && target?.entity_id) {
     const r = await reconcileOne(supabase, String(target.entity_type), String(target.entity_id));
-    return NextResponse.json({ success: true, mode: 'single', ...r });
+    return apiSuccess({ mode: 'single', ...r });
   }
 
   const full = new URL(request.url).searchParams.get('full') === 'true';
   const result = await reconcileCorpus(supabase, { full });
-  return NextResponse.json(result);
+  return apiSuccess(result);
 }

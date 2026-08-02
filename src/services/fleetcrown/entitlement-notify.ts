@@ -88,7 +88,6 @@ export async function notifyFleetCrownEntitlement(pi: PaymentIntent): Promise<vo
   } // only product passes carry a plan
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const admin = getAdminClient() as any;
 
     const meta = getEntityMetadata('product' as EntityType);

@@ -59,18 +59,20 @@ One silent-data-loss bug was found during the audit and fixed immediately: the p
 
 ## Enforcement Ledger (Never-Twice)
 
-| Class                                           | Gate                                                   | Status          |
-| ----------------------------------------------- | ------------------------------------------------------ | --------------- |
-| Form-field ↔ schema drift                       | `entity-form-schema-drift.test.ts`                     | ✅ (2026-07-13) |
-| Migration timestamp collisions                  | `migrations-unique-version.test.ts`                    | ✅ (#541)       |
-| Profile allow-list drift                        | schema derivation + `profile-updatable-fields.test.ts` | ✅ this PR      |
-| Missing auth on mutating routes                 | route-walker test (pins today's 0)                     | Slice 2         |
-| Missing rate limit on mutating routes           | same walker, allowlist ratcheting down                 | Slice 2         |
-| New `/api/` + app-route literals                | ESLint `no-restricted-syntax`                          | Slice 3         |
-| New admin-client call sites                     | ESLint `no-restricted-imports`                         | Slice 3         |
-| Raw `NextResponse.json` in api/ (5 files today) | ESLint rule (allowlist lnurlp/openapi)                 | Slice 3         |
-| Currency-format bypasses                        | ESLint `no-restricted-syntax`                          | Slice 3         |
-| Legacy-class + clone counts                     | grep/jscpd ratchet in `npm run verify`                 | Phase B         |
+| Class                                   | Gate                                                    | Status          |
+| --------------------------------------- | ------------------------------------------------------- | --------------- |
+| Form-field ↔ schema drift               | `entity-form-schema-drift.test.ts`                      | ✅ (2026-07-13) |
+| Migration timestamp collisions          | `migrations-unique-version.test.ts`                     | ✅ (#541)       |
+| Profile allow-list drift                | schema derivation + `profile-updatable-fields.test.ts`  | ✅ this PR      |
+| Missing auth on mutating routes         | `api-route-guards.test.ts` walker (pins today's 0)      | ✅ (#559)       |
+| Missing rate limit on mutating routes   | same walker, allowlist ratcheting down                  | ✅ (#559)       |
+| New `/api/` + app-route literals        | ESLint `no-restricted-syntax`                           | ✅ (#557)       |
+| New admin-client call sites             | (deferred — see Phase D)                                | ⏳ open         |
+| Raw `NextResponse.json` in api/         | ESLint rule (allowlist lnurlp/openapi)                  | ✅ (#572)       |
+| Currency-format bypasses                | swept to the SSOT formatter                             | ✅ (#557)       |
+| Clone percentage                        | `check:duplication` ratchet in `verify` (baseline 1.3%) | ✅ (#567)       |
+| File sizes (components/routes/services) | `check:sizes` ratchet in `verify` (list only shrinks)   | ✅ (#566)       |
+| Public-surface row filtering            | `public-surface-filtering.test.ts`                      | ✅ (#572)       |
 
 ## Judged Clean (do not re-litigate)
 
@@ -78,4 +80,35 @@ Auth coverage (five legitimate mechanisms across 211 routes), error-message hygi
 
 ---
 
-_Remediation is being shipped as ranked slices (1: profile-save SSOT + settings IA — this PR; 2: API security gaps + route-walker gates; 3: literal sweeps + lint gates + UI mechanical fixes; 4: designed states). Phases A (types generation), B (clone refactors), C (god-file splits) are deliberately un-started multi-PR efforts to be picked up as their own tasks._
+## Completion status (2026-08-02, end of sweep)
+
+Everything in this report shipped the same day except Phase A, which is documented below as a scoped follow-up.
+
+| Package                                                    | PR   | Outcome                                                                                                                      |
+| ---------------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Slice 1 — profile-save SSOT + settings IA                  | #552 | ✅ merged + deployed. Found and fixed silent field loss (currency/background/inspiration_statement dropped from every save). |
+| Slice 2 — API rate limits + validation + route-walker gate | #559 | ✅ merged + deployed                                                                                                         |
+| Slice 3 — literal sweeps + lint gate + UI mechanical       | #557 | ✅ merged + deployed. Legacy shadcn classes now 0 repo-wide.                                                                 |
+| Slice 4 — designed empty/error states + presence beacon    | #569 | ✅ merged                                                                                                                    |
+| API polish — responses, session-client, contract test, img | #572 | ✅ merged                                                                                                                    |
+| Phase B — clone dedup + ratchet                            | #567 | ✅ **duplication 2.61% → 1.2%** (447 → 157 clones)                                                                           |
+| Phase C — god-file splits + size gate                      | #566 | ✅ merged. `paymentFlowService` 931 lines → façade + modules.                                                                |
+| Phase A — generated DB types                               | —    | ⏳ **not shipped, deliberately** (below)                                                                                     |
+
+### Phase A — why it did not ship, and what it needs
+
+The live schema types WERE regenerated successfully (`npm run gen:types` → 7,616 lines via postgres-meta; the tunnel/DB path works). Swapping `src/types/database.ts` from its hand-maintained `Database` interface to a re-export of the generated one produces **~30 type errors in 5 files**, in two classes:
+
+1. **`TS2344` — generated Rows don't satisfy `BaseEntity`.** Real drift the hand file was hiding: generated timestamps are `string | null` (the columns are nullable) while `BaseEntity` wants optional-non-null. A small `AsEntity<T>` remap (`Omit` the two timestamp fields, re-add as optional) resolves this cleanly and was validated locally.
+2. **`TS2589` — "type instantiation excessively deep"** on queries built from _dynamic_ table names (`getTableName(...)`) against the much larger generated `Database` union — `src/app/api/research/route.ts`, `src/app/discover/discoverGenericFetcher.ts`.
+
+⚠️ **Validated dead end:** routing those dynamic queries through the existing `fromTable()` untyped escape hatch makes it **worse** (errors 30 → 136), because `fromTable` returns `any` and that collapses generic inference in downstream helpers like `buildQuery`. The fix must keep the queries typed — e.g. narrow the table-name argument to a literal union, or give `buildQuery` an explicit type parameter — not erase the types.
+
+This is a careful migration across every DB query surface, on money-adjacent code. It is the right next task, but it is its own task, not a sweep item.
+
+### Remaining open (recorded, not started)
+
+- **Phase A** as above.
+- **Phase D — admin-client → RLS**: ~7 user-scoped routes still use the service-role client where owner RLS policies would do (notifications ×2, messages unread-count/read, messages/self insert path). Needs new RLS policies first, then the `no-restricted-imports` gate on `@/lib/supabase/admin`.
+- **Flaky perf test**: `tests/unit/utils/currency.comprehensive.test.ts` asserts wall-clock duration and fails under parallel CI load (passes 37/37 in isolation). Replace the timing assertion with something deterministic.
+- `types/database.ts`'s remaining hand-written app-model tail, and the 59-interface `src/types/` layer, are only partially addressed (Phase B derived the group/loan input types from their zod schemas).

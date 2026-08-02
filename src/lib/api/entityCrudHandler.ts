@@ -37,6 +37,8 @@ import {
   type RateLimitResult,
 } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
+import { getAdminClient } from '@/lib/supabase/admin';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { type EntityType, getEntityMetadata } from '@/config/entity-registry';
 import { ENTITY_STATUS } from '@/config/database-constants';
 import { checkOwnership } from '@/services/actors';
@@ -488,6 +490,28 @@ function createDeleteHandler(config: EntityHandlerConfig) {
           code: error.code,
         });
         return handleSupabaseError(error);
+      }
+
+      // entity_wallets is polymorphic (entity_type + entity_id), so Postgres
+      // cannot cascade it — the rows outlive the entity. Prod accumulated links
+      // pointing at deleted entities, and the shared-wallet disclosure counted
+      // them as live pages until it started verifying visibility. Clean them
+      // here, in the one handler every entity type deletes through.
+      // Admin client: authorization already happened above, and the link row is
+      // not necessarily readable under the deleter's own RLS scope.
+      const { error: linkError } = await (getAdminClient() as unknown as AnySupabaseClient)
+        .from(DATABASE_TABLES.ENTITY_WALLETS)
+        .delete()
+        .eq('entity_type', entityType)
+        .eq('entity_id', entityId);
+      if (linkError) {
+        // The entity is already gone; a stale link is a hygiene problem, not a
+        // reason to report the delete as failed.
+        logger.warn('entity_wallets cleanup failed after entity delete', {
+          entityType,
+          entityId,
+          error: linkError.message,
+        });
       }
 
       // Post-process (audit logging, etc.)

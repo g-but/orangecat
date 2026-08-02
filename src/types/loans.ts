@@ -5,8 +5,10 @@
  * Enables users to list loans for refinancing and allows community lending.
  */
 
+import type { z } from 'zod';
 import { type CurrencyCode } from '@/config/currencies';
 import type { OffsetPagination } from '@/types/pagination';
+import type { loanSchema } from '@/lib/validation/finance';
 
 type LoanStatus = 'active' | 'paid_off' | 'refinanced' | 'defaulted' | 'cancelled';
 
@@ -131,29 +133,17 @@ interface LoanPayment {
 
 // ==================== FORM TYPES ====================
 
-export interface CreateLoanRequest {
-  title: string;
-  description?: string;
-  loan_category_id?: string;
-  original_amount: number;
-  remaining_balance: number;
-  interest_rate?: number;
-  monthly_payment?: number;
-  currency: CurrencyCode;
-  lender_name?: string;
-  loan_number?: string;
-  origination_date?: string;
-  maturity_date?: string;
-  is_public: boolean;
-  is_negotiable: boolean;
-  minimum_offer_amount?: number;
-  preferred_terms?: string;
-  contact_method: ContactMethod;
-}
+/**
+ * Payload for creating a loan — derived from `loanSchema` (the Zod SSOT in
+ * lib/validation/finance, which also validates POST/PUT /api/loans).
+ * `z.input` keeps schema-defaulted fields (loan_type, fulfillment_type,
+ * collateral) optional for callers, exactly as the API accepts them.
+ */
+export type CreateLoanRequest = z.input<typeof loanSchema>;
 
-export interface UpdateLoanRequest extends Partial<CreateLoanRequest> {
+export type UpdateLoanRequest = Partial<CreateLoanRequest> & {
   status?: LoanStatus;
-}
+};
 
 export interface CreateLoanOfferRequest {
   loan_id: string;

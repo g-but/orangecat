@@ -18,8 +18,7 @@ const restrictedSyntaxSelectors = [
   },
   {
     selector: 'Identifier[name=/[Cc]rowdfund/]',
-    message:
-      "CLAUDE.md bans 'crowdfund' terminology — use 'fund' / 'funding' / 'project' instead.",
+    message: "CLAUDE.md bans 'crowdfund' terminology — use 'fund' / 'funding' / 'project' instead.",
   },
   {
     selector:
@@ -131,10 +130,7 @@ const eslintConfig = [
       'no-implied-eval': 'error',
       'no-new-func': 'error',
       'no-script-url': 'error',
-      'no-restricted-syntax': [
-        'error',
-        ...restrictedSyntaxSelectors,
-      ],
+      'no-restricted-syntax': ['error', ...restrictedSyntaxSelectors],
       // Lock @deprecated count at 0.
       'no-warning-comments': ['error', { terms: ['@deprecated'], location: 'anywhere' }],
       // eslint-plugin-react-hooks v6 (bundled with Next 16's eslint-config-next) adds
@@ -174,6 +170,27 @@ const eslintConfig = [
           selector: 'Literal[value=/^\\u002Fapi\\u002F/]',
           message:
             "Hardcoded '/api/…' path — import API_ROUTES from '@/config/api-routes' (or PUBLIC_API_BASE from '@/config/public-api' for versioned v1 URLs) and reference the endpoint there. Add the entry if it's missing.",
+        },
+      ],
+    },
+  },
+  {
+    // Envelope gate (never-twice): API routes speak the standard envelope via
+    // apiSuccess/apiError & friends (src/lib/api/standardResponse.ts) — raw
+    // NextResponse.json drifts payload shapes and skips error logging. The only
+    // wire-format exceptions are LNURL (protocol-fixed JSON) and the OpenAPI
+    // spec document, carved out below.
+    files: ['src/app/api/**/*.{ts,tsx}'],
+    ignores: ['src/app/api/lnurlp/**', 'src/app/api/v1/openapi.json/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...restrictedSyntaxSelectors,
+        {
+          selector:
+            "CallExpression[callee.object.name='NextResponse'][callee.property.name='json']",
+          message:
+            "Raw NextResponse.json in an API route — use apiSuccess/apiError (and friends) from '@/lib/api/standardResponse' so every endpoint speaks the standard envelope. Only lnurlp/** and v1/openapi.json/** (fixed wire formats) are exempt.",
         },
       ],
     },

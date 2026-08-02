@@ -1,33 +1,30 @@
 'use client';
 
-import { ChevronDown, ChevronRight, Info, Zap } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
 import { RISK_COLORS, RISK_ICONS } from '@/config/cat-actions';
+import { AUTONOMY_LEVEL_META, type AutonomyLevel } from '@/config/cat-autonomy';
+import { AutonomySelect } from './AutonomySelect';
 import type { Action, CategorySummary } from './types';
 
 interface ActionRowProps {
   action: Action;
-  isCategoryEnabled: boolean;
   isSaving: boolean;
   isAnySaving: boolean;
-  onToggle: (actionId: string, category: string, enabled: boolean) => void;
+  onSetAutonomy: (actionId: string, category: string, level: AutonomyLevel) => void;
 }
 
-function ActionRow({ action, isCategoryEnabled, isSaving, isAnySaving, onToggle }: ActionRowProps) {
+function ActionRow({ action, isSaving, isAnySaving, onSetAutonomy }: ActionRowProps) {
   const RiskIcon = RISK_ICONS[action.riskLevel];
 
   return (
-    <div
-      className={`flex items-center justify-between p-3 rounded-lg ${
-        isCategoryEnabled ? 'bg-surface-base' : 'bg-surface-raised opacity-60'
-      }`}
-    >
-      <div className="flex items-center gap-3 flex-1">
+    <div className="flex flex-col gap-3 rounded-lg bg-surface-base p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 flex-1 items-start gap-3">
         <Tooltip>
           <TooltipTrigger>
-            <div className={`p-1.5 rounded ${RISK_COLORS[action.riskLevel]}`}>
+            <div className={`rounded p-1.5 ${RISK_COLORS[action.riskLevel]}`}>
               <RiskIcon className="h-4 w-4" />
             </div>
           </TooltipTrigger>
@@ -35,46 +32,29 @@ function ActionRow({ action, isCategoryEnabled, isSaving, isAnySaving, onToggle 
             <p className="capitalize">{action.riskLevel} risk</p>
           </TooltipContent>
         </Tooltip>
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-fg-primary text-sm">{action.name}</span>
-            {action.requiresConfirmation && (
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium text-fg-primary">{action.name}</span>
+            {action.riskLevel === 'high' && (
               <Badge variant="outline" className="text-xs">
-                <Zap className="h-3 w-3 mr-1" />
-                Requires confirmation
+                Always confirms
               </Badge>
             )}
           </div>
-          <p className="text-sm text-fg-secondary">{action.description}</p>
+          <p className="break-words text-sm text-fg-secondary">{action.description}</p>
+          <p className="mt-0.5 text-xs text-fg-tertiary">
+            {AUTONOMY_LEVEL_META[action.autonomy].description}
+          </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        {isCategoryEnabled ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div>
-                <Switch
-                  checked={true}
-                  onCheckedChange={checked => onToggle(action.id, action.category, checked)}
-                  disabled={isSaving || isAnySaving}
-                  className="data-[state=checked]:bg-fg-primary"
-                />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Toggle individual action (category must stay enabled)</p>
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <Tooltip>
-            <TooltipTrigger>
-              <Info className="h-4 w-4 text-fg-tertiary" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Enable the category first to configure this action</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
+      <div className="flex-shrink-0">
+        <AutonomySelect
+          value={action.autonomy}
+          riskLevel={action.riskLevel}
+          disabled={isSaving || isAnySaving}
+          ariaLabel={`Autonomy level for ${action.name}`}
+          onChange={level => onSetAutonomy(action.id, action.category, level)}
+        />
       </div>
     </div>
   );
@@ -87,7 +67,7 @@ interface CategoryRowProps {
   saving: string | null;
   onToggleExpanded: (id: string) => void;
   onToggleCategory: (id: string, enabled: boolean) => void;
-  onToggleAction: (actionId: string, category: string, enabled: boolean) => void;
+  onSetAutonomy: (actionId: string, category: string, level: AutonomyLevel) => void;
 }
 
 export function CategoryRow({
@@ -97,7 +77,7 @@ export function CategoryRow({
   saving,
   onToggleExpanded,
   onToggleCategory,
-  onToggleAction,
+  onSetAutonomy,
 }: CategoryRowProps) {
   return (
     <div className="bg-surface-base rounded-lg border border-default overflow-hidden">
@@ -137,10 +117,9 @@ export function CategoryRow({
               <ActionRow
                 key={action.id}
                 action={action}
-                isCategoryEnabled={cat.enabled}
                 isSaving={saving === action.id}
                 isAnySaving={saving === cat.category}
-                onToggle={onToggleAction}
+                onSetAutonomy={onSetAutonomy}
               />
             ))}
           </div>
