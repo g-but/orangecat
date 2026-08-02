@@ -69,6 +69,12 @@ export function SettingsDataSection() {
         <DatabaseBackup className="mr-2 h-6 w-6" />
         Your data
       </h3>
+      <p className="mb-6 text-fg-secondary">
+        OrangeCat never uses your data to train AI models. When Cat calls an AI provider, that
+        provider&apos;s own data policy applies — with your own key it&apos;s your provider
+        agreement; on the free pool, prompts may be logged by the model host. Your data here exists
+        to serve you, and you can take it or delete it anytime.
+      </p>
 
       <div className="space-y-4">
         <div className="rounded-md border border-default bg-surface-raised/30 p-6">

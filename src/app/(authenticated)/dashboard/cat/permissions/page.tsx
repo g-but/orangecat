@@ -15,6 +15,7 @@ import { CategoryRow } from './CategoryRow';
 import { SpendCapsCard } from './SpendCapsCard';
 import { PermissionPresets } from './PermissionPresets';
 import { PermissionInfo } from './PermissionInfo';
+import { CatActivityCard } from './CatActivityCard';
 
 export default function CatPermissionsPage() {
   const { user, isLoading: authLoading } = useRequireAuth();
@@ -220,6 +221,8 @@ export default function CatPermissionsPage() {
             saving={saving}
             onToggleCategory={toggleCategory}
           />
+
+          <CatActivityCard userId={user.id} />
 
           <PermissionInfo />
         </div>
