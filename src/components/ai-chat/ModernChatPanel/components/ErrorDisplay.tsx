@@ -8,7 +8,7 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { AlertCircle, Coins, Key, X } from 'lucide-react';
+import { AlertCircle, Coins, Key, Laptop, X } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import { CatStatusButton } from '@/components/ai-chat/CatStatusNote';
 
@@ -33,9 +33,11 @@ const FIXABLE_CODES = new Set([
 export function ErrorDisplay({ error, code, onRetry, onDismiss }: ErrorDisplayProps) {
   const router = useRouter();
 
+  const isLocalSetup = code === 'LOCAL_UNREACHABLE';
   const legacyKeyHint =
     error.includes('API key') || error.includes('openrouter') || error.includes('not configured');
-  const showFixActions = (code ? FIXABLE_CODES.has(code) : false) || legacyKeyHint;
+  const showFixActions =
+    !isLocalSetup && ((code ? FIXABLE_CODES.has(code) : false) || legacyKeyHint);
   // Retrying a hard daily cap or an empty credit balance just fails again —
   // don't offer a button that lies.
   const showRetry = Boolean(onRetry) && code !== 'DAILY_LIMIT' && code !== 'INSUFFICIENT_CREDITS';
@@ -47,6 +49,15 @@ export function ErrorDisplay({ error, code, onRetry, onDismiss }: ErrorDisplayPr
         <div className="flex-1 min-w-0">
           <p className="text-base text-status-negative">{error}</p>
           <div className="flex flex-wrap items-center gap-2 mt-2">
+            {isLocalSetup && (
+              <button
+                onClick={() => router.push(ROUTES.SETTINGS_AI)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-warm/90 transition-colors"
+              >
+                <Laptop className="h-3.5 w-3.5" />
+                Local model setup
+              </button>
+            )}
             {showFixActions && (
               <>
                 <button

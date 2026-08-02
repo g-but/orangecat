@@ -6,6 +6,8 @@ import { isCatHubPath } from '@/config/routes';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { STORAGE_KEYS } from '@/config/storage-keys';
 import { readPageExcerptForCat, type CatPageDescriptor } from '@/config/cat-page-context';
+import { getLocalRuntime, parseLocalModelId } from '@/config/local-ai';
+import { streamLocalChat } from '@/services/ai/local-runtime';
 import type {
   Message,
   CatAction,
@@ -211,6 +213,102 @@ export function useChatMessages({
       const timeout = setTimeout(() => abortController.abort(), STREAM_TIMEOUT_MS);
 
       try {
+        // ── Local model path ──────────────────────────────────────────────
+        // Inference runs on the USER's machine (Ollama / LM Studio); the
+        // server only prepares Cat's context and persists the exchange.
+        const local = parseLocalModelId(selectedModel);
+        if (local) {
+          const prepRes = await fetch(API_ROUTES.CAT.PREPARE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: content,
+              preferredCurrency,
+              locale: readLocale(),
+              lastVisitedPath: readLastVisitedPath(),
+              currentPath: pageContextRef.current?.path,
+              currentEntity: pageContextRef.current?.entity,
+              pageExcerpt: pageContextRef.current?.path ? readPageExcerptForCat() : undefined,
+              conversationId: activeConversationId ?? undefined,
+            }),
+            signal: abortController.signal,
+          });
+          if (!prepRes.ok) {
+            throw new CatChatError(
+              'Could not prepare your conversation. Try again.',
+              'STREAM_ERROR'
+            );
+          }
+          const prepBody = (await prepRes.json()) as {
+            data?: {
+              messages?: Array<{ role: string; content: string }>;
+              conversationId?: string | null;
+            };
+          };
+          const prepared = prepBody?.data;
+          if (!prepared?.messages?.length) {
+            throw new CatChatError(
+              'Could not prepare your conversation. Try again.',
+              'STREAM_ERROR'
+            );
+          }
+
+          let reply = '';
+          try {
+            reply = await streamLocalChat({
+              runtimeId: local.runtimeId,
+              model: local.model,
+              messages: prepared.messages,
+              signal: abortController.signal,
+              onChunk: chunk =>
+                setMessages(prev =>
+                  prev.map(m =>
+                    m.id === assistantId ? { ...m, content: (m.content || '') + chunk } : m
+                  )
+                ),
+            });
+          } catch (localErr) {
+            if (localErr instanceof DOMException && localErr.name === 'AbortError') {
+              throw localErr;
+            }
+            const runtimeName = getLocalRuntime(local.runtimeId)?.name ?? local.runtimeId;
+            throw new CatChatError(
+              `Cat can't reach ${runtimeName} on this computer. Make sure it's running with OrangeCat allowed (Settings → AI → Run locally shows the exact command), then try again.`,
+              'LOCAL_UNREACHABLE'
+            );
+          }
+
+          if (!reply.trim()) {
+            reply =
+              "I couldn't put together a reply to that. Could you rephrase or add a bit more detail?";
+            setMessages(prev =>
+              prev.map(m => (m.id === assistantId ? { ...m, content: reply } : m))
+            );
+          }
+
+          // Persist so local chats appear in history like any other — fire
+          // and forget; a failed save must not disturb the finished reply.
+          if (prepared.conversationId) {
+            void fetch(API_ROUTES.CAT.LOCAL_COMPLETE, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                conversationId: prepared.conversationId,
+                message: content,
+                reply,
+                model: selectedModel,
+              }),
+            }).catch(() => {});
+          }
+
+          setMessages(prev =>
+            prev.map(m =>
+              m.id === assistantId ? { ...m, modelUsed: selectedModel, provider: 'local' } : m
+            )
+          );
+          return;
+        }
+
         const res = await fetch(API_ROUTES.CAT.CHAT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
