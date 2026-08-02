@@ -1,39 +1,73 @@
 'use client';
 
 /**
- * ProfileSupportSection
+ * ProfileSupportSection — "pay this person" on a public profile.
  *
- * The "send this person BTC" surface on a public profile. Previously this was a
- * stub: a Donate/Subscribe toggle that only revealed the raw address to copy,
- * shipped with developer notes-to-self ("real engine integrates the full
- * PublicEntityPaymentSection…", "Full engine would create subscription row…")
- * that were visible to real visitors. It made the platform's single most
- * important action look fake. Replaced with the real BitcoinDonationCard — an
- * always-visible QR, click-to-copy address, and one-tap "Send with Wallet"
- * (bitcoin: URI), for both on-chain and Lightning.
+ * It used to render `profiles.bitcoin_address` / `profiles.lightning_address`,
+ * two legacy columns that NO payment path reads. That was wrong twice over: a
+ * profile with a working wallet showed nothing payable, and a profile with a
+ * stale column advertised an address the platform would never actually invoice
+ * against — a visitor could have paid somewhere the owner no longer controls.
  *
- * Renders nothing when the profile has no payment address (the owner is prompted
- * to add one on the Wallets tab, which knows it's their own profile).
+ * Now it asks the authority. `/api/tips/receive-info` runs the same resolution
+ * a real payment runs, so this card appears exactly when money can actually
+ * arrive, and stays silent otherwise rather than guessing from a column.
  */
 
-import BitcoinDonationCard from '@/components/bitcoin/BitcoinDonationCard';
+import { useEffect, useState } from 'react';
+import { Zap } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/Card';
+import TipButton from '@/components/tips/TipButton';
+import { SharePayLink } from '@/components/receive/SharePayLink';
+import { fetchTipReceiveInfo } from '@/services/tips/tip-client';
+import { PAY_COPY } from '@/config/pay';
 
 interface ProfileSupportSectionProps {
-  profile: {
-    bitcoin_address: string | null;
-    lightning_address: string | null;
-  };
+  username: string;
+  displayName: string;
+  /** The owner viewing their own profile gets the shareable link too. */
+  isOwner?: boolean;
 }
 
-export function ProfileSupportSection({ profile }: ProfileSupportSectionProps) {
-  if (!profile.bitcoin_address && !profile.lightning_address) {
+export function ProfileSupportSection({
+  username,
+  displayName,
+  isOwner = false,
+}: ProfileSupportSectionProps) {
+  const [canReceive, setCanReceive] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    fetchTipReceiveInfo(username)
+      .then(info => live && setCanReceive(info.canReceive))
+      .catch(() => live && setCanReceive(false));
+    return () => {
+      live = false;
+    };
+  }, [username]);
+
+  // Unknown or unpayable: render nothing. A profile is not the place to
+  // announce that someone hasn't set up a wallet.
+  if (!canReceive) {
     return null;
   }
 
   return (
-    <BitcoinDonationCard
-      bitcoinAddress={profile.bitcoin_address || undefined}
-      lightningAddress={profile.lightning_address || undefined}
-    />
+    <Card>
+      <CardContent className="flex flex-col gap-4 pt-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="flex items-center gap-2 font-semibold text-fg-primary">
+              <Zap className="h-4 w-4 text-bitcoinOrange" />
+              {PAY_COPY.title(displayName)}
+            </h3>
+            <p className="mt-1 text-sm text-fg-secondary">{PAY_COPY.disclaimer}</p>
+          </div>
+          <TipButton username={username} recipientName={displayName} />
+        </div>
+
+        {isOwner && <SharePayLink username={username} />}
+      </CardContent>
+    </Card>
   );
 }
