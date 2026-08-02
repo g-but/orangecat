@@ -13,7 +13,7 @@
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
+import { cache, Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -30,7 +30,9 @@ interface PayRecipient {
   displayName: string;
 }
 
-async function getRecipient(username: string): Promise<PayRecipient | null> {
+// cache() dedupes the lookup across generateMetadata and the page body, which
+// both need the recipient — otherwise every pay link costs two profile queries.
+const getRecipient = cache(async (username: string): Promise<PayRecipient | null> => {
   const { data } = await getAdminClient()
     .from(DATABASE_TABLES.PROFILES)
     .select('username, display_name:name')
@@ -42,13 +44,17 @@ async function getRecipient(username: string): Promise<PayRecipient | null> {
     return null;
   }
   return { username: row.username, displayName: row.display_name || row.username };
-}
+});
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { username } = await params;
   const recipient = await getRecipient(username);
   if (!recipient) {
-    return { title: `Pay — ${APP_NAME}`, robots: { index: false, follow: false } };
+    // generateMetadata resolves before the page's streaming boundary, so
+    // notFound() here sends a real 404 — the same call inside the streamed page
+    // body gets forced to a 200 "soft 404" by the root loading.tsx. A payment
+    // link to a mistyped name should fail honestly.
+    notFound();
   }
   const title = `${PAY_COPY.title(recipient.displayName)} — ${APP_NAME}`;
   return {
