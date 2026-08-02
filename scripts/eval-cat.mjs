@@ -87,9 +87,23 @@ const EVAL_PROVIDER =
 // Pin one provider/model for repeatability: the gate measures the Cat judgment
 // pipeline (rubric, tools, prefill, why-line), not whichever free-model fallback
 // is least congested tonight.
+// MUST equal DEFAULT_FREE_MODEL_ID in src/config/ai-models.ts. This script
+// runs on the box, where only the standalone build ships (no src/), so it
+// cannot import the registry at runtime — instead
+// __tests__/unit/scripts/eval-cat-model.test.ts asserts the two match, and
+// CI fails the moment they drift.
+//
+// The old literal
+// 'openai/gpt-oss-120b:free' silently stopped being a free model — the
+// registry now carries 'openai/gpt-oss-120b' as PAID and only the 20b variant
+// as free — so every probe was rejected by OrangeCat's own paywall with
+// HTTP 402 INSUFFICIENT_CREDITS, and the harness reported it as a
+// "provider layer" failure — the gate had been dead since Cat Credits went
+// live on 2026-08-01. Pinning the registry's default free model also means
+// the eval measures the model users actually get.
 const EVAL_MODEL =
   process.env.CAT_EVAL_MODEL ||
-  (EVAL_PROVIDER === 'groq' ? 'llama-3.3-70b-versatile' : 'openai/gpt-oss-120b:free');
+  (EVAL_PROVIDER === 'groq' ? 'llama-3.3-70b-versatile' : 'nvidia/nemotron-3-super-120b-a12b:free');
 const NOTIFY = process.env.CAT_EVAL_NOTIFY === '1';
 const NOTIFY_USER_ID =
   process.env.CAT_EVAL_NOTIFY_USER_ID || 'cec88bc9-557f-452b-92f1-e093092fecd6'; // founder mao
@@ -99,8 +113,13 @@ const JSON_OUT =
 
 const PROBE_TIMEOUT_MS = 120_000; // tool phase ≤25s + free-model generation
 const INTER_PROBE_DELAY_MS = 8_000; // be gentle to free-tier TPM
-const MAX_ATTEMPTS = 3; // per probe, on transient failures only
-const RETRY_BACKOFF_MS = [20_000, 45_000]; // free-tier 429s need a real pause
+const MAX_ATTEMPTS = 4; // per probe, on transient failures only
+// The free pool's own message is "Free AI capacity is maxed out right now.
+// Try again in a minute" — but the longest backoff was 45s, so retries gave
+// up just before capacity came back. Observed live: probes a–f passed and
+// g/h both exhausted their attempts inside ~65s. The final 90s step honours
+// what the provider actually asks for.
+const RETRY_BACKOFF_MS = [20_000, 45_000, 90_000];
 const PASS_THRESHOLD = 7; // per axis, out of 8
 
 if (!SUPABASE_URL || !ANON_KEY || !SERVICE_KEY) {
