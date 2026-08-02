@@ -17,6 +17,7 @@ import { apiSuccess } from '@/lib/api/standardResponse';
 import type { AuthenticatedRequest } from '@/lib/api/withAuth';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { buildCatSystemPrompt } from '@/services/cat/system-prompt';
+import { getCustomInstructions } from '@/services/cat/custom-instructions';
 import { buildReplyLanguageDirective } from '@/services/cat/reply-language';
 import { getCatFewShotExamplesText } from '@/services/cat/few-shot-examples';
 import { parseActionsFromResponse } from '@/services/cat/response-parser';
@@ -248,7 +249,7 @@ export async function orchestrateCatChat(
   // every turn, it just has to beat the (already parallel) context fetchers. Recall
   // is best-effort: [] if memory is unavailable. Folded in near the top of the
   // context so the budget always keeps the durable facts.
-  const [userContext, memories] = await Promise.all([
+  const [userContext, memories, customInstructions] = await Promise.all([
     fetchFullContextForCat(supabase, user.id, {
       preferredCurrency,
       locale,
@@ -258,6 +259,7 @@ export async function orchestrateCatChat(
       pageExcerpt,
     }),
     recallMemories(supabase, user.id, message),
+    getCustomInstructions(supabase, user.id),
   ]);
   userContext.memories = memories;
   const contextString = buildFullContextString(userContext);
@@ -272,7 +274,7 @@ export async function orchestrateCatChat(
   // The per-turn reply-language directive goes DEAD LAST: weak free models
   // weight the prompt tail most, and burying the language rule mid-prompt let
   // them default to the browser locale's language (English in → German out).
-  const systemPrompt = `${buildCatSystemPrompt({ userContext: contextString || undefined })}\n\n${getCatFewShotExamplesText()}${buildReplyLanguageDirective(message)}`;
+  const systemPrompt = `${buildCatSystemPrompt({ userContext: contextString || undefined, customInstructions })}\n\n${getCatFewShotExamplesText()}${buildReplyLanguageDirective(message)}`;
 
   let conversationId: string | null = null;
   let historyMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];

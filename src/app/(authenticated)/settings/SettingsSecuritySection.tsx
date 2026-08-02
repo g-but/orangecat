@@ -1,9 +1,14 @@
 'use client';
 
-import { Shield, Link2 } from 'lucide-react';
+import { useState } from 'react';
+import { Shield, Link2, Loader2, MonitorSmartphone } from 'lucide-react';
 import { toast } from 'sonner';
 import { MFAStatus } from '@/components/auth/MFASetup';
 import { NostrConnectionCard } from '@/components/nostr/NostrConnectionCard';
+import Button from '@/components/ui/Button';
+import { supabase } from '@/lib/supabase/browser';
+import { ROUTES } from '@/config/routes';
+import { logger } from '@/utils/logger';
 
 interface Props {
   mfaStatusKey: number;
@@ -18,6 +23,26 @@ export function SettingsSecuritySection({
   onViewRecoveryCodes,
   onMFADisableComplete,
 }: Props) {
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  // Revokes every refresh token for the account (scope: 'global'), then sends
+  // this browser to the sign-in page. Other devices are signed out as their
+  // access tokens expire (~1h max).
+  const handleSignOutEverywhere = async () => {
+    setIsSigningOut(true);
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      if (error) {
+        throw error;
+      }
+      window.location.assign(ROUTES.AUTH);
+    } catch (err) {
+      logger.error('Global sign-out failed', err, 'Settings');
+      toast.error('Could not sign out everywhere. Try again.');
+      setIsSigningOut(false);
+    }
+  };
+
   return (
     <>
       <div className="border-t border-subtle pt-10">
@@ -51,6 +76,32 @@ export function SettingsSecuritySection({
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="border-t border-subtle pt-10">
+        <h3 className="text-lg font-semibold text-fg-primary mb-4 flex items-center">
+          <MonitorSmartphone className="w-6 h-6 mr-2 text-fg-secondary" />
+          Active Sessions
+        </h3>
+        <p className="text-fg-secondary mb-6">
+          Lost a device, or signed in somewhere you don&apos;t trust? Sign out of your account on
+          every device, including this one. You&apos;ll need to sign in again.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleSignOutEverywhere}
+          disabled={isSigningOut}
+          className="px-6 py-2"
+        >
+          {isSigningOut ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing out…
+            </>
+          ) : (
+            'Sign out all devices'
+          )}
+        </Button>
       </div>
 
       <div className="border-t border-subtle pt-10">

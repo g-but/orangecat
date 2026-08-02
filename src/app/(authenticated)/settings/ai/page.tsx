@@ -24,6 +24,7 @@ import { useAISettings } from '@/hooks/useAISettings';
 import Loading from '@/components/Loading';
 import { AIKeyManager } from '@/components/ai/AIKeyManager';
 import { CatCreditsPanel } from '@/components/ai/CatCreditsPanel';
+import { CatCustomInstructions } from '@/components/ai/CatCustomInstructions';
 import { CatMemoryManager } from '@/components/ai/CatMemoryManager';
 import { CatMemoryImport } from '@/components/ai/CatMemoryImport';
 import { getProvidersByCategory } from '@/data/aiProviders';
@@ -198,9 +199,17 @@ export default function AISettingsPage() {
           </h2>
           <p className="mt-1 text-sm text-fg-secondary">
             Cat&apos;s memory is yours: review it, delete any of it, export it, or bring context
-            over from another AI.
+            over from another AI. Standing instructions steer how Cat behaves in every chat.
           </p>
         </div>
+
+        <CatCustomInstructions
+          value={preferences?.custom_instructions ?? null}
+          isLoading={settingsLoading}
+          onSave={async instructions => {
+            await updatePreferences({ custom_instructions: instructions });
+          }}
+        />
 
         <CatMemoryManager
           reloadKey={memoryReloadKey}
