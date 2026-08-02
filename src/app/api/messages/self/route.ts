@@ -5,12 +5,6 @@ import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
-interface ConversationRow {
-  id: string;
-  is_group: boolean;
-  participants: Array<{ user_id: string }> | null;
-}
-
 /** Insert a conversation row + participant row using the given Supabase client. */
 async function insertConversationAndParticipant(
   client: AnySupabaseClient,
@@ -39,25 +33,20 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
   try {
     const { user, supabase } = _req;
 
-    // Find existing self-conversation (single-participant DM)
-    let conversationId: string | null = null;
-    const { data: convs } = await supabase
+    // Find existing self-conversation (single-participant DM), filtered in the
+    // database instead of scanning the user's entire conversation list: the sole
+    // participant (index 0) is the caller and there is no second participant.
+    const { data: selfConv } = await supabase
       .from(DATABASE_TABLES.CONVERSATION_DETAILS)
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('id')
+      .eq('is_group', false)
+      .eq('participants->0->>user_id', user.id)
+      .is('participants->1', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (Array.isArray(convs)) {
-      const selfConv = (convs as ConversationRow[]).find(c => {
-        if (c.is_group) {
-          return false;
-        }
-        const parts = Array.isArray(c.participants) ? c.participants : [];
-        return parts.length === 1 && parts[0]?.user_id === user.id;
-      });
-      if (selfConv) {
-        conversationId = selfConv.id;
-      }
-    }
+    let conversationId: string | null = (selfConv as { id: string } | null)?.id ?? null;
 
     if (!conversationId) {
       const { ProfileServerService } = await import('@/services/profile/server');

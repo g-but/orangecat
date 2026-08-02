@@ -28,6 +28,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
     isLoadingMore,
     error,
     loadMore,
+    retry,
     menuState,
     editingMessageId,
     messagesEndRef,
@@ -51,25 +52,36 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
   }
 
   if (error) {
+    // forbidden/not_found are terminal — retrying can't help; network/unknown can.
+    const isRetryable = error === 'network' || error === 'unknown';
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-fg-primary mb-2">
-            {error === 'forbidden'
-              ? 'Access Denied'
-              : error === 'not_found'
-                ? 'Conversation Not Found'
-                : 'Error Loading Messages'}
-          </h3>
-          <p className="text-fg-secondary mb-4">
-            {error === 'forbidden'
-              ? "You don't have access to this conversation"
-              : error === 'not_found'
-                ? 'This conversation may have been deleted'
-                : 'Please try again'}
-          </p>
-          <Button onClick={() => onBack(error)}>Go Back</Button>
-        </div>
+      <div className="flex items-center justify-center h-full p-4">
+        {isRetryable ? (
+          <div className="oc-error-surface max-w-md text-center">
+            <h3 className="text-base font-semibold mb-1">Couldn&apos;t load messages</h3>
+            <p className="text-sm mb-4">Check your connection and try again.</p>
+            <div className="flex justify-center gap-3">
+              <Button variant="outline" onClick={() => retry()}>
+                Retry
+              </Button>
+              <Button variant="ghost" onClick={() => onBack(error)}>
+                Go Back
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-fg-primary mb-2">
+              {error === 'forbidden' ? 'Access Denied' : 'Conversation Not Found'}
+            </h3>
+            <p className="text-fg-secondary mb-4">
+              {error === 'forbidden'
+                ? "You don't have access to this conversation"
+                : 'This conversation may have been deleted'}
+            </p>
+            <Button onClick={() => onBack(error)}>Go Back</Button>
+          </div>
+        )}
       </div>
     );
   }

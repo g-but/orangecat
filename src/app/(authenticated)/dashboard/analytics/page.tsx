@@ -1,11 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projectStore';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import Loading from '@/components/Loading';
-import { TrendingUp, Users, DollarSign, Target, Zap } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import EmptyState from '@/components/ui/EmptyState';
+import { ROUTES } from '@/config/routes';
+import { AlertCircle, BarChart3, TrendingUp, Users, DollarSign, Target, Zap } from 'lucide-react';
 import AnalyticsMetricsGrid from './components/AnalyticsMetricsGrid';
 import type { AnalyticsMetric } from './components/AnalyticsMetricsGrid';
 import ProjectPerformanceTable from './components/ProjectPerformanceTable';
@@ -14,7 +18,12 @@ import AnalyticsInsights from './components/AnalyticsInsights';
 
 export default function AnalyticsPage() {
   const { user, isLoading: authLoading } = useRequireAuth();
-  const { projects, loadProjects, isLoading: projectLoading } = useProjectStore();
+  const {
+    projects,
+    loadProjects,
+    isLoading: projectLoading,
+    error: projectsError,
+  } = useProjectStore();
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
   const [selectedProject, setSelectedProject] = useState<string>('all');
 
@@ -26,6 +35,50 @@ export default function AnalyticsPage() {
 
   if (authLoading || projectLoading) {
     return <Loading fullScreen />;
+  }
+
+  // Fetch failed — show a real error surface instead of rendering zeros as data.
+  if (projectsError) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Breadcrumb items={[{ label: 'Analytics' }]} className="mb-4" />
+        <div className="oc-error-surface">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h2 className="text-base font-semibold mb-1">Couldn&apos;t load your analytics</h2>
+              <p className="text-sm mb-3">{projectsError}</p>
+              <Button variant="outline" size="sm" onClick={() => user?.id && loadProjects(user.id)}>
+                Retry
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No projects at all — zero metrics would be fake insight, so say so honestly.
+  if (projects.length === 0) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Breadcrumb items={[{ label: 'Analytics' }]} className="mb-4" />
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-fg-primary">Project Analytics</h1>
+          <p className="text-fg-secondary mt-1">Track your fundraising performance and insights</p>
+        </div>
+        <EmptyState
+          icon={BarChart3}
+          title="No activity to analyze yet"
+          description="Create your first project and its funding performance will show up here."
+          action={
+            <Link href={ROUTES.DASHBOARD.PROJECTS_CREATE}>
+              <Button variant="outline">Create a project</Button>
+            </Link>
+          }
+        />
+      </div>
+    );
   }
 
   const getFilteredProjects = () => {

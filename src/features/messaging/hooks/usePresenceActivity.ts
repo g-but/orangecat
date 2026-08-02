@@ -61,20 +61,16 @@ export function usePresenceActivity({
       }, awayTimeout);
     };
 
-    const handleBeforeUnload = () => {
-      // Pre-existing dead endpoint: no /api/presence/offline handler exists, so this
-      // beacon 404s silently. Kept as a literal (not in API_ROUTES) so audit:routes
-      // doesn't declare a phantom route; remove or implement the handler to close this.
-      // eslint-disable-next-line no-restricted-syntax -- see above
-      navigator.sendBeacon?.('/api/presence/offline', JSON.stringify({ userId }));
-    };
+    // No unload beacon: presence writes go through the authenticated `update_presence`
+    // RPC (keyed on auth.uid()), which a sendBeacon POST can't call, and a raw
+    // `{ userId }` body would be spoofable. On tab close, readers already degrade
+    // honestly — missing/stale rows read as offline via last_seen_at recency.
 
     updatePresence('online');
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleWindowFocus);
     window.addEventListener('blur', handleWindowBlur);
-    window.addEventListener('beforeunload', handleBeforeUnload);
 
     heartbeatRef.current = setInterval(() => {
       if (!document.hidden && myStatus !== 'offline') {
@@ -87,7 +83,6 @@ export function usePresenceActivity({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleWindowFocus);
       window.removeEventListener('blur', handleWindowBlur);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
 
       if (heartbeatRef.current) {
         clearInterval(heartbeatRef.current);
