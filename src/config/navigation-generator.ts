@@ -1,212 +1,88 @@
 /**
- * Navigation Generator - Single Source of Truth
+ * Navigation Generator — SSOT for entity-driven navigation.
  *
- * Generates navigation items automatically from entity registry.
- * Provides progressive disclosure with smart defaults.
+ * Every entity type in the registry reaches the sidebar through this file and
+ * nowhere else. Hand-placing an entity into a hand-written section instead is
+ * how the primary nav grows without anyone deciding it should (Documents sat
+ * above Home that way) — so the rule is: one group per entity, no exceptions.
  *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
- * Last Modified Summary: Initial creation - generates navigation from entity registry
+ * Last Modified: 2026-08-02
+ * Last Modified Summary: deduped four identical section builders; folded
+ *   Documents back into the generated Create group; deleted the dead
+ *   _CATEGORY_TO_SECTION map that described a long-gone IA.
  */
 
 import { ComponentType, SVGProps } from 'react';
-import {
-  ENTITY_REGISTRY,
-  ENTITY_TYPES,
-  type EntityType,
-  type EntityCategory,
-} from './entity-registry';
+import { ENTITY_REGISTRY, ENTITY_TYPES, type EntityType } from './entity-registry';
 import type { NavSection, NavigationItem } from './navigation';
 
 /**
- * Map entity categories to navigation sections
+ * Entity groupings for semantic navigation sections.
+ *
+ * CREATE: things you make or offer.
+ * FUND: things that need funding or support.
+ * COORDINATE: people and shared structures.
+ * FINANCE: money and the things money is held in.
+ *
+ * Membership is exhaustive — see the coverage test in
+ * __tests__/unit/config/navigation-generator.test.ts, which fails if a new
+ * entity type is added to the registry without being placed in a group.
  */
-interface CategoryToSectionMap {
-  category: EntityCategory;
-  sectionId: string;
-  sectionTitle: string;
+const ENTITY_GROUPS: ReadonlyArray<{
+  id: string;
+  title: string;
   priority: number;
-  defaultExpanded: boolean; // Progressive disclosure: only expand most-used sections
-  collapsible: boolean;
+  types: readonly EntityType[];
+}> = [
+  {
+    id: 'create',
+    title: 'Create',
+    priority: 2,
+    types: ['product', 'service', 'ai_assistant', 'document'],
+  },
+  { id: 'fund', title: 'Fund', priority: 3, types: ['project', 'cause', 'research', 'wishlist'] },
+  { id: 'coordinate', title: 'Coordinate', priority: 4, types: ['group', 'circle', 'event'] },
+  { id: 'finance', title: 'Finance', priority: 5, types: ['wallet', 'asset', 'loan', 'investment'] },
+] as const;
+
+/** Every entity type that any group claims — the coverage test reads this. */
+export const GROUPED_ENTITY_TYPES: readonly EntityType[] = ENTITY_GROUPS.flatMap(g => [...g.types]);
+
+function toNavigationItem(type: EntityType): NavigationItem {
+  const entity = ENTITY_REGISTRY[type];
+  return {
+    name: entity.namePlural,
+    href: entity.basePath,
+    icon: entity.icon as ComponentType<SVGProps<SVGSVGElement>>,
+    description: entity.description,
+    requiresAuth: true,
+  };
 }
 
-const _CATEGORY_TO_SECTION: CategoryToSectionMap[] = [
-  {
-    category: 'gateway',
-    sectionId: 'wallet',
-    sectionTitle: 'Wallet',
-    priority: 5,
-    defaultExpanded: false, // Collapsed by default - can expand to see wallet details
-    collapsible: true,
-  },
-  {
-    category: 'business',
-    sectionId: 'sell',
-    sectionTitle: 'Sell',
-    priority: 2,
-    defaultExpanded: true, // Expanded - core business function
-    collapsible: true,
-  },
-  {
-    category: 'community',
-    sectionId: 'network',
-    sectionTitle: 'Network',
-    priority: 4,
-    defaultExpanded: false, // Collapsed - can expand to see Groups, Circles, Events, People
-    collapsible: true,
-  },
-  {
-    category: 'finance',
-    sectionId: 'manage',
-    sectionTitle: 'Manage',
-    priority: 5,
-    defaultExpanded: false, // Collapsed - can expand to see Assets, Loans, Wallets
-    collapsible: true,
-  },
-];
-
 /**
- * Entity groupings for semantic navigation sections
+ * Generate navigation sections from the entity registry.
  *
- * CREATE: Things you make/offer (Products, Services, AI Assistants)
- * FUND: Things that need funding/support (Projects, Causes, Research, Wishlists)
- */
-const CREATE_ENTITIES: EntityType[] = ['product', 'service', 'ai_assistant'];
-const FUND_ENTITIES: EntityType[] = ['project', 'cause', 'research', 'wishlist'];
-const COORDINATE_ENTITIES: EntityType[] = ['group', 'circle', 'event'];
-const FINANCE_ENTITIES: EntityType[] = ['wallet', 'asset', 'loan', 'investment'];
-
-/**
- * Generate navigation items from entity registry
- *
- * Groups entities by semantic meaning for better UX:
- * - Create: Things you make/offer
- * - Fund: Things that need funding
- * - Network: Community connections
- * - Manage: Financial assets
- *
- * Applies progressive disclosure with smart defaults.
+ * All groups are collapsed by default (progressive disclosure): the sidebar
+ * opens showing primary destinations, and the 15 entity types stay one click
+ * away instead of filling the viewport.
  */
 export function generateEntityNavigation(): NavSection[] {
-  const sections: NavSection[] = [];
+  return ENTITY_GROUPS.map(({ id, title, priority, types }) => ({
+    id,
+    title,
+    priority,
+    defaultExpanded: false,
+    collapsible: true,
+    requiresAuth: true,
+    items: types
+      .filter(type => ENTITY_TYPES.includes(type))
+      .map(toNavigationItem)
+      .sort((a, b) => createPriorityOf(a) - createPriorityOf(b)),
+  })).sort((a, b) => a.priority - b.priority);
+}
 
-  // Group 1: Create (Products, Services, AI Assistants, Wishlists)
-  // Semantic: Things you create/offer to others
-  const createEntities = ENTITY_TYPES.filter(type => CREATE_ENTITIES.includes(type));
-  if (createEntities.length > 0) {
-    sections.push({
-      id: 'create',
-      title: 'Create',
-      priority: 2,
-      defaultExpanded: false,
-      collapsible: true,
-      requiresAuth: true,
-      items: createEntities
-        .map(type => {
-          const entity = ENTITY_REGISTRY[type];
-          return {
-            name: entity.namePlural,
-            href: entity.basePath,
-            icon: entity.icon as ComponentType<SVGProps<SVGSVGElement>>,
-            description: entity.description,
-            requiresAuth: true,
-          } as NavigationItem;
-        })
-        .sort((a, b) => {
-          // Sort by entity priority within section
-          const aType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === a.href);
-          const bType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === b.href);
-          const aPriority = aType ? ENTITY_REGISTRY[aType].createPriority : 999;
-          const bPriority = bType ? ENTITY_REGISTRY[bType].createPriority : 999;
-          return aPriority - bPriority;
-        }),
-    });
-  }
-
-  // Group 2: Fund (Projects, Causes, Research)
-  // Semantic: Things that need funding/support
-  if (FUND_ENTITIES.length > 0) {
-    sections.push({
-      id: 'fund',
-      title: 'Fund',
-      priority: 3,
-      defaultExpanded: false,
-      collapsible: true,
-      requiresAuth: true,
-      items: FUND_ENTITIES.map(type => {
-        const entity = ENTITY_REGISTRY[type];
-        return {
-          name: entity.namePlural,
-          href: entity.basePath,
-          icon: entity.icon as ComponentType<SVGProps<SVGSVGElement>>,
-          description: entity.description,
-          requiresAuth: true,
-        } as NavigationItem;
-      }).sort((a, b) => {
-        const aType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === a.href);
-        const bType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === b.href);
-        const aPriority = aType ? ENTITY_REGISTRY[aType].createPriority : 999;
-        const bPriority = bType ? ENTITY_REGISTRY[bType].createPriority : 999;
-        return aPriority - bPriority;
-      }),
-    });
-  }
-
-  // Group 3: Coordinate (Groups, Events)
-  if (COORDINATE_ENTITIES.length > 0) {
-    sections.push({
-      id: 'coordinate',
-      title: 'Coordinate',
-      priority: 4,
-      defaultExpanded: false, // Collapsed - progressive disclosure
-      collapsible: true,
-      requiresAuth: true,
-      items: COORDINATE_ENTITIES.map(type => {
-        const entity = ENTITY_REGISTRY[type];
-        return {
-          name: entity.namePlural,
-          href: entity.basePath,
-          icon: entity.icon as ComponentType<SVGProps<SVGSVGElement>>,
-          description: entity.description,
-          requiresAuth: true,
-        } as NavigationItem;
-      }).sort((a, b) => {
-        const aType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === a.href);
-        const bType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === b.href);
-        const aPriority = aType ? ENTITY_REGISTRY[aType].createPriority : 999;
-        const bPriority = bType ? ENTITY_REGISTRY[bType].createPriority : 999;
-        return aPriority - bPriority;
-      }),
-    });
-  }
-
-  // Group 4: Finance (Wallets, Assets, Loans, Investments)
-  if (FINANCE_ENTITIES.length > 0) {
-    sections.push({
-      id: 'finance',
-      title: 'Finance',
-      priority: 5,
-      defaultExpanded: false, // Collapsed - progressive disclosure
-      collapsible: true,
-      requiresAuth: true,
-      items: FINANCE_ENTITIES.map(type => {
-        const entity = ENTITY_REGISTRY[type];
-        return {
-          name: entity.namePlural,
-          href: entity.basePath,
-          icon: entity.icon as ComponentType<SVGProps<SVGSVGElement>>,
-          description: entity.description,
-          requiresAuth: true,
-        } as NavigationItem;
-      }).sort((a, b) => {
-        const aType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === a.href);
-        const bType = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === b.href);
-        const aPriority = aType ? ENTITY_REGISTRY[aType].createPriority : 999;
-        const bPriority = bType ? ENTITY_REGISTRY[bType].createPriority : 999;
-        return aPriority - bPriority;
-      }),
-    });
-  }
-
-  return sections.sort((a, b) => a.priority - b.priority);
+function createPriorityOf(item: NavigationItem): number {
+  const type = ENTITY_TYPES.find(t => ENTITY_REGISTRY[t].basePath === item.href);
+  return type ? ENTITY_REGISTRY[type].createPriority : 999;
 }

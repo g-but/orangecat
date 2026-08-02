@@ -34,7 +34,6 @@ import {
   ClipboardList,
   BarChart3,
   Handshake,
-  FileText,
   CalendarCheck,
 } from 'lucide-react';
 import { ECOSYSTEM } from './ecosystem';
@@ -187,13 +186,6 @@ const simplifiedSections: NavSection[] = [
         href: ROUTES.DASHBOARD.CAT,
         icon: Cat,
         description: 'Your AI agent',
-        requiresAuth: true,
-      },
-      {
-        name: 'Documents',
-        href: ROUTES.DASHBOARD.DOCUMENTS,
-        icon: FileText,
-        description: 'Context for your Cat',
         requiresAuth: true,
       },
       {
