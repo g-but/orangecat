@@ -495,7 +495,7 @@ export interface Database {
           title: string;
           description: string | null;
           cause_category: string | null;
-          target_amount: number | null;
+          goal_amount: number | null;
           current_amount: number;
           currency: 'SATS' | 'BTC' | 'CHF' | 'EUR' | 'USD' | 'GBP';
           status: 'draft' | 'active' | 'completed' | 'cancelled';
@@ -513,7 +513,7 @@ export interface Database {
           title: string;
           description?: string | null;
           cause_category?: string | null;
-          target_amount?: number | null;
+          goal_amount?: number | null;
           current_amount?: number;
           currency?: 'SATS' | 'BTC' | 'CHF' | 'EUR' | 'USD' | 'GBP';
           status?: 'draft' | 'active' | 'completed' | 'cancelled';
@@ -531,7 +531,7 @@ export interface Database {
           title?: string;
           description?: string | null;
           cause_category?: string | null;
-          target_amount?: number | null;
+          goal_amount?: number | null;
           current_amount?: number;
           currency?: 'SATS' | 'BTC' | 'CHF' | 'EUR' | 'USD' | 'GBP';
           status?: 'draft' | 'active' | 'completed' | 'cancelled';
