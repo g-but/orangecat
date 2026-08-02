@@ -9,16 +9,24 @@
 
 'use client';
 
-import { Wallet as WalletIcon } from 'lucide-react';
+import { Wallet as WalletIcon, QrCode } from 'lucide-react';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { Button } from '@/components/ui/Button';
+import { ROUTES } from '@/config/routes';
 
 export function WalletsPageHeader() {
   return (
     <div className="mb-6 lg:mb-8">
       <Breadcrumb items={[{ label: 'Wallets' }]} className="mb-4" />
-      <div className="flex items-center gap-3 mb-2">
-        <WalletIcon className="w-8 h-8 text-bitcoinOrange" />
-        <h1 className="text-2xl lg:text-3xl font-bold text-fg-primary">Manage Wallets</h1>
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <div className="flex items-center gap-3">
+          <WalletIcon className="w-8 h-8 text-bitcoinOrange" />
+          <h1 className="text-2xl lg:text-3xl font-bold text-fg-primary">Manage Wallets</h1>
+        </div>
+        <Button variant="accent" size="sm" href={ROUTES.RECEIVE}>
+          <QrCode className="mr-2 h-4 w-4" />
+          Receive
+        </Button>
       </div>
       {/* Desktop: Full description, Mobile: Shortened */}
       <p className="hidden lg:block text-fg-secondary mb-4 max-w-2xl">

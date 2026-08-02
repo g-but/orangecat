@@ -430,6 +430,32 @@ export async function resolveUserWallet(
 }
 
 /**
+ * Resolve ONE SPECIFIC wallet of a user into a payment method — the owner
+ * picked it explicitly (e.g. the /receive wallet switcher), so no cross-wallet
+ * priority applies; only the within-wallet NWC > Lightning > on-chain order.
+ * Ownership is part of the query: a wallet id belonging to someone else (or an
+ * inactive wallet) resolves to null, never to a payable rail.
+ */
+export async function resolveSpecificUserWallet(
+  supabase: SupabaseClient,
+  userId: string,
+  walletId: string
+): Promise<ResolvedWallet | null> {
+  const { data: wallet } = await supabase
+    .from(DATABASE_TABLES.WALLETS)
+    .select('id, nwc_connection_uri, lightning_address, address_or_xpub')
+    .eq('id', walletId)
+    .eq('profile_id', userId)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (!wallet) {
+    return null;
+  }
+  return pickMethodFromWallet(wallet as WalletRow);
+}
+
+/**
  * Resolve best wallet for a group from the group_wallets table.
  * Priority: Lightning Address > On-chain (group_wallets has no NWC support)
  */

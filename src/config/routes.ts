@@ -409,6 +409,8 @@ export const ROUTES = {
 
   // Timeline routes
   TIMELINE: '/timeline',
+  /** Owner's "get paid" screen — one tap to a scannable QR. */
+  RECEIVE: '/receive',
   // Personalized "Following" home feed (people/projects you follow)
   FEED: '/home',
   // Open-roles collaborator board (project_roles)

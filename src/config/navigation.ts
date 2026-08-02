@@ -20,6 +20,7 @@ import { ROUTES } from './routes';
 import { XBrandIcon, GitHubIcon } from '@/components/icons/BrandIcons';
 import {
   Home,
+  QrCode,
   Users,
   Settings,
   User as UserIcon,
@@ -200,6 +201,15 @@ const simplifiedSections: NavSection[] = [
         href: ROUTES.DASHBOARD.HOME,
         icon: Home,
         description: 'Your dashboard',
+        requiresAuth: true,
+      },
+      {
+        // "Get paid" is a primary verb on an economic platform — one tap from
+        // anywhere to a scannable QR (the in-person receive flow).
+        name: 'Receive',
+        href: ROUTES.RECEIVE,
+        icon: QrCode,
+        description: 'Show a QR to get paid',
         requiresAuth: true,
       },
       {
