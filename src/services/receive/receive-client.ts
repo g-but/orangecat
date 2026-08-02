@@ -4,6 +4,8 @@
  * the tips engine pointed at yourself (same intent, same bearer token).
  */
 
+import { API_ROUTES } from '@/config/api-routes';
+
 export { fetchTipStatus as fetchReceiveStatus } from '@/services/tips/tip-client';
 
 export interface ReceiveRequest {
@@ -43,7 +45,7 @@ function errorMessage(json: { error?: unknown }, fallback: string): string {
 
 /** Can I be paid right now, and what is my @orangecat.ch address? */
 export async function fetchReceiveOverview(): Promise<OwnerReceiveOverview> {
-  const res = await fetch('/api/wallets/receive-status');
+  const res = await fetch(API_ROUTES.WALLETS.RECEIVE_STATUS);
   const json = await readJson(res);
   if (!res.ok || !json.success) {
     throw new Error(errorMessage(json, 'Could not load your receiving setup.'));
@@ -53,7 +55,7 @@ export async function fetchReceiveOverview(): Promise<OwnerReceiveOverview> {
 
 /** The owner's active wallets, for the receive-with switcher. */
 export async function fetchReceiveWallets(profileId: string): Promise<ReceiveWalletOption[]> {
-  const res = await fetch(`/api/wallets?profile_id=${encodeURIComponent(profileId)}`);
+  const res = await fetch(`${API_ROUTES.WALLETS.BASE}?profile_id=${encodeURIComponent(profileId)}`);
   const json = await readJson(res);
   if (!res.ok || !json.success) {
     throw new Error(errorMessage(json, 'Could not load your wallets.'));
@@ -72,7 +74,7 @@ export async function createReceiveRequest(
   amountBtc: number,
   walletId?: string
 ): Promise<ReceiveRequest> {
-  const res = await fetch('/api/receive/request', {
+  const res = await fetch(API_ROUTES.RECEIVE.REQUEST, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ amount_btc: amountBtc, ...(walletId ? { wallet_id: walletId } : {}) }),
