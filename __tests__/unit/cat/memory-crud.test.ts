@@ -152,12 +152,10 @@ describe('suppression — deleted facts stay deleted', () => {
       cat_memories: [{ id: 'm1', content: 'Knows French' }],
       cat_forgotten_facts: [],
     });
-    const result = await forgetMemoriesMatching(client, 'u1', ['speaking French']);
+    const result = await forgetMemoriesMatching(client, 'u1', ['Knows French']);
     expect(result.deleted).toEqual(['Knows French']);
     const suppressed = (inserted.cat_forgotten_facts ?? []) as Array<{ content: string }>;
-    expect(suppressed.map(s => s.content)).toEqual(
-      expect.arrayContaining(['Knows French', 'speaking French'])
-    );
+    expect(suppressed.map(s => s.content)).toEqual(expect.arrayContaining(['Knows French']));
   });
 
   it('a forgotten fact is suppressed for re-extraction (inflections included)', async () => {
@@ -165,8 +163,12 @@ describe('suppression — deleted facts stay deleted', () => {
       cat_memories: [],
       cat_forgotten_facts: [{ content: 'Knows French' }, { content: 'photography skills' }],
     });
-    expect(await isSuppressedFact(client, 'u1', 'Speaks French', null)).toBe(true);
-    expect(await isSuppressedFact(client, 'u1', 'Is a professional photographer', null)).toBe(true);
+    // Containment and multi-stem hits suppress; a single shared stem does NOT
+    // (same safety rule as forgetting — see requiredStemHits). Paraphrases
+    // like "Speaks French" are caught by the embedding check in prod.
+    expect(await isSuppressedFact(client, 'u1', 'Knows French fluently', null)).toBe(true);
+    expect(await isSuppressedFact(client, 'u1', 'Has photography skills', null)).toBe(true);
+    expect(await isSuppressedFact(client, 'u1', 'Has strong cooking skills', null)).toBe(false);
     expect(await isSuppressedFact(client, 'u1', 'Owns a drone', null)).toBe(false);
   });
 });
