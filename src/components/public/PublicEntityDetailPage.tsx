@@ -20,6 +20,7 @@ import PublicEntityOwnerCard from '@/components/public/PublicEntityOwnerCard';
 import PublicEntityHero from '@/components/public/PublicEntityHero';
 import { PublicEntityPaymentSection } from '@/components/payment';
 import { resolveSellerReceiveInfo, type SellerReceiveInfo } from '@/domain/payments';
+import { getSharedWalletUsage, type SharedWalletUsage } from '@/domain/wallets/walletUsage';
 import { currencyConverter } from '@/services/currency';
 import { type CurrencyCode } from '@/config/currencies';
 import { fetchEntityOwner } from '@/lib/entities/fetchEntityOwner';
@@ -146,10 +147,16 @@ export default async function PublicEntityDetailPage({
   const price = config.getPrice?.(entity) ?? null;
   const priceAmount = price && price.amount > 0 ? price.amount : undefined;
   let sellerReceive: SellerReceiveInfo | null = null;
+  let sharedWalletUsage: SharedWalletUsage | null = null;
   let priceAmountBtc: number | undefined;
   const hasPaymentSurface = config.showPaymentSection !== false || meta.canReceiveSupport;
   if (hasPaymentSurface) {
     sellerReceive = await resolveSellerReceiveInfo(supabase, config.entityType, id);
+    // Address-reuse disclosure — only worth resolving when an address will
+    // actually be shown (NWC reveals no static address to link).
+    if (sellerReceive?.address) {
+      sharedWalletUsage = await getSharedWalletUsage(supabase, config.entityType, id);
+    }
     if (priceAmount !== undefined && price) {
       priceAmountBtc =
         (price.currency || 'BTC') === 'BTC'
@@ -288,6 +295,7 @@ export default async function PublicEntityDetailPage({
                     sellerProfileId={owner?.id ?? null}
                     sellerUserId={owner?.user_id ?? null}
                     sellerReceive={sellerReceive}
+                    sharedWalletUsage={sharedWalletUsage}
                     priceAmountBtc={priceAmountBtc}
                     signInRedirect={viewRoute}
                   />
