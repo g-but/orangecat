@@ -424,4 +424,5 @@ export const ROUTES = {
   SETTINGS_AI_ONBOARDING: '/settings/ai/onboarding',
   SETTINGS_INTEGRATIONS: '/settings/integrations',
   SETTINGS_NOTIFICATIONS: '/settings/notifications',
+  SETTINGS_USAGE: '/settings/usage',
 } as const;

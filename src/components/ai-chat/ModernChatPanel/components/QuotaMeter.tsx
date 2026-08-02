@@ -43,16 +43,17 @@ export function QuotaMeter({ quota, className }: QuotaMeterProps) {
     // "Together" in their toolbar instead of a generic "Your key".
     const label = quota.activeByokProviderName ?? 'Your key';
     return (
-      <span
+      <Link
+        href={ROUTES.SETTINGS_USAGE}
         className={cn(
-          'inline-flex items-center gap-1 rounded-md border border-subtle bg-surface-raised px-2 py-1 text-xs text-fg-secondary',
+          'inline-flex items-center gap-1 rounded-md border border-subtle bg-surface-raised px-2 py-1 text-xs text-fg-secondary hover:text-fg-primary',
           className
         )}
-        title={`Cat is routing through your ${label} key — you pay them directly.`}
+        title={`Cat is routing through your ${label} key — you pay them directly. Click for full usage.`}
       >
         <KeyRound className="h-3 w-3" aria-hidden="true" />
         {label}
-      </span>
+      </Link>
     );
   }
 
@@ -86,7 +87,12 @@ export function QuotaMeter({ quota, className }: QuotaMeterProps) {
       {isPro && !isCapped && !isNearCap && (
         <Sparkles className="h-3 w-3 text-accent-warm" aria-hidden="true" />
       )}
-      <span className="whitespace-nowrap" aria-live="polite">
+      <Link
+        href={ROUTES.SETTINGS_USAGE}
+        className="whitespace-nowrap hover:underline"
+        aria-live="polite"
+        title="See your full usage — what counts, when it resets, and your plan"
+      >
         {isCapped ? (
           'Daily limit reached'
         ) : (
@@ -98,7 +104,7 @@ export function QuotaMeter({ quota, className }: QuotaMeterProps) {
           </>
         )}
         <span className="sr-only"> {explanation}</span>
-      </span>
+      </Link>
       {(isCapped || isNearCap) && (
         <Link
           href={ROUTES.SETTINGS_AI}
