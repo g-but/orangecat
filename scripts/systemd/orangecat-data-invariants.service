@@ -1,0 +1,22 @@
+# Nightly DATA-INVARIANT gate — assert against the rows production actually has.
+# Runs scripts/check-data-invariants.mjs --gate (deployed to /opt/orangecat/scripts/
+# by scripts/deploy-selfhost.sh) against production. --gate exits non-zero when an
+# invariant is violated — the tripwire for the "green mocks, wrong prod data" class
+# that shipped a false public claim about shared wallets in August 2026.
+#
+# SSOT: this file lives in the repo at scripts/systemd/ and is installed to
+# /etc/systemd/system/ by deploy-selfhost.sh — edit it here, not on the box.
+[Unit]
+Description=OrangeCat nightly data-invariant gate (orphaned links, unpayable wallets, money-state drift)
+After=network-online.target
+Wants=network-online.target
+OnFailure=notify-failure@%n.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/opt/orangecat/app/.env
+ExecStart=/usr/bin/node /opt/orangecat/scripts/check-data-invariants.mjs --gate
+WorkingDirectory=/opt/orangecat/app
+
+[Install]
+WantedBy=multi-user.target

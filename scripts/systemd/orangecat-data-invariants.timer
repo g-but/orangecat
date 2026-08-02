@@ -1,0 +1,12 @@
+# SSOT: repo scripts/systemd/ — installed by deploy-selfhost.sh.
+# Runs at 05:00, after the 04:30 judgment eval and 04:45 outcome gate, so the
+# three nightly gates never overlap on the box.
+[Unit]
+Description=OrangeCat nightly data-invariant gate (05:00 UTC)
+
+[Timer]
+OnCalendar=*-*-* 05:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target
