@@ -19,7 +19,12 @@
 
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { CAT_FREE_DAILY_LIMIT, CAT_SUPPORTER_DAILY_LIMIT, CAT_PLANS } from '@/config/cat-plans';
+import {
+  CAT_FREE_DAILY_LIMIT,
+  CAT_SUPPORTER_DAILY_LIMIT,
+  CAT_PLANS,
+  SETTINGS_AI_ANCHORS,
+} from '@/config/cat-plans';
 
 const MIGRATIONS_DIR = join(process.cwd(), 'supabase', 'migrations');
 
@@ -78,6 +83,20 @@ describe('plan limit SSOT (TS ↔ SQL drift guard)', () => {
     expect(free.bullets[0]).toContain(String(CAT_FREE_DAILY_LIMIT));
     const supporter = CAT_PLANS.find(p => p.id === 'supporter')!;
     expect(supporter.bullets[0]).toContain(String(CAT_SUPPORTER_DAILY_LIMIT));
+  });
+
+  it('settings anchors point at sections that exist', () => {
+    // SETTINGS_AI_ANCHORS deep-links (#credits/#byok/#local) are config facts;
+    // the ids live in settings/ai/page.tsx. If a section is renamed or removed
+    // the pricing CTAs would silently land on the page top — fail instead.
+    const aiPage = readFileSync(
+      join(process.cwd(), 'src', 'app', '(authenticated)', 'settings', 'ai', 'page.tsx'),
+      'utf8'
+    );
+    for (const anchor of Object.values(SETTINGS_AI_ANCHORS)) {
+      const id = anchor.split('#')[1];
+      expect(aiPage).toContain(`id="${id}"`);
+    }
   });
 
   it('supporter grants never hardcode the limit', () => {

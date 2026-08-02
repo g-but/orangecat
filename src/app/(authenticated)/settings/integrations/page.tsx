@@ -73,6 +73,13 @@ export default function IntegrationsPage() {
         <p className="text-sm text-fg-secondary">
           Let external services authenticate to OrangeCat and receive signed events.
         </p>
+        <p className="mt-1 text-xs text-fg-tertiary">
+          Looking for AI provider keys (Groq, OpenRouter, OpenAI…)? Those live in{' '}
+          <Link href={ROUTES.SETTINGS_AI} className="underline hover:text-fg-primary">
+            Settings → AI
+          </Link>
+          — this page is for OrangeCat platform access from outside.
+        </p>
         <p className="mt-2 text-xs text-fg-secondary">
           API contract:{' '}
           <a

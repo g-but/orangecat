@@ -251,6 +251,14 @@ export default function UsageSettingsPage() {
                 <span className="w-full text-sm text-fg-tertiary sm:w-auto sm:flex-1">
                   {plan.bullets[0]} · {plan.priceCopy}
                 </span>
+                {!isActive && plan.status === 'available' && (
+                  <Link
+                    href={plan.cta.href}
+                    className="text-sm text-fg-secondary underline underline-offset-2 hover:text-fg-primary"
+                  >
+                    {plan.cta.label} →
+                  </Link>
+                )}
               </li>
             );
           })}

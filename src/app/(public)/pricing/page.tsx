@@ -5,6 +5,7 @@ import Button from '@/components/ui/Button';
 import { PageHeading } from '@/components/layout/PageHeading';
 import {
   CAT_PLANS,
+  CAT_WIRED_PROVIDERS,
   CAT_FREE_DAILY_LIMIT,
   CAT_SUPPORTER_DAILY_LIMIT,
   CAT_FRONTIER_MODELS_LIST,
@@ -39,9 +40,9 @@ export default function PricingPage() {
           </div>
           <PageHeading className="mb-4">Your AI, your bill, your choice</PageHeading>
           <p className="mx-auto max-w-2xl text-xl text-fg-secondary">
-            Cat works any way you want. Free out of the box, or bring your own key from six wired
-            providers — OpenAI, OpenRouter, Together, Groq, DeepSeek, xAI. OrangeCat doesn&apos;t
-            mark up inference; we earn from the platform, not your AI bill.
+            Cat works any way you want. Free out of the box, or bring your own key from{' '}
+            {CAT_WIRED_PROVIDERS.length} wired providers — {CAT_WIRED_PROVIDERS.join(', ')}.
+            OrangeCat doesn&apos;t mark up inference; we earn from the platform, not your AI bill.
           </p>
         </div>
 

@@ -126,6 +126,20 @@ export const CAT_FRONTIER_MODELS_LIST = CAT_FRONTIER_MODELS.join(', ');
 /** "Claude, GPT, or Grok" */
 export const CAT_FRONTIER_MODELS_OR = `${CAT_FRONTIER_MODELS.slice(0, -1).join(', ')}, or ${CAT_FRONTIER_MODELS[CAT_FRONTIER_MODELS.length - 1]}`;
 
+
+/**
+ * Deep links into /settings/ai — the EXACT section where each plan is acted
+ * on. Config-level so every surface (pricing cards, /settings/usage, chat
+ * upsells) lands the user on the form, not a page top they must scan.
+ * The ids are stamped on the sections in settings/ai/page.tsx; the drift
+ * pair is guarded by __tests__/unit/cat/plan-limit-drift.test.ts.
+ */
+export const SETTINGS_AI_ANCHORS = {
+  credits: `${ROUTES.SETTINGS_AI}#credits`,
+  byok: `${ROUTES.SETTINGS_AI}#byok`,
+  local: `${ROUTES.SETTINGS_AI}#local`,
+} as const;
+
 export const CAT_PLANS: CatPlan[] = [
   {
     id: 'free',
@@ -171,7 +185,7 @@ export const CAT_PLANS: CatPlan[] = [
       'Cat routes through your key — OrangeCat never sees your bill, never marks it up',
       'Keys encrypted at rest, scrubbed from logs, never echoed back to the client',
     ],
-    cta: { label: 'Add your key', href: ROUTES.SETTINGS_AI, variant: 'accent' },
+    cta: { label: 'Add your key', href: SETTINGS_AI_ANCHORS.byok, variant: 'accent' },
     status: 'available',
     badge: 'Available now',
   },
@@ -187,7 +201,7 @@ export const CAT_PLANS: CatPlan[] = [
       'Full agentic Cat: discovery, matchmaking, multi-step tasks',
     ],
     cta: CAT_CREDITS_LIVE
-      ? { label: 'Top up credits', href: ROUTES.SETTINGS_AI, variant: 'accent' }
+      ? { label: 'Top up credits', href: SETTINGS_AI_ANCHORS.credits, variant: 'accent' }
       : { label: 'Back us as a founding supporter', href: ROUTES.SUPPORT, variant: 'outline' },
     status: CAT_CREDITS_LIVE ? 'available' : 'coming-soon',
     badge: CAT_CREDITS_LIVE ? 'Live' : 'Activating',

@@ -28,6 +28,7 @@ import { CatCustomInstructions } from '@/components/ai/CatCustomInstructions';
 import { CatMemoryManager } from '@/components/ai/CatMemoryManager';
 import { CatMemoryImport } from '@/components/ai/CatMemoryImport';
 import { LocalRuntimePanel } from '@/components/ai/LocalRuntimePanel';
+import { AiUsageStrip } from '@/components/ai/AiUsageStrip';
 
 export default function AISettingsPage() {
   const { user, hydrated, isLoading: authLoading } = useRequireAuth();
@@ -54,6 +55,10 @@ export default function AISettingsPage() {
 
   return (
     <div className="space-y-12">
+      {/* Live status strip — the numbers live on /settings/usage; this one
+          line connects config to consumption so neither tab is a dead end. */}
+      <AiUsageStrip />
+
       {/* ════ Group 1 · How Cat runs ═══════════════════════════════════════ */}
       <section aria-labelledby="how-cat-runs" className="space-y-4">
         <div>
@@ -105,10 +110,12 @@ export default function AISettingsPage() {
         </section>
 
         {/* ── Cat Credits (pay with Bitcoin) ────────────────────────────── */}
-        <CatCreditsPanel />
+        <div id="credits" className="scroll-mt-24">
+          <CatCreditsPanel />
+        </div>
 
         {/* ── BYOK ──────────────────────────────────────────────────────── */}
-        <section className="rounded-lg border border-default bg-surface-base p-6">
+        <section id="byok" className="scroll-mt-24 rounded-lg border border-default bg-surface-base p-6">
           <div className="mb-4 flex items-start gap-3">
             <div className="rounded-md bg-surface-raised p-2">
               <Server className="h-5 w-5 text-fg-primary" />
@@ -147,7 +154,7 @@ export default function AISettingsPage() {
         </section>
 
         {/* ── Local ─────────────────────────────────────────────────────── */}
-        <section className="rounded-lg border border-default bg-surface-base p-6">
+        <section id="local" className="scroll-mt-24 rounded-lg border border-default bg-surface-base p-6">
           <div className="mb-4 flex items-start gap-3">
             <div className="rounded-md bg-surface-raised p-2">
               <Terminal className="h-5 w-5 text-fg-primary" />
