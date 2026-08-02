@@ -91,10 +91,22 @@ const headerNavigationConfig = {
       name: 'Product',
       children: [
         { name: 'About & mission', href: ROUTES.ABOUT, description: 'Why OrangeCat exists' },
-        { name: 'Roadmap', href: ROUTES.ROADMAP, description: 'What works now and what comes next' },
+        {
+          name: 'Roadmap',
+          href: ROUTES.ROADMAP,
+          description: 'What works now and what comes next',
+        },
         { name: 'Changelog', href: ROUTES.CHANGELOG, description: 'Every shipped improvement' },
-        { name: 'Docs', href: ROUTES.DOCS, description: 'Entities, Bitcoin payments, and security' },
-        { name: 'Whitepaper', href: ROUTES.WHITEPAPER, description: 'The economic coordination thesis' },
+        {
+          name: 'Docs',
+          href: ROUTES.DOCS,
+          description: 'Entities, Bitcoin payments, and security',
+        },
+        {
+          name: 'Whitepaper',
+          href: ROUTES.WHITEPAPER,
+          description: 'The economic coordination thesis',
+        },
       ],
     },
     { name: 'Blog', href: ROUTES.BLOG },
@@ -314,6 +326,7 @@ export const footerNavigation = {
     { name: 'How it works', href: ROUTES.HOW_IT_WORKS },
     { name: 'Roadmap', href: ROUTES.ROADMAP },
     { name: 'Changelog', href: ROUTES.CHANGELOG },
+    { name: 'Cat plans', href: ROUTES.PRICING },
   ],
   learn: [
     { name: 'Documentation', href: ROUTES.DOCS },

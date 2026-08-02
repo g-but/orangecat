@@ -1,4 +1,4 @@
-import { Bell, BrainCircuit, KeyRound, UserRound, type LucideIcon } from 'lucide-react';
+import { Bell, BrainCircuit, Gauge, KeyRound, UserRound, type LucideIcon } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 
 /**
@@ -34,6 +34,12 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     label: 'AI',
     description: 'How Cat runs: managed, credits, your own keys, or local.',
     icon: BrainCircuit,
+  },
+  {
+    href: ROUTES.SETTINGS_USAGE,
+    label: 'Usage',
+    description: 'How much Cat you have left today, what counts, and when it resets.',
+    icon: Gauge,
   },
   {
     href: ROUTES.SETTINGS_INTEGRATIONS,
