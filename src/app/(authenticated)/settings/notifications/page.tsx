@@ -20,7 +20,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Bell, Check, Loader2, LogIn } from 'lucide-react';
+import { Bell, Check, Loader2, LogIn } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { API_ROUTES } from '@/config/api-routes';
 import { ROUTES } from '@/config/routes';
@@ -189,23 +189,10 @@ export default function NotificationSettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6 lg:p-8">
-      <div>
-        <Link
-          href={ROUTES.SETTINGS}
-          className="inline-flex items-center gap-1.5 text-sm text-fg-secondary hover:text-fg-primary"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Settings
-        </Link>
-        <h1 className="mt-3 flex items-center gap-2 text-2xl font-semibold text-fg-primary">
-          <Bell className="h-5 w-5" />
-          Notifications
-        </h1>
-        <p className="mt-1 text-sm text-fg-secondary">
-          Transactional emails (auth, security) are always sent. Everything else is in your hands.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <p className="text-sm text-fg-secondary">
+        Transactional emails (auth, security) are always sent. Everything else is in your hands.
+      </p>
 
       {error && (
         <div className="rounded-md border border-status-negative/30 bg-status-negative/5 px-3 py-2 text-sm text-status-negative">

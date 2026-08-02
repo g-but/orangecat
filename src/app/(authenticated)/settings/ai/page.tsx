@@ -16,7 +16,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Bot, Check, Server, Terminal, AlertCircle } from 'lucide-react';
+import { Bot, Check, Server, Terminal, AlertCircle } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import { CAT_FRONTIER_MODELS_OR } from '@/config/cat-plans';
 import { useRequireAuth } from '@/hooks/useAuth';
@@ -54,19 +54,8 @@ export default function AISettingsPage() {
   const localProviders = getProvidersByCategory('local');
 
   return (
-    <div className="min-h-screen bg-surface-page">
-      <div className="border-b border-default bg-surface-base">
-        <div className="mx-auto flex h-16 max-w-4xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-          <Link href={ROUTES.SETTINGS} className="text-fg-secondary hover:text-fg-primary">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <Bot className="h-6 w-6 text-fg-secondary" />
-          <h1 className="text-xl font-semibold text-fg-primary">Cat AI</h1>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-        <p className="text-fg-primary">
+    <div className="space-y-6">
+      <p className="text-fg-primary">
           Cat works any of three ways. Pick whichever fits — they&apos;re all first-class. OrangeCat
           earns from platform activity, not from your AI bill.
         </p>
@@ -206,7 +195,6 @@ export default function AISettingsPage() {
             them anytime from the chat panel.
           </p>
         </div>
-      </div>
     </div>
   );
 }

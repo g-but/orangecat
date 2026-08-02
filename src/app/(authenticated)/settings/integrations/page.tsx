@@ -17,7 +17,7 @@
  */
 
 import Link from 'next/link';
-import { ArrowLeft, KeyRound, LogIn, Webhook } from 'lucide-react';
+import { KeyRound, LogIn, Webhook } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useMessagingActors } from '@/features/messaging/hooks/useMessagingActors';
 import { ROUTES } from '@/config/routes';
@@ -68,17 +68,9 @@ export default function IntegrationsPage() {
   const defaultActorId = personalActor?.actor_id ?? actors[0]?.actor_id ?? null;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-10 p-4 sm:p-6 lg:p-8">
+    <div className="space-y-10">
       <div>
-        <Link
-          href={ROUTES.SETTINGS}
-          className="inline-flex items-center gap-1.5 text-sm text-fg-secondary hover:text-fg-primary"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Settings
-        </Link>
-        <h1 className="mt-3 text-2xl font-semibold text-fg-primary">Integrations</h1>
-        <p className="mt-1 text-sm text-fg-secondary">
+        <p className="text-sm text-fg-secondary">
           Let external services authenticate to OrangeCat and receive signed events.
         </p>
         <p className="mt-2 text-xs text-fg-secondary">
