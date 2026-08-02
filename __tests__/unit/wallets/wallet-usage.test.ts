@@ -157,3 +157,30 @@ describe('getSharedWalletUsage — defects found by verifying against prod data'
     expect(usage?.shared_count).toBe(1);
   });
 });
+
+describe('getSharedWalletUsage — owner-default detection', () => {
+  it('flags the owner-default fallback when the entity has NO explicit link', async () => {
+    // The FleetCrown case: two passes both resolve to orangecat@coinos.io via
+    // the fallback chain, with zero entity_wallets rows and a wallet row that
+    // is not flagged primary. Keying on is_primary alone disclosed nothing.
+    mockResolve.mockResolvedValue({ method: 'lightning_address', wallet_id: 'w1' });
+    walletRow = {
+      id: 'w1',
+      is_primary: false,
+      lightning_address: 'orangecat@coinos.io',
+      address_or_xpub: null,
+    };
+    addressTwins = [{ id: 'w1' }];
+    linkRows = []; // no link for this entity — fallback resolution
+    const usage = await getSharedWalletUsage(supabase, 'product', ENTITY_ID);
+    expect(usage?.is_owner_default).toBe(true);
+    expect(usage?.shared_count).toBe(0);
+  });
+
+  it('does NOT call an explicitly-linked, non-primary wallet the owner default', async () => {
+    mockResolve.mockResolvedValue({ method: 'onchain', wallet_id: 'w1' });
+    linkRows = [{ entity_type: 'product', entity_id: ENTITY_ID }]; // deliberate link
+    const usage = await getSharedWalletUsage(supabase, 'product', ENTITY_ID);
+    expect(usage?.is_owner_default).toBe(false);
+  });
+});
