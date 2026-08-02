@@ -15,7 +15,6 @@ import {
 import { STATUS } from '@/config/database-constants';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UntypedTable = any;
 
 interface ProfileRecord {

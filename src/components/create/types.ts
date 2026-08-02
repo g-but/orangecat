@@ -186,7 +186,6 @@ export interface DefaultGuidance {
 
 // ==================== ENTITY CONFIGURATION ====================
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface EntityConfig<T extends Record<string, any> = Record<string, any>> {
   /** Entity type identifier */
   type: EntityType | 'organization';
@@ -263,7 +262,6 @@ export interface FormActions<T> {
 
 // ==================== COMPONENT PROPS ====================
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface EntityFormProps<T extends Record<string, any>> {
   config: EntityConfig<T>;
   initialValues?: Partial<T>;
@@ -305,7 +303,6 @@ export interface GuidancePanelProps {
  *
  * Note: Use `defaults` (not `data`) to store the prefill values.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface EntityTemplate<T extends Record<string, any> = Record<string, any>> {
   /** Unique identifier for the template */
   id: string;

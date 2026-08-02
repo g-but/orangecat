@@ -106,7 +106,7 @@ export default async function ArticlePage({ params }: PageProps) {
           </Link>
 
           {article.coverImage && (
-            // eslint-disable-next-line @next/next/no-img-element
+            // eslint-disable-next-line @next/next/no-img-element -- cover may be an Openverse or user-pasted URL on any host; next/image would throw for hosts outside images.remotePatterns
             <img
               src={article.coverImage}
               alt=""
@@ -128,7 +128,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 className="flex items-center gap-2.5 text-fg-primary transition-opacity hover:opacity-80"
               >
                 {article.author.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                  // eslint-disable-next-line @next/next/no-img-element -- avatar_url is a free-form user URL (any host); next/image would throw for hosts outside images.remotePatterns
                   <img
                     src={article.author.avatarUrl}
                     alt=""
@@ -176,7 +176,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 className="flex items-center gap-3 transition-opacity hover:opacity-80"
               >
                 {article.author.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                  // eslint-disable-next-line @next/next/no-img-element -- avatar_url is a free-form user URL (any host); next/image would throw for hosts outside images.remotePatterns
                   <img
                     src={article.author.avatarUrl}
                     alt=""

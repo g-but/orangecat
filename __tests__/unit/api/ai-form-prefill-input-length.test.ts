@@ -36,14 +36,11 @@ jest.mock('@/lib/rate-limit', () => ({
 // The response helpers wrap NextResponse, which needs the Next runtime; the
 // established convention in route tests is to stub them.
 jest.mock('@/lib/api/standardResponse', () => ({
+  apiSuccess: jest.fn((data: unknown) => ({ status: 200, body: { success: true, data } })),
   apiValidationError: jest.fn((error: string) => ({ status: 400, error })),
   apiBadRequest: jest.fn((error: string) => ({ status: 400, error })),
   apiRateLimited: jest.fn(() => ({ status: 429 })),
   apiInternalError: jest.fn(() => ({ status: 500 })),
-}));
-
-jest.mock('next/server', () => ({
-  NextResponse: { json: (body: unknown) => ({ status: 200, body }) },
 }));
 
 jest.mock('@/lib/ai/form-prefill-service', () => ({

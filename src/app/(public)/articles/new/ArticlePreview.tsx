@@ -20,7 +20,7 @@ export default function ArticlePreview({
   return (
     <div className="rounded-lg border border-subtle bg-surface-page p-6">
       {coverImage && (
-        // eslint-disable-next-line @next/next/no-img-element
+        // eslint-disable-next-line @next/next/no-img-element -- cover image is a free-form URL (Openverse, AI generation, or user upload) on any host; next/image would throw for hosts outside images.remotePatterns
         <img
           src={coverImage}
           alt=""

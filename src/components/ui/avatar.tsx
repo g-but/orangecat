@@ -22,7 +22,7 @@ Avatar.displayName = 'Avatar';
 
 const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
   ({ className, alt = '', ...props }, ref) => (
-    // eslint-disable-next-line @next/next/no-img-element -- Avatar images are dynamic user content
+    // eslint-disable-next-line @next/next/no-img-element -- generic src prop carrying free-form user URLs (any host); next/image would throw for hosts outside images.remotePatterns
     <img ref={ref} alt={alt} className={cn('aspect-square h-full w-full', className)} {...props} />
   )
 );

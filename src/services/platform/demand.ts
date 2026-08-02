@@ -5,7 +5,6 @@
  *   - searches: the terms people search for, as anonymous aggregates
  * Both are already-public data; safe to expose without a session.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 export interface DemandNeed {

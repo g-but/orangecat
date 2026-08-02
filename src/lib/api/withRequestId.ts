@@ -6,7 +6,6 @@ interface GlobalWithCrypto {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withRequestId(): Middleware<any> {
   return async (req, ctx, next) => {
     const globalWithCrypto = globalThis as GlobalWithCrypto;

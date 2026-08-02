@@ -6,7 +6,6 @@
 
 import { DATABASE_TABLES } from '@/config/database-tables';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = any;
 
 /**

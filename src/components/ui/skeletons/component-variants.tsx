@@ -57,7 +57,6 @@ export function ProfileHeaderSkeleton() {
     <div className="relative">
       <Skeleton className="h-48 md:h-64 lg:h-80 w-full rounded-lg" />
       <div className="absolute -bottom-12 left-4 md:-bottom-16 md:left-8">
-        {/* eslint-disable-next-line no-restricted-syntax -- avatar photo ring uses white/gray-900 to separate from cover image; no semantic token covers this visual boundary */}
         <Skeleton className="h-24 w-24 md:h-32 md:w-32 rounded-lg border-4 border-card dark:border-border" />
       </div>
       <div className="mt-16 md:mt-20 space-y-4">

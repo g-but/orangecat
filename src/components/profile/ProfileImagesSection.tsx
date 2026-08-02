@@ -47,7 +47,7 @@ export function ProfileImagesSection({
           }}
         >
           {bannerPreview || profile.banner_url ? (
-            // eslint-disable-next-line @next/next/no-img-element -- Dynamic banner preview
+            // eslint-disable-next-line @next/next/no-img-element -- src is a blob: object-URL preview or free-form banner_url (any host); next/image handles neither
             <img
               src={bannerPreview || profile.banner_url || ''}
               alt={`${profile.username || 'Profile'} banner`}
@@ -90,7 +90,7 @@ export function ProfileImagesSection({
           }}
         >
           {avatarPreview || profile.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element -- Dynamic avatar preview
+            // eslint-disable-next-line @next/next/no-img-element -- src is a blob: object-URL preview or free-form avatar_url (any host); next/image handles neither
             <img
               src={avatarPreview || profile.avatar_url || ''}
               alt={`${profile.username || 'Profile'} avatar`}

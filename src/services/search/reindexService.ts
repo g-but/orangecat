@@ -10,7 +10,6 @@
  * this converges the index in the background, and tolerates the provider being down.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { embedTexts } from '@/services/ai/embeddings';
 import { ENTITY_STATUS } from '@/config/database-constants';
