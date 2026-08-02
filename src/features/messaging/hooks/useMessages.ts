@@ -21,6 +21,8 @@ interface UseMessagesReturn {
   isLoadingMore: boolean;
   error: 'forbidden' | 'not_found' | 'network' | 'unknown' | null;
   loadMore: () => Promise<void>;
+  /** Re-run the initial fetch — for inline retry after a failed load. */
+  retry: () => Promise<void>;
   addOptimisticMessage: (message: Message) => void;
   confirmMessage: (tempId: string, realMessage: Message) => void;
   removeMessage: (messageId: string) => void;
@@ -65,6 +67,7 @@ export function useMessages(
     isLoadingMore,
     error,
     loadMore,
+    retry,
   } = useMessagesFetcher({ conversationId, enabled, applyReadStatus, markAsRead });
 
   const prevReadTimesKeyRef = useRef('');
@@ -132,6 +135,7 @@ export function useMessages(
     isLoadingMore,
     error,
     loadMore,
+    retry,
     addOptimisticMessage,
     confirmMessage,
     removeMessage,

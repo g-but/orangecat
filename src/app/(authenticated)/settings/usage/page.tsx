@@ -28,23 +28,38 @@ function formatCountdown(totalSeconds: number): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-function useCreditBalance(): { balanceBtc: number | null; isLoading: boolean } {
+function useCreditBalance(): {
+  balanceBtc: number | null;
+  isLoading: boolean;
+  error: boolean;
+  retry: () => void;
+} {
   const [balanceBtc, setBalanceBtc] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
+    setError(false);
     (async () => {
       try {
         const res = await fetch(API_ROUTES.CAT.CREDITS, { credentials: 'include' });
         if (!res.ok) {
+          if (!cancelled) {
+            setError(true);
+          }
           return;
         }
         const body = (await res.json()) as { success: boolean; data?: { balanceBtc: number } };
         if (!cancelled && body.success && body.data) {
           setBalanceBtc(body.data.balanceBtc);
         }
-      } catch (error) {
-        logger.warn('Usage page: credit balance fetch failed', { error }, 'Usage');
+      } catch (fetchError) {
+        logger.warn('Usage page: credit balance fetch failed', { error: fetchError }, 'Usage');
+        if (!cancelled) {
+          setError(true);
+        }
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -54,13 +69,13 @@ function useCreditBalance(): { balanceBtc: number | null; isLoading: boolean } {
     return () => {
       cancelled = true;
     };
-  }, []);
-  return { balanceBtc, isLoading };
+  }, [attempt]);
+  return { balanceBtc, isLoading, error, retry: () => setAttempt(a => a + 1) };
 }
 
 export default function UsageSettingsPage() {
   const { quota, isLoading: quotaLoading } = useCatQuota();
-  const { balanceBtc } = useCreditBalance();
+  const { balanceBtc, error: creditError, retry: retryCredits } = useCreditBalance();
   const { formatAmountBtc } = useDisplayCurrency();
 
   /** Which CAT_PLANS card is the user's current reality — via the SSOT map. */
@@ -197,16 +212,31 @@ export default function UsageSettingsPage() {
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="font-heading text-base font-semibold text-fg-primary">Cat Credits</h2>
-            <p className="mt-2 text-sm text-fg-secondary">
-              {balanceBtc !== null ? (
-                <>
-                  Balance:{' '}
-                  <span className="font-medium text-fg-primary">{formatAmountBtc(balanceBtc)}</span>
-                </>
-              ) : (
-                'Prepaid balance for managed frontier models, billed per message.'
-              )}
-            </p>
+            {creditError ? (
+              <div className="oc-error-surface mt-2">
+                <p className="text-sm">Couldn&apos;t load your credit balance.</p>
+                <button
+                  type="button"
+                  onClick={retryCredits}
+                  className="mt-2 text-sm font-medium underline underline-offset-2"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-fg-secondary">
+                {balanceBtc !== null ? (
+                  <>
+                    Balance:{' '}
+                    <span className="font-medium text-fg-primary">
+                      {formatAmountBtc(balanceBtc)}
+                    </span>
+                  </>
+                ) : (
+                  'Prepaid balance for managed frontier models, billed per message.'
+                )}
+              </p>
+            )}
             <p className="mt-1 text-sm text-fg-tertiary">
               Top up and see the per-message ledger in{' '}
               <Link href={ROUTES.SETTINGS_AI} className="underline underline-offset-2">

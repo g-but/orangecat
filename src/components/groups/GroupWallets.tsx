@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Wallet } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
 import type { GroupWalletSummary } from '@/services/groups/types';
 import { GroupWalletCard } from './GroupWalletCard';
 import { GroupWalletCreateForm } from './GroupWalletCreateForm';
@@ -40,7 +41,12 @@ export function GroupWallets({
         </CardHeader>
         <CardContent>
           {typedWallets.length === 0 ? (
-            <div className="text-center py-8 text-fg-secondary">No wallets yet</div>
+            <EmptyState
+              icon={Wallet}
+              title="No wallets yet"
+              description="Use “Create a group wallet” above to add a Bitcoin wallet so this group can receive funds together."
+              className="py-8"
+            />
           ) : (
             <div className="space-y-4">
               {typedWallets.map(wallet => (
