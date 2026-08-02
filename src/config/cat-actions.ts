@@ -956,6 +956,60 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     ],
     enabled: true,
   },
+  remember_fact: {
+    id: 'remember_fact',
+    name: 'Remember Fact',
+    description:
+      'Store facts the user explicitly asks Cat to remember ("remember that I…"). Overrides any earlier forget of the same fact — a deliberate statement outranks a past deletion.',
+    category: 'context',
+    icon: FileText,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      {
+        name: 'facts',
+        type: 'array',
+        required: true,
+        description:
+          'Short third-person facts to store (e.g. ["Speaks Italian", "Prefers morning meetings"]). Max 5 per call.',
+      },
+    ],
+    examples: [
+      'Remember that I speak Italian',
+      'Note that my workshop is in Basel',
+      "Don't forget I prefer Lightning payments",
+    ],
+    enabled: true,
+  },
+  edit_memory: {
+    id: 'edit_memory',
+    name: 'Edit Memory',
+    description:
+      'Correct ONE stored memory in place when the user says a remembered fact is slightly wrong ("it\'s 45 CHF, not 40"). Use forget_memories instead when the fact should simply be removed.',
+    category: 'context',
+    icon: Settings,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      {
+        name: 'match',
+        type: 'string',
+        required: true,
+        description: 'A short phrase identifying WHICH memory to change, close to its wording.',
+      },
+      {
+        name: 'new_content',
+        type: 'string',
+        required: true,
+        description: 'The corrected fact, written in the third person.',
+      },
+    ],
+    examples: [
+      'Actually my mug costs 45 CHF, not 40 — fix that',
+      "I moved — I'm in Bern now, not Zurich",
+    ],
+    enabled: true,
+  },
   add_context: {
     id: 'add_context',
     name: 'Add Context',

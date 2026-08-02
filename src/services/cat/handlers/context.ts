@@ -5,7 +5,7 @@ import {
   normalizeEconomicPatch,
   removeFromEconomicProfile,
 } from '../economic-profile';
-import { forgetMemoriesMatching } from '../memory';
+import { forgetMemoriesMatching, rememberFacts, editMemoryMatching } from '../memory';
 import type { ActionHandler } from './types';
 
 export const contextHandlers: Record<string, ActionHandler> = {
@@ -90,6 +90,79 @@ export const contextHandlers: Record<string, ActionHandler> = {
         deletedMemories: mem.deleted,
         removedProfileEntries: profile.removed,
         notFound: stillUnknown,
+      },
+    };
+  },
+
+  // Explicit "remember this" — a user command, not passive extraction. Also
+  // lifts any suppression a past forget left behind for the same fact.
+  remember_fact: async (supabase, userId, _actorId, params) => {
+    const facts = Array.isArray(params.facts)
+      ? (params.facts as unknown[]).filter((f): f is string => typeof f === 'string')
+      : [];
+    if (facts.length === 0) {
+      return { success: false, error: 'Nothing to remember — pass one or more short facts.' };
+    }
+    const result = await rememberFacts(supabase, userId, facts);
+    if (result.stored.length === 0 && result.duplicates.length === 0) {
+      return { success: false, error: 'Could not store the memory — nothing was saved.' };
+    }
+    const storedPart =
+      result.stored.length > 0
+        ? `🧠 Remembered: ${result.stored.map(s => `"${s}"`).join(', ')}.`
+        : '';
+    const dupPart =
+      result.duplicates.length > 0
+        ? ` Already knew: ${result.duplicates.map(s => `"${s}"`).join(', ')}.`
+        : '';
+    return {
+      success: true,
+      data: {
+        displayMessage: `${storedPart}${dupPart}`.trim(),
+        stored: result.stored,
+        duplicates: result.duplicates,
+      },
+    };
+  },
+
+  // Correct ONE stored memory in place. Ambiguity is surfaced, never guessed
+  // through — silently editing the wrong memory is a trust-killer.
+  edit_memory: async (supabase, userId, _actorId, params) => {
+    const match = typeof params.match === 'string' ? params.match : '';
+    const newContent = typeof params.new_content === 'string' ? params.new_content : '';
+    if (!match || !newContent) {
+      return {
+        success: false,
+        error: 'Pass "match" (which memory to change) and "new_content" (the corrected fact).',
+      };
+    }
+    const result = await editMemoryMatching(supabase, userId, match, newContent);
+    if (!result.ok) {
+      if (result.reason === 'ambiguous') {
+        return {
+          success: false,
+          error: `Several memories match: ${(result.candidates ?? [])
+            .map(c => `"${c}"`)
+            .join(
+              ', '
+            )}. Ask the user which one to change, then call edit_memory with more specific wording.`,
+        };
+      }
+      if (result.reason === 'not_found') {
+        return {
+          success: false,
+          error:
+            'No stored memory matched — nothing was changed. The full list is at Settings → AI → What Cat remembers.',
+        };
+      }
+      return { success: false, error: 'Updating the memory failed — nothing was changed.' };
+    }
+    return {
+      success: true,
+      data: {
+        displayMessage: `✏️ Updated memory: "${result.previous}" → "${result.updated}"`,
+        previous: result.previous,
+        updated: result.updated,
       },
     };
   },
