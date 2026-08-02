@@ -11,6 +11,7 @@ const KNOWN_PAYMENT_ERRORS: Record<string, string> = {
   'no price': 'This entity has no price set',
   'Amount is required': 'Payment amount is required for contributions',
   'owner not found': 'This listing is no longer available.',
+  'not publicly available': 'This listing is not available.',
   'LNURL-pay endpoint': 'Seller Lightning Address is unreachable. Try again later.',
   'outside allowed range': 'Payment amount is outside the allowed range for this seller.',
   'LNURL callback': 'Lightning Address invoice request failed. Try again later.',

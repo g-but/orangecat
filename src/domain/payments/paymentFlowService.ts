@@ -68,6 +68,20 @@ export async function initiatePayment(
   const { entity_type, entity_id } = input;
   const meta = getEntityMetadata(entity_type);
 
+  // 0. Publication gate — the buyer's own RLS read is the check, exactly like
+  // the public-support flow. Everything after this resolves through the admin
+  // client (seller lookup, wallet secrets), so without this gate an
+  // authenticated user could mint an invoice + order against a DRAFT entity
+  // the owner never published (found by live simulation, 2026-08-02).
+  const { data: visibleEntity } = await supabase
+    .from(meta.tableName)
+    .select('id')
+    .eq('id', entity_id)
+    .maybeSingle();
+  if (!visibleEntity) {
+    throw new Error('Entity is not publicly available');
+  }
+
   // 1. Resolve seller
   const sellerId = await getSellerUserId(supabase, entity_type, entity_id);
   if (!sellerId) {
