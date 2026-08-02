@@ -22,56 +22,8 @@ type Resolver = (hostname: string) => Promise<Array<{ address: string }>>;
 
 const defaultResolver: Resolver = async hostname => lookup(hostname, { all: true, verbatim: true });
 
-function isPrivateIPv4(ip: string): boolean {
-  const octets = ip.split('.').map(Number);
-  if (octets.length !== 4 || octets.some(o => Number.isNaN(o))) {
-    return true; // malformed — treat as unsafe
-  }
-  const [a, b] = octets;
-  return (
-    a === 0 || // "this network"
-    a === 10 || // RFC1918
-    a === 127 || // loopback
-    (a === 100 && b >= 64 && b <= 127) || // CGNAT 100.64/10
-    (a === 169 && b === 254) || // link-local / cloud metadata
-    (a === 172 && b >= 16 && b <= 31) || // RFC1918
-    (a === 192 && b === 168) || // RFC1918
-    (a === 192 && b === 0) || // IETF protocol assignments 192.0.0/24 + 192.0.2/24 test
-    (a === 198 && (b === 18 || b === 19)) || // benchmarking 198.18/15
-    a >= 224 // multicast + reserved + broadcast
-  );
-}
-
-/** True when `ip` (v4 or v6) is loopback, link-local, private, or reserved. */
-export function isPrivateAddress(ip: string): boolean {
-  const version = isIP(ip);
-  if (version === 4) {
-    return isPrivateIPv4(ip);
-  }
-  if (version === 6) {
-    const lower = ip.toLowerCase();
-    // IPv4-mapped (::ffff:a.b.c.d) — check the embedded v4 address
-    const mapped = lower.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    if (mapped) {
-      return isPrivateIPv4(mapped[1]);
-    }
-    return (
-      lower === '::' ||
-      lower === '::1' ||
-      lower.startsWith('fc') || // ULA fc00::/7
-      lower.startsWith('fd') ||
-      lower.startsWith('fe8') || // link-local fe80::/10
-      lower.startsWith('fe9') ||
-      lower.startsWith('fea') ||
-      lower.startsWith('feb') ||
-      lower.startsWith('fec') || // deprecated site-local fec0::/10
-      lower.startsWith('fed') ||
-      lower.startsWith('fee') ||
-      lower.startsWith('fef')
-    );
-  }
-  return true; // not an IP at all — caller should have resolved first
-}
+export { isPrivateAddress } from './private-address';
+import { isPrivateAddress } from './private-address';
 
 /**
  * Validate that a user-supplied URL is http(s) and does not point at a
