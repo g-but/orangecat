@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Plus, User, Compass, BookOpen, Cat } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useBottomNavScroll } from '@/hooks/useHeaderScroll';
 import { useComposer } from '@/contexts/ComposerContext';
@@ -10,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { getRouteChrome, getRouteSurface, ROUTES } from '@/config/routes';
 import { getContextualCreateAction } from '@/lib/navigation/contextual-create';
 import { isNavHrefActive } from '@/lib/navigation/isActive';
+import { mobileTabBar, mobileTabBarAnonymous } from '@/config/navigation';
 import { MobileCreateSheet } from '@/components/create/MobileCreateSheet';
 import { Z_INDEX } from '@/constants/z-index';
 
@@ -83,87 +83,24 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
   // Non-authenticated users see simplified nav
   const isAuthenticated = !!user;
 
-  // Active state uses isNavHrefActive — the same SSOT as sidebar +
-  // desktop header nav, so a route is considered "active" identically
-  // across all three chrome surfaces. Profile match is the one exception
-  // (collapses /profile + /profiles into the same nav item).
-  const isActive = (href: string) => isNavHrefActive(pathname, href);
-  const isProfileActive = !!(pathname?.startsWith('/profile') || pathname?.startsWith('/profiles'));
+  // Active state uses isNavHrefActive — the same SSOT as sidebar + desktop
+  // header nav, so a route reads as "active" identically across all three
+  // chrome surfaces.
+  const isActiveHref = (href: string) => isNavHrefActive(pathname, href);
 
-  // Navigation items - consistent for authenticated users regardless of route
-  const navItems = isAuthenticated
-    ? [
-        {
-          icon: Cat,
-          label: 'Cat',
-          href: ROUTES.DASHBOARD.CAT,
-          active: isActive(ROUTES.DASHBOARD.CAT),
-        },
-        {
-          icon: Home,
-          label: 'Dashboard',
-          href: ROUTES.DASHBOARD.HOME,
-          active:
-            pathname === ROUTES.DASHBOARD.HOME ||
-            (pathname?.startsWith(`${ROUTES.DASHBOARD.HOME}/`) ?? false),
-        },
-        {
-          icon: Plus,
-          label: createAction.label,
-          href: createAction.href,
-          active: false,
-          primary: true,
-          createAction, // Pass the action for the click handler
-        },
-        {
-          icon: BookOpen,
-          label: 'Timeline',
-          href: ROUTES.TIMELINE,
-          active: isActive(ROUTES.TIMELINE),
-        },
-        {
-          icon: User,
-          label: 'Profile',
-          href: ROUTES.PROFILE.EDIT,
-          active: isProfileActive,
-        },
-      ]
-    : [
-        { icon: Home, label: 'Home', href: ROUTES.HOME, active: pathname === ROUTES.HOME },
-        {
-          icon: Compass,
-          label: 'Discover',
-          href: ROUTES.DISCOVER,
-          active: isActive(ROUTES.DISCOVER),
-        },
-        {
-          icon: Plus,
-          label: 'Create',
-          href: ROUTES.PROJECTS.CREATE,
-          active: isActive(ROUTES.PROJECTS.CREATE),
-          primary: true,
-        },
-        { icon: User, label: 'Login', href: ROUTES.AUTH, active: isActive(ROUTES.AUTH) },
-      ];
+  // SSOT: the slot list lives in src/config/navigation.ts alongside the sidebar,
+  // so "what deserves a thumb" is one decision in one file rather than a second
+  // list here that quietly drifts from the rest of the chrome.
+  const navItems = isAuthenticated ? mobileTabBar : mobileTabBarAnonymous;
 
-  // Handle click on primary "+" button
-  const handlePrimaryClick = (item: (typeof navItems)[number]) => {
-    if ('createAction' in item && item.createAction) {
-      const action = item.createAction;
-      if (action.type === 'post') {
-        // Open composer for posts
-        openComposer();
-        router.push(`${ROUTES.TIMELINE}?compose=true`);
-      } else if (action.type === 'entity') {
-        // Navigate directly to entity creation
-        router.push(action.href);
-      } else if (action.type === 'menu') {
-        // Show the create sheet with all options
-        setShowCreateSheet(true);
-      }
+  const handleCreate = () => {
+    if (createAction.type === 'post') {
+      openComposer();
+      router.push(`${ROUTES.TIMELINE}?compose=true`);
+    } else if (createAction.type === 'entity') {
+      router.push(createAction.href);
     } else {
-      // Fallback for non-authenticated nav
-      router.push(item.href);
+      setShowCreateSheet(true);
     }
   };
 
@@ -206,16 +143,18 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
         >
           {navItems.map((item, index) => {
             const Icon = item.icon;
-            const isActive = item.active;
+            // Profile collapsed /profile + /profiles; nothing in the bar needs
+            // that special case now, so every slot uses the shared active test.
+            const isActive = isActiveHref(item.href);
+            const label = item.opensCreate ? createAction.label : item.name;
 
             return (
               <button
                 key={`${item.href}-${index}`}
                 onClick={e => {
                   e.preventDefault();
-                  if (item.primary) {
-                    // Use contextual handler for primary "+" button
-                    handlePrimaryClick(item);
+                  if (item.opensCreate) {
+                    handleCreate();
                   } else {
                     router.push(item.href);
                   }
@@ -231,7 +170,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
                   item.primary && 'relative',
                   shouldBeSmall ? 'min-h-12 gap-0.5' : 'min-h-14 gap-1'
                 )}
-                aria-label={item.label}
+                aria-label={label}
                 aria-current={isActive ? 'page' : undefined}
                 type="button"
               >
@@ -273,7 +212,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
                         isActive && 'font-semibold'
                       )}
                     >
-                      {item.label}
+                      {label}
                     </span>
                   </>
                 )}

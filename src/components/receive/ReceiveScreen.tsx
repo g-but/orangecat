@@ -18,6 +18,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle2, Clock, Copy, Check, Loader2, Share2, Wallet, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PaymentQRCode } from '@/components/payment/PaymentQRCode';
+import { SharePayLink } from '@/components/receive/SharePayLink';
 import { ContributionAmountInput } from '@/components/payment/ContributionAmountInput';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
@@ -228,6 +229,11 @@ export function ReceiveScreen() {
               {RECEIVE_COPY.share}
             </Button>
           </div>
+          {/* The QR above serves the person standing in front of you; this
+              serves everyone else. Different artifact for a different job. */}
+          {overview?.username && (
+            <SharePayLink username={overview.username} className="w-full" />
+          )}
         </div>
       ) : request && settleState === 'paid' ? (
         <div className="mt-8 flex flex-col items-center gap-3 text-center">
@@ -341,6 +347,8 @@ export function ReceiveScreen() {
           >
             {generating ? RECEIVE_COPY.generating : RECEIVE_COPY.generate}
           </Button>
+          {/* Not everyone you're asking is in the room. Same amount, sendable. */}
+          {overview?.username && <SharePayLink username={overview.username} amountBtc={amount} />}
         </div>
       )}
     </div>

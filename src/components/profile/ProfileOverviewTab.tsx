@@ -104,7 +104,13 @@ export default function ProfileOverviewTab({
         />
       )}
 
-      <ProfileSupportSection profile={profile} />
+      {profile.username && (
+        <ProfileSupportSection
+          username={profile.username}
+          displayName={profile.name || profile.username}
+          isOwner={isOwnProfile}
+        />
+      )}
 
       {/* Stats Grid — visitors only see stats that exist; "0 Projects" and
           "CHF 0.00 Total Raised" say nothing worth a card. */}

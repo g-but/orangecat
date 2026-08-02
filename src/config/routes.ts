@@ -414,6 +414,8 @@ export const ROUTES = {
   TIMELINE: '/timeline',
   /** Owner's "get paid" screen — one tap to a scannable QR. */
   RECEIVE: '/receive',
+  /** Public, account-free page a payer lands on. The shareable half of RECEIVE. */
+  PAY: (username: string) => `/pay/${encodeURIComponent(username)}`,
   // Personalized "Following" home feed (people/projects you follow)
   FEED: '/home',
   // Open-roles collaborator board (project_roles)

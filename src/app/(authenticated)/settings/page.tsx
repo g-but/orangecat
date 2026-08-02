@@ -10,6 +10,7 @@ import { SettingsSecuritySection } from './SettingsSecuritySection';
 import { SettingsDangerSection } from './SettingsDangerSection';
 import { SettingsDataSection } from './SettingsDataSection';
 import { SettingsPreferencesSection } from './SettingsPreferencesSection';
+import { SettingsAppearanceSection } from './SettingsAppearanceSection';
 import { SettingsModals } from './SettingsModals';
 
 export default function SettingsPage() {
@@ -84,6 +85,8 @@ export default function SettingsPage() {
               onMFADisableComplete={refreshMFAStatus}
             />
             <SettingsPreferencesSection />
+
+            <SettingsAppearanceSection />
 
             <SettingsDataSection />
 

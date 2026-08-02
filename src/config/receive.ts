@@ -22,6 +22,16 @@ export const RECEIVE_MIN_BTC = TIP_MIN_BTC;
 export const RECEIVE_MAX_BTC = TIP_MAX_BTC;
 export const RECEIVE_POLL_INTERVAL_MS = TIP_POLL_INTERVAL_MS;
 
+export const RECEIVE_SHARE_COPY = {
+  heading: 'Send someone a payment link',
+  /** Why a link and not the QR: a QR is useless inside a chat thread. */
+  hint: 'Works in WhatsApp, email, anywhere. They can pay from any Bitcoin wallet — no OrangeCat account needed.',
+  copy: 'Copy link',
+  copied: 'Link copied',
+  share: 'Share',
+  withAmount: 'Include the amount',
+} as const;
+
 export const RECEIVE_COPY = {
   title: 'Receive',
   subtitle: 'Get paid straight to your wallet — OrangeCat never holds your money.',
