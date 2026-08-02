@@ -15,6 +15,15 @@ import type {
 } from '../types';
 import { useChatHistory } from './useChatHistory';
 
+/** Chat error that carries the server's machine-readable code (drives recovery CTAs). */
+class CatChatError extends Error {
+  code?: string;
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 const STREAM_TIMEOUT_MS = 60_000;
 
 /**
@@ -116,6 +125,7 @@ export function useChatMessages({
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const onPendingResultRef = useRef(onPendingResult);
@@ -165,6 +175,7 @@ export function useChatMessages({
       }
 
       setError(null);
+      setErrorCode(null);
 
       const userMessage: Message = {
         id: `user-${Date.now()}`,
@@ -222,18 +233,21 @@ export function useChatMessages({
 
         if (!res.ok || !res.body) {
           let msg = 'Failed to get response';
+          let code: string | undefined;
           try {
             const data = await res.json();
             // standardResponse envelope: { success:false, error:{code,message,details} }.
             // Prefer error.message; fall back through legacy shapes so anything
             // truthy beats the generic default.
             msg =
+              data?.message ||
               data?.error?.message ||
               data?.details?.message ||
               (typeof data?.error === 'string' ? data.error : undefined) ||
               msg;
+            code = data?.code || data?.error?.code;
           } catch {}
-          throw new Error(msg);
+          throw new CatChatError(msg, code);
         }
 
         let modelUsed = selectedModel;
@@ -258,9 +272,10 @@ export function useChatMessages({
             fallback?: { from: string; to: string; model: string; reason: string };
             suggestUpgrade?: boolean;
             error?: string;
+            code?: string;
           };
           if (event?.error) {
-            throw new Error(event.error);
+            throw new CatChatError(event.error, event.code);
           }
           if (event?.content) {
             setMessages(prev =>
@@ -362,9 +377,11 @@ export function useChatMessages({
           // intentional no-op: keep partial streamed content
         } else if (isAbort) {
           setError('Response timed out. Try again or rephrase your question.');
+          setErrorCode(null);
           setMessages(prev => prev.filter(m => m.id !== assistantId));
         } else {
           setError(e instanceof Error ? e.message : 'Something went wrong');
+          setErrorCode(e instanceof CatChatError ? (e.code ?? null) : null);
           setMessages(prev => prev.filter(m => m.id !== assistantId));
         }
       } finally {
@@ -382,6 +399,7 @@ export function useChatMessages({
   const clearChat = useCallback(() => {
     setMessages([]);
     setError(null);
+    setErrorCode(null);
     // A fresh draft has no server-side thread yet — nothing to clear there.
     const targetId = conversationId ?? pendingConversationIdRef.current;
     if (!targetId) {
@@ -395,6 +413,7 @@ export function useChatMessages({
 
   const setErrorState = useCallback((err: string | null) => {
     setError(err);
+    setErrorCode(null);
   }, []);
 
   const addSystemMessage = useCallback((content: string) => {
@@ -414,6 +433,7 @@ export function useChatMessages({
     stopGeneration,
     clearChat,
     setError: setErrorState,
+    errorCode,
     addSystemMessage,
   };
 }

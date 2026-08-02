@@ -44,6 +44,7 @@ import { getUserActorId } from '@/domain/actors';
 import type { ExecAction, CatAction, ExecActionResult } from '@/types/cat';
 import { AI_MESSAGE_MAX_CHARS } from '@/lib/validation/ai';
 import { PAGE_EXCERPT_MAX_CHARS } from '@/config/cat-page-context';
+import { markLinkDown } from '@/services/ai/link-health';
 
 export const catChatBodySchema = z.object({
   message: z.string().min(1).max(AI_MESSAGE_MAX_CHARS),
@@ -308,6 +309,7 @@ export async function orchestrateCatChat(
         let activeProvider = provider;
         let activeModel = modelToUse;
         let activeService = aiService;
+        let activeIsPlatform = !hasByok;
         try {
           let usage:
             | {
@@ -420,7 +422,15 @@ export async function orchestrateCatChat(
           while (lastErr && !streamStarted && fallbackIndex < fallbacks.length) {
             attemptedFallback = true;
             const reason = isAiRateLimitError(lastErr) ? 'rate_limit' : 'provider_error';
+            // Remember the dead PLATFORM link so the next message's chain
+            // skips it for a minute instead of paying the failed round-trip
+            // again. BYOK links are never marked — the user's own key failing
+            // must not sideline the platform's identical provider+model.
+            if (activeIsPlatform) {
+              markLinkDown(activeProvider, activeModel);
+            }
             const next = fallbacks[fallbackIndex++];
+            activeIsPlatform = !next.hasByok;
             logger.warn(
               'Cat chat: provider failed, trying next fallback',
               {
@@ -453,6 +463,9 @@ export async function orchestrateCatChat(
             }
           }
           if (lastErr) {
+            if (activeIsPlatform) {
+              markLinkDown(activeProvider, activeModel);
+            }
             throw lastErr;
           }
 
@@ -602,8 +615,13 @@ export async function orchestrateCatChat(
     lastErr = err;
   }
   let fallbackIndex = 0;
+  let lastTried = { provider: provider as string, model: modelToUse, platform: !hasByok };
   while (!result && lastErr && fallbackIndex < fallbacks.length) {
+    if (lastTried.platform) {
+      markLinkDown(lastTried.provider, lastTried.model);
+    }
     const next = fallbacks[fallbackIndex++];
+    lastTried = { provider: next.provider, model: next.modelToUse, platform: !next.hasByok };
     logger.warn(
       'Cat chat (non-streaming): provider failed, trying next fallback',
       {
@@ -630,6 +648,9 @@ export async function orchestrateCatChat(
     }
   }
   if (!result) {
+    if (lastTried.platform) {
+      markLinkDown(lastTried.provider, lastTried.model);
+    }
     throw lastErr ?? new Error('Cat chat: no AI provider produced a response');
   }
 

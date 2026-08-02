@@ -100,6 +100,7 @@ export function ModernChatPanel({
     isLoading,
     isLoadingHistory,
     error,
+    errorCode,
     messagesEndRef,
     sendMessage,
     stopGeneration,
@@ -276,7 +277,12 @@ export function ModernChatPanel({
         </div>
 
         {error && (
-          <ErrorDisplay error={error} onRetry={handleRetry} onDismiss={handleDismissError} />
+          <ErrorDisplay
+            error={error}
+            code={errorCode}
+            onRetry={handleRetry}
+            onDismiss={handleDismissError}
+          />
         )}
 
         <ChatInput
