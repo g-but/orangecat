@@ -48,7 +48,10 @@ export const contextHandlers: Record<string, ActionHandler> = {
       ? (params.facts as unknown[]).filter((f): f is string => typeof f === 'string')
       : [];
     if (facts.length === 0) {
-      return { success: false, error: 'Nothing to forget — pass the wrong facts as short phrases.' };
+      return {
+        success: false,
+        error: 'Nothing to forget — pass the wrong facts as short phrases.',
+      };
     }
     const [mem, profile] = await Promise.all([
       forgetMemoriesMatching(supabase, userId, facts),
@@ -65,18 +68,25 @@ export const contextHandlers: Record<string, ActionHandler> = {
           'No stored memory or profile entry matched — nothing was removed. The full list is at Settings → AI → What Cat remembers.',
       };
     }
-    const parts = [
-      mem.deleted.length > 0 && `${mem.deleted.length} memor${mem.deleted.length === 1 ? 'y' : 'ies'}`,
-      profile.removed.length > 0 && `${profile.removed.length} profile entr${profile.removed.length === 1 ? 'y' : 'ies'}`,
-    ]
-      .filter(Boolean)
-      .join(' and ');
+    // List exactly WHAT was removed, not just counts — the user must be able
+    // to spot an over-match at a glance (and re-add it), and a bare "removed
+    // 2 entries" hides which stored fact survived.
+    const removedAll = [...mem.deleted, ...profile.removed];
+    const MAX_LISTED = 8;
+    const listed = removedAll
+      .slice(0, MAX_LISTED)
+      .map(r => `"${r.length > 70 ? `${r.slice(0, 70)}…` : r}"`)
+      .join(', ');
+    const overflow =
+      removedAll.length > MAX_LISTED ? ` and ${removedAll.length - MAX_LISTED} more` : '';
     return {
       success: true,
       data: {
         displayMessage:
-          `🧹 Removed ${parts}.` +
-          (stillUnknown.length > 0 ? ` No match found for: ${stillUnknown.join(', ')}.` : ''),
+          `🧹 Removed ${listed}${overflow}.` +
+          (stillUnknown.length > 0
+            ? ` No stored match found for: ${stillUnknown.join(', ')} — check Settings → AI → What Cat remembers.`
+            : ''),
         deletedMemories: mem.deleted,
         removedProfileEntries: profile.removed,
         notFound: stillUnknown,

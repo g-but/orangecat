@@ -54,8 +54,8 @@ describe('forgetMemoriesMatching', () => {
 
   it('one call can match multiple facts across multiple memories', async () => {
     const { client, deleted } = supabaseWithCorpus(CORPUS);
-    // Text mode requires ≥2 significant-word overlaps (single-word overlap
-    // would over-delete); looser phrasings are caught by the embeddings path.
+    // Text mode requires a majority of the fact's significant (stemmed) words
+    // to appear in the memory; looser phrasings are caught by the embeddings path.
     const result = await forgetMemoriesMatching(client, 'u1', [
       'speaks French',
       'income on weekends',
@@ -84,5 +84,100 @@ describe('forgetMemoriesMatching', () => {
     const result = await forgetMemoriesMatching(client, 'u1', ['a', ' is ']);
     expect(deleted).toHaveLength(0);
     expect(result.deleted).toEqual([]);
+  });
+});
+
+/**
+ * Regression: 2026-08-02 prod incident. The user said "photography, handmade
+ * ceramics, and French don't apply to me, and the weekends-only availability
+ * is wrong — forget all of those"; the model passed exactly these phrases and
+ * NOTHING was deleted, because matching required exact substrings
+ * ("photography" ≠ "photographer", "ceramics" ≠ "ceramic", "speaking" ≠
+ * "speaks") and the semantic floor (0.75) sat above what real phrasings score
+ * (0.39–0.61). These tests pin the stemmed lexical layer with the user's
+ * actual stored memories; embeddings are disabled in the unit env.
+ */
+const INCIDENT_CORPUS: Row[] = [
+  { id: 'i1', content: 'Username is @mao.' },
+  { id: 'i2', content: 'Wants to make extra income on the side.' },
+  {
+    id: 'i3',
+    content:
+      'Has full-stack web development (React/Node/TypeScript), product & UX design, and basic Bitcoin/Lightning knowledge.',
+  },
+  { id: 'i4', content: 'Wants to earn extra income on weekends.' },
+  { id: 'i5', content: 'Owns a drone.' },
+  { id: 'i6', content: 'Selling a handmade ceramic coffee mug for CHF 40' },
+  { id: 'i7', content: 'Creates product listings for handcrafted items' },
+  { id: 'i8', content: 'Knows French' },
+  { id: 'i9', content: 'Can only work on weekends.' },
+  {
+    id: 'i10',
+    content:
+      'Is a professional photographer who speaks fluent French and owns a rarely used drone.',
+  },
+  { id: 'i11', content: 'Has a documentary photography background' },
+  { id: 'i12', content: 'Prefers Lightning over on-chain payments' },
+];
+
+describe('forgetMemoriesMatching — 2026-08-02 incident regression (stemming)', () => {
+  it('the exact phrases the model passed now delete every targeted memory', async () => {
+    const { client } = supabaseWithCorpus(INCIDENT_CORPUS);
+    const result = await forgetMemoriesMatching(client, 'u1', [
+      'photography skills',
+      'handmade ceramics',
+      'speaking French',
+    ]);
+
+    expect(result.deleted).toEqual(
+      expect.arrayContaining([
+        // "photography" must reach "photographer" and "photography background"
+        'Is a professional photographer who speaks fluent French and owns a rarely used drone.',
+        'Has a documentary photography background',
+        // "ceramics" must reach "ceramic"
+        'Selling a handmade ceramic coffee mug for CHF 40',
+        // "speaking French" must reach "Knows French" (1-of-2 majority)
+        'Knows French',
+      ])
+    );
+    expect(result.notFound).toEqual([]);
+  });
+
+  it('never touches unrelated memories', async () => {
+    const { client } = supabaseWithCorpus(INCIDENT_CORPUS);
+    const result = await forgetMemoriesMatching(client, 'u1', [
+      'photography skills',
+      'handmade ceramics',
+      'speaking French',
+    ]);
+    for (const survivor of [
+      'Username is @mao.',
+      'Wants to make extra income on the side.',
+      'Has full-stack web development (React/Node/TypeScript), product & UX design, and basic Bitcoin/Lightning knowledge.',
+      'Owns a drone.',
+      'Prefers Lightning over on-chain payments',
+    ]) {
+      expect(result.deleted).not.toContain(survivor);
+    }
+  });
+
+  it('a 3-word fact needs a 2-token majority — one shared word is not enough', async () => {
+    // "weekend availability constraint" shares only "weekend" with both
+    // weekend memories; deleting the income GOAL over one shared word would be
+    // over-deletion. In prod the semantic layer (floor 0.45) resolves this:
+    // "Can only work on weekends." scores 0.52, the goal only 0.41.
+    const { client } = supabaseWithCorpus(INCIDENT_CORPUS);
+    const result = await forgetMemoriesMatching(client, 'u1', ['weekend availability constraint']);
+    expect(result.deleted).toEqual([]);
+    expect(result.notFound).toEqual(['weekend availability constraint']);
+  });
+
+  it('stem equality never fires on mere prefix overlap (constraint ≠ construction)', async () => {
+    const { client } = supabaseWithCorpus([
+      { id: 'c1', content: 'Works in construction management' },
+    ]);
+    const result = await forgetMemoriesMatching(client, 'u1', ['constraint']);
+    expect(result.deleted).toEqual([]);
+    expect(result.notFound).toEqual(['constraint']);
   });
 });
