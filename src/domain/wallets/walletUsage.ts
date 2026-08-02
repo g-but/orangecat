@@ -17,7 +17,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { resolveSellerWallet } from '@/domain/payments';
-import type { EntityType } from '@/config/entity-registry';
+import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { logger } from '@/utils/logger';
 
 export interface SharedWalletUsage {
@@ -33,6 +33,46 @@ export interface SharedWalletUsage {
    * reused address, so payments are NOT linkable on-chain. No warning needed.
    */
   fresh_address_per_payment: boolean;
+}
+
+/**
+ * Count the sibling links that are actually PUBLIC pages, using the caller's
+ * RLS-scoped client so the database's own visibility rules decide — the same
+ * gate the payment surface uses.
+ *
+ * Two ways the raw link count lies, both observed in prod: entity_wallets keeps
+ * rows for entities that were deleted (all nine links on one wallet pointed at
+ * rows that no longer exist), and a draft page isn't publicly linkable at all.
+ * Claiming "also receives funds for 8 other pages" when none are visible is
+ * exactly the fabricated-confidence failure this disclosure exists to prevent.
+ */
+async function countPubliclyVisible(
+  supabase: SupabaseClient,
+  siblings: Array<{ entity_type: EntityType; entity_id: string }>
+): Promise<number> {
+  if (siblings.length === 0) {
+    return 0;
+  }
+  const byType = new Map<EntityType, string[]>();
+  for (const s of siblings) {
+    byType.set(s.entity_type, [...(byType.get(s.entity_type) ?? []), s.entity_id]);
+  }
+
+  const counts = await Promise.all(
+    Array.from(byType.entries()).map(async ([type, ids]) => {
+      try {
+        const { data } = await supabase
+          .from(getEntityMetadata(type).tableName)
+          .select('id')
+          .in('id', ids);
+        return data?.length ?? 0;
+      } catch {
+        // An unknown/unreadable type contributes nothing rather than inflating.
+        return 0;
+      }
+    })
+  );
+  return counts.reduce((sum, n) => sum + n, 0);
 }
 
 /**
@@ -59,21 +99,40 @@ export async function getSharedWalletUsage(
     // we correctly return null (treasury sharing isn't a privacy leak).
     const { data: wallet } = await admin
       .from(DATABASE_TABLES.WALLETS)
-      .select('id, is_primary')
+      .select('id, is_primary, lightning_address, address_or_xpub')
       .eq('id', resolved.wallet_id)
       .maybeSingle();
     if (!wallet) {
       return null;
     }
 
+    // Count by ADDRESS, not by wallet row. The on-chain linkability a backer
+    // cares about is a property of the address itself, and prod really does
+    // hold the same address in several wallet rows (one lightning address in
+    // two rows, one xpub in eleven) — counting per wallet_id reports "not
+    // shared" for the most visible reuse on the platform.
+    const address = wallet.lightning_address || wallet.address_or_xpub || null;
+    let walletIds = [resolved.wallet_id];
+    if (address) {
+      const { data: twins } = await admin
+        .from(DATABASE_TABLES.WALLETS)
+        .select('id')
+        .or(`lightning_address.eq.${address},address_or_xpub.eq.${address}`);
+      if (twins?.length) {
+        walletIds = Array.from(new Set(twins.map(t => t.id as string)));
+      }
+    }
+
     const { data: links } = await admin
       .from(DATABASE_TABLES.ENTITY_WALLETS)
       .select('entity_type, entity_id')
-      .eq('wallet_id', resolved.wallet_id);
+      .in('wallet_id', walletIds);
 
-    const sharedCount = (links ?? []).filter(
+    const siblings = (links ?? []).filter(
       l => !(l.entity_type === entityType && l.entity_id === entityId)
-    ).length;
+    ) as Array<{ entity_type: EntityType; entity_id: string }>;
+
+    const sharedCount = await countPubliclyVisible(supabase, siblings);
 
     return {
       shared_count: sharedCount,

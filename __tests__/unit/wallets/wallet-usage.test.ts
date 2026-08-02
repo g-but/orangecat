@@ -15,39 +15,48 @@ jest.mock('@/domain/payments', () => ({
   resolveSellerWallet: (...args: unknown[]) => mockResolve(...args),
 }));
 
-// Admin client: route wallets vs entity_wallets queries to separate results.
-let walletRow: { id: string; is_primary: boolean } | null = null;
+// Admin client mock: wallets lookups (single row + address twins) and
+// entity_wallets link rows. Public client mock: RLS-visible sibling entities.
+let walletRow: Record<string, unknown> | null = null;
+let addressTwins: Array<{ id: string }> = [];
 let linkRows: Array<{ entity_type: string; entity_id: string }> = [];
+let visibleByTable: Record<string, string[]> = {};
+
 jest.mock('@/lib/supabase/admin', () => ({
   getAdminClient: () => ({
     from: (table: string) => {
-      const chain = {
-        select: () => chain,
-        eq: () => chain,
-        maybeSingle: async () => ({ data: walletRow }),
-        then: (resolve: (v: { data: unknown }) => void) =>
-          resolve({ data: table === 'entity_wallets' ? linkRows : null }),
-      };
-      return table === 'wallets'
-        ? chain
-        : {
-            select: () => ({
-              eq: async () => ({ data: linkRows }),
-            }),
-          };
+      if (table === 'wallets') {
+        return {
+          select: () => ({
+            eq: () => ({ maybeSingle: async () => ({ data: walletRow }) }),
+            or: async () => ({ data: addressTwins }),
+          }),
+        };
+      }
+      return { select: () => ({ in: async () => ({ data: linkRows }) }) };
     },
   }),
 }));
 
 import { getSharedWalletUsage } from '@/domain/wallets/walletUsage';
 
-const supabase = {} as never;
+const supabase = {
+  from: (table: string) => ({
+    select: () => ({
+      in: async (_col: string, ids: string[]) => ({
+        data: (visibleByTable[table] ?? []).filter(id => ids.includes(id)).map(id => ({ id })),
+      }),
+    }),
+  }),
+} as never;
 const ENTITY_ID = '11111111-2222-3333-4444-555555555555';
 
 beforeEach(() => {
   mockResolve.mockReset();
-  walletRow = { id: 'w1', is_primary: false };
+  walletRow = { id: 'w1', is_primary: false, lightning_address: null, address_or_xpub: null };
+  addressTwins = [];
   linkRows = [];
+  visibleByTable = {};
 });
 
 describe('getSharedWalletUsage', () => {
@@ -63,6 +72,7 @@ describe('getSharedWalletUsage', () => {
       { entity_type: 'project', entity_id: 'other-1' },
       { entity_type: 'cause', entity_id: 'other-2' },
     ];
+    visibleByTable = { projects: ['other-1'], user_causes: ['other-2'] };
     const usage = await getSharedWalletUsage(supabase, 'product', ENTITY_ID);
     expect(usage).toEqual({
       shared_count: 2,
@@ -98,5 +108,52 @@ describe('getSharedWalletUsage', () => {
   it('degrades to null when resolution throws — disclosure never breaks the page', async () => {
     mockResolve.mockRejectedValue(new Error('rail down'));
     expect(await getSharedWalletUsage(supabase, 'product', ENTITY_ID)).toBeNull();
+  });
+});
+
+describe('getSharedWalletUsage — defects found by verifying against prod data', () => {
+  it('counts reuse across DIFFERENT wallet rows holding the SAME address', async () => {
+    // Prod really holds orangecat@coinos.io in two wallet rows (and one xpub in
+    // eleven). Per-wallet_id counting reported "not shared" for the platform's
+    // most visible reuse — the FleetCrown/OrangeCat case.
+    mockResolve.mockResolvedValue({ method: 'lightning_address', wallet_id: 'w1' });
+    walletRow = {
+      id: 'w1',
+      is_primary: false,
+      lightning_address: 'orangecat@coinos.io',
+      address_or_xpub: null,
+    };
+    addressTwins = [{ id: 'w1' }, { id: 'w2' }];
+    linkRows = [
+      { entity_type: 'product', entity_id: ENTITY_ID }, // self, wallet w1
+      { entity_type: 'product', entity_id: 'twin-linked' }, // via wallet w2
+    ];
+    visibleByTable = { user_products: ['twin-linked'] };
+    const usage = await getSharedWalletUsage(supabase, 'product', ENTITY_ID);
+    expect(usage?.shared_count).toBe(1);
+  });
+
+  it('never counts links whose entity no longer exists (orphan rows)', async () => {
+    // All nine links on one prod wallet pointed at deleted entities; the raw
+    // count would have claimed "8 other pages" that a backer cannot open.
+    mockResolve.mockResolvedValue({ method: 'onchain', wallet_id: 'w1' });
+    linkRows = [
+      { entity_type: 'product', entity_id: 'deleted-1' },
+      { entity_type: 'cause', entity_id: 'deleted-2' },
+    ];
+    visibleByTable = {}; // RLS/existence returns nothing
+    const usage = await getSharedWalletUsage(supabase, 'product', ENTITY_ID);
+    expect(usage?.shared_count).toBe(0);
+  });
+
+  it('counts only the publicly visible siblings, not drafts', async () => {
+    mockResolve.mockResolvedValue({ method: 'onchain', wallet_id: 'w1' });
+    linkRows = [
+      { entity_type: 'product', entity_id: 'published' },
+      { entity_type: 'product', entity_id: 'draft-hidden-by-rls' },
+    ];
+    visibleByTable = { user_products: ['published'] };
+    const usage = await getSharedWalletUsage(supabase, 'product', ENTITY_ID);
+    expect(usage?.shared_count).toBe(1);
   });
 });
