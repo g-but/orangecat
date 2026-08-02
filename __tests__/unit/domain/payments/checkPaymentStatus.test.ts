@@ -10,6 +10,8 @@
 
 import { checkPaymentStatus } from '@/domain/payments/paymentFlowService';
 import { STATUS } from '@/config/database-constants';
+import { getAdminClient } from '@/lib/supabase/admin';
+const getAdminClientMock = getAdminClient as jest.Mock;
 
 jest.mock('@/utils/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
@@ -20,6 +22,7 @@ jest.mock('@/lib/email/send-seller-notification', () => ({
 jest.mock('@/services/notifications/dispatcher', () => ({
   NotificationDispatcher: { dispatch: jest.fn().mockResolvedValue(undefined) },
 }));
+jest.mock('@/lib/supabase/admin', () => ({ getAdminClient: jest.fn() }));
 
 const PI_ID = 'pi-1';
 const BUYER = 'buyer-1';
@@ -38,7 +41,9 @@ function makeSupabase(intent: Record<string, unknown> | null) {
   // Awaited update chains resolve cleanly.
   builder.then = (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) =>
     Promise.resolve({ error: null }).then(resolve, reject);
-  return { client: { from: jest.fn(() => builder) } as never, update };
+  const client = { from: jest.fn(() => builder) } as never;
+  getAdminClientMock.mockReturnValue(client);
+  return { client, update };
 }
 
 const baseIntent = {

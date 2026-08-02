@@ -17,6 +17,8 @@ import { checkPaymentStatus } from '@/domain/payments/paymentFlowService';
 import { STATUS } from '@/config/database-constants';
 import { checkOnchainPaymentStatus } from '@/domain/payments/paymentStatusService';
 import { NotificationDispatcher } from '@/services/notifications/dispatcher';
+import { getAdminClient } from '@/lib/supabase/admin';
+const getAdminClientMock = getAdminClient as jest.Mock;
 
 jest.mock('@/utils/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
@@ -31,6 +33,7 @@ jest.mock('@/domain/payments/paymentStatusService', () => ({
   checkNWCPaymentStatus: jest.fn(),
   checkOnchainPaymentStatus: jest.fn(),
 }));
+jest.mock('@/lib/supabase/admin', () => ({ getAdminClient: jest.fn() }));
 
 const onchainMock = checkOnchainPaymentStatus as jest.Mock;
 const dispatchMock = NotificationDispatcher.dispatch as jest.Mock;
@@ -68,7 +71,9 @@ function makeSupabase(claimWon: boolean) {
   builder.single = jest.fn(() => Promise.resolve({ data: intent, error: null }));
   builder.then = (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) =>
     Promise.resolve({ data: claimWon ? [{ id: PI_ID }] : [], error: null }).then(resolve, reject);
-  return { from: jest.fn(() => builder), rpc } as never;
+  const client = { from: jest.fn(() => builder), rpc } as never;
+  getAdminClientMock.mockReturnValue(client);
+  return client;
 }
 
 beforeEach(() => {
@@ -115,6 +120,7 @@ describe('exactly-once settlement', () => {
       );
     };
     const supabase = { from: jest.fn(() => builder), rpc } as never;
+    getAdminClientMock.mockReturnValue(supabase);
 
     await Promise.all([
       checkPaymentStatus(supabase, PI_ID, SELLER),
