@@ -87,6 +87,12 @@ jobs:
           # client bundle CD ships (artifact download, no rebuild) — a client
           # var set only in cd.yml never reaches production.
           NEXT_PUBLIC_CAT_CREDITS_LIVE: ${{ vars.NEXT_PUBLIC_CAT_CREDITS_LIVE }}
+          # FleetCrown feedback widget token. Statically prerendered routes
+          # (e.g. /dashboard/*) evaluate the root layout's env gate at BUILD
+          # time — without this the widget bakes out of every static page and
+          # only runtime-rendered routes get it. Public by design (it ships in
+          # page source), hence a repo variable, not a secret.
+          FLEETCROWN_FEEDBACK_TOKEN: ${{ vars.FLEETCROWN_FEEDBACK_TOKEN }}
         run: npm run build
 
       - name: Assemble standalone (static + public)
