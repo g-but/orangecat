@@ -287,6 +287,26 @@ export const PLATFORM_TOOL_DEFINITION = [
   {
     type: 'function',
     function: {
+      name: 'forget_memories',
+      description:
+        'Delete stored memories about the user that they say are wrong or want removed ("that\'s not true", "I don\'t speak French", "forget that", "remove X from what you know"). Pass each wrong fact as a short phrase close to the user\'s wording. This is the ONLY way to change stored memories — without calling it, nothing changes, so never claim a memory was removed unless this tool confirmed it.',
+      parameters: {
+        type: 'object',
+        properties: {
+          facts: {
+            type: 'array',
+            items: { type: 'string' },
+            description:
+              'The wrong or unwanted facts to forget, one short phrase each (e.g. ["photography skills", "speaks French", "only available on weekends"]).',
+          },
+        },
+        required: ['facts'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'check_cat_health',
       description:
         "Live health check of the AI providers powering the Cat. Call when the user asks why the Cat/AI is failing, slow, or not answering, or asks about a system notification that mentions provider failures, eval/harness errors, or Cat health. Returns per-provider status (ok / rate-limited / auth failure / down) that explains what's wrong in actionable terms. Takes no arguments.",

@@ -11,6 +11,7 @@
 
 import { useRef, useState } from 'react';
 import { Mic, Square, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { API_ROUTES } from '@/config/api-routes';
 import { logger } from '@/utils/logger';
 import { cn } from '@/lib/utils';
@@ -99,9 +100,14 @@ export function DictationButton({
           const text: string = json?.data?.text ?? '';
           if (text) {
             onTranscript(text);
+          } else if (!res.ok) {
+            toast.error("Couldn't transcribe — try again in a moment.");
+          } else {
+            toast.message("Didn't catch any speech — try speaking closer to the mic.");
           }
         } catch (e) {
           logger.warn('[Dictation] transcription request failed', { error: e });
+          toast.error("Couldn't transcribe — check your connection and try again.");
         } finally {
           setState('idle');
         }
@@ -110,8 +116,16 @@ export function DictationButton({
       rec.start();
       setState('recording');
     } catch (e) {
-      // Permission denied or no mic — fail quietly back to idle.
+      // Permission denied or no mic. This must be AUDIBLE feedback — a silent
+      // return reads as "the mic button is broken" (it did, verbatim, in a
+      // founder bug report from Brave, which blocks mic access by default).
       logger.warn('[Dictation] microphone unavailable', { error: e });
+      const denied = e instanceof DOMException && e.name === 'NotAllowedError';
+      toast.error(
+        denied
+          ? 'Microphone blocked — allow mic access for orangecat.ch in your browser, then try again.'
+          : 'No microphone available — check your device and browser settings.'
+      );
       releaseStream();
       setState('idle');
     }

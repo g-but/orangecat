@@ -90,6 +90,115 @@ export async function recallMemories(
   }
 }
 
+// ─── Forgetting ─────────────────────────────────────────────────────────────
+
+/** What a forget request actually did — the model reports THIS, never a guess. */
+export interface ForgetResult {
+  /** Contents of the memories that were deleted. */
+  deleted: string[];
+  /** Requested facts for which no stored memory matched. */
+  notFound: string[];
+}
+
+/** Semantic floor for treating a stored memory as "the fact the user means". */
+const FORGET_MATCH_SIMILARITY = 0.75;
+/** Bound one forget call — the model should pass targeted facts, not essays. */
+const MAX_FORGET_FACTS = 10;
+/** Ignore degenerate fragments ("a", "is") that would text-match everything. */
+const MIN_FORGET_FRAGMENT_CHARS = 4;
+
+/**
+ * Delete stored memories matching the given facts. Matching is deliberately
+ * generous — the user says "photography doesn't apply to me", the stored row is
+ * "Has photography skills, speaks French…" — so each fact matches by
+ * case-insensitive containment in EITHER direction, plus semantic similarity
+ * when embeddings are available. Deletion is scoped to the user's own rows.
+ *
+ * This is the ONLY write path Cat has to memory besides extraction; it returns
+ * exactly what happened so the model can report truthfully.
+ */
+export async function forgetMemoriesMatching(
+  supabase: AnySupabaseClient,
+  userId: string,
+  facts: string[]
+): Promise<ForgetResult> {
+  const wanted = facts
+    .map(f => f.trim())
+    .filter(f => f.length >= MIN_FORGET_FRAGMENT_CHARS)
+    .slice(0, MAX_FORGET_FACTS);
+  const result: ForgetResult = { deleted: [], notFound: [] };
+  if (wanted.length === 0) {
+    return result;
+  }
+
+  const { data: rows, error: loadError } = await supabase
+    .from(DATABASE_TABLES.CAT_MEMORIES)
+    .select('id, content')
+    .eq('user_id', userId);
+  if (loadError) {
+    logger.warn('forgetMemoriesMatching load failed', { error: loadError }, 'CatMemory');
+    return { deleted: [], notFound: wanted };
+  }
+  const corpus = (rows ?? []) as Array<{ id: string; content: string }>;
+
+  const doomed = new Map<string, string>();
+  for (const fact of wanted) {
+    const norm = fact.toLowerCase();
+    const sigTokens = norm.split(/[^a-z0-9äöüéèàç]+/).filter(t => t.length >= 4);
+    let matched = false;
+    for (const m of corpus) {
+      const c = m.content.toLowerCase();
+      // Containment either way ("photography" ⊂ "Has photography skills…"),
+      // or the fact's significant words appear in the memory (≥2 of them, or
+      // the only one for single-word facts) — "income on weekends" should hit
+      // "Wants to earn extra income on weekends." without exact phrasing.
+      const tokenHits = sigTokens.filter(t => c.includes(t)).length;
+      const tokenMatch =
+        sigTokens.length > 0 && (sigTokens.length === 1 ? tokenHits === 1 : tokenHits >= 2);
+      if (c.includes(norm) || norm.includes(c) || tokenMatch) {
+        doomed.set(m.id, m.content);
+        matched = true;
+      }
+    }
+    if (!matched && embeddingsEnabled()) {
+      try {
+        const vec = await embedText(fact);
+        if (vec) {
+          const { data: near } = await supabase.rpc('match_cat_memories', {
+            p_user_id: userId,
+            query_embedding: JSON.stringify(vec),
+            match_count: 3,
+            min_similarity: FORGET_MATCH_SIMILARITY,
+          });
+          for (const n of (Array.isArray(near) ? near : []) as CatMemory[]) {
+            doomed.set(n.id, n.content);
+            matched = true;
+          }
+        }
+      } catch (err) {
+        logger.warn('forget semantic match failed', { err }, 'CatMemory');
+      }
+    }
+    if (!matched) {
+      result.notFound.push(fact);
+    }
+  }
+
+  if (doomed.size > 0) {
+    const { error } = await supabase
+      .from(DATABASE_TABLES.CAT_MEMORIES)
+      .delete()
+      .eq('user_id', userId)
+      .in('id', [...doomed.keys()]);
+    if (error) {
+      logger.warn('forgetMemoriesMatching delete failed', { error }, 'CatMemory');
+      return { deleted: [], notFound: wanted };
+    }
+    result.deleted.push(...doomed.values());
+  }
+  return result;
+}
+
 // ─── Extraction ─────────────────────────────────────────────────────────────
 
 /**
