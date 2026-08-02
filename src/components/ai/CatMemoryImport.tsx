@@ -27,6 +27,9 @@ export function CatMemoryImport({ onImported }: CatMemoryImportProps) {
   const [isImporting, setIsImporting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
+  // Collapsed by default: importing is a one-time task, so the two-step wizard
+  // should not occupy the page for everyone who never needs it.
+  const [open, setOpen] = useState(false);
 
   const copyPrompt = useCallback(async () => {
     try {
@@ -93,83 +96,107 @@ export function CatMemoryImport({ onImported }: CatMemoryImportProps) {
 
   return (
     <section className="rounded-lg border border-default bg-surface-base p-6">
-      <div className="mb-4 flex items-start gap-3">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+        className="flex w-full items-start gap-3 text-left"
+      >
         <div className="rounded-md bg-surface-raised p-2">
           <ArrowDownToLine className="h-5 w-5 text-fg-primary" />
         </div>
         <div className="flex-1">
-          <h2 className="text-lg font-semibold text-fg-primary">Import from another AI</h2>
+          <span className="flex items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold text-fg-primary">Import from another AI</h2>
+            {open ? (
+              <ChevronUp className="h-4 w-4 shrink-0 text-fg-secondary" />
+            ) : (
+              <ChevronDown className="h-4 w-4 shrink-0 text-fg-secondary" />
+            )}
+          </span>
           <p className="mt-1 text-sm text-fg-secondary">
-            Already have context in ChatGPT, Grok, Gemini or Claude? Bring it over so Cat starts warm
-            instead of cold. Copy the prompt, run it in your other assistant, and paste the result
-            back — Cat keeps what&apos;s new and skips anything it already knows.
+            Already have context in ChatGPT, Grok, Gemini or Claude? Bring it over so Cat starts
+            warm instead of cold.
           </p>
         </div>
-      </div>
+      </button>
 
-      {/* Step 1 — copy the prompt */}
-      <div className="mb-4 rounded-md border border-subtle bg-surface-raised/30 p-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-sm font-medium text-fg-primary">
-            1 · Copy this prompt into your other AI
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowPrompt(v => !v)}
-              className="inline-flex items-center gap-1 text-sm text-fg-secondary hover:text-fg-primary"
-            >
-              {showPrompt ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              {showPrompt ? 'Hide' : 'Show'} prompt
-            </button>
-            <Button
-              variant="outline"
-              onClick={copyPrompt}
-              className="h-11 gap-2 px-3 text-sm"
-              aria-label="Copy the import prompt"
-            >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? 'Copied' : 'Copy prompt'}
-            </Button>
+      {!open ? null : (
+        <div className="mt-4">
+          <p className="mb-4 text-sm text-fg-secondary">
+            Copy the prompt, run it in your other assistant, and paste the result back — Cat keeps
+            what&apos;s new and skips anything it already knows.
+          </p>
+
+          {/* Step 1 — copy the prompt */}
+          <div className="mb-4 rounded-md border border-subtle bg-surface-raised/30 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm font-medium text-fg-primary">
+                1 · Copy this prompt into your other AI
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPrompt(v => !v)}
+                  className="inline-flex items-center gap-1 text-sm text-fg-secondary hover:text-fg-primary"
+                >
+                  {showPrompt ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                  {showPrompt ? 'Hide' : 'Show'} prompt
+                </button>
+                <Button
+                  variant="outline"
+                  onClick={copyPrompt}
+                  className="h-11 gap-2 px-3 text-sm"
+                  aria-label="Copy the import prompt"
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copied ? 'Copied' : 'Copy prompt'}
+                </Button>
+              </div>
+            </div>
+            {showPrompt && (
+              <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap rounded-md border border-subtle bg-surface-page p-3 text-xs text-fg-secondary">
+                {MEMORY_IMPORT_PROMPT}
+              </pre>
+            )}
+          </div>
+
+          {/* Step 2 — paste the result */}
+          <div className="rounded-md border border-subtle bg-surface-raised/30 p-3">
+            <label htmlFor="memory-import" className="text-sm font-medium text-fg-primary">
+              2 · Paste the result here
+            </label>
+            <textarea
+              id="memory-import"
+              value={text}
+              onChange={e => setText(e.target.value)}
+              disabled={isImporting}
+              rows={6}
+              placeholder="Paste everything your other AI exported…"
+              className="mt-2 w-full resize-y rounded-md border border-subtle bg-surface-page p-3 text-sm text-fg-primary placeholder:text-fg-tertiary focus:outline-none focus:ring-2 focus:ring-accent-warm disabled:opacity-60"
+            />
+            <div className="mt-3 flex items-center justify-end">
+              <Button
+                variant="accent"
+                onClick={handleImport}
+                disabled={isImporting || !text.trim()}
+                className="h-11 gap-2 px-4 text-sm"
+              >
+                {isImporting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ArrowDownToLine className="h-4 w-4" />
+                )}
+                Import into Cat
+              </Button>
+            </div>
           </div>
         </div>
-        {showPrompt && (
-          <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap rounded-md border border-subtle bg-surface-page p-3 text-xs text-fg-secondary">
-            {MEMORY_IMPORT_PROMPT}
-          </pre>
-        )}
-      </div>
-
-      {/* Step 2 — paste the result */}
-      <div className="rounded-md border border-subtle bg-surface-raised/30 p-3">
-        <label htmlFor="memory-import" className="text-sm font-medium text-fg-primary">
-          2 · Paste the result here
-        </label>
-        <textarea
-          id="memory-import"
-          value={text}
-          onChange={e => setText(e.target.value)}
-          disabled={isImporting}
-          rows={6}
-          placeholder="Paste everything your other AI exported…"
-          className="mt-2 w-full resize-y rounded-md border border-subtle bg-surface-page p-3 text-sm text-fg-primary placeholder:text-fg-tertiary focus:outline-none focus:ring-2 focus:ring-accent-warm disabled:opacity-60"
-        />
-        <div className="mt-3 flex items-center justify-end">
-          <Button
-            variant="accent"
-            onClick={handleImport}
-            disabled={isImporting || !text.trim()}
-            className="h-11 gap-2 px-4 text-sm"
-          >
-            {isImporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ArrowDownToLine className="h-4 w-4" />
-            )}
-            Import into Cat
-          </Button>
-        </div>
-      </div>
+      )}
     </section>
   );
 }
