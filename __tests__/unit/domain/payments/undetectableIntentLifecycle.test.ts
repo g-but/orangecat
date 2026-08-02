@@ -15,6 +15,8 @@ import { BUYER_CLAIM_GRACE_MS } from '@/domain/payments/intentExpiry';
 import { STATUS } from '@/config/database-constants';
 import type { PaymentIntent } from '@/domain/payments/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getAdminClient } from '@/lib/supabase/admin';
+const getAdminClientMock = getAdminClient as jest.Mock;
 
 jest.mock('@/utils/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
@@ -30,6 +32,7 @@ jest.mock('@/domain/payments/paymentStatusService', () => ({
   checkOnchainPaymentStatus: jest.fn(),
   checkLnurlVerifyPaymentStatus: jest.fn(),
 }));
+jest.mock('@/lib/supabase/admin', () => ({ getAdminClient: jest.fn() }));
 
 const updates: Array<Record<string, unknown>> = [];
 
@@ -40,7 +43,9 @@ function makeSupabase(): SupabaseClient {
     return builder;
   });
   builder.eq = jest.fn(() => Promise.resolve({ error: null }));
-  return { from: jest.fn(() => builder) } as unknown as SupabaseClient;
+  const client = { from: jest.fn(() => builder) } as unknown as SupabaseClient;
+  getAdminClientMock.mockReturnValue(client);
+  return client;
 }
 
 function bareLightningIntent(expiresAt: string): PaymentIntent {

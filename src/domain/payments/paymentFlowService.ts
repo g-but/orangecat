@@ -458,7 +458,7 @@ export async function acknowledgePublicPayment(
       pi.status !== STATUS.PAYMENT_INTENTS.EXPIRED &&
       pi.status !== STATUS.PAYMENT_INTENTS.FAILED
     ) {
-      await updatePaymentStatus(admin, paymentIntentId, STATUS.PAYMENT_INTENTS.EXPIRED);
+      await updatePaymentStatus(paymentIntentId, STATUS.PAYMENT_INTENTS.EXPIRED);
     }
     throw new Error('This payment request has expired');
   }
@@ -470,7 +470,7 @@ export async function acknowledgePublicPayment(
     };
   }
 
-  await updatePaymentStatus(admin, paymentIntentId, STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED);
+  await updatePaymentStatus(paymentIntentId, STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED);
   return {
     status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
     paid_at: null,
@@ -501,9 +501,9 @@ async function refreshPaymentStatus(
   // afterwards. Ask first, expire only on a genuine no.
 
   if (pi.payment_method === 'nwc' && pi.payment_hash) {
-    const paid = await checkNWCPaymentStatus(supabase, pi);
+    const paid = await checkNWCPaymentStatus(pi);
     if (paid) {
-      await handlePaymentConfirmed(supabase, pi);
+      await handlePaymentConfirmed(pi);
       return { status: STATUS.PAYMENT_INTENTS.PAID, paid_at: new Date().toISOString() };
     }
   }
@@ -511,7 +511,7 @@ async function refreshPaymentStatus(
   if (pi.payment_method === 'lightning_address' && pi.lnurl_verify_url) {
     const paid = await checkLnurlVerifyPaymentStatus(pi);
     if (paid) {
-      await handlePaymentConfirmed(supabase, pi);
+      await handlePaymentConfirmed(pi);
       return { status: STATUS.PAYMENT_INTENTS.PAID, paid_at: new Date().toISOString() };
     }
   }
@@ -519,14 +519,14 @@ async function refreshPaymentStatus(
   if (pi.payment_method === 'onchain' && pi.onchain_address) {
     const onchainStatus = await checkOnchainPaymentStatus(pi);
     if (onchainStatus === 'confirmed') {
-      await handlePaymentConfirmed(supabase, pi);
+      await handlePaymentConfirmed(pi);
       return { status: STATUS.PAYMENT_INTENTS.PAID, paid_at: new Date().toISOString() };
     }
     if (
       onchainStatus === 'in_mempool' &&
       pi.status !== STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION
     ) {
-      await updatePaymentStatus(supabase, pi.id, STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION);
+      await updatePaymentStatus(pi.id, STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION);
       return { status: STATUS.PAYMENT_INTENTS.PENDING_CONFIRMATION, paid_at: null };
     }
   }
@@ -539,7 +539,7 @@ async function refreshPaymentStatus(
   const undetectable = pi.payment_method === 'lightning_address' && !pi.lnurl_verify_url;
   if (undetectable) {
     if (isBeyondClaimWindow(pi.expires_at)) {
-      await updatePaymentStatus(supabase, pi.id, STATUS.PAYMENT_INTENTS.EXPIRED);
+      await updatePaymentStatus(pi.id, STATUS.PAYMENT_INTENTS.EXPIRED);
       return { status: STATUS.PAYMENT_INTENTS.EXPIRED, paid_at: null };
     }
     return { status: pi.status, paid_at: pi.paid_at };
@@ -547,7 +547,7 @@ async function refreshPaymentStatus(
 
   // The rail says no payment arrived. Only now is expiry the truth.
   if (pi.expires_at && new Date(pi.expires_at) < new Date()) {
-    await updatePaymentStatus(supabase, pi.id, STATUS.PAYMENT_INTENTS.EXPIRED);
+    await updatePaymentStatus(pi.id, STATUS.PAYMENT_INTENTS.EXPIRED);
     return { status: STATUS.PAYMENT_INTENTS.EXPIRED, paid_at: null };
   }
 
@@ -608,7 +608,7 @@ export async function buyerConfirmPayment(
   }
 
   // Mark as buyer_confirmed — seller verifies in their wallet
-  await updatePaymentStatus(supabase, paymentIntentId, STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED);
+  await updatePaymentStatus(paymentIntentId, STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED);
 
   return { status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED, paid_at: null };
 }
@@ -637,7 +637,7 @@ export async function sellerConfirmPayment(
     throw new Error('Payment is not awaiting recipient confirmation');
   }
 
-  await handlePaymentConfirmed(supabase, pi as PaymentIntent);
+  await handlePaymentConfirmed(pi as PaymentIntent);
   return { status: STATUS.PAYMENT_INTENTS.PAID, paid_at: new Date().toISOString() };
 }
 
@@ -712,7 +712,6 @@ async function getEntityTitle(
 }
 
 async function updatePaymentStatus(
-  supabase: SupabaseClient,
   paymentIntentId: string,
   status: PaymentIntentStatus
 ): Promise<void> {
@@ -721,7 +720,13 @@ async function updatePaymentStatus(
     updates.paid_at = new Date().toISOString();
   }
 
-  const { error } = await supabase
+  // Always write through the admin client. A status transition is a system fact
+  // recorded AFTER the caller was authorized — but RLS only grants UPDATE on
+  // payment_intents to the buyer, so a seller- (or anon-) scoped client updates
+  // zero rows with NO error, and the intent silently stays in its old status
+  // while the caller reports success.
+  const admin = getAdminClient() as unknown as SupabaseClient;
+  const { error } = await admin
     .from(DATABASE_TABLES.PAYMENT_INTENTS)
     .update(updates)
     .eq('id', paymentIntentId);
@@ -753,11 +758,13 @@ async function updatePaymentStatus(
  * @returns true when THIS caller won the transition; false when someone else
  *          already settled it (a safe, silent no-op).
  */
-async function claimPaidTransition(
-  supabase: SupabaseClient,
-  paymentIntentId: string
-): Promise<boolean> {
-  const { data, error } = await supabase
+async function claimPaidTransition(paymentIntentId: string): Promise<boolean> {
+  // Admin client, always: under a caller-scoped client, RLS (UPDATE granted to
+  // buyers only) makes this conditional update match zero rows WITHOUT an error
+  // — indistinguishable from "another observer won the race" — so a recipient's
+  // confirmation skipped every side-effect while the API reported paid.
+  const admin = getAdminClient() as unknown as SupabaseClient;
+  const { data, error } = await admin
     .from(DATABASE_TABLES.PAYMENT_INTENTS)
     .update({ status: STATUS.PAYMENT_INTENTS.PAID, paid_at: new Date().toISOString() })
     .eq('id', paymentIntentId)
@@ -779,18 +786,21 @@ async function claimPaidTransition(
  *
  * Runs at most once per payment intent — see {@link claimPaidTransition}.
  */
-async function handlePaymentConfirmed(
-  supabase: SupabaseClient,
-  paymentIntent: PaymentIntent
-): Promise<void> {
+async function handlePaymentConfirmed(paymentIntent: PaymentIntent): Promise<void> {
   const piId = paymentIntent.id;
   const entityType = paymentIntent.entity_type as EntityType;
   const entityId = paymentIntent.entity_id;
 
+  // Settlement side-effects span multiple users' data (the buyer's order, the
+  // seller's notification, the entity's inventory) — no single user-scoped
+  // client can be entitled to all of it. Authorization already happened at the
+  // call sites; from here on, writes are system writes.
+  const admin = getAdminClient() as unknown as SupabaseClient;
+
   // Mark payment intent as paid — and only continue if we were the observer
   // that actually moved it there. Losing the race means another poller (or the
   // recipient's confirmation) already ran every side-effect below.
-  const claimed = await claimPaidTransition(supabase, piId);
+  const claimed = await claimPaidTransition(piId);
   if (!claimed) {
     logger.info(
       'Payment already settled by another observer — skipping duplicate side-effects',
@@ -827,7 +837,7 @@ async function handlePaymentConfirmed(
     // payment, and the terminal-status short-circuit means a retry wouldn't
     // re-run this anyway). But a silent failure left the order stuck in
     // pending_payment with no trace — log it loudly so it can be reconciled.
-    const { error: orderError } = await supabase
+    const { error: orderError } = await admin
       .from(DATABASE_TABLES.ORDERS)
       .update({ status: STATUS.ORDERS.PAID })
       .eq('payment_intent_id', piId);
@@ -841,7 +851,7 @@ async function handlePaymentConfirmed(
     }
 
     // Decrement inventory (atomic — prevents overselling)
-    await supabase
+    await admin
       .rpc('decrement_inventory', {
         p_entity_type: entityType,
         p_entity_id: entityId,
@@ -859,7 +869,7 @@ async function handlePaymentConfirmed(
   }
 
   // Notify seller — fire-and-forget, must not block payment confirmation
-  sendSellerPaymentNotification(paymentIntent, supabase).catch(err =>
+  sendSellerPaymentNotification(paymentIntent, admin).catch(err =>
     logger.warn('Seller payment notification failed', { err }, 'paymentFlowService')
   );
 

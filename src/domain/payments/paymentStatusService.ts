@@ -10,6 +10,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { NWCClient } from '@/lib/nostr/nwc';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { checkAddressPayment, type OnchainPaymentCheck } from '@/lib/bitcoin/mempool';
 import { decrypt } from './encryptionService';
@@ -22,18 +23,22 @@ import type { PaymentIntent } from './types';
  *
  * Returns true if paid, false otherwise.
  */
-export async function checkNWCPaymentStatus(
-  supabase: SupabaseClient,
-  paymentIntent: PaymentIntent
-): Promise<boolean> {
+export async function checkNWCPaymentStatus(paymentIntent: PaymentIntent): Promise<boolean> {
   if (!paymentIntent.payment_hash) {
     return false;
   }
 
+  // Read the seller's wallet through the admin client: detection is a system
+  // operation on the SELLER's secret, and the caller is usually the buyer (or
+  // anonymous). It only worked under caller clients because wallets_select is
+  // currently public-read — tightening that policy must not silently kill
+  // payment detection.
+  const admin = getAdminClient() as unknown as SupabaseClient;
+
   // Use the exact wallet selected when the invoice was created. The fallback
   // keeps pre-migration intents checkable, but new intents must never search an
   // arbitrary NWC wallet belonging to the same recipient.
-  let walletQuery = supabase
+  let walletQuery = admin
     .from(DATABASE_TABLES.WALLETS)
     .select('nwc_connection_uri')
     .not('nwc_connection_uri', 'is', null);

@@ -89,6 +89,9 @@ export const POST = withAuth(
       if (message.includes('not found')) {
         return apiBadRequest('Payment not found');
       }
+      if (message.includes('not awaiting') || message.includes('automatically')) {
+        return apiBadRequest(message);
+      }
 
       return apiInternalError('Failed to confirm payment');
     }
