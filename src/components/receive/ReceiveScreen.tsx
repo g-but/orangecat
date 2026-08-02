@@ -19,6 +19,7 @@ import { CheckCircle2, Clock, Copy, Check, Loader2, Share2, Wallet, Zap } from '
 import { Button } from '@/components/ui/Button';
 import { PaymentQRCode } from '@/components/payment/PaymentQRCode';
 import { SharePayLink } from '@/components/receive/SharePayLink';
+import { MoneyTabs } from '@/components/money/MoneyTabs';
 import { ContributionAmountInput } from '@/components/payment/ContributionAmountInput';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
@@ -183,8 +184,10 @@ export function ReceiveScreen() {
       <h1 className="text-2xl font-bold text-fg-primary">{RECEIVE_COPY.title}</h1>
       <p className="mt-1 text-sm text-fg-secondary">{RECEIVE_COPY.subtitle}</p>
 
+      <MoneyTabs className="mt-5" />
+
       {showAddressTab && (
-        <div className="mt-5 grid grid-cols-2 gap-1 rounded-lg bg-surface-raised p-1">
+        <div className="mt-3 grid grid-cols-2 gap-1 rounded-lg bg-surface-raised p-1">
           {(['address', 'request'] as const).map(t => (
             <button
               key={t}
