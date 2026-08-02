@@ -60,6 +60,10 @@ jobs:
       # server can actually receive. Server-side receive is gated independently
       # on PLATFORM_NWC_URI (runtime), so this flag is display-only.
       NEXT_PUBLIC_CAT_CREDITS_LIVE: ${{ vars.NEXT_PUBLIC_CAT_CREDITS_LIVE }}
+      # FleetCrown feedback widget token — must match ci.yml's build env so a
+      # cd-side rebuild bakes the same embed into prerendered pages. Public by
+      # design (ships in page source): repo variable, not a secret.
+      FLEETCROWN_FEEDBACK_TOKEN: ${{ vars.FLEETCROWN_FEEDBACK_TOKEN }}
       OC_BOX: ${{ vars.OC_BOX || 'root@167.233.22.31' }}
     steps:
       - name: Guard — is the deploy key configured?
