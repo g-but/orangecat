@@ -160,11 +160,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* FleetCrown feedback widget — OrangeCat is customer #2 of the sibling
             product's embeddable feedback loop (visitor points at the broken
             element → FleetCrown per-project inbox → one-click agent dispatch).
-            Env-gated like GA; data-fc-bottom clears the mobile bottom nav. */}
+            Env-gated like GA; data-fc-bottom clears the mobile bottom nav.
+            afterInteractive, not lazyOnload: busy pages (Cat chat streams and
+            polls) can keep the browser from going idle, so lazyOnload left the
+            FAB unmounted for minutes — a feedback button that isn't there when
+            something breaks is the one time it's needed. */}
         {process.env.FLEETCROWN_FEEDBACK_TOKEN && (
           <Script
             src="https://fleetcrown.orangecat.ch/widget.js"
-            strategy="lazyOnload"
+            strategy="afterInteractive"
             data-fc-project={process.env.FLEETCROWN_FEEDBACK_TOKEN}
             data-fc-bottom="80"
           />

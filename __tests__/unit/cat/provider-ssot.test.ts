@@ -7,6 +7,7 @@
  * routing chain).
  */
 
+import { AI_MODEL_REGISTRY, DEFAULT_MODEL_ID, DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
 import { WIRED_PROVIDER_IDS, aiProviders, wiredProviders } from '@/data/aiProviders';
 import {
   IMAGE_PROVIDER_RUNTIME,
@@ -37,6 +38,17 @@ describe('provider SSOT invariants', () => {
   it('PROVIDER_RUNTIME entries use base URLs from the URL SSOT', () => {
     for (const [id, runtime] of Object.entries(PROVIDER_RUNTIME)) {
       expect(runtime.baseUrl).toBe(PROVIDER_BASE_URLS[id as keyof typeof PROVIDER_BASE_URLS]);
+    }
+  });
+
+  it('model defaults point at registered, available free models', () => {
+    // A default pointing at a removed registry entry breaks every non-BYOK
+    // consumer (chat fallback, platform-llm, offer-engine, form prefill).
+    for (const id of [DEFAULT_MODEL_ID, DEFAULT_FREE_MODEL_ID]) {
+      const model = AI_MODEL_REGISTRY[id];
+      expect(model).toBeDefined();
+      expect(model.isFree).toBe(true);
+      expect(model.isAvailable).toBe(true);
     }
   });
 });

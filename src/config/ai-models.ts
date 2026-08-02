@@ -61,20 +61,24 @@ export interface AIModelMetadata {
 export const AI_MODEL_REGISTRY: Record<string, AIModelMetadata> = {
   // ==================== FREE TIER ====================
   // No API cost - rate limited (50/day on free accounts, 1000/day with $10+ credits)
-  // Refreshed 2026-07-08 against live OpenRouter model pages/docs.
+  // Refreshed 2026-08-02 against the live OpenRouter catalog (/api/v1/models).
+  // ⚠️ Free model ids ROT — OpenRouter retires them without notice and requests
+  // 404. Every entry here is checked by the free-model catalog health probe
+  // (services/cat/health-probes.ts); if the probe reports one missing, replace
+  // it here and nowhere else — every consumer derives from this registry.
 
-  'openai/gpt-oss-120b:free': {
-    id: 'openai/gpt-oss-120b:free',
-    name: 'GPT-OSS 120B (Free)',
-    provider: 'OpenAI',
-    description: 'Best free general model for coding, reasoning, and tool-friendly chat',
-    contextWindow: 131072,
+  'nvidia/nemotron-3-super-120b-a12b:free': {
+    id: 'nvidia/nemotron-3-super-120b-a12b:free',
+    name: 'Nemotron 3 Super 120B (Free)',
+    provider: 'NVIDIA',
+    description: 'Best free general model for reasoning, coding, and everyday chat',
+    contextWindow: 262144,
     maxOutputTokens: 8192,
     inputCostPer1M: 0,
     outputCostPer1M: 0,
-    capabilities: ['text', 'function_calling', 'json_mode', 'streaming'],
+    capabilities: ['text', 'streaming'],
     tier: 'free',
-    recommendedFor: ['coding', 'complex reasoning', 'general chat'],
+    recommendedFor: ['complex reasoning', 'coding', 'general chat'],
     isAvailable: true,
     isFree: true,
     rateLimit: '50-1000/day',
@@ -97,35 +101,35 @@ export const AI_MODEL_REGISTRY: Record<string, AIModelMetadata> = {
     rateLimit: '50-1000/day',
   },
 
-  'meta-llama/llama-3.3-70b-instruct:free': {
-    id: 'meta-llama/llama-3.3-70b-instruct:free',
-    name: 'Llama 3.3 70B (Free)',
-    provider: 'Meta',
-    description: 'Strong multilingual free model for analysis and everyday coding',
-    contextWindow: 65536,
+  'nvidia/nemotron-nano-9b-v2:free': {
+    id: 'nvidia/nemotron-nano-9b-v2:free',
+    name: 'Nemotron Nano 9B (Free)',
+    provider: 'NVIDIA',
+    description: 'Fast free model for quick answers and high-volume simple tasks',
+    contextWindow: 128000,
     maxOutputTokens: 8192,
     inputCostPer1M: 0,
     outputCostPer1M: 0,
     capabilities: ['text', 'streaming'],
     tier: 'free',
-    recommendedFor: ['general purpose', 'multilingual chat', 'analysis'],
+    recommendedFor: ['fast responses', 'simple tasks', 'high volume'],
     isAvailable: true,
     isFree: true,
     rateLimit: '50-1000/day',
   },
 
-  'meta-llama/llama-4-scout:free': {
-    id: 'meta-llama/llama-4-scout:free',
-    name: 'Llama 4 Scout (Free)',
-    provider: 'Meta',
+  'google/gemma-4-31b-it:free': {
+    id: 'google/gemma-4-31b-it:free',
+    name: 'Gemma 4 31B (Free)',
+    provider: 'Google',
     description: 'Free multimodal long-context model for image-aware and document-heavy prompts',
-    contextWindow: 10000000,
+    contextWindow: 262144,
     maxOutputTokens: 8192,
     inputCostPer1M: 0,
     outputCostPer1M: 0,
     capabilities: ['text', 'vision', 'streaming'],
     tier: 'free',
-    recommendedFor: ['vision tasks', 'huge context', 'multimodal chat'],
+    recommendedFor: ['vision tasks', 'long context', 'multimodal chat'],
     isAvailable: true,
     isFree: true,
     rateLimit: '50-1000/day',
@@ -393,10 +397,10 @@ export function calculateCostBtc(
 // ==================== CONSTANTS ====================
 
 /** Default model for Auto mode fallback (free model) */
-export const DEFAULT_MODEL_ID = 'meta-llama/llama-3.3-70b-instruct:free';
+export const DEFAULT_MODEL_ID = 'nvidia/nemotron-3-super-120b-a12b:free';
 
 /** Default free model for platform usage */
-export const DEFAULT_FREE_MODEL_ID = 'openai/gpt-oss-120b:free';
+export const DEFAULT_FREE_MODEL_ID = 'nvidia/nemotron-3-super-120b-a12b:free';
 
 /** Default BTC price for cost calculations (updated periodically) */
 export const DEFAULT_BTC_PRICE_USD = 100000;

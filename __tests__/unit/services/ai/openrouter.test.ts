@@ -11,7 +11,7 @@ import { calculateCostBtc } from '@/config/ai-models';
 global.TextDecoder = NodeTextDecoder;
 
 const PAID_MODEL = 'deepseek/deepseek-v4-flash';
-const FREE_MODEL = 'openai/gpt-oss-120b:free';
+const FREE_MODEL = 'openai/gpt-oss-20b:free';
 const BTC_PRICE_USD = 100_000;
 
 function mockJsonResponse(body: unknown): Response {

@@ -21,10 +21,13 @@ import { buildFullContextString } from '@/services/ai/context-string-builder';
 import { listMemories } from './memory';
 import { getDemandSignals } from './demand-signals';
 import { logger } from '@/utils/logger';
+import { DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
 
 // Capable, JSON-reliable defaults (mirrors form-prefill-service's provider choice).
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const OPENROUTER_MODEL = 'meta-llama/llama-4-maverick:free';
+// Free OpenRouter ids rot (404 without notice) — always take the registry
+// default, which the free-model catalog probe keeps honest.
+const OPENROUTER_MODEL = DEFAULT_FREE_MODEL_ID;
 const MAX_OFFERS = 5;
 
 export interface ProposedOffer {

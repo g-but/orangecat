@@ -12,6 +12,7 @@
  */
 
 import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
+import { DEFAULT_FREE_MODEL_ID, getFreeModels } from '@/config/ai-models';
 
 export type ProbeClass =
   | 'ok'
@@ -35,6 +36,11 @@ export interface ProbeResult {
 
 export interface CatHealthReport {
   probes: { groq: ProbeResult; openrouter: ProbeResult };
+  /**
+   * Registry free-model ids missing from the live OpenRouter catalog
+   * (model rot). Empty = no drift; null = catalog check unavailable.
+   */
+  missingFreeModels: string[] | null;
   catCanAnswer: boolean;
   summary: string;
 }
@@ -127,25 +133,67 @@ export function probeGroq(): Promise<ProbeResult> {
 }
 
 export function probeOpenRouter(): Promise<ProbeResult> {
+  // Probe with the registry's platform default — a hardcoded id here once
+  // drifted from the registry and kept "passing" while chat 404'd (and later
+  // kept "failing" after the registry was fixed).
   return probeProvider(
     'openrouter',
     'OPENROUTER_API_KEY',
     `${PROVIDER_BASE_URLS.openrouter}/chat/completions`,
-    'meta-llama/llama-3.3-70b-instruct:free'
+    DEFAULT_FREE_MODEL_ID
   );
+}
+
+/**
+ * Registry-vs-catalog drift check. OpenRouter retires free models without
+ * notice; a registry entry pointing at a retired id makes chat 404 mid-chain.
+ * This has bitten prod three times (gpt-oss-120b:free, llama-4-maverick:free,
+ * then llama-3.3-70b-instruct:free + llama-4-scout:free on 2026-08-02) —
+ * hence a standing probe instead of a fourth manual fix. Uses the public
+ * /models endpoint (no key needed). Returns the registry free-model ids that
+ * no longer exist upstream; empty array = no drift; null = catalog fetch
+ * failed (unknown, not necessarily broken).
+ */
+export async function probeFreeModelCatalog(): Promise<string[] | null> {
+  try {
+    const res = await fetch(`${PROVIDER_BASE_URLS.openrouter}/models`);
+    if (!res.ok) {
+      return null;
+    }
+    const body = (await res.json()) as { data?: Array<{ id?: string }> };
+    const live = new Set((body.data ?? []).map(m => m.id));
+    if (live.size === 0) {
+      return null;
+    }
+    return getFreeModels()
+      .map(m => m.id)
+      .filter(id => !live.has(id));
+  } catch {
+    return null;
+  }
 }
 
 /** Probe both providers and summarize. */
 export async function runCatHealthProbes(): Promise<CatHealthReport> {
-  const [groq, openrouter] = await Promise.all([probeGroq(), probeOpenRouter()]);
+  const [groq, openrouter, missingFreeModels] = await Promise.all([
+    probeGroq(),
+    probeOpenRouter(),
+    probeFreeModelCatalog(),
+  ]);
+  const drift =
+    missingFreeModels && missingFreeModels.length > 0
+      ? ` ⚠️ Registry free models no longer on OpenRouter: ${missingFreeModels.join(', ')} — update src/config/ai-models.ts.`
+      : '';
   return {
     probes: { groq, openrouter },
+    missingFreeModels,
     catCanAnswer: groq.class === 'ok' || openrouter.class === 'ok',
     summary:
-      groq.class === 'ok'
+      (groq.class === 'ok'
         ? `Cat is healthy: ${groq.provider} probe returned OK.`
         : openrouter.class === 'ok'
           ? `Primary (${groq.provider}) is degraded (${groq.class}); fallback (${openrouter.provider}) is healthy.`
-          : `Both providers are degraded: groq=${groq.class}, openrouter=${openrouter.class}.`,
+          : `Both providers are degraded: groq=${groq.class}, openrouter=${openrouter.class}.`) +
+      drift,
   };
 }

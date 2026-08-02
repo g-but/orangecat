@@ -7,6 +7,7 @@
 
 import type { AIPrefillResponse } from '@/components/create/types';
 import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
+import { DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
 import {
   AI_ASSIST_MIN_INPUT_LENGTH,
   USER_OVERRIDABLE_FIELDS,
@@ -20,7 +21,7 @@ import type { AiAssistTarget } from './assist-target';
 
 // Default models for form prefill (fast, good at JSON generation)
 const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile';
-const DEFAULT_OPENROUTER_MODEL = 'meta-llama/llama-4-maverick:free';
+const DEFAULT_OPENROUTER_MODEL = DEFAULT_FREE_MODEL_ID;
 
 /**
  * Configuration for the form prefill service
