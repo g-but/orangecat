@@ -372,6 +372,31 @@ export const entityHandlers: Record<string, ActionHandler> = {
     };
   },
 
+  create_circle: async (supabase, _userId, actorId, params) => {
+    const { data, error } = await supabase
+      .from(ENTITY_REGISTRY.circle.tableName)
+      .insert({
+        actor_id: actorId,
+        title: params.title,
+        description: params.description || null,
+        category: (params.category as string | null) ?? null,
+        visibility: (params.visibility as string | null) ?? 'public',
+        status: params.publish ? 'active' : 'draft',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    const title = params.title as string;
+    const statusLabel = params.publish ? 'live' : 'draft';
+    return {
+      success: true,
+      data: { ...data, displayMessage: `⭕ Circle "${title}" created (${statusLabel})` },
+    };
+  },
+
   update_entity: async (supabase, _userId, actorId, params) => {
     const entityType = params.entity_type as string;
     const entityId = params.entity_id as string;

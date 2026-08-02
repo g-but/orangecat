@@ -540,6 +540,47 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     enabled: true,
   },
 
+  create_circle: {
+    id: 'create_circle',
+    name: 'Create Circle',
+    description: 'Start a lightweight community circle around a shared interest',
+    category: 'entities',
+    icon: Users,
+    riskLevel: 'medium',
+    requiresConfirmation: true,
+    parameters: [
+      { name: 'title', type: 'string', required: true, description: 'Circle name' },
+      {
+        name: 'description',
+        type: 'string',
+        required: false,
+        description: 'What the circle is about',
+      },
+      { name: 'category', type: 'string', required: false, description: 'Circle category' },
+      {
+        name: 'visibility',
+        type: 'string',
+        required: false,
+        description: 'public | unlisted | private (default: public)',
+        default: 'public',
+      },
+      {
+        name: 'publish',
+        type: 'boolean',
+        required: false,
+        description: 'Make it live immediately',
+        default: false,
+      },
+    ],
+    examples: [
+      'Start a circle for Zurich makers',
+      'Create a community for Bitcoin beginners',
+      'Set up an interest circle for ceramics',
+    ],
+    apiEndpoint: getApiEndpoint('circle'),
+    enabled: true,
+  },
+
   update_entity: {
     id: 'update_entity',
     name: 'Update Entity',

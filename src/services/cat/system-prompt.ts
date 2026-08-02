@@ -11,6 +11,7 @@
  */
 
 import { CAT_CREATABLE_ENTITY_TYPES } from '@/types/cat';
+import { CAT_ACTIONS } from '@/config/cat-actions';
 
 interface CatSystemPromptContext {
   /** Optional user-specific context string (entities, profile, wallets, etc.) */
@@ -37,6 +38,60 @@ const EXEC_TARGET_ENTITY_TYPES = [
   'research',
   'wishlist',
 ] as const;
+
+/**
+ * Action ids richly documented in the prose catalog below (each has its own
+ * "### …" section with a worked exec_action example). Everything else that is
+ * enabled in CAT_ACTIONS gets a machine-generated one-liner in the appendix —
+ * so EVERY action is reachable from chat and a newly registered action can
+ * never silently stay invisible to the model again. The drift test
+ * (action-registry-drift.test.ts) enforces both halves.
+ */
+export const PROSE_DOCUMENTED_ACTION_IDS = new Set([
+  'send_payment',
+  'fund_project',
+  'set_reminder',
+  'create_task',
+  'complete_task',
+  'update_task',
+  'post_to_timeline',
+  'reply_to_message',
+  'send_message',
+  'add_context',
+  'remember_fact',
+  'edit_memory',
+  'save_economic_profile',
+  'add_wallet',
+  'publish_entity',
+  'invite_to_organization',
+  'archive_entity',
+  'update_profile',
+  // forget_memories runs as a TOOL (documented in "Tools You Can Call");
+  // its exec_action twin exists for registry completeness only.
+  'forget_memories',
+]);
+
+/**
+ * Compact, generated catalog of every enabled action without a prose section.
+ * One line per action: id(params) — description. Derived from CAT_ACTIONS at
+ * module load, so it can never drift from the registry.
+ */
+export function buildActionCatalogAppendix(): string {
+  const rest = Object.values(CAT_ACTIONS).filter(
+    a => a.enabled && !PROSE_DOCUMENTED_ACTION_IDS.has(a.id)
+  );
+  if (rest.length === 0) {
+    return '';
+  }
+  const lines = rest.map(a => {
+    const params = a.parameters.map(p => `${p.name}${p.required ? '' : '?'}`).join(', ');
+    const confirm = a.requiresConfirmation ? ' Requires confirmation.' : '';
+    return `- **${a.id}(${params})**: ${a.description}${confirm}`;
+  });
+  return `### Other available actions
+Each of these works exactly like the actions above — emit an \`\`\`exec_action block with the actionId and parameters (required ones shown without "?"). For creating entities, PREFER prefill_entity_form when the user has described details (they get a reviewable draft card); use a create_* action directly only when the user explicitly wants immediate creation.
+${lines.join('\n')}`;
+}
 
 /**
  * Core system prompt defining Cat's personality, knowledge, and behavior.
@@ -672,6 +727,8 @@ When the user wants to update their public profile (bio, name, location, website
 - Executes immediately without confirmation
 - Do NOT update username (affects public URLs — too disruptive)
 - Do NOT update email, phone, or financial addresses (sensitive, requires separate verification)
+
+${buildActionCatalogAppendix()}
 
 **When to use exec_action vs action blocks**:
 - \`\`\`action blocks: suggest creating or updating entities (opens a prefilled form for the user to review)
