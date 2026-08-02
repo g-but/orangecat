@@ -160,6 +160,33 @@ export const DEFAULT_GROQ_MODEL: keyof typeof GROQ_MODELS =
  */
 export const GROQ_CHAT_MAX_TOKENS = 2048;
 
+/**
+ * Groq's on-demand service tier (the platform org's tier) hard-rejects any
+ * single request whose tokens exceed its per-minute limit with HTTP 413 —
+ * measured against the platform key 2026-08-02: "Limit 12000". Once a Cat
+ * prompt outgrows this (memories + history + page excerpt), EVERY message
+ * pays a guaranteed-failing Groq round-trip before falling back.
+ */
+export const GROQ_ON_DEMAND_TPM_LIMIT = 12_000;
+
+/**
+ * Pre-flight fit check for the on-demand tier. The chars/4 estimate
+ * deliberately over-counts tokens (the measured 413 payload was ~6 chars per
+ * token), so borderline prompts skip a little early instead of 413ing —
+ * callers only invoke this when another chain link can serve the request.
+ * The reserved output budget counts against the same TPM bucket, so it's
+ * part of the estimate.
+ */
+export function promptFitsGroqOnDemand(
+  messages: Array<{ content: string | null | undefined }>
+): boolean {
+  const chars = messages.reduce(
+    (n, m) => n + (typeof m.content === 'string' ? m.content.length : 0),
+    0
+  );
+  return chars / 4 + GROQ_CHAT_MAX_TOKENS <= GROQ_ON_DEMAND_TPM_LIMIT;
+}
+
 // ==================== SERVICE CLASS ====================
 
 export class GroqService {

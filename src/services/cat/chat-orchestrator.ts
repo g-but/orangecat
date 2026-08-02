@@ -38,6 +38,7 @@ import type { ExecAction, CatAction, ExecActionResult } from '@/types/cat';
 import { AI_MESSAGE_MAX_CHARS } from '@/lib/validation/ai';
 import { PAGE_EXCERPT_MAX_CHARS } from '@/config/cat-page-context';
 import { markLinkDown } from '@/services/ai/link-health';
+import { promptFitsGroqOnDemand } from '@/services/ai/groq';
 
 export const catChatBodySchema = z.object({
   message: z.string().min(1).max(AI_MESSAGE_MAX_CHARS),
@@ -77,6 +78,29 @@ export type CatChatBody = z.infer<typeof catChatBodySchema>;
  */
 export const EMPTY_REPLY_FALLBACK =
   "I couldn't put together a reply to that. Could you rephrase or add a bit more detail?";
+
+/**
+ * Sentinel for a chain link skipped by pre-flight instead of attempted. A
+ * PLATFORM Groq link deterministically 413s once the assembled prompt exceeds
+ * Groq's on-demand TPM limit — paying that round-trip on every message adds
+ * latency and log noise for a guaranteed failure. Skips must NOT mark the
+ * link down globally: other users' smaller prompts still fit it.
+ */
+class GroqPreflightSkip extends Error {
+  constructor() {
+    super('platform Groq skipped pre-flight: prompt exceeds the on-demand TPM limit');
+    this.name = 'GroqPreflightSkip';
+  }
+}
+
+/** True when this link is platform Groq and the prompt clearly won't fit it. */
+function overflowsPlatformGroq(
+  provider: string,
+  hasByok: boolean,
+  messages: ToolAugmentedMessage[]
+): boolean {
+  return provider === 'groq' && !hasByok && !promptFitsGroqOnDemand(messages);
+}
 
 /**
  * Provider-agnostic rate-limit detection. Every AI provider error class we ship
@@ -374,10 +398,18 @@ export async function orchestrateCatChat(
           // content streams — otherwise the client sees half a response and
           // then a switch.
           let lastErr: unknown = null;
-          try {
-            await consumeStream();
-          } catch (err) {
-            lastErr = err;
+          // Pre-flight: a platform-Groq primary deterministically 413s once
+          // the prompt outgrows the on-demand TPM limit — skip the guaranteed
+          // failure when another link can serve. BYOK Groq (possibly a higher
+          // tier) and a chain with no other links still get the real attempt.
+          if (fallbacks.length > 0 && overflowsPlatformGroq(provider, hasByok, messages)) {
+            lastErr = new GroqPreflightSkip();
+          } else {
+            try {
+              await consumeStream();
+            } catch (err) {
+              lastErr = err;
+            }
           }
           let fallbackIndex = 0;
           while (lastErr && !streamStarted && fallbackIndex < fallbacks.length) {
@@ -386,11 +418,20 @@ export async function orchestrateCatChat(
             // Remember the dead PLATFORM link so the next message's chain
             // skips it for a minute instead of paying the failed round-trip
             // again. BYOK links are never marked — the user's own key failing
-            // must not sideline the platform's identical provider+model.
-            if (activeIsPlatform) {
+            // must not sideline the platform's identical provider+model. A
+            // pre-flight skip is never marked either: this user's prompt is
+            // too big for the link, other users' prompts may fit it fine.
+            if (activeIsPlatform && !(lastErr instanceof GroqPreflightSkip)) {
               markLinkDown(activeProvider, activeModel);
             }
             const next = fallbacks[fallbackIndex++];
+            if (
+              fallbackIndex < fallbacks.length &&
+              overflowsPlatformGroq(next.provider, next.hasByok, messages)
+            ) {
+              lastErr = new GroqPreflightSkip();
+              continue;
+            }
             activeIsPlatform = !next.hasByok;
             logger.warn(
               'Cat chat: provider failed, trying next fallback',
@@ -424,7 +465,7 @@ export async function orchestrateCatChat(
             }
           }
           if (lastErr) {
-            if (activeIsPlatform) {
+            if (activeIsPlatform && !(lastErr instanceof GroqPreflightSkip)) {
               markLinkDown(activeProvider, activeModel);
             }
             throw lastErr;
@@ -566,23 +607,36 @@ export async function orchestrateCatChat(
   let result;
   let fellBackTo: FallbackProvider | null = null;
   let lastErr: unknown = null;
-  try {
-    result = await aiService.chatCompletion({
-      model: modelToUse,
-      messages,
-      temperature: 0.7,
-    });
-  } catch (err) {
-    lastErr = err;
+  // Same pre-flight as the streaming path: never pay a guaranteed 413 on a
+  // platform-Groq link when another link can serve this prompt.
+  if (fallbacks.length > 0 && overflowsPlatformGroq(provider, hasByok, messages)) {
+    lastErr = new GroqPreflightSkip();
+  } else {
+    try {
+      result = await aiService.chatCompletion({
+        model: modelToUse,
+        messages,
+        temperature: 0.7,
+      });
+    } catch (err) {
+      lastErr = err;
+    }
   }
   let fallbackIndex = 0;
   let lastTried = { provider: provider as string, model: modelToUse, platform: !hasByok };
   while (!result && lastErr && fallbackIndex < fallbacks.length) {
-    if (lastTried.platform) {
+    if (lastTried.platform && !(lastErr instanceof GroqPreflightSkip)) {
       markLinkDown(lastTried.provider, lastTried.model);
     }
     const next = fallbacks[fallbackIndex++];
     lastTried = { provider: next.provider, model: next.modelToUse, platform: !next.hasByok };
+    if (
+      fallbackIndex < fallbacks.length &&
+      overflowsPlatformGroq(next.provider, next.hasByok, messages)
+    ) {
+      lastErr = new GroqPreflightSkip();
+      continue;
+    }
     logger.warn(
       'Cat chat (non-streaming): provider failed, trying next fallback',
       {
@@ -609,7 +663,7 @@ export async function orchestrateCatChat(
     }
   }
   if (!result) {
-    if (lastTried.platform) {
+    if (lastTried.platform && !(lastErr instanceof GroqPreflightSkip)) {
       markLinkDown(lastTried.provider, lastTried.model);
     }
     throw lastErr ?? new Error('Cat chat: no AI provider produced a response');
