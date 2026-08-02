@@ -58,6 +58,45 @@ const AREA_LABELS: Array<{ re: RegExp; label: string }> = [
 ];
 
 /**
+ * Character cap for the visible-page excerpt sent alongside currentPath.
+ * ~450 tokens: enough for a settings page's headings and copy, small enough
+ * to never crowd out the rest of the context budget. Client trims to this;
+ * the server schema enforces it again.
+ */
+export const PAGE_EXCERPT_MAX_CHARS = 1800;
+
+/**
+ * Capture what the user can actually SEE on the current page, so Cat helps
+ * with the real page instead of hallucinating a plausible one. Path labels
+ * alone ("your settings") tell Cat WHERE the user is but not WHAT is there —
+ * and app surfaces (unlike entities) have no lookup tool, so without this
+ * excerpt the model invents sections that don't exist.
+ *
+ * Reads `<main>` only — the Cat overlay and navigation mount outside it, so
+ * the excerpt never captures the chat conversation itself. Client-only;
+ * returns undefined during SSR or when there's nothing readable.
+ */
+export function readPageExcerptForCat(): string | undefined {
+  if (typeof document === 'undefined') {
+    return undefined;
+  }
+  const root = document.querySelector<HTMLElement>('main');
+  if (!root) {
+    return undefined;
+  }
+  const clean = (root.innerText ?? '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\s*\n\s*/g, '\n')
+    .trim();
+  if (!clean) {
+    return undefined;
+  }
+  return clean.length > PAGE_EXCERPT_MAX_CHARS
+    ? `${clean.slice(0, PAGE_EXCERPT_MAX_CHARS)}…`
+    : clean;
+}
+
+/**
  * Describe the current page for Cat. Returns undefined for anything that isn't a
  * safe same-origin path (so callers can simply skip sending page context).
  */
