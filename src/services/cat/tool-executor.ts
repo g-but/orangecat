@@ -232,19 +232,36 @@ Explain this to the user in plain language: which provider is healthy, degraded,
 
     let content: string;
     try {
-      const { forgetMemoriesMatching } = await import('./memory');
-      const outcome = await forgetMemoriesMatching(supabase, userId, facts);
+      // One user verb must clear BOTH stores — free-form memories AND the
+      // structured economic profile — exactly like the exec_action handler.
+      // This path once cleared only memories, so a "removed" skill kept
+      // driving suggestions (the dispatch-drift bug class).
+      const [{ forgetMemoriesMatching }, { removeFromEconomicProfile }] = await Promise.all([
+        import('./memory'),
+        import('./economic-profile'),
+      ]);
+      const [mem, profile] = await Promise.all([
+        forgetMemoriesMatching(supabase, userId, facts),
+        removeFromEconomicProfile(supabase, userId, facts),
+      ]);
+      const outcome = {
+        deleted: mem.deleted,
+        removedProfileEntries: profile.removed,
+        notFound: facts.filter(f => mem.notFound.includes(f) && profile.notFound.includes(f)),
+      };
       content =
         JSON.stringify(outcome) +
-        '\n\nReport ONLY what "deleted" confirms was removed, quoting the deleted memories. ' +
-        'For anything in "notFound", say plainly that no matching stored memory was found and ' +
-        'that the full list is at Settings → AI → What Cat remembers. Never claim other changes.';
-      if (outcome.deleted.length > 0) {
+        '\n\nReport ONLY what "deleted" and "removedProfileEntries" confirm was removed, ' +
+        'quoting the deleted items. For anything in "notFound", say plainly that no matching ' +
+        'stored memory or profile entry was found and that the full list is at ' +
+        'Settings → AI → What Cat remembers. Never claim other changes.';
+      const removedCount = outcome.deleted.length + outcome.removedProfileEntries.length;
+      if (removedCount > 0) {
         onToolCall?.({
           id: toolCall.id,
           name: toolName,
           status: 'completed',
-          resultCount: outcome.deleted.length,
+          resultCount: removedCount,
           results: [],
         });
       } else {
