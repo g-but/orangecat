@@ -134,9 +134,21 @@ export async function getSharedWalletUsage(
 
     const sharedCount = await countPubliclyVisible(supabase, siblings);
 
+    // No explicit link for THIS entity means resolveSellerWallet fell through
+    // to the owner-default chain — so every other unlinked page of the same
+    // owner lands on this identical address. That fallback, not the is_primary
+    // flag, is what actually makes a wallet the de-facto default: the two
+    // FleetCrown passes both display orangecat@coinos.io through it while the
+    // resolved wallet row is not flagged primary at all, so keying the
+    // disclosure on is_primary alone stayed silent on the platform's most
+    // visible reuse.
+    const hasExplicitLink = (links ?? []).some(
+      l => l.entity_type === entityType && l.entity_id === entityId
+    );
+
     return {
       shared_count: sharedCount,
-      is_owner_default: !!wallet.is_primary,
+      is_owner_default: !hasExplicitLink || !!wallet.is_primary,
       fresh_address_per_payment: resolved.method === 'onchain' && !!resolved.onchain_xpub,
     };
   } catch (error) {
