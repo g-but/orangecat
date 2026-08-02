@@ -67,4 +67,43 @@ describe('Cat Tier 1: runtime context block', () => {
     // dates should format without throwing
     expect(s).toContain('## Current Date & Time');
   });
+
+  describe('page excerpt (visible-page grounding)', () => {
+    const onPage = (excerpt?: string): FullUserContext => ({
+      ...ctx,
+      runtime: {
+        ...ctx.runtime,
+        currentPath: '/settings/ai',
+        pageExcerpt: excerpt,
+      },
+    });
+
+    it('renders the excerpt verbatim with a describe-only-whats-here rule', () => {
+      const s = buildFullContextString(
+        onPage('Cat AI\nUse OrangeCat\nCat Credits\nBring your own key')
+      );
+      expect(s).toContain('Visible on this page right now');
+      expect(s).toContain('Bring your own key');
+      expect(s).toContain('never invent');
+    });
+
+    it('without an excerpt on a non-entity page, tells Cat it cannot see the page', () => {
+      const s = buildFullContextString(onPage(undefined));
+      expect(s).toContain('can NOT see this page');
+      expect(s).not.toContain('Visible on this page right now');
+    });
+
+    it('entity pages keep the lookup-tools instruction instead of the blind-page warning', () => {
+      const s = buildFullContextString({
+        ...ctx,
+        runtime: {
+          ...ctx.runtime,
+          currentPath: '/projects/abc123',
+          currentEntity: { type: 'project', ref: 'abc123' },
+        },
+      });
+      expect(s).toContain('lookup/search tools');
+      expect(s).not.toContain('can NOT see this page');
+    });
+  });
 });

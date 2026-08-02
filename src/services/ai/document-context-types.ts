@@ -218,6 +218,12 @@ export interface RuntimeContext {
   /** The entity the current page is about, if recognised (type + id/slug). */
   currentEntity?: { type: string; ref: string };
   /**
+   * Verbatim excerpt of what's visible on the current page. App surfaces
+   * (settings, wallet, pricing) have no lookup tool — this is the only way
+   * Cat can describe the actual page instead of a hallucinated one.
+   */
+  pageExcerpt?: string;
+  /**
    * Live BTC exchange-rate snapshot so Cat quotes real numbers for BTC⇄fiat
    * conversions instead of recalling a stale rate from training data.
    */

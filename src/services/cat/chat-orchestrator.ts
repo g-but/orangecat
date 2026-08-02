@@ -43,6 +43,7 @@ import { createActionExecutor } from '@/services/cat';
 import { getUserActorId } from '@/domain/actors';
 import type { ExecAction, CatAction, ExecActionResult } from '@/types/cat';
 import { AI_MESSAGE_MAX_CHARS } from '@/lib/validation/ai';
+import { PAGE_EXCERPT_MAX_CHARS } from '@/config/cat-page-context';
 
 export const catChatBodySchema = z.object({
   message: z.string().min(1).max(AI_MESSAGE_MAX_CHARS),
@@ -61,6 +62,15 @@ export const catChatBodySchema = z.object({
   /** The page the user is on right now (global Cat overlay), + its entity if any. */
   currentPath: z.string().max(200).optional(),
   currentEntity: z.object({ type: z.string().max(32), ref: z.string().max(120) }).optional(),
+  /**
+   * Verbatim excerpt of what's visible on the current page (client-captured,
+   * capped at PAGE_EXCERPT_MAX_CHARS + ellipsis). Grounds "help me with this
+   * page" in the real page instead of a guessed one.
+   */
+  pageExcerpt: z
+    .string()
+    .max(PAGE_EXCERPT_MAX_CHARS + 1)
+    .optional(),
 });
 
 export type CatChatBody = z.infer<typeof catChatBodySchema>;
@@ -199,6 +209,7 @@ export async function orchestrateCatChat(
     lastVisitedPath,
     currentPath,
     currentEntity,
+    pageExcerpt,
     conversationId: requestedConversationId,
   } = body;
 
@@ -244,6 +255,7 @@ export async function orchestrateCatChat(
       lastVisitedPath,
       currentPath,
       currentEntity,
+      pageExcerpt,
     }),
     recallMemories(supabase, user.id, message),
   ]);

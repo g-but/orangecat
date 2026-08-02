@@ -95,8 +95,17 @@ export function renderCurrentSession(r: FullUserContext['runtime']): string | nu
       ? ` — a ${r.currentEntity.type} (ref \`${r.currentEntity.ref}\`)`
       : '';
     lines.push(
-      `**Currently viewing**: \`${r.currentPath}\`${entity}. The user opened you WHILE on this page — if their question is about it ("this", "here", "them"), ground your answer in it. Use your lookup/search tools to pull the specifics of that ${r.currentEntity ? r.currentEntity.type : 'page'} rather than guessing.`
+      `**Currently viewing**: \`${r.currentPath}\`${entity}. The user opened you WHILE on this page — if their question is about it ("this", "here", "them"), ground your answer in it.${r.currentEntity ? ` Use your lookup/search tools to pull the specifics of that ${r.currentEntity.type} rather than guessing.` : ''}`
     );
+    if (r.pageExcerpt) {
+      lines.push(
+        `**Visible on this page right now** (verbatim excerpt of what the user sees):\n"""\n${r.pageExcerpt}\n"""\nWhen explaining or helping with this page, describe ONLY sections and controls that appear in this excerpt — never invent ones that don't. If something the user asks about isn't in the excerpt, say you don't see it on this page.`
+      );
+    } else if (!r.currentEntity) {
+      lines.push(
+        `You can NOT see this page's contents. If the user asks about "this page", say what you can't see and ask them to describe or paste the part they mean — do not guess at sections or controls.`
+      );
+    }
   } else if (r.lastVisitedPath) {
     lines.push(
       `**Just came from**: \`${r.lastVisitedPath}\` — if relevant to their question, reference what's on that page.`

@@ -14,6 +14,7 @@ import { logger } from '@/utils/logger';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { isCatHubPath } from '@/config/routes';
+import { PAGE_EXCERPT_MAX_CHARS } from '@/config/cat-page-context';
 
 import type {
   DocumentContext,
@@ -248,6 +249,8 @@ export interface RuntimeContextHints {
   currentPath?: string;
   /** Entity the current page is about, if the client recognised one. */
   currentEntity?: { type: string; ref: string };
+  /** Visible-page excerpt captured by the client. Only kept when currentPath is valid. */
+  pageExcerpt?: string;
 }
 
 /**
@@ -314,6 +317,14 @@ async function fetchRuntimeContextForCat(
   const lastVisitedPath = sanitizeLastVisitedPath(hints?.lastVisitedPath);
   const currentPath = sanitizeLastVisitedPath(hints?.currentPath);
   const currentEntity = currentPath ? sanitizeCurrentEntity(hints?.currentEntity) : undefined;
+  // Excerpt only makes sense anchored to a valid current page; strip control
+  // chars (keep newlines) and re-cap server-side — the client is untrusted.
+  const rawExcerpt = currentPath && typeof hints?.pageExcerpt === 'string' ? hints.pageExcerpt : '';
+  const cleanedExcerpt = rawExcerpt
+    .replace(/[\x00-\x08\x0b-\x1f\x7f]/g, '')
+    .trim()
+    .slice(0, PAGE_EXCERPT_MAX_CHARS + 1);
+  const pageExcerpt = cleanedExcerpt || undefined;
 
   // Current actor: for Tier 1 we always use the individual actor. Group-context
   // switching plumbs through later (Tier 5), with its own server-side validation
@@ -362,6 +373,7 @@ async function fetchRuntimeContextForCat(
     lastVisitedPath,
     currentPath,
     currentEntity,
+    pageExcerpt,
     btcRate,
   };
 }

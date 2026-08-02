@@ -5,7 +5,7 @@ import { API_ROUTES } from '@/config/api-routes';
 import { isCatHubPath } from '@/config/routes';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { STORAGE_KEYS } from '@/config/storage-keys';
-import type { CatPageDescriptor } from '@/config/cat-page-context';
+import { readPageExcerptForCat, type CatPageDescriptor } from '@/config/cat-page-context';
 import type {
   Message,
   CatAction,
@@ -212,6 +212,9 @@ export function useChatMessages({
             lastVisitedPath: readLastVisitedPath(),
             currentPath: pageContextRef.current?.path,
             currentEntity: pageContextRef.current?.entity,
+            // What the user actually sees, captured fresh each send — without
+            // it Cat knows the path but invents the page's contents.
+            pageExcerpt: pageContextRef.current?.path ? readPageExcerptForCat() : undefined,
             conversationId: activeConversationId ?? undefined,
           }),
           signal: abortController.signal,
