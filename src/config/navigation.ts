@@ -20,6 +20,8 @@ import { ROUTES } from './routes';
 import { XBrandIcon, GitHubIcon } from '@/components/icons/BrandIcons';
 import {
   Home,
+  Plus,
+  Compass,
   QrCode,
   Users,
   Settings,
@@ -309,6 +311,48 @@ const simplifiedSections: NavSection[] = [
 
 // Export simplified sections
 export const sidebarSections: NavSection[] = simplifiedSections;
+
+/**
+ * Mobile tab bar — the five slots in the thumb zone.
+ *
+ * This used to be a hardcoded array inside MobileBottomNav, which is how the
+ * phone and the desktop sidebar drifted into disagreeing (the bar sent
+ * "Profile" to the edit form while the sidebar sent it to the public page, and
+ * the primary money surface was absent from the bar entirely). One list, one
+ * decision about what deserves a thumb.
+ *
+ * Chosen by frequency × value on an economic platform. Receive holds the
+ * primary slot because moving money is the defining act here and it previously
+ * had no presence on mobile at all; Create keeps a slot but not the emphasis,
+ * since creating an entity is deliberate and occasional. Timeline and Profile
+ * come out — Timeline lives in the drawer, Profile in the header avatar, and
+ * both were spending prime space on destinations reachable elsewhere.
+ */
+export interface MobileTabItem {
+  name: string;
+  href: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  /** The raised, visually dominant slot. Exactly one item may set this. */
+  primary?: boolean;
+  /** Opens the contextual create surface rather than navigating to `href`. */
+  opensCreate?: boolean;
+  counter?: NavCounterSource;
+}
+
+export const mobileTabBar: MobileTabItem[] = [
+  { name: 'Cat', href: ROUTES.DASHBOARD.CAT, icon: Cat },
+  { name: 'Home', href: ROUTES.DASHBOARD.HOME, icon: Home },
+  { name: 'Receive', href: ROUTES.RECEIVE, icon: QrCode, primary: true },
+  { name: 'Create', href: ROUTES.CREATE, icon: Plus, opensCreate: true },
+  { name: 'Messages', href: ROUTES.MESSAGES, icon: MessageSquare, counter: 'messages' },
+];
+
+export const mobileTabBarAnonymous: MobileTabItem[] = [
+  { name: 'Home', href: ROUTES.HOME, icon: Home },
+  { name: 'Explore', href: ROUTES.DISCOVER, icon: Compass },
+  { name: 'Create', href: ROUTES.CREATE, icon: Plus, primary: true, opensCreate: true },
+  { name: 'Sign in', href: ROUTES.AUTH, icon: UserIcon },
+];
 
 /**
  * Bottom navigation items for account management
