@@ -19,6 +19,7 @@
  * Last Modified Summary: Added category, priority, createActionLabel fields; fixed wallet path; added color mapping for Tailwind
  */
 
+import type { Database as GeneratedDatabase } from '@/types/database.generated';
 import {
   LucideIcon,
   Package,
@@ -141,13 +142,50 @@ export interface EntityMetadata {
  * SINGLE SOURCE OF TRUTH for all entity types.
  * SmartCreateButton and other UI components derive their options from this registry.
  */
+/**
+ * Table name per entity type — LITERAL-typed, and the only place these strings
+ * are written. The registry below reads from here, so there is still exactly
+ * one source of truth.
+ *
+ * Two things this buys that a widened `string` did not:
+ *  - `satisfies Record<EntityType, TableName>` fails the build if an entity
+ *    points at a table that does not exist in the live schema (TableName is
+ *    derived from the generated types).
+ *  - `getTableName('cause')` returns the literal `'user_causes'`, so
+ *    supabase's `.from()` instantiates ONE query builder instead of one per
+ *    table in the schema (that blow-up is what made this migration fail twice).
+ */
+/** Every table in the live schema, derived from the generated types. */
+type TableName = keyof GeneratedDatabase['public']['Tables'];
+
+export const ENTITY_TABLE_NAMES = {
+  wallet: 'wallets',
+  project: 'projects',
+  product: 'user_products',
+  service: 'user_services',
+  cause: 'user_causes',
+  ai_assistant: 'ai_assistants',
+  group: 'groups',
+  circle: 'circles',
+  asset: 'assets',
+  loan: 'loans',
+  investment: 'investments',
+  event: 'events',
+  research: 'research_entities',
+  wishlist: 'wishlists',
+  document: 'user_documents',
+} as const satisfies Record<EntityType, TableName>;
+
+/** The tables entity code may query — 15 literals, not every table in the schema. */
+export type EntityTableName = (typeof ENTITY_TABLE_NAMES)[EntityType];
+
 export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
   // ==================== GATEWAY (Foundational) ====================
   wallet: {
     type: 'wallet',
     name: 'Wallet',
     namePlural: 'Wallets',
-    tableName: 'wallets',
+    tableName: ENTITY_TABLE_NAMES.wallet,
     userIdField: 'profile_id',
     icon: Wallet,
     colorTheme: 'orange',
@@ -169,7 +207,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'project',
     name: 'Project',
     namePlural: 'Projects',
-    tableName: 'projects',
+    tableName: ENTITY_TABLE_NAMES.project,
     userIdField: 'actor_id',
     icon: Rocket,
     colorTheme: 'orange',
@@ -189,7 +227,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'product',
     name: 'Product',
     namePlural: 'Products',
-    tableName: 'user_products',
+    tableName: ENTITY_TABLE_NAMES.product,
     userIdField: 'actor_id',
     icon: Package,
     colorTheme: 'tiffany',
@@ -210,7 +248,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'service',
     name: 'Service',
     namePlural: 'Services',
-    tableName: 'user_services',
+    tableName: ENTITY_TABLE_NAMES.service,
     userIdField: 'actor_id',
     icon: Briefcase,
     colorTheme: 'tiffany',
@@ -231,7 +269,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'cause',
     name: 'Cause',
     namePlural: 'Causes',
-    tableName: 'user_causes',
+    tableName: ENTITY_TABLE_NAMES.cause,
     userIdField: 'actor_id',
     icon: Heart,
     colorTheme: 'rose',
@@ -251,7 +289,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'ai_assistant',
     name: 'AI Assistant',
     namePlural: 'AI Assistants',
-    tableName: 'ai_assistants',
+    tableName: ENTITY_TABLE_NAMES.ai_assistant,
     userIdField: 'actor_id',
     icon: Bot,
     colorTheme: 'tiffany',
@@ -273,7 +311,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'group',
     name: 'Group',
     namePlural: 'Groups',
-    tableName: 'groups',
+    tableName: ENTITY_TABLE_NAMES.group,
     userIdField: 'created_by',
     titleColumn: 'name',
     icon: Users,
@@ -294,7 +332,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'circle',
     name: 'Circle',
     namePlural: 'Circles',
-    tableName: 'circles',
+    tableName: ENTITY_TABLE_NAMES.circle,
     userIdField: 'actor_id',
     icon: CircleDashed,
     colorTheme: 'tiffany',
@@ -316,7 +354,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'asset',
     name: 'Asset',
     namePlural: 'Assets',
-    tableName: 'assets',
+    tableName: ENTITY_TABLE_NAMES.asset,
     userIdField: 'actor_id',
     icon: Building,
     colorTheme: 'green',
@@ -336,7 +374,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'loan',
     name: 'Loan',
     namePlural: 'Loans',
-    tableName: 'loans',
+    tableName: ENTITY_TABLE_NAMES.loan,
     userIdField: 'actor_id',
     icon: Coins,
     colorTheme: 'tiffany',
@@ -356,7 +394,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'investment',
     name: 'Investment',
     namePlural: 'Investments',
-    tableName: 'investments',
+    tableName: ENTITY_TABLE_NAMES.investment,
     userIdField: 'actor_id',
     icon: TrendingUp,
     colorTheme: 'green',
@@ -376,7 +414,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'event',
     name: 'Event',
     namePlural: 'Events',
-    tableName: 'events',
+    tableName: ENTITY_TABLE_NAMES.event,
     userIdField: 'actor_id',
     icon: Calendar,
     colorTheme: 'tiffany',
@@ -398,7 +436,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'research',
     name: 'Research',
     namePlural: 'Research',
-    tableName: 'research_entities', // Database table name (unchanged for compatibility)
+    tableName: ENTITY_TABLE_NAMES.research, // Database table name (unchanged for compatibility)
     userIdField: 'actor_id',
     icon: FlaskConical,
     colorTheme: 'tiffany',
@@ -421,7 +459,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'wishlist',
     name: 'Wishlist',
     namePlural: 'Wishlists',
-    tableName: 'wishlists',
+    tableName: ENTITY_TABLE_NAMES.wishlist,
     userIdField: 'actor_id',
     icon: Gift,
     colorTheme: 'rose',
@@ -443,7 +481,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'document',
     name: 'Document',
     namePlural: 'Documents',
-    tableName: 'user_documents',
+    tableName: ENTITY_TABLE_NAMES.document,
     userIdField: 'actor_id',
     icon: FileText,
     colorTheme: 'tiffany',
@@ -500,8 +538,8 @@ export function getApiEndpoint(type: EntityType): string {
 /**
  * Get database table name for an entity type
  */
-export function getTableName(type: EntityType): string {
-  return ENTITY_REGISTRY[type].tableName;
+export function getTableName<T extends EntityType>(type: T): (typeof ENTITY_TABLE_NAMES)[T] {
+  return ENTITY_TABLE_NAMES[type];
 }
 
 /**

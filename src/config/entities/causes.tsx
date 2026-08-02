@@ -38,14 +38,14 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
     const displayCurrency = (userCurrency ||
       cause.currency ||
       PLATFORM_DEFAULT_CURRENCY) as Currency;
-    // Build goal label - use target_amount (database field name)
+    // Build goal label - use goal_amount (database field name)
     const goalLabel =
-      cause.target_amount && cause.currency
+      cause.goal_amount && cause.currency
         ? (() => {
             const goalAmount =
               cause.currency === displayCurrency
-                ? cause.target_amount
-                : convert(cause.target_amount, cause.currency as Currency, displayCurrency);
+                ? cause.goal_amount
+                : convert(cause.goal_amount, cause.currency as Currency, displayCurrency);
             return `Goal: ${formatCurrency(goalAmount, displayCurrency)}`;
           })()
         : undefined;
@@ -56,7 +56,7 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
       progressParts.push(cause.cause_category);
     }
     // Use current_amount (database field name) instead of total_raised
-    if (cause.current_amount !== undefined && cause.target_amount && cause.currency) {
+    if (cause.current_amount !== undefined && cause.goal_amount && cause.currency) {
       // Convert both to same currency for percentage calculation
       const raisedInGoalCurrency =
         cause.currency === displayCurrency
@@ -64,8 +64,8 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
           : convert(cause.current_amount, cause.currency as Currency, displayCurrency);
       const goalInGoalCurrency =
         cause.currency === displayCurrency
-          ? cause.target_amount
-          : convert(cause.target_amount, cause.currency as Currency, displayCurrency);
+          ? cause.goal_amount
+          : convert(cause.goal_amount, cause.currency as Currency, displayCurrency);
       const percentage = Math.round((raisedInGoalCurrency / goalInGoalCurrency) * 100);
       progressParts.push(`${percentage}% funded`);
     }

@@ -42,6 +42,11 @@ try {
       'src',
       '--min-tokens',
       MIN_TOKENS,
+      // Generated code is not hand-written debt: its repetition is an artifact
+      // of the generator, and nobody can "refactor" it. Excluded so the ratchet
+      // measures what humans actually own.
+      '--ignore',
+      '**/*.generated.ts',
       '--reporters',
       'json',
       '--output',
