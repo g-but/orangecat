@@ -13,6 +13,7 @@ import {
   apiNotFound,
   apiInternalError,
 } from '@/lib/api/standardResponse';
+import { loanWriteRateLimit } from '@/lib/api/loanRoutes';
 import { createObligationLoanSchema } from '@/config/loan-obligation';
 import { createObligationLoan } from '@/domain/loans/obligation';
 import { logger } from '@/utils/logger';
@@ -20,6 +21,11 @@ import { logger } from '@/utils/logger';
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
+
+    const limited = await loanWriteRateLimit(user.id);
+    if (limited) {
+      return limited;
+    }
 
     let body: unknown;
     try {

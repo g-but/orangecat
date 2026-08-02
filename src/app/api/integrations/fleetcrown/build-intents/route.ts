@@ -2,9 +2,11 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   apiBadRequest,
   apiForbidden,
+  apiRateLimited,
   apiServiceUnavailable,
   apiSuccess,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { getEntityMetadata, isValidEntityType } from '@/config/entity-registry';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { getSellerUserId } from '@/domain/payments';
@@ -16,6 +18,11 @@ import type { AnySupabaseClient } from '@/lib/supabase/types';
 const NON_ACTIONABLE = new Set(['wallet', 'document']);
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
+  const rl = await rateLimitWriteAsync(request.user.id);
+  if (!rl.success) {
+    return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
+  }
+
   const body = (await request.json()) as {
     entity_type?: string;
     entity_id?: string;

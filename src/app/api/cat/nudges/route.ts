@@ -9,6 +9,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { apiRateLimited } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { generateNudges } from '@/services/cat/nudges';
@@ -108,6 +110,10 @@ export async function POST(request: Request) {
   } = await auth.auth.getUser();
   if (!user) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+  const rl = await rateLimitWriteAsync(user.id);
+  if (!rl.success) {
+    return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
   }
   const body = await request.json().catch(() => ({}));
   if (body?.action !== 'dismiss' || !body?.id) {

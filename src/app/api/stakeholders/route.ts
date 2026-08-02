@@ -32,8 +32,10 @@ import {
   apiValidationError,
   apiNotFound,
   apiInternalError,
+  apiRateLimited,
   apiUnauthorized,
 } from '@/lib/api/standardResponse';
+import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { createStakeholderSchema } from '@/config/stakeholders';
 import {
@@ -70,6 +72,11 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
     const { user, supabase } = request;
+
+    const rl = await rateLimitWriteAsync(user.id);
+    if (!rl.success) {
+      return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
+    }
 
     let body: unknown;
     try {
