@@ -9,6 +9,7 @@ import { SettingsPasswordSection } from './SettingsPasswordSection';
 import { SettingsSecuritySection } from './SettingsSecuritySection';
 import { SettingsDangerSection } from './SettingsDangerSection';
 import { SettingsDataSection } from './SettingsDataSection';
+import { SettingsPreferencesSection } from './SettingsPreferencesSection';
 import { SettingsModals } from './SettingsModals';
 
 export default function SettingsPage() {
@@ -82,6 +83,8 @@ export default function SettingsPage() {
               onViewRecoveryCodes={() => setShowRecoveryCodes(true)}
               onMFADisableComplete={refreshMFAStatus}
             />
+            <SettingsPreferencesSection />
+
             <SettingsDataSection />
 
             <SettingsDangerSection isDeleting={isDeleting} onDelete={handleDeleteAccount} />

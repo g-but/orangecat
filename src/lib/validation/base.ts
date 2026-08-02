@@ -272,6 +272,16 @@ export const profileSchema = z.object({
     .nullable(),
 });
 
+/**
+ * The columns a profile PUT may write — derived from the schema so the two
+ * can never drift. A hand-written copy of this list in the API route silently
+ * dropped 'currency', 'background', and 'inspiration_statement' for months:
+ * saves succeeded while those fields vanished. Server-managed columns
+ * (id, email, created_at, updated_at) are not in the schema, so they can
+ * never be written through this path.
+ */
+export const PROFILE_UPDATABLE_FIELDS: readonly string[] = Object.keys(profileSchema.shape);
+
 // HTML sanitization for rich text content
 export function sanitizeHtml(html: string): string {
   if (typeof window === 'undefined') {

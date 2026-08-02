@@ -1,126 +1,81 @@
 # Codebase Audit Report
 
-**Date**: 2026-07-13
-**Auditor**: Claude Code (5 parallel subagents + synthesis)
-**Branch**: main
-**Commit**: 326bfbf9
-**Previous audit**: 2026-07-09 (overall 7/10) — see "Delta since last audit" below.
-
-> **⏱️ 2026-07-20 note:** the body below is the 2026-07-13 snapshot and is kept
-> as-is. Several of its 🟠/🔴 items have since been resolved — see
-> **"Delta since 2026-07-13 → 2026-07-20"** immediately below the Health Score.
+**Date**: 2026-08-02
+**Auditor**: Claude Code (3 parallel read-only audit agents: SSOT/best-practices, API layer, UI/UX)
+**Baseline**: main @ 14dec65b · 211 API routes · ~216k lines (723 tsx + 908 ts)
+**Previous audit**: 2026-07-13 (overall 7.7/10, updated 2026-07-20) — see delta below.
 
 ## Executive Summary
 
-OrangeCat is a **structurally healthy, well-disciplined codebase** whose real gaps are in _product surface area_ (what actually transacts) rather than engineering hygiene. The hard SSOT wins are genuinely done and enforced: **0** hardcoded route strings, **0** leaked entity-table strings, **0** raw-hex design-token violations, a respected entity registry, and only **1.09%** code duplication across ~200k lines. Type-check (non-incremental) and lint are clean; **1018 of 1019 tests pass**.
+OrangeCat's SSOT discipline is exceptional where the SSOTs already exist: **1** hardcoded table name in 807 `.from()` calls, **0** arbitrary hex colors, **0** `@ts-ignore`, **1** real `console.*`, **0** fake UI metrics, **0** user-facing "sats"/"donate" copy, **0** missing-auth routes across all 211, **0** error-message leaks (10 sampled). Design-token migration is ~98.6% semantic (~5,700 semantic vs ~107 legacy class uses). Route-level async boundaries are near-universal (115 loading/error/not-found files).
 
-The debt that exists is bounded and mechanical: a dead 7,468-line generated types file, three status-config files that re-declare the same labels, ~189 `as any` (many avoidable), an unfinished design-token migration (112 legacy refs), and a handful of god files. None of it is architectural rot.
+The remaining debt concentrates in four places: (1) a **parallel hand-written type layer** — 59 interfaces in `src/types/` with zero `z.infer`, plus a hand-edited 3,500-line `types/database.ts`; (2) **447 code clones** (2.61% of lines — up from 1.09% on 07-13), especially API-route pairs the existing CRUD factory was built to eliminate; (3) **~53 path literals** (`/api/...`, app routes) that predate the API_ROUTES/ROUTES SSOTs; (4) **~22 mutating routes without rate limiting** and ~15 without zod validation — including two unauthenticated endpoints that trigger external calls and one authenticated endpoint that invokes an LLM per request.
 
-The **most important findings are two live correctness/security bugs** surfaced by the functional audit — a partial-PUT "silent unpublish" in several entity update builders (same class fixed all week), and a public profile endpoint that returns the entire `profiles` row — plus the strategic reality that **the platform has never processed a payment**: several entity types are economically inert, and the one blocker (a platform Lightning wallet) gates the entire value proposition.
+One silent-data-loss bug was found during the audit and fixed immediately: the profile PUT's hand-written field allow-list had drifted from the schema and silently dropped `currency`, `background`, and `inspiration_statement` from every save (the `inspiration_statement` column didn't even exist). The allow-list is now derived from `profileSchema`, killing the drift class.
 
 ## Health Score
 
-| Area                   | Score      | Notes                                                                                              |
-| ---------------------- | ---------- | -------------------------------------------------------------------------------------------------- |
-| First Principles       | 7.5/10     | SSOT/registry excellent; dead generated types, 3 status files, `as any`, a few god files           |
-| Best Practices         | 9/10       | type-check + lint clean, 1018/1019 tests; 1 stale (feature-gated) test, minor console/helper drift |
-| Mission Alignment      | 6/10       | Cat strong, entities mostly work; **payments never happen**, investment/group/circle hollow        |
-| Functional Correctness | 8/10       | Auth/actor/RLS strong; 1 PII-exposure + 1 unpublish-on-partial-PUT bug class                       |
-| UI/UX & Responsive     | 8/10       | No breakage, good touch/async/a11y; token migration unfinished, god components                     |
-| **Overall**            | **7.7/10** | Ship-quality engineering; product depth + payments are the frontier                                |
+| Area | Score | Notes |
+|------|-------|-------|
+| First Principles / SSOT | 8/10 | Config SSOTs superb; `src/types/` parallel layer + clone growth are the gap |
+| Best Practices | 8/10 | Response format, auth, logging near-perfect; rate-limit + zod gaps |
+| Mission Alignment | 8/10 | Payments now REAL (Cat Credits live 2026-08-01); terminology + honesty rules hold |
+| Functional Correctness | 7/10 | 0 auth holes, but unmetered LLM/auth endpoints + 1 unbounded query |
+| UI/UX & Responsive | 8/10 | 98.6% token migration, aria/alt clean; 4 designed-state gaps |
+| **Overall** | **7.9/10** | Debt is concentrated and enumerable, not diffuse |
 
-## Delta since 2026-07-13 → 2026-07-20
+## Delta since 2026-07-13/20
 
-Re-verified against code on 2026-07-20. Several 2026-07-13 findings are resolved:
+- ✅ **"0 payments ever" is over** — Cat Credits went live 2026-08-01 (Coinos NWC on the box); the paramount 07-20 blocker is resolved.
+- ✅ S1 (public profile PII) and F2 (partial-PUT unpublish) fixed in the first-payment sprint (per 07-20 delta); not re-broken.
+- ✅ Token migration advanced from 112 legacy refs → ~107 total legacy class *uses* with semantic usage now ~5,700 (98.6%); `text-gray-*` fully gone.
+- ✅ Data controls shipped (memory consent, export, delete-all, account deletion — #518); settings IA unified (#532/#537/#539); agent trust layer complete (spend caps #512, denial reasons #517, action audit UI #538).
+- ⚠️ **Duplication regressed**: 1.09% (07-13) → 2.61% (447 clones) — three weeks of high-velocity parallel shipping added clone debt faster than factories absorbed it.
+- ⚠️ `any` pressure roughly flat (~130 combined vs ~215 then, different counting methods — treat as "still the biggest suppression class").
+- ⏳ Not re-verified this pass: MockPaymentProvider stack, `/discover` SSR, fiat rails, investment settlement, group/circle treasuries (product-depth items — unchanged status assumed).
 
-- ✅ **Dead 7,468-line `database.generated.ts`** — deleted (canonical `database.ts` remains, 36 importers).
-- ✅ **Three status-config files re-declaring labels** — collapsed to `STATUS_LABELS` SSOT in `4dd6465e`; all three (`status-config`, `entity-status`, `project-statuses`) now derive labels from it and colors from `badge-colors.ts`. Last straggler (`ai-assistants.ts` dropdown) → PR #407. The three files are **not** merged and should not be — distinct SoC (badge styling / per-entity variant + transitions / project validation).
-- ✅ **Duplicated `AiService` interface** — deduped (`4dd6465e`).
-- ✅ **Two live bugs** (PII-exposure via full `profiles` row; partial-PUT silent-unpublish) — both fixed in the first-payment sprint (denylist→allowlist; status-default guard).
-- ✅ **Money-path test coverage** (Phase 4.1, money half) — added `assistant-charge` + `credit-topup` + `credits` ledger-wrapper suites (PR #405, 46 assertions); the Cat Credits money loop is now wired **and** tested ahead of go-live.
-- ✅ **Entity detail redesign** — every marketplace type (incl. wishlist, PR #406) renders through the unified `PublicEntityDetailPage`; the flat column-dump owner view is gone.
-- ⏳ **Still open:** `MockPaymentProvider`/`getPaymentProvider` stack still present (4.3); SSR `/discover` still `'use client'` (SEO/crawler gap); remaining `AnySupabaseClient` casts; OIDC/governance test coverage; `strategic-plan.md` still claims transaction fees (business-model reconciliation, plan 2.4).
-- 🔴 **Unchanged and paramount:** **the platform still has never processed a payment.** The money loop is fully wired + tested, but the single blocker remains founder-side — provisioning `PLATFORM_NWC_URI`. Every payments-dependent finding below is gated on that one env action, not on code.
+## Top Findings (ranked, with remediation status)
 
----
+| # | Finding | Count | Action |
+|---|---------|-------|--------|
+| 1 | Profile PUT allow-list drift → silent field loss (currency/background/inspiration_statement; inspiration column missing entirely) | 3 fields | **FIXED**: derived `PROFILE_UPDATABLE_FIELDS` from schema + guard test + column migration |
+| 2 | Mutating routes without rate limiting — worst: `auth/verify-captcha` + `auth/sync` (unauthenticated, external calls), `cat/offers-from-text` (LLM per request), 6 loan writes, webhook-endpoints incl. `replay` (outbound HTTP), integration-keys, `v1/stakeholders` + `v1/timeline/publish` | ~22 files | Slice 2 + route-walker gate |
+| 3 | Mutating routes without zod — raw property access in `projects/[id]/status`, `notifications/preferences`, `social/follow`+`unfollow`, `wallets` POST, `auth/sync`, `auth/verify-captcha`; dead `_body` parse in `groups/[slug]/members:76` | ~15 (8 worst) | Slice 2 |
+| 4 | Parallel type layer: `src/types/` 59 hand interfaces, 0 z.infer; hand-edited `types/database.ts` (internal clones prove hand-maintenance); split-brain input types (CreateGroupInput, CreateLoanRequest vs zod) | 59 | Phase A: generate DB types; restrict entity-input types to `@/lib/validation` |
+| 5 | Code duplication: 447 clones / 5,643 lines — social follower/following route pair, task action route triple, ModernProfileEditor 58-line internal clone, navigation-generator ×3, tasks form hooks | 447 | Phase B: refactor top-10 via existing factories + jscpd ratchet in verify |
+| 6 | Hardcoded `/api/` paths bypassing API_ROUTES — worst `articles/ai-client.ts` ×7, `cat-actions.ts` ×4 (one duplicates `API_ROUTES.MESSAGES.BASE`), payment panels ×6 | 33 | Slice 3 + `no-restricted-syntax` gate |
+| 7 | Hardcoded app routes bypassing ROUTES (`ProjectHeader`, `MessagePanel`, bookings/tasks pages) | 20 | Slice 3 (same gate; ROUTES needs param-fns for `/messages/:id`) |
+| 8 | User-scoped routes lazily on admin client — `cat/nudges`, `cat/offers-from-text` (writes profile bio via service role!), notifications, `messages/self` (also an unbounded `select('*')` + in-memory `.find()` scan + compensating delete) | ~9 sites | Slice 2 partial; RLS-policy phase; `no-restricted-imports` gate |
+| 9 | Public v1 routes (`v1/demand`, `v1/search`, `discover/counts`) served via admin client — public exposure hinges solely on service-level filtering | 3 routes | Contract test pinning "public/active rows only" |
+| 10 | Currency display bypassing useDisplayCurrency (`DynamicSidebar:88`, `settings/usage:208`, `AnalyticsInsights:145`, `OwnerCollectPanel:232`, timeline formatter `:164`; raw `toLocaleString` in asset/loan/collateral configs) | ~8 | Slice 3 + lint gate |
+| 11 | Legacy design-class tail (tiffany 46 — 13 config-side; shadcn legacy 61) concentrated in `ui/` primitives (CurrencyInput 10, UserProfileDropdownPanel 8, skeletons 7, LocationInput 5, Breadcrumb 5) | ~107 | Slice 3 mechanical sweep |
+| 12 | Raw `uppercase tracking-wide*` instead of the semantic `tracking-label`/`caps` utilities built for exactly this | 55 | Slice 3 mechanical sweep |
+| 13 | Inline status-pill markup (`rounded-full … px-2 py-0.5`) ×29 despite `ui/badge` (37 importers); hand-rolled `animate-pulse` skeletons in 30 files despite `ui/skeletons` | 29+30 | Phase: route to Badge/Skeleton |
+| 14 | Touch targets <44px: `UpgradeNudge:55`, `NostrConnectionCard:91`, `ConversationListItem:202`, `ComposerImageAttachment:131`, `SmartQuestionsPanel:93` (also hover-only-revealed = invisible on touch) | 5 | Slice 3 (BitcoinWalletStatsCompact:104 is the reference pattern) |
+| 15 | Missing designed states: analytics (no empty/error — zeros render as real data, violating the no-fake-metrics rule), settings/usage (silent fetch error), MessagePanel (no in-panel error), 4 bare empty states (GroupWallets, ConversationRail, LoanOffersList, DashboardProjects) | 4+4 surfaces | Slice 4 (design judgment) |
+| 16 | God files: 20 components >300 (ArticleComposer 483, WalletForm 402, bookings/[id] 375), 11 services >500 (**paymentFlowService 931**), 11 routes >150 (cron/payment-reconcile 196 — logic inline) | 42 | Phase C: split worst-first |
+| 17 | Suppression debt: `any` ~81 + 49 disables; `no-img-element` ×20; `exhaustive-deps` ×16 | ~130 | Ratchet counts in CI |
+| 18 | Singletons: raw `.from('match_introductions')` + table missing from DATABASE_TABLES (`reverseMatch.ts:101`); `console.warn` in `useProfileTheme:54`; Bitcoin Orange on non-Bitcoin UI (CatCreditsPanel top-up CTA :102 + 2 icons); `shadow-[…]` in SidebarNavItem:62; `w-96` skeleton overflow at 320px (`app/loading.tsx:8`); careers page 3× accent CTA | 8 | Slice 3 one-liners |
 
-## Delta since last audit (2026-07-09 → 2026-07-13)
+## Enforcement Ledger (Never-Twice)
 
-- ✅ **Loans hardened** — 5 prod bugs fixed via live testing (edit no-op, display_name drift, `loan_offers` RLS recursion, entity-wallets refetch loop, `show_on_profile` no-op).
-- ✅ **`show_on_profile` silent-drop fixed across all 6 affected entities** + a new CI guard (`__tests__/unit/config/entity-form-schema-drift.test.ts`) that fails on form-field↔schema drift.
-- ✅ **Stale "sats" guidance copy removed** (SATS was retired as a currency code) → CHF/BTC.
-- ⏳ **Still open from 2026-07-09:** dual `Database` types (`database.generated.ts` confirmed **dead** — safe to delete), loan dual create-path, ~80 browser-supabase consumers, FleetCrown emit loop.
-- ℹ️ The failing `FormField.voice.test.tsx` is a consequence of the 2026-07-09 change gating voice input behind `FEATURES.voiceInput` — the test wasn't updated to the flag. Not a regression.
+| Class | Gate | Status |
+|-------|------|--------|
+| Form-field ↔ schema drift | `entity-form-schema-drift.test.ts` | ✅ (2026-07-13) |
+| Migration timestamp collisions | `migrations-unique-version.test.ts` | ✅ (#541) |
+| Profile allow-list drift | schema derivation + `profile-updatable-fields.test.ts` | ✅ this PR |
+| Missing auth on mutating routes | route-walker test (pins today's 0) | Slice 2 |
+| Missing rate limit on mutating routes | same walker, allowlist ratcheting down | Slice 2 |
+| New `/api/` + app-route literals | ESLint `no-restricted-syntax` | Slice 3 |
+| New admin-client call sites | ESLint `no-restricted-imports` | Slice 3 |
+| Raw `NextResponse.json` in api/ (5 files today) | ESLint rule (allowlist lnurlp/openapi) | Slice 3 |
+| Currency-format bypasses | ESLint `no-restricted-syntax` | Slice 3 |
+| Legacy-class + clone counts | grep/jscpd ratchet in `npm run verify` | Phase B |
 
----
+## Judged Clean (do not re-litigate)
 
-## Phase 1: First Principles — 7.5/10
-
-**Strong (no action):** `ROUTES` (0 hardcoded route strings in components), `DATABASE_TABLES` (673 refs, 0 leaked `user_*` strings), `entity-registry.ts`. jscpd duplication **1.09%**. Factories earn their place. No premature abstraction.
-
-- 🔴 **Dead 7,468-line `src/types/database.generated.ts`** — zero importers; `src/types/database.ts` (36 importers) is canonical. Delete it (or make it canonical and delete the other).
-- 🟠 **Three overlapping status-config files** re-declare the same labels: `config/status-config.ts:54`, `config/entity-status.ts:60`, `config/project-statuses.ts:25`. Collapse to one `STATUS_META` label SSOT.
-- 🟠 **Duplicated `AiService` interface** — `services/ai/platform-providers.ts:35` and `services/cat/provider-resolver.ts:35`. Extract one shared contract.
-- 🟠 **`as any` = 189, `: any` = 26, `eslint-disable` = 248** (211 suppress `no-explicit-any`). Concentrated in Supabase code; `services/cat/nudges.ts` has 7 `supabase: any` params — type them `SupabaseClient`.
-- 🟢 **God files (logic):** `services/cat/chat-orchestrator.ts` (690), `services/ai/context-sections.ts` (634), `services/ai/openrouter.ts` (528), `lib/api/entityCrudHandler.ts` (531).
-
-## Phase 2: Best Practices — 9/10
-
-- `npm run type-check` (non-incremental) — **CLEAN**; `npm run lint` — **CLEAN**; `npm test` — **1018/1019 pass**.
-- 🟠 **Failing test:** `__tests__/create/FormField.voice.test.tsx:37` — voice-input button not found because voice is feature-gated off (`FEATURES.voiceInput`). Update or gate the test. (Not in the pre-push `__tests__/unit` path.)
-- 🟢 **~4 `console.*` in app code** → route through `src/lib/logger` (`hooks/useProfileTheme.ts:53` + `lib/validation`, `lib/crypto`).
-- 🟢 **5 routes skip `apiSuccess`/`apiError`** but keep the correct shape.
-- ✅ 0 hex, 0 hardcoded table strings, no SQL injection, naming conventions intact.
-
-## Phase 3: Mission Alignment — 6/10
-
-| Pillar                     | Rating                | Evidence / biggest gap                                                                                                                                                                                                                                                         |
-| -------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Cat-first interface        | **Implemented**       | Cat Tiers 1/2/3 (memory, matchmaking, offers, entity creation). Gap: lives alongside nav, not the default surface.                                                                                                                                                             |
-| Pseudonymous participation | **Partial**           | Anonymous auth exists; real-identity coupling in places.                                                                                                                                                                                                                       |
-| **Any currency**           | **Partial → Not-yet** | Bitcoin/Lightning native; **fiat rails (PayPal/Twint/bank) are not real** in code.                                                                                                                                                                                             |
-| Full economic spectrum     | **Partial**           | **Functional:** product, service, project, cause, event, loan, research, ai_assistant(free). **Partial-transact:** investment (funding UI works, no equity/settlement), asset (collateral-only), wishlist (thin). **Inert:** group, circle (no payment UI, no domain service). |
-| **Payments reality**       | **Not-yet (blocked)** | **0 payments ever.** NWC top-up + paid Cat/assistants code-complete but blocked on platform Lightning wallet (`PLATFORM_NWC_URI`). Highest-leverage gap.                                                                                                                       |
-| OC↔FC integration          | **Implemented**       | OIDC live; shared spine; timeline/publish bus wired.                                                                                                                                                                                                                           |
-
-**Structural:** only **7/14 entities have a dedicated domain service** — business-rule consistency varies. **Top gaps:** (1) first real payment, (2) fiat rails, (3) investment settlement + live group/circle treasuries.
-
-## Phase 4: Improvement Roadmap
-
-**Quick wins (<1h):** fix/gate `FormField.voice.test.tsx`; route stray `console.*` through logger; delete dead `database.generated.ts`; **F2 unpublish fix** (remove `default:'draft'` from 4 builders).
-
-**Medium (1–5h):** **S1 PII fix** (profile field allowlist); collapse 3 status files; extract shared `AiService`; type `supabase: any`; finish token migration (112 refs); split top god components; add schema↔builder CI guard.
-
-**Strategic:** provision platform Lightning wallet → **first payment**; real fiat rails; investment settlement; live group/circle treasuries; make the Cat the default surface.
-
-## Phase 5: Functional Correctness — 8/10
-
-Auth centralized + RLS-first; **0 mutating routes missing auth**; actor system clean; no SQL injection; errors never leak internals; only 2 (benign) `@ts-ignore`; zero TODO/FIXME/HACK.
-
-- 🔴 **S1 — Public profile returns entire `profiles` row.** `app/api/profile/[identifier]/route.ts:39,73,96,126` — `select('*')` on a public route incl. email-lookup; row holds `email`/`phone`/`bitcoin_address`/`privacy_settings`. Leak depends solely on RLS/column grants. **Fix:** public-field allowlist (mirror `PUBLIC_WALLET_FIELDS`, `wallets/route.ts:19`) + verify RLS.
-- 🟠 **F2 — `status:{default:'draft'}` in update builders → partial PUT silently unpublishes.** `events/[id]/route.ts:58` already fixed it; NOT propagated to `products/[id]:34`, `investments/[id]:28`, `causes/[id]:31`, `ai-assistants/[id]:48` (and `circles/[id]:21` defaults `'active'`). **Fix:** `{ from: 'status' }` (no default).
-- 🟠 **S3 — RLS-only authz (no in-app guard):** group proposals (`groups/[slug]/proposals/*`), `stakeholders/[id]` PATCH/DELETE, `tasks/[id]` PATCH. Add defense-in-depth or verify policies.
-- 🟢 **F1 — Update-builder silent-drop** is a standing class (the `show_on_profile` bug); add a schema↔builder CI guard.
-- ✅ Cleared: `messages/[conversationId]` (sender verified), `projects/[id]/support` (attribution from session).
-
-## Phase 6: UI/UX & Responsive — 8/10
-
-No 375px breakage, no touch-target failures, no missing async states, 0 hex, no Bitcoin-orange misuse. Touch targets enforced at token level; skeletons in 114 files; 149 `aria-label`s; centralized focus states.
-
-- 🟠 **Token migration unfinished — 112 legacy refs:** `tiffany` 58 (config files), `text-foreground` 38 (→ `text-fg-primary`), `bg-card` 21 (→ `bg-surface-base`), `bg-orange` 0.
-- 🟠 **17 UI files > 300 lines:** `CommandPalette` 460, `PublicEntityDetailPage` 459, `EntityDashboardPage` 432, `GroupWallets` 377, `TasksSection` 373.
-- 🟢 a11y sweep of icon-only raw `<button>`s outside the (clean) timeline module.
+Auth coverage (five legitimate mechanisms across 211 routes), error-message hygiene, tips flow ("exemplary" — per-IP + per-recipient limits, opaque tokens), list-handler pagination, quota-cap SSOT (`cat-plans.ts`), rendered-copy terminology, aria-labels/alt (0 violations), `oc-error-surface` (32 uses), table overflow (3/3), `lib/supabase/untyped.ts` as a deliberate escape hatch.
 
 ---
 
-## Action Items (prioritized)
-
-1. **[Strategic]** Provision platform Lightning wallet → land the **first payment** (unblocks NWC top-up + paid Cat/assistants).
-2. **[Security]** S1 — allowlist public fields on `GET /api/profile/[identifier]`; verify `profiles` RLS.
-3. **[Bug]** F2 — remove `status` defaults from products/investments/causes/ai-assistants/circles update builders.
-4. **[Quick]** Gate/fix `FormField.voice.test.tsx`; delete dead `database.generated.ts`; route stray `console.*` through logger.
-5. **[Guard]** Add schema↔update-builder CI coverage test (extends the form↔schema guard added 2026-07-13).
-6. **[Mission]** Fiat rails (Twint/PayPal); investment settlement; live group/circle treasuries.
-7. **[Quality]** Collapse 3 status-config files; extract shared `AiService`; type `supabase: any`; finish token migration; split top god components.
-
-_No code was modified during the audit itself. The `show_on_profile` bug class (F1) and stale sats guidance were fixed separately in commits b1ab442f, a97ffedc, 326bfbf9._
+*Remediation is being shipped as ranked slices (1: profile-save SSOT + settings IA — this PR; 2: API security gaps + route-walker gates; 3: literal sweeps + lint gates + UI mechanical fixes; 4: designed states). Phases A (types generation), B (clone refactors), C (god-file splits) are deliberately un-started multi-PR efforts to be picked up as their own tasks.*

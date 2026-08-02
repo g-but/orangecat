@@ -1,4 +1,13 @@
-import { Bell, BrainCircuit, Gauge, KeyRound, UserRound, type LucideIcon } from 'lucide-react';
+import {
+  Bell,
+  BrainCircuit,
+  Gauge,
+  KeyRound,
+  ShieldCheck,
+  UserRound,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 
 /**
@@ -46,6 +55,27 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     label: 'Integrations',
     description: 'Integration keys + webhook endpoints for external services.',
     icon: KeyRound,
+  },
+];
+
+/**
+ * Trust-critical control surfaces that live OUTSIDE /settings (they belong to
+ * the Cat/wallet dashboards) but must be findable from it — "what can my Cat
+ * do and spend" should never require knowing a dashboard sub-path. Rendered
+ * by SettingsShell as a quiet related-links row under the tab rail.
+ */
+export const RELATED_SETTINGS: SettingsSection[] = [
+  {
+    href: ROUTES.DASHBOARD.CAT_PERMISSIONS,
+    label: 'Cat permissions & spend caps',
+    description: 'What Cat may do on your behalf, and how much it may spend.',
+    icon: ShieldCheck,
+  },
+  {
+    href: ROUTES.DASHBOARD.WALLETS,
+    label: 'Wallets',
+    description: 'Your wallets, Lightning address, and receive status.',
+    icon: Wallet,
   },
 ];
 

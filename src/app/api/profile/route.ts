@@ -1,4 +1,4 @@
-import { profileSchema, normalizeProfileData } from '@/lib/validation';
+import { profileSchema, normalizeProfileData, PROFILE_UPDATABLE_FIELDS } from '@/lib/validation';
 import {
   apiSuccess,
   apiNotFound,
@@ -18,31 +18,9 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 // Fields safe to persist — guards against schema/validation drift
-const PROFILE_ALLOWED_FIELDS = [
-  'username',
-  'name',
-  'bio',
-  'email',
-  'contact_email',
-  'location_country',
-  'location_city',
-  'location_zip',
-  'location_search',
-  'location_context',
-  'latitude',
-  'longitude',
-  'location',
-  'avatar_url',
-  'banner_url',
-  'website',
-  'social_links',
-  'phone',
-  'bitcoin_address',
-  'lightning_address',
-  'privacy_settings',
-  'current_status',
-  'help_wanted',
-];
+// Writable columns come from the schema (PROFILE_UPDATABLE_FIELDS) — never a
+// hand-written list here. The old local copy drifted and silently dropped
+// currency, background, and inspiration_statement from every save.
 
 async function respondWithProfile(
   supabase: AnySupabaseClient,
@@ -116,7 +94,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest) => {
 
     const dataToSave = Object.fromEntries(
       Object.entries(validatedData as Record<string, unknown>).filter(([key]) =>
-        PROFILE_ALLOWED_FIELDS.includes(key)
+        PROFILE_UPDATABLE_FIELDS.includes(key)
       )
     );
 
