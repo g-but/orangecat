@@ -16,20 +16,13 @@ import { logger } from '@/utils/logger';
 import { apiSuccess } from '@/lib/api/standardResponse';
 import type { AuthenticatedRequest } from '@/lib/api/withAuth';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
-import { buildCatSystemPrompt } from '@/services/cat/system-prompt';
-import { getCustomInstructions } from '@/services/cat/custom-instructions';
-import { buildReplyLanguageDirective } from '@/services/cat/reply-language';
-import { getCatFewShotExamplesText } from '@/services/cat/few-shot-examples';
+import { prepareCatChat } from '@/services/cat/chat-prepare';
 import { parseActionsFromResponse } from '@/services/cat/response-parser';
-import {
-  resolveConversationIdOrDefault,
-  getMessagesForContext,
-  saveMessages,
-} from '@/services/cat/conversation-history';
+import { saveMessages } from '@/services/cat/conversation-history';
 import { resolveProvider, type FallbackProvider } from '@/services/cat/provider-resolver';
 import { meterCreditUsage } from '@/services/cat/credit-metering';
 import { getAdminClient } from '@/lib/supabase/admin';
-import { recallMemories, extractAndStoreMemories } from '@/services/cat/memory';
+import { extractAndStoreMemories } from '@/services/cat/memory';
 import { extractAndStoreEconomicProfile } from '@/services/cat/economic-profile';
 import {
   maybeEnrichWithSearchResults,
@@ -39,7 +32,6 @@ import {
   type PrefillProposal,
 } from '@/services/cat/tool-use';
 import { isAgenticModel } from '@/config/model-capability';
-import { fetchFullContextForCat, buildFullContextString } from '@/services/ai/document-context';
 import { createActionExecutor } from '@/services/cat';
 import { getUserActorId } from '@/domain/actors';
 import type { ExecAction, CatAction, ExecActionResult } from '@/types/cat';
@@ -241,61 +233,28 @@ export async function orchestrateCatChat(
   // Resolve actor ID for exec_action execution
   const actorId = await getUserActorId(supabase, user.id);
 
-  // Build context + history. Runtime hints flow client→server so Cat knows
-  // currency, locale, and recent-page state for THIS exchange.
-  //
-  // Memory recall (an embedding round-trip + pgvector query) is INDEPENDENT of the
-  // context fetch, so run both concurrently — recall no longer adds its latency to
-  // every turn, it just has to beat the (already parallel) context fetchers. Recall
-  // is best-effort: [] if memory is unavailable. Folded in near the top of the
-  // context so the budget always keeps the durable facts.
-  const [userContext, memories, customInstructions] = await Promise.all([
-    fetchFullContextForCat(supabase, user.id, {
-      preferredCurrency,
-      locale,
-      lastVisitedPath,
-      currentPath,
-      currentEntity,
-      pageExcerpt,
-    }),
-    recallMemories(supabase, user.id, message),
-    getCustomInstructions(supabase, user.id),
-  ]);
-  userContext.memories = memories;
-  const contextString = buildFullContextString(userContext);
+  // Prompt assembly (context + memories + custom instructions + history)
+  // lives in chat-prepare — shared with /api/cat/prepare so LOCAL models
+  // (Ollama / LM Studio in the user's browser) get the identical brain.
+  const prepared = await prepareCatChat(supabase, user.id, {
+    message,
+    requestedConversationId,
+    preferredCurrency,
+    locale,
+    lastVisitedPath,
+    currentPath,
+    currentEntity,
+    pageExcerpt,
+  });
+  const conversationId = prepared.conversationId;
 
   // Does this message want more than chat (discovery, creation, multi-step)?
   // If so AND the answering model isn't agentic (frontier), we flag the
   // response so the UI can gently suggest upgrading to a more powerful model.
   // Uses the same signal that gates tool use — one source of truth.
   const wantsAgentic = messageMightNeedTools(message);
-  // Examples are appended as labeled text (not injected as fake conversation
-  // turns) so weaker models can't mistake the example people for the real user.
-  // The per-turn reply-language directive goes DEAD LAST: weak free models
-  // weight the prompt tail most, and burying the language rule mid-prompt let
-  // them default to the browser locale's language (English in → German out).
-  const systemPrompt = `${buildCatSystemPrompt({ userContext: contextString || undefined, customInstructions })}\n\n${getCatFewShotExamplesText()}${buildReplyLanguageDirective(message)}`;
 
-  let conversationId: string | null = null;
-  let historyMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
-  try {
-    conversationId = await resolveConversationIdOrDefault(
-      supabase,
-      user.id,
-      requestedConversationId
-    );
-    historyMessages = await getMessagesForContext(supabase, user.id, conversationId);
-  } catch {
-    /* Non-fatal — continue without history */
-  }
-
-  // Build message array: system (now includes example dialogues as text) +
-  // real history + the user's message. No fake example turns in the array.
-  const baseMessages: ToolAugmentedMessage[] = [
-    { role: 'system', content: systemPrompt },
-    ...historyMessages,
-    { role: 'user', content: message },
-  ];
+  const baseMessages: ToolAugmentedMessage[] = prepared.messages;
 
   // ── Streaming ──────────────────────────────────────────────────────────────
   if (stream) {

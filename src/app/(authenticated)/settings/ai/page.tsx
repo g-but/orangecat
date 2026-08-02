@@ -16,7 +16,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Bot, Check, Server, Terminal, AlertCircle } from 'lucide-react';
+import { Bot, Check, Server, Terminal } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import { CAT_FRONTIER_MODELS_OR } from '@/config/cat-plans';
 import { useRequireAuth } from '@/hooks/useAuth';
@@ -27,7 +27,7 @@ import { CatCreditsPanel } from '@/components/ai/CatCreditsPanel';
 import { CatCustomInstructions } from '@/components/ai/CatCustomInstructions';
 import { CatMemoryManager } from '@/components/ai/CatMemoryManager';
 import { CatMemoryImport } from '@/components/ai/CatMemoryImport';
-import { getProvidersByCategory } from '@/data/aiProviders';
+import { LocalRuntimePanel } from '@/components/ai/LocalRuntimePanel';
 
 export default function AISettingsPage() {
   const { user, hydrated, isLoading: authLoading } = useRequireAuth();
@@ -51,8 +51,6 @@ export default function AISettingsPage() {
   if (!user) {
     return null;
   }
-
-  const localProviders = getProvidersByCategory('local');
 
   return (
     <div className="space-y-12">
@@ -155,36 +153,7 @@ export default function AISettingsPage() {
               </p>
             </div>
           </div>
-          <div className="space-y-3">
-            {localProviders.map(p => (
-              <div
-                key={p.id}
-                className="flex items-start gap-3 rounded-md border border-subtle bg-surface-raised/30 p-3"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-fg-primary">{p.name}</p>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-subtle bg-surface-page px-2 py-0.5 text-xs text-fg-secondary">
-                      <AlertCircle className="h-3 w-3" /> Coming soon
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-sm text-fg-secondary">{p.description}</p>
-                </div>
-                <Link
-                  href={p.websiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-fg-secondary underline hover:text-fg-primary"
-                >
-                  Learn more
-                </Link>
-              </div>
-            ))}
-            <p className="text-xs text-fg-secondary">
-              Cat doesn&apos;t route to local endpoints yet. Wiring this is on the roadmap so the
-              sovereignty path is real, not decorative.
-            </p>
-          </div>
+          <LocalRuntimePanel />
         </section>
       </section>
 
