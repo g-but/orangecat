@@ -113,8 +113,13 @@ const JSON_OUT =
 
 const PROBE_TIMEOUT_MS = 120_000; // tool phase ≤25s + free-model generation
 const INTER_PROBE_DELAY_MS = 8_000; // be gentle to free-tier TPM
-const MAX_ATTEMPTS = 3; // per probe, on transient failures only
-const RETRY_BACKOFF_MS = [20_000, 45_000]; // free-tier 429s need a real pause
+const MAX_ATTEMPTS = 4; // per probe, on transient failures only
+// The free pool's own message is "Free AI capacity is maxed out right now.
+// Try again in a minute" — but the longest backoff was 45s, so retries gave
+// up just before capacity came back. Observed live: probes a–f passed and
+// g/h both exhausted their attempts inside ~65s. The final 90s step honours
+// what the provider actually asks for.
+const RETRY_BACKOFF_MS = [20_000, 45_000, 90_000];
 const PASS_THRESHOLD = 7; // per axis, out of 8
 
 if (!SUPABASE_URL || !ANON_KEY || !SERVICE_KEY) {
