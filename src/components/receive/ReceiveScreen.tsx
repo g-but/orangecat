@@ -240,7 +240,7 @@ export function ReceiveScreen() {
         <MoneyReceipt
           title={RECEIVE_COPY.paidTitle}
           amountBtc={request.amountBtc}
-          counterpartyLabel="Into"
+          counterpartyLabel="Via"
           counterparty={request.methodLabel}
           fallbackBody={RECEIVE_COPY.paidBody}
         >
