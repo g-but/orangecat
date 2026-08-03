@@ -6,19 +6,37 @@
  * Two entry points, matching the two ways you actually get asked for money:
  * a person (username or Lightning address) or an invoice someone handed you.
  *
- * The invoice path reads the amount locally and shows it BEFORE the confirm
- * button appears. Nobody should tap "send" on a figure we never displayed, and
- * an invoice with no amount is refused outright rather than paid blind.
+ * Both paths obey the same rule: nothing is spent until the payer has been
+ * shown, in words, exactly what is about to happen.
+ *  - The person path resolves the recipient while you type and then puts a
+ *    review step in front of the send, because you typed both the name and the
+ *    amount and either could be wrong.
+ *  - The invoice path reads the amount locally and shows it before the confirm
+ *    button appears. It needs no review step — you typed nothing to get it
+ *    wrong, and an extra tap confirming a single fact already on screen is
+ *    ceremony, not safety. An invoice with no amount is refused outright rather
+ *    than paid blind.
  */
 
 import { useCallback, useMemo, useState } from 'react';
-import { ArrowUpRight, CheckCircle2, Loader2, Wallet } from 'lucide-react';
+import { ArrowUpRight, Loader2, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { PageHeading } from '@/components/layout/PageHeading';
 import { MoneyTabs } from '@/components/money/MoneyTabs';
+import { MoneyReceipt } from '@/components/money/MoneyReceipt';
+import { StatusNote } from '@/components/money/StatusNote';
 import { ContributionAmountInput } from '@/components/payment/ContributionAmountInput';
+import { RecipientStatus } from '@/components/send/RecipientStatus';
+import { SendReviewStep } from '@/components/send/SendReviewStep';
+import { useRecipientCheck } from '@/components/send/useRecipientCheck';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { sendInvoice, sendToPerson, type SendOutcome } from '@/services/send/send-client';
 import { parseBolt11 } from '@/lib/bitcoin/bolt11';
+import { haptic } from '@/lib/haptics';
 import { SEND_COPY, SEND_NOTE_MAX_LENGTH } from '@/config/send';
 import { PAY_MAX_BTC, PAY_MIN_BTC } from '@/config/pay';
 import { DEFAULT_TIP_BTC } from '@/config/tips';
@@ -26,8 +44,14 @@ import { ROUTES } from '@/config/routes';
 
 type Tab = 'person' | 'invoice';
 
+const TABS = [
+  { value: 'person' as const, label: SEND_COPY.personTab },
+  { value: 'invoice' as const, label: SEND_COPY.invoiceTab },
+];
+
 export function SendScreen() {
   const { isLoading: authLoading } = useRequireAuth();
+  const { formatAmountBtc } = useDisplayCurrency();
 
   const [tab, setTab] = useState<Tab>('person');
   const [recipient, setRecipient] = useState('');
@@ -35,9 +59,12 @@ export function SendScreen() {
   const [memo, setMemo] = useState('');
   const [invoice, setInvoice] = useState('');
 
+  const [reviewing, setReviewing] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<SendOutcome | null>(null);
+
+  const recipientCheck = useRecipientCheck(tab === 'person' ? recipient : '');
 
   // Read locally so the payer sees the figure before committing to it.
   const parsedInvoice = useMemo(() => (invoice.trim() ? parseBolt11(invoice) : null), [invoice]);
@@ -50,6 +77,7 @@ export function SendScreen() {
     setInvoice('');
     setRecipient('');
     setMemo('');
+    setReviewing(false);
   }, []);
 
   const handleSend = useCallback(async () => {
@@ -62,6 +90,8 @@ export function SendScreen() {
           : await sendToPerson(recipient, amount, memo || undefined)
       );
     } catch (e) {
+      haptic('error');
+      setReviewing(false);
       setError(e instanceof Error ? e.message : 'The payment did not go through.');
     } finally {
       setSending(false);
@@ -78,143 +108,142 @@ export function SendScreen() {
 
   if (outcome) {
     return (
-      <div className="mx-auto flex max-w-md flex-col items-center gap-3 px-4 py-16 text-center">
-        <CheckCircle2 className="h-16 w-16 text-status-positive" />
-        <p className="text-xl font-semibold text-fg-primary">{SEND_COPY.sentTitle}</p>
-        <p className="text-sm text-fg-secondary">{SEND_COPY.sentBody(outcome.destination)}</p>
-        <Button variant="accent" className="mt-2" onClick={reset}>
-          {SEND_COPY.again}
-        </Button>
+      <div className="mx-auto w-full max-w-md px-4">
+        <MoneyReceipt
+          title={SEND_COPY.sentTitle}
+          amountBtc={outcome.amountBtc}
+          counterparty={outcome.destination === 'invoice' ? null : outcome.destination}
+          counterpartyLabel={SEND_COPY.reviewTo}
+          note={memo || null}
+          fallbackBody={SEND_COPY.sentFallback}
+        >
+          <Button variant="accent" onClick={reset}>
+            {SEND_COPY.again}
+          </Button>
+        </MoneyReceipt>
       </div>
     );
   }
 
-  const canSend =
-    tab === 'invoice' ? invoiceIsPayable : recipient.trim().length > 0 && amount > 0;
+  const canReview =
+    tab === 'invoice' ? invoiceIsPayable : recipientCheck.payable && amount > 0;
 
   return (
     <div className="mx-auto w-full max-w-md px-4 py-6">
-      <h1 className="flex items-center gap-2 text-2xl font-bold text-fg-primary">
-        <ArrowUpRight className="h-6 w-6 text-fg-secondary" />
+      <PageHeading className="flex items-center gap-2">
+        <ArrowUpRight className="h-6 w-6 shrink-0 text-fg-secondary" aria-hidden="true" />
         {SEND_COPY.title}
-      </h1>
+      </PageHeading>
       <p className="mt-1 text-sm text-fg-secondary">{SEND_COPY.subtitle}</p>
 
       <MoneyTabs className="mt-5" />
 
-      <div className="mt-3 grid grid-cols-2 gap-1 rounded-lg bg-surface-raised p-1">
-        {(['person', 'invoice'] as const).map(t => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => {
-              setTab(t);
+      {reviewing ? (
+        <SendReviewStep
+          recipientName={recipientCheck.name ?? recipient}
+          amountLabel={formatAmountBtc(amount)}
+          note={memo}
+          sending={sending}
+          onBack={() => setReviewing(false)}
+          onConfirm={handleSend}
+          error={error}
+        />
+      ) : (
+        <>
+          <SegmentedControl
+            className="mt-3"
+            label="Send method"
+            items={TABS}
+            value={tab}
+            onChange={value => {
+              setTab(value);
               setError(null);
             }}
-            className={`min-h-11 rounded-md px-3 text-sm font-medium transition-colors ${
-              tab === t
-                ? 'bg-surface-base text-fg-primary shadow-sm'
-                : 'text-fg-secondary hover:text-fg-primary'
-            }`}
-          >
-            {t === 'person' ? SEND_COPY.personTab : SEND_COPY.invoiceTab}
-          </button>
-        ))}
-      </div>
+          />
 
-      <div className="mt-6 space-y-4">
-        {tab === 'person' ? (
-          <>
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-fg-secondary">
-                {SEND_COPY.recipientLabel}
-              </span>
-              <input
-                value={recipient}
-                onChange={e => setRecipient(e.target.value)}
-                placeholder={SEND_COPY.recipientPlaceholder}
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                className="min-h-11 w-full rounded-md border border-default bg-surface-base px-3 text-fg-primary placeholder:text-fg-tertiary focus:border-interactive focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </label>
+          <div className="mt-6 space-y-4">
+            {tab === 'person' ? (
+              <>
+                <Input
+                  label={SEND_COPY.recipientLabel}
+                  value={recipient}
+                  onChange={e => setRecipient(e.target.value)}
+                  placeholder={SEND_COPY.recipientPlaceholder}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  className="min-h-11"
+                />
 
-            <ContributionAmountInput
-              value={amount}
-              onChange={setAmount}
-              minBtc={PAY_MIN_BTC}
-              maxBtc={PAY_MAX_BTC}
-            />
+                <RecipientStatus check={recipientCheck} handle={recipient} />
 
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-fg-secondary">
-                {SEND_COPY.memoLabel}
-              </span>
-              <input
-                value={memo}
-                onChange={e => setMemo(e.target.value.slice(0, SEND_NOTE_MAX_LENGTH))}
-                placeholder={SEND_COPY.memoPlaceholder}
-                className="min-h-11 w-full rounded-md border border-default bg-surface-base px-3 text-fg-primary placeholder:text-fg-tertiary focus:border-interactive focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </label>
-          </>
-        ) : (
-          <>
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-fg-secondary">
-                {SEND_COPY.invoiceLabel}
-              </span>
-              <textarea
-                value={invoice}
-                onChange={e => setInvoice(e.target.value)}
-                placeholder={SEND_COPY.invoicePlaceholder}
-                rows={4}
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                className="w-full resize-none rounded-md border border-default bg-surface-base p-3 font-mono text-xs text-fg-primary placeholder:text-fg-tertiary focus:border-interactive focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </label>
+                <ContributionAmountInput
+                  value={amount}
+                  onChange={setAmount}
+                  minBtc={PAY_MIN_BTC}
+                  maxBtc={PAY_MAX_BTC}
+                />
 
-            {invoice.trim() && (
-              <p
-                className={`rounded-md border px-3 py-2 text-sm ${
-                  invoiceIsPayable
-                    ? 'border-subtle bg-surface-raised/40 text-fg-primary'
-                    : 'border-status-warning/40 bg-status-warning-subtle text-fg-secondary'
-                }`}
-              >
-                {invoiceIsPayable
-                  ? SEND_COPY.invoiceReads(`${invoiceAmount} BTC`)
-                  : parsedInvoice && parsedInvoice.network !== 'mainnet'
-                    ? `That is a ${parsedInvoice.network} invoice, not a real-Bitcoin one.`
-                    : SEND_COPY.invoiceUnreadable}
-              </p>
+                <Input
+                  label={SEND_COPY.memoLabel}
+                  value={memo}
+                  onChange={e => setMemo(e.target.value.slice(0, SEND_NOTE_MAX_LENGTH))}
+                  placeholder={SEND_COPY.memoPlaceholder}
+                  className="min-h-11"
+                />
+              </>
+            ) : (
+              <>
+                <Textarea
+                  label={SEND_COPY.invoiceLabel}
+                  value={invoice}
+                  onChange={e => setInvoice(e.target.value)}
+                  placeholder={SEND_COPY.invoicePlaceholder}
+                  rows={4}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  className="resize-none font-mono text-xs"
+                />
+
+                {invoice.trim() && (
+                  <StatusNote tone={invoiceIsPayable ? 'neutral' : 'warning'}>
+                    {invoiceIsPayable
+                      ? SEND_COPY.invoiceReads(formatAmountBtc(invoiceAmount as number))
+                      : parsedInvoice && parsedInvoice.network !== 'mainnet'
+                        ? SEND_COPY.invoiceWrongNetwork(parsedInvoice.network)
+                        : SEND_COPY.invoiceUnreadable}
+                  </StatusNote>
+                )}
+              </>
             )}
-          </>
-        )}
 
-        {error && <p className="text-sm text-status-negative">{error}</p>}
-        <p className="text-center text-xs text-fg-tertiary">{SEND_COPY.disclaimer}</p>
+            {error && <p className="text-sm text-status-negative">{error}</p>}
+            <p className="text-center text-xs text-fg-tertiary">{SEND_COPY.disclaimer}</p>
 
-        <Button
-          variant="accent"
-          className="w-full"
-          onClick={handleSend}
-          disabled={!canSend || sending}
-          isLoading={sending}
-        >
-          {sending ? SEND_COPY.sending : SEND_COPY.confirm}
-        </Button>
+            <Button
+              variant="accent"
+              className="w-full"
+              onClick={() => (tab === 'invoice' ? void handleSend() : setReviewing(true))}
+              disabled={!canReview || sending}
+              isLoading={sending}
+            >
+              {sending
+                ? SEND_COPY.sending
+                : tab === 'invoice'
+                  ? SEND_COPY.confirm
+                  : SEND_COPY.review}
+            </Button>
 
-        <p className="text-center text-xs text-fg-tertiary">
-          <Wallet className="mr-1 inline h-3 w-3" />
-          <a href={ROUTES.DASHBOARD.WALLETS} className="underline hover:text-fg-secondary">
-            {SEND_COPY.noWalletCta}
-          </a>
-        </p>
-      </div>
+            <p className="text-center text-xs text-fg-tertiary">
+              <Wallet className="mr-1 inline h-3 w-3" aria-hidden="true" />
+              <a href={ROUTES.DASHBOARD.WALLETS} className="underline hover:text-fg-secondary">
+                {SEND_COPY.noWalletCta}
+              </a>
+            </p>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -14,8 +14,9 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CheckCircle2, Clock, Loader2 } from 'lucide-react';
+import { Clock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { MoneyReceipt } from '@/components/money/MoneyReceipt';
 import { PaymentQRCode } from '@/components/payment/PaymentQRCode';
 import { ContributionAmountInput } from '@/components/payment/ContributionAmountInput';
 import {
@@ -156,12 +157,14 @@ export function PayFlow({
 
   if (invoice && settleState === 'paid') {
     return (
-      <div className="flex flex-col items-center gap-3 py-6 text-center">
-        <CheckCircle2 className="h-12 w-12 text-status-positive" />
-        <p className="text-lg font-semibold text-fg-primary">{TIP_COPY.paidTitle}</p>
-        <p className="text-sm text-fg-secondary">{TIP_COPY.paidBody(recipientName)}</p>
+      <MoneyReceipt
+        title={TIP_COPY.paidTitle}
+        amountBtc={invoice.amountBtc}
+        counterparty={recipientName}
+        fallbackBody={TIP_COPY.paidBody(recipientName)}
+      >
         {renderDone?.(reset)}
-      </div>
+      </MoneyReceipt>
     );
   }
 

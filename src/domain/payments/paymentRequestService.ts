@@ -34,7 +34,26 @@ export interface PaymentRequestRow {
   status: PaymentRequestStatus;
   created_at: string;
   paid_at: string | null;
+  /**
+   * The OTHER party, from the caller's point of view — who asked you, or who
+   * you asked. A list of amounts without names is unreadable: "0.0005 BTC,
+   * pending" tells you nothing about whether to pay it.
+   */
+  counterparty_username: string | null;
+  counterparty_name: string | null;
 }
+
+/** A profile embed arrives as an object or a one-element array depending on
+ *  how PostgREST resolves the relationship — both are handled at the read. */
+type EmbeddedProfile = { username: string | null; name: string | null };
+
+type RawPaymentRequestRow = Omit<
+  PaymentRequestRow,
+  'counterparty_username' | 'counterparty_name'
+> & {
+  requester: EmbeddedProfile | EmbeddedProfile[] | null;
+  payer: EmbeddedProfile | EmbeddedProfile[] | null;
+};
 
 export type RequestFailureReason =
   | 'payer_not_found'
@@ -78,11 +97,11 @@ export async function createPaymentRequest(
   const username = payerUsername.trim().replace(/^@/, '');
 
   const { data: payer } = await fromTable(admin, DATABASE_TABLES.PROFILES)
-    .select('id, username')
+    .select('id, username, name')
     .ilike('username', username)
     .maybeSingle();
 
-  const payerRow = payer as { id?: string; username?: string } | null;
+  const payerRow = payer as { id?: string; username?: string; name?: string } | null;
   if (!payerRow?.id) {
     return fail('payer_not_found', `We couldn't find @${username} on OrangeCat.`);
   }
@@ -107,8 +126,17 @@ export async function createPaymentRequest(
     return fail('not_found', 'Could not create that request. Try again.');
   }
 
-  await notifyPayer(data as PaymentRequestRow, requesterId);
-  return { ok: true, request: data as PaymentRequestRow };
+  // The counterparty here is the payer — we resolved them a moment ago, so the
+  // row we hand back matches the shape the list returns rather than a lookalike
+  // missing exactly the fields the UI renders.
+  const request: PaymentRequestRow = {
+    ...(data as Omit<PaymentRequestRow, 'counterparty_username' | 'counterparty_name'>),
+    counterparty_username: payerRow.username ?? null,
+    counterparty_name: payerRow.name ?? payerRow.username ?? null,
+  };
+
+  await notifyPayer(request, requesterId);
+  return { ok: true, request };
 }
 
 /** Tell the payer they've been asked, with a link that pays it in one tap. */
@@ -151,15 +179,34 @@ export async function listPaymentRequests(
   supabase: SupabaseClient,
   userId: string
 ): Promise<{ incoming: PaymentRequestRow[]; outgoing: PaymentRequestRow[] }> {
+  // Both parties are embedded because either one can be "the other person"
+  // depending on which side of the ask the caller is on. Two FKs point at
+  // profiles, so each embed names its constraint — PostgREST cannot guess.
   const { data } = await fromTable(supabase, DATABASE_TABLES.PAYMENT_REQUESTS)
-    .select('id, requester_id, payer_id, amount_btc, note, status, created_at, paid_at')
+    .select(
+      `id, requester_id, payer_id, amount_btc, note, status, created_at, paid_at,
+       requester:profiles!payment_requests_requester_id_fkey(username, name),
+       payer:profiles!payment_requests_payer_id_fkey(username, name)`
+    )
     .order('created_at', { ascending: false })
     .limit(100);
 
-  const rows = (data ?? []) as PaymentRequestRow[];
+  const rows = (data ?? []) as unknown as RawPaymentRequestRow[];
+  const view = (row: RawPaymentRequestRow) => {
+    // The caller already knows who they are; the useful name is the other one.
+    const other = row.payer_id === userId ? row.requester : row.payer;
+    const profile = Array.isArray(other) ? other[0] : other;
+    const { requester: _requester, payer: _payer, ...rest } = row;
+    return {
+      ...rest,
+      counterparty_username: profile?.username ?? null,
+      counterparty_name: profile?.name ?? profile?.username ?? null,
+    };
+  };
+
   return {
-    incoming: rows.filter(r => r.payer_id === userId),
-    outgoing: rows.filter(r => r.requester_id === userId),
+    incoming: rows.filter(r => r.payer_id === userId).map(view),
+    outgoing: rows.filter(r => r.requester_id === userId).map(view),
   };
 }
 

@@ -19,18 +19,33 @@ export const SEND_COPY = {
   memoLabel: 'Note (optional)',
   memoPlaceholder: "What's it for?",
 
+  /** Live recipient resolution — a wrong name must fail loudly, before sending. */
+  recipientChecking: 'Looking them up…',
+  recipientReady: (name: string) => `Paying ${name}.`,
+  recipientExternal:
+    "Lightning address — we'll pay it directly. Check the spelling: we can't tell you who owns it.",
+  recipientNotFound: (handle: string) => `Nobody on OrangeCat goes by @${handle}.`,
+  recipientCannotReceive: (name: string) => `${name} can't receive Bitcoin yet.`,
+
   invoiceLabel: 'Lightning invoice',
   invoicePlaceholder: 'Paste an invoice starting with lnbc…',
   /** Shown once we have read the invoice — consent before spending. */
   invoiceReads: (amount: string) => `This invoice is for ${amount}.`,
   invoiceUnreadable: "We can't read an amount from that invoice.",
+  invoiceWrongNetwork: (network: string) => `That is a ${network} invoice, not a real-Bitcoin one.`,
 
-  review: 'Review',
+  review: 'Review payment',
+  reviewTitle: 'Check this is right',
+  reviewIntro: 'Bitcoin payments are final. There is no undo.',
+  reviewTo: 'To',
+  reviewAmount: 'Amount',
+  reviewNote: 'Note',
+  back: 'Back',
   confirm: 'Send payment',
   sending: 'Sending…',
 
   sentTitle: 'Sent',
-  sentBody: (destination: string) => `Paid to ${destination}.`,
+  sentFallback: 'The payment went through.',
   again: 'Send another',
 
   noWalletTitle: 'Connect a wallet to send',

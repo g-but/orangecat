@@ -206,12 +206,11 @@ describe('closePaymentRequest', () => {
 });
 
 describe('listPaymentRequests', () => {
-  it('splits rows by which side of the ask the caller is on', async () => {
-    const rows = [
-      { id: 'a', requester_id: REQUESTER, payer_id: PAYER },
-      { id: 'b', requester_id: PAYER, payer_id: REQUESTER },
-    ];
-    const client = {
+  const LENA = { username: 'lena', name: 'Lena Brunner' };
+  const MARCO = { username: 'marco', name: 'Marco Testi' };
+
+  function listClient(rows: unknown[]) {
+    return {
       from: () => {
         const b: Record<string, unknown> = {};
         b.select = () => b;
@@ -220,9 +219,64 @@ describe('listPaymentRequests', () => {
         return b;
       },
     } as unknown as SupabaseClient;
+  }
 
-    const { incoming, outgoing } = await listPaymentRequests(client, REQUESTER);
+  it('splits rows by which side of the ask the caller is on', async () => {
+    const rows = [
+      { id: 'a', requester_id: REQUESTER, payer_id: PAYER },
+      { id: 'b', requester_id: PAYER, payer_id: REQUESTER },
+    ];
+
+    const { incoming, outgoing } = await listPaymentRequests(listClient(rows), REQUESTER);
     expect(outgoing.map(r => r.id)).toEqual(['a']);
     expect(incoming.map(r => r.id)).toEqual(['b']);
+  });
+
+  it('names the OTHER person on each row, never the caller', async () => {
+    const rows = [
+      // The caller asked Marco.
+      { id: 'a', requester_id: REQUESTER, payer_id: PAYER, requester: LENA, payer: MARCO },
+      // Marco asked the caller.
+      { id: 'b', requester_id: PAYER, payer_id: REQUESTER, requester: MARCO, payer: LENA },
+    ];
+
+    const { incoming, outgoing } = await listPaymentRequests(listClient(rows), REQUESTER);
+    expect(outgoing[0].counterparty_name).toBe('Marco Testi');
+    expect(outgoing[0].counterparty_username).toBe('marco');
+    expect(incoming[0].counterparty_name).toBe('Marco Testi');
+  });
+
+  it('reads an embed that arrives as a one-element array', async () => {
+    const rows = [
+      { id: 'a', requester_id: REQUESTER, payer_id: PAYER, requester: [LENA], payer: [MARCO] },
+    ];
+
+    const { outgoing } = await listPaymentRequests(listClient(rows), REQUESTER);
+    expect(outgoing[0].counterparty_username).toBe('marco');
+  });
+
+  it('falls back to the username when someone has no display name', async () => {
+    const rows = [
+      {
+        id: 'a',
+        requester_id: REQUESTER,
+        payer_id: PAYER,
+        requester: LENA,
+        payer: { username: 'marco', name: null },
+      },
+    ];
+
+    const { outgoing } = await listPaymentRequests(listClient(rows), REQUESTER);
+    expect(outgoing[0].counterparty_name).toBe('marco');
+  });
+
+  it('never leaks the raw profile embeds to the client', async () => {
+    const rows = [
+      { id: 'a', requester_id: REQUESTER, payer_id: PAYER, requester: LENA, payer: MARCO },
+    ];
+
+    const { outgoing } = await listPaymentRequests(listClient(rows), REQUESTER);
+    expect(outgoing[0]).not.toHaveProperty('requester');
+    expect(outgoing[0]).not.toHaveProperty('payer');
   });
 });
