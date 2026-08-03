@@ -51,6 +51,10 @@ module.exports = {
   // Mock Next.js modules that cause issues in Jest
   moduleNameMapper: {
     '^@/components/ui/tabs$': '<rootDir>/__mocks__/ui-tabs.js',
+    // Jest resolves lucide's ESM to a build where some icons come back
+    // undefined, which fails as "Element type is invalid" and looks like a
+    // component bug. See __mocks__/lucide-react.js.
+    '^lucide-react$': '<rootDir>/__mocks__/lucide-react.js',
     '^@/contexts/AuthContext$': '<rootDir>/__mocks__/contexts/AuthContext.js',
     '^@/lib/nostr/nwc$': '<rootDir>/__mocks__/nostr-nwc.js',
     '^@/(.*)$': '<rootDir>/src/$1',

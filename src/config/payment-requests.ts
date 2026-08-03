@@ -24,11 +24,20 @@ export const REQUEST_COPY = {
 
   incomingTitle: 'Waiting on you',
   outgoingTitle: 'You asked for',
-  empty: 'No requests yet.',
+  incomingEmpty: 'Nobody has asked you for anything.',
+  outgoingEmpty: "You haven't asked anyone yet.",
 
   pay: 'Pay',
   decline: 'Decline',
   cancel: 'Cancel',
+
+  /** Confirmations for actions that finish quietly, in the background. */
+  declined: 'Request declined.',
+  cancelled: 'Request withdrawn.',
+  /** Neither side is named on a row until we know who they are. */
+  unknownParty: 'Someone',
+  from: (name: string) => `From ${name}`,
+  to: (name: string) => `To ${name}`,
 
   statusLabels: {
     pending: 'Pending',

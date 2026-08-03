@@ -15,6 +15,7 @@
  */
 
 import { TIP_MAX_BTC, TIP_MIN_BTC } from './tips';
+import { SITE_URL } from './brand';
 
 export const PAY_MIN_BTC = TIP_MIN_BTC;
 export const PAY_MAX_BTC = TIP_MAX_BTC;
@@ -29,6 +30,18 @@ export interface PayPrefill {
   note?: string;
   /** Set when the link carried an amount we could not honour — shown, not swallowed. */
   amountError?: string;
+}
+
+/**
+ * The origin a shareable pay link should carry.
+ *
+ * In the browser we use the origin actually being viewed, so links created on a
+ * preview or self-hosted deploy point back at that same deploy instead of
+ * silently sending the payer to production. On the server there is no such
+ * thing to read, so the configured site URL stands in.
+ */
+export function payLinkOrigin(): string {
+  return typeof window === 'undefined' ? SITE_URL : window.location.origin;
 }
 
 /**

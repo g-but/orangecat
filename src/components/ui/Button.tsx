@@ -10,12 +10,19 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   href?: string;
 }
 
+/** Only used when a loading button has no label of its own to keep showing. */
+const LOADING_FALLBACK_LABEL = 'Loading...';
+
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, children, ...props }, ref) => {
+    // A busy button keeps its own label. Replacing it with "Loading..." threw
+    // away the caller's copy — so a button that said "Sending…" while a payment
+    // was in flight silently became a generic one, and the word the user needed
+    // (which action is happening?) was the one we removed.
     const buttonContent = isLoading ? (
       <div className="flex items-center">
         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3" />
-        <span>Loading...</span>
+        <span>{children ?? LOADING_FALLBACK_LABEL}</span>
       </div>
     ) : (
       children
