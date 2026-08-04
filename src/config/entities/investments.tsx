@@ -42,7 +42,7 @@ export const investmentEntityConfig: EntityConfig<Investment> = {
     if (investment.risk_level) {
       metadataParts.push(`${investment.risk_level} risk`);
     }
-    if (investment.investor_count > 0) {
+    if ((investment.investor_count ?? 0) > 0) {
       metadataParts.push(
         `${investment.investor_count} investor${investment.investor_count !== 1 ? 's' : ''}`
       );

@@ -31,7 +31,8 @@ export interface Investment {
   risk_level?: 'low' | 'medium' | 'high';
   terms?: string;
   is_public: boolean;
-  investor_count: number;
+  /** Not a column — enriched at read time from the funding ledger when available. */
+  investor_count?: number;
   bitcoin_address?: string;
   lightning_address?: string;
   wallet_id?: string;

@@ -6,7 +6,7 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { TIMELINE_TABLES } from '@/config/database-tables';
-import type { TimelineEvent } from '@/types/timeline';
+import type { TimelineEvent, TimelineEventDb } from '@/types/timeline';
 import { mapDbEventToTimelineEvent } from '../formatters';
 
 export async function resolveActorId(actorId?: string): Promise<string | null> {
@@ -41,7 +41,9 @@ export async function fetchCreatedEvent(
     logger.error(logMessage, error, 'Timeline');
     return { event: null };
   }
-  return { event: mapDbEventToTimelineEvent(data) };
+  // `TimelineEventDb` is the app's view of a `timeline_events` row: same
+  // columns, with the jsonb payloads given their parsed shape.
+  return { event: mapDbEventToTimelineEvent(data as unknown as TimelineEventDb) };
 }
 
 /**

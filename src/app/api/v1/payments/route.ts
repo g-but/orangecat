@@ -29,6 +29,7 @@ import { getEntityMetadata } from '@/config/entity-registry';
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createPublicClient } from '@/lib/supabase/public';
+import { looseClient } from '@/lib/supabase/untyped';
 import {
   rateLimitWriteAsync,
   rateLimitIntegrationKeyWrite,
@@ -78,7 +79,8 @@ export async function POST(request: NextRequest) {
       supabase = (await createServerClient()) as unknown as SupabaseClient;
     } else {
       const meta = getEntityMetadata(validated.entity_type);
-      const { data: visibleEntity } = await createPublicClient()
+      // Table name comes from the registry at runtime.
+      const { data: visibleEntity } = await looseClient(createPublicClient())
         .from(meta.tableName)
         .select('id')
         .eq('id', validated.entity_id)

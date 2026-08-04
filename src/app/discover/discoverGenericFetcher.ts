@@ -1,5 +1,6 @@
 import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
+import type { FilterChain } from '@/lib/supabase/untyped';
 import { getTableName } from '@/config/entity-registry';
 import { STATUS, ENTITY_STATUS } from '@/config/database-constants';
 import type { DiscoverTabType } from '@/components/discover/DiscoverTabs';
@@ -59,8 +60,11 @@ export async function fetchDiscoverGenericData(
   const escaped = searchTerm ? searchTerm.replace(/[%_]/g, '\\$&') : null;
   const should = (tab: DiscoverTabType) => activeTab === 'all' || activeTab === tab;
 
-  const buildQuery = <T>(
-    base: ReturnType<ReturnType<typeof supabase.from>['select']>,
+  // `base` is a builder over a different table on every call, so it is accepted
+  // structurally — the column names in each `.select()` are still checked
+  // against the real schema at the call sites below.
+  const buildQuery = <T, B extends FilterChain<B>>(
+    base: B,
     tab: DiscoverTabType,
     tabLimit: number,
     searchFields = 'title,description'

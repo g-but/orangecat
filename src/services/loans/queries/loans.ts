@@ -8,6 +8,7 @@
 
 import { callRpc, fromTable } from '@/lib/supabase/untyped';
 import supabase from '@/lib/supabase/browser';
+import { narrowLoan, narrowLoans } from './narrow';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -58,7 +59,7 @@ export async function getLoan(loanId: string): Promise<LoanResponse> {
       return { success: false, error: error.message };
     }
 
-    return { success: true, loan: data };
+    return { success: true, loan: narrowLoan(data) };
   } catch (error) {
     logger.error('Exception getting loan', error, 'Loans');
     return { success: false, error: 'Failed to get loan' };
@@ -139,7 +140,7 @@ export async function getUserLoans(
       return { success: false, error: error.message };
     }
 
-    return { success: true, loans: data || [], total: count || 0 };
+    return { success: true, loans: narrowLoans(data || []), total: count || 0 };
   } catch (error) {
     logger.error('Exception getting user loans', error, 'Loans');
     return { success: false, error: 'Failed to get loans' };

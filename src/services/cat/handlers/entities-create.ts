@@ -254,7 +254,6 @@ export const entityCreateHandlers: Record<string, ActionHandler> = {
         minimum_investment: minimumInvestment,
         currency: 'BTC',
         total_raised: 0,
-        investor_count: 0,
         is_public: Boolean(params.publish),
         status: params.publish ? STATUS.INVESTMENTS.OPEN : STATUS.INVESTMENTS.DRAFT,
       })

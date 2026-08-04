@@ -98,9 +98,8 @@ export async function createIntegrationKey(params: {
   const scopesToStore = scopes && scopes.length > 0 ? scopes : ['*'];
 
   const admin = createAdminClient();
-  const { data, error } = await (
-    admin.from(DATABASE_TABLES.INTEGRATION_KEYS) as ReturnType<typeof admin.from> as any
-  )
+  const { data, error } = await admin
+    .from(DATABASE_TABLES.INTEGRATION_KEYS)
     .insert({
       user_id: userId,
       actor_id: actorId,

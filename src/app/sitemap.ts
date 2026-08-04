@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { looseClient } from '@/lib/supabase/untyped';
 import { ENTITY_REGISTRY, type EntityType } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { ENTITY_STATUS } from '@/config/database-constants';
@@ -90,7 +91,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let dynamicPages: MetadataRoute.Sitemap = [];
 
   try {
-    const supabase = createAdminClient();
+    // The sitemap walks every entity table by registry name, so the table is a
+    // runtime value; each result is cast to the tiny shape this file needs.
+    const supabase = looseClient(createAdminClient());
 
     // Public profile pages
     const { data: profiles } = (await supabase

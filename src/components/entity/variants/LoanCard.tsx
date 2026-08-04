@@ -47,7 +47,7 @@ export function LoanCard({ loan, viewMode = 'grid' }: LoanCardProps) {
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-fg-primary truncate">{loan.title}</h3>
               <p className="text-sm text-fg-secondary truncate">
-                {formatAmount(loan.remaining_balance, loan.currency)} remaining
+                {formatAmount(loan.remaining_balance, loan.currency ?? undefined)} remaining
               </p>
             </div>
 
@@ -86,14 +86,14 @@ export function LoanCard({ loan, viewMode = 'grid' }: LoanCardProps) {
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm text-fg-secondary">Remaining</span>
             <span className="break-words font-semibold text-fg-primary sm:text-right">
-              {formatAmount(loan.remaining_balance, loan.currency)}
+              {formatAmount(loan.remaining_balance, loan.currency ?? undefined)}
             </span>
           </div>
           <Progress value={progress} className="h-1.5" />
           <div className="flex flex-col gap-1 text-xs text-fg-secondary sm:flex-row sm:justify-between">
             <span>{progress.toFixed(0)}% funded</span>
             <span className="break-words sm:text-right">
-              {formatAmount(loan.original_amount, loan.currency)} total
+              {formatAmount(loan.original_amount, loan.currency ?? undefined)} total
             </span>
           </div>
         </div>
@@ -111,7 +111,7 @@ export function LoanCard({ loan, viewMode = 'grid' }: LoanCardProps) {
               <div className="flex min-w-0 items-center gap-1">
                 <TrendingUp className="h-3 w-3 text-fg-tertiary" />
                 <span className="min-w-0 break-words">
-                  {formatAmount(loan.monthly_payment, loan.currency)}/mo
+                  {formatAmount(loan.monthly_payment, loan.currency ?? undefined)}/mo
                 </span>
               </div>
             )}

@@ -44,25 +44,31 @@ export function useTypingSubscription({
       try {
         const { data } = await supabase
           .from(DATABASE_TABLES.TYPING_INDICATORS)
-          .select('user_id, started_at, expires_at, profiles:user_id (username, name)')
+          .select('user_id, started_at, expires_at')
           .eq('conversation_id', conversationId)
           .neq('user_id', userId)
           .gt('expires_at', new Date().toISOString());
 
         if (data) {
-          type TypingRow = {
-            user_id: string;
-            started_at: string;
-            expires_at: string;
-            profiles: { username: string; name: string } | null;
-          };
+          // `typing_indicators.user_id` is a foreign key to `auth.users`, not to
+          // `profiles`, so PostgREST cannot embed the profile in the query above
+          // — it has to be a second lookup.
+          const typingUserIds = [...new Set(data.map(t => t.user_id))];
+          const { data: profiles } = typingUserIds.length
+            ? await supabase
+                .from(DATABASE_TABLES.PROFILES)
+                .select('id, username, name')
+                .in('id', typingUserIds)
+            : { data: [] };
+          const profilesById = new Map((profiles ?? []).map(p => [p.id, p]));
+
           setTypingUsers(
-            (data as TypingRow[])
-              .filter(t => t.profiles)
+            data
+              .filter(t => profilesById.has(t.user_id))
               .map(t => ({
                 userId: t.user_id,
-                username: t.profiles?.username || '',
-                name: t.profiles?.name || '',
+                username: profilesById.get(t.user_id)?.username || '',
+                name: profilesById.get(t.user_id)?.name || '',
                 startedAt: new Date(t.started_at),
               }))
           );

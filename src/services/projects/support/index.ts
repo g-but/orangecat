@@ -9,6 +9,8 @@
  * Last Modified Summary: Created main orchestrator
  */
 
+import type { SupportType } from './types';
+
 // Re-export types
 export * from './types';
 
@@ -47,7 +49,7 @@ class ProjectSupportService {
     return import('./queries').then(m => m.getProjectSupport(projectId, filters, pagination));
   }
 
-  async hasUserSupported(projectId: string, userId: string, supportType?: string) {
+  async hasUserSupported(projectId: string, userId: string, supportType?: SupportType) {
     return import('./queries').then(m => m.hasUserSupported(projectId, userId, supportType));
   }
 

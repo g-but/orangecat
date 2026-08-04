@@ -7,6 +7,7 @@ import { getTableName } from '@/config/entity-registry';
 import { ENTITY_STATUS } from '@/config/database-constants';
 import type { DiscoverTabType } from '@/components/discover/DiscoverTabs';
 import type { Loan } from '@/types/loans';
+import { narrowLoans } from '@/services/loans/queries/narrow';
 import type { Investment } from '@/types/investments';
 import type { GenericPublicEntity } from '@/components/entity/variants/GenericPublicCard';
 
@@ -57,7 +58,7 @@ export function useDiscoverFinancialData(
           logger.error('Error fetching loans', error, 'Discover');
           setLoans([]);
         } else {
-          setLoans(data || []);
+          setLoans(narrowLoans(data || []));
         }
       } catch (error) {
         logger.error('Error fetching loans', error, 'Discover');
@@ -96,7 +97,9 @@ export function useDiscoverFinancialData(
           logger.error('Error fetching investments', error, 'Discover');
           setInvestments([]);
         } else {
-          setInvestments(data || []);
+          // `investments.status`/`currency` are text columns with app-level
+          // unions; investor_count is enriched, not selected.
+          setInvestments((data || []) as unknown as Investment[]);
         }
       } catch (error) {
         logger.error('Error fetching investments', error, 'Discover');

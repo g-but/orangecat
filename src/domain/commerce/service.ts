@@ -1,5 +1,6 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { looseClient } from '@/lib/supabase/untyped';
 import type { UserProduct, UserService, UserCause } from '@/types/database';
 import { STATUS } from '@/config/database-constants';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
@@ -22,7 +23,9 @@ export async function listEntitiesPage(
   table: Table,
   params: ListParams & { limit: number; offset: number }
 ) {
-  const supabase = await createServerClient();
+  // One code path serves every entity table, so the table name and several of
+  // the filtered columns are only known at runtime — see `looseClient`.
+  const supabase = looseClient(await createServerClient());
   const { limit, offset, category, userId, includeOwnDrafts } = params;
 
   // base query for items - dynamic table access for entity registry pattern
@@ -94,8 +97,10 @@ export async function listEntitiesPage(
   // Filter out example/test data after fetching
   // FUTURE: Add is_example boolean column to entity tables and filter at query level — requires a DB migration; current title-based filtering is a temporary workaround
   const exampleTitles = ["Assassin's Creed", 'Example Service', 'Test Service', 'Sample Service'];
-  const filteredItems = (items || []).filter((item: { title?: string; name?: string }) => {
-    const title = item.title || item.name || '';
+  const filteredItems = ((items || []) as Record<string, unknown>[]).filter(item => {
+    // Rows come back column-agnostic (the table varies): some entities title the
+    // record `title`, some `name`.
+    const title = typeof item.title === 'string' ? item.title : String(item.name ?? '');
     return !exampleTitles.some(exampleTitle =>
       title.toLowerCase().includes(exampleTitle.toLowerCase())
     );

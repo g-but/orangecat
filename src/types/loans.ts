@@ -9,8 +9,14 @@ import type { z } from 'zod';
 import { type CurrencyCode } from '@/config/currencies';
 import type { OffsetPagination } from '@/types/pagination';
 import type { loanSchema } from '@/lib/validation/finance';
+import type { Database } from '@/types/database';
+import type { LoanFulfillmentType, LoanType } from '@/config/loans';
 
-type LoanStatus = 'active' | 'paid_off' | 'refinanced' | 'defaulted' | 'cancelled';
+type LoanRow = Database['public']['Tables']['loans']['Row'];
+type LoanOfferRow = Database['public']['Tables']['loan_offers']['Row'];
+
+// Mirrors `loans_status_check` in the baseline migration.
+type LoanStatus = 'draft' | 'active' | 'paid_off' | 'refinanced' | 'defaulted' | 'cancelled';
 
 type LoanOfferStatus = 'pending' | 'accepted' | 'rejected' | 'expired' | 'cancelled';
 
@@ -28,76 +34,31 @@ export type PaymentMethod = 'bitcoin' | 'lightning' | 'bank_transfer' | 'card' |
 
 // ==================== DATABASE TYPES ====================
 
-export interface LoanCategory {
-  id: string;
-  name: string;
-  description?: string;
-  icon?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+export type LoanCategory = Database['public']['Tables']['loan_categories']['Row'];
 
-type LoanType = 'new_request' | 'existing_loan';
-
-type FulfillmentType = 'lightning' | 'onchain' | 'bank_transfer' | 'other';
-
-export interface Loan {
-  id: string;
-  user_id: string;
-  title: string;
-  description?: string;
-  loan_category_id?: string;
-  original_amount: number;
-  remaining_balance: number;
-  interest_rate?: number;
-  monthly_payment?: number;
-  currency: CurrencyCode;
-  lender_name?: string;
-  loan_number?: string;
-  origination_date?: string;
-  maturity_date?: string;
+/**
+ * A `loans` row.
+ *
+ * Columns come straight from the generated schema; only the columns Postgres
+ * stores as `text` under a CHECK constraint are narrowed to the app's unions,
+ * since postgres-meta can't express a CHECK as a union. Those narrowings are
+ * asserted in exactly one place — `narrowLoan()` in
+ * `services/loans/queries/narrow.ts`, at the query boundary.
+ */
+export interface Loan
+  extends Omit<LoanRow, 'status' | 'contact_method' | 'currency' | 'loan_type' | 'fulfillment_type'> {
   status: LoanStatus;
-  is_public: boolean;
-  is_negotiable: boolean;
-  minimum_offer_amount?: number;
-  preferred_terms?: string;
-  contact_method: ContactMethod;
-  // Loan type and fulfillment
-  loan_type?: LoanType;
-  fulfillment_type?: FulfillmentType;
-  // Existing loan details (for refinancing)
-  current_lender?: string;
-  current_interest_rate?: number;
-  desired_rate?: number;
-  // Bitcoin payment addresses
-  bitcoin_address?: string;
-  lightning_address?: string;
-  created_at: string;
-  updated_at: string;
-  paid_off_at?: string;
+  contact_method: ContactMethod | null;
+  currency: CurrencyCode | null;
+  loan_type: LoanType | null;
+  fulfillment_type: LoanFulfillmentType | null;
   // Index signature for BaseEntity compatibility
   [key: string]: unknown;
 }
 
-export interface LoanOffer {
-  id: string;
-  loan_id: string;
-  offerer_id: string;
+export interface LoanOffer extends Omit<LoanOfferRow, 'offer_type' | 'status'> {
   offer_type: LoanOfferType;
-  offer_amount: number;
-  interest_rate?: number;
-  term_months?: number;
-  monthly_payment?: number;
-  terms?: string;
-  conditions?: string;
   status: LoanOfferStatus;
-  is_binding: boolean;
-  expires_at: string;
-  created_at: string;
-  updated_at: string;
-  accepted_at?: string;
-  rejected_at?: string;
   profiles?: {
     username?: string | null;
     display_name?: string | null;

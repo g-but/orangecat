@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import type { ModelTier } from '@/config/ai-models';
+import type { Database } from '@/types/database';
 import { hasActiveByok, type UserApiKey } from '@/services/ai/api-key-service';
 import { applyOrderToKeys, platformPositionFromOrder } from '@/services/ai/key-chain';
 import { API_ROUTES } from '@/config/api-routes';
@@ -34,6 +35,32 @@ export interface UserAIPreferences {
   cached_total_cost_btc: number;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Fill the column defaults the DB declares but the schema types can't express:
+ * every nullable column here is `DEFAULT`-backed, so a row read back may still
+ * carry `null` if it was written explicitly. The UI treats these as settings
+ * with values, so normalize once, on read.
+ */
+function normalizePreferences(
+  row: Database['public']['Tables']['user_ai_preferences']['Row']
+): UserAIPreferences {
+  return {
+    ...row,
+    default_tier: (row.default_tier ?? 'economy') as ModelTier,
+    auto_router_enabled: row.auto_router_enabled ?? true,
+    max_cost_btc: row.max_cost_btc ?? 100,
+    require_vision: row.require_vision ?? false,
+    require_function_calling: row.require_function_calling ?? false,
+    onboarding_completed: row.onboarding_completed ?? false,
+    onboarding_step: row.onboarding_step ?? 0,
+    cached_total_requests: row.cached_total_requests ?? 0,
+    cached_total_tokens: row.cached_total_tokens ?? 0,
+    cached_total_cost_btc: row.cached_total_cost_btc ?? 0,
+    created_at: row.created_at ?? '',
+    updated_at: row.updated_at ?? '',
+  };
 }
 
 export interface AISettingsState {
@@ -95,7 +122,7 @@ export function useAISettings() {
       const primaryKey = keys.find((k: UserApiKey) => k.is_primary) || keys[0] || null;
 
       setState({
-        preferences: prefsData,
+        preferences: prefsData ? normalizePreferences(prefsData) : null,
         keys,
         isLoading: false,
         error: null,

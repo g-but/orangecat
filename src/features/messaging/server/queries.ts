@@ -108,18 +108,16 @@ export async function fetchUserConversations(
     }
 
     // Get user profiles separately to avoid complex joins
-    const userIds = [
-      ...new Set(
-        (allParticipants || []).map((p: ConversationParticipantsRow) => p.user_id).filter(Boolean)
-      ),
-    ];
-    let profilesMap = new Map<string, ProfilesRow>();
+    const userIds = [...new Set((allParticipants || []).map(p => p.user_id).filter(Boolean))];
+    // Only the four columns the participant list renders are selected.
+    type ProfileSummary = Pick<ProfilesRow, 'id' | 'username' | 'name' | 'avatar_url'>;
+    let profilesMap = new Map<string, ProfileSummary>();
     if (userIds.length > 0) {
       const { data: profiles } = await admin
         .from(DATABASE_TABLES.PROFILES)
         .select('id, username, name, avatar_url')
         .in('id', userIds);
-      profilesMap = new Map((profiles || []).map((p: ProfilesRow) => [p.id, p]));
+      profilesMap = new Map((profiles || []).map(p => [p.id, p]));
     }
 
     // Group participants by conversation
@@ -196,20 +194,7 @@ export async function fetchConversationSummary(conversationId: string): Promise<
     )
     .eq('conversation_id', conversationId);
 
-  interface ParticipantWithProfile {
-    user_id: string;
-    role: string;
-    joined_at: string;
-    last_read_at: string | null;
-    is_active: boolean;
-    profiles?: {
-      username?: string;
-      name?: string;
-      avatar_url?: string | null;
-    };
-  }
-
-  const formattedParticipants = (participants || []).map((p: ParticipantWithProfile) => ({
+  const formattedParticipants = (participants || []).map(p => ({
     user_id: p.user_id,
     username: p.profiles?.username || '',
     name: p.profiles?.name || '',
@@ -282,37 +267,15 @@ export async function fetchMessages(
     .eq('is_active', true);
 
   // Create map of user_id -> last_read_at for quick lookup
-  interface ParticipantReadTime {
-    user_id: string;
-    last_read_at: string | null;
-  }
   const participantReadTimes = new Map<string, Date | null>();
-  allParticipants?.forEach((p: ParticipantReadTime) => {
+  allParticipants?.forEach(p => {
     participantReadTimes.set(p.user_id, p.last_read_at ? new Date(p.last_read_at) : null);
   });
 
   const userLastReadAt = participantReadTimes.get(user.id) || null;
 
   // Transform to expected format
-  interface MessageRow {
-    id: string;
-    conversation_id: string;
-    sender_id: string;
-    content: string;
-    message_type: string;
-    metadata: Record<string, unknown> | null;
-    created_at: string;
-    updated_at: string;
-    is_deleted: boolean;
-    edited_at: string | null;
-    profiles?: {
-      id?: string;
-      username?: string;
-      name?: string;
-      avatar_url?: string | null;
-    };
-  }
-  const messages = (data || []).map((m: MessageRow) => {
+  const messages = (data || []).map(m => {
     const messageCreatedAt = new Date(m.created_at);
 
     // For messages sent by current user: calculate read receipt status

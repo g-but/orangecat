@@ -9,8 +9,10 @@
  * Last Modified Summary: Created project support type definitions
  */
 
-// Support type enum (internal to support package)
-type SupportType = 'bitcoin_funding' | 'signature' | 'message' | 'reaction';
+import type { Database } from '@/types/database';
+
+// Support type — the Postgres enum `support_type` is the SSOT
+export type SupportType = Database['public']['Enums']['support_type'];
 
 // Reaction emoji types (internal to support package)
 type ReactionEmoji = '❤️' | '👍' | '🔥' | '🚀' | '💪' | '🎉' | '⭐' | '🙌';
