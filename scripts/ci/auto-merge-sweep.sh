@@ -99,13 +99,32 @@ for number in $(printf '%s' "$prs_json" | jq -r '.[].number'); do
       elif ($checks | length) == 0 then "skip: no checks reported yet"
       elif ($checks | map(pending) | any) then "skip: checks still running"
       elif (($checks | map(ok) | all) | not) then "skip: checks not green"
-      elif $pr.mergeable != "MERGEABLE"
-        then "skip: not mergeable (\($pr.mergeable)/\($pr.mergeStateStatus))"
       else "merge" end
   ')
 
   if [ "$verdict" != "merge" ]; then
     echo "[auto-merge] #${number} ${verdict} — ${title}"
+    continue
+  fi
+
+  # Mergeability is computed lazily by GitHub and is invalidated every time the
+  # base branch moves — so right after a merge (exactly when this workflow runs)
+  # every PR reports UNKNOWN. Poll until GitHub has an answer instead of
+  # treating "not computed yet" as "not mergeable"; otherwise the fast path can
+  # never merge anything and the whole train falls back to the cron.
+  mergeable=""
+  state=""
+  for attempt in 1 2 3 4 5 6; do
+    fresh=$(gh pr view "$number" --repo "$REPO" --json mergeable,mergeStateStatus)
+    mergeable=$(printf '%s' "$fresh" | jq -r '.mergeable')
+    state=$(printf '%s' "$fresh" | jq -r '.mergeStateStatus')
+    [ "$mergeable" != "UNKNOWN" ] && break
+    echo "[auto-merge] #${number} mergeability not computed yet (attempt ${attempt}) — waiting"
+    sleep 5
+  done
+
+  if [ "$mergeable" != "MERGEABLE" ]; then
+    echo "[auto-merge] #${number} skip: not mergeable (${mergeable}/${state}) — ${title}"
     continue
   fi
 
