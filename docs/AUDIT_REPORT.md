@@ -95,7 +95,7 @@ Everything in this report shipped the same day except Phase A, which followed on
 | API polish — responses, session-client, contract test, img | #572 | ✅ merged                                                                                                                    |
 | Phase B — clone dedup + ratchet                            | #567 | ✅ **duplication 2.61% → 1.2%** (447 → 157 clones)                                                                           |
 | Phase C — god-file splits + size gate                      | #566 | ✅ merged. `paymentFlowService` 931 lines → façade + modules.                                                                |
-| Phase A — generated DB types                               | PR   | ✅ `types/database.ts` is now a façade over the live-schema types; found 3 more schema-drift bugs.                          |
+| Phase A — generated DB types                               | #608 | ✅ `types/database.ts` is now a façade over the live-schema types; found 3 more schema-drift bugs.                          |
 
 ### Phase A — shipped (part 2)
 
