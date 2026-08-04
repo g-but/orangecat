@@ -50,11 +50,27 @@ HOLD_LABELS='["hold","no-automerge","do-not-merge","wip"]'
 echo "[auto-merge] sweeping open PRs against ${BASE_BRANCH} in ${REPO}"
 
 # Never add changes to a base that is red or mid-verification.
+#
+# The run has to belong to the CURRENT tip of the base branch. Checking only
+# "the latest CI run" is a trap: right after a merge, the newest run is still
+# the *previous* commit's — and it is green — so the guard would wave through a
+# second merge onto a commit nothing has verified yet. That is exactly the
+# batching this script exists to prevent.
+main_sha=$(gh api "repos/${REPO}/commits/${BASE_BRANCH}" --jq '.sha')
 main_ci=$(gh run list --repo "$REPO" --workflow ci.yml --branch "$BASE_BRANCH" --limit 1 \
   --json status,conclusion,headSha --jq '.[0] // empty')
-if [ -n "$main_ci" ]; then
+
+if [ -z "$main_ci" ]; then
+  echo "[auto-merge] no CI history for ${BASE_BRANCH} — proceeding"
+else
   main_status=$(printf '%s' "$main_ci" | jq -r '.status')
   main_conclusion=$(printf '%s' "$main_ci" | jq -r '.conclusion // ""')
+  main_ci_sha=$(printf '%s' "$main_ci" | jq -r '.headSha')
+
+  if [ "$main_ci_sha" != "$main_sha" ]; then
+    echo "[auto-merge] ${BASE_BRANCH} is at ${main_sha:0:8} but the newest CI run is for ${main_ci_sha:0:8} — waiting for CI to catch up"
+    exit 0
+  fi
   if [ "$main_status" != "completed" ]; then
     echo "[auto-merge] ${BASE_BRANCH} CI is still running — deferring to the next sweep"
     exit 0
