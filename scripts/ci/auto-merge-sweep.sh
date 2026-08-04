@@ -120,6 +120,31 @@ for number in $(printf '%s' "$prs_json" | jq -r '.[].number'); do
 
   if [ "$verdict" != "merge" ]; then
     echo "[auto-merge] #${number} ${verdict} — ${title}"
+
+    # A CANCELLED check is not a verdict, it is noise: CI uses
+    # `concurrency: cancel-in-progress`, so an unrelated newer run on the same
+    # ref can kill a PR's build. Nothing ever re-runs it, the PR is never green,
+    # and it sits in this queue forever — which is exactly how #603 and #604
+    # stranded. Re-run it and let a later sweep judge the real result. Genuine
+    # failures are left alone; only a run with no real failure is retried.
+    if [ "$verdict" = "skip: checks not green" ]; then
+      retry_urls=$(printf '%s' "$pr" | jq -r '
+        [ .statusCheckRollup[]?
+          | select(has("state") | not)
+          | select((.conclusion // "") == "CANCELLED")
+          | .detailsUrl ] as $cancelled
+        | [ .statusCheckRollup[]?
+            | select(((.conclusion // .state // "")
+                      | test("^(FAILURE|TIMED_OUT|ACTION_REQUIRED|STARTUP_FAILURE|ERROR)$"))) ] as $failed
+        | if ($failed | length) == 0 then $cancelled[] else empty end
+      ')
+      for url in $retry_urls; do
+        run_id=$(printf '%s' "$url" | grep -oE '/runs/[0-9]+' | grep -oE '[0-9]+' || true)
+        [ -z "$run_id" ] && continue
+        echo "[auto-merge] #${number} re-running cancelled run ${run_id}"
+        gh run rerun "$run_id" --repo "$REPO" || echo "[auto-merge] #${number} could not re-run ${run_id}" >&2
+      done
+    fi
     continue
   fi
 
