@@ -141,6 +141,13 @@ const APP_SURFACES = [
   '/jobs',
   '/community',
   '/create',
+  '/collaborate',
+  '/home',
+  // Money surfaces. `/pay/<username>` is deliberately NOT here — that one is a
+  // public page for the payer, who needs no account.
+  '/receive',
+  '/send',
+  '/requests',
 ] as const;
 
 const AUTH_SURFACES = ['/auth'] as const;
@@ -414,6 +421,12 @@ export const ROUTES = {
   TIMELINE: '/timeline',
   /** Owner's "get paid" screen — one tap to a scannable QR. */
   RECEIVE: '/receive',
+  /** Public, account-free page a payer lands on. The shareable half of RECEIVE. */
+  PAY: (username: string) => `/pay/${encodeURIComponent(username)}`,
+  /** Outbound half of the money surface — pay a person or a pasted invoice. */
+  SEND: '/send',
+  /** Person-to-person asks for money, both directions. */
+  REQUESTS: '/requests',
   // Personalized "Following" home feed (people/projects you follow)
   FEED: '/home',
   // Open-roles collaborator board (project_roles)

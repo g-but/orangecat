@@ -1,6 +1,7 @@
 'use client';
 import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
+import { extractProfiles, type Connection, type FollowWithProfile } from './followProfiles';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -17,24 +18,6 @@ interface ProfilePeopleTabProps {
   profile: ScalableProfile;
   isOwnProfile?: boolean;
 }
-
-interface Connection {
-  id: string;
-  username: string;
-  name: string;
-  avatar_url: string | null;
-  bio: string | null;
-}
-
-type FollowWithProfile = {
-  profiles: {
-    id: string;
-    username: string;
-    display_name?: string;
-    bio?: string | null;
-    avatar_url?: string | null;
-  } | null;
-};
 
 /**
  * ProfilePeopleTab Component
@@ -77,7 +60,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
               profiles!follows_following_id_fkey (
                 id,
                 username,
-                display_name,
+                name,
                 bio,
                 avatar_url
               )
@@ -89,10 +72,8 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
             return;
           }
           if (!followingError && followingData) {
-            const followingProfiles = (followingData as FollowWithProfile[])
-              .map(item => item.profiles)
-              .filter((p): p is NonNullable<typeof p> => p !== null);
-            setFollowing(followingProfiles as Connection[]);
+            const followingProfiles = extractProfiles(followingData as FollowWithProfile[]);
+            setFollowing(followingProfiles);
           }
 
           // Fetch followers
@@ -104,7 +85,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
               profiles!follows_follower_id_fkey (
                 id,
                 username,
-                display_name,
+                name,
                 bio,
                 avatar_url
               )
@@ -116,10 +97,8 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
             return;
           }
           if (!followersError && followersData) {
-            const followerProfiles = (followersData as FollowWithProfile[])
-              .map(item => item.profiles)
-              .filter((p): p is NonNullable<typeof p> => p !== null);
-            setFollowers(followerProfiles as Connection[]);
+            const followerProfiles = extractProfiles(followersData as FollowWithProfile[]);
+            setFollowers(followerProfiles);
           }
         } else {
           // For other profiles, use API (will work if public data)
@@ -135,10 +114,8 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
             }
             if (followingData.success && followingData.data && followingData.data.data) {
               // Extract profiles from nested structure
-              const followingProfiles = (followingData.data.data as FollowWithProfile[])
-                .map(item => item.profiles)
-                .filter((p): p is NonNullable<typeof p> => p !== null);
-              setFollowing(followingProfiles as Connection[]);
+              const followingProfiles = extractProfiles(followingData.data.data as FollowWithProfile[]);
+              setFollowing(followingProfiles);
             }
           }
 
@@ -154,10 +131,8 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
             }
             if (followersData.success && followersData.data && followersData.data.data) {
               // Extract profiles from nested structure
-              const followerProfiles = (followersData.data.data as FollowWithProfile[])
-                .map(item => item.profiles)
-                .filter((p): p is NonNullable<typeof p> => p !== null);
-              setFollowers(followerProfiles as Connection[]);
+              const followerProfiles = extractProfiles(followersData.data.data as FollowWithProfile[]);
+              setFollowers(followerProfiles);
             }
           }
         }

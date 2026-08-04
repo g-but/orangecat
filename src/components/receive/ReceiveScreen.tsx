@@ -18,6 +18,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle2, Clock, Copy, Check, Loader2, Share2, Wallet, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PaymentQRCode } from '@/components/payment/PaymentQRCode';
+import { SharePayLink } from '@/components/receive/SharePayLink';
+import { MoneyTabs } from '@/components/money/MoneyTabs';
 import { ContributionAmountInput } from '@/components/payment/ContributionAmountInput';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
@@ -182,8 +184,10 @@ export function ReceiveScreen() {
       <h1 className="text-2xl font-bold text-fg-primary">{RECEIVE_COPY.title}</h1>
       <p className="mt-1 text-sm text-fg-secondary">{RECEIVE_COPY.subtitle}</p>
 
+      <MoneyTabs className="mt-5" />
+
       {showAddressTab && (
-        <div className="mt-5 grid grid-cols-2 gap-1 rounded-lg bg-surface-raised p-1">
+        <div className="mt-3 grid grid-cols-2 gap-1 rounded-lg bg-surface-raised p-1">
           {(['address', 'request'] as const).map(t => (
             <button
               key={t}
@@ -228,6 +232,11 @@ export function ReceiveScreen() {
               {RECEIVE_COPY.share}
             </Button>
           </div>
+          {/* The QR above serves the person standing in front of you; this
+              serves everyone else. Different artifact for a different job. */}
+          {overview?.username && (
+            <SharePayLink username={overview.username} className="w-full" />
+          )}
         </div>
       ) : request && settleState === 'paid' ? (
         <div className="mt-8 flex flex-col items-center gap-3 text-center">
@@ -341,6 +350,8 @@ export function ReceiveScreen() {
           >
             {generating ? RECEIVE_COPY.generating : RECEIVE_COPY.generate}
           </Button>
+          {/* Not everyone you're asking is in the room. Same amount, sendable. */}
+          {overview?.username && <SharePayLink username={overview.username} amountBtc={amount} />}
         </div>
       )}
     </div>

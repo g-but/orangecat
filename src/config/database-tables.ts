@@ -55,6 +55,7 @@ export const DATABASE_TABLES = {
 
   // Payments & Orders
   PAYMENT_INTENTS: 'payment_intents',
+  PAYMENT_REQUESTS: 'payment_requests',
   ORDERS: 'orders',
   CONTRIBUTIONS: 'contributions',
 

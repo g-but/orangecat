@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, ExternalLink } from 'lucide-react';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
+import { ThemeModeRow } from '@/components/ui/ThemeModeRow';
 import type { MutableRefObject } from 'react';
 import { ROUTES } from '@/config/routes';
 
@@ -149,6 +150,15 @@ export function UserProfileDropdownPanel({
             </button>
           );
         })}
+      </div>
+
+      <div className="border-t border-border-subtle my-1" />
+
+      {/* Theme lives here so small screens can reach it — the header toggle is
+          desktop-only. Not keyboard-indexed with the nav items above because it
+          acts in place instead of navigating. */}
+      <div className="py-1" role="none">
+        <ThemeModeRow showDescription={showDescriptions} />
       </div>
 
       <div className="border-t border-border-subtle my-1" />
