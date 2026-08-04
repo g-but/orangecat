@@ -60,10 +60,17 @@ export function CatChatToolbar({
         </p>
       </div>
 
-      <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
-        {activePanel === 'chat' && <QuotaMeter quota={quota} />}
-        {panelLink('context')}
-        {panelLink('controls')}
+      {/* min-w-0 (not flex-shrink-0): the quota chip must be allowed to shrink
+          and truncate. Pinned at its natural width it overflowed the toolbar
+          on phones in the capped state and slid under the panel toggle. The
+          two panel links stay fixed — they're the controls that must remain
+          tappable. */}
+      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+        {activePanel === 'chat' && <QuotaMeter quota={quota} className="min-w-0" />}
+        <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
+          {panelLink('context')}
+          {panelLink('controls')}
+        </div>
       </div>
     </div>
   );

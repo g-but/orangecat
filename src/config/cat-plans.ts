@@ -243,4 +243,12 @@ export const CAT_UPSELL = {
     'Add your own API key for unlimited messages — you pay your provider directly, OrangeCat never marks it up.',
   /** Link label for the BYOK CTA. */
   byokAction: 'Add your key',
+  /**
+   * Capped-state label. Two widths because the meter sits in a crowded
+   * toolbar: the long form only renders where there's room (≥sm), and the
+   * short form keeps the chip from overflowing into the panel controls on
+   * phones. Copy lives HERE, not inline in the component.
+   */
+  cappedLabel: 'Daily limit reached',
+  cappedLabelShort: 'Limit reached',
 } as const;

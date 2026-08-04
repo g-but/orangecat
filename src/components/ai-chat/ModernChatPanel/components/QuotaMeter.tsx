@@ -70,46 +70,66 @@ export function QuotaMeter({ quota, className }: QuotaMeterProps) {
     ? `You've used all ${dailyLimit} ${noun} for today · ${CAT_UPSELL.byokShort}`
     : `${requestsRemaining} of ${dailyLimit} ${noun} left today · ${CAT_UPSELL.byokShort}`;
 
+  // CAPPED: the user can't send anything, so the only useful control is the
+  // escape. Render ONE link (not label + separate CTA) — two nowrap links side
+  // by side overflowed the toolbar on phones and collided with the panel
+  // toggle. Single chip, short label on mobile, never wider than its space.
+  if (isCapped) {
+    return (
+      <Link
+        href={ROUTES.SETTINGS_AI}
+        className={cn(
+          'inline-flex min-w-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs',
+          'border-status-negative/30 bg-status-negative-subtle text-status-negative',
+          'hover:bg-status-negative/15',
+          className
+        )}
+        title={`${explanation} — ${CAT_UPSELL.byokFull}`}
+        aria-live="polite"
+      >
+        <KeyRound className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+        <span className="truncate">
+          <span className="sm:hidden">{CAT_UPSELL.cappedLabelShort}</span>
+          <span className="hidden sm:inline">{CAT_UPSELL.cappedLabel}</span>
+        </span>
+        <span className="hidden flex-shrink-0 font-medium underline decoration-dotted underline-offset-2 md:inline">
+          {CAT_UPSELL.byokAction} →
+        </span>
+        <span className="sr-only"> {explanation}</span>
+      </Link>
+    );
+  }
+
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs',
-        isCapped && 'border-status-negative/30 bg-status-negative-subtle text-status-negative',
+        'inline-flex min-w-0 items-center gap-2 rounded-md border px-2 py-1 text-xs',
         isNearCap && 'border-status-warning/30 bg-status-warning-subtle text-status-warning',
-        !isCapped &&
-          !isNearCap &&
-          isPro &&
-          'border-accent-warm/30 bg-accent-warm/10 text-fg-primary',
-        !isCapped && !isNearCap && !isPro && 'border-subtle bg-surface-raised text-fg-secondary',
+        !isNearCap && isPro && 'border-accent-warm/30 bg-accent-warm/10 text-fg-primary',
+        !isNearCap && !isPro && 'border-subtle bg-surface-raised text-fg-secondary',
         className
       )}
       title={explanation}
     >
-      {isPro && !isCapped && !isNearCap && (
-        <Sparkles className="h-3 w-3 text-accent-warm" aria-hidden="true" />
+      {isPro && !isNearCap && (
+        <Sparkles className="h-3 w-3 flex-shrink-0 text-accent-warm" aria-hidden="true" />
       )}
       <Link
         href={ROUTES.SETTINGS_USAGE}
-        className="whitespace-nowrap hover:underline"
+        className="truncate whitespace-nowrap hover:underline"
         aria-live="polite"
         title="See your full usage — what counts, when it resets, and your plan"
       >
-        {isCapped ? (
-          'Daily limit reached'
-        ) : (
-          <>
-            {isPro && 'Pro · '}
-            {requestsRemaining} of {dailyLimit}
-            <span className="hidden sm:inline"> {noun}</span> left
-            <span className="hidden sm:inline"> today</span>
-          </>
-        )}
+        {isPro && 'Pro · '}
+        {requestsRemaining} of {dailyLimit}
+        <span className="hidden sm:inline"> {noun}</span> left
+        <span className="hidden sm:inline"> today</span>
         <span className="sr-only"> {explanation}</span>
       </Link>
-      {(isCapped || isNearCap) && (
+      {isNearCap && (
         <Link
           href={ROUTES.SETTINGS_AI}
-          className="whitespace-nowrap font-medium underline decoration-dotted underline-offset-2 hover:no-underline"
+          className="hidden flex-shrink-0 whitespace-nowrap font-medium underline decoration-dotted underline-offset-2 hover:no-underline sm:inline"
           title="Bring your own API key — unlimited messages, you pay your provider directly"
         >
           {CAT_UPSELL.byokAction} →

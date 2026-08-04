@@ -151,10 +151,40 @@ function significantStems(text: string): Set<string> {
 }
 
 /**
+ * How many of a fact's significant stems must appear in a memory for the
+ * LEXICAL layer to call it a match.
+ *
+ * A majority rule (ceil(n/2)) is WRONG for two-word facts: it needs only one
+ * hit, so "photography skills" matches "Has strong cooking skills" on the
+ * shared stem "skill" and silently deletes an unrelated memory. Deleting the
+ * wrong memory is the worst failure this code has, so multi-word facts require
+ * TWO stem hits; looser paraphrases ("speaking French" → "Knows French", one
+ * shared stem) are caught by the semantic layer instead, which scores them
+ * 0.45+ while unrelated pairs stay ≤0.29.
+ */
+function requiredStemHits(factStemCount: number): number {
+  return factStemCount <= 1 ? 1 : 2;
+}
+
+/** Do `a`'s significant stems appear in `b` often enough to be the same fact? */
+function stemOverlapMatches(aStems: Set<string>, bStems: Set<string>): boolean {
+  if (aStems.size === 0) {
+    return false;
+  }
+  let hits = 0;
+  for (const s of aStems) {
+    if (bStems.has(s)) {
+      hits++;
+    }
+  }
+  return hits >= requiredStemHits(aStems.size);
+}
+
+/**
  * Shared lexical predicate: does phrase `a` refer to (roughly) the same fact
- * as phrase `b`? Containment in either direction, or a majority of `a`'s
- * significant stemmed words appearing in `b` — the same rule the forget
- * matcher uses, so "what gets forgotten" and "what stays suppressed" agree.
+ * as phrase `b`? Containment in either direction, or enough shared stems —
+ * the SAME rule the forget matcher uses, so "what gets forgotten", "what stays
+ * suppressed", and "which memory gets edited" can never disagree.
  */
 function phrasesOverlap(a: string, b: string): boolean {
   const na = a.toLowerCase();
@@ -162,18 +192,7 @@ function phrasesOverlap(a: string, b: string): boolean {
   if (nb.includes(na) || na.includes(nb)) {
     return true;
   }
-  const aStems = significantStems(na);
-  if (aStems.size === 0) {
-    return false;
-  }
-  const bStems = significantStems(nb);
-  let hits = 0;
-  for (const s of aStems) {
-    if (bStems.has(s)) {
-      hits++;
-    }
-  }
-  return hits >= Math.max(1, Math.ceil(aStems.size / 2));
+  return stemOverlapMatches(significantStems(na), significantStems(nb));
 }
 
 /**
@@ -221,20 +240,14 @@ export async function forgetMemoriesMatching(
     // "photography skills" hit "Is a professional photographer…" and
     // "speaking French" hit "Knows French" — the exact phrasings that used to
     // fall through and leave memories the user disowned in place.
-    const needed = Math.max(1, Math.ceil(factStems.size / 2));
     let matched = false;
     for (let i = 0; i < corpus.length; i++) {
       const m = corpus[i];
       const c = m.content.toLowerCase();
-      let hits = 0;
-      for (const s of factStems) {
-        if (memoryStems[i].has(s)) {
-          hits++;
-        }
-      }
       // Containment either way ("photography" ⊂ "Has photography skills…"),
-      // or the stemmed-majority rule above.
-      if (c.includes(norm) || norm.includes(c) || (factStems.size > 0 && hits >= needed)) {
+      // or enough shared stems (see requiredStemHits — two-word facts need
+      // TWO hits, so a single shared "skills" can't delete a stranger).
+      if (c.includes(norm) || norm.includes(c) || stemOverlapMatches(factStems, memoryStems[i])) {
         doomed.set(m.id, m.content);
         matched = true;
       }

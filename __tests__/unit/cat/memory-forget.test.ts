@@ -121,26 +121,55 @@ const INCIDENT_CORPUS: Row[] = [
 ];
 
 describe('forgetMemoriesMatching — 2026-08-02 incident regression (stemming)', () => {
-  it('the exact phrases the model passed now delete every targeted memory', async () => {
+  it('stemming still reaches inflected forms when enough words match', async () => {
     const { client } = supabaseWithCorpus(INCIDENT_CORPUS);
-    const result = await forgetMemoriesMatching(client, 'u1', [
-      'photography skills',
-      'handmade ceramics',
-      'speaking French',
-    ]);
+    // "handmade ceramics" → "handmade ceramic mug": both stems hit, so the
+    // inflection ceramics→ceramic is matched WITHOUT the unsafe 1-of-2 rule.
+    const result = await forgetMemoriesMatching(client, 'u1', ['handmade ceramics']);
+    expect(result.deleted).toEqual(['Selling a handmade ceramic coffee mug for CHF 40']);
+    expect(result.notFound).toEqual([]);
+  });
 
+  it('a single word the user names matches on containment alone', async () => {
+    const { client } = supabaseWithCorpus(INCIDENT_CORPUS);
+    // One significant stem → one hit required, and plain containment covers
+    // both photography memories. This is how a user removes a whole topic.
+    const result = await forgetMemoriesMatching(client, 'u1', ['photography']);
     expect(result.deleted).toEqual(
       expect.arrayContaining([
-        // "photography" must reach "photographer" and "photography background"
-        'Is a professional photographer who speaks fluent French and owns a rarely used drone.',
         'Has a documentary photography background',
-        // "ceramics" must reach "ceramic"
-        'Selling a handmade ceramic coffee mug for CHF 40',
-        // "speaking French" must reach "Knows French" (1-of-2 majority)
-        'Knows French',
+        'Is a professional photographer who speaks fluent French and owns a rarely used drone.',
       ])
     );
-    expect(result.notFound).toEqual([]);
+    expect(result.deleted).toHaveLength(2);
+  });
+
+  it('a single shared stem NEVER deletes an unrelated memory (data-loss guard)', async () => {
+    // The 2026-08-02 regression: a majority rule made two-word facts need only
+    // ONE stem hit, so forgetting "photography skills" also deleted "Has
+    // strong cooking skills" — they share nothing but "skill".
+    const { client } = supabaseWithCorpus([
+      { id: 'k1', content: 'Has strong cooking skills' },
+      { id: 'k2', content: 'Has photography skills' },
+      { id: 'k3', content: 'Has excellent teaching skills' },
+    ]);
+    const result = await forgetMemoriesMatching(client, 'u1', ['photography skills']);
+    expect(result.deleted).toEqual(['Has photography skills']);
+    expect(result.deleted).not.toContain('Has strong cooking skills');
+    expect(result.deleted).not.toContain('Has excellent teaching skills');
+  });
+
+  it('a one-shared-stem paraphrase is left to the semantic layer, not deleted lexically', async () => {
+    // "speaking French" vs "Knows French" share only the stem "french". In
+    // prod embeddings score this 0.61 (well over the 0.45 floor) and it IS
+    // deleted; lexically it must NOT be, or the cooking-skills bug returns.
+    const { client } = supabaseWithCorpus([
+      { id: 'f1', content: 'Knows French' },
+      { id: 'f2', content: 'Loves French cinema' },
+    ]);
+    const result = await forgetMemoriesMatching(client, 'u1', ['speaking French']);
+    expect(result.deleted).toEqual([]);
+    expect(result.notFound).toEqual(['speaking French']);
   });
 
   it('never touches unrelated memories', async () => {
