@@ -77,6 +77,29 @@ const TOOL_TRIGGER_KEYWORDS = [
   'not responding',
   'eval',
   'harness',
+  // interest / topic discovery — explore_topic. Without these, "I'm interested
+  // in longevity" matches NO keyword and the tool pass never runs, so the whole
+  // discovery capability stays unreachable.
+  'interested in',
+  'interest in',
+  "i'm into",
+  'im into',
+  'passionate about',
+  'care about',
+  'curious about',
+  'tell me about',
+  'what is happening with',
+  "what's happening with",
+  'learn about',
+  'explore',
+  'anything about',
+  'anyone working on',
+  'who else is',
+  'get involved',
+  'put me in touch',
+  'introduce me',
+  'introduction to',
+  'reach out to',
   // read surface / query_my_data ("how am I doing?")
   'how much',
   'earning',
@@ -329,6 +352,30 @@ export const PLATFORM_TOOL_DEFINITION = [
           },
         },
         required: ['facts'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'explore_topic',
+      description:
+        "Explore a TOPIC or INTEREST across all of OrangeCat and find the people behind it. Use whenever the user expresses an interest or curiosity rather than naming a specific thing to find ('I'm interested in longevity', 'anyone working on Bitcoin education?', 'what's happening with regenerative farming?', 'introduce me to people doing X'). Returns related public projects, research, products, services, causes and events — each attributed to its owner — plus the people working in that space, so you can offer a real introduction. Prefer this over search_platform for interests; search_platform is for finding a specific known thing.",
+      parameters: {
+        type: 'object',
+        properties: {
+          topic: {
+            type: 'string',
+            description:
+              "The interest or subject area, in the user's own words (e.g. 'longevity research', 'Bitcoin education for kids').",
+          },
+          entityType: {
+            type: 'string',
+            description:
+              'Optional: restrict to one entity type (project, research, product, service, cause, event, …). Omit to search everything, which is usually right.',
+          },
+        },
+        required: ['topic'],
       },
     },
   },

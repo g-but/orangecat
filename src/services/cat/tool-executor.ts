@@ -11,7 +11,7 @@ import { generateOffers } from './offer-engine';
 import { resolveAiAssistTarget } from '@/lib/ai/assist-target';
 import { isValidEntityType, type EntityType } from '@/config/entity-registry';
 import { PREFILLABLE_ENTITY_TYPES } from './tool-use-detection';
-import { MY_DATA_TOPICS, type MyDataTopic } from './my-data-topics';
+import { handleExploreTopic, handleQueryMyData } from './tool-handlers-lookup';
 import { fetchWebsiteText, resolveRequestedUrl } from './website-analysis';
 import { runCatHealthProbes } from './health-probes';
 import type {
@@ -213,56 +213,12 @@ Explain this to the user in plain language: which provider is healthy, degraded,
     }
   }
 
-  // ── query_my_data ────────────────────────────────────────────────────────
-  // Read-only mirror of the user's own platform state (listings, earnings,
-  // bookings, wallets, notifications, tasks). No permission gate — it mutates
-  // nothing — and it returns prose, not JSON, so weak models paraphrase
-  // instead of echoing raw structures.
+  // Read-only lookups live in tool-handlers-lookup.ts (size limit); dispatch.
+  if (toolName === 'explore_topic') {
+    return handleExploreTopic(supabase, userId, toolCall, onToolCall);
+  }
   if (toolName === 'query_my_data') {
-    const parsedArgs = (() => {
-      try {
-        return JSON.parse(toolCall.function.arguments ?? '{}') as {
-          topic?: string;
-          days?: number;
-        };
-      } catch {
-        return {} as { topic?: string; days?: number };
-      }
-    })();
-    const topic = (
-      MY_DATA_TOPICS.includes(parsedArgs.topic as MyDataTopic) ? parsedArgs.topic : 'overview'
-    ) as MyDataTopic;
-
-    onToolCall?.({ id: toolCall.id, name: toolName, status: 'running', args: { topic } });
-    try {
-      const { queryMyData } = await import('./my-data');
-      const report = await queryMyData(supabase, userId, topic, { days: parsedArgs.days });
-      onToolCall?.({
-        id: toolCall.id,
-        name: toolName,
-        status: 'completed',
-        resultCount: 1,
-        results: [],
-      });
-      return {
-        role: 'tool',
-        tool_call_id: toolCall.id,
-        content: `LIVE DATA (the user's own, just read):\n${report}\n\nAnswer the user's question from THIS data only. Amounts are BTC; present them in the user's display currency style when natural. If a section says it could not be read, say so honestly for that part — never fill gaps with guesses.`,
-      };
-    } catch (err) {
-      onToolCall?.({
-        id: toolCall.id,
-        name: toolName,
-        status: 'failed',
-        error: err instanceof Error ? err.message : 'unknown',
-      });
-      return {
-        role: 'tool',
-        tool_call_id: toolCall.id,
-        content:
-          'Reading the data failed — tell the user honestly that you could not read their live data right now, and that their dashboard shows the authoritative numbers.',
-      };
-    }
+    return handleQueryMyData(supabase, userId, toolCall, onToolCall);
   }
 
   // ── search_platform ──────────────────────────────────────────────────────
