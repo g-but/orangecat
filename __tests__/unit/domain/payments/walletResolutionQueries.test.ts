@@ -357,6 +357,24 @@ describe('resolveSellerWallet — group entities', () => {
     });
   });
 
+  it('picks the group’s oldest wallet when several could receive', async () => {
+    // group_wallets has no is_primary, so age is the whole tie-break. Without a
+    // deterministic order, two equally capable treasury wallets would receive
+    // in whatever order Postgres happened to return them.
+    const { client } = createFakeSupabase({
+      [DATABASE_TABLES.ENTITY_WALLETS]: [],
+      [DATABASE_TABLES.GROUP_WALLETS]: [
+        groupWallet({ id: 'gw-new', lightning_address: 'new@ln', created_at: '2026-06-01' }),
+        groupWallet({ id: 'gw-old', lightning_address: 'old@ln', created_at: '2026-01-01' }),
+      ],
+    });
+    getAdminClientMock.mockReturnValue(client);
+
+    expect(await resolveSellerWallet({} as never, 'group', GROUP)).toMatchObject({
+      wallet_id: 'gw-old',
+    });
+  });
+
   it('returns null when the group has wallets but none can receive', async () => {
     const { client } = createFakeSupabase({
       [DATABASE_TABLES.ENTITY_WALLETS]: [],
