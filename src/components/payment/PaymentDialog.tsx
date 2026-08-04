@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { PaymentQRCode } from './PaymentQRCode';
 import { PaymentStatusIndicator } from './PaymentStatusIndicator';
-import { ContributionAmountInput } from './ContributionAmountInput';
+import { AmountField } from '@/components/money/AmountField';
 import { usePaymentFlow } from '@/hooks/usePaymentFlow';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
@@ -43,6 +43,7 @@ interface PaymentDialogProps {
 }
 
 import { DEFAULT_CONTRIBUTION_BTC } from '@/config/payment-presets';
+import { PAY_MAX_BTC, PAY_MIN_BTC } from '@/config/pay';
 
 export function PaymentDialog({
   open,
@@ -133,9 +134,11 @@ export function PaymentDialog({
             <>
               {isContribution && (
                 <div className="space-y-4">
-                  <ContributionAmountInput
+                  <AmountField
                     value={contributionAmount}
                     onChange={setContributionAmount}
+                    minBtc={PAY_MIN_BTC}
+                    maxBtc={PAY_MAX_BTC}
                   />
                   {showMore ? (
                     <div className="space-y-4">

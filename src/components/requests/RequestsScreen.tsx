@@ -23,9 +23,11 @@ import { Input } from '@/components/ui/Input';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { MoneyTabs } from '@/components/money/MoneyTabs';
 import { MoneyReceipt } from '@/components/money/MoneyReceipt';
-import { ContributionAmountInput } from '@/components/payment/ContributionAmountInput';
+import { AmountField } from '@/components/money/AmountField';
+import { RequestList } from '@/components/requests/RequestList';
+import { PayerStatus, isRequestablePayer } from '@/components/requests/PayerStatus';
+import { useRecipientCheck } from '@/components/send/useRecipientCheck';
 import { useRequireAuth } from '@/hooks/useAuth';
-import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import {
   createRequest,
   closeRequest,
@@ -33,16 +35,9 @@ import {
   type PaymentRequestRow,
 } from '@/services/payment-requests/request-client';
 import { REQUEST_COPY, REQUEST_NOTE_MAX_LENGTH } from '@/config/payment-requests';
-import { PAY_MAX_BTC, PAY_MIN_BTC, buildPayUrl, payLinkOrigin } from '@/config/pay';
+import { PAY_MAX_BTC, PAY_MIN_BTC } from '@/config/pay';
 import { DEFAULT_TIP_BTC } from '@/config/tips';
 import { haptic } from '@/lib/haptics';
-
-const STATUS_STYLES: Record<PaymentRequestRow['status'], string> = {
-  pending: 'text-fg-secondary',
-  paid: 'text-status-positive',
-  declined: 'text-fg-tertiary',
-  cancelled: 'text-fg-tertiary',
-};
 
 interface SentRequest {
   name: string;
@@ -58,6 +53,7 @@ export function RequestsScreen() {
   const [outgoing, setOutgoing] = useState<PaymentRequestRow[]>([]);
 
   const [payer, setPayer] = useState('');
+  const payerCheck = useRecipientCheck(payer);
   const [amount, setAmount] = useState(DEFAULT_TIP_BTC);
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -173,7 +169,9 @@ export function RequestsScreen() {
           className="min-h-11"
         />
 
-        <ContributionAmountInput
+        <PayerStatus check={payerCheck} handle={payer} />
+
+        <AmountField
           value={amount}
           onChange={setAmount}
           minBtc={PAY_MIN_BTC}
@@ -195,7 +193,7 @@ export function RequestsScreen() {
           variant="accent"
           className="w-full"
           onClick={handleSubmit}
-          disabled={submitting || !payer.trim() || amount <= 0}
+          disabled={submitting || !isRequestablePayer(payerCheck) || amount <= 0}
           isLoading={submitting}
         >
           {submitting ? REQUEST_COPY.submitting : REQUEST_COPY.submit}
@@ -219,80 +217,5 @@ export function RequestsScreen() {
         onClose={id => handleClose(id, 'cancelled')}
       />
     </div>
-  );
-}
-
-function RequestList({
-  title,
-  emptyText,
-  emptyIcon: EmptyIcon,
-  rows,
-  direction,
-  onClose,
-}: {
-  title: string;
-  emptyText: string;
-  emptyIcon: typeof Inbox;
-  rows: PaymentRequestRow[];
-  direction: 'incoming' | 'outgoing';
-  onClose: (id: string) => void;
-}) {
-  const { formatAmountBtc } = useDisplayCurrency();
-
-  return (
-    <section className="mt-8">
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-caps text-fg-tertiary">
-        {title}
-      </h2>
-
-      {rows.length === 0 ? (
-        <p className="flex items-center gap-2 rounded-lg border border-subtle px-3 py-4 text-sm text-fg-tertiary">
-          <EmptyIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {emptyText}
-        </p>
-      ) : (
-        <ul className="divide-y divide-subtle rounded-lg border border-subtle">
-          {rows.map(row => {
-            const name = row.counterparty_name ?? REQUEST_COPY.unknownParty;
-            return (
-              <li key={row.id} className="flex items-center justify-between gap-3 px-3 py-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-fg-primary">{formatAmountBtc(row.amount_btc)}</p>
-                  <p className="truncate text-sm text-fg-secondary">
-                    {direction === 'incoming' ? REQUEST_COPY.from(name) : REQUEST_COPY.to(name)}
-                    {row.note ? ` · ${row.note}` : ''}
-                  </p>
-                  <p className={`text-xs ${STATUS_STYLES[row.status]}`}>
-                    {REQUEST_COPY.statusLabels[row.status]}
-                  </p>
-                </div>
-
-                {row.status === 'pending' && (
-                  <div className="flex shrink-0 gap-2">
-                    {/* The ask is a suggestion: the pay page opens prefilled and
-                        stays editable, exactly like a shared pay link. */}
-                    {direction === 'incoming' && row.counterparty_username && (
-                      <Button
-                        variant="accent"
-                        size="sm"
-                        href={buildPayUrl(payLinkOrigin(), row.counterparty_username, {
-                          amountBtc: row.amount_btc,
-                          note: row.note ?? undefined,
-                        })}
-                      >
-                        {REQUEST_COPY.pay}
-                      </Button>
-                    )}
-                    <Button variant="outline" size="sm" onClick={() => onClose(row.id)}>
-                      {direction === 'incoming' ? REQUEST_COPY.decline : REQUEST_COPY.cancel}
-                    </Button>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </section>
   );
 }

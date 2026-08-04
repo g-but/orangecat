@@ -14,6 +14,13 @@ export const REQUEST_COPY = {
 
   payerLabel: 'From',
   payerPlaceholder: 'Their username',
+
+  /** Live payer resolution — see PayerStatus for why these differ from /send. */
+  payerChecking: 'Looking them up…',
+  payerReady: (name: string) => `Asking ${name}.`,
+  payerNotFound: (handle: string) => `Nobody on OrangeCat goes by @${handle}.`,
+  payerExternal:
+    'A request goes to an OrangeCat account. A Lightning address can be paid, but not asked.',
   noteLabel: "What's it for? (optional)",
   notePlaceholder: 'Dinner, rent, tickets…',
 

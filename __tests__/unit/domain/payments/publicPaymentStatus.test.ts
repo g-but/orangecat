@@ -192,7 +192,12 @@ describe('the recipient hears about a claim exactly once', () => {
 
     const result = await acknowledgePublicPayment(PI_ID, TOKEN);
 
-    expect(result.status).toBe(STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED);
+    // Identical answer to the first claim: still waiting on the recipient.
+    expect(result).toEqual({
+      status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
+      paid_at: null,
+      requires_recipient_confirmation: true,
+    });
     expect(dispatchMock).not.toHaveBeenCalled();
     expect(fake.updates).toEqual([]);
   });

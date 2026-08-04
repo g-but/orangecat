@@ -18,7 +18,7 @@
  *    than paid blind.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight, Loader2, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -28,13 +28,20 @@ import { PageHeading } from '@/components/layout/PageHeading';
 import { MoneyTabs } from '@/components/money/MoneyTabs';
 import { MoneyReceipt } from '@/components/money/MoneyReceipt';
 import { StatusNote } from '@/components/money/StatusNote';
-import { ContributionAmountInput } from '@/components/payment/ContributionAmountInput';
+import { AmountField } from '@/components/money/AmountField';
+import { MoneyActionBar } from '@/components/money/MoneyActionBar';
 import { RecipientStatus } from '@/components/send/RecipientStatus';
 import { SendReviewStep } from '@/components/send/SendReviewStep';
 import { useRecipientCheck } from '@/components/send/useRecipientCheck';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
-import { sendInvoice, sendToPerson, type SendOutcome } from '@/services/send/send-client';
+import {
+  sendInvoice,
+  sendToPerson,
+  fetchSendCapability,
+  type SendOutcome,
+  type SendCapability,
+} from '@/services/send/send-client';
 import { parseBolt11 } from '@/lib/bitcoin/bolt11';
 import { haptic } from '@/lib/haptics';
 import { SEND_COPY, SEND_NOTE_MAX_LENGTH } from '@/config/send';
@@ -59,10 +66,24 @@ export function SendScreen() {
   const [memo, setMemo] = useState('');
   const [invoice, setInvoice] = useState('');
 
+  const [capability, setCapability] = useState<SendCapability | null>(null);
   const [reviewing, setReviewing] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<SendOutcome | null>(null);
+
+  // Asked once, before the form is offered — see fetchSendCapability.
+  useEffect(() => {
+    let active = true;
+    void fetchSendCapability().then(c => {
+      if (active) {
+        setCapability(c);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const recipientCheck = useRecipientCheck(tab === 'person' ? recipient : '');
 
@@ -98,10 +119,26 @@ export function SendScreen() {
     }
   }, [tab, invoice, recipient, amount, memo]);
 
-  if (authLoading) {
+  if (authLoading || !capability) {
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-fg-tertiary" />
+      </div>
+    );
+  }
+
+  // Nothing on this screen can work without a wallet to spend from, so say so
+  // instead of rendering a form that ends in a refusal.
+  if (!capability.canSend) {
+    return (
+      <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center">
+        <Wallet className="h-12 w-12 text-fg-tertiary" aria-hidden="true" />
+        <h2 className="text-lg font-semibold text-fg-primary">{SEND_COPY.noWalletTitle}</h2>
+        <p className="text-sm text-fg-secondary">{capability.message ?? SEND_COPY.noWalletBody}</p>
+        <Button variant="accent" href={ROUTES.DASHBOARD.WALLETS}>
+          {SEND_COPY.noWalletCta}
+        </Button>
+        <MoneyTabs className="mt-4 w-full" />
       </div>
     );
   }
@@ -177,7 +214,7 @@ export function SendScreen() {
 
                 <RecipientStatus check={recipientCheck} handle={recipient} />
 
-                <ContributionAmountInput
+                <AmountField
                   value={amount}
                   onChange={setAmount}
                   minBtc={PAY_MIN_BTC}
@@ -221,26 +258,21 @@ export function SendScreen() {
             {error && <p className="text-sm text-status-negative">{error}</p>}
             <p className="text-center text-xs text-fg-tertiary">{SEND_COPY.disclaimer}</p>
 
-            <Button
-              variant="accent"
-              className="w-full"
-              onClick={() => (tab === 'invoice' ? void handleSend() : setReviewing(true))}
-              disabled={!canReview || sending}
-              isLoading={sending}
-            >
-              {sending
-                ? SEND_COPY.sending
-                : tab === 'invoice'
-                  ? SEND_COPY.confirm
-                  : SEND_COPY.review}
-            </Button>
-
-            <p className="text-center text-xs text-fg-tertiary">
-              <Wallet className="mr-1 inline h-3 w-3" aria-hidden="true" />
-              <a href={ROUTES.DASHBOARD.WALLETS} className="underline hover:text-fg-secondary">
-                {SEND_COPY.noWalletCta}
-              </a>
-            </p>
+            <MoneyActionBar>
+              <Button
+                variant="accent"
+                className="w-full"
+                onClick={() => (tab === 'invoice' ? void handleSend() : setReviewing(true))}
+                disabled={!canReview || sending}
+                isLoading={sending}
+              >
+                {sending
+                  ? SEND_COPY.sending
+                  : tab === 'invoice'
+                    ? SEND_COPY.confirm
+                    : SEND_COPY.review}
+              </Button>
+            </MoneyActionBar>
           </div>
         </>
       )}

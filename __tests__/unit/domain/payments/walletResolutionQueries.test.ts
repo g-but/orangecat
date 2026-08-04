@@ -21,6 +21,7 @@ import {
   resolveSellerWallet,
 } from '@/domain/payments/walletResolutionService';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getEntityMetadata } from '@/config/entity-registry';
 import { createFakeSupabase, type Row } from '../../../../test-utils/fakeSupabase';
 
 jest.mock('@/utils/logger', () => ({
@@ -152,6 +153,23 @@ describe('resolveUserWallet — the wallet set it is allowed to choose from', ()
     });
   });
 
+  it('prefers the wallet the owner declared as on-chain over a stray address', async () => {
+    // A Lightning-typed wallet can still carry an address field. Paying to it
+    // because it happened to be first would ignore the owner's own declaration.
+    const { client } = createFakeSupabase({
+      [DATABASE_TABLES.WALLETS]: [
+        wallet({ id: 'w-stray', wallet_type: 'lightning', address_or_xpub: 'bc1qstray' }),
+        wallet({ id: 'w-declared', wallet_type: 'onchain', address_or_xpub: 'bc1qdeclared' }),
+      ],
+    });
+
+    expect(await resolveUserWallet(client, OWNER)).toEqual({
+      method: 'onchain',
+      wallet_id: 'w-declared',
+      onchain_address: 'bc1qdeclared',
+    });
+  });
+
   it('rejects an xpub as a payable address and carries the key instead', async () => {
     // Handing `bitcoin:zpub...` to a payer is a QR no wallet can pay; it shipped
     // once. The key must travel as onchain_xpub so an address is derived later.
@@ -197,6 +215,71 @@ describe('resolveSpecificUserWallet — ownership is part of the query', () => {
     const { client } = createFakeSupabase({ [DATABASE_TABLES.WALLETS]: rows });
 
     expect(await resolveSpecificUserWallet(client, OWNER, 'w-dead')).toBeNull();
+  });
+});
+
+describe('resolveSellerWallet — a wallet tied to one specific entity', () => {
+  const product = getEntityMetadata('product');
+
+  function linkedWorld(links: Row[], wallets: Row[]) {
+    const fake = createFakeSupabase({
+      [DATABASE_TABLES.ENTITY_WALLETS]: links,
+      [product.tableName]: [{ id: 'prod-1', [product.userIdField]: 'actor-1' }],
+      [DATABASE_TABLES.ACTORS]: [
+        { id: 'actor-1', actor_type: 'user', user_id: OWNER, group_id: null },
+      ],
+      [DATABASE_TABLES.WALLETS]: wallets,
+    });
+    getAdminClientMock.mockReturnValue(fake.client);
+    return fake;
+  }
+
+  it('ignores a link to a wallet the owner has since deactivated', async () => {
+    linkedWorld(
+      [{ entity_type: 'product', entity_id: 'prod-1', wallet_id: 'w-dead', is_primary: true }],
+      [
+        wallet({ id: 'w-dead', is_active: false, lightning_address: 'dead@ln' }),
+        wallet({ id: 'w-default', is_primary: true, lightning_address: 'default@ln' }),
+      ]
+    );
+
+    // Falls through to the owner's profile default rather than paying a wallet
+    // that is no longer in use.
+    expect(await resolveSellerWallet({} as never, 'product', 'prod-1')).toMatchObject({
+      wallet_id: 'w-default',
+    });
+  });
+
+  it('uses the link the owner marked primary when several are tied to the entity', async () => {
+    linkedWorld(
+      [
+        // Non-primary listed first: only real ordering picks the right one.
+        { entity_type: 'product', entity_id: 'prod-1', wallet_id: 'w-other', is_primary: false },
+        { entity_type: 'product', entity_id: 'prod-1', wallet_id: 'w-chosen', is_primary: true },
+      ],
+      [
+        wallet({ id: 'w-other', lightning_address: 'other@ln' }),
+        wallet({ id: 'w-chosen', lightning_address: 'chosen@ln' }),
+      ]
+    );
+
+    expect(await resolveSellerWallet({} as never, 'product', 'prod-1')).toMatchObject({
+      wallet_id: 'w-chosen',
+    });
+  });
+
+  it('does not borrow a wallet linked to a DIFFERENT entity', async () => {
+    linkedWorld(
+      [{ entity_type: 'product', entity_id: 'prod-2', wallet_id: 'w-theirs', is_primary: true }],
+      [
+        wallet({ id: 'w-theirs', lightning_address: 'other-entity@ln' }),
+        wallet({ id: 'w-default', is_primary: true, lightning_address: 'default@ln' }),
+      ]
+    );
+
+    expect(await resolveSellerWallet({} as never, 'product', 'prod-1')).toMatchObject({
+      wallet_id: 'w-default',
+    });
   });
 });
 
@@ -246,6 +329,31 @@ describe('resolveSellerWallet — group entities', () => {
       method: 'onchain',
       wallet_id: 'gw-live',
       onchain_address: 'bc1qlive',
+    });
+  });
+
+  it('routes a group-OWNED entity to the group treasury, not the founder’s pocket', async () => {
+    // The entity is a product owned by a group actor. `groups.created_by` is
+    // also the ownership field, so a wrong branch here quietly pays club income
+    // into the founder's personal wallet.
+    const product = getEntityMetadata('product');
+    const fake = createFakeSupabase({
+      [DATABASE_TABLES.ENTITY_WALLETS]: [],
+      [product.tableName]: [{ id: 'prod-1', [product.userIdField]: 'actor-g' }],
+      [DATABASE_TABLES.ACTORS]: [
+        { id: 'actor-g', actor_type: 'group', user_id: 'founder-1', group_id: GROUP },
+      ],
+      [DATABASE_TABLES.WALLETS]: [
+        wallet({ id: 'w-founder', profile_id: 'founder-1', lightning_address: 'founder@ln' }),
+      ],
+      [DATABASE_TABLES.GROUP_WALLETS]: [groupWallet({ id: 'gw-ours', lightning_address: 'ours@ln' })],
+    });
+    getAdminClientMock.mockReturnValue(fake.client);
+
+    expect(await resolveSellerWallet({} as never, 'product', 'prod-1')).toEqual({
+      method: 'lightning_address',
+      wallet_id: 'gw-ours',
+      lightning_address: 'ours@ln',
     });
   });
 

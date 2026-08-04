@@ -35,3 +35,24 @@ export function sendToPerson(recipient: string, amountBtc: number, memo?: string
 export function sendInvoice(invoice: string) {
   return post({ invoice });
 }
+
+export interface SendCapability {
+  canSend: boolean;
+  /** Present when `canSend` is false — already payer-readable, shown as-is. */
+  message?: string;
+}
+
+/**
+ * Whether this user can send, asked before the form is offered rather than
+ * discovered on the final tap. Treated as capable if the check itself fails:
+ * a network hiccup must not lock someone out of paying.
+ */
+export async function fetchSendCapability(): Promise<SendCapability> {
+  try {
+    const res = await fetch(API_ROUTES.SEND, { method: 'GET' });
+    const json = await res.json();
+    return json?.success ? (json.data as SendCapability) : { canSend: true };
+  } catch {
+    return { canSend: true };
+  }
+}
