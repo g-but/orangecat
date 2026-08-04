@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+#
+# Merge every open PR that is ready and fully green, then re-arm CI on main.
+#
+# WHY THIS EXISTS
+# ---------------
+# Nobody reviews PRs on this repo — the owner explicitly does not want to be in
+# the merge loop, and agent sessions are barred from merging by hand. So the
+# policy lives here, in the repo, where it is visible, revocable, and applies
+# uniformly to every PR instead of depending on who opened it.
+#
+# THE POLICY
+#   merge a PR  <=>  it is not a draft
+#                    AND carries no hold label
+#                    AND has at least one check
+#                    AND every check has finished green
+#                    AND GitHub reports it cleanly mergeable
+#
+# Anything else is left alone for the next sweep. Nothing here forces a merge:
+# a red or pending PR simply waits, and a draft waits forever. To hold a ready
+# PR back, mark it a draft or add one of the hold labels below.
+#
+# ONE PR PER SWEEP, AND ONLY ONTO A GREEN MAIN
+# --------------------------------------------
+# A PR's checks prove *that PR against the main it branched from* — not against
+# the other eleven PRs sitting next to it. Merging a batch in one pass would put
+# a combination onto main that nothing ever built. So this script merges at most
+# one PR, then hands control back to CI: the merge train advances one car per
+# sweep, and every car is verified on main before the next one couples.
+#
+# For the same reason it refuses to merge while main's CI is red or still
+# running. Red main => stop adding changes until it is fixed; running CI => the
+# answer is not in yet. Both simply defer to the next sweep.
+#
+# THE CD RE-ARM (do not remove)
+#   A push made with the default GITHUB_TOKEN does NOT trigger workflows. CI
+#   runs on push-to-main and CD chains off CI, so a merge from this script would
+#   otherwise land on main and never deploy. The explicit workflow_dispatch of
+#   CI at the end restores that chain: CI runs on main -> CD fires -> box gets
+#   the new build. Silent no-deploy is the failure mode this guards against.
+
+set -euo pipefail
+
+REPO="${GH_REPO:-maonakamoto/orangecat}"
+BASE_BRANCH="${BASE_BRANCH:-main}"
+
+# A PR wearing any of these is never merged automatically.
+HOLD_LABELS='["hold","no-automerge","do-not-merge","wip"]'
+
+echo "[auto-merge] sweeping open PRs against ${BASE_BRANCH} in ${REPO}"
+
+# Never add changes to a base that is red or mid-verification.
+main_ci=$(gh run list --repo "$REPO" --workflow ci.yml --branch "$BASE_BRANCH" --limit 1 \
+  --json status,conclusion,headSha --jq '.[0] // empty')
+if [ -n "$main_ci" ]; then
+  main_status=$(printf '%s' "$main_ci" | jq -r '.status')
+  main_conclusion=$(printf '%s' "$main_ci" | jq -r '.conclusion // ""')
+  if [ "$main_status" != "completed" ]; then
+    echo "[auto-merge] ${BASE_BRANCH} CI is still running — deferring to the next sweep"
+    exit 0
+  fi
+  if [ "$main_conclusion" != "success" ]; then
+    echo "[auto-merge] ${BASE_BRANCH} CI is ${main_conclusion} — refusing to merge onto a broken base" >&2
+    exit 0
+  fi
+fi
+
+prs_json=$(gh pr list --repo "$REPO" --state open --base "$BASE_BRANCH" --limit 50 \
+  --json number,title,isDraft,mergeable,mergeStateStatus,labels,statusCheckRollup)
+
+count=$(printf '%s' "$prs_json" | jq 'length')
+if [ "$count" -eq 0 ]; then
+  echo "[auto-merge] no open PRs"
+  exit 0
+fi
+
+merged_any=0
+
+for number in $(printf '%s' "$prs_json" | jq -r '.[].number'); do
+  pr=$(printf '%s' "$prs_json" | jq -c --argjson n "$number" '.[] | select(.number == $n)')
+  title=$(printf '%s' "$pr" | jq -r '.title')
+
+  # A rollup entry is either a CheckRun (status + conclusion) or a commit
+  # StatusContext (state) — external services like Snyk report as the latter.
+  verdict=$(printf '%s' "$pr" | jq -r --argjson hold "$HOLD_LABELS" '
+    def ok:
+      if has("state") then (.state == "SUCCESS")
+      else ((.status == "COMPLETED")
+            and ((.conclusion // "") | test("^(SUCCESS|NEUTRAL|SKIPPED)$"))) end;
+    def pending:
+      if has("state") then (.state == "PENDING")
+      else (.status != "COMPLETED") end;
+
+    . as $pr
+    | (($pr.statusCheckRollup) // []) as $checks
+    | if $pr.isDraft then "skip: draft"
+      elif ([$pr.labels[]?.name] | any(. as $l | $hold | index($l) != null))
+        then "skip: hold label"
+      elif ($checks | length) == 0 then "skip: no checks reported yet"
+      elif ($checks | map(pending) | any) then "skip: checks still running"
+      elif (($checks | map(ok) | all) | not) then "skip: checks not green"
+      elif $pr.mergeable != "MERGEABLE"
+        then "skip: not mergeable (\($pr.mergeable)/\($pr.mergeStateStatus))"
+      else "merge" end
+  ')
+
+  if [ "$verdict" != "merge" ]; then
+    echo "[auto-merge] #${number} ${verdict} — ${title}"
+    continue
+  fi
+
+  echo "[auto-merge] #${number} green and ready — merging: ${title}"
+  if gh pr merge "$number" --repo "$REPO" --squash --delete-branch; then
+    merged_any=1
+    echo "[auto-merge] #${number} merged"
+    # One car per sweep: let CI verify this on main before coupling the next.
+    break
+  else
+    # Losing a race (someone merged first, or main moved underneath) is normal;
+    # the next sweep re-evaluates from fresh state.
+    echo "[auto-merge] #${number} merge failed — leaving for the next sweep" >&2
+  fi
+done
+
+if [ "$merged_any" -eq 1 ]; then
+  echo "[auto-merge] re-arming CI on ${BASE_BRANCH} so CD deploys the merge"
+  gh workflow run ci.yml --repo "$REPO" --ref "$BASE_BRANCH"
+else
+  echo "[auto-merge] nothing merged; CD not triggered"
+fi
