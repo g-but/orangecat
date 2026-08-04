@@ -14,6 +14,7 @@ import { Copy, Check, ExternalLink, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
+import { QR_RENDER } from '@/config/payment-qr';
 
 interface PaymentQRCodeProps {
   /** QR data string (bolt11 uppercased or bitcoin: URI) */
@@ -82,10 +83,10 @@ export function PaymentQRCode({
         <QRCodeSVG
           value={qrData}
           size={size}
-          level="M"
+          level={QR_RENDER.level}
           includeMargin
-          bgColor="#FFFFFF"
-          fgColor="#000000"
+          bgColor={QR_RENDER.bgColor}
+          fgColor={QR_RENDER.fgColor}
         />
       </div>
 

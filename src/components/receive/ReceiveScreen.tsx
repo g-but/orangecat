@@ -15,11 +15,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { CheckCircle2, Clock, Copy, Check, Loader2, Share2, Wallet, Zap } from 'lucide-react';
+import { Clock, Copy, Check, Loader2, Share2, Wallet, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { PageHeading } from '@/components/layout/PageHeading';
 import { PaymentQRCode } from '@/components/payment/PaymentQRCode';
 import { SharePayLink } from '@/components/receive/SharePayLink';
 import { MoneyTabs } from '@/components/money/MoneyTabs';
+import { MoneyReceipt } from '@/components/money/MoneyReceipt';
 import { ContributionAmountInput } from '@/components/payment/ContributionAmountInput';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
@@ -38,6 +41,7 @@ import {
   RECEIVE_MAX_BTC,
   RECEIVE_POLL_INTERVAL_MS,
 } from '@/config/receive';
+import { QR_RENDER } from '@/config/payment-qr';
 import { DEFAULT_TIP_BTC } from '@/config/tips';
 import { ROUTES } from '@/config/routes';
 
@@ -181,28 +185,22 @@ export function ReceiveScreen() {
 
   return (
     <div className="mx-auto w-full max-w-md px-4 py-6">
-      <h1 className="text-2xl font-bold text-fg-primary">{RECEIVE_COPY.title}</h1>
+      <PageHeading>{RECEIVE_COPY.title}</PageHeading>
       <p className="mt-1 text-sm text-fg-secondary">{RECEIVE_COPY.subtitle}</p>
 
       <MoneyTabs className="mt-5" />
 
       {showAddressTab && (
-        <div className="mt-3 grid grid-cols-2 gap-1 rounded-lg bg-surface-raised p-1">
-          {(['address', 'request'] as const).map(t => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={`min-h-11 rounded-md px-3 text-sm font-medium transition-colors ${
-                activeTab === t
-                  ? 'bg-surface-base text-fg-primary shadow-sm'
-                  : 'text-fg-secondary hover:text-fg-primary'
-              }`}
-            >
-              {t === 'address' ? RECEIVE_COPY.addressTab : RECEIVE_COPY.requestTab}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          className="mt-3"
+          label="Receive method"
+          value={activeTab}
+          onChange={setTab}
+          items={[
+            { value: 'address', label: RECEIVE_COPY.addressTab },
+            { value: 'request', label: RECEIVE_COPY.requestTab },
+          ]}
+        />
       )}
 
       {activeTab === 'address' && address ? (
@@ -210,11 +208,11 @@ export function ReceiveScreen() {
           <div className="rounded-lg bg-surface-base p-4 shadow-sm">
             <QRCodeSVG
               value={`lightning:${address}`}
-              size={256}
-              level="M"
+              size={QR_RENDER.defaultSize}
+              level={QR_RENDER.level}
               includeMargin
-              bgColor="#FFFFFF"
-              fgColor="#000000"
+              bgColor={QR_RENDER.bgColor}
+              fgColor={QR_RENDER.fgColor}
             />
           </div>
           <p className="flex items-center gap-2 font-mono text-sm text-fg-primary">
@@ -239,13 +237,15 @@ export function ReceiveScreen() {
           )}
         </div>
       ) : request && settleState === 'paid' ? (
-        <div className="mt-8 flex flex-col items-center gap-3 text-center">
-          <CheckCircle2 className="h-16 w-16 text-status-positive" />
-          <p className="text-xl font-semibold text-fg-primary">{RECEIVE_COPY.paidTitle}</p>
-          <p className="text-sm text-fg-secondary">{RECEIVE_COPY.paidBody}</p>
+        <MoneyReceipt
+          title={RECEIVE_COPY.paidTitle}
+          amountBtc={request.amountBtc}
+          counterpartyLabel="Via"
+          counterparty={request.methodLabel}
+          fallbackBody={RECEIVE_COPY.paidBody}
+        >
           <Button
             variant="accent"
-            className="mt-2"
             onClick={() => {
               setRequest(null);
               setSettleState('pending');
@@ -253,7 +253,7 @@ export function ReceiveScreen() {
           >
             {RECEIVE_COPY.again}
           </Button>
-        </div>
+        </MoneyReceipt>
       ) : request && settleState === 'expired' ? (
         <div className="mt-8 flex flex-col items-center gap-3 text-center">
           <Clock className="h-12 w-12 text-fg-tertiary" />
@@ -310,22 +310,15 @@ export function ReceiveScreen() {
               <p className="mb-2 text-sm font-medium text-fg-secondary">
                 {RECEIVE_COPY.walletLabel}
               </p>
+              {/* "Primary" is the same kind of choice as any named wallet, so
+                  it is one more option in the same list rather than a
+                  hand-written twin of the button beside it. */}
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setWalletId(undefined)}
-                  className={`min-h-11 rounded-full border px-4 text-sm transition-colors ${
-                    walletId === undefined
-                      ? 'border-accent-primary bg-accent-primary/10 text-fg-primary'
-                      : 'border-default text-fg-secondary hover:text-fg-primary'
-                  }`}
-                >
-                  Primary
-                </button>
-                {wallets.map(w => (
+                {[{ id: undefined, label: RECEIVE_COPY.primaryWallet }, ...wallets].map(w => (
                   <button
-                    key={w.id}
+                    key={w.id ?? 'primary'}
                     type="button"
+                    aria-pressed={walletId === w.id}
                     onClick={() => setWalletId(w.id)}
                     className={`min-h-11 rounded-full border px-4 text-sm transition-colors ${
                       walletId === w.id

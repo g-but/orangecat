@@ -16,9 +16,8 @@ import { Check, Copy, Link2, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { cn } from '@/lib/utils';
-import { buildPayUrl, PAY_COPY } from '@/config/pay';
+import { buildPayUrl, payLinkOrigin, PAY_COPY } from '@/config/pay';
 import { RECEIVE_SHARE_COPY } from '@/config/receive';
-import { SITE_URL } from '@/config/brand';
 
 interface SharePayLinkProps {
   username: string;
@@ -31,9 +30,7 @@ export function SharePayLink({ username, amountBtc, className }: SharePayLinkPro
   const { copied, copy } = useCopyToClipboard();
   const [includeAmount, setIncludeAmount] = useState(false);
 
-  // window.location.origin keeps preview/self-host deploys honest; SITE_URL is
-  // the server-render fallback so the first paint isn't a broken link.
-  const origin = typeof window === 'undefined' ? SITE_URL : window.location.origin;
+  const origin = payLinkOrigin();
   const url = useMemo(
     () =>
       buildPayUrl(origin, username, {

@@ -42,6 +42,8 @@ export const RECEIVE_COPY = {
   requestHint: 'Exact amount — you’ll see it the moment it’s paid.',
   amountLabel: 'Amount',
   walletLabel: 'Receive with',
+  /** The default choice in the wallet switcher — "whichever wallet is primary". */
+  primaryWallet: 'Primary',
   generate: 'Show payment QR',
   generating: 'Creating…',
   scan: 'Waiting for payment…',
