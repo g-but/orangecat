@@ -208,6 +208,11 @@ const REST_RETRIES = 4;
 const REST_BACKOFF_MS = 1500;
 
 async function rest(method, path, { body, prefer } = {}) {
+  // Retry logging names the table only. A PostgREST path carries its filters in
+  // the query string — `?user_id=eq.<uuid>` — and those ids come from env, so
+  // logging the whole path leaks identifiers into the journal for no diagnostic
+  // gain. CodeQL flags it as clear-text logging of environment data, correctly.
+  const resource = path.split('?')[0];
   let lastErr;
   for (let attempt = 1; attempt <= REST_RETRIES; attempt++) {
     let res;
@@ -219,7 +224,7 @@ async function rest(method, path, { body, prefer } = {}) {
       });
     } catch (err) {
       lastErr = new Error(`PostgREST ${method} ${path} → transport: ${err.message}`);
-      await sleepBackoff(attempt, `${method} ${path}`, lastErr.message);
+      await sleepBackoff(attempt, `${method} ${resource}`, 'transport');
       continue;
     }
     if (res.ok) {
@@ -229,7 +234,7 @@ async function rest(method, path, { body, prefer } = {}) {
     const detail = await res.text();
     lastErr = new Error(`PostgREST ${method} ${path} → ${res.status}: ${detail}`);
     if (res.status < 500) {throw lastErr;}
-    await sleepBackoff(attempt, `${method} ${path}`, `${res.status}`);
+    await sleepBackoff(attempt, `${method} ${resource}`, `${res.status}`);
   }
   throw lastErr;
 }
