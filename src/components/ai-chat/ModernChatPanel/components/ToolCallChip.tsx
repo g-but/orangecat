@@ -39,6 +39,12 @@ const TOOL_LABELS: Record<string, ToolLabel> = {
     noResults: 'Nothing to draft',
     failed: "Couldn't draft",
   },
+  explore_topic: {
+    running: 'Exploring',
+    completed: n => `Found ${n} related ${n === 1 ? 'result' : 'results'}`,
+    noResults: 'Nothing on this topic yet',
+    failed: "Couldn't explore that topic",
+  },
   query_my_data: {
     running: 'Reading your data',
     completed: () => 'Read your live data',

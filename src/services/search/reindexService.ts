@@ -16,17 +16,15 @@ import { ENTITY_STATUS } from '@/config/database-constants';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { logger } from '@/utils/logger';
 import { introduceMatches } from '@/services/match/reverseMatch';
-
-interface IndexItem {
-  entity_type: string;
-  entity_id: string;
-  title: string;
-  url: string;
-  text: string;
-  updated_at: string | null;
-  /** 0–1 outcome/quality signal, blended into ranking (secondary to relevance). */
-  quality: number;
-}
+import { clamp01, recency, isVerified, profileQuality, causeQuality } from './reindex-scoring';
+import {
+  buildCorpus,
+  buildWishlistText,
+  ENTITY_CFG,
+  EVENT_PUBLIC_STATUSES,
+  PUBLIC_FLAG_ENTITY_TYPES,
+  type IndexItem,
+} from './reindex-sources';
 
 export interface ReconcileResult {
   success: true;
@@ -40,83 +38,8 @@ export interface ReconcileResult {
 }
 
 // ── Quality signals (real outcomes) ─────────────────────────────────────────
-const DAY_MS = 86_400_000;
-const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
-/** Recency 1→0 over ~90 days; null/unknown ⇒ low. */
-const recency = (ts: string | null | undefined): number => {
-  if (!ts) {
-    return 0.1;
-  }
-  const days = (Date.now() - new Date(ts).getTime()) / DAY_MS;
-  return Math.min(1, Math.max(0.05, 1 - days / 90));
-};
-const isVerified = (status: string | null | undefined): boolean =>
-  status === 'verified' || status === 'approved';
-/** People: recency of activity + followers + verification. */
-const profileQuality = (o: {
-  lastActiveAt?: string | null;
-  followers?: number;
-  verified?: boolean;
-}): number =>
-  clamp01(
-    0.5 * recency(o.lastActiveAt) +
-      0.3 * Math.min((o.followers ?? 0) / 5, 1) +
-      0.2 * (o.verified ? 1 : 0)
-  );
-/** Causes: recency + how close to goal (funding traction). */
-const causeQuality = (o: { updatedAt?: string | null; raised?: number; goal?: number }): number => {
-  const ratio = o.goal && o.goal > 0 ? Math.min((o.raised ?? 0) / o.goal, 1) : 0;
-  return clamp01(0.6 * recency(o.updatedAt) + 0.4 * ratio);
-};
-
 const EMBED_BATCH = 96;
 const key = (t: string, id: string) => `${t}:${id}`;
-
-/**
- * A wishlist's "need" text = its own title/description PLUS its items' — the
- * real demand detail usually lives in the items, not the thin container. This
- * is what gets embedded so a need can be matched to the supply that meets it.
- */
-async function buildWishlistText(
-  supabase: any,
-  w: { id: string; title?: string | null; description?: string | null }
-): Promise<string> {
-  const parts: string[] = [w.title, w.description].filter(Boolean) as string[];
-  const { data: items } = await supabase
-    .from(DATABASE_TABLES.WISHLIST_ITEMS)
-    .select('title, description')
-    .eq('wishlist_id', w.id)
-    .limit(50);
-  for (const it of items ?? []) {
-    if (it.title) {
-      parts.push(it.title);
-    }
-    if (it.description) {
-      parts.push(it.description);
-    }
-  }
-  return parts.join('. ').trim();
-}
-
-/** Entity types whose public rows are embedded into the search corpus.
- *  The allow-list is a deliberate scope decision; table + path come from the registry SSOT. */
-const INDEXABLE_ENTITY_TYPES = [
-  'product',
-  'service',
-  'cause',
-  // Projects are the "what's being built" side — including work published from
-  // FleetCrown. Same generic branch (title + description, gated on status=active,
-  // url /projects/:id), so a buyer searching by meaning ("someone building a
-  // Bitcoin invoicing tool") hits the project, not just an exact keyword.
-  'project',
-] as const satisfies readonly EntityType[];
-
-const ENTITY_CFG: Record<string, { table: string; basePath: string }> = Object.fromEntries(
-  INDEXABLE_ENTITY_TYPES.map(t => {
-    const meta = getEntityMetadata(t);
-    return [t, { table: meta.tableName, basePath: meta.publicBasePath }];
-  })
-);
 
 const isNewer = (a: string | null, b: string | null) => {
   if (!a) {
@@ -198,6 +121,53 @@ export async function reconcileOne(
         };
       }
     }
+  } else if (PUBLIC_FLAG_ENTITY_TYPES.includes(type as (typeof PUBLIC_FLAG_ENTITY_TYPES)[number])) {
+    // Types gated on is_public AND status, not status alone. Research is the
+    // headline case: it was absent from the corpus entirely, so an interest
+    // search for a scientific topic could never surface the research entity
+    // that is literally about it.
+    const meta = getEntityMetadata(type as EntityType);
+    const { data } = await supabase
+      .from(meta.tableName)
+      .select('id, title, description, status, is_public, updated_at')
+      .eq('id', id)
+      .maybeSingle();
+    if (data && data.is_public && data.status === ENTITY_STATUS.ACTIVE) {
+      const text = [data.title, data.description].filter(Boolean).join('. ').trim();
+      if (text) {
+        item = {
+          entity_type: type,
+          entity_id: data.id,
+          title: data.title || 'Untitled',
+          url: `${meta.publicBasePath}/${data.id}`,
+          text,
+          updated_at: data.updated_at ?? null,
+          quality: clamp01(recency(data.updated_at)),
+        };
+      }
+    }
+  } else if (type === 'event') {
+    // Events use a multi-state publish gate rather than status='active'.
+    const meta = getEntityMetadata('event');
+    const { data } = await supabase
+      .from(meta.tableName)
+      .select('id, title, description, status, updated_at')
+      .eq('id', id)
+      .maybeSingle();
+    if (data && EVENT_PUBLIC_STATUSES.includes(data.status)) {
+      const text = [data.title, data.description].filter(Boolean).join('. ').trim();
+      if (text) {
+        item = {
+          entity_type: 'event',
+          entity_id: data.id,
+          title: data.title || 'Untitled',
+          url: `${meta.publicBasePath}/${data.id}`,
+          text,
+          updated_at: data.updated_at ?? null,
+          quality: clamp01(recency(data.updated_at)),
+        };
+      }
+    }
   } else if (type === 'wishlist') {
     // The demand side. A public, active wishlist is a standing "I need X" —
     // indexed into the same vector space as supply so the two can be matched.
@@ -273,107 +243,6 @@ export async function reconcileOne(
 }
 
 /** Build the full current searchable corpus (profiles + active indexable entities). */
-async function buildCorpus(supabase: any): Promise<IndexItem[]> {
-  const items: IndexItem[] = [];
-
-  // Follower counts (one query) → per-profile connection signal.
-  const followerCount = new Map<string, number>();
-  const { data: follows } = await supabase.from(DATABASE_TABLES.FOLLOWS).select('following_id');
-  for (const f of follows ?? []) {
-    if (f.following_id) {
-      followerCount.set(f.following_id, (followerCount.get(f.following_id) ?? 0) + 1);
-    }
-  }
-
-  const { data: profiles } = await supabase
-    .from(DATABASE_TABLES.PROFILES)
-    .select(
-      'id, username, name, bio, location_city, updated_at, last_active_at, verification_status'
-    )
-    .not('username', 'is', null)
-    .not('bio', 'is', null);
-  for (const p of profiles ?? []) {
-    const text = [p.name, p.bio, p.location_city].filter(Boolean).join('. ').trim();
-    if (!text) {
-      continue;
-    }
-    items.push({
-      entity_type: 'profile',
-      entity_id: p.id,
-      title: p.name || p.username,
-      url: `/profiles/${p.username}`,
-      text,
-      updated_at: p.updated_at ?? null,
-      quality: profileQuality({
-        lastActiveAt: p.last_active_at,
-        followers: followerCount.get(p.id) ?? 0,
-        verified: isVerified(p.verification_status),
-      }),
-    });
-  }
-
-  for (const type of INDEXABLE_ENTITY_TYPES) {
-    const { table, basePath } = ENTITY_CFG[type];
-    const cols =
-      type === 'cause'
-        ? 'id, title, description, updated_at, total_raised, goal_amount'
-        : 'id, title, description, updated_at';
-    const { data } = await supabase.from(table).select(cols).eq('status', ENTITY_STATUS.ACTIVE);
-    for (const e of data ?? []) {
-      const text = [e.title, e.description].filter(Boolean).join('. ').trim();
-      if (!text) {
-        continue;
-      }
-      items.push({
-        entity_type: type,
-        entity_id: e.id,
-        title: e.title || 'Untitled',
-        url: `${basePath}/${e.id}`,
-        text,
-        updated_at: e.updated_at ?? null,
-        quality:
-          type === 'cause'
-            ? causeQuality({
-                updatedAt: e.updated_at,
-                raised: Number(e.total_raised ?? 0),
-                goal: Number(e.goal_amount ?? 0),
-              })
-            : clamp01(recency(e.updated_at)),
-      });
-    }
-  }
-
-  // Wishlists = the demand side. Index public + active ones so a standing
-  // "I need X" lives in the same vector space as the "haves" (products/
-  // services) and can be matched to what would meet it.
-  const { data: wishlists } = await supabase
-    .from(DATABASE_TABLES.WISHLISTS)
-    .select('id, title, description, updated_at')
-    .eq('visibility', 'public')
-    .eq('is_active', true);
-  for (const w of wishlists ?? []) {
-    const text = await buildWishlistText(supabase, w);
-    if (!text) {
-      continue;
-    }
-    items.push({
-      entity_type: 'wishlist',
-      entity_id: w.id,
-      title: w.title || 'Wishlist',
-      url: `/wishlists/${w.id}`,
-      text,
-      updated_at: w.updated_at ?? null,
-      quality: clamp01(recency(w.updated_at)),
-    });
-  }
-
-  return items;
-}
-
-/**
- * Incremental sweep (cron safety net) or full re-embed (`full: true`). Embeds new/
- * changed items, refreshes quality_score for unchanged ones, prunes stale rows.
- */
 export async function reconcileCorpus(
   supabase: any,
   { full }: { full: boolean }

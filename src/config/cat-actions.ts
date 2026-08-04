@@ -795,6 +795,43 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     enabled: true,
   },
 
+  request_introduction: {
+    id: 'request_introduction',
+    name: 'Request Introduction',
+    description:
+      "Put the user in touch with the person behind an entity they discovered: opens a direct conversation and sends their intro message. Use after explore_topic when the user wants to connect ('introduce me', 'put me in touch', 'reach out to them'). Draft the message in the USER's voice — who they are and why they're reaching out — and show it to them before sending.",
+    category: 'communication',
+    icon: Users,
+    riskLevel: 'high',
+    requiresConfirmation: true,
+    parameters: [
+      {
+        name: 'entity_type',
+        type: 'string',
+        required: true,
+        description: 'Type of the entity from the discovery results (project, research, service, …)',
+      },
+      {
+        name: 'entity_id',
+        type: 'entity_id',
+        required: true,
+        description: 'Id of that entity — its owner is who gets the message',
+      },
+      {
+        name: 'message',
+        type: 'string',
+        required: true,
+        description:
+          "The intro to send, written in the user's first person. Say who they are and why this work interests them. Min 10 chars.",
+      },
+    ],
+    examples: [
+      'Introduce me to whoever is running that longevity study',
+      'Put me in touch with the person behind that project',
+    ],
+    enabled: true,
+  },
+
   book_service: {
     id: 'book_service',
     name: 'Book Service',

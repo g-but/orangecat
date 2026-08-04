@@ -7,6 +7,7 @@
  */
 
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { ENTITY_REGISTRY, isValidEntityType, type EntityType } from '@/config/entity-registry';
 import { NotificationService } from '@/lib/services/notifications';
 import { logger } from '@/utils/logger';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
@@ -167,6 +168,104 @@ export const socialHandlers: Record<string, ActionHandler> = {
     return {
       success: true,
       data: { displayMessage: `📭 Marked ${before} notification${before === 1 ? '' : 's'} read` },
+    };
+  },
+
+  // The connection step of discovery: open a real conversation with the person
+  // behind an entity and send the user's intro. Requires confirmation — this
+  // messages a stranger on the user's behalf, and messaging here has no block
+  // list, so the confirmation IS the consent gate.
+  request_introduction: async (supabase, userId, _actorId, params) => {
+    const entityType = typeof params.entity_type === 'string' ? params.entity_type : '';
+    const entityId = typeof params.entity_id === 'string' ? params.entity_id : '';
+    const message = typeof params.message === 'string' ? params.message.trim() : '';
+    if (!isValidEntityType(entityType) || !entityId) {
+      return {
+        success: false,
+        error:
+          'Pass entity_type and entity_id of the thing you want an introduction about (from explore_topic results).',
+      };
+    }
+    if (message.length < 10) {
+      return {
+        success: false,
+        error:
+          'Pass a "message" — the intro to send in the user\'s voice, saying who they are and why they are reaching out.',
+      };
+    }
+
+    const meta = ENTITY_REGISTRY[entityType as EntityType];
+    const titleCol = meta.titleColumn ?? 'title';
+    const { data: entity, error: entityError } = await supabase
+      .from(meta.tableName)
+      .select(`id, ${titleCol}, actor_id, user_id`)
+      .eq('id', entityId)
+      .maybeSingle();
+    if (entityError || !entity) {
+      return { success: false, error: `No ${meta.name.toLowerCase()} found with that id.` };
+    }
+    // The selected columns are built from the registry at runtime, so the
+    // typed-select parser can't narrow them — go through unknown.
+    const rec = entity as unknown as Record<string, unknown>;
+
+    // Resolve the owner the same way discovery does: actor → profile.
+    let ownerUserId = typeof rec.user_id === 'string' ? rec.user_id : null;
+    if (!ownerUserId && typeof rec.actor_id === 'string') {
+      const { data: actor } = await supabase
+        .from(DATABASE_TABLES.ACTORS)
+        .select('user_id')
+        .eq('id', rec.actor_id)
+        .maybeSingle();
+      ownerUserId = (actor as { user_id: string | null } | null)?.user_id ?? null;
+    }
+    if (!ownerUserId) {
+      return {
+        success: false,
+        error: 'Could not work out who owns that — no introduction was sent.',
+      };
+    }
+    if (ownerUserId === userId) {
+      return { success: false, error: "That's the user's own listing — no introduction needed." };
+    }
+
+    const { data: ownerProfile } = await supabase
+      .from(DATABASE_TABLES.PROFILES)
+      .select('username, name')
+      .eq('id', ownerUserId)
+      .maybeSingle();
+    const owner = ownerProfile as { username: string | null; name: string | null } | null;
+    const ownerLabel = owner?.name || (owner?.username ? `@${owner.username}` : 'them');
+
+    // Lazy import: messaging helpers pull the notification/email stack.
+    const { openOrCreateConversation } = await import(
+      '@/features/messaging/lib/conversation-helpers'
+    );
+    const convo = await openOrCreateConversation(userId, [ownerUserId]);
+    const conversationId =
+      (convo as { conversationId?: string; id?: string }).conversationId ??
+      (convo as { id?: string }).id;
+    if (!conversationId) {
+      return { success: false, error: 'Could not open a conversation — nothing was sent.' };
+    }
+
+    const title = String(rec[titleCol] ?? meta.name);
+    const body = `${message}\n\n— sent via OrangeCat about "${title}"`;
+    const { error: sendError } = await supabase.from(DATABASE_TABLES.MESSAGES).insert({
+      conversation_id: conversationId,
+      sender_id: userId,
+      content: body,
+      message_type: 'text',
+    });
+    if (sendError) {
+      return { success: false, error: `Could not send the message: ${sendError.message}` };
+    }
+
+    return {
+      success: true,
+      data: {
+        conversationId,
+        displayMessage: `🤝 Introduction sent to ${ownerLabel} about "${title}"`,
+      },
     };
   },
 
