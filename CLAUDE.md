@@ -11,7 +11,7 @@ FleetCrown (rebranded from Cockpit) is a live customer project (see "FleetCrown"
 
 | Layer      | Technology                                                                          |
 | ---------- | ----------------------------------------------------------------------------------- |
-| Framework  | Next.js 16, React 19, TypeScript 5.8                                                          |
+| Framework  | Next.js 16, React 19, TypeScript 5.8                                                |
 | Styling    | Tailwind CSS 3.3                                                                    |
 | Database   | Self-hosted Supabase (PostgreSQL + Auth + RLS) — `supabase.orangecat.ch` on Hetzner |
 | Bitcoin    | Lightning Network, BTCPay, NWC                                                      |
@@ -59,3 +59,34 @@ grep -rn '\[#' src/
 # Find inline style hex violations
 grep -rn "style={{.*#" src/
 ```
+
+---
+
+## Shipping: nobody merges by hand
+
+**Do not merge PRs, and do not ask anyone to.** Open a PR and stop there —
+merging and deploying are automated end to end:
+
+```
+push branch → open PR → CI green → auto-merge.yml squash-merges it
+            → CI on main → CD deploys to bitbaum → health check
+```
+
+`.github/workflows/auto-merge.yml` (policy in `scripts/ci/auto-merge-sweep.sh`)
+merges **one** PR per sweep, and only when: it is not a draft, carries no hold
+label, every check has finished green, GitHub calls it cleanly mergeable, and
+main's own CI is currently green. One car per sweep is deliberate — a PR's
+checks prove that PR against the main it branched from, not against the other
+PRs queued beside it, so each merge is verified on main before the next couples.
+
+**Signal "not ready" by opening a draft PR**, or by labelling it `hold` /
+`no-automerge` / `do-not-merge` / `wip`. A draft waits forever. A red PR waits
+until it is green. Neither needs a human.
+
+Because of this, a green PR ships itself within minutes. Do not open a PR you
+would not want deployed. If work needs to land in a specific order, keep the
+later PRs as drafts until the earlier ones are on main.
+
+**Never remove the CI re-arm at the end of the sweep script.** A push made with
+the default `GITHUB_TOKEN` does not trigger workflows, and CD chains off CI — so
+without that explicit dispatch, merges land on main and silently never deploy.
