@@ -17,6 +17,7 @@ import type {
   SupportFilters,
   SupportPagination,
   ProjectSupportResponse,
+  SupportType,
 } from './types';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from './constants';
 
@@ -191,7 +192,7 @@ export async function getProjectSupport(
 export async function hasUserSupported(
   projectId: string,
   userId: string,
-  supportType?: string
+  supportType?: SupportType
 ): Promise<boolean> {
   try {
     let query = supabase

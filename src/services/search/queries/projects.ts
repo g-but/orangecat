@@ -6,6 +6,7 @@
  */
 
 import supabase from '@/lib/supabase/browser';
+import type { FilterChain } from '@/lib/supabase/untyped';
 import { logger } from '@/utils/logger';
 import { PROJECT_STATUS, PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import { getTableName } from '@/config/entity-registry';
@@ -185,10 +186,7 @@ function applyProjectFilters(
 /**
  * Apply Supabase query-builder filters for the fallback path.
  */
-function applyProjectQueryFilters(
-  projectQuery: ReturnType<typeof supabase.from>,
-  filters: SearchFilters
-) {
+function applyProjectQueryFilters<B extends FilterChain<B>>(projectQuery: B, filters: SearchFilters) {
   // Status filtering
   if (filters.statuses && filters.statuses.length > 0) {
     projectQuery = projectQuery.in('status', filters.statuses);

@@ -91,15 +91,17 @@ export async function createWebhookEndpoint(params: {
   const secretEncrypted = encryptWebhookSecret(secret);
 
   const admin = createAdminClient();
-  const { data, error } = await (
-    admin.from(DATABASE_TABLES.WEBHOOK_ENDPOINTS) as ReturnType<typeof admin.from> as any
-  )
+  const { data, error } = await admin
+    .from(DATABASE_TABLES.WEBHOOK_ENDPOINTS)
     .insert({
       user_id: userId,
       actor_id: actorId,
       name: name.trim(),
       url: url.trim(),
-      secret_encrypted: secretEncrypted,
+      // `secret_encrypted` is a `bytea` column; postgres-meta types it as the
+      // hex string PostgREST returns on read, while this insert passes the raw
+      // Buffer (the read path in getEndpointSigningContext accepts both).
+      secret_encrypted: secretEncrypted as unknown as string,
       secret_prefix: secretPrefix,
       event_types: eventTypes && eventTypes.length > 0 ? eventTypes : null,
     })

@@ -65,7 +65,7 @@ export const aiAssistantEntityConfig: EntityConfig<AIAssistant> = {
     if (assistant.category) {
       metadataParts.push(assistant.category);
     }
-    if (assistant.total_conversations > 0) {
+    if ((assistant.total_conversations ?? 0) > 0) {
       metadataParts.push(`${assistant.total_conversations} conversations`);
     }
     if (assistant.average_rating) {

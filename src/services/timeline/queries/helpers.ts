@@ -12,6 +12,7 @@ import supabase from '@/lib/supabase/browser';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { logger } from '@/utils/logger';
 import type { TimelineDisplayEvent, TimelineEventDb, TimelineActorType } from '@/types/timeline';
+import type { Database } from '@/types/database';
 import {
   mapDbEventToTimelineEvent,
   getEventIcon,
@@ -53,7 +54,21 @@ type EnrichedEventRow = TimelineEventDb & {
   target_data?: SubjectData | null;
 };
 
-export function transformEnrichedEventToDisplay(event: EnrichedEventRow): TimelineDisplayEvent {
+/**
+ * The two enriched timeline views feeds read from. Their `*_data` columns are
+ * `jsonb`, so the schema types them as `Json`.
+ */
+type EnrichedTimelineViewRow =
+  | Database['public']['Views']['enriched_timeline_events']['Row']
+  | Database['public']['Views']['community_timeline_no_duplicates']['Row'];
+
+export function transformEnrichedEventToDisplay(
+  row: EnrichedTimelineViewRow
+): TimelineDisplayEvent {
+  // The view returns the event's own snake_case columns plus the joined actor /
+  // subject / target JSON blobs. `EnrichedEventRow` is that same row with those
+  // blobs given their real shape — the one narrowing point for these feeds.
+  const event = row as unknown as EnrichedEventRow;
   const timelineEvent = mapDbEventToTimelineEvent(event);
 
   // Omit eventType and eventSubtype as TimelineDisplayEvent extends Omit<TimelineEvent, 'eventType' | 'eventSubtype'>

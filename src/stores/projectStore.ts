@@ -11,13 +11,14 @@ import { fromTable } from '@/lib/supabase/untyped';
 import { create } from 'zustand';
 import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
-import { getTableName } from '@/config/entity-registry';
+import { ENTITY_TABLE_NAMES, getTableName } from '@/config/entity-registry';
 import { PROJECT_STATUS, type ProjectStatus } from '@/config/project-statuses';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { API_ROUTES } from '@/config/api-routes';
 
 // Use existing FundingPage type from funding.ts
 import type { FundingPage } from '@/types/funding';
+import type { Database } from '@/types/database';
 
 export interface Project extends FundingPage {
   isDraft: boolean;
@@ -96,12 +97,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         throw error;
       }
 
-      type RawProjectRow = Project & {
-        currency?: string;
-        raised_amount?: number;
-        contributor_count?: number;
-      };
-      const projects: Project[] = ((data || []) as RawProjectRow[]).map(project => ({
+      // A `user_projects` row plus the view-model fields this mapper computes
+      // below (isDraft/isActive/total_funding/...), which the row itself lacks.
+      type RawProjectRow = Database['public']['Tables'][(typeof ENTITY_TABLE_NAMES)['project']]['Row'] &
+        Partial<Project> & {
+          raised_amount?: number;
+        };
+      const projects: Project[] = ((data || []) as unknown as RawProjectRow[]).map(project => ({
         ...project,
         // Map database fields to FundingPage interface
         total_funding: project.raised_amount ?? project.total_funding ?? 0,

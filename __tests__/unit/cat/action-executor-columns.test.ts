@@ -525,7 +525,9 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(insert!.currency).toBe('BTC');
       expect(insert!.investment_type).toBe('revenue_share');
       expect(insert!.total_raised).toBe(0);
-      expect(insert!.investor_count).toBe(0);
+      // `investor_count` is NOT a column on `investments` — writing it made the
+      // insert fail with 42703. It is enriched at read time, never persisted.
+      expect((insert as Record<string, unknown>).investor_count).toBeUndefined();
       expect(insert!.is_public).toBe(false);
       expect(insert!.status).toBe('draft');
       expect(insert!.actor_id).toBe(ACTOR_ID);

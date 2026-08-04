@@ -137,7 +137,6 @@ describe('Financial entity create workflows (loan/investment)', () => {
           target_amount: 0.5,
           minimum_investment: 0.001,
           total_raised: 0,
-          investor_count: 0,
           status: 'draft',
         })
       );

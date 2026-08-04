@@ -68,6 +68,8 @@ One silent-data-loss bug was found during the audit and fixed immediately: the p
 | Missing rate limit on mutating routes   | same walker, allowlist ratcheting down                  | ✅ (#559)       |
 | New `/api/` + app-route literals        | ESLint `no-restricted-syntax`                           | ✅ (#557)       |
 | New admin-client call sites             | (deferred — see Phase D)                                | ⏳ open         |
+| Hand-written DB schema types drifting   | `types/database.ts` re-exports the generated schema     | ✅ (Phase A)    |
+| Wall-clock assertions in unit tests     | currency perf test rewritten deterministically          | ✅ (Phase A)    |
 | Raw `NextResponse.json` in api/         | ESLint rule (allowlist lnurlp/openapi)                  | ✅ (#572)       |
 | Currency-format bypasses                | swept to the SSOT formatter                             | ✅ (#557)       |
 | Clone percentage                        | `check:duplication` ratchet in `verify` (baseline 1.3%) | ✅ (#567)       |
@@ -82,7 +84,7 @@ Auth coverage (five legitimate mechanisms across 211 routes), error-message hygi
 
 ## Completion status (2026-08-02, end of sweep)
 
-Everything in this report shipped the same day except Phase A, which is documented below as a scoped follow-up.
+Everything in this report shipped the same day except Phase A, which followed on 2026-08-04 (below).
 
 | Package                                                    | PR   | Outcome                                                                                                                      |
 | ---------------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -93,31 +95,67 @@ Everything in this report shipped the same day except Phase A, which is document
 | API polish — responses, session-client, contract test, img | #572 | ✅ merged                                                                                                                    |
 | Phase B — clone dedup + ratchet                            | #567 | ✅ **duplication 2.61% → 1.2%** (447 → 157 clones)                                                                           |
 | Phase C — god-file splits + size gate                      | #566 | ✅ merged. `paymentFlowService` 931 lines → façade + modules.                                                                |
-| Phase A — generated DB types                               | —    | ⏳ **not shipped, deliberately** (below)                                                                                     |
+| Phase A — generated DB types                               | PR   | ✅ `types/database.ts` is now a façade over the live-schema types; found 3 more schema-drift bugs.                          |
 
-### Phase A — why it did not ship, and what it needs
+### Phase A — shipped (part 2)
 
-The live schema types WERE regenerated successfully (`npm run gen:types` → 7,616 lines via postgres-meta; the tunnel/DB path works). Swapping `src/types/database.ts` from its hand-maintained `Database` interface to a re-export of the generated one produces **~30 type errors in 5 files**, in two classes:
+`src/types/database.ts` no longer holds a hand-maintained `Database` interface: it
+re-exports the one `npm run gen:types` produces from the live self-hosted schema
+(7,693 lines via postgres-meta), and keeps only the app-model tail. The live
+schema is now the single source of truth for every typed Supabase query.
 
-1. **`TS2344` — generated Rows don't satisfy `BaseEntity`.** Real drift the hand file was hiding: generated timestamps are `string | null` (the columns are nullable) while `BaseEntity` wants optional-non-null. A small `AsEntity<T>` remap (`Omit` the two timestamp fields, re-add as optional) resolves this cleanly and was validated locally.
-2. **`TS2589` — "type instantiation excessively deep"** on queries built from _dynamic_ table names (`getTableName(...)`) against the much larger generated `Database` union — `src/app/api/research/route.ts`, `src/app/discover/discoverGenericFetcher.ts`.
+The swap produced **79 errors in 26 files**, cleared over three `tsc` rounds
+(79 → 15 → 0) without re-entering either documented dead end. What worked:
 
-⚠️ **Validated dead end:** routing those dynamic queries through the existing `fromTable()` untyped escape hatch makes it **worse** (errors 30 → 136), because `fromTable` returns `any` and that collapses generic inference in downstream helpers like `buildQuery`. The fix must keep the queries typed — e.g. narrow the table-name argument to a literal union, or give `buildQuery` an explicit type parameter — not erase the types.
+1. **`looseClient(sb)`** (`lib/supabase/untyped.ts`) — a `SupabaseClient` view
+   whose rows are `Record<string, unknown>`, so genuinely dynamic-table helpers
+   (`listEntitiesPage`, `createEntityListHandler`, `deleteEntity`, the sitemap
+   walker, two `/api/v1` routes) can name a table at runtime and still get typed
+   results. This is the fix `fromTable()` could not be: it returns `any`, which
+   collapsed inference in downstream generics and drove errors 30 → 136.
+2. **`FilterChain<B>`** — a structural view of the PostgREST filter methods, for
+   the two helpers that receive and return a builder (`applyProjectQueryFilters`,
+   the discover `buildQuery`). `B extends FilterChain<B>` keeps the caller's
+   exact builder type flowing through instead of widening it.
+3. **`AsEntity<T>`** — `Omit`s the two timestamps and re-adds them optional, so
+   generated Rows (honestly `string | null`) satisfy `BaseEntity`.
+4. **Hand types re-derived from `Database[...]['Row']`** — `Loan`, `LoanOffer`,
+   `LoanCategory`, `UserAIPreferences`, `SupportType`, the projectStore row.
+   Where Postgres enforces a CHECK constraint that postgres-meta can only emit as
+   `string`, the narrowing is asserted in exactly one place per domain
+   (`services/loans/queries/narrow.ts`).
 
-⚠️ **Second validated dead end (attempted and reverted the same evening):** narrowing `getTableName()` from `string` to the generated `TableName = keyof Database['public']['Tables']` union is *also* worse — **145 errors**. Bare `string` makes `.from()` instantiate one over-wide builder; a ~100-literal union makes it instantiate ~100 of them. Both exceed TS's instantiation depth.
+**Three more real bugs the swap surfaced** (same class as the `user_causes`
+`goal_amount` find in part 1 — a stale hand type hiding a broken query):
 
-**Remaining viable directions (untried, in rough order of promise):**
-1. Narrow to only the ~14 **entity** tables. Needs literal types the registry currently erases (`ENTITY_REGISTRY: Record<EntityType, EntityMetadata>` widens `tableName` to `string`) — i.e. `as const satisfies Record<...>`, watching for readonly ripple on the `fields: [...]` arrays.
-2. Stop passing dynamic table names into typed `.from()` at all — a typed accessor per entity.
-3. Keep the hand-written `Database` interface but derive only the per-table `Row` types from the generated file.
+- `investments.investor_count` **is not a column**, yet `domain/investments/service.ts`
+  and the Cat's `create_investment` handler both wrote it on insert — those
+  inserts failed with 42703. Removed from both paths; the field is now declared
+  runtime-enriched (like `UserCause.current_amount`), and both unit tests that
+  pinned `investor_count: 0` now assert the column is *not* sent.
+- `typing_indicators.user_id` is a foreign key to `auth.users`, **not** to
+  `profiles`, so the `profiles:user_id (...)` embed in `useTypingSubscription`
+  could never resolve — typing indicators never showed a name. Replaced with a
+  second profile lookup, the same pattern the messaging queries already use.
+- The `Loan` hand type contradicted the DB CHECK constraints:
+  `fulfillment_type` was `'lightning' | 'onchain' | 'bank_transfer' | 'other'`
+  where the DB allows only `manual | automatic`; `loan_type` said
+  `existing_loan` where the DB says `existing_refinance`; `LoanStatus` was
+  missing `draft`. Now sourced from the `config/loans.ts` SSOT.
 
-**Cost note for whoever picks it up:** `tsc --noEmit` against the full generated schema takes ~10 minutes per iteration on this machine. That feedback loop, not the edit count, is the real expense — budget accordingly and batch changes per run.
+**Known mismatch left as-is, deliberately:** `webhook_endpoints.secret_encrypted`
+is a `bytea` column that postgres-meta types as the hex string PostgREST returns
+on read, while the insert passes a raw `Buffer`. Runtime behaviour is unchanged
+(the read path already accepts both) and the cast is commented at the call site,
+but whether the mint actually round-trips is worth verifying against prod.
 
-This is a careful migration across every DB query surface, on money-adjacent code. It is the right next task, but it is its own task, not a sweep item.
+**Not closed by this phase:** the remaining 59-interface `src/types/` layer, and
+the fact that inserts routed through `createEntity()`/`looseClient` are *not*
+column-checked at compile time — which is exactly how `investor_count` survived.
+A schema-derived check on entity insert payloads would end that class.
 
 ### Remaining open (recorded, not started)
 
-- **Phase A** as above.
 - **Phase D — admin-client → RLS**: ~7 user-scoped routes still use the service-role client where owner RLS policies would do (notifications ×2, messages unread-count/read, messages/self insert path). Needs new RLS policies first, then the `no-restricted-imports` gate on `@/lib/supabase/admin`.
-- **Flaky perf test**: `tests/unit/utils/currency.comprehensive.test.ts` asserts wall-clock duration and fails under parallel CI load (passes 37/37 in isolation). Replace the timing assertion with something deterministic.
+- ~~**Flaky perf test**~~: fixed alongside Phase A — `tests/unit/utils/currency.comprehensive.test.ts` no longer asserts wall-clock budgets (they measured the machine, not the code). The conversion test now asserts a sats round-trip lands back on the same BTC value to 8 dp, which is deterministic and catches precision regressions a timer never could.
 - `types/database.ts`'s remaining hand-written app-model tail, and the 59-interface `src/types/` layer, are only partially addressed (Phase B derived the group/loan input types from their zod schemas).

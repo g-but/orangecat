@@ -72,7 +72,7 @@ export function MakeOfferDialog({
               <div className="rounded-md bg-surface-raised/60 p-3">
                 <p className="text-sm text-fg-secondary">Remaining Balance</p>
                 <p className="text-lg font-semibold text-status-negative">
-                  {formatLoanCurrency(loan.remaining_balance, loan.currency)}
+                  {formatLoanCurrency(loan.remaining_balance, loan.currency ?? undefined)}
                 </p>
               </div>
               <div className="rounded-md bg-surface-raised/60 p-3">

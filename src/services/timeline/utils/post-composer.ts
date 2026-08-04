@@ -449,15 +449,7 @@ export async function fetchUserProjects(userId: string): Promise<UserProject[]> 
       throw error;
     }
 
-    type ProjectRow = {
-      id: string;
-      title: string;
-      description?: string | null;
-      status: string;
-      contributor_count?: number | null;
-      project_media: { id: string; storage_path: string; position: number }[] | null;
-    };
-    return (data || []).map((project: ProjectRow): UserProject => {
+    return (data || []).map((project): UserProject => {
       let thumbnail_url: string | null = null;
       if (project.project_media && project.project_media.length > 0) {
         const firstMedia = project.project_media.sort((a, b) => a.position - b.position)[0];
@@ -471,6 +463,8 @@ export async function fetchUserProjects(userId: string): Promise<UserProject[]> 
       const { project_media: _pm, description, contributor_count, ...rest } = project;
       return {
         ...rest,
+        title: rest.title ?? '',
+        status: rest.status ?? '',
         description: description ?? undefined,
         contributor_count: contributor_count ?? undefined,
         thumbnail_url,

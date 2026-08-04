@@ -33,7 +33,6 @@ export async function createInvestment(
       risk_level: normalizeToNull(input.risk_level),
       terms: normalizeToNull(input.terms),
       is_public: input.is_public ?? false,
-      investor_count: 0,
       bitcoin_address: normalizeToNull(input.bitcoin_address),
       lightning_address: normalizeToNull(input.lightning_address),
       status: STATUS.INVESTMENTS.DRAFT,

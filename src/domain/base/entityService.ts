@@ -20,6 +20,7 @@ import { type EntityType, getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 import { logger } from '@/utils/logger';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
+import { looseClient } from '@/lib/supabase/untyped';
 
 // ==================== TYPES ====================
 
@@ -310,7 +311,13 @@ export async function deleteEntity(
   const supabase = await createServerClient();
   const tableName = getTableName(entityType);
 
-  const { error } = await supabase.from(tableName).delete().eq('id', id).eq('actor_id', actor.id);
+  // One delete path for every entity table, so the table — and therefore the
+  // set of known columns — is a runtime value.
+  const { error } = await looseClient(supabase)
+    .from(tableName)
+    .delete()
+    .eq('id', id)
+    .eq('actor_id', actor.id);
 
   if (error) {
     logger.error(`Failed to delete ${entityType}`, {

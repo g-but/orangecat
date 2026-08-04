@@ -66,13 +66,13 @@ export function AvailableLoans({ loans, onOfferMade }: AvailableLoansProps) {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-fg-secondary">Remaining</span>
                     <span className="font-semibold text-status-negative">
-                      {formatLoanAmount(loan.remaining_balance, loan.currency)}
+                      {formatLoanAmount(loan.remaining_balance, loan.currency ?? undefined)}
                     </span>
                   </div>
                   <Progress value={progress} className="h-1.5" />
                   <div className="flex justify-between text-xs text-fg-secondary">
                     <span>{progress.toFixed(0)}% paid</span>
-                    <span>{formatLoanAmount(loan.original_amount, loan.currency)} total</span>
+                    <span>{formatLoanAmount(loan.original_amount, loan.currency ?? undefined)} total</span>
                   </div>
                 </div>
 
@@ -92,7 +92,7 @@ export function AvailableLoans({ loans, onOfferMade }: AvailableLoansProps) {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-fg-secondary">Monthly</span>
                     <span className="font-medium">
-                      {formatLoanAmount(loan.monthly_payment, loan.currency)}
+                      {formatLoanAmount(loan.monthly_payment, loan.currency ?? undefined)}
                     </span>
                   </div>
                 )}

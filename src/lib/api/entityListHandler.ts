@@ -18,6 +18,7 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { looseClient } from '@/lib/supabase/untyped';
 import {
   apiSuccess,
   apiForbidden,
@@ -106,7 +107,9 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
     withRateLimit('read')
   )(async (request: NextRequest) => {
     try {
-      const supabase = await createServerClient();
+      // This one handler serves every entity type: the table, the ownership
+      // column and the configured filter columns are all runtime values.
+      const supabase = looseClient(await createServerClient());
       const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
       const category = getString(request.url, 'category');
       const queryUserId = getString(request.url, 'user_id');

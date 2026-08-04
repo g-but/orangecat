@@ -1,6 +1,7 @@
 import { apiBadRequest, apiNotFound, apiSuccess } from '@/lib/api/standardResponse';
 import { getEntityMetadata, isValidEntityType } from '@/config/entity-registry';
 import { createPublicClient } from '@/lib/supabase/public';
+import { looseClient } from '@/lib/supabase/untyped';
 import { getEntityFundingStats } from '@/services/wallets/funding-stats';
 
 export async function GET(
@@ -14,7 +15,8 @@ export async function GET(
 
   const publicClient = createPublicClient();
   const meta = getEntityMetadata(type);
-  const { data: visibleEntity } = await publicClient
+  // Table name comes from the registry at runtime.
+  const { data: visibleEntity } = await looseClient(publicClient)
     .from(meta.tableName)
     .select('id')
     .eq('id', id)

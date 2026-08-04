@@ -8,6 +8,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { narrowLoanOffers } from './narrow';
 import { logger } from '@/utils/logger';
 import type { LoanOffersListResponse, LoanOffersQuery, Pagination } from '@/types/loans';
 import { getCurrentUserId } from '../utils/auth';
@@ -63,7 +64,7 @@ export async function getLoanOffers(
       return { success: false, error: error.message };
     }
 
-    return { success: true, offers: data || [], total: count || 0 };
+    return { success: true, offers: narrowLoanOffers(data || []), total: count || 0 };
   } catch (error) {
     logger.error('Exception getting loan offers', error, 'Loans');
     return { success: false, error: 'Failed to get offers' };
@@ -123,7 +124,7 @@ export async function getUserOffers(
       return { success: false, error: error.message };
     }
 
-    return { success: true, offers: data || [], total: count || 0 };
+    return { success: true, offers: narrowLoanOffers(data || []), total: count || 0 };
   } catch (error) {
     logger.error('Exception getting user offers', error, 'Loans');
     return { success: false, error: 'Failed to get offers' };
@@ -188,7 +189,7 @@ export async function getIncomingOffers(
       return { success: false, error: error.message };
     }
 
-    return { success: true, offers: data || [], total: count || 0 };
+    return { success: true, offers: narrowLoanOffers(data || []), total: count || 0 };
   } catch (error) {
     logger.error('Exception getting incoming offers', error, 'Loans');
     return { success: false, error: 'Failed to get incoming offers' };
