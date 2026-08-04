@@ -56,6 +56,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 // ---------------------------------------------------------------------------
 // Env
@@ -196,17 +197,48 @@ const svcHeaders = {
   'Content-Type': 'application/json',
 };
 
+// PostgREST reloads its schema cache in the background; while that is in flight
+// it answers 503 PGRST002 ("Could not query the database for the schema cache.
+// Retrying.") — a state that clears itself in seconds. With no retry, one such
+// blip anywhere in the run kills the whole nightly gate: 2026-08-04 the eval
+// died in resetDailyCap on exactly this, so a self-healing hiccup read as a
+// failed judgment gate. Transport errors (fetch throws) are the same class.
+// 4xx is a real verdict about the request and is never retried.
+const REST_RETRIES = 4;
+const REST_BACKOFF_MS = 1500;
+
 async function rest(method, path, { body, prefer } = {}) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    method,
-    headers: { ...svcHeaders, ...(prefer ? { Prefer: prefer } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    throw new Error(`PostgREST ${method} ${path} → ${res.status}: ${await res.text()}`);
+  let lastErr;
+  for (let attempt = 1; attempt <= REST_RETRIES; attempt++) {
+    let res;
+    try {
+      res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+        method,
+        headers: { ...svcHeaders, ...(prefer ? { Prefer: prefer } : {}) },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    } catch (err) {
+      lastErr = new Error(`PostgREST ${method} ${path} → transport: ${err.message}`);
+      await sleepBackoff(attempt, `${method} ${path}`, lastErr.message);
+      continue;
+    }
+    if (res.ok) {
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    }
+    const detail = await res.text();
+    lastErr = new Error(`PostgREST ${method} ${path} → ${res.status}: ${detail}`);
+    if (res.status < 500) {throw lastErr;}
+    await sleepBackoff(attempt, `${method} ${path}`, `${res.status}`);
   }
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
+  throw lastErr;
+}
+
+async function sleepBackoff(attempt, what, why) {
+  if (attempt >= REST_RETRIES) {return;}
+  const wait = REST_BACKOFF_MS * attempt;
+  console.warn(`eval-cat: ${what} transient (${why}) — retry ${attempt}/${REST_RETRIES - 1} in ${wait}ms`);
+  await new Promise((r) => setTimeout(r, wait));
 }
 
 // ---------------------------------------------------------------------------
@@ -626,7 +658,15 @@ async function main() {
   }
 }
 
-main().catch(async err => {
+// Exported so the retry contract can be tested (see
+// __tests__/unit/scripts/eval-cat-retry.test.ts). Importing this module must
+// therefore NOT start a run — hence the direct-invocation guard below.
+export { rest };
+
+const invokedDirectly =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (invokedDirectly) {main().catch(async err => {
   console.error(`eval-cat: harness error: ${err?.stack || err}`);
   if (NOTIFY) {
     try {
@@ -639,4 +679,4 @@ main().catch(async err => {
     }
   }
   process.exit(2);
-});
+});}
