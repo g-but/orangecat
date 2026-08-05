@@ -95,6 +95,12 @@ GRANT ALL ON FUNCTION public.match_interested_people(printcraft.vector, uuid, in
 -- An empty search today becomes a standing subscription instead of a dead end.
 ALTER TABLE public.cat_watches ADD COLUMN IF NOT EXISTS topic text;
 
+-- migration-safety: contract-ok widening a CHECK in place — the constraint is
+-- dropped and immediately re-added in the same transaction with a strictly
+-- larger value set (the three existing kinds plus 'topic_match'). Every row and
+-- every INSERT the previous release can produce still passes, so a rollback is
+-- safe; only rows using the new kind would fail the old constraint, and the
+-- previous release never writes those.
 DO $$
 BEGIN
   IF EXISTS (
