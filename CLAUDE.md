@@ -87,6 +87,19 @@ Because of this, a green PR ships itself within minutes. Do not open a PR you
 would not want deployed. If work needs to land in a specific order, keep the
 later PRs as drafts until the earlier ones are on main.
 
-**Never remove the CI re-arm at the end of the sweep script.** A push made with
-the default `GITHUB_TOKEN` does not trigger workflows, and CD chains off CI — so
-without that explicit dispatch, merges land on main and silently never deploy.
+**Two explicit hand-offs keep this chain alive. Never remove either.** Both
+exist because `GITHUB_TOKEN` is deliberately inert:
+
+1. **The CI re-arm** at the end of `scripts/ci/auto-merge-sweep.sh`. A push made
+   with the default `GITHUB_TOKEN` does not trigger workflows, so without the
+   explicit `workflow_dispatch` a merge lands on main and CI never runs.
+2. **The `post-main` job** in `ci.yml`. GitHub also suppresses the `workflow_run`
+   event for a run that was itself created with `GITHUB_TOKEN` — so the CI run
+   the re-arm just started chains to *nothing*. CD and Main Red Alert both hang
+   off `workflow_run`, and both are therefore dead on the automated path unless
+   the dispatched run hands off itself. It does: file/close the red-main issue,
+   then dispatch CD, and fail if no CD run appears.
+
+Failure mode if either is dropped: **CI is green, no check is red, and nothing
+deploys.** On 2026-08-04 that stranded 14 verified commits on main for eight
+hours. Auto-merge itself survived only because it has a `schedule` cron.
