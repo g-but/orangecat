@@ -11,7 +11,7 @@
  */
 
 import { useState } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { AmountField } from '@/components/money/AmountField';
 
 const RATE_CHF_PER_BTC = 100_000;
@@ -174,8 +174,30 @@ describe('suggestions are exact', () => {
     // by looking at the rendered page.
     setup({ presetsBtc: undefined });
 
-    for (const label of ['CHF 1.00', 'CHF 5.00', 'CHF 10.00', 'CHF 20.00', 'CHF 50.00']) {
+    for (const label of ['CHF 1', 'CHF 5', 'CHF 10', 'CHF 20', 'CHF 50']) {
       expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+    }
+  });
+
+  it('spaces an alphabetic currency code but not a symbol glyph', () => {
+    // "CHF 5" and "$5" are both right; "CHF5" and "$ 5" are both wrong.
+    setup({ presetsBtc: undefined });
+    expect(screen.getByRole('button', { name: 'CHF 5' })).toBeInTheDocument();
+
+    cleanup();
+    mockCurrency = 'USD';
+    setup({ presetsBtc: undefined });
+    expect(screen.getByRole('button', { name: '$5' })).toBeInTheDocument();
+  });
+
+  it('labels a suggestion as the round number it is, with no trailing zeros', () => {
+    // The rung was picked BECAUSE it is round, so it has to read as one.
+    // Converting it to BTC and formatting back gives "CHF 5.00" at best and
+    // "CHF 4.99" at worst, which makes a deliberate number look accidental.
+    setup({ presetsBtc: undefined });
+
+    for (const button of screen.getAllByRole('button')) {
+      expect(button.textContent).not.toMatch(/\.\d*0$/);
     }
   });
 
