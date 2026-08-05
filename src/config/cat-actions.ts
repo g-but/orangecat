@@ -19,6 +19,7 @@ import {
   Send,
   Megaphone,
   Users,
+  Eye,
   Wallet,
   Settings,
   FileText,
@@ -809,7 +810,8 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
         name: 'entity_type',
         type: 'string',
         required: true,
-        description: 'Type of the entity from the discovery results (project, research, service, …)',
+        description:
+          'Type of the entity from the discovery results (project, research, service, …)',
       },
       {
         name: 'entity_id',
@@ -828,6 +830,76 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     examples: [
       'Introduce me to whoever is running that longevity study',
       'Put me in touch with the person behind that project',
+    ],
+    enabled: true,
+  },
+
+  publish_interest: {
+    id: 'publish_interest',
+    name: 'Publish Interest',
+    description:
+      "Add a topic to the user's PUBLIC interests so other people searching that topic can find them. Offer this when they express an interest ('I'm into longevity') or when explore_topic finds nothing — being findable is the fix for an empty result. This makes something public: state plainly that it goes on their public profile and wait for a clear yes. Never publish a topic they only mentioned in passing, and never publish anything sensitive (health, finances, relationships, politics, anything they asked you to keep private).",
+    category: 'context',
+    icon: Users,
+    riskLevel: 'high',
+    requiresConfirmation: true,
+    parameters: [
+      {
+        name: 'topic',
+        type: 'string',
+        required: true,
+        description:
+          'Short topic in the user\'s own words, 2–80 chars, no lead-in ("longevity research", not "I am interested in longevity research")',
+      },
+    ],
+    examples: [
+      'Make my interest in longevity discoverable',
+      'Add Bitcoin education to my interests',
+    ],
+    enabled: true,
+  },
+
+  unpublish_interest: {
+    id: 'unpublish_interest',
+    name: 'Remove Interest',
+    description:
+      "Remove a topic from the user's public interests — they stop being discoverable for it. Always honour this immediately and without argument.",
+    category: 'context',
+    icon: Users,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      {
+        name: 'topic',
+        type: 'string',
+        required: true,
+        description: 'The interest to remove (matched loosely against what they published)',
+      },
+    ],
+    examples: ['Remove longevity from my interests', 'Stop showing that I am into tattoo art'],
+    enabled: true,
+  },
+
+  watch_topic: {
+    id: 'watch_topic',
+    name: 'Watch Topic',
+    description:
+      "Notify the user when someone new appears on OrangeCat working on a topic. Offer this whenever explore_topic comes back empty — it turns 'nothing here yet' into a standing subscription instead of a dead end.",
+    category: 'context',
+    icon: Eye,
+    riskLevel: 'low',
+    requiresConfirmation: false,
+    parameters: [
+      {
+        name: 'topic',
+        type: 'string',
+        required: true,
+        description: 'The topic to watch, 2–80 chars',
+      },
+    ],
+    examples: [
+      'Tell me when someone posts about longevity',
+      'Let me know if anyone starts a Bitcoin meetup here',
     ],
     enabled: true,
   },

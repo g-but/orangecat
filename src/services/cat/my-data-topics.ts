@@ -10,6 +10,7 @@ export const MY_DATA_TOPICS = [
   'wallets',
   'notifications',
   'tasks',
+  'interests',
   'overview',
 ] as const;
 export type MyDataTopic = (typeof MY_DATA_TOPICS)[number];

@@ -13,6 +13,8 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { NotificationService } from '@/lib/services/notifications';
 import { logger } from '@/utils/logger';
+import { exploreTopic } from './discovery';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 const LOG_SOURCE = 'CatProactive';
 
@@ -191,16 +193,35 @@ export async function runDailyBrief(admin: SupabaseClient, limit: number): Promi
 interface WatchRow {
   id: string;
   user_id: string;
-  kind: 'funding_reached' | 'sale_received' | 'booking_received';
+  kind: 'funding_reached' | 'sale_received' | 'booking_received' | 'topic_match';
   label: string;
   entity_type: string | null;
   entity_id: string | null;
   target_btc: number | null;
+  topic: string | null;
   created_at: string;
 }
 
 /** Has this watch's condition become true? */
 async function watchConditionMet(admin: SupabaseClient, watch: WatchRow): Promise<boolean> {
+  if (watch.kind === 'topic_match') {
+    if (!watch.topic) {
+      return false;
+    }
+    // Fires on either channel: something published on the topic, or someone
+    // declaring the interest. The watcher is excluded as the viewer, so their
+    // own work can never trigger their own watch.
+    const result = await exploreTopic(
+      admin as unknown as AnySupabaseClient,
+      watch.user_id,
+      watch.topic
+    );
+    if (result.degraded) {
+      return false;
+    }
+    return result.hits.length > 0 || result.people.length > 0;
+  }
+
   if (watch.kind === 'funding_reached') {
     if (!watch.entity_id || !watch.target_btc) {
       return false;
@@ -256,7 +277,7 @@ export interface WatchRunResult {
 export async function runWatchEvaluation(admin: SupabaseClient): Promise<WatchRunResult> {
   const { data, error } = await admin
     .from(DATABASE_TABLES.CAT_WATCHES)
-    .select('id, user_id, kind, label, entity_type, entity_id, target_btc, created_at')
+    .select('id, user_id, kind, label, entity_type, entity_id, target_btc, topic, created_at')
     .eq('status', 'active')
     .order('created_at', { ascending: true })
     .limit(MAX_WATCHES_PER_RUN);

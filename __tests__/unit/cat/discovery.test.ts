@@ -25,14 +25,24 @@ interface Row {
   [k: string]: unknown;
 }
 
-/** Supabase mock: rpc returns match rows; from() serves per-table lookups. */
+/**
+ * Supabase mock: rpc is routed BY NAME — match_content (entities) and
+ * match_interested_people (declared interests) are separate channels and a
+ * mock that conflated them would hide exactly the bug worth catching.
+ */
 function mockSupabase(opts: {
   matches?: Row[];
   rpcError?: unknown;
+  interestRows?: Row[];
   tables?: Record<string, Row | null>;
 }) {
   const client = {
-    rpc: async () => ({ data: opts.matches ?? [], error: opts.rpcError ?? null }),
+    rpc: async (name: string) => {
+      if (name === 'match_interested_people') {
+        return { data: opts.interestRows ?? [], error: null };
+      }
+      return { data: opts.matches ?? [], error: opts.rpcError ?? null };
+    },
     from: (table: string) => {
       const builder: Record<string, unknown> = {};
       const chain = () => builder;
@@ -103,7 +113,12 @@ describe('exploreTopic', () => {
         },
       ],
       tables: {
-        projects: { id: 'p1', title: 'My own longevity project', actor_id: null, user_id: 'viewer-1' },
+        projects: {
+          id: 'p1',
+          title: 'My own longevity project',
+          actor_id: null,
+          user_id: 'viewer-1',
+        },
         profiles: { username: 'me', name: 'Me' },
       },
     });
@@ -143,11 +158,75 @@ describe('exploreTopic', () => {
         },
       ],
       tables: {
-        user_products: { id: 't1', title: 'Test product', actor_id: null, user_id: 'x', is_test: true },
+        user_products: {
+          id: 't1',
+          title: 'Test product',
+          actor_id: null,
+          user_id: 'x',
+          is_test: true,
+        },
       },
     });
     const result = await exploreTopic(client, 'viewer-1', 'longevity');
     expect(result.hits).toEqual([]);
+  });
+
+  it('finds someone who published NOTHING but declared the interest', async () => {
+    // The case the platform actually has: 148 profiles, 5 bios, no longevity
+    // entities. Without this channel the answer is "nobody", which is wrong.
+    const client = mockSupabase({
+      matches: [],
+      interestRows: [{ user_id: 'u2', topic: 'longevity research', similarity: 0.8 }],
+      tables: { profiles: { id: 'u2', username: 'ada', name: 'Ada' } },
+    });
+    const result = await exploreTopic(client, 'viewer-1', 'longevity');
+    expect(result.hits).toEqual([]);
+    expect(result.people).toHaveLength(1);
+    expect(result.people[0].username).toBe('ada');
+
+    // And the digest must not tell the model the platform is empty.
+    const digest = formatDiscoveryForModel(result);
+    expect(digest).toContain('Ada');
+    expect(digest).not.toContain('No public entities or people');
+  });
+
+  it('keeps BOTH reasons when someone matches by work and by interest', async () => {
+    const client = mockSupabase({
+      matches: [
+        {
+          entity_type: 'research',
+          entity_id: 'r1',
+          title: 'Biomarkers study',
+          url: '/research/r1',
+          text_preview: '',
+          similarity: 0.7,
+        },
+      ],
+      interestRows: [{ user_id: 'owner-1', topic: 'longevity', similarity: 0.9 }],
+      tables: {
+        research_entities: {
+          id: 'r1',
+          title: 'Biomarkers study',
+          actor_id: null,
+          user_id: 'owner-1',
+        },
+        profiles: { id: 'owner-1', username: 'ada', name: 'Ada' },
+      },
+    });
+    const result = await exploreTopic(client, 'viewer-1', 'longevity');
+    expect(result.people).toHaveLength(1);
+    expect(result.people[0].via.join(' ')).toContain('Interested in longevity');
+    expect(result.people[0].via.join(' ')).toContain('Biomarkers study');
+  });
+
+  it('an empty topic search still offers being findable + a watch', async () => {
+    const client = mockSupabase({ matches: [], interestRows: [] });
+    const digest = formatDiscoveryForModel(
+      await exploreTopic(client, 'viewer-1', 'basket weaving')
+    );
+    expect(digest).toContain('publish_interest');
+    expect(digest).toContain('watch_topic');
+    expect(digest).toContain('never publish silently');
   });
 
   it('reports degraded (not "nothing found") when the index is unreachable', async () => {
@@ -171,9 +250,7 @@ describe('discovery wiring', () => {
   it('explore_topic is a declared platform tool', () => {
     const def = PLATFORM_TOOL_DEFINITION.find(t => t.function.name === 'explore_topic');
     expect(def).toBeDefined();
-    expect(
-      (def!.function.parameters as { required: string[] }).required
-    ).toEqual(['topic']);
+    expect((def!.function.parameters as { required: string[] }).required).toEqual(['topic']);
   });
 
   it('interest phrasings reach the tool pass (they did not before)', () => {
