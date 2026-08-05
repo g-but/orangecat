@@ -18,7 +18,7 @@ import { Clock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MoneyReceipt } from '@/components/money/MoneyReceipt';
 import { PaymentQRCode } from '@/components/payment/PaymentQRCode';
-import { ContributionAmountInput } from '@/components/payment/ContributionAmountInput';
+import { AmountField } from '@/components/money/AmountField';
 import {
   fetchTipInvoice,
   fetchTipReceiveInfo,
@@ -208,7 +208,7 @@ export function PayFlow({
   return (
     <div className="space-y-4">
       {noteSlot}
-      <ContributionAmountInput
+      <AmountField
         value={amount}
         onChange={setAmount}
         minBtc={TIP_MIN_BTC}

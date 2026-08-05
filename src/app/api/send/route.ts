@@ -19,7 +19,11 @@ import {
   apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
-import { payInvoice, sendToRecipient } from '@/domain/payments/sendPaymentService';
+import {
+  payInvoice,
+  sendToRecipient,
+  resolveSenderNwcUri,
+} from '@/domain/payments/sendPaymentService';
 import { PAY_MAX_BTC, PAY_MIN_BTC } from '@/config/pay';
 import { SEND_NOTE_MAX_LENGTH } from '@/config/send';
 import { logger } from '@/utils/logger';
@@ -34,6 +38,26 @@ const bodySchema = z.union([
     memo: z.string().max(SEND_NOTE_MAX_LENGTH).optional(),
   }),
 ]);
+
+/**
+ * GET /api/send — can this user send at all?
+ *
+ * The screen used to let someone fill in a recipient, an amount and a note
+ * before finding out, on the final tap, that they have no wallet to send from.
+ * That is the worst moment to say it: the work is done and the answer was
+ * knowable before a single keystroke.
+ *
+ * Answered by running the SAME resolution the payment runs — never by guessing
+ * from the presence of a wallet row, which is how a UI ends up promising a
+ * capability the payment path then refuses. The decrypted connection is used to
+ * prove readability and discarded; nothing about it is returned.
+ */
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
+  const resolved = await resolveSenderNwcUri(request.user.id);
+  return typeof resolved === 'string'
+    ? apiSuccess({ canSend: true })
+    : apiSuccess({ canSend: false, reason: resolved.reason, message: resolved.message });
+});
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {

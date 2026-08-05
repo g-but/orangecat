@@ -23,7 +23,7 @@ import { PaymentQRCode } from '@/components/payment/PaymentQRCode';
 import { SharePayLink } from '@/components/receive/SharePayLink';
 import { MoneyTabs } from '@/components/money/MoneyTabs';
 import { MoneyReceipt } from '@/components/money/MoneyReceipt';
-import { ContributionAmountInput } from '@/components/payment/ContributionAmountInput';
+import { AmountField } from '@/components/money/AmountField';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import {
@@ -299,7 +299,7 @@ export function ReceiveScreen() {
         </div>
       ) : (
         <div className="mt-6 space-y-4">
-          <ContributionAmountInput
+          <AmountField
             value={amount}
             onChange={setAmount}
             minBtc={RECEIVE_MIN_BTC}
