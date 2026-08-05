@@ -163,3 +163,31 @@ describe('publishing safety', () => {
     }
   });
 });
+
+describe('publishing closes the loop immediately', () => {
+  it('tells the user who else is already into it', async () => {
+    const client = mockSupabase({
+      existing: [],
+      rpcRows: [{ user_id: 'u2', topic: 'longevity', similarity: 0.9 }],
+      profiles: [{ id: 'u2', username: 'ada', name: 'Ada' }],
+    });
+    const result = await ACTION_HANDLERS.publish_interest!(client, 'u1', 'actor-1', {
+      topic: 'longevity',
+    });
+    expect(result.success).toBe(true);
+    const data = result.data as { peers: unknown[]; message: string };
+    expect(data.peers).toHaveLength(1);
+    expect(data.message).toContain('Ada');
+    expect(data.message).toContain('@ada');
+  });
+
+  it('says nothing about peers when there are none', async () => {
+    const client = mockSupabase({ existing: [], rpcRows: [], profiles: [] });
+    const result = await ACTION_HANDLERS.publish_interest!(client, 'u1', 'actor-1', {
+      topic: 'basket weaving',
+    });
+    const data = result.data as { peers: unknown[]; message: string };
+    expect(data.peers).toEqual([]);
+    expect(data.message).not.toContain('into this too');
+  });
+});

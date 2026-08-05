@@ -9,7 +9,13 @@
  */
 
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { publishInterest, unpublishInterest, isValidTopic, cleanTopic } from '../interests';
+import {
+  publishInterest,
+  unpublishInterest,
+  isValidTopic,
+  cleanTopic,
+  findPeopleByInterest,
+} from '../interests';
 import type { ActionHandler } from './types';
 
 /** Watches are cheap, but not unlimited — a runaway loop shouldn't fill the table. */
@@ -22,14 +28,34 @@ export const interestHandlers: Record<string, ActionHandler> = {
     if (!result.ok) {
       return { success: false, error: result.error };
     }
+
+    // The moment someone becomes findable is also the moment to tell them who
+    // they can already find. Publishing and then saying nothing wastes the one
+    // event in this system most likely to start a real conversation.
+    const others = await findPeopleByInterest(supabase, userId, result.topic);
+    const peers = others.map(p => ({
+      displayName: p.displayName,
+      username: p.username,
+      profileUrl: p.profileUrl,
+    }));
+
+    const base = result.alreadyPublished
+      ? `"${result.topic}" was already in your public interests.`
+      : `"${result.topic}" is now on your public profile — people searching this topic can find you.`;
+    const peerNote =
+      peers.length > 0
+        ? ` ${peers.length} other ${peers.length === 1 ? 'person is' : 'people are'} into this too: ${peers
+            .map(p => (p.username ? `${p.displayName} (@${p.username})` : p.displayName))
+            .join(', ')}. Offer to introduce them or to follow.`
+        : '';
+
     return {
       success: true,
       data: {
         topic: result.topic,
         alreadyPublished: result.alreadyPublished,
-        message: result.alreadyPublished
-          ? `"${result.topic}" was already in your public interests.`
-          : `"${result.topic}" is now on your public profile — people searching this topic can find you.`,
+        peers,
+        message: base + peerNote,
       },
     };
   },
