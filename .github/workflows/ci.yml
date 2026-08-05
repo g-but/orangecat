@@ -228,3 +228,54 @@ jobs:
           npm audit --audit-level=critical --omit=dev
           npm audit --audit-level=high --omit=dev \
             || echo "::warning title=Dependency audit::HIGH-severity advisories present — triage and escalate this gate to blocking."
+
+  # Everything GitHub would have chained off this run, had it emitted the event.
+  #
+  # CD and Main Red Alert both trigger on `workflow_run` of CI. GitHub does not
+  # emit that event when the CI run was itself created with the default
+  # GITHUB_TOKEN — which is exactly how the auto-merge sweep re-arms CI after a
+  # bot merge (a GITHUB_TOKEN push triggers nothing, hence the dispatch). So on
+  # the automated path both consumers are dead, and dead *silently*: green CI,
+  # no red check, nothing deployed. That stranded 14 verified commits on main
+  # for eight hours on 2026-08-04 while the box served the old build.
+  #
+  # A dispatched run therefore does the handoff itself. The push path is left
+  # alone — its `workflow_run` fires normally, and is the better path there
+  # (CD downloads the exact artifact this run built). One trigger per path.
+  post-main:
+    needs: [build-and-smoke, security]
+    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write # dispatch cd.yml
+      issues: write # file/close the red-main issue
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Resolve this run's verdict
+        id: verdict
+        run: |
+          if [ "${{ needs.build-and-smoke.result }}" = "success" ] \
+             && [ "${{ needs.security.result }}" = "success" ]; then
+            echo "conclusion=success" >> "$GITHUB_OUTPUT"
+          elif [ "${{ needs.build-and-smoke.result }}" = "cancelled" ] \
+             || [ "${{ needs.security.result }}" = "cancelled" ]; then
+            echo "conclusion=cancelled" >> "$GITHUB_OUTPUT"
+          else
+            echo "conclusion=failure" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: File or resolve the main-red issue
+        env:
+          CONCLUSION: ${{ steps.verdict.outputs.conclusion }}
+          RUN_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash scripts/ci/main-red-alert.sh
+
+      - name: Arm CD
+        if: steps.verdict.outputs.conclusion == 'success'
+        run: bash scripts/ci/arm-cd.sh
