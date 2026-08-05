@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { PaymentQRCode } from './PaymentQRCode';
 import { PaymentStatusIndicator } from './PaymentStatusIndicator';
+import { AmountField } from '@/components/money/AmountField';
 import { PUBLIC_API_BASE } from '@/config/public-api';
-import { CONTRIBUTION_QUICK_AMOUNTS_BTC } from '@/config/payment-presets';
-import { displayBTC } from '@/services/currency';
+import { DEFAULT_CONTRIBUTION_BTC } from '@/config/payment-presets';
+import { PAY_MAX_BTC, PAY_MIN_BTC } from '@/config/pay';
 import type { EntityType } from '@/config/entity-registry';
 import type { PaymentIntentStatus, PaymentMethod } from '@/domain/payments';
-import { cn } from '@/lib/utils';
 
 interface PublicSupportPanelProps {
   entityType: EntityType;
@@ -55,7 +55,7 @@ export function PublicSupportPanel({
   entityId,
   entityTitle,
 }: PublicSupportPanelProps) {
-  const [amountBtc, setAmountBtc] = useState<number>(0.0001);
+  const [amountBtc, setAmountBtc] = useState<number>(DEFAULT_CONTRIBUTION_BTC);
   const [phase, setPhase] = useState<Phase>('choose');
   const [intent, setIntent] = useState<PublicIntent | null>(null);
   const [error, setError] = useState<string>('');
@@ -160,42 +160,18 @@ export function PublicSupportPanel({
         {phase === 'choose' && (
           <>
             <p className="text-sm text-fg-secondary">
-              Choose a small contribution. You will pay {entityTitle} directly; no account is
-              required.
+              You will pay {entityTitle} directly; no account is required.
             </p>
-            <div className="grid grid-cols-3 gap-2">
-              {CONTRIBUTION_QUICK_AMOUNTS_BTC.slice(0, 3).map(value => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setAmountBtc(value)}
-                  aria-pressed={amountBtc === value}
-                  className={cn(
-                    'rounded-md border px-2 py-2 text-xs font-medium',
-                    amountBtc === value
-                      ? 'border-bitcoinOrange bg-bitcoinOrange/10 text-fg-primary'
-                      : 'border-default text-fg-secondary hover:bg-surface-raised'
-                  )}
-                >
-                  {displayBTC(value)}
-                </button>
-              ))}
-            </div>
-            <label className="block text-xs text-fg-secondary">
-              Custom amount in BTC
-              <input
-                type="number"
-                min="0.000001"
-                max="1"
-                step="0.000001"
-                value={amountBtc}
-                onChange={event => setAmountBtc(Number(event.target.value))}
-                className="mt-1 min-h-11 w-full rounded-md border border-default bg-surface-base px-3 font-mono text-sm text-fg-primary"
-              />
-            </label>
+            <AmountField
+              value={amountBtc}
+              onChange={setAmountBtc}
+              minBtc={PAY_MIN_BTC}
+              maxBtc={PAY_MAX_BTC}
+              label="How much"
+            />
             <Button
               onClick={createIntent}
-              disabled={!Number.isFinite(amountBtc) || amountBtc < 0.000001 || amountBtc > 1}
+              disabled={!Number.isFinite(amountBtc) || amountBtc < PAY_MIN_BTC || amountBtc > PAY_MAX_BTC}
               className="w-full min-h-11"
             >
               Create Bitcoin request

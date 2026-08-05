@@ -60,6 +60,13 @@ interface AmountFieldProps {
 
 const BTC_DECIMALS = CURRENCY_METADATA.BTC.precision;
 
+/**
+ * "CHF 5" but "$5" — an alphabetic code is a word and takes a space, a glyph
+ * hugs its number. Getting this backwards is the kind of small wrongness that
+ * makes a payment screen feel machine-generated.
+ */
+const ALPHABETIC_SYMBOL = /^[A-Za-z]+$/;
+
 /** A value the input can hold: plain digits, no thousands separators. */
 function toDraft(amount: number, decimals: number): string {
   if (!Number.isFinite(amount) || amount <= 0) {
@@ -151,19 +158,32 @@ export function AmountField({
     emit(btc);
   };
 
+  /**
+   * Suggestions, each carrying the label it was round in.
+   *
+   * A ladder rung is chosen because it is a round number, so it has to READ as
+   * one. Converting the fiat rung to BTC and formatting it back gives
+   * "CHF 5.00" at best and "CHF 4.99" at worst — the trailing zeros are noise
+   * and the drift makes a deliberate number look accidental. The rung labels
+   * itself in its own unit; only a caller-supplied BTC ladder is formatted.
+   */
   const presets = useMemo(() => {
-    const ladder =
-      presetsBtc ??
-      (inBtc
-        ? CONTRIBUTION_QUICK_AMOUNTS_BTC
-        : CONTRIBUTION_QUICK_AMOUNTS_FIAT.map(fiat => convertToBTC(fiat, displayCurrency)));
-    return ladder.filter(btc => btc > 0 && btc >= minBtc && btc <= maxBtc);
+    if (presetsBtc) {
+      return presetsBtc
+        .filter(btc => btc > 0 && btc >= minBtc && btc <= maxBtc)
+        .map(btc => ({ btc, label: inBtc ? `${toDraft(btc, BTC_DECIMALS)} BTC` : formatAmountBtc(btc) }));
+    }
+    if (inBtc) {
+      return CONTRIBUTION_QUICK_AMOUNTS_BTC.filter(btc => btc >= minBtc && btc <= maxBtc).map(
+        btc => ({ btc, label: `${toDraft(btc, BTC_DECIMALS)} BTC` })
+      );
+    }
+    return CONTRIBUTION_QUICK_AMOUNTS_FIAT.map(fiat => ({
+      btc: convertToBTC(fiat, displayCurrency),
+      label: `${symbol}${ALPHABETIC_SYMBOL.test(symbol) ? ' ' : ''}${fiat}`,
+    })).filter(p => p.btc > 0 && p.btc >= minBtc && p.btc <= maxBtc);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [presetsBtc, inBtc, displayCurrency, minBtc, maxBtc]);
-
-  /** A suggestion reads in the unit being typed, or it is noise. */
-  const presetLabel = (btc: number) =>
-    inBtc ? `${toDraft(btc, BTC_DECIMALS)} BTC` : formatAmountBtc(btc);
+  }, [presetsBtc, inBtc, displayCurrency, symbol, minBtc, maxBtc]);
 
   const tooSmall = value > 0 && value < minBtc;
   const tooLarge = value > maxBtc;
@@ -231,9 +251,9 @@ export function AmountField({
 
       {presets.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {presets.map(btc => (
+          {presets.map(({ btc, label }) => (
             <button
-              key={btc}
+              key={label}
               type="button"
               onClick={() => choosePreset(btc)}
               aria-pressed={Math.abs(value - btc) < btc * 0.001}
@@ -244,7 +264,7 @@ export function AmountField({
                   : 'border-default text-fg-secondary hover:text-fg-primary'
               )}
             >
-              {presetLabel(btc)}
+              {label}
             </button>
           ))}
         </div>

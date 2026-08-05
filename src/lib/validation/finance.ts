@@ -11,6 +11,7 @@ import {
   ALLOWED_CATEGORY_ICONS,
 } from '@/types/wallet';
 import { WALLET_VISIBILITY_LEVELS } from '@/config/wallet-visibility';
+import { TIP_MAX_BTC, TIP_MIN_BTC } from '@/config/tips';
 import { lightningAddressSchema, optionalText } from './base';
 
 /**
@@ -354,10 +355,12 @@ export const publicSupportCreateSchema = z.object({
     errorMap: () => ({ message: 'Invalid entity type' }),
   }),
   entity_id: z.string().uuid('entity_id must be a valid UUID'),
+  // Same bounds the payer's amount field enforces — one place, so a change to
+  // the range can never leave the form offering what the server rejects.
   amount_btc: z
     .number()
-    .min(0.000001, 'Minimum support amount is 0.000001 BTC')
-    .max(1, 'Maximum support amount is 1 BTC'),
+    .min(TIP_MIN_BTC, `Minimum support amount is ${TIP_MIN_BTC} BTC`)
+    .max(TIP_MAX_BTC, `Maximum support amount is ${TIP_MAX_BTC} BTC`),
 });
 
 export const publicPaymentActionSchema = z.object({

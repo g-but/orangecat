@@ -14,8 +14,11 @@ export const ENTITY_PRIMARY_CTA: Record<EntityType, string> = {
   // Exchange — market transaction
   product: 'Buy now',
   service: 'Book this service',
-  // Funding (no strings) — donation/gift
-  cause: 'Donate',
+  // Funding (no strings) — donation/gift.
+  // "Donate" is deliberately not used: it frames the giver as a charity case's
+  // benefactor rather than a backer, and it is the one word on this page that
+  // disagreed with the panel it scrolls to ("Support with Bitcoin").
+  cause: 'Fund this cause',
   research: 'Fund this research',
   wishlist: 'Gift an item',
   // Funding (soft strings) — milestone accountability
