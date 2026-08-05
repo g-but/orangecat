@@ -27,6 +27,7 @@ import { CatCreditsPanel } from '@/components/ai/CatCreditsPanel';
 import { CatCustomInstructions } from '@/components/ai/CatCustomInstructions';
 import { CatMemoryManager } from '@/components/ai/CatMemoryManager';
 import { CatMemoryImport } from '@/components/ai/CatMemoryImport';
+import { CatInterestsManager } from '@/components/ai/CatInterestsManager';
 import { LocalRuntimePanel } from '@/components/ai/LocalRuntimePanel';
 import { AiUsageStrip } from '@/components/ai/AiUsageStrip';
 
@@ -115,7 +116,10 @@ export default function AISettingsPage() {
         </div>
 
         {/* ── BYOK ──────────────────────────────────────────────────────── */}
-        <section id="byok" className="scroll-mt-24 rounded-lg border border-default bg-surface-base p-6">
+        <section
+          id="byok"
+          className="scroll-mt-24 rounded-lg border border-default bg-surface-base p-6"
+        >
           <div className="mb-4 flex items-start gap-3">
             <div className="rounded-md bg-surface-raised p-2">
               <Server className="h-5 w-5 text-fg-primary" />
@@ -154,7 +158,10 @@ export default function AISettingsPage() {
         </section>
 
         {/* ── Local ─────────────────────────────────────────────────────── */}
-        <section id="local" className="scroll-mt-24 rounded-lg border border-default bg-surface-base p-6">
+        <section
+          id="local"
+          className="scroll-mt-24 rounded-lg border border-default bg-surface-base p-6"
+        >
           <div className="mb-4 flex items-start gap-3">
             <div className="rounded-md bg-surface-raised p-2">
               <Terminal className="h-5 w-5 text-fg-primary" />
@@ -181,8 +188,10 @@ export default function AISettingsPage() {
             What Cat knows
           </h2>
           <p className="mt-1 text-sm text-fg-secondary">
-            Cat&apos;s memory is yours: review it, delete any of it, export it, or bring context
-            over from another AI. Standing instructions steer how Cat behaves in every chat.
+            Cat&apos;s memory is yours and private: review it, delete any of it, export it, or bring
+            context over from another AI. Standing instructions steer how Cat behaves in every chat.
+            Interests are the deliberate exception — the one part you choose to make public so other
+            people can find you.
           </p>
         </div>
 
@@ -203,6 +212,8 @@ export default function AISettingsPage() {
         />
 
         <CatMemoryImport onImported={() => setMemoryReloadKey(k => k + 1)} />
+
+        <CatInterestsManager />
       </section>
 
       {/* Privacy footnote */}

@@ -16,6 +16,7 @@ import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 export { MY_DATA_TOPICS, type MyDataTopic } from './my-data-topics';
 import type { MyDataTopic } from './my-data-topics';
+import { listInterests } from './interests';
 
 const DEFAULT_WINDOW_DAYS = 30;
 const MAX_ROWS_PER_TYPE = 8;
@@ -330,6 +331,21 @@ async function tasksSection(supabase: AnySupabaseClient, userId: string): Promis
   }
 }
 
+async function interestsSection(supabase: AnySupabaseClient, userId: string): Promise<string> {
+  try {
+    const interests = await listInterests(supabase, userId);
+    if (interests.length === 0) {
+      return 'PUBLIC INTERESTS: none published. Nothing about their interests is visible to other people.';
+    }
+    return (
+      `PUBLIC INTERESTS (${interests.length}, visible to other signed-in users, findable in topic search):\n` +
+      interests.map(i => `- ${i.topic}`).join('\n')
+    );
+  } catch {
+    return 'PUBLIC INTERESTS: could not be read right now.';
+  }
+}
+
 /**
  * Answer a read-only "my data" question. Returns a compact plain-text report
  * the model paraphrases — never raw JSON, so weak models don't echo it.
@@ -358,6 +374,8 @@ export async function queryMyData(
       return notificationsSection(supabase, userId);
     case 'tasks':
       return tasksSection(supabase, userId);
+    case 'interests':
+      return interestsSection(supabase, userId);
     case 'overview': {
       const sections = await Promise.all([
         listingsSection(supabase, userId),
@@ -366,6 +384,7 @@ export async function queryMyData(
         walletsSection(supabase, userId),
         notificationsSection(supabase, userId),
         tasksSection(supabase, userId),
+        interestsSection(supabase, userId),
       ]);
       return sections.join('\n\n');
     }

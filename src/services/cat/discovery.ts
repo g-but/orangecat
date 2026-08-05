@@ -10,6 +10,11 @@
  *    owners behind the hits — someone into longevity is discoverable through
  *    the research they published, which is also the stronger signal.
  *
+ *    Published interests are the second channel, and they cover the case work
+ *    cannot: someone who has shipped nothing yet but said what they care about
+ *    is still findable from day one. Both channels merge into one person list,
+ *    each carrying its own `via` reason.
+ *
  * 2. Everything surfaced here is PUBLIC. Each type's public predicate mirrors
  *    the discover/search SSOT (see fetchDiscoverCounts + the public-surface
  *    filtering contract test); test rows are excluded. This service runs with
@@ -21,6 +26,10 @@ import { ENTITY_REGISTRY, isValidEntityType, type EntityType } from '@/config/en
 import { embeddingsEnabled, embedText } from '@/services/ai/embeddings';
 import { logger } from '@/utils/logger';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
+import { findPeopleByInterest } from './interests';
+import type { DiscoveryHit, DiscoveryPerson, DiscoveryResult } from './discovery-types';
+
+export type { DiscoveryHit, DiscoveryPerson, DiscoveryResult };
 
 const LOG_SOURCE = 'CatDiscovery';
 
@@ -31,33 +40,6 @@ const MIN_SIMILARITY = 0.3;
 /** Cap what reaches the model, so the digest stays readable. */
 const MAX_ENTITIES_RETURNED = 12;
 const MAX_PEOPLE_RETURNED = 8;
-
-export interface DiscoveryPerson {
-  userId: string | null;
-  displayName: string;
-  username: string | null;
-  profileUrl: string | null;
-  /** What they published that matched — why they're relevant. */
-  via: string[];
-}
-
-export interface DiscoveryHit {
-  entityType: EntityType;
-  entityId: string;
-  title: string;
-  description: string | null;
-  url: string;
-  similarity: number;
-  owner: DiscoveryPerson | null;
-}
-
-export interface DiscoveryResult {
-  topic: string;
-  hits: DiscoveryHit[];
-  people: DiscoveryPerson[];
-  /** True when the semantic index could not be consulted at all. */
-  degraded: boolean;
-}
 
 interface MatchRow {
   entity_type: string;
@@ -119,7 +101,9 @@ async function resolveOwner(
       displayName = a?.display_name ?? null;
     }
     if (!userId) {
-      return displayName ? { userId: null, displayName, username: null, profileUrl: null, via: [] } : null;
+      return displayName
+        ? { userId: null, displayName, username: null, profileUrl: null, via: [] }
+        : null;
     }
 
     const { data: profile } = await supabase
@@ -142,10 +126,7 @@ async function resolveOwner(
 }
 
 /** Re-read a matched row so the card has live, public, owner-attributed data. */
-async function enrichHit(
-  supabase: AnySupabaseClient,
-  row: MatchRow
-): Promise<DiscoveryHit | null> {
+async function enrichHit(supabase: AnySupabaseClient, row: MatchRow): Promise<DiscoveryHit | null> {
   if (!isValidEntityType(row.entity_type)) {
     return null;
   }
@@ -159,7 +140,9 @@ async function enrichHit(
       .select(`id, ${titleCol}, description, actor_id, user_id, is_test`)
       .eq('id', row.entity_id);
     q = applyPublicGate(q, type) as typeof q;
-    const { data, error } = await (q as unknown as { maybeSingle: () => Promise<{ data: unknown; error: unknown }> }).maybeSingle();
+    const { data, error } = await (
+      q as unknown as { maybeSingle: () => Promise<{ data: unknown; error: unknown }> }
+    ).maybeSingle();
     if (error || !data) {
       // Row is gone or no longer public — the index lagged. Drop it.
       return null;
@@ -230,11 +213,16 @@ export async function exploreTopic(
   }
 
   let rows: MatchRow[] = [];
+  // People who *declared* this interest. Resolved from the same vector as the
+  // entity search, and independent of it: the index being empty for a topic
+  // says nothing about who cares about it.
+  let interestPeople: DiscoveryPerson[] = [];
   try {
     const vec = await embedText(topic);
     if (!vec) {
       return { ...empty, degraded: true };
     }
+    interestPeople = await findPeopleByInterest(supabase, viewerUserId, topic, vec);
     const { data, error } = await supabase.rpc('match_content', {
       query_embedding: JSON.stringify(vec),
       match_count: MATCH_COUNT,
@@ -243,12 +231,14 @@ export async function exploreTopic(
     });
     if (error) {
       logger.warn('match_content failed', { error }, LOG_SOURCE);
-      return { ...empty, degraded: true };
+      // Entity index down, but people who declared the interest still count —
+      // hand back what we do have rather than nothing.
+      return { ...empty, people: interestPeople, degraded: true };
     }
     rows = (data ?? []) as MatchRow[];
   } catch (err) {
     logger.warn('exploreTopic threw', { err }, LOG_SOURCE);
-    return { ...empty, degraded: true };
+    return { ...empty, people: interestPeople, degraded: true };
   }
 
   // Profiles that matched on their own text are people directly; everything
@@ -288,10 +278,31 @@ export async function exploreTopic(
     }
   }
 
+  // Someone can arrive by both channels — published work AND a declared
+  // interest. Keep both reasons; that combination is the strongest signal
+  // there is, so those people sort first.
+  for (const p of interestPeople) {
+    if (!p.userId) {
+      continue;
+    }
+    const existing = peopleByUser.get(p.userId);
+    if (existing) {
+      existing.via = [...p.via, ...existing.via].slice(0, 3);
+    } else {
+      peopleByUser.set(p.userId, p);
+    }
+  }
+  const interestUserIds = new Set(interestPeople.map(p => p.userId));
+  const people = [...peopleByUser.values()].sort((a, b) => {
+    const score = (p: DiscoveryPerson) =>
+      (interestUserIds.has(p.userId) ? 2 : 0) + (p.via.length > 1 ? 1 : 0);
+    return score(b) - score(a);
+  });
+
   return {
     topic,
     hits,
-    people: [...peopleByUser.values()].slice(0, MAX_PEOPLE_RETURNED),
+    people: people.slice(0, MAX_PEOPLE_RETURNED),
     degraded: false,
   };
 }
@@ -302,7 +313,13 @@ export function formatDiscoveryForModel(result: DiscoveryResult): string {
     return `TOPIC SEARCH UNAVAILABLE for "${result.topic}" — the semantic index could not be reached. Tell the user honestly that you could not search right now; do NOT claim the platform has nothing on this topic.`;
   }
   if (result.hits.length === 0 && result.people.length === 0) {
-    return `No public entities or people on OrangeCat match "${result.topic}" yet. Say so plainly — and note that this makes them early here, which is an opportunity to be the first (offer to help them create something in this space).`;
+    return [
+      `No public entities or people on OrangeCat match "${result.topic}" yet. Say so plainly — being early is the honest framing, not a failure.`,
+      `Then offer BOTH of these, briefly, in one breath:`,
+      `1. publish_interest("${result.topic}") — so the next person who searches this finds THEM. Say what it does in plain words ("it goes on your public profile") and get a clear yes first; never publish silently.`,
+      `2. watch_topic("${result.topic}") — you'll tell them the moment someone shows up.`,
+      `Also offer to help them create the first entity in this space if that fits.`,
+    ].join('\n');
   }
 
   const byType = new Map<EntityType, DiscoveryHit[]>();
@@ -311,21 +328,32 @@ export function formatDiscoveryForModel(result: DiscoveryResult): string {
   }
 
   const parts: string[] = [`RELATED TO "${result.topic}" ON ORANGECAT (all public):`];
+  if (result.hits.length === 0) {
+    parts.push(
+      `\nNo published entities on this topic yet — but the people below said they are into it, which is exactly who to talk to.`
+    );
+  }
   for (const [type, hits] of byType) {
     const meta = ENTITY_REGISTRY[type];
     parts.push(`\n${meta.namePlural}:`);
     for (const h of hits) {
-      const who = h.owner ? ` — by ${h.owner.displayName}${h.owner.username ? ` (@${h.owner.username})` : ''}` : '';
+      const who = h.owner
+        ? ` — by ${h.owner.displayName}${h.owner.username ? ` (@${h.owner.username})` : ''}`
+        : '';
       const desc = h.description ? ` :: ${h.description.slice(0, 160)}` : '';
       parts.push(`- "${h.title}"${who} [${h.url}] (relevance ${h.similarity.toFixed(2)})${desc}`);
     }
   }
 
   if (result.people.length > 0) {
-    parts.push(`\nPEOPLE working on this (introduce these — use entity_id from above with request_introduction):`);
+    parts.push(
+      `\nPEOPLE into this (offer an introduction — request_introduction takes an entity_id from above; for someone who surfaced only via a declared interest, suggest following them or opening a conversation instead):`
+    );
     for (const p of result.people) {
       const handle = p.username ? `@${p.username}` : p.displayName;
-      parts.push(`- ${p.displayName} (${handle})${p.via.length > 0 ? ` — ${p.via.join('; ')}` : ''}`);
+      parts.push(
+        `- ${p.displayName} (${handle})${p.via.length > 0 ? ` — ${p.via.join('; ')}` : ''}`
+      );
     }
   }
 
