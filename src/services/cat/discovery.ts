@@ -316,7 +316,7 @@ export function formatDiscoveryForModel(result: DiscoveryResult): string {
     return [
       `No public entities or people on OrangeCat match "${result.topic}" yet. Say so plainly — being early is the honest framing, not a failure.`,
       `Then offer BOTH of these, briefly, in one breath:`,
-      `1. publish_interest("${result.topic}") — so the next person who searches this finds THEM. Say what it does in plain words ("it goes on your public profile") and get a clear yes first; never publish silently.`,
+      `1. publish_interest("${result.topic}") — so the next person who searches this finds THEM. Call publish_interest, NOT update_profile: this is a searchable interest, not bio text, so do not offer to edit their bio or background. Say in plain words that the topic becomes visible to anyone signed in, and get a clear yes first; never publish silently.`,
       `2. watch_topic("${result.topic}") — you'll tell them the moment someone shows up.`,
       `Also offer to help them create the first entity in this space if that fits.`,
     ].join('\n');
