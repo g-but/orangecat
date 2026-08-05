@@ -838,7 +838,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     id: 'publish_interest',
     name: 'Publish Interest',
     description:
-      "Add a topic to the user's PUBLIC interests so other people searching that topic can find them. Offer this when they express an interest ('I'm into longevity') or when explore_topic finds nothing — being findable is the fix for an empty result. This makes something public: state plainly that it goes on their public profile and wait for a clear yes. Never publish a topic they only mentioned in passing, and never publish anything sensitive (health, finances, relationships, politics, anything they asked you to keep private).",
+      "Add a topic to the user's PUBLIC INTERESTS LIST so other people searching that topic can find them. This is NOT update_profile — it does not touch their bio or background, it adds a searchable topic tag. Use this, never update_profile, whenever the goal is being findable by topic. Offer it when they express an interest ('I'm into longevity') or when explore_topic finds nothing — being findable is the fix for an empty result. It makes something public: say plainly that the topic becomes visible to anyone signed in, and wait for a clear yes. Never publish a topic they only mentioned in passing, and never publish anything sensitive (health, finances, relationships, politics, anything they asked you to keep private).",
     category: 'context',
     icon: Users,
     riskLevel: 'high',

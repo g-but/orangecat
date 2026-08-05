@@ -7,6 +7,7 @@ import {
   MAX_INTERESTS_PER_USER,
 } from '@/services/cat/interests';
 import { CAT_ACTIONS } from '@/config/cat-actions';
+import { formatDiscoveryForModel } from '@/services/cat/discovery';
 import { ACTION_HANDLERS } from '@/services/cat/handlers';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
@@ -189,5 +190,30 @@ describe('publishing closes the loop immediately', () => {
     const data = result.data as { peers: unknown[]; message: string };
     expect(data.peers).toEqual([]);
     expect(data.message).not.toContain('into this too');
+  });
+});
+
+describe('publish_interest is not confusable with update_profile', () => {
+  /**
+   * Caught in production: a free model read "puts that topic on their public
+   * profile" and offered to edit the user's bio instead of publishing an
+   * interest, so the feature was unreachable by its natural path. The word
+   * "profile" is the trap; these assertions keep it out.
+   */
+  it('the action description steers away from bio editing', () => {
+    const d = CAT_ACTIONS.publish_interest.description;
+    expect(d).toContain('NOT update_profile');
+    expect(d).not.toMatch(/on their public profile/i);
+  });
+
+  it('the empty-search digest tells the model which verb to use', () => {
+    const digest = formatDiscoveryForModel({
+      topic: 'permaculture',
+      hits: [],
+      people: [],
+      degraded: false,
+    });
+    expect(digest).toContain('publish_interest');
+    expect(digest).toContain('NOT update_profile');
   });
 });
