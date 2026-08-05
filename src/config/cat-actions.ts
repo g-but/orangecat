@@ -863,7 +863,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     id: 'unpublish_interest',
     name: 'Remove Interest',
     description:
-      "Remove a topic from the user's public interests — they stop being discoverable for it. Always honour this immediately and without argument.",
+      'Remove a topic from the user\'s public interests — they stop being discoverable for it. This is NOT forget_memories: it removes a PUBLIC listing and touches no private memory. Use it, never forget_memories, whenever the user says "remove my interest(s)", "stop being findable for X", or names something they published. Always honour it immediately and without argument.',
     category: 'context',
     icon: Users,
     riskLevel: 'low',
@@ -1231,7 +1231,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     id: 'forget_memories',
     name: 'Forget About Me',
     description:
-      "Delete stored facts the user says are wrong or wants removed — clears BOTH Cat's memories and the matching economic-profile entries. Use when the user says something you know about them is incorrect ('I don't speak French', 'remove the photography thing').",
+      "Delete stored facts the user says are wrong or wants removed — clears BOTH Cat's memories and the matching economic-profile entries. Use when the user says something you know about them is incorrect ('I don't speak French', 'remove the photography thing'). NOT for interests: 'remove my interests' or 'stop being findable for X' means unpublish_interest, a public listing — deleting memories there destroys private data the user never asked you to touch.",
     category: 'context',
     icon: Shield,
     riskLevel: 'low',
@@ -1558,7 +1558,8 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
   update_profile: {
     id: 'update_profile',
     name: 'Update Profile',
-    description: "Update the user's public profile — name, bio, background, location, or website",
+    description:
+      "Update the user's public profile — name, bio, background, location, or website. Only these fields: to make someone findable for a TOPIC, use publish_interest instead, which adds a searchable interest rather than rewriting their bio.",
     category: 'context',
     icon: Settings,
     riskLevel: 'medium',

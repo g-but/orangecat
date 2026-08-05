@@ -1,0 +1,73 @@
+import { CAT_ACTIONS } from '@/config/cat-actions';
+
+/**
+ * Confusable verbs must stay disambiguated.
+ *
+ * Twice in one day a new Cat verb was shadowed by an older one with overlapping
+ * vocabulary, and both times only production caught it:
+ *
+ *  - "add this topic to your public PROFILE" → the model ran update_profile and
+ *    offered to edit the bio, so publish_interest was unreachable.
+ *  - "REMOVE my public interests"            → the model ran forget_memories and
+ *    deleted private memories, including one the user had held for weeks.
+ *
+ * The second is the dangerous shape: the wrong verb destroyed data. A model can
+ * only pick the right verb if the descriptions say which is which, so that
+ * routing text is a correctness requirement, not documentation. Adding a verb
+ * whose trigger words overlap an existing one means adding a row here.
+ */
+
+interface ConfusablePair {
+  /** The newer, more specific verb that keeps losing. */
+  action: string;
+  /** The established verb that shadows it. */
+  shadowedBy: string;
+  /** Why picking wrong is bad — kept in the failure message. */
+  consequence: string;
+  /** Phrasings that must not appear, because they steer to the wrong verb. */
+  forbiddenPhrases?: RegExp[];
+}
+
+const CONFUSABLE: ConfusablePair[] = [
+  {
+    action: 'publish_interest',
+    shadowedBy: 'update_profile',
+    consequence: 'the model edits the bio instead, and being findable never happens',
+    forbiddenPhrases: [/on their public profile/i],
+  },
+  {
+    action: 'unpublish_interest',
+    shadowedBy: 'forget_memories',
+    consequence: 'the model deletes private memories the user never asked it to touch',
+  },
+];
+
+describe('confusable Cat verbs stay disambiguated', () => {
+  it.each(CONFUSABLE)(
+    '$action names $shadowedBy so the model can tell them apart',
+    ({ action, shadowedBy, consequence }) => {
+      const desc = CAT_ACTIONS[action]?.description;
+      expect(desc).toBeDefined();
+      // "NOT update_profile" / "NOT forget_memories" — an explicit negative.
+      expect(desc).toMatch(new RegExp(`not ${shadowedBy}`, 'i'));
+      if (!new RegExp(`not ${shadowedBy}`, 'i').test(desc!)) {
+        throw new Error(`Without this, ${consequence}.`);
+      }
+    }
+  );
+
+  it.each(CONFUSABLE)('$shadowedBy points back at $action', ({ action, shadowedBy }) => {
+    // The disambiguation has to be readable from BOTH sides: the model may be
+    // looking at the established verb when it decides.
+    expect(CAT_ACTIONS[shadowedBy]?.description).toContain(action);
+  });
+
+  it.each(CONFUSABLE.filter(c => c.forbiddenPhrases?.length))(
+    '$action avoids the phrasings that mis-route it',
+    ({ action, forbiddenPhrases }) => {
+      for (const phrase of forbiddenPhrases!) {
+        expect(CAT_ACTIONS[action].description).not.toMatch(phrase);
+      }
+    }
+  );
+});
