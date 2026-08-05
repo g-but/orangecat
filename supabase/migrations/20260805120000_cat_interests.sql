@@ -76,15 +76,23 @@ CREATE OR REPLACE FUNCTION public.match_interested_people(
     LANGUAGE sql STABLE
     SET search_path TO 'public', 'printcraft'
     AS $$
-  select distinct on (i.user_id)
-    i.user_id,
-    i.topic,
-    1 - (i.embedding <=> query_embedding) as similarity
-  from public.cat_interests i
-  where i.embedding is not null
-    and i.user_id <> exclude_user
-    and 1 - (i.embedding <=> query_embedding) >= min_similarity
-  order by i.user_id, i.embedding <=> query_embedding
+  -- Inner DISTINCT ON keeps each person's single closest interest; its ORDER BY
+  -- is forced to lead with user_id, so ranking by similarity has to happen in
+  -- the outer query. Applying LIMIT inside would return an arbitrary set of
+  -- users ordered by uuid rather than the best matches.
+  select t.user_id, t.topic, t.similarity
+  from (
+    select distinct on (i.user_id)
+      i.user_id,
+      i.topic,
+      1 - (i.embedding <=> query_embedding) as similarity
+    from public.cat_interests i
+    where i.embedding is not null
+      and i.user_id <> exclude_user
+      and 1 - (i.embedding <=> query_embedding) >= min_similarity
+    order by i.user_id, i.embedding <=> query_embedding
+  ) t
+  order by t.similarity desc
   limit match_count;
 $$;
 
