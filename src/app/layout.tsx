@@ -49,7 +49,6 @@ import { CurrencyRatesProvider } from '@/components/providers/CurrencyRatesProvi
 import { getRenderRates } from '@/services/currency/rates.server';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toaster } from '@/components/ui/sonner';
-import { Suspense } from 'react';
 
 import type { Metadata, Viewport } from 'next';
 import { APP_DESCRIPTION, APP_NAME, APP_TAGLINE, SITE_URL } from '@/config/brand';
@@ -157,9 +156,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CurrencyRatesProvider initialSnapshot={rateSnapshot}>
             <QueryProvider>
               <AuthProvider>
-                <AppShell>
-                  <Suspense>{children}</Suspense>
-                </AppShell>
+                {/* No Suspense boundary here. A boundary above every page
+                    forces the whole app to stream, and once streaming starts
+                    the HTTP status is committed to 200 — so notFound() renders
+                    the not-found UI with a 200, and redirect() degrades to a
+                    client-side redirect instead of a server 307. Pages that
+                    need a boundary declare it themselves (loading.tsx, or an
+                    inner <Suspense> around the slow part, which is what the
+                    Next.js docs recommend so the existence check still runs
+                    before the response commits). Enforced by audit-routes. */}
+                <AppShell>{children}</AppShell>
               </AuthProvider>
             </QueryProvider>
           </CurrencyRatesProvider>
