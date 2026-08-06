@@ -5,6 +5,7 @@ import Button from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import { Alert, AlertDescription } from '@/components/ui/Alert';
+import { WALLET_PROVIDERS } from '@/config/wallet-providers';
 import { shortenNpub } from '@/lib/nostr';
 import { useNostrConnectionCard } from './useNostrConnectionCard';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
@@ -202,7 +203,7 @@ export function NostrConnectionCard() {
                 <p className="text-xs text-fg-secondary text-center">
                   Install{' '}
                   <a
-                    href="https://getalby.com"
+                    href={WALLET_PROVIDERS.alby.website}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-fg-primary hover:underline inline-flex items-center gap-0.5"
