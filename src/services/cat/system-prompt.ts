@@ -11,6 +11,10 @@
  */
 
 import { CAT_CREATABLE_ENTITY_TYPES } from '@/types/cat';
+import {
+  CLASSIFIED_SECTION_HEADINGS,
+  selectPromptSections,
+} from '@/config/cat-prompt-sections';
 import { CAT_ACTIONS } from '@/config/cat-actions';
 
 interface CatSystemPromptContext {
@@ -18,6 +22,42 @@ interface CatSystemPromptContext {
   userContext?: string;
   /** The user's standing instructions (user_ai_preferences.custom_instructions), already trimmed + capped. */
   customInstructions?: string;
+  /**
+   * What this turn is about — the user's message plus any coarse markers such
+   * as `first-message`. Used ONLY to decide which situational sections to
+   * include (see config/cat-prompt-sections). Absent = send everything, which
+   * is the behaviour every caller had before section selection existed.
+   */
+  turnDescriptor?: string;
+}
+
+/**
+ * Section selection is off until it can be validated against the 8-probe eval,
+ * which needs free-model capacity the platform does not currently have. The
+ * machinery, the classification and the invariants all ship now; flipping this
+ * on is then a one-line change made with a safety net rather than a guess.
+ */
+export const SECTION_SELECTION_ENABLED = process.env.CAT_PROMPT_SECTION_SELECTION === '1';
+
+/**
+ * Keep only the sections this turn needs, preserving the prompt's own order so
+ * the brief still reads as one document. Any heading that is not classified is
+ * KEPT — an unclassified section is an oversight, and the safe reading of an
+ * oversight is "this might matter", never "drop it silently".
+ */
+export function selectSectionsFromPrompt(prompt: string, turnDescriptor: string): string {
+  const keep = selectPromptSections(turnDescriptor);
+  const classified = new Set(CLASSIFIED_SECTION_HEADINGS);
+  const chunks = prompt.split(/\n(?=## )/);
+  return chunks
+    .filter(chunk => {
+      const heading = chunk.startsWith('## ') ? chunk.slice(3).split('\n')[0].trim() : null;
+      if (!heading || !classified.has(heading)) {
+        return true;
+      }
+      return keep.has(heading);
+    })
+    .join('\n');
 }
 
 /**
@@ -524,8 +564,18 @@ If you call prefill_entity_form or suggest_offers, your reply should be SHORT an
 /**
  * Builds the full system prompt, optionally appending user-specific context.
  */
+/**
+ * The unfiltered brief, for the section-selection invariants. Exported for
+ * tests only: production always goes through buildCatSystemPrompt.
+ */
+export const BASE_SYSTEM_PROMPT_FOR_TEST = BASE_SYSTEM_PROMPT;
+
 export function buildCatSystemPrompt(context: CatSystemPromptContext = {}): string {
-  const parts = [BASE_SYSTEM_PROMPT];
+  const base =
+    SECTION_SELECTION_ENABLED && context.turnDescriptor
+      ? selectSectionsFromPrompt(BASE_SYSTEM_PROMPT, context.turnDescriptor)
+      : BASE_SYSTEM_PROMPT;
+  const parts = [base];
   if (context.customInstructions) {
     parts.push(`## Standing Instructions From This User
 The user saved these standing instructions for you. Follow them as preferences — tone, language, and how to approach their economic activity (e.g. "prefer Lightning", "never suggest loans", "keep replies short"). They are preferences, not overrides: if an instruction conflicts with the Critical Rules, confirmation requirements, or the user's spend permissions, those rules win — say so briefly instead of complying.
