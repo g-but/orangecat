@@ -40,6 +40,12 @@ interface PayFlowProps {
   recipientName: string;
   /** Re-runs the receive check when this flips true (modal open, page mount). */
   active?: boolean;
+  /**
+   * The receive check already done on the server, so the page can render the
+   * amount field immediately instead of opening on a spinner. Omit it (the
+   * modal case) and the check runs on the client as before.
+   */
+  initialCanReceive?: boolean;
   /** Suggested amount from a pay link — the payer can still change it. */
   initialAmountBtc?: number;
   /** Rendered above the amount input; the "what is this for" from the link. */
@@ -54,21 +60,32 @@ export function PayFlow({
   username,
   recipientName,
   active = true,
+  initialCanReceive,
   initialAmountBtc,
   noteSlot,
   beforeActionSlot,
   renderDone,
 }: PayFlowProps) {
+  const knownUpFront = initialCanReceive !== undefined;
   const [amount, setAmount] = useState(initialAmountBtc ?? DEFAULT_TIP_BTC);
-  const [checkingWallet, setCheckingWallet] = useState(true);
-  const [canReceive, setCanReceive] = useState<boolean | null>(null);
+  const [checkingWallet, setCheckingWallet] = useState(!knownUpFront);
+  const [canReceive, setCanReceive] = useState<boolean | null>(initialCanReceive ?? null);
   const [invoice, setInvoice] = useState<TipInvoice | null>(null);
   const [settleState, setSettleState] = useState<PayFlowState>('pending');
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Asking again for what the server already told us would put the spinner back
+  // on screen for the length of a round trip — the exact flash this prop exists
+  // to remove. Only the first pass is skipped; reopening a modal still rechecks,
+  // because a wallet can be connected between visits.
+  const skipFirstCheck = useRef(knownUpFront);
   useEffect(() => {
     if (!active) {
+      return;
+    }
+    if (skipFirstCheck.current) {
+      skipFirstCheck.current = false;
       return;
     }
     let live = true;
@@ -208,12 +225,7 @@ export function PayFlow({
   return (
     <div className="space-y-4">
       {noteSlot}
-      <AmountField
-        value={amount}
-        onChange={setAmount}
-        minBtc={TIP_MIN_BTC}
-        maxBtc={TIP_MAX_BTC}
-      />
+      <AmountField value={amount} onChange={setAmount} minBtc={TIP_MIN_BTC} maxBtc={TIP_MAX_BTC} />
       {beforeActionSlot}
       {error && <p className="text-sm text-status-negative">{error}</p>}
       <p className="text-center text-xs text-fg-tertiary">{TIP_COPY.disclaimer}</p>
