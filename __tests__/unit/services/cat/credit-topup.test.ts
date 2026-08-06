@@ -17,6 +17,7 @@ import {
   checkTopUp,
   MIN_TOPUP_BTC,
   MAX_TOPUP_BTC,
+  TOPUP_EXPIRY_GRACE_MS,
 } from '@/services/cat/credit-topup';
 
 jest.mock('@/utils/logger', () => ({
@@ -47,12 +48,21 @@ jest.mock('@/lib/supabase/admin', () => ({
  * the builder (e.g. `.update().eq()`) resolves to `awaitResult`; `.single()` /
  * `.maybeSingle()` resolve to the configured terminal.
  */
-function qb(opts: { terminal?: unknown; awaitResult?: unknown } = {}) {
+function qb(
+  opts: {
+    terminal?: unknown;
+    awaitResult?: unknown;
+    onUpdate?: (payload: Record<string, unknown>) => void;
+  } = {}
+) {
   const terminal = opts.terminal ?? { data: null, error: null };
   const awaitResult = opts.awaitResult ?? { data: null, error: null };
   const builder: Record<string, unknown> = {
     insert: () => builder,
-    update: () => builder,
+    update: (payload: Record<string, unknown>) => {
+      opts.onUpdate?.(payload);
+      return builder;
+    },
     select: () => builder,
     eq: () => builder,
     order: () => builder,
@@ -230,5 +240,45 @@ describe('checkTopUp', () => {
     getPlatformNwcClient.mockResolvedValue(nwcClient()); // settled_at: null
     await expect(checkTopUp('owner', 'tp1')).resolves.toEqual({ status: 'expired' });
     expect(appendCreditEntry).not.toHaveBeenCalled();
+  });
+
+  it('tells the user "expired" without RECORDING it while a payment could still land', async () => {
+    // Two different claims, deliberately decoupled: "start a new invoice" is
+    // safe to say the moment our own expires_at passes, but `expired` in the
+    // row is terminal — the branch above returns early and never looks the
+    // invoice up again. expires_at is our local Date.now()+1h guess, so writing
+    // it on that alone would strand a payment still in flight.
+    const updated: Array<Record<string, unknown>> = [];
+    adminFrom.mockReturnValue(
+      qb({
+        terminal: {
+          data: { ...pendingRow, expires_at: new Date(Date.now() - 1000).toISOString() },
+        },
+        onUpdate: (payload: Record<string, unknown>) => updated.push(payload),
+      })
+    );
+    getPlatformNwcClient.mockResolvedValue(nwcClient()); // settled_at: null
+
+    await expect(checkTopUp('owner', 'tp1')).resolves.toEqual({ status: 'expired' });
+    expect(updated).toHaveLength(0);
+  });
+
+  it('records expired only once no payment can still arrive (past grace)', async () => {
+    const updated: Array<Record<string, unknown>> = [];
+    adminFrom.mockReturnValue(
+      qb({
+        terminal: {
+          data: {
+            ...pendingRow,
+            expires_at: new Date(Date.now() - TOPUP_EXPIRY_GRACE_MS - 1000).toISOString(),
+          },
+        },
+        onUpdate: (payload: Record<string, unknown>) => updated.push(payload),
+      })
+    );
+    getPlatformNwcClient.mockResolvedValue(nwcClient()); // settled_at: null
+
+    await expect(checkTopUp('owner', 'tp1')).resolves.toEqual({ status: 'expired' });
+    expect(updated).toContainEqual({ status: 'expired' });
   });
 });
