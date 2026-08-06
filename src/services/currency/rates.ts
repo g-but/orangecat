@@ -1,150 +1,204 @@
 /**
- * Currency Rate Management
+ * The rate cache every conversion reads from.
  *
- * Handles rate caching, fetching from CoinGecko, and rate lookups.
+ * It starts EMPTY, and that is the whole point. It used to be seeded with
+ * BTC_CHF: 86000 / BTC_USD: 97000 / BTC_EUR: 91000 "defaults", which meant the
+ * `if (!rate) cannot convert` guard downstream was unreachable for the very
+ * currencies people actually use — there was always a number, just not a true
+ * one. When those seeds were last plausible is anyone's guess; at the time this
+ * was rewritten the real CHF rate was 52,199, so a price of CHF 100 converted to
+ * an invoice worth about CHF 61 and nothing anywhere said so.
+ *
+ * Empty means "we don't know", and "we don't know" is a state the UI and the
+ * payment path both know how to handle honestly. See rateSource.server.ts for where
+ * real rates come from.
+ *
+ * This module is isomorphic. It never imports rateSource (that is server-only,
+ * and pulling it into a client bundle would ship an outbound third-party fetch
+ * to every browser). Instead:
+ *   - the browser fills the cache from our own /api/rates
+ *   - the server fills it via rates.server.ts
  */
 
+import { API_ROUTES } from '@/config/api-routes';
 import type { CurrencyCode } from '@/config/currencies';
 import { logger } from '@/utils/logger';
 import type { ExchangeRates, RateCache } from './types';
 
 // ==================== RATE CACHE ====================
 
+/**
+ * Known BTC prices, keyed `BTC_<CODE>`. Absent key = unknown rate, never zero
+ * and never a placeholder.
+ */
 export const cache: RateCache = {
-  rates: {
-    // Default rates (will be updated from API)
-    BTC_USD: 97000,
-    BTC_EUR: 91000,
-    BTC_CHF: 86000,
-    BTC_GBP: 78000,
-  },
+  rates: {},
   lastUpdated: null,
   expiresAt: null,
 };
 
-// ==================== RATE MANAGEMENT ====================
+const SATS_PER_BTC = 100_000_000;
 
-function updateRates(rates: Record<string, number>): void {
-  Object.assign(cache.rates, rates);
-  cache.lastUpdated = new Date();
-  cache.expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+/** How long a snapshot stays usable before we treat it as unknown again. */
+const MAX_AGE_MS = 15 * 60_000;
+
+export interface RateSnapshotLike {
+  rates: Readonly<Record<string, number>>;
+  fetchedAt: number;
 }
 
-// ==================== COINGECKO CONVERTER SERVICE ====================
+/**
+ * Adopt a rate snapshot from whichever side fetched it.
+ *
+ * Exported so server rendering can hand the browser the rates it already had,
+ * letting the first paint be denominated in the payer's own currency instead of
+ * flashing BTC until a client fetch lands.
+ */
+export function applyRateSnapshot(snapshot: RateSnapshotLike | null): void {
+  if (!snapshot || Date.now() - snapshot.fetchedAt > MAX_AGE_MS) {
+    return;
+  }
+  for (const [code, value] of Object.entries(snapshot.rates)) {
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+      cache.rates[`BTC_${code.toUpperCase()}`] = value;
+    }
+  }
+  cache.lastUpdated = new Date(snapshot.fetchedAt);
+  cache.expiresAt = new Date(snapshot.fetchedAt + MAX_AGE_MS);
+}
+
+/** The BTC price in `currency`, or null when we genuinely do not know it. */
+export function getRate(currency: string): number | null {
+  const code = currency.toUpperCase();
+  if (code === 'BTC') {
+    return 1;
+  }
+  if (cache.expiresAt && cache.expiresAt.getTime() < Date.now()) {
+    return null;
+  }
+  return cache.rates[`BTC_${code}`] ?? null;
+}
+
+/** Have we got a usable rate for anything? */
+export function hasUsableRates(): boolean {
+  return (
+    Object.keys(cache.rates).length > 0 &&
+    !!cache.expiresAt &&
+    cache.expiresAt.getTime() >= Date.now()
+  );
+}
+
+function toExchangeRates(): ExchangeRates | null {
+  const chf = getRate('CHF');
+  const usd = getRate('USD');
+  const eur = getRate('EUR');
+  const gbp = getRate('GBP');
+  if (!chf && !usd && !eur && !gbp) {
+    return null;
+  }
+  return {
+    btcToChf: chf ?? 0,
+    btcToUsd: usd ?? 0,
+    btcToEur: eur ?? 0,
+    btcToGbp: gbp ?? 0,
+    lastUpdated: cache.lastUpdated?.getTime() ?? 0,
+  };
+}
+
+// ==================== CONVERTER ====================
+
+const isBrowser = typeof window !== 'undefined';
 
 class CurrencyConverterService {
-  private apiRates: ExchangeRates | null = null;
-  private cacheDuration = 60 * 1000; // 1 minute cache
-  private fetchPromise: Promise<ExchangeRates> | null = null;
+  private fetchPromise: Promise<ExchangeRates | null> | null = null;
 
-  private async fetchRatesFromApi(): Promise<ExchangeRates> {
+  /**
+   * Load rates from our own origin.
+   *
+   * Browser-only: on the server the cache is filled by rates.server.ts, which
+   * talks to the upstream directly. A server calling its own HTTP endpoint would
+   * be a needless round trip and, behind a single-process reverse proxy, a good
+   * way to deadlock under load.
+   */
+  private async fetchRates(): Promise<ExchangeRates | null> {
+    if (!isBrowser) {
+      return toExchangeRates();
+    }
     if (this.fetchPromise) {
       return this.fetchPromise;
     }
 
     this.fetchPromise = (async () => {
       try {
-        const response = await fetch(
-          'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=chf,usd,eur',
-          { headers: { Accept: 'application/json' } }
-        );
-
-        if (!response.ok) {
-          throw new Error(`CoinGecko API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const bitcoin = data.bitcoin;
-
-        const rates: ExchangeRates = {
-          btcToChf: bitcoin.chf || 86000,
-          btcToUsd: bitcoin.usd || 97000,
-          btcToEur: bitcoin.eur || 91000,
-          lastUpdated: Date.now(),
-        };
-
-        this.apiRates = rates;
-        updateRates({
-          BTC_USD: rates.btcToUsd,
-          BTC_EUR: rates.btcToEur,
-          BTC_CHF: rates.btcToChf,
+        const response = await fetch(API_ROUTES.RATES, {
+          headers: { Accept: 'application/json' },
         });
-        return rates;
+        if (!response.ok) {
+          throw new Error(`rates endpoint responded ${response.status}`);
+        }
+        const body = (await response.json()) as { data?: RateSnapshotLike };
+        applyRateSnapshot(body.data ?? null);
+        return toExchangeRates();
       } catch (error) {
-        logger.warn('Failed to fetch BTC prices, using fallback rates', error, 'Currency');
-
-        const fallbackRates: ExchangeRates = {
-          btcToChf: 86000,
-          btcToUsd: 97000,
-          btcToEur: 91000,
-          lastUpdated: Date.now(),
-        };
-
-        this.apiRates = fallbackRates;
-        return fallbackRates;
+        logger.warn(
+          'Could not load Bitcoin rates; amounts stay in BTC',
+          { error: String(error) },
+          'Currency'
+        );
+        return null;
       } finally {
-        setTimeout(() => {
-          this.fetchPromise = null;
-        }, 1000);
+        this.fetchPromise = null;
       }
     })();
 
     return this.fetchPromise;
   }
 
-  async getRates(): Promise<ExchangeRates> {
-    if (this.apiRates && Date.now() - this.apiRates.lastUpdated < this.cacheDuration) {
-      return this.apiRates;
+  /** Current rates, loading them if the cache has nothing usable. */
+  async getRates(): Promise<ExchangeRates | null> {
+    if (hasUsableRates()) {
+      return toExchangeRates();
     }
-    return this.fetchRatesFromApi();
+    return this.fetchRates();
   }
 
+  /** Cached rates only — null when unknown. Never blocks, never guesses. */
   getCachedRates(): ExchangeRates | null {
-    return this.apiRates;
+    return hasUsableRates() ? toExchangeRates() : null;
   }
 
+  /** Fiat → BTC. Returns 0 when the rate is unknown; callers must not treat that as free. */
   async toBTC(amount: number, fromCurrency: CurrencyCode): Promise<number> {
     if (amount === 0) {
       return 0;
     }
-    const rates = await this.getRates();
-
-    switch (fromCurrency.toUpperCase()) {
-      case 'BTC':
-        return amount;
-      case 'SATS':
-        return amount / 100_000_000;
-      case 'CHF':
-        return amount / rates.btcToChf;
-      case 'USD':
-        return amount / rates.btcToUsd;
-      case 'EUR':
-        return amount / rates.btcToEur;
-      default:
-        return 0;
+    const code = String(fromCurrency).toUpperCase();
+    if (code === 'BTC') {
+      return amount;
     }
+    if (code === 'SATS') {
+      return amount / SATS_PER_BTC;
+    }
+    await this.getRates();
+    const rate = getRate(code);
+    return rate ? amount / rate : 0;
   }
 
+  /** BTC → fiat. Returns 0 when the rate is unknown. */
   async fromBTC(amountBTC: number, toCurrency: CurrencyCode): Promise<number> {
     if (amountBTC === 0) {
       return 0;
     }
-    const rates = await this.getRates();
-
-    switch (toCurrency.toUpperCase()) {
-      case 'BTC':
-        return amountBTC;
-      case 'SATS':
-        return Math.round(amountBTC * 100_000_000);
-      case 'CHF':
-        return amountBTC * rates.btcToChf;
-      case 'USD':
-        return amountBTC * rates.btcToUsd;
-      case 'EUR':
-        return amountBTC * rates.btcToEur;
-      default:
-        return 0;
+    const code = String(toCurrency).toUpperCase();
+    if (code === 'BTC') {
+      return amountBTC;
     }
+    if (code === 'SATS') {
+      return Math.round(amountBTC * SATS_PER_BTC);
+    }
+    await this.getRates();
+    const rate = getRate(code);
+    return rate ? amountBTC * rate : 0;
   }
 
   async convert(
@@ -163,10 +217,6 @@ class CurrencyConverterService {
     if (amountBTC === 0) {
       return '0 BTC';
     }
-    if (amountBTC < 0.00001) {
-      const sats = Math.round(amountBTC * 100_000_000);
-      return `${sats.toLocaleString()} sat`;
-    }
     if (showDecimals) {
       return `${amountBTC.toLocaleString(undefined, { maximumFractionDigits: 8 })} BTC`;
     }
@@ -174,12 +224,13 @@ class CurrencyConverterService {
   }
 
   clearCache(): void {
-    this.apiRates = null;
+    cache.rates = {};
+    cache.lastUpdated = null;
+    cache.expiresAt = null;
     this.fetchPromise = null;
   }
 }
 
-// Singleton instance
 export const currencyConverter = new CurrencyConverterService();
 
 // Convenience async functions

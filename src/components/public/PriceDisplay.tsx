@@ -12,7 +12,8 @@
  * dropped — never fabricated (a wrong rate is a money-correctness bug).
  */
 
-import { currencyConverter, formatCurrency } from '@/services/currency';
+import { formatCurrency } from '@/services/currency';
+import { convertBtcToOrNull, convertToBtcOrNull } from '@/services/currency/rates.server';
 import { PLATFORM_DEFAULT_CURRENCY, type CurrencyCode } from '@/config/currencies';
 
 interface PriceDisplayProps {
@@ -39,21 +40,20 @@ export default async function PriceDisplay({
   // fiat prices get the Bitcoin equivalent.
   const secondaryCurrency: CurrencyCode = currency === 'BTC' ? PLATFORM_DEFAULT_CURRENCY : 'BTC';
 
-  let secondary = 0;
+  let secondary: number | null = null;
   try {
-    secondary = await currencyConverter.convert(
-      amount,
-      currency as CurrencyCode,
-      secondaryCurrency
-    );
+    secondary =
+      currency === 'BTC'
+        ? await convertBtcToOrNull(amount, secondaryCurrency)
+        : await convertToBtcOrNull(amount, currency as CurrencyCode);
   } catch {
-    secondary = 0;
+    secondary = null;
   }
 
   return (
     <p className={className}>
       {formatCurrency(amount, currency)}
-      {secondary > 0 && (
+      {secondary !== null && secondary > 0 && (
         <span className="ml-2 text-base font-normal text-fg-secondary">
           ≈ {formatCurrency(secondary, secondaryCurrency)}
         </span>

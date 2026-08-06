@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { ArrowLeftRight, TrendingUp } from 'lucide-react';
 import {
   GuidanceDefaultCard,
@@ -21,8 +21,8 @@ import {
   GuidanceFieldCard,
 } from '@/components/create/guidance-shared';
 import type { FieldGuidanceContent, DefaultContent } from '@/lib/project-guidance';
-import { currencyConverter, formatCurrency } from '@/services/currency';
-import type { ExchangeRates } from '@/services/currency/types';
+import { formatCurrency } from '@/services/currency';
+import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 
 export type FieldType = string | null;
 
@@ -35,40 +35,27 @@ interface DynamicSidebarProps<T extends string = string> {
   className?: string;
 }
 
+/**
+ * What a goal is worth in the other denominations.
+ *
+ * This used to fall back to hardcoded rates (97000/91000/86000) whenever the
+ * real ones hadn't loaded, labelled "Estimated rates". They were years out of
+ * date — the CHF figure was off by roughly 65% — so someone setting a goal was
+ * shown a confidently wrong number. Without rates the breakdown simply doesn't
+ * render; the goal amount itself is still on screen.
+ */
 function CurrencyBreakdown({ amount, currency }: { amount: number; currency: string }) {
-  const [rates, setRates] = useState<ExchangeRates | null>(null);
+  const { convertToBTC, convertFromBTC, isLoading } = useCurrencyConversion();
 
-  useEffect(() => {
-    currencyConverter
-      .getRates()
-      .then(setRates)
-      .catch(() => {});
-  }, []);
+  const btc = !amount || isNaN(amount) ? 0 : convertToBTC(amount, currency);
+  const usd = convertFromBTC(btc, 'USD');
+  const eur = convertFromBTC(btc, 'EUR');
+  const chf = convertFromBTC(btc, 'CHF');
 
-  const r = rates ?? { btcToUsd: 97000, btcToEur: 91000, btcToChf: 86000 };
-
-  const toBtc = (): number => {
-    if (!amount || isNaN(amount)) {
-      return 0;
-    }
-    switch (currency) {
-      case 'BTC':
-        return amount;
-      case 'USD':
-        return amount / r.btcToUsd;
-      case 'EUR':
-        return amount / r.btcToEur;
-      case 'CHF':
-        return amount / r.btcToChf;
-      default:
-        return 0;
-    }
-  };
-
-  const btc = toBtc();
-  const usd = btc * r.btcToUsd;
-  const eur = btc * r.btcToEur;
-  const chf = btc * r.btcToChf;
+  // Nothing convertible yet (or at all) — say nothing rather than guess.
+  if (isLoading || btc <= 0 || (usd <= 0 && eur <= 0 && chf <= 0)) {
+    return null;
+  }
 
   const fmt = (num: number, decimals: number = 2): string => {
     if (num === 0) {
@@ -109,7 +96,7 @@ function CurrencyBreakdown({ amount, currency }: { amount: number; currency: str
       <div className="mt-3 pt-3 border-t border-subtle">
         <p className="text-xs text-fg-secondary flex items-start gap-1">
           <TrendingUp className="w-3 h-3 mt-0.5 flex-shrink-0" />
-          <span>{rates ? 'Live rates.' : 'Estimated rates.'} All funding settles in Bitcoin.</span>
+          <span>Live rates. All funding settles in Bitcoin.</span>
         </p>
       </div>
     </div>

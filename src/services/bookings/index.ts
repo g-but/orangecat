@@ -13,7 +13,7 @@ import { logger } from '@/utils/logger';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { ROUTES } from '@/config/routes';
 import { NotificationDispatcher } from '@/services/notifications/dispatcher';
-import { convertToBTC } from '@/services/currency/rates';
+import { convertToBtcOrNull } from '@/services/currency/rates.server';
 import type { CurrencyCode } from '@/config/currencies';
 
 // Types
@@ -145,10 +145,20 @@ class BookingService {
     // paymentFlowService so the booking record stores real BTC.
     const priceCol = input.bookable_type === 'service' ? 'fixed_price' : 'rental_price_btc';
     const rawPrice = Number(row[priceCol] ?? 0);
-    const priceBtc =
-      input.bookable_type === 'service' && rawPrice > 0
-        ? await convertToBTC(rawPrice, String(row.currency || 'BTC').toUpperCase() as CurrencyCode)
-        : rawPrice;
+    let priceBtc = rawPrice;
+    if (input.bookable_type === 'service' && rawPrice > 0) {
+      // A booking records what the customer owes. Without a real rate we cannot
+      // say what a fiat price is in Bitcoin, and writing a guess (or a zero)
+      // into the record is worse than making them try again in a moment.
+      const converted = await convertToBtcOrNull(
+        rawPrice,
+        String(row.currency || 'BTC').toUpperCase() as CurrencyCode
+      );
+      if (converted === null || !(converted > 0)) {
+        throw new Error('Bitcoin exchange rate unavailable; could not price this booking');
+      }
+      priceBtc = converted;
+    }
     const durationMinutes =
       input.bookable_type === 'service' ? ((row.duration_minutes as number | null) ?? null) : null;
 

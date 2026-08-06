@@ -45,6 +45,8 @@ import Script from 'next/script';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { CurrencyRatesProvider } from '@/components/providers/CurrencyRatesProvider';
+import { getRenderRates } from '@/services/currency/rates.server';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toaster } from '@/components/ui/sonner';
 import { Suspense } from 'react';
@@ -100,6 +102,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  // Cache-only, never a network wait: rendering a page must not depend on a
+  // third party answering. Whatever we last knew gets handed to the browser so
+  // the first paint already speaks the visitor's currency.
+  const rateSnapshot = getRenderRates();
 
   return (
     <html
@@ -148,13 +154,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to main content
         </a>
         <ThemeProvider>
-          <QueryProvider>
-            <AuthProvider>
-              <AppShell>
-                <Suspense>{children}</Suspense>
-              </AppShell>
-            </AuthProvider>
-          </QueryProvider>
+          <CurrencyRatesProvider initialSnapshot={rateSnapshot}>
+            <QueryProvider>
+              <AuthProvider>
+                <AppShell>
+                  <Suspense>{children}</Suspense>
+                </AppShell>
+              </AuthProvider>
+            </QueryProvider>
+          </CurrencyRatesProvider>
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
         {/* FleetCrown feedback widget — OrangeCat is customer #2 of the sibling

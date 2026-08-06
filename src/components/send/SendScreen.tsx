@@ -130,14 +130,22 @@ export function SendScreen() {
   // Nothing on this screen can work without a wallet to spend from, so say so
   // instead of rendering a form that ends in a refusal.
   if (!capability.canSend) {
+    // "Connect a wallet" is the right ask only when the wallet is the problem.
+    // When it's our key that's missing, their wallet is already connected and
+    // sending them to set one up blames them for our outage.
+    const oursNotTheirs = capability.reason === 'sending_unavailable';
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center">
         <Wallet className="h-12 w-12 text-fg-tertiary" aria-hidden="true" />
-        <h2 className="text-lg font-semibold text-fg-primary">{SEND_COPY.noWalletTitle}</h2>
+        <h2 className="text-lg font-semibold text-fg-primary">
+          {oursNotTheirs ? SEND_COPY.unavailableTitle : SEND_COPY.noWalletTitle}
+        </h2>
         <p className="text-sm text-fg-secondary">{capability.message ?? SEND_COPY.noWalletBody}</p>
-        <Button variant="accent" href={ROUTES.DASHBOARD.WALLETS}>
-          {SEND_COPY.noWalletCta}
-        </Button>
+        {!oursNotTheirs && (
+          <Button variant="accent" href={ROUTES.DASHBOARD.WALLETS}>
+            {SEND_COPY.noWalletCta}
+          </Button>
+        )}
         <MoneyTabs className="mt-4 w-full" />
       </div>
     );
@@ -162,8 +170,7 @@ export function SendScreen() {
     );
   }
 
-  const canReview =
-    tab === 'invoice' ? invoiceIsPayable : recipientCheck.payable && amount > 0;
+  const canReview = tab === 'invoice' ? invoiceIsPayable : recipientCheck.payable && amount > 0;
 
   return (
     <div className="mx-auto w-full max-w-md px-4 py-6">

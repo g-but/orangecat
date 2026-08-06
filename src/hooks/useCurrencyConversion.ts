@@ -1,111 +1,62 @@
 /**
- * useCurrencyConversion Hook
+ * Synchronous currency conversion for components.
  *
- * React hook wrapper for the centralized currency converter service.
- * Provides synchronous conversion using cached rates.
+ * Reads the shared rate cache (SSOT: /src/services/currency). Rates normally
+ * arrive with the page — CurrencyRatesProvider seeds the cache from the server
+ * before anything renders — so `isLoading` is false on the very first paint and
+ * amounts are shown in the visitor's own currency straight away. The fetch-on-
+ * mount path below is the fallback for trees rendered without that provider
+ * (tests, isolated stories).
  *
- * Single source of truth: /src/services/currency
- *
- * Created: 2025-06-05
+ * An unknown rate returns 0, which display code reads as "keep showing BTC".
+ * It never guesses: a plausible wrong rate is the one bug nobody notices.
  */
 
 import { useState, useEffect } from 'react';
-import { currencyConverter } from '@/services/currency';
-import { type CurrencyCode } from '@/config/currencies';
+import { currencyConverter, getRate } from '@/services/currency/rates';
+import { useRatesReady } from '@/components/providers/CurrencyRatesProvider';
 
 export function useCurrencyConversion() {
-  const [isLoading, setIsLoading] = useState(true);
+  const ratesReady = useRatesReady();
+  const [fetched, setFetched] = useState(false);
 
   useEffect(() => {
-    // Pre-fetch rates on mount
+    if (ratesReady) {
+      return;
+    }
+    let cancelled = false;
     currencyConverter
       .getRates()
-      .then(() => {
-        setIsLoading(false);
-      })
-      .catch(() => {
-        setIsLoading(false);
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) {
+          setFetched(true);
+        }
       });
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [ratesReady]);
 
-  /**
-   * Convert to BTC (uses cached rates, returns immediately)
-   */
   const convertToBTC = (amount: number, fromCurrency: string): number => {
-    if (amount === 0 || !fromCurrency) {
+    if (!amount || !fromCurrency) {
       return 0;
     }
-
-    const currency = fromCurrency.toUpperCase() as CurrencyCode;
-
-    // For BTC, no API call needed
-    if (currency === 'BTC') {
-      return amount;
-    }
-
-    // Use last cached rates (synchronous)
-    // This is safe because we pre-fetch in useEffect
-    // For real-time accuracy, the service auto-refreshes every minute
-    try {
-      // Get cached rates synchronously
-      const rates = currencyConverter.getCachedRates();
-      if (!rates) {
-        return 0;
-      }
-
-      switch (currency) {
-        case 'CHF':
-          return amount / rates.btcToChf;
-        case 'USD':
-          return amount / rates.btcToUsd;
-        case 'EUR':
-          return amount / rates.btcToEur;
-        default:
-          return 0;
-      }
-    } catch {
-      return 0;
-    }
+    const rate = getRate(fromCurrency.toUpperCase());
+    return rate ? amount / rate : 0;
   };
 
-  /**
-   * Convert from BTC (uses cached rates, returns immediately)
-   */
   const convertFromBTC = (amountBTC: number, toCurrency: string): number => {
-    if (amountBTC === 0 || !toCurrency) {
+    if (!amountBTC || !toCurrency) {
       return 0;
     }
-
-    const currency = toCurrency.toUpperCase() as CurrencyCode;
-
-    if (currency === 'BTC') {
-      return amountBTC;
-    }
-
-    try {
-      const rates = currencyConverter.getCachedRates();
-      if (!rates) {
-        return 0;
-      }
-
-      switch (currency) {
-        case 'CHF':
-          return amountBTC * rates.btcToChf;
-        case 'USD':
-          return amountBTC * rates.btcToUsd;
-        case 'EUR':
-          return amountBTC * rates.btcToEur;
-        default:
-          return 0;
-      }
-    } catch {
-      return 0;
-    }
+    const rate = getRate(toCurrency.toUpperCase());
+    return rate ? amountBTC * rate : 0;
   };
 
   return {
     convertToBTC,
     convertFromBTC,
-    isLoading,
+    isLoading: !ratesReady && !fetched,
   };
 }

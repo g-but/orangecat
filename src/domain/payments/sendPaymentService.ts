@@ -20,7 +20,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { NWCClient } from '@/lib/nostr/nwc';
-import { decrypt } from '@/domain/payments/encryptionService';
+import { decrypt, isEncryptionConfigured } from '@/domain/payments/encryptionService';
 import { generateInvoice } from '@/domain/payments/invoiceGenerationService';
 import { resolveUserWallet } from '@/domain/payments/walletResolutionService';
 import { getAdminClient } from '@/lib/supabase/admin';
@@ -32,6 +32,8 @@ import { logger } from '@/utils/logger';
 export type SendFailureReason =
   | 'no_sender_wallet'
   | 'wallet_unreadable'
+  /** Our key is missing or rotated — nothing the payer can do about it. */
+  | 'sending_unavailable'
   | 'recipient_not_found'
   | 'recipient_cannot_receive'
   | 'invalid_invoice'
@@ -89,6 +91,22 @@ export async function resolveSenderNwcUri(userId: string): Promise<string | Send
   try {
     return decrypt(encrypted);
   } catch {
+    // Two very different failures used to share one message. With no key
+    // configured, "reconnect it" is advice that cannot work — reconnecting has
+    // to encrypt, which needs the same key — so it sends the payer chasing a
+    // problem that is ours. Say so, and make it loud in the logs, because
+    // nothing else on the box reports it.
+    if (!isEncryptionConfigured()) {
+      logger.error(
+        'PAYMENT_ENCRYPTION_KEY is missing or invalid — no user can send from a connected wallet',
+        { userId },
+        'Payments'
+      );
+      return fail(
+        'sending_unavailable',
+        'Sending is temporarily unavailable on our side. Your wallet is fine — please try again shortly.'
+      );
+    }
     return fail(
       'wallet_unreadable',
       'We could not read your wallet connection. Reconnect it and try again.'

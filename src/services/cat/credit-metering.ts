@@ -18,7 +18,7 @@
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { calculateCostBtc, getModelMetadata, isModelFree } from '@/config/ai-models';
 import { appendCreditEntry, getCreditBalance } from '@/services/cat/credits';
-import { convertFromBTC } from '@/services/currency/rates';
+import { convertBtcToOrNull } from '@/services/currency/rates.server';
 import { logger } from '@/utils/logger';
 
 /**
@@ -108,44 +108,48 @@ export async function meterCreditUsage(
 
   const hasProviderCost = Number.isFinite(rawCostBtc) && (rawCostBtc ?? 0) > 0;
 
-  let btcPriceUsd = 100000;
-  let liveRate = false;
-  try {
-    const usdPerBtc = await convertFromBTC(1, 'USD');
-    if (Number.isFinite(usdPerBtc) && usdPerBtc > 0) {
-      btcPriceUsd = usdPerBtc;
-      liveRate = true;
+  // Only the registry-ESTIMATE path needs a rate: the price table is in USD, so
+  // turning it into a BTC charge requires knowing what Bitcoin costs. A
+  // provider-reported cost is already BTC and needs nothing.
+  let btcPriceUsd: number | null = null;
+  if (!hasProviderCost) {
+    try {
+      const usdPerBtc = await convertBtcToOrNull(1, 'USD');
+      if (usdPerBtc !== null && Number.isFinite(usdPerBtc) && usdPerBtc > 0) {
+        btcPriceUsd = usdPerBtc;
+      }
+    } catch {
+      /* handled by the null check below */
     }
-  } catch {
-    /* fall through to the conservative default + the warning below */
+
+    if (btcPriceUsd === null) {
+      // No rate, no bill. This used to fall back to a hardcoded 100,000 USD/BTC,
+      // which debited a real ledger against a made-up number — taking the wrong
+      // amount of someone's money is worse than taking none and reconciling.
+      logger.error(
+        'Cat frontier usage NOT billed — no BTC/USD rate to price a registry estimate',
+        { userId, model, ref, inputTokens, outputTokens },
+        'CatCredits'
+      );
+      return 0;
+    }
   }
 
   const meteredRawCostBtc = hasProviderCost
     ? (rawCostBtc as number)
-    : calculateCostBtc(model, inputTokens, outputTokens, btcPriceUsd);
+    : calculateCostBtc(model, inputTokens, outputTokens, btcPriceUsd as number);
   if (meteredRawCostBtc <= 0) {
     return 0;
   }
 
   // Provider-reported cost is ground truth → charge margin only. A registry
-  // estimate is less reliable (hand-maintained prices lag), and doubly so if
-  // the live BTC/USD rate was unavailable — pad it and record the source so a
-  // low-confidence bill is auditable rather than a silent under-charge.
+  // estimate is less reliable (hand-maintained prices lag), so pad it and record
+  // the source, keeping a low-confidence bill auditable rather than a silent
+  // under-charge. Either way the rate behind it is real — see above.
   const effectiveMarkup = hasProviderCost
     ? CREDIT_USAGE_MARKUP
     : CREDIT_USAGE_MARKUP * ESTIMATE_SAFETY_MULTIPLIER;
-  const pricingSource = hasProviderCost
-    ? 'provider_reported'
-    : liveRate
-      ? 'registry_estimate'
-      : 'registry_estimate_norate';
-  if (!hasProviderCost && !liveRate) {
-    logger.warn(
-      'Cat credit debit priced from a registry estimate with no live BTC rate — used the conservative fallback',
-      { userId, model, ref, btcPriceUsd },
-      'CatCredits'
-    );
-  }
+  const pricingSource = hasProviderCost ? 'provider_reported' : 'registry_estimate';
 
   const chargeBtc = ceilBtc(meteredRawCostBtc * effectiveMarkup);
 

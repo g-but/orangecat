@@ -10,20 +10,24 @@ import { payInvoice, sendToRecipient } from '@/domain/payments/sendPaymentServic
 import { resolveUserWallet } from '@/domain/payments/walletResolutionService';
 import { generateInvoice } from '@/domain/payments/invoiceGenerationService';
 import { getAdminClient } from '@/lib/supabase/admin';
-import { decrypt } from '@/domain/payments/encryptionService';
+import { decrypt, isEncryptionConfigured } from '@/domain/payments/encryptionService';
 import { NWCClient } from '@/lib/nostr/nwc';
 
 jest.mock('@/utils/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
 jest.mock('@/lib/supabase/admin', () => ({ getAdminClient: jest.fn() }));
-jest.mock('@/domain/payments/encryptionService', () => ({ decrypt: jest.fn() }));
+jest.mock('@/domain/payments/encryptionService', () => ({
+  decrypt: jest.fn(),
+  isEncryptionConfigured: jest.fn(() => true),
+}));
 jest.mock('@/domain/payments/walletResolutionService', () => ({ resolveUserWallet: jest.fn() }));
 jest.mock('@/domain/payments/invoiceGenerationService', () => ({ generateInvoice: jest.fn() }));
 jest.mock('@/lib/nostr/nwc', () => ({ NWCClient: jest.fn() }));
 
 const adminMock = getAdminClient as jest.Mock;
 const decryptMock = decrypt as jest.Mock;
+const isEncryptionConfiguredMock = isEncryptionConfigured as jest.Mock;
 const resolveWalletMock = resolveUserWallet as jest.Mock;
 const generateInvoiceMock = generateInvoice as jest.Mock;
 const NWCClientMock = NWCClient as unknown as jest.Mock;
@@ -62,6 +66,7 @@ beforeEach(() => {
     disconnect: jest.fn(),
   }));
   decryptMock.mockReturnValue('nostr+walletconnect://sender');
+  isEncryptionConfiguredMock.mockReturnValue(true);
 });
 
 describe('payInvoice', () => {
@@ -116,6 +121,21 @@ describe('payInvoice', () => {
     });
     const result = await payInvoice('user-1', MAINNET_INVOICE);
     expect(result).toMatchObject({ ok: false, reason: 'wallet_unreadable' });
+  });
+
+  it('blames itself, not the payer, when the encryption key is missing', async () => {
+    // Found live: every send failed with "reconnect your wallet" because the
+    // box had no PAYMENT_ENCRYPTION_KEY. Reconnecting needs the same key to
+    // encrypt, so that advice cannot work — it just moves our outage onto them.
+    mockAdmin({ nwc: 'enc' });
+    decryptMock.mockImplementation(() => {
+      throw new Error('no key');
+    });
+    isEncryptionConfiguredMock.mockReturnValue(false);
+
+    const result = await payInvoice('user-1', MAINNET_INVOICE);
+    expect(result).toMatchObject({ ok: false, reason: 'sending_unavailable' });
+    expect((result as { message: string }).message).not.toMatch(/reconnect/i);
   });
 
   it('surfaces a rejected payment as payment_failed', async () => {

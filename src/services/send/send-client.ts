@@ -40,6 +40,8 @@ export interface SendCapability {
   canSend: boolean;
   /** Present when `canSend` is false — already payer-readable, shown as-is. */
   message?: string;
+  /** Why, so the screen can tell "you need a wallet" from "we're broken". */
+  reason?: string;
 }
 
 /**

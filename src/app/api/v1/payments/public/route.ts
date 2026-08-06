@@ -42,6 +42,10 @@ export async function POST(request: Request) {
       ['owner not found', 'This page no longer has a receiving owner.'],
       ['no wallet', 'The owner has not connected a Bitcoin wallet yet.'],
       ['outside allowed range', 'That amount is outside the wallet provider’s allowed range.'],
+      [
+        'exchange rate unavailable',
+        'We could not check the Bitcoin exchange rate just now, so we did not want to guess the amount. Please try again in a moment.',
+      ],
       ['LNURL', 'The Lightning Address could not create an invoice. Try again later.'],
     ];
     for (const [pattern, safe] of safeErrors) {
