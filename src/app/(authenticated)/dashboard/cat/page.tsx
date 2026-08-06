@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
@@ -20,7 +20,7 @@ import { APP_CONTENT_HEIGHT_CLASS } from '@/config/layout-chrome';
 import { useConversations } from '@/components/ai-chat/ModernChatPanel/hooks/useConversations';
 import { ConversationRail } from '@/components/ai-chat/ModernChatPanel/components/ConversationRail';
 
-export default function CatHubPage() {
+function CatHub() {
   const { user, isLoading } = useRequireAuth();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<CatHubTab>('chat');
@@ -89,5 +89,14 @@ export default function CatHubPage() {
         />
       </div>
     </div>
+  );
+}
+
+/** Own Suspense boundary — it reads `?tab=`. See ResetPasswordPage for why. */
+export default function CatHubPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <CatHub />
+    </Suspense>
   );
 }

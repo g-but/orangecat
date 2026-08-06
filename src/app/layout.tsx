@@ -49,7 +49,6 @@ import { CurrencyRatesProvider } from '@/components/providers/CurrencyRatesProvi
 import { getRenderRates } from '@/services/currency/rates.server';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toaster } from '@/components/ui/sonner';
-import { Suspense } from 'react';
 
 import type { Metadata, Viewport } from 'next';
 import { APP_DESCRIPTION, APP_NAME, APP_TAGLINE, SITE_URL } from '@/config/brand';
@@ -157,9 +156,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CurrencyRatesProvider initialSnapshot={rateSnapshot}>
             <QueryProvider>
               <AuthProvider>
-                <AppShell>
-                  <Suspense>{children}</Suspense>
-                </AppShell>
+                {/* No Suspense boundary here, deliberately.
+                    A boundary above every page means the response starts
+                    streaming before the page body runs, and once headers are
+                    sent the status can no longer change — so every notFound()
+                    in the app resolved to HTTP 200 with the 404 UI inside it.
+                    A mistyped pay link answered "200 OK". Pages that need a
+                    boundary (useSearchParams, slow sections) declare their own,
+                    where it doesn't cost the whole app its status codes. */}
+                <AppShell>{children}</AppShell>
               </AuthProvider>
             </QueryProvider>
           </CurrencyRatesProvider>
