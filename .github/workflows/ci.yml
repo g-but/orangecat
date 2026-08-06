@@ -87,6 +87,11 @@ jobs:
           # client bundle CD ships (artifact download, no rebuild) — a client
           # var set only in cd.yml never reaches production.
           NEXT_PUBLIC_CAT_CREDITS_LIVE: ${{ vars.NEXT_PUBLIC_CAT_CREDITS_LIVE }}
+          # Voice input on create forms and onboarding. Same rule as the line
+          # above, and the reason this feature was dead: the flag existed in the
+          # code and in nobody's build env, so FEATURES.voiceInput compiled to
+          # false in every production bundle it ever shipped in.
+          NEXT_PUBLIC_FEATURE_VOICE_INPUT: ${{ vars.NEXT_PUBLIC_FEATURE_VOICE_INPUT }}
           # FleetCrown feedback widget token. Statically prerendered routes
           # (e.g. /dashboard/*) evaluate the root layout's env gate at BUILD
           # time — without this the widget bakes out of every static page and
