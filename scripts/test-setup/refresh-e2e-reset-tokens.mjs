@@ -45,6 +45,15 @@ const admin = createClient(url, serviceKey, {
 
 // Opportunistic cleanup of yesterday's throwaway reset users. Best-effort —
 // a failure here must never block the run.
+//
+// This deletes the AUTH user; the profile row goes with it via
+// profiles.profiles_id_fkey ON DELETE CASCADE (migration 20260806150000).
+// Before that constraint existed the profile survived every deletion, so this
+// loop ran successfully for two months while quietly leaving 113 orphaned
+// profiles in production — 73% of the profiles table, which made the platform's
+// signup numbers mostly synthetic. If that constraint is ever dropped, this
+// script silently starts leaking again; the nightly `profiles.orphaned`
+// invariant is what would notice.
 try {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   for (let page = 1; page <= 10; page++) {
