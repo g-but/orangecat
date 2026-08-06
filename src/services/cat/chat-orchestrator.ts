@@ -19,6 +19,7 @@ import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { prepareCatChat } from '@/services/cat/chat-prepare';
 import { parseActionsFromResponse } from '@/services/cat/response-parser';
 import { saveMessages } from '@/services/cat/conversation-history';
+import { buildFailedTurnMessages } from '@/services/cat/failed-turn';
 import { resolveProvider, type FallbackProvider } from '@/services/cat/provider-resolver';
 import { meterCreditUsage } from '@/services/cat/credit-metering';
 import { getAdminClient } from '@/lib/supabase/admin';
@@ -288,13 +289,15 @@ export async function orchestrateCatChat(
       async start(controller) {
         // Lifted outside the try block so the catch at the bottom can
         // tell whether the failover attempt was reached (and which
-        // provider/model was active when the chain died). Block-scoped
-        // `let` inside the try is invisible to the outer catch.
+        // provider/model was active when the chain died), and can persist
+        // whatever text had already streamed. Block-scoped `let` inside the
+        // try is invisible to the outer catch.
         let attemptedFallback = false;
         let activeProvider = provider;
         let activeModel = modelToUse;
         let activeService = aiService;
         let activeIsPlatform = !hasByok;
+        let fullContent = '';
         try {
           let usage:
             | {
@@ -304,7 +307,6 @@ export async function orchestrateCatChat(
                 costBtc?: number;
               }
             | undefined;
-          let fullContent = '';
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ model: modelToUse, provider })}\n\n`)
           );
@@ -557,6 +559,34 @@ export async function orchestrateCatChat(
                 'Cat couldn’t generate a response. Try again, or add your own key in Settings → API Keys.',
               code: 'STREAM_ERROR',
             };
+          }
+          // Persist the turn even though it failed. The success path saves
+          // only `if (fullContent)`, so before this a total provider failure
+          // threw away the user's own words: they reloaded to an empty thread
+          // and we kept no record of what they had asked. Six real accounts
+          // reached exactly this state in June 2026 — one message-less
+          // conversation each, never seen again — and because an unsaved turn
+          // is indistinguishable from "opened the page and typed nothing",
+          // those failures were invisible in the data too.
+          //
+          // The assistant turn stores the same sentence the user just saw, so
+          // the thread reads back honestly, and the user/assistant alternation
+          // the next request's history depends on stays intact.
+          if (conversationId) {
+            await saveMessages(
+              supabase,
+              conversationId,
+              user.id,
+              buildFailedTurnMessages({
+                message,
+                partialContent: fullContent,
+                errorText: errPayload.error,
+                model: activeModel,
+                provider: activeProvider,
+              })
+            ).catch((persistErr: unknown) => {
+              logger.error('Failed to persist failed turn', { persistErr }, 'cat/chat');
+            });
           }
           controller.enqueue(encoder.encode(`event: error\n`));
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(errPayload)}\n\n`));

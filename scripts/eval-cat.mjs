@@ -443,6 +443,29 @@ async function purgeRunMemories(userId, sinceIso) {
   );
 }
 
+/**
+ * Delete eval conversations left behind by an EARLIER run. End-of-run cleanup
+ * only knows the ids it collected in memory, so a hard kill (CI timeout, box
+ * restart) between probes strands them forever: 18 such rows from a single
+ * 2026-07-03 run were still sitting in production a month later, making up
+ * more than a third of the whole conversations table and inflating every
+ * usage metric read off it. Sweeping by title at START is the durable fix —
+ * it needs no memory of the run that leaked.
+ */
+async function sweepStaleEvalConversations(userId) {
+  const stale = await rest(
+    'GET',
+    `cat_conversations?user_id=eq.${userId}&is_default=is.false&title=like.${encodeURIComponent('[eval]%')}&select=id`
+  );
+  for (const { id } of stale ?? []) {
+    await rest('DELETE', `cat_messages?conversation_id=eq.${id}`, { prefer: 'return=minimal' });
+    await rest('DELETE', `cat_conversations?id=eq.${id}`, { prefer: 'return=minimal' });
+  }
+  if (stale?.length) {
+    console.error(`eval-cat: swept ${stale.length} stale eval conversation(s) from a previous run`);
+  }
+}
+
 async function cleanupEvalArtifacts(userId, conversationIds, runStartIso) {
   await purgeRunMemories(userId, runStartIso);
   for (const id of conversationIds) {
@@ -539,6 +562,9 @@ async function main() {
   const cookie = buildAuthCookie(session);
 
   await resetDailyCap(userId);
+  await sweepStaleEvalConversations(userId).catch(err =>
+    console.error(`eval-cat: stale-conversation sweep failed (non-fatal): ${err}`)
+  );
 
   const runStartIso = new Date().toISOString();
   const report = {
