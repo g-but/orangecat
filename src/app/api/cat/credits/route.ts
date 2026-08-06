@@ -9,6 +9,7 @@
  */
 
 import { getCreditBalance, listCreditEntries } from '@/services/cat/credits';
+import { getResumableTopUp } from '@/services/cat/credit-topup';
 import { platformReceiveEnabled } from '@/lib/bitcoin/platform-wallet';
 import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
@@ -16,13 +17,21 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   const { user, supabase } = request;
   try {
-    const [balanceBtc, entries] = await Promise.all([
+    const [balanceBtc, entries, pendingTopup] = await Promise.all([
       getCreditBalance(supabase, user.id),
       listCreditEntries(supabase, user.id),
+      getResumableTopUp(supabase, user.id),
     ]);
     // topupEnabled tells the UI whether to offer Lightning top-up (only when a
     // platform receiving wallet is configured — otherwise the button stays off).
-    return apiSuccess({ balanceBtc, entries, topupEnabled: platformReceiveEnabled() });
+    // pendingTopup carries a still-payable invoice so the panel can offer it
+    // again; without it, closing the dialog lost the only handle on the invoice.
+    return apiSuccess({
+      balanceBtc,
+      entries,
+      topupEnabled: platformReceiveEnabled(),
+      pendingTopup,
+    });
   } catch (error) {
     return handleApiError(error);
   }

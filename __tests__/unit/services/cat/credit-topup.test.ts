@@ -18,6 +18,7 @@ import {
   MIN_TOPUP_BTC,
   MAX_TOPUP_BTC,
   TOPUP_EXPIRY_GRACE_MS,
+  getResumableTopUp,
 } from '@/services/cat/credit-topup';
 
 jest.mock('@/utils/logger', () => ({
@@ -48,6 +49,9 @@ jest.mock('@/lib/supabase/admin', () => ({
  * the builder (e.g. `.update().eq()`) resolves to `awaitResult`; `.single()` /
  * `.maybeSingle()` resolve to the configured terminal.
  */
+/** Filter clauses the builder saw, so a query's scoping can be asserted. */
+const qbCalls: unknown[][] = [];
+
 function qb(
   opts: {
     terminal?: unknown;
@@ -57,6 +61,7 @@ function qb(
 ) {
   const terminal = opts.terminal ?? { data: null, error: null };
   const awaitResult = opts.awaitResult ?? { data: null, error: null };
+  const calls: unknown[][] = qbCalls;
   const builder: Record<string, unknown> = {
     insert: () => builder,
     update: (payload: Record<string, unknown>) => {
@@ -64,7 +69,14 @@ function qb(
       return builder;
     },
     select: () => builder,
-    eq: () => builder,
+    eq: (...a: unknown[]) => {
+      calls.push(['eq', ...a]);
+      return builder;
+    },
+    gt: (...a: unknown[]) => {
+      calls.push(['gt', ...a]);
+      return builder;
+    },
     order: () => builder,
     limit: () => builder,
     single: async () => terminal,
@@ -85,7 +97,53 @@ function nwcClient(over: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  qbCalls.length = 0;
   platformReceiveEnabled.mockReturnValue(true);
+});
+
+describe('getResumableTopUp', () => {
+  const supabase = { from: (...a: unknown[]) => adminFrom(...a) } as never;
+
+  it('returns the still-payable invoice so a closed dialog can be reopened', async () => {
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    adminFrom.mockReturnValue(
+      qb({
+        terminal: {
+          data: {
+            id: 'tp1',
+            bolt11: 'lnbc1...',
+            payment_hash: 'ph_1',
+            amount_btc: '0.00010000', // numeric(18,8) arrives as a string
+            expires_at: expiresAt,
+          },
+        },
+      })
+    );
+
+    await expect(getResumableTopUp(supabase, 'owner')).resolves.toEqual({
+      topupId: 'tp1',
+      bolt11: 'lnbc1...',
+      paymentHash: 'ph_1',
+      amountBtc: 0.0001, // coerced — a string here would break BTC formatting
+      expiresAt,
+    });
+  });
+
+  it('scopes to the caller, to pending only, and excludes already-expired rows', async () => {
+    adminFrom.mockReturnValue(qb({ terminal: { data: null } }));
+
+    await getResumableTopUp(supabase, 'owner');
+
+    // Resuming an expired invoice could only produce a payment that cannot land.
+    expect(qbCalls).toContainEqual(['eq', 'user_id', 'owner']);
+    expect(qbCalls).toContainEqual(['eq', 'status', 'pending']);
+    expect(qbCalls.some(c => c[0] === 'gt' && c[1] === 'expires_at')).toBe(true);
+  });
+
+  it('returns null when there is nothing to resume', async () => {
+    adminFrom.mockReturnValue(qb({ terminal: { data: null } }));
+    await expect(getResumableTopUp(supabase, 'owner')).resolves.toBeNull();
+  });
 });
 
 describe('initiateTopUp', () => {

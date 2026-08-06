@@ -67,3 +67,36 @@ describe('useDisplayCurrency', () => {
     expect(result.current.isLoading).toBe(true);
   });
 });
+
+/**
+ * A metered micropayment product routinely charges less than a cent per Cat
+ * message. At CHF's 2-decimal precision those amounts formatted as "CHF 0.00" —
+ * money genuinely spent, displayed as nothing. A credits ledger became a column
+ * of zeros and a non-empty balance looked empty. BTC carries 8 decimals, so it
+ * can always say what a fiat unit cannot.
+ */
+describe('amounts smaller than the display currency can express', () => {
+  it('never renders a non-zero amount as zero — falls back to BTC', () => {
+    mockCurrency = 'CHF';
+    const { result } = renderHook(() => useDisplayCurrency());
+
+    // 0.00000005 BTC * 86,000 = CHF 0.0043 → would print "CHF 0.00".
+    const rendered = result.current.formatAmountBtc(0.00000005);
+    expect(rendered).not.toBe('CHF 0.00');
+    expect(rendered).toBe('₿0.00000005');
+  });
+
+  it('still uses fiat once the amount is large enough to express', () => {
+    mockCurrency = 'CHF';
+    const { result } = renderHook(() => useDisplayCurrency());
+
+    // 0.0000001 BTC * 86,000 = CHF 0.0086 → rounds to CHF 0.01, which is honest.
+    expect(result.current.formatAmountBtc(0.0000001)).toBe('CHF 0.01');
+  });
+
+  it('leaves a true zero rendered in the display currency', () => {
+    mockCurrency = 'CHF';
+    const { result } = renderHook(() => useDisplayCurrency());
+    expect(result.current.formatAmountBtc(0)).toBe('CHF 0.00');
+  });
+});

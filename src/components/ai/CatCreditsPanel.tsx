@@ -10,11 +10,12 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { Coins, Loader2, AlertCircle, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { Coins, Loader2, AlertCircle, ArrowDownLeft, ArrowUpRight, Clock } from 'lucide-react';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { displayBTC } from '@/services/currency';
 import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
-import { TopUpDialog } from './TopUpDialog';
+import { TopUpDialog, type TopUpInvoiceView } from './TopUpDialog';
 
 interface CreditEntry {
   id: string;
@@ -37,9 +38,12 @@ export function CatCreditsPanel() {
   const [balanceBtc, setBalanceBtc] = useState(0);
   const [entries, setEntries] = useState<CreditEntry[]>([]);
   const [topupEnabled, setTopupEnabled] = useState(false);
+  const [pendingTopup, setPendingTopup] = useState<TopUpInvoiceView | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [topUpOpen, setTopUpOpen] = useState(false);
+  /** Set when the dialog is opened to RESUME `pendingTopup` rather than start fresh. */
+  const [resuming, setResuming] = useState<TopUpInvoiceView | null>(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -53,6 +57,7 @@ export function CatCreditsPanel() {
       setBalanceBtc(json?.data?.balanceBtc ?? 0);
       setEntries((json?.data?.entries ?? []) as CreditEntry[]);
       setTopupEnabled(!!json?.data?.topupEnabled);
+      setPendingTopup((json?.data?.pendingTopup ?? null) as TopUpInvoiceView | null);
     } catch (err) {
       logger.error('Failed to load cat credits', err, 'CatCredits');
       setError('Could not load your credits. Try again.');
@@ -94,7 +99,10 @@ export function CatCreditsPanel() {
         </div>
         <button
           type="button"
-          onClick={() => setTopUpOpen(true)}
+          onClick={() => {
+            setResuming(null);
+            setTopUpOpen(true);
+          }}
           disabled={!topupEnabled}
           title={topupEnabled ? 'Top up with Lightning' : 'Lightning top-up is coming soon'}
           className={
@@ -106,6 +114,28 @@ export function CatCreditsPanel() {
           {topupEnabled ? 'Top up' : 'Top up (soon)'}
         </button>
       </div>
+
+      {/* An invoice issued earlier and still payable. Without this the only
+          handle on it was the dialog's own state, so closing the modal made a
+          live invoice unreachable and invisible. */}
+      {pendingTopup && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-md border border-subtle bg-surface-raised/30 p-3">
+          <span className="flex items-center gap-2 text-sm text-fg-secondary">
+            <Clock className="h-4 w-4 text-status-warning" />
+            {displayBTC(pendingTopup.amountBtc)} invoice waiting for payment
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setResuming(pendingTopup);
+              setTopUpOpen(true);
+            }}
+            className="rounded-md border border-subtle px-3 py-1.5 text-sm text-fg-primary hover:bg-surface-raised"
+          >
+            Show invoice
+          </button>
+        </div>
+      )}
 
       {/* History */}
       {error ? (
@@ -155,7 +185,13 @@ export function CatCreditsPanel() {
 
       {topUpOpen && (
         <TopUpDialog
-          onClose={() => setTopUpOpen(false)}
+          initialInvoice={resuming}
+          onClose={() => {
+            setTopUpOpen(false);
+            // Refresh so a top-up created and then closed shows up as pending
+            // rather than vanishing until the next page load.
+            void load();
+          }}
           onSuccess={() => {
             setTopUpOpen(false);
             void load();

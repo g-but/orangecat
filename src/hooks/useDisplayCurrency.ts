@@ -19,7 +19,21 @@ import { useUserCurrency } from './useUserCurrency';
 import { isFiatCurrency } from '@/utils/currency-helpers';
 import { useCurrencyConversion } from './useCurrencyConversion';
 import { formatCurrency, satsToBitcoin, bitcoinToSats } from '@/services/currency';
-import type { CurrencyCode } from '@/config/currencies';
+import { CURRENCY_METADATA, type CurrencyCode } from '@/config/currencies';
+
+/**
+ * Would this fiat amount render as all zeros at the currency's precision?
+ *
+ * CHF/USD/EUR/GBP carry 2 decimals, but this platform charges per Cat message —
+ * amounts that are routinely under half a cent. Formatting those the ordinary
+ * way prints "CHF 0.00" for money that was really spent, so a credits ledger
+ * reads as a column of zeros and a balance looks empty while it is not. A
+ * display that rounds a non-zero amount to zero is not imprecise, it is wrong.
+ */
+function roundsToZero(fiatAmount: number, currency: CurrencyCode): boolean {
+  const precision = CURRENCY_METADATA[currency]?.precision ?? 2;
+  return Math.abs(fiatAmount) < 0.5 * Math.pow(10, -precision);
+}
 
 interface DisplayCurrencyOptions {
   /** Show currency symbol (default: true) */
@@ -90,10 +104,16 @@ export function useDisplayCurrency(): UseDisplayCurrencyReturn {
       const btc = satsToBitcoin(sats);
       const fiatAmount = convertFromBTC(btc, displayCurrency);
 
-      // Rates not loaded yet (e.g. logged-out visitors) → fall back to BTC, the
-      // canonical unit — NEVER sats. Showing sats here was why public pages
-      // rendered "100,000 sat" before rates arrived.
-      if (isLoading || fiatAmount === 0) {
+      // Fall back to BTC, the canonical unit — NEVER sats. Showing sats here was
+      // why public pages rendered "100,000 sat" before rates arrived. Three
+      // cases reach it:
+      //   - rates not loaded yet (e.g. logged-out visitors),
+      //   - the conversion produced nothing,
+      //   - the amount is real but smaller than the currency can express, which
+      //     would otherwise print "CHF 0.00" for money that was genuinely spent
+      //     (see roundsToZero — per-message Cat charges live below half a cent).
+      // BTC has 8 decimals, so it can always say what a fiat unit cannot.
+      if (isLoading || fiatAmount === 0 || roundsToZero(fiatAmount, displayCurrency)) {
         return formatCurrency(btc, 'BTC', { showSymbol, compact });
       }
 

@@ -5,15 +5,25 @@
  *
  * Pick an amount → POST issues a platform invoice → show the bolt11 as a QR +
  * copy → poll settlement → on payment, credit lands and the panel refreshes.
- * Amounts are BTC (canonical), shown in the user's display currency.
+ *
+ * Amounts lead with BTC, the canonical unit, and carry the user's display
+ * currency as an approximation. Leading with fiat (as this did) meant the three
+ * presets read "CHF 5.23 / 26.15 / 52.31" — values nobody would choose, which
+ * silently changed every day with the exchange rate. The amount actually being
+ * invoiced is the BTC one, so that is the number shown.
+ *
+ * Can also RESUME an invoice issued earlier (`initialInvoice`): a top-up whose
+ * dialog was closed is still payable until it expires, and settlement no longer
+ * depends on this component being mounted (services/cat/topup-reconcile).
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Loader2, Copy, Check, X, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Loader2, Copy, Check, X, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import Button from '@/components/ui/Button';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { displayBTC } from '@/services/currency';
 import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
 
@@ -21,24 +31,38 @@ import { API_ROUTES } from '@/config/api-routes';
 import { TOPUP_PRESETS_BTC as PRESETS_BTC } from '@/config/cat-plans';
 const POLL_MS = 3000;
 
-interface Invoice {
+export interface TopUpInvoiceView {
   topupId: string;
   bolt11: string;
   amountBtc: number;
+  expiresAt: string;
 }
 
 interface TopUpDialogProps {
   onClose: () => void;
   onSuccess: () => void;
+  /** Resume an invoice issued earlier instead of asking for an amount. */
+  initialInvoice?: TopUpInvoiceView | null;
 }
 
-export function TopUpDialog({ onClose, onSuccess }: TopUpDialogProps) {
-  const { formatAmountBtc } = useDisplayCurrency();
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
+/** mm:ss left, or null once the window has passed. */
+function timeLeft(expiresAt: string): string | null {
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (!isFinite(ms) || ms <= 0) {
+    return null;
+  }
+  const total = Math.floor(ms / 1000);
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
+export function TopUpDialog({ onClose, onSuccess, initialInvoice }: TopUpDialogProps) {
+  const { formatAmountBtc, prefersFiat } = useDisplayCurrency();
+  const [invoice, setInvoice] = useState<TopUpInvoiceView | null>(initialInvoice ?? null);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [expired, setExpired] = useState(false);
+  const [remaining, setRemaining] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPolling = useCallback(() => {
@@ -49,6 +73,15 @@ export function TopUpDialog({ onClose, onSuccess }: TopUpDialogProps) {
   }, []);
 
   useEffect(() => stopPolling, [stopPolling]);
+
+  /**
+   * BTC leads; fiat is the approximation. A user who prefers BTC/SATS as their
+   * display currency would otherwise see the same number twice.
+   */
+  const fiatHint = useCallback(
+    (btc: number): string | null => (prefersFiat ? `≈ ${formatAmountBtc(btc)}` : null),
+    [prefersFiat, formatAmountBtc]
+  );
 
   const create = useCallback(async (amountBtc: number) => {
     setCreating(true);
@@ -67,6 +100,7 @@ export function TopUpDialog({ onClose, onSuccess }: TopUpDialogProps) {
         topupId: json.data.topupId,
         bolt11: json.data.bolt11,
         amountBtc: json.data.amountBtc,
+        expiresAt: json.data.expiresAt,
       });
     } catch (err) {
       logger.error('Top-up create failed', err, 'CatCredits');
@@ -102,6 +136,17 @@ export function TopUpDialog({ onClose, onSuccess }: TopUpDialogProps) {
     }, POLL_MS);
     return stopPolling;
   }, [invoice, onSuccess, stopPolling]);
+
+  // Count the window down. "Waiting for payment…" with no deadline gave no clue
+  // that the invoice dies in an hour.
+  useEffect(() => {
+    if (!invoice || expired) {
+      return;
+    }
+    setRemaining(timeLeft(invoice.expiresAt));
+    const tick = setInterval(() => setRemaining(timeLeft(invoice.expiresAt)), 1000);
+    return () => clearInterval(tick);
+  }, [invoice, expired]);
 
   const copy = async () => {
     if (!invoice) {
@@ -146,9 +191,12 @@ export function TopUpDialog({ onClose, onSuccess }: TopUpDialogProps) {
                   type="button"
                   disabled={creating}
                   onClick={() => create(amt)}
-                  className="rounded-md border border-subtle bg-surface-raised/30 px-3 py-3 text-sm font-medium text-fg-primary hover:border-strong hover:bg-surface-raised disabled:opacity-50"
+                  className="flex flex-col items-center gap-0.5 rounded-md border border-subtle bg-surface-raised/30 px-3 py-3 text-sm font-medium text-fg-primary hover:border-strong hover:bg-surface-raised disabled:opacity-50"
                 >
-                  {formatAmountBtc(amt)}
+                  <span>{displayBTC(amt)}</span>
+                  {fiatHint(amt) && (
+                    <span className="text-xs font-normal text-fg-tertiary">{fiatHint(amt)}</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -181,28 +229,51 @@ export function TopUpDialog({ onClose, onSuccess }: TopUpDialogProps) {
         ) : (
           <div className="flex flex-col items-center gap-3">
             <p className="text-sm text-fg-secondary">
-              Pay {formatAmountBtc(invoice.amountBtc)} with any Lightning wallet:
+              Pay{' '}
+              <span className="font-medium text-fg-primary">{displayBTC(invoice.amountBtc)}</span>
+              {fiatHint(invoice.amountBtc) && (
+                <span className="text-fg-tertiary"> ({fiatHint(invoice.amountBtc)})</span>
+              )}{' '}
+              with any Lightning wallet:
             </p>
             <div className="rounded-md bg-white p-3">
-              <QRCodeSVG value={invoice.bolt11.toUpperCase()} size={200} />
+              {/*
+                The `LIGHTNING:` scheme is what makes a phone camera or a desktop
+                wallet handler offer to pay this. A bare bolt11 (what was here)
+                scans as meaningless text unless the user is already inside a
+                wallet app. Uppercase keeps the QR in bech32 alphanumeric mode,
+                and `:` is in that charset, so the prefix costs no density.
+              */}
+              <QRCodeSVG value={`LIGHTNING:${invoice.bolt11.toUpperCase()}`} size={200} />
             </div>
-            <button
-              type="button"
-              onClick={copy}
-              className="inline-flex items-center gap-1.5 rounded-md border border-subtle px-3 py-1.5 text-sm text-fg-secondary hover:bg-surface-raised"
-            >
-              {copied ? (
-                <Check className="h-4 w-4 text-status-positive" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-              {copied ? 'Copied' : 'Copy invoice'}
-            </button>
+            <div className="flex items-center gap-2">
+              <a
+                href={`lightning:${invoice.bolt11}`}
+                className="inline-flex items-center gap-1.5 rounded-md border border-subtle px-3 py-1.5 text-sm text-fg-secondary hover:bg-surface-raised"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Open in wallet
+              </a>
+              <button
+                type="button"
+                onClick={copy}
+                className="inline-flex items-center gap-1.5 rounded-md border border-subtle px-3 py-1.5 text-sm text-fg-secondary hover:bg-surface-raised"
+              >
+                {copied ? (
+                  <Check className="h-4 w-4 text-status-positive" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+                {copied ? 'Copied' : 'Copy invoice'}
+              </button>
+            </div>
             <div className="flex items-center gap-2 text-sm text-fg-tertiary">
-              <Loader2 className="h-4 w-4 animate-spin" /> Waiting for payment…
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {remaining ? `Waiting for payment — ${remaining} left` : 'Waiting for payment…'}
             </div>
-            <p className="flex items-center gap-1 text-xs text-fg-tertiary">
-              <CheckCircle2 className="h-3 w-3" /> Credits land automatically once paid.
+            <p className="flex items-center gap-1 text-center text-xs text-fg-tertiary">
+              <CheckCircle2 className="h-3 w-3 shrink-0" />
+              Credits land automatically once paid — you can close this.
             </p>
           </div>
         )}
