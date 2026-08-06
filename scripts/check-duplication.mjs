@@ -15,6 +15,15 @@
  * Baseline history:
  *   1.3  (2026-08-02) — post phase-B dedup refactor; measured 1.20% with
  *                       `jscpd src --min-tokens 70`.
+ *   1.1  (2026-08-06) — measured 1.01% in CI (2232/221625 lines, 140 clones)
+ *                       and 0.99% locally (2191/222072, 138). Ratcheting per
+ *                       the rule above: the reduction had already happened and
+ *                       the baseline had not followed it down, so 0.29% of
+ *                       headroom was sitting there for new duplication to
+ *                       occupy without ever tripping the gate.
+ *                       Deliberately 1.1 and not 1.0: the two environments
+ *                       disagree by ~0.02%, so a baseline pinned to the lower
+ *                       reading would make the gate flaky rather than strict.
  *
  * Run: npm run check:duplication   (part of `npm run verify`; exit 1 on FAIL)
  */
@@ -25,7 +34,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 /** Max allowed duplicated-lines percentage across src/ (see ratchet rule above). */
-const BASELINE_PERCENT = 1.3;
+const BASELINE_PERCENT = 1.1;
 
 /** Keep detection settings pinned so the number is comparable across runs. */
 const MIN_TOKENS = '70';
