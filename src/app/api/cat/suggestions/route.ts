@@ -1,19 +1,19 @@
 /**
- * My Cat - Context-Aware Suggestions API
+ * My Cat — Prompt Suggestions API
  *
- * GET /api/cat/suggestions - Returns personalised quick prompts based on the user's full context
- * (profile, entities, documents, tasks, wallets — not just documents).
- * These suggestions appear in the empty state of My Cat chat.
+ * GET /api/cat/suggestions — returns the prompts THIS user should send the Cat,
+ * generated from their real state (listings, drafts, payment setup, profile).
+ * Rendered in the empty state of My Cat chat.
+ *
+ * Ordered; at most the first item carries a `reason` and is the recommendation.
+ * Generation + ranking rules live in services/cat/prompt-suggestions.ts.
  */
 
 import { apiSuccess } from '@/lib/api/standardResponse';
 import { withOptionalAuth } from '@/lib/api/withAuth';
 import { fetchFullContextForCat } from '@/services/ai/document-context';
-import {
-  generateSuggestionsFromContext,
-  hasRichContext,
-  DEFAULT_SUGGESTIONS,
-} from '@/services/ai/suggestions';
+import { generatePromptSuggestions, hasRichContext } from '@/services/cat/prompt-suggestions';
+import { STARTER_PROMPTS } from '@/config/cat-prompts';
 import { logger } from '@/utils/logger';
 
 export const GET = withOptionalAuth(async request => {
@@ -21,16 +21,16 @@ export const GET = withOptionalAuth(async request => {
     const { user, supabase } = request;
 
     if (!user) {
-      return apiSuccess({ suggestions: DEFAULT_SUGGESTIONS, hasContext: false });
+      return apiSuccess({ suggestions: STARTER_PROMPTS, hasContext: false });
     }
 
     const context = await fetchFullContextForCat(supabase, user.id);
     const rich = hasRichContext(context);
-    const suggestions = generateSuggestionsFromContext(context);
+    const suggestions = await generatePromptSuggestions(user.id, context);
 
     return apiSuccess({ suggestions, hasContext: rich });
   } catch (error) {
     logger.error('Cat Suggestions error', error, 'CatSuggestionsAPI');
-    return apiSuccess({ suggestions: DEFAULT_SUGGESTIONS, hasContext: false });
+    return apiSuccess({ suggestions: STARTER_PROMPTS, hasContext: false });
   }
 });

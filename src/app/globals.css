@@ -431,6 +431,24 @@
     @apply rounded-lg border border-border-subtle bg-surface-page px-4 py-3 text-left text-sm text-fg-primary transition-colors hover:bg-surface-raised/50;
   }
 
+  /* The one recommended prompt: states its reason, then the prompt itself.
+     Weighted above the alternatives so there is a single obvious next action. */
+  .oc-chat-lead {
+    @apply flex w-full flex-col gap-1.5 rounded-xl border border-interactive bg-surface-raised px-4 py-3.5 text-left transition-colors hover:bg-surface-raised/70;
+  }
+  .oc-chat-lead-reason {
+    @apply text-xs leading-snug text-fg-secondary;
+  }
+  .oc-chat-lead-prompt {
+    @apply flex items-center justify-between gap-3 text-sm font-medium text-fg-primary;
+  }
+
+  /* Alternatives under a recommendation — reachable, but not competing for the
+     read. min-h keeps them at a 44px touch target. */
+  .oc-chat-suggestion-quiet {
+    @apply inline-flex min-h-11 items-center rounded-lg border border-border-subtle bg-surface-page px-3 py-2 text-left text-xs text-fg-secondary transition-colors hover:bg-surface-raised/50 hover:text-fg-primary;
+  }
+
   .oc-chat-empty {
     @apply flex h-full flex-col items-center justify-center px-4 py-8 text-center;
   }
