@@ -595,6 +595,7 @@ export async function orchestrateCatChat(
           // chat that already failed must not fail differently because the
           // alert could not be written.
           void alertCatChatFailure({
+            userId: user.id,
             code: errPayload.code,
             provider: activeProvider,
             model: activeModel,
