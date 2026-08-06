@@ -131,7 +131,7 @@ export function buildActionCatalogAppendix(): string {
     return `- **${a.id}(${params})**: ${a.description}${confirm}`;
   });
   return `### Other available actions
-Each of these works exactly like the actions above — emit an \`\`\`exec_action block with the actionId and parameters (required ones shown without "?"). For creating entities, PREFER prefill_entity_form when the user has described details (they get a reviewable draft card); use a create_* action directly only when the user explicitly wants immediate creation.
+Same envelope as above; required parameters are the ones without "?". To create an entity PREFER prefill_entity_form once the user has given details (they get a reviewable draft card) — use a create_* action only when they want it created immediately.
 ${lines.join('\n')}`;
 }
 
@@ -444,18 +444,18 @@ Emit ONE \`\`\`exec_action block (separate from \`\`\`action blocks) at the END 
 Catalog below as **id(params)**; \`?\` marks an optional parameter. **CONFIRM** means say what you are about to do and get their go-ahead first — everything else executes immediately.
 
 **Money**
-- **send_payment(recipient, amount_btc, message?)** — CONFIRM. recipient = @username or a Lightning address (user@domain.com). Requires an NWC wallet. Always restate amount and recipient in your text before the block.
+- **send_payment(recipient, amount_btc, memo?)** — CONFIRM. recipient = @username or a Lightning address (user@domain.com). memo = the note sent with it. Requires an NWC wallet. Always restate amount and recipient in your text before the block.
 - **fund_project(project_id, amount_btc, message?)** — CONFIRM. project_id from context. Requires NWC; decline gracefully if the project only accepts on-chain.
 - **add_wallet(label, behavior_type, category?, description?, goal_amount?, goal_currency?, goal_deadline?, budget_amount?, budget_period?)** — a savings goal or budget wallet. behavior_type: one_time_goal | recurring_budget | general. category: general | rent | food | medical | education | emergency | transportation | utilities | projects | legal | entertainment. For one_time_goal include goal_amount (BTC), goal_currency (BTC/CHF/USD), goal_deadline (ISO date); for recurring_budget include budget_amount (BTC per period) and budget_period (daily | weekly | monthly | quarterly | yearly). Uses their existing primary lightning address — no address parameter. Check "User's Wallets" context first, don't duplicate a goal. Triggers: "save for X", "put away Y BTC", "emergency fund", "budget for rent".
 
 **Tasks and reminders** — task_id is the UUID shown as [task_id: ...] in "Active Tasks & Reminders" context. due_date accepts ISO 8601 or natural language ("tomorrow", "next week", "in 2 hours").
 - **set_reminder(title, due_date, notes?)** — notes is optional extra context stored with it.
-- **create_task(title, notes?, due_date?)** — due_date optional for tasks.
+- **create_task(title, notes?, due_date?, priority?)** — due_date optional for tasks. priority: low | normal | high | urgent.
 - **complete_task(task_id, notes?)** — "mark it done", "I finished X". Works for both tasks and reminders. Include notes only if they gave one.
 - **update_task(task_id, due_date?, title?, priority?, notes?)** — reschedule/rename/reprioritise. Include ONLY the fields they want changed. priority: low | normal | high | urgent.
 
 **Communication**
-- **post_to_timeline(content, visibility?)** — visibility: public (default) | private.
+- **post_to_timeline(content, visibility?, entity_id?, entity_type?)** — visibility: public (default) | private. Pass entity_id + entity_type to attach the post to one of their listings.
 - **reply_to_message(conversation_id, content)** — CONFIRM. conversation_id is the UUID in "Recent Conversations" context.
 - **send_message(recipient, content)** — CONFIRM. recipient = @username. Only when they explicitly ask to message someone.
 
