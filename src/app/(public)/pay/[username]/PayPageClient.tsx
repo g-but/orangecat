@@ -19,9 +19,11 @@ import { parsePayPrefill, PAY_COPY } from '@/config/pay';
 interface PayPageClientProps {
   username: string;
   recipientName: string;
+  /** Resolved on the server so the amount field is there on the first paint. */
+  canReceive: boolean;
 }
 
-export function PayPageClient({ username, recipientName }: PayPageClientProps) {
+export function PayPageClient({ username, recipientName, canReceive }: PayPageClientProps) {
   const searchParams = useSearchParams();
   const prefill = useMemo(() => parsePayPrefill(searchParams), [searchParams]);
 
@@ -29,6 +31,7 @@ export function PayPageClient({ username, recipientName }: PayPageClientProps) {
     <PayFlow
       username={username}
       recipientName={recipientName}
+      initialCanReceive={canReceive}
       initialAmountBtc={prefill.amountBtc}
       noteSlot={
         prefill.note ? (

@@ -19,6 +19,7 @@ import { getAdminClient } from '@/lib/supabase/admin';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { APP_NAME, SITE_URL } from '@/config/brand';
 import { PAY_COPY } from '@/config/pay';
+import { getTipReceiveInfo } from '@/domain/tips/tip-service';
 import { PayPageClient } from './PayPageClient';
 
 interface PageProps {
@@ -74,6 +75,12 @@ export default async function PayPage({ params }: PageProps) {
     notFound();
   }
 
+  // Resolve "can this person receive?" here rather than from the browser. It is
+  // the one thing standing between arriving and being able to type an amount,
+  // and asking for it client-side meant a pay link opened on a spinner — on the
+  // one surface whose entire job is to be handed to someone else.
+  const receiveInfo = await getTipReceiveInfo(getAdminClient(), recipient.username);
+
   return (
     <div className="mx-auto w-full max-w-md px-4 py-10">
       <header className="mb-6 text-center">
@@ -91,7 +98,11 @@ export default async function PayPage({ params }: PageProps) {
           </div>
         }
       >
-        <PayPageClient username={recipient.username} recipientName={recipient.displayName} />
+        <PayPageClient
+          username={recipient.username}
+          recipientName={recipient.displayName}
+          canReceive={!!receiveInfo?.canReceive}
+        />
       </Suspense>
     </div>
   );
