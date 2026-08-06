@@ -230,6 +230,52 @@ export async function settleTopUpRow(
 }
 
 /**
+ * The caller's most recent top-up that can still be paid.
+ *
+ * An invoice does not stop being payable because its dialog was closed, but
+ * nothing in the UI referenced a pending top-up once that happened — the only
+ * handle on it was component state that went away with the modal. A user who
+ * closed the dialog (or reloaded, or came back on their phone) had no way to
+ * reach the invoice again and no evidence it existed, so the honest options
+ * were "pay a QR I can no longer see" or "make a second one".
+ *
+ * Read with the caller's own client so RLS scopes it; expired rows are excluded
+ * because resuming one would only produce a payment that cannot land.
+ */
+export async function getResumableTopUp(
+  supabase: AnySupabaseClient,
+  userId: string
+): Promise<TopUpInvoice | null> {
+  const { data } = await supabase
+    .from(DATABASE_TABLES.CAT_CREDIT_TOPUPS)
+    .select('id, bolt11, payment_hash, amount_btc, expires_at')
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) {
+    return null;
+  }
+  const row = data as {
+    id: string;
+    bolt11: string;
+    payment_hash: string;
+    amount_btc: number | string;
+    expires_at: string;
+  };
+  return {
+    topupId: row.id,
+    bolt11: row.bolt11,
+    paymentHash: row.payment_hash,
+    amountBtc: Number(row.amount_btc),
+    expiresAt: row.expires_at,
+  };
+}
+
+/**
  * Poll one of YOUR top-ups. Scoped to the caller by user_id; terminal rows
  * answer without a wallet round-trip.
  */
