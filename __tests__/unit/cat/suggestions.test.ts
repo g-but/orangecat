@@ -1,15 +1,29 @@
 /**
- * Unit tests for generateSuggestionsFromContext and hasRichContext.
- * These are pure functions — no DB, no HTTP, no mocking needed.
+ * Unit tests for the Cat prompt-suggestion engine.
+ *
+ * The engine's promise is that a suggestion is EARNED: it names something the
+ * user actually has, and the lead states why it leads. These tests pin that
+ * contract, plus the degradation path when the platform LLM is unavailable
+ * (which is the normal case in CI — callPlatformJson is mocked to null).
  */
 
 import {
-  generateSuggestionsFromContext,
+  generatePromptSuggestions,
+  detectGaps,
   hasRichContext,
-  DEFAULT_SUGGESTIONS,
-} from '@/services/ai/suggestions';
-import { CAT_QUICKSTARTS, selectQuickstarts } from '@/config/cat-quickstarts';
+} from '@/services/cat/prompt-suggestions';
+import { STARTER_PROMPTS, getStarterPrompts } from '@/config/cat-prompts';
+import { getEntitiesByCategory } from '@/config/entity-registry';
 import type { FullUserContext } from '@/services/ai/document-context';
+
+jest.mock('@/services/cat/platform-llm', () => ({
+  callPlatformJson: jest.fn(async () => null),
+  parseJsonLoose: jest.requireActual('@/services/cat/platform-llm').parseJsonLoose,
+}));
+
+import { callPlatformJson } from '@/services/cat/platform-llm';
+
+const mockedCall = callPlatformJson as jest.MockedFunction<typeof callPlatformJson>;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -45,24 +59,22 @@ function makeContext(overrides: Partial<FullUserContext> = {}): FullUserContext 
     paymentCapabilities: EMPTY_PAYMENT,
     stats: { ...EMPTY_STATS },
     ...overrides,
-  };
+  } as FullUserContext;
 }
 
 function makeEntity(
   type: string,
-  title: string
+  title: string,
+  overrides: Partial<import('@/services/ai/document-context').EntitySummary> = {}
 ): import('@/services/ai/document-context').EntitySummary {
-  return { id: crypto.randomUUID(), type, title, status: 'active' };
-}
-
-function makeTask(title = 'Finish proposal'): import('@/services/ai/document-context').TaskSummary {
   return {
     id: crypto.randomUUID(),
+    type,
     title,
-    category: 'personal',
-    priority: 'high',
-    current_status: 'active',
-    task_type: 'task',
+    status: 'active',
+    description: 'A described thing',
+    price_btc: 0.001,
+    ...overrides,
   };
 }
 
@@ -83,22 +95,34 @@ function makeWallet(): import('@/services/ai/document-context').WalletSummary {
   };
 }
 
-function makeDocument(
-  title: string,
-  document_type = 'goals',
-  content = ''
-): import('@/services/ai/document-context').DocumentContext {
-  return {
-    id: crypto.randomUUID(),
-    title,
-    content,
-    document_type,
-    visibility: 'cat_visible',
-    created_at: new Date().toISOString(),
-  };
-}
+const PAID_UP = { ...EMPTY_PAYMENT, lightningAddress: 'me@orangecat.ch' };
 
-// ─── hasRichContext ────────────────────────────────────────────────────────────
+/** A user with a bio, so the "no bio" gap doesn't shadow the case under test. */
+const PROFILE = { name: 'Alice', username: 'alice', bio: 'Ceramicist in Zürich' };
+
+beforeEach(() => {
+  mockedCall.mockClear();
+  mockedCall.mockResolvedValue(null);
+});
+
+// ─── Starter prompts are derived, not written ─────────────────────────────────
+
+describe('starter prompts', () => {
+  it('derives one prompt per top business entity type in the registry', () => {
+    const business = getEntitiesByCategory().business.slice(0, 3);
+    const starters = getStarterPrompts();
+    expect(starters).toHaveLength(business.length);
+    business.forEach((meta, i) => {
+      expect(starters[i].prompt.toLowerCase()).toContain(meta.name.toLowerCase());
+    });
+  });
+
+  it('offers a fork of equals — no starter claims to be a recommendation', () => {
+    expect(STARTER_PROMPTS.every(s => s.reason === undefined)).toBe(true);
+  });
+});
+
+// ─── hasRichContext ───────────────────────────────────────────────────────────
 
 describe('hasRichContext', () => {
   it('returns false for completely empty context', () => {
@@ -106,18 +130,9 @@ describe('hasRichContext', () => {
   });
 
   it('returns true when profile has a name', () => {
-    const ctx = makeContext({ profile: { name: 'Alice', username: 'alice' } });
-    expect(hasRichContext(ctx)).toBe(true);
-  });
-
-  it('returns true when profile has a bio', () => {
-    const ctx = makeContext({ profile: { bio: 'Builder', username: null } });
-    expect(hasRichContext(ctx)).toBe(true);
-  });
-
-  it('returns true when profile has a background', () => {
-    const ctx = makeContext({ profile: { background: 'Developer', username: null } });
-    expect(hasRichContext(ctx)).toBe(true);
+    expect(hasRichContext(makeContext({ profile: { name: 'Alice', username: 'alice' } }))).toBe(
+      true
+    );
   });
 
   it('returns false when profile exists but is blank', () => {
@@ -128,210 +143,197 @@ describe('hasRichContext', () => {
   });
 
   it('returns true when there is at least one entity', () => {
-    const ctx = makeContext({ entities: [makeEntity('product', 'My Coffee')] });
-    expect(hasRichContext(ctx)).toBe(true);
-  });
-
-  it('returns true when there is at least one document', () => {
-    const ctx = makeContext({ documents: [makeDocument('My Goals')] });
-    expect(hasRichContext(ctx)).toBe(true);
-  });
-
-  it('returns true when there is at least one task', () => {
-    const ctx = makeContext({ tasks: [makeTask()] });
-    expect(hasRichContext(ctx)).toBe(true);
+    expect(hasRichContext(makeContext({ entities: [makeEntity('product', 'Mug')] }))).toBe(true);
   });
 
   it('returns true when there is at least one wallet', () => {
-    const ctx = makeContext({ wallets: [makeWallet()] });
-    expect(hasRichContext(ctx)).toBe(true);
+    expect(hasRichContext(makeContext({ wallets: [makeWallet()] }))).toBe(true);
   });
 });
 
-// ─── generateSuggestionsFromContext ───────────────────────────────────────────
+// ─── Gap detection: every gap names a real thing ──────────────────────────────
 
-describe('generateSuggestionsFromContext', () => {
-  it('returns DEFAULT_SUGGESTIONS for completely empty context', () => {
-    expect(generateSuggestionsFromContext(makeContext())).toEqual(DEFAULT_SUGGESTIONS);
-  });
-
-  it('returns at most 4 suggestions', () => {
-    // Rich context with everything — should still cap at 4
+describe('detectGaps', () => {
+  it('leads with the payment gap when listings exist but money cannot arrive', () => {
     const ctx = makeContext({
-      profile: { name: 'Alice', username: 'alice' },
-      entities: [
-        makeEntity('product', 'Coffee Beans'),
-        makeEntity('service', 'Design Work'),
-        makeEntity('project', 'School Fund'),
-        makeEntity('cause', 'Clean Water'),
-      ],
-      documents: [makeDocument('2026 Goals')],
-      tasks: [makeTask()],
-      wallets: [makeWallet()],
-      stats: {
-        ...EMPTY_STATS,
-        totalProducts: 1,
-        totalServices: 1,
-        totalProjects: 1,
-        totalCauses: 1,
-      },
-    });
-    expect(generateSuggestionsFromContext(ctx).length).toBeLessThanOrEqual(4);
-  });
-
-  it('generates named-entity suggestion for first product', () => {
-    const ctx = makeContext({
+      profile: PROFILE,
       entities: [makeEntity('product', 'Handmade Candles')],
-      stats: { ...EMPTY_STATS, totalProducts: 1 },
     });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    expect(suggestions.some(s => s.includes('Handmade Candles'))).toBe(true);
+    const [top] = detectGaps(ctx);
+    expect(top.reason).toContain('1 listing');
+    expect(top.prompt.toLowerCase()).toContain('paid');
   });
 
-  it('generates named-entity suggestion for first service', () => {
+  it('flags an unpublished draft by name', () => {
     const ctx = makeContext({
-      entities: [makeEntity('service', 'Logo Design')],
-      stats: { ...EMPTY_STATS, totalServices: 1 },
-    });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    expect(suggestions.some(s => s.includes('Logo Design'))).toBe(true);
-  });
-
-  it('generates named-entity suggestion for first project', () => {
-    const ctx = makeContext({
-      entities: [makeEntity('project', 'Solar Panel Build')],
-      stats: { ...EMPTY_STATS, totalProjects: 1 },
-    });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    expect(suggestions.some(s => s.includes('Solar Panel Build'))).toBe(true);
-  });
-
-  it('generates named-entity suggestion for first cause', () => {
-    const ctx = makeContext({
-      entities: [makeEntity('cause', 'Ocean Clean-Up')],
-      stats: { ...EMPTY_STATS, totalCauses: 1 },
-    });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    expect(suggestions.some(s => s.includes('Ocean Clean-Up'))).toBe(true);
-  });
-
-  it('leads with the wallet chip when user has entities but no wallet', () => {
-    const ctx = makeContext({
-      entities: [makeEntity('product', 'Merch')],
-      stats: { ...EMPTY_STATS, totalProducts: 1 },
-    });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    expect(suggestions[0]).toBe(CAT_QUICKSTARTS.entitiesNoWallet[0]);
-    expect(suggestions[0].toLowerCase()).toContain('wallet');
-  });
-
-  it('uses the established tier when user has entities and a wallet', () => {
-    const ctx = makeContext({
-      entities: [makeEntity('service', 'Consulting')],
+      profile: PROFILE,
       wallets: [makeWallet()],
-      stats: { ...EMPTY_STATS, totalServices: 1, totalWallets: 1 },
+      entities: [makeEntity('product', 'Handmade Candles', { status: 'draft' })],
     });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    expect(suggestions[0]).toBe(CAT_QUICKSTARTS.established[0]);
-    expect(suggestions.some(s => s.toLowerCase().includes('wallet'))).toBe(false);
+    const gaps = detectGaps(ctx);
+    expect(gaps[0].prompt).toContain('Handmade Candles');
+    expect(gaps[0].reason).toContain('draft');
   });
 
-  it('includes task nudge when user has tasks', () => {
+  it('flags a published listing with no description by name', () => {
     const ctx = makeContext({
-      tasks: [makeTask('Write report')],
-      stats: { ...EMPTY_STATS, totalTasks: 1 },
-      profile: { name: 'Alice', username: 'alice' },
+      profile: PROFILE,
+      paymentCapabilities: PAID_UP,
+      entities: [makeEntity('product', 'Blue Vase', { description: '  ' })],
     });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    expect(suggestions.some(s => s.toLowerCase().includes('task'))).toBe(true);
+    const gaps = detectGaps(ctx);
+    expect(gaps[0].prompt).toContain('Blue Vase');
+    expect(gaps[0].reason).toContain('no description');
   });
 
-  it('uses the noEntities tier for users with a wallet but nothing listed', () => {
+  it('flags a fixed-price listing with no price by name', () => {
     const ctx = makeContext({
-      wallets: [makeWallet()],
-      stats: { ...EMPTY_STATS, totalWallets: 1 },
-      profile: { name: 'Alice', username: 'alice' },
+      profile: PROFILE,
+      paymentCapabilities: PAID_UP,
+      entities: [makeEntity('product', 'Blue Vase', { price_btc: 0 })],
     });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    expect(suggestions[0]).toBe(CAT_QUICKSTARTS.noEntities[0]);
+    const gaps = detectGaps(ctx);
+    expect(gaps.some(g => g.prompt.includes('charge') && g.prompt.includes('Blue Vase'))).toBe(true);
   });
 
-  it('returns document-based suggestions when only documents are present', () => {
+  it('does not invent a price gap for entities that are not sold at a price', () => {
     const ctx = makeContext({
-      documents: [makeDocument('Learn Python', 'goals', 'I want to learn programming')],
+      profile: PROFILE,
+      paymentCapabilities: PAID_UP,
+      entities: [makeEntity('cause', 'Clean Water', { price_btc: 0 })],
     });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    // Should get at least one suggestion referencing the doc title
-    expect(suggestions.some(s => s.includes('Learn Python'))).toBe(true);
+    expect(detectGaps(ctx).some(g => g.prompt.includes('charge'))).toBe(false);
   });
 
-  it('does not return duplicate suggestions', () => {
+  it('falls through to demand once the listing is live and payable', () => {
     const ctx = makeContext({
-      entities: [
-        makeEntity('product', 'Widget A'),
-        makeEntity('product', 'Widget B'), // second product — no additional suggestion for same type
-      ],
-      stats: { ...EMPTY_STATS, totalProducts: 2 },
+      profile: PROFILE,
+      paymentCapabilities: PAID_UP,
+      entities: [makeEntity('service', 'Pottery Classes')],
     });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    const unique = new Set(suggestions);
-    expect(unique.size).toBe(suggestions.length);
+    const gaps = detectGaps(ctx);
+    expect(gaps[0].prompt).toContain('Pottery Classes');
+    expect(gaps[0].reason).toContain('demand');
   });
 
-  it('keeps a named-entity chip alongside the tier chips', () => {
-    const ctx = makeContext({
-      entities: [makeEntity('product', 'Handmade Candles')],
-      wallets: [makeWallet()],
-      stats: { ...EMPTY_STATS, totalProducts: 1, totalWallets: 1 },
-    });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    expect(suggestions.some(s => s.includes('Handmade Candles'))).toBe(true);
-  });
-
-  it('falls back to generic suggestions when context exists but produces no specific matches', () => {
-    // Profile with a name but no entities/tasks/wallets/docs
+  it('every gap states a reason — a suggestion that cannot justify itself is not one', () => {
     const ctx = makeContext({
       profile: { name: 'Alice', username: 'alice' },
+      entities: [makeEntity('product', 'Blue Vase', { status: 'draft', description: null })],
     });
-    const suggestions = generateSuggestionsFromContext(ctx);
-    // Should still return something (gap nudge or generic)
-    expect(suggestions.length).toBeGreaterThan(0);
-    expect(suggestions).not.toEqual(DEFAULT_SUGGESTIONS);
+    const gaps = detectGaps(ctx);
+    expect(gaps.length).toBeGreaterThan(0);
+    expect(gaps.every(g => !!g.reason?.trim())).toBe(true);
   });
 });
 
-// ─── selectQuickstarts (tier rules SSOT) ──────────────────────────────────────
+// ─── Composition ──────────────────────────────────────────────────────────────
 
-describe('selectQuickstarts', () => {
-  it('returns the noEntities tier when the user has nothing listed', () => {
-    expect(selectQuickstarts({ entityCount: 0, hasWallet: false })).toEqual(
-      CAT_QUICKSTARTS.noEntities
-    );
-    expect(selectQuickstarts({ entityCount: 0, hasWallet: true })).toEqual(
-      CAT_QUICKSTARTS.noEntities
-    );
+describe('generatePromptSuggestions', () => {
+  it('returns the starter fork for a user the Cat knows nothing about', async () => {
+    expect(await generatePromptSuggestions('u-empty', makeContext())).toEqual(STARTER_PROMPTS);
   });
 
-  it('returns the entitiesNoWallet tier when listings exist but no wallet does', () => {
-    expect(selectQuickstarts({ entityCount: 2, hasWallet: false })).toEqual(
-      CAT_QUICKSTARTS.entitiesNoWallet
+  it('degrades to deterministic gaps when the platform LLM is unavailable', async () => {
+    const ctx = makeContext({
+      profile: PROFILE,
+      entities: [makeEntity('product', 'Handmade Candles')],
+    });
+    const out = await generatePromptSuggestions('u-nollm', ctx);
+    expect(out.length).toBeGreaterThan(0);
+    expect(out[0].reason).toBeTruthy();
+    expect(out[0].prompt.toLowerCase()).toContain('paid');
+  });
+
+  it('returns at most four prompts', async () => {
+    const ctx = makeContext({
+      profile: { name: 'Alice', username: 'alice' },
+      entities: [
+        makeEntity('product', 'A', { status: 'draft' }),
+        makeEntity('product', 'B', { description: null }),
+        makeEntity('service', 'C', { price_btc: 0 }),
+        makeEntity('cause', 'D'),
+      ],
+    });
+    expect((await generatePromptSuggestions('u-many', ctx)).length).toBeLessThanOrEqual(4);
+  });
+
+  it('marks exactly one recommendation — the rest are unweighted alternatives', async () => {
+    const ctx = makeContext({
+      profile: { name: 'Alice', username: 'alice' },
+      entities: [makeEntity('product', 'Handmade Candles', { status: 'draft' })],
+    });
+    const out = await generatePromptSuggestions('u-onelead', ctx);
+    expect(out[0].reason).toBeTruthy();
+    expect(out.slice(1).every(s => s.reason === undefined)).toBe(true);
+  });
+
+  it('never repeats the same prompt', async () => {
+    const ctx = makeContext({
+      profile: PROFILE,
+      entities: [makeEntity('product', 'Widget A'), makeEntity('product', 'Widget B')],
+    });
+    const out = await generatePromptSuggestions('u-dupes', ctx);
+    expect(new Set(out.map(s => s.prompt)).size).toBe(out.length);
+  });
+
+  it('uses the LLM phrasing when it is grounded in the user’s own data', async () => {
+    mockedCall.mockResolvedValue(
+      JSON.stringify({
+        recommended: {
+          prompt: 'What is missing before I publish "Handmade Candles"?',
+          reason: '"Handmade Candles" is a draft and earns nothing while hidden.',
+        },
+        alternatives: ['Who would buy my candles?', 'Help me price my candles'],
+      })
     );
+    const ctx = makeContext({
+      profile: PROFILE,
+      wallets: [makeWallet()],
+      entities: [makeEntity('product', 'Handmade Candles', { status: 'draft' })],
+    });
+    const out = await generatePromptSuggestions('u-grounded', ctx);
+    expect(out[0].prompt).toContain('Handmade Candles');
+    expect(out.map(s => s.prompt)).toContain('Who would buy my candles?');
   });
 
-  it('returns the established tier when entities and a wallet both exist', () => {
-    expect(selectQuickstarts({ entityCount: 1, hasWallet: true })).toEqual(
-      CAT_QUICKSTARTS.established
+  it('discards an LLM recommendation that names nothing the user has', async () => {
+    mockedCall.mockResolvedValue(
+      JSON.stringify({
+        recommended: {
+          prompt: 'Help me market my haircuts',
+          reason: 'Your barbershop needs customers.',
+        },
+        alternatives: [],
+      })
     );
+    const ctx = makeContext({
+      profile: PROFILE,
+      wallets: [makeWallet()],
+      entities: [makeEntity('product', 'Handmade Candles', { status: 'draft' })],
+    });
+    const out = await generatePromptSuggestions('u-hallucinated', ctx);
+    expect(out[0].prompt).not.toContain('haircuts');
+    expect(out[0].prompt).toContain('Handmade Candles');
   });
 
-  it('every tier stays within the 3-4 chip budget', () => {
-    for (const chips of Object.values(CAT_QUICKSTARTS)) {
-      expect(chips.length).toBeGreaterThanOrEqual(3);
-      expect(chips.length).toBeLessThanOrEqual(4);
-    }
-  });
+  it('regenerates when the user’s state changes, and only then', async () => {
+    const draft = makeEntity('product', 'Handmade Candles', { status: 'draft' });
+    const ctx = makeContext({ profile: PROFILE, wallets: [makeWallet()], entities: [draft] });
 
-  it('DEFAULT_SUGGESTIONS mirrors the noEntities tier', () => {
-    expect(DEFAULT_SUGGESTIONS).toEqual([...CAT_QUICKSTARTS.noEntities]);
+    const first = await generatePromptSuggestions('u-cache', ctx);
+    const cached = await generatePromptSuggestions('u-cache', ctx);
+    expect(cached).toBe(first);
+    expect(mockedCall).toHaveBeenCalledTimes(1);
+
+    // Publishing the draft is a different reality — the answer must be recomputed.
+    const published = makeContext({
+      profile: PROFILE,
+      wallets: [makeWallet()],
+      entities: [{ ...draft, status: 'active' }],
+    });
+    const after = await generatePromptSuggestions('u-cache', published);
+    expect(mockedCall).toHaveBeenCalledTimes(2);
+    expect(after[0].prompt).not.toEqual(first[0].prompt);
   });
 });

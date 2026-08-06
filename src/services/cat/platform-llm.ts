@@ -26,6 +26,12 @@ export interface PlatformJsonOpts {
   maxTokens?: number;
   /** Long-form (article bodies): prefer OpenRouter for a larger output budget. */
   longform?: boolean;
+  /**
+   * Abort after this many ms. Set it on anything a user is waiting behind — the
+   * free pool has no latency guarantee, and callers here all degrade gracefully
+   * to a null return. Omitted = wait indefinitely (background/batch callers).
+   */
+  timeoutMs?: number;
 }
 
 interface Provider {
@@ -100,6 +106,7 @@ export async function callPlatformJson(
     fetch(provider.url, {
       method: 'POST',
       headers,
+      ...(opts.timeoutMs ? { signal: AbortSignal.timeout(opts.timeoutMs) } : {}),
       body: JSON.stringify({
         model: provider.model,
         messages,
