@@ -22,16 +22,16 @@ const OPS_NOTIFY_USER_ID = process.env.OPS_NOTIFY_USER_ID || 'cec88bc9-557f-452b
 const SOURCE = 'cat/chat';
 
 interface FailureAlertParams {
-  /** The user whose turn failed — named so the operator can tell real users from our own testing. */
-  username?: string | null;
+  /** Whose turn failed. Resolved to a username so the alert can be triaged. */
+  userId: string;
   /** Structured error code already shown to the client (e.g. ALL_PROVIDERS_DOWN). */
   code: string;
   provider?: string;
   model?: string;
 }
 
-function describe({ username, code, provider, model }: FailureAlertParams): string {
-  const who = username ? `@${username}` : 'a user';
+function describe(username: string | null, { code, provider, model }: FailureAlertParams): string {
+  const who = username ? `@${username}` : 'someone';
   const link = [provider, model].filter(Boolean).join('/');
   return `${who} asked Cat something and got nothing back (${code}${link ? ` on ${link}` : ''}).`;
 }
@@ -44,7 +44,18 @@ function describe({ username, code, provider, model }: FailureAlertParams): stri
 export async function alertCatChatFailure(params: FailureAlertParams): Promise<void> {
   try {
     const supabase = getAdminClient();
-    const message = describe(params);
+
+    // Name the person. "someone got nothing back" cannot be triaged: the whole
+    // question this alert exists to answer is whether a REAL user was turned
+    // away or whether it was our own eval / founder account. One indexed
+    // lookup, on a request that has already failed.
+    const { data: profile } = await supabase
+      .from(DATABASE_TABLES.PROFILES)
+      .select('username')
+      .eq('id', params.userId)
+      .maybeSingle();
+
+    const message = describe(profile?.username ?? null, params);
     const question = `Help me with this notification: ${params.code} — "${message}" What does it mean and what should I do?`;
 
     const { data: existing } = await supabase
@@ -64,6 +75,7 @@ export async function alertCatChatFailure(params: FailureAlertParams): Promise<v
       source: SOURCE,
       provider: params.provider ?? null,
       model: params.model ?? null,
+      lastFailedUserId: params.userId,
       lastSeenAt: new Date().toISOString(),
     };
 
