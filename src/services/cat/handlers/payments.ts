@@ -3,11 +3,10 @@ import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS } from '@/config/database-constants';
 import { NWCClient } from '@/lib/nostr/nwc';
-import { decrypt } from '@/domain/payments/encryptionService';
 import { generateInvoice } from '@/domain/payments/invoiceGenerationService';
+import { resolveSenderNwcUri, sendToRecipient } from '@/domain/payments/sendPaymentService';
 import { resolveSellerWallet, getSellerUserId } from '@/domain/payments/walletResolutionService';
 import { getAdminClient } from '@/lib/supabase/admin';
-import type { ResolvedWallet } from '@/domain/payments/types';
 import type { ActionHandler } from './types';
 
 export const paymentHandlers: Record<string, ActionHandler> = {
@@ -118,138 +117,49 @@ export const paymentHandlers: Record<string, ActionHandler> = {
     };
   },
 
-  send_payment: async (supabase, userId, _actorId, params) => {
+  /**
+   * Asking the Cat to pay someone runs the same code as tapping Send.
+   *
+   * This used to be its own 130-line implementation, and the differences were
+   * not stylistic. It resolved recipients by reading `wallets.lightning_address`
+   * directly, so anyone receiving over NWC — which the rest of the platform
+   * handles fine — came back as "has no Lightning address configured". It also
+   * matched usernames case-sensitively, so asking to pay @Alice failed for a
+   * user stored as @alice. Both were fixed once, in the shared service, and this
+   * handler was still carrying the old copy.
+   */
+  send_payment: async (_supabase, userId, _actorId, params) => {
     const amountBtc = params.amount_btc as number;
     const recipient = params.recipient as string;
     const memo = (params.memo as string) || 'Payment via My Cat';
 
-    if (!amountBtc || amountBtc <= 0) {
+    // The service takes a number and a string; the Cat fills these from a model
+    // response, so neither is guaranteed to be either.
+    if (typeof amountBtc !== 'number' || !Number.isFinite(amountBtc) || amountBtc <= 0) {
       return { success: false, error: 'Amount must be positive' };
     }
-
-    // 1. Get sender's NWC wallet (user can only read their own wallets via RLS)
-    // Own-secret read: the NWC URI has no client-role column grant (write-only
-    // for anon/authenticated), so read it via service role — scoped to the
-    // authenticated user's own profile_id established by the caller.
-    const { data: senderWallets } = await (getAdminClient() as unknown as SupabaseClient)
-      .from(DATABASE_TABLES.WALLETS)
-      .select('nwc_connection_uri')
-      .eq('profile_id', userId)
-      .eq('is_active', true)
-      .not('nwc_connection_uri', 'is', null)
-      .order('is_primary', { ascending: false })
-      .limit(1);
-
-    if (!senderWallets || senderWallets.length === 0 || !senderWallets[0].nwc_connection_uri) {
-      return {
-        success: false,
-        error:
-          'No Lightning wallet (NWC) connected. Add one in Settings → Wallet to enable automatic payments.',
-      };
+    if (typeof recipient !== 'string' || !recipient.trim()) {
+      return { success: false, error: 'Recipient is required — a username or Lightning address' };
     }
 
-    let senderNwcUri: string;
-    try {
-      senderNwcUri = decrypt(senderWallets[0].nwc_connection_uri);
-    } catch {
-      return {
-        success: false,
-        error: 'Wallet connection is corrupted. Please reconnect your wallet in Settings.',
-      };
+    const result = await sendToRecipient(userId, recipient, amountBtc, memo);
+    if (!result.ok) {
+      return { success: false, error: result.message };
     }
 
-    // 2. Resolve recipient's lightning address
-    const trimmedRecipient = recipient.trim();
-    let lightningAddress: string;
-
-    if (trimmedRecipient.includes('@') && !trimmedRecipient.startsWith('@')) {
-      // Direct lightning address: alice@getalby.com
-      lightningAddress = trimmedRecipient;
-    } else {
-      // Username lookup: @alice or alice
-      const username = trimmedRecipient.startsWith('@')
-        ? trimmedRecipient.slice(1)
-        : trimmedRecipient;
-      const admin = getAdminClient() as unknown as SupabaseClient;
-
-      const { data: profile } = await admin
-        .from(DATABASE_TABLES.PROFILES)
-        .select('id')
-        .eq('username', username)
-        .single();
-
-      if (!profile) {
-        return { success: false, error: `User @${username} not found` };
-      }
-
-      const { data: recipientWallets } = await admin
-        .from(DATABASE_TABLES.WALLETS)
-        .select('lightning_address')
-        .eq('profile_id', profile.id)
-        .eq('is_active', true)
-        .not('lightning_address', 'is', null)
-        .order('is_primary', { ascending: false })
-        .limit(1);
-
-      if (
-        !recipientWallets ||
-        recipientWallets.length === 0 ||
-        !recipientWallets[0].lightning_address
-      ) {
-        return {
-          success: false,
-          error: `@${username} has no Lightning address configured. Ask them to add one in their settings.`,
-        };
-      }
-
-      lightningAddress = recipientWallets[0].lightning_address;
-    }
-
-    // 3. Generate invoice from recipient's lightning address
-    const recipientWallet: ResolvedWallet = {
-      method: 'lightning_address',
-      wallet_id: 'recipient',
-      lightning_address: lightningAddress,
+    const paid = result.amountBtc ?? amountBtc;
+    const displayMemo = memo !== 'Payment via My Cat' ? ` — "${memo}"` : '';
+    return {
+      success: true,
+      data: {
+        payment_hash: result.paymentHash,
+        amount_btc: paid,
+        recipient: result.destination,
+        memo,
+        status: 'paid',
+        displayMessage: `Sent ${paid} BTC to ${result.destination}${displayMemo}`,
+      },
     };
-
-    let invoice;
-    try {
-      invoice = await generateInvoice(recipientWallet, amountBtc, memo);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
-      return { success: false, error: `Could not reach ${lightningAddress}: ${msg}` };
-    }
-
-    if (!invoice.bolt11) {
-      return { success: false, error: 'Failed to get a Lightning invoice from the recipient' };
-    }
-
-    // 4. Pay invoice from sender's NWC wallet
-    const sendNwcClient = new NWCClient(senderNwcUri);
-    try {
-      await sendNwcClient.connect();
-      const payResult = await sendNwcClient.payInvoice(invoice.bolt11);
-      const displayMemo = memo !== 'Payment via My Cat' ? ` — "${memo}"` : '';
-      return {
-        success: true,
-        data: {
-          payment_hash: payResult.payment_hash,
-          amount_btc: amountBtc,
-          recipient: lightningAddress,
-          memo,
-          status: 'paid',
-          displayMessage: `Sent ${amountBtc} BTC to ${lightningAddress}${displayMemo}`,
-        },
-      };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
-      return {
-        success: false,
-        error: `Lightning payment failed: ${msg}. Check your wallet has sufficient balance.`,
-      };
-    } finally {
-      sendNwcClient.disconnect();
-    }
   },
 
   fund_project: async (supabase, userId, _actorId, params) => {
@@ -261,35 +171,13 @@ export const paymentHandlers: Record<string, ActionHandler> = {
       return { success: false, error: 'Amount must be positive' };
     }
 
-    // 1. Get sender's NWC wallet
-    // Own-secret read: the NWC URI has no client-role column grant (write-only
-    // for anon/authenticated), so read it via service role — scoped to the
-    // authenticated user's own profile_id established by the caller.
-    const { data: senderWallets } = await (getAdminClient() as unknown as SupabaseClient)
-      .from(DATABASE_TABLES.WALLETS)
-      .select('nwc_connection_uri')
-      .eq('profile_id', userId)
-      .eq('is_active', true)
-      .not('nwc_connection_uri', 'is', null)
-      .order('is_primary', { ascending: false })
-      .limit(1);
-
-    if (!senderWallets || senderWallets.length === 0 || !senderWallets[0].nwc_connection_uri) {
-      return {
-        success: false,
-        error:
-          'No Lightning wallet (NWC) connected. Add one in Settings → Wallet to fund projects automatically.',
-      };
-    }
-
-    let senderNwcUri: string;
-    try {
-      senderNwcUri = decrypt(senderWallets[0].nwc_connection_uri);
-    } catch {
-      return {
-        success: false,
-        error: 'Wallet connection is corrupted. Please reconnect your wallet in Settings.',
-      };
+    // 1. Get the sender's NWC connection through the shared resolver, so a
+    // missing wallet and an unreadable one stay distinguishable — and so a key
+    // problem on our side isn't reported to the user as their wallet being
+    // "corrupted", which is the one diagnosis they can't act on.
+    const senderNwcUri = await resolveSenderNwcUri(userId);
+    if (typeof senderNwcUri !== 'string') {
+      return { success: false, error: senderNwcUri.message };
     }
 
     // 2. Resolve project owner's payment method (uses admin internally for cross-user lookup)
