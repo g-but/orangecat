@@ -71,7 +71,6 @@ ${buildEntityMenu()}
 
 Rules:
 - Pick the ONE type the sentence is actually about. Do not propose alternatives.
-- Ownership separates the types that otherwise look alike. If they KEEP the thing and let someone use it for a while — rent, let, lease, hire out — that is "asset". If ownership changes hands for money, that is "product". ("Rent out my flat" is an asset; "sell my bike" is a product.)
 - "description" is THEIR words, lightly cleaned (drop filler, fix obvious dictation errors, keep every concrete detail: names, amounts, currencies, condition, dates). Never invent details they did not say. Never add marketing language.
 - Keep amounts and currencies exactly as spoken ("200 francs" stays 200 CHF, not "around 200").
 - confidence reflects how clearly the sentence names one creatable thing. A vague sentence ("I need to sort my finances") is LOW confidence, not a guess at "project".
