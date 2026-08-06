@@ -21,7 +21,12 @@ describe('Cat failure alerting', () => {
       throw new Error('no service key in this environment');
     });
     await expect(
-      alertCatChatFailure({ code: 'ALL_PROVIDERS_DOWN', provider: 'groq', model: 'x' })
+      alertCatChatFailure({
+        userId: 'u1',
+        code: 'ALL_PROVIDERS_DOWN',
+        provider: 'groq',
+        model: 'x',
+      })
     ).resolves.toBeUndefined();
   });
 
@@ -35,7 +40,9 @@ describe('Cat failure alerting', () => {
       insert: () => Promise.reject(new Error('RLS denied')),
     };
     (getAdminClient as jest.Mock).mockReturnValue({ from: () => rejecting });
-    await expect(alertCatChatFailure({ code: 'STREAM_ERROR' })).resolves.toBeUndefined();
+    await expect(
+      alertCatChatFailure({ userId: 'u1', code: 'STREAM_ERROR' })
+    ).resolves.toBeUndefined();
   });
 
   it('coalesces onto an existing unread alert for the same code instead of stacking rows', async () => {
@@ -46,13 +53,16 @@ describe('Cat failure alerting', () => {
       eq: () => chain,
       order: () => chain,
       limit: () => chain,
-      maybeSingle: () => Promise.resolve({ data: { id: 'n1', metadata: { occurrences: 3 } } }),
+      maybeSingle: jest
+        .fn()
+        .mockResolvedValueOnce({ data: { username: 'mao' } })
+        .mockResolvedValue({ data: { id: 'n1', metadata: { occurrences: 3 } } }),
       update,
       insert,
     };
     (getAdminClient as jest.Mock).mockReturnValue({ from: () => chain });
 
-    await alertCatChatFailure({ code: 'AI_RATE_LIMITED', provider: 'openrouter' });
+    await alertCatChatFailure({ userId: 'u1', code: 'AI_RATE_LIMITED', provider: 'openrouter' });
 
     // A capacity outage hits every user at once; one row per request would
     // bury the very signal the alert exists to raise.
@@ -68,13 +78,21 @@ describe('Cat failure alerting', () => {
       eq: () => chain,
       order: () => chain,
       limit: () => chain,
-      maybeSingle: () => Promise.resolve({ data: null }),
+      maybeSingle: jest
+        .fn()
+        .mockResolvedValueOnce({ data: { username: 'user_2dd6f19e' } })
+        .mockResolvedValue({ data: null }),
       update: jest.fn(),
       insert,
     };
     (getAdminClient as jest.Mock).mockReturnValue({ from: () => chain });
 
-    await alertCatChatFailure({ code: 'ALL_PROVIDERS_DOWN', provider: 'groq', model: 'llama' });
+    await alertCatChatFailure({
+      userId: 'u1',
+      code: 'ALL_PROVIDERS_DOWN',
+      provider: 'groq',
+      model: 'llama',
+    });
 
     expect(insert).toHaveBeenCalledTimes(1);
     const row = insert.mock.calls[0][0];
@@ -82,6 +100,32 @@ describe('Cat failure alerting', () => {
     expect(row.metadata.title).toBe('ALL_PROVIDERS_DOWN');
     expect(row.is_read).toBe(false);
     expect(row.message).toContain('got nothing back');
+    // Naming the account is the difference between a triageable alert and a
+    // useless one: the question this exists to answer is whether a REAL user
+    // was turned away or whether it was our own eval / founder account.
+    expect(row.message).toContain('@user_2dd6f19e');
+    expect(row.metadata.lastFailedUserId).toBe('u1');
+  });
+
+  it('still alerts when the account cannot be named', async () => {
+    const insert = jest.fn().mockResolvedValue({});
+    const chain = {
+      select: () => chain,
+      eq: () => chain,
+      order: () => chain,
+      limit: () => chain,
+      maybeSingle: jest.fn().mockResolvedValue({ data: null }),
+      update: jest.fn(),
+      insert,
+    };
+    (getAdminClient as jest.Mock).mockReturnValue({ from: () => chain });
+
+    await alertCatChatFailure({ userId: 'u9', code: 'STREAM_ERROR' });
+
+    // A missing profile must degrade the wording, never suppress the alert.
+    expect(insert).toHaveBeenCalledTimes(1);
+    expect(insert.mock.calls[0][0].message).toContain('someone');
+    expect(insert.mock.calls[0][0].metadata.lastFailedUserId).toBe('u9');
   });
 
   it('stays wired into the streaming failure path', () => {
