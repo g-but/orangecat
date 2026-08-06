@@ -495,6 +495,86 @@ for (const l of emittedLinks) {
   check('link', l.path, l.source, l.note);
 }
 
+// ---------------------------------------------------------------------------
+// 5. Streaming boundaries vs. HTTP status (the soft-404 / soft-redirect class)
+// ---------------------------------------------------------------------------
+// notFound() and redirect() can only set a status code while the response is
+// still uncommitted. A Suspense boundary ABOVE the page — a segment
+// loading.tsx, or a <Suspense> wrapping {children} in a layout — starts the
+// stream immediately, so Next.js commits 200 and then renders the not-found UI
+// inline or does the redirect client-side. Next's own docs: not-found.js
+// "returns a 404 HTTP status code for non-streamed responses and a 200 status
+// code for streamed responses".
+//
+// Observed on prod 2026-08-06: orangecat.ch/<unknown-username> answered 200,
+// and /profiles/me answered 200 + a client-side redirect instead of a 307.
+// Nobody chose that — a bare <Suspense>{children}</Suspense> in the root
+// layout had put every page in the app behind a boundary. A 200 that means
+// "not found" is invisible to link checkers, uptime monitors, CDN caches and
+// share-link validators, all of which read the status and not the HTML.
+//
+// The fix Next.js recommends is to run the existence check BEFORE any
+// boundary, i.e. no loading.tsx on that segment; put <Suspense> inside the
+// page around the slow part instead, so the check still commits the status.
+const STREAMING_ALLOW = new Map([
+  // Behind auth: no crawler, monitor or share-link validator ever reads these
+  // status codes, so the loading skeleton is worth more than the 404.
+  ['(authenticated)/dashboard/documents/[id]', 'auth-gated; skeleton kept deliberately'],
+  ['(authenticated)/dashboard/wishlists/items/[itemId]', 'auth-gated; skeleton kept deliberately'],
+]);
+
+const streamingFailures = [];
+
+// A layout must never wrap {children} in a Suspense boundary — that applies to
+// every page beneath it, which is how this class got introduced.
+const appFiles = walkFiles(APP_DIR);
+for (const layout of appFiles.filter(f => f.endsWith('/layout.tsx'))) {
+  const src = readFileSync(layout, 'utf8');
+  if (/<Suspense[^>]*>\s*\{\s*children\s*\}/.test(src)) {
+    streamingFailures.push({
+      category: 'layout-suspense',
+      path: relative(ROOT, layout),
+      source: 'layout wraps {children} in <Suspense>',
+      note: 'every page beneath it streams, so notFound()/redirect() lose their status code',
+    });
+  }
+}
+
+// A page that calls notFound() must not sit under a loading.tsx.
+for (const page of appFiles.filter(f => f.endsWith('/page.tsx'))) {
+  const src = readFileSync(page, 'utf8');
+  if (!/\bnotFound\(\)/.test(src)) {
+    continue;
+  }
+  const segment = relative(APP_DIR, page).replace(/\/page\.tsx$/, '');
+  if (STREAMING_ALLOW.has(segment)) {
+    continue;
+  }
+  // Walk up from the page's own directory to src/app looking for loading.tsx.
+  let dir = join(APP_DIR, segment);
+  const boundaries = [];
+  for (;;) {
+    try {
+      statSync(join(dir, 'loading.tsx'));
+      boundaries.push(relative(ROOT, join(dir, 'loading.tsx')));
+    } catch {
+      /* no boundary at this level */
+    }
+    if (dir === APP_DIR) {
+      break;
+    }
+    dir = join(dir, '..');
+  }
+  if (boundaries.length > 0) {
+    streamingFailures.push({
+      category: 'soft-404',
+      path: `/${segment}`,
+      source: relative(ROOT, page),
+      note: `streams behind ${boundaries.join(', ')} — notFound() will answer 200`,
+    });
+  }
+}
+
 function printTable(title, rows) {
   if (rows.length === 0) {
     return;
@@ -529,10 +609,19 @@ if (unresolved.length > 0) {
   }
 }
 
-if (failures.length + suspects.length > 0) {
+printTable(
+  `❌ SOFT STATUS — streams before notFound()/redirect(), so the status is 200 (${streamingFailures.length})`,
+  streamingFailures
+);
+
+if (failures.length + suspects.length + streamingFailures.length > 0) {
   console.error(
-    `\naudit:routes FAILED — ${failures.length} broken, ${suspects.length} suspicious.`
+    `\naudit:routes FAILED — ${failures.length} broken, ${suspects.length} suspicious, ` +
+      `${streamingFailures.length} soft status.`
   );
   process.exit(1);
 }
-console.log('\n✅ audit:routes clean — every declared and emitted link resolves to a route.');
+console.log(
+  '\n✅ audit:routes clean — every declared and emitted link resolves to a route, ' +
+    'and no notFound() page streams away its 404.'
+);
