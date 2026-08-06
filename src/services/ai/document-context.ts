@@ -28,7 +28,7 @@ import type {
   RuntimeContext,
 } from './document-context-types';
 import { isSupportedCurrency, PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
-import { currencyConverter } from '@/services/currency/rates';
+import { convertBtcToOrNull } from '@/services/currency/rates.server';
 
 import { fetchEntitiesForCat } from './entity-context-fetcher';
 import { getEconomicProfile } from '@/services/cat/economic-profile';
@@ -358,15 +358,18 @@ async function fetchRuntimeContextForCat(
   // is instructed (in the system prompt) not to invent one.
   let btcRate: RuntimeContext['btcRate'] = null;
   try {
-    const rates = await currencyConverter.getRates();
-    const byCur: Record<string, number> = {
-      CHF: rates.btcToChf,
-      USD: rates.btcToUsd,
-      EUR: rates.btcToEur,
-    };
+    // Ask for the currency the user actually thinks in, and fall back to the
+    // platform default only if that one is unknown. Omitting the line entirely
+    // is the correct outcome when we have no rate — Cat is told not to invent
+    // one, and a made-up rate quoted with confidence is worse than silence.
     const fiat = preferredCurrency === 'BTC' ? 'CHF' : preferredCurrency.toUpperCase();
-    const rate = byCur[fiat];
-    btcRate = rate ? { currency: fiat, rate } : { currency: 'CHF', rate: rates.btcToChf };
+    const rate = await convertBtcToOrNull(1, fiat);
+    if (rate !== null && rate > 0) {
+      btcRate = { currency: fiat, rate };
+    } else {
+      const chf = await convertBtcToOrNull(1, 'CHF');
+      btcRate = chf !== null && chf > 0 ? { currency: 'CHF', rate: chf } : null;
+    }
   } catch (error) {
     logger.warn('Could not fetch BTC rate for cat runtime', { error }, 'DocumentContext');
   }

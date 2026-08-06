@@ -48,6 +48,24 @@ export function encrypt(plaintext: string): string {
  * Decrypt a base64-encoded ciphertext produced by encrypt().
  */
 /**
+ * Is there a usable key at all?
+ *
+ * Worth asking separately from "can this ciphertext be read", because the two
+ * failures need opposite responses. A ciphertext this key can't open is the
+ * user's problem to fix by reconnecting. No key at all is ours: reconnecting
+ * would fail at the encrypt step too, so telling them to try it wastes their
+ * time and hides an outage behind what looks like their mistake.
+ */
+export function isEncryptionConfigured(): boolean {
+  try {
+    getKey();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Can this deployment actually use the stored ciphertext? A stored NWC URI is
  * useless if the key is missing or was rotated (e.g. written by a dev machine
  * whose key production doesn't have) — the payment path silently falls back to

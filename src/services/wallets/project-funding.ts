@@ -14,7 +14,8 @@
  */
 
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-import { currencyConverter, convertBtcTo } from '@/services/currency';
+import { convertBtcTo } from '@/services/currency';
+import { loadServerRates } from '@/services/currency/rates.server';
 import { logger } from '@/utils/logger';
 import { getEntitiesFundingStats } from './funding-stats';
 
@@ -56,7 +57,7 @@ export async function enrichProjectsWithSettledFunding<
   // number); BTC-denominated projects are unaffected.
   if (stats.size > 0) {
     try {
-      await currencyConverter.getRates();
+      await loadServerRates();
     } catch (error) {
       logger.warn('Rates unavailable for funding enrichment', { error }, 'Wallets');
     }

@@ -5,7 +5,7 @@ import { getTableName } from '@/config/entity-registry';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { ENTITY_STATUS } from '@/config/database-constants';
 import { getEntityFundingStats } from '@/services/wallets/funding-stats';
-import { convertBtcTo, currencyConverter } from '@/services/currency';
+import { convertBtcToOrNull } from '@/services/currency/rates.server';
 
 const DEFAULT_CAMPAIGN_DURATION_DAYS = 30;
 
@@ -51,15 +51,18 @@ export const GET = withOptionalAuth(
       const fundingStats = await getEntityFundingStats(supabase, 'project', projectId);
       const raisedBtc = fundingStats?.totalBtc ?? 0;
       const supporterCount = fundingStats?.contributorCount ?? 0;
+      // The goal is written in the project's own currency but money arrives in
+      // Bitcoin, so every fiat figure below depends on a real rate. Without one
+      // we report null rather than 0 — "we can't say" is true, "nothing raised"
+      // would be a lie about someone's fundraiser.
       const goalCurrency = ((project.currency as string) || 'BTC').toUpperCase();
-      if (raisedBtc > 0 && goalCurrency !== 'BTC') {
-        await currencyConverter.getRates().catch(() => undefined);
-      }
-      const raisedAmount = raisedBtc > 0 ? convertBtcTo(raisedBtc, goalCurrency) : 0;
+      const raisedAmount = raisedBtc > 0 ? await convertBtcToOrNull(raisedBtc, goalCurrency) : 0;
+      const fiatUnavailable = raisedAmount === null;
 
-      // Calculate progress
       const progressPercent =
-        project.goal_amount > 0 ? Math.min((raisedAmount / project.goal_amount) * 100, 100) : 0;
+        raisedAmount !== null && project.goal_amount > 0
+          ? Math.min((raisedAmount / project.goal_amount) * 100, 100)
+          : null;
 
       // Calculate days remaining (default campaign duration from creation date)
       const createdDate = new Date(project.created_at);
@@ -77,7 +80,7 @@ export const GET = withOptionalAuth(
         1,
         Math.ceil((now.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000))
       );
-      const dailyFundingRate = raisedAmount / daysSinceCreation;
+      const dailyFundingRate = raisedAmount !== null ? raisedAmount / daysSinceCreation : null;
 
       // Get project category and related projects
       const { data: relatedProjectsData, error: _relatedError } = await supabase
@@ -97,10 +100,16 @@ export const GET = withOptionalAuth(
           goalAmount: project.goal_amount,
           raisedAmount,
           raisedBtc,
-          progressPercent: Math.round(progressPercent * 100) / 100,
-          remaining: Math.max(0, project.goal_amount - raisedAmount),
+          /** True when no Bitcoin rate was available, so every fiat field is null. */
+          fiatUnavailable,
+          progressPercent:
+            progressPercent === null ? null : Math.round(progressPercent * 100) / 100,
+          remaining: raisedAmount === null ? null : Math.max(0, project.goal_amount - raisedAmount),
           supporterCount,
-          averageContribution: supporterCount > 0 ? Math.round(raisedAmount / supporterCount) : 0,
+          averageContribution:
+            raisedAmount !== null && supporterCount > 0
+              ? Math.round(raisedAmount / supporterCount)
+              : null,
         },
         timeMetrics: {
           createdAt: project.created_at,
@@ -113,9 +122,15 @@ export const GET = withOptionalAuth(
           ),
         },
         performanceMetrics: {
-          dailyFundingRate: Math.round(dailyFundingRate),
-          projectedTotal: Math.round(raisedAmount + dailyFundingRate * daysRemaining),
-          willReachGoal: raisedAmount + dailyFundingRate * daysRemaining >= project.goal_amount,
+          dailyFundingRate: dailyFundingRate === null ? null : Math.round(dailyFundingRate),
+          projectedTotal:
+            raisedAmount === null || dailyFundingRate === null
+              ? null
+              : Math.round(raisedAmount + dailyFundingRate * daysRemaining),
+          willReachGoal:
+            raisedAmount === null || dailyFundingRate === null
+              ? null
+              : raisedAmount + dailyFundingRate * daysRemaining >= project.goal_amount,
           category: project.category || 'uncategorized',
           categoryRank,
         },

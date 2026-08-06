@@ -53,6 +53,9 @@ export const SEND_COPY = {
     'Sending needs a wallet OrangeCat can ask to pay — any NWC-compatible Lightning wallet. Your keys stay yours.',
   noWalletCta: 'Set up a wallet',
 
+  /** Shown when sending is broken on our side — never blame the payer's wallet. */
+  unavailableTitle: 'Sending is paused right now',
+
   /** Honesty line: we ask the user's own wallet to pay; we never hold funds. */
   disclaimer: 'Paid from your own wallet. OrangeCat never holds your Bitcoin.',
 } as const;

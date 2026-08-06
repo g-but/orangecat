@@ -10,8 +10,7 @@ import { createHash } from 'node:crypto';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 import { getAdminClient } from '@/lib/supabase/admin';
-import { convertToBTC } from '@/services/currency/rates';
-import type { CurrencyCode } from '@/config/currencies';
+import { convertToBtcOrNull } from '@/services/currency/rates.server';
 import type { PaymentIntentStatus } from './types';
 import { logger } from '@/utils/logger';
 
@@ -70,7 +69,20 @@ export async function resolveAmount(
   if (currency === 'BTC') {
     return priceNum;
   }
-  return await convertToBTC(priceNum, currency as CurrencyCode);
+
+  // Refuse rather than guess. This converts a seller's asking price into the
+  // Bitcoin a buyer will actually part with, so an approximate rate is not a
+  // cosmetic problem — it is charging the wrong amount. The old code fell back
+  // to a hardcoded 86,000 CHF/BTC that had drifted ~65% from the market, which
+  // would have invoiced a CHF 100 listing at roughly CHF 61 worth of Bitcoin,
+  // every time, with no error and nothing on screen to notice.
+  const amountBtc = await convertToBtcOrNull(priceNum, currency);
+  if (amountBtc === null || !(amountBtc > 0)) {
+    throw new Error(
+      `Bitcoin exchange rate unavailable for ${currency}; refusing to price this payment`
+    );
+  }
+  return amountBtc;
 }
 
 export async function getEntityTitle(

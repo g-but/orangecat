@@ -3,11 +3,17 @@
  *
  * Synchronous conversion between BTC, sats, and fiat currencies.
  *
- * These read the in-memory `cache.rates`, which is seeded with sane defaults for
- * every supported fiat (USD/EUR/CHF/GBP) and refreshed from the API. A missing
- * rate therefore means an *unsupported* currency code — we must NOT fabricate a
- * value. Fabricating is a money-correctness bug: `amount / 1` would render e.g.
- * "100 CHF" as "100 BTC". For an unknown rate we fail safe to 0 and warn.
+ * These read the in-memory `cache.rates`, which starts EMPTY and is filled only
+ * from a real, recent quote (see rateSource.server.ts). A missing rate therefore
+ * means "we do not know what Bitcoin is worth right now" — an ordinary, expected
+ * state, not an unsupported currency. Either way we must NOT fabricate a value:
+ * `amount / 1` would render "100 CHF" as "100 BTC", and a *plausible* wrong rate
+ * is worse still because nothing on screen looks amiss. Unknown fails safe to 0
+ * and warns; display code reads 0 as "keep showing BTC".
+ *
+ * These are the DISPLAY conversions. Anything that prices money server-side must
+ * use rates.server.ts, whose helpers return `number | null` so a zero can never
+ * be mistaken for an amount.
  */
 
 import { logger } from '@/utils/logger';

@@ -65,6 +65,8 @@ export const API_ROUTES = {
     RECEIVE_STATUS: '/api/wallets/receive-status',
   },
   ENTITY_WALLETS: '/api/entity-wallets',
+  /** What Bitcoin costs — our own origin, so no third-party call from a browser. */
+  RATES: '/api/rates',
   RECEIVE: {
     REQUEST: '/api/receive/request',
   },

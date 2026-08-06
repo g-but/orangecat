@@ -231,13 +231,14 @@ export default async function PublicProjectPage({ params }: PageProps) {
           value: project.goal_amount,
           currency: project.currency || 'BTC',
         },
-        ...(settledRaised > 0 && {
-          amountRaised: {
-            '@type': 'MonetaryAmount',
-            value: settledRaised,
-            currency: project.currency || 'BTC',
-          },
-        }),
+        ...(settledRaised !== null &&
+          settledRaised > 0 && {
+            amountRaised: {
+              '@type': 'MonetaryAmount',
+              value: settledRaised,
+              currency: project.currency || 'BTC',
+            },
+          }),
       },
     }),
     ...(project.bitcoin_address && {

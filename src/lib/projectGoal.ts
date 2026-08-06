@@ -1,32 +1,24 @@
 'use server';
 
-import { currencyConverter } from '@/services/currency';
+import { convertBtcToOrNull } from '@/services/currency/rates.server';
 
 /**
- * Compute amount raised in goal currency from BTC balance.
- * Falls back to 0 for unknown currencies.
+ * A project's settled BTC total expressed in the currency its goal is written in.
+ *
+ * Returns null when there is no usable Bitcoin rate. That is not the same as
+ * zero: "CHF 0 raised" tells a visitor the fundraiser has nothing, which is a
+ * false claim about someone's project. Callers should fall back to showing the
+ * Bitcoin figure instead.
  */
 export async function computeAmountRaised(
   bitcoin_balance_btc: number,
   goal_currency: string
-): Promise<number> {
+): Promise<number | null> {
   if (!bitcoin_balance_btc || bitcoin_balance_btc === 0) {
     return 0;
   }
   if (goal_currency === 'BTC') {
     return bitcoin_balance_btc;
   }
-
-  const rates = await currencyConverter.getRates();
-
-  const rate =
-    goal_currency === 'CHF'
-      ? rates.btcToChf
-      : goal_currency === 'USD'
-        ? rates.btcToUsd
-        : goal_currency === 'EUR'
-          ? rates.btcToEur
-          : 0;
-
-  return bitcoin_balance_btc * rate;
+  return convertBtcToOrNull(bitcoin_balance_btc, goal_currency);
 }

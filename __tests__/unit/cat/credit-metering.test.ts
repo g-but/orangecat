@@ -22,9 +22,11 @@ jest.mock('@/utils/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
 
-// Live-rate lookup is best-effort; pin it for determinism.
-jest.mock('@/services/currency/rates', () => ({
-  convertFromBTC: jest.fn().mockResolvedValue(100000), // 1 BTC = 100k USD
+// Registry estimates are priced in USD, so they need a BTC/USD rate. Pin it for
+// determinism — and let a test return null to prove we bill nothing without one.
+const convertBtcToOrNull = jest.fn().mockResolvedValue(100000); // 1 BTC = 100k USD
+jest.mock('@/services/currency/rates.server', () => ({
+  convertBtcToOrNull: (...a: unknown[]) => convertBtcToOrNull(...a),
 }));
 
 const appendCreditEntry = jest.fn();
@@ -168,6 +170,39 @@ describe('meterCreditUsage', () => {
     const [, , entry] = appendCreditEntry.mock.calls[0] as [unknown, string, any];
     expect(entry.metadata.rawCostBtc).toBe(providerReportedRawCostBtc);
     expect(entry.metadata.pricingSource).toBe('provider_reported');
+  });
+
+  it('bills nothing when a registry estimate has no BTC/USD rate to price it', async () => {
+    // This used to fall back to a hardcoded 100,000 USD/BTC and debit a real
+    // ledger against it. Taking the wrong amount of someone's money is worse
+    // than taking none and reconciling from the logs.
+    convertBtcToOrNull.mockResolvedValueOnce(null);
+    appendCreditEntry.mockResolvedValue(0.001);
+
+    const charged = await meterCreditUsage(admin, 'u1', {
+      model: PAID_MODEL,
+      inputTokens: 100000,
+      outputTokens: 100000,
+      ref: 'no-rate',
+    });
+
+    expect(charged).toBe(0);
+    expect(appendCreditEntry).not.toHaveBeenCalled();
+  });
+
+  it('needs no rate at all for a provider-reported cost — it is already in BTC', async () => {
+    appendCreditEntry.mockResolvedValue(0.001);
+
+    const charged = await meterCreditUsage(admin, 'u1', {
+      model: PAID_MODEL,
+      inputTokens: 100,
+      outputTokens: 100,
+      rawCostBtc: 0.00000234,
+      ref: 'no-rate-provider-cost',
+    });
+
+    expect(charged).toBeGreaterThan(0);
+    expect(convertBtcToOrNull).not.toHaveBeenCalled();
   });
 
   it('returns 0 (never throws) but retries before giving up when the ledger keeps failing', async () => {

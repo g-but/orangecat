@@ -6,6 +6,8 @@ export interface ExchangeRates {
   btcToChf: number;
   btcToUsd: number;
   btcToEur: number;
+  /** GBP is a supported display currency; omitting it here silently converted to 0. */
+  btcToGbp: number;
   lastUpdated: number;
 }
 

@@ -21,7 +21,7 @@ import PublicEntityHero from '@/components/public/PublicEntityHero';
 import { PublicEntityPaymentSection } from '@/components/payment';
 import { resolveSellerReceiveInfo, type SellerReceiveInfo } from '@/domain/payments';
 import { getSharedWalletUsage, type SharedWalletUsage } from '@/domain/wallets/walletUsage';
-import { currencyConverter } from '@/services/currency';
+import { convertToBtcOrNull } from '@/services/currency/rates.server';
 import { type CurrencyCode } from '@/config/currencies';
 import { fetchEntityOwner } from '@/lib/entities/fetchEntityOwner';
 import { fetchProfileListingCounts } from '@/services/profile/listingCounts';
@@ -161,7 +161,7 @@ export default async function PublicEntityDetailPage({
       priceAmountBtc =
         (price.currency || 'BTC') === 'BTC'
           ? priceAmount
-          : await currencyConverter.convert(priceAmount, price.currency as CurrencyCode, 'BTC');
+          : ((await convertToBtcOrNull(priceAmount, price.currency as CurrencyCode)) ?? undefined);
     }
   }
 

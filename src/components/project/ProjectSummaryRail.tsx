@@ -35,7 +35,8 @@ interface Props {
 export default function ProjectSummaryRail({ project, settledRaisedBtc = 0, isOwner }: Props) {
   const { formatAmountBtc } = useDisplayCurrency();
   const goalCurrency = project.goal_currency || project.currency || PLATFORM_DEFAULT_CURRENCY;
-  const [amountRaised, setAmountRaised] = useState<number>(0);
+  // null = no Bitcoin rate available, so the goal currency can't be quoted.
+  const [amountRaised, setAmountRaised] = useState<number | null>(0);
   const [refreshing, setRefreshing] = useState(false);
   const [bitcoinBalanceBtc, setBitcoinBalanceBtc] = useState<number>(
     project.bitcoin_balance_btc || 0
@@ -58,7 +59,7 @@ export default function ProjectSummaryRail({ project, settledRaisedBtc = 0, isOw
 
   const progress = useMemo(() => {
     const goal = project.goal_amount || 0;
-    if (!goal) {
+    if (!goal || amountRaised === null) {
       return 0;
     }
     return Math.min((amountRaised / goal) * 100, 100);
@@ -103,8 +104,14 @@ export default function ProjectSummaryRail({ project, settledRaisedBtc = 0, isOw
   return (
     <aside className="sticky top-6 rounded-lg border bg-surface-base dark:border-default p-6 space-y-4">
       <div>
-        <div className="text-2xl font-bold">{formatCurrency(amountRaised, goalCurrency)}</div>
-        {project.goal_amount && (
+        {/* No rate → quote the Bitcoin that actually arrived rather than claim
+            "CHF 0 raised", which would be a false statement about the project. */}
+        <div className="text-2xl font-bold">
+          {amountRaised === null
+            ? formatCurrency(settledRaisedBtc, 'BTC')
+            : formatCurrency(amountRaised, goalCurrency)}
+        </div>
+        {project.goal_amount && amountRaised !== null && (
           <div className="text-sm text-fg-secondary">
             of {formatCurrency(project.goal_amount, goalCurrency)} goal
           </div>
