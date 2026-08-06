@@ -553,10 +553,71 @@ async function notifyFounderHarnessError(summaryLine) {
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+
+// ---------------------------------------------------------------------------
+// Free-tier budget guard
+// ---------------------------------------------------------------------------
+
+/**
+ * The eval and real users drink from the same 50-requests/day free pool, and
+ * the eval is the only one of the two that can wait. Eight probes is 16% of
+ * the day's capacity; with retries it has reached a third of it. On 2026-08-06
+ * the pool was fully exhausted and a real user asking Cat a question got
+ * "Free AI capacity is maxed out right now" — diagnostics must never be the
+ * reason that happens.
+ *
+ * So: check what's left before starting, and stand down if running would eat
+ * into the reserve kept for people. Costs one request to learn the number,
+ * which is cheaper than discovering it eight failures in.
+ */
+const FREE_TIER_RESERVE = Number(process.env.CAT_EVAL_FREE_RESERVE || 20);
+
+async function freeModelBudget() {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) {return null;}
+  const read = h => {
+    const limit = Number(h.get('x-ratelimit-limit'));
+    const remaining = Number(h.get('x-ratelimit-remaining'));
+    const reset = Number(h.get('x-ratelimit-reset'));
+    return Number.isFinite(remaining) ? { limit, remaining, reset } : null;
+  };
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: EVAL_MODEL.includes(':free') ? EVAL_MODEL : 'nvidia/nemotron-3-super-120b-a12b:free',
+        messages: [{ role: 'user', content: 'ping' }],
+        max_tokens: 1,
+      }),
+    });
+    return read(res.headers);
+  } catch {
+    // Unknown is not the same as empty — let the run proceed rather than
+    // silently skipping the eval forever on a transient network blip.
+    return null;
+  }
+}
+
 async function main() {
   console.error(
     `eval-cat: target=${BASE_URL} user=${EVAL_EMAIL} provider=${EVAL_PROVIDER} model=${EVAL_MODEL}`
   );
+  const budget = await freeModelBudget();
+  if (budget) {
+    console.error(
+      `eval-cat: free-model budget ${budget.remaining}/${budget.limit} remaining (reserve ${FREE_TIER_RESERVE})`
+    );
+    if (budget.remaining < FREE_TIER_RESERVE + PROBES.length) {
+      console.error(
+        `eval-cat: SKIPPED — running ${PROBES.length} probes would leave real users under the ${FREE_TIER_RESERVE}-request reserve. ` +
+          `Resets at ${budget.reset ? new Date(budget.reset).toISOString() : 'unknown'}. ` +
+          'Raise the ceiling permanently with 10 OpenRouter credits (50/day -> 1000/day).'
+      );
+      return;
+    }
+  }
+
   const session = await signIn();
   const userId = session.user.id;
   const cookie = buildAuthCookie(session);

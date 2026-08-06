@@ -155,10 +155,18 @@ export const DEFAULT_GROQ_MODEL: keyof typeof GROQ_MODELS =
  * llama-3.1-8b-instant), and the *reserved* `max_tokens` counts against that
  * bucket up-front — so defaulting to the model's full 8192 output capability
  * makes every request exceed TPM and 429 (which silently fell the Cat back to
- * OpenRouter on every message). 2048 is ample for chat; callers that need more
- * pass `maxTokens` explicitly.
+ * OpenRouter on every message). Callers that need more pass `maxTokens`
+ * explicitly.
+ *
+ * Lowered 2048 -> 1024 on 2026-08-06. The reservation is pure prompt budget
+ * spent up-front: at ~4.5 chars/token, 1024 fewer reserved output tokens buys
+ * ~4,600 more characters of prompt, roughly halving the gap between Cat's
+ * prompt and the on-demand ceiling. 1024 tokens is still a long chat reply
+ * (~4,500 characters), and every caller that genuinely needs more — the
+ * writing engine and reviser — already passes `maxTokens` explicitly, so this
+ * narrows nothing but the default.
  */
-export const GROQ_CHAT_MAX_TOKENS = 2048;
+export const GROQ_CHAT_MAX_TOKENS = 1024;
 
 /**
  * Groq's on-demand service tier (the platform org's tier) hard-rejects any
