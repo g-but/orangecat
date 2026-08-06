@@ -20,6 +20,7 @@ import { prepareCatChat } from '@/services/cat/chat-prepare';
 import { parseActionsFromResponse } from '@/services/cat/response-parser';
 import { saveMessages } from '@/services/cat/conversation-history';
 import { buildFailedTurnMessages } from '@/services/cat/failed-turn';
+import { alertCatChatFailure } from '@/services/cat/failure-alert';
 import { resolveProvider, type FallbackProvider } from '@/services/cat/provider-resolver';
 import { meterCreditUsage } from '@/services/cat/credit-metering';
 import { getAdminClient } from '@/lib/supabase/admin';
@@ -588,6 +589,16 @@ export async function orchestrateCatChat(
               logger.error('Failed to persist failed turn', { persistErr }, 'cat/chat');
             });
           }
+          // Raise it with the operator too. Persisting the turn makes the
+          // failure visible to anyone who goes looking; this makes it visible
+          // to someone who isn't looking. Detached and self-swallowing — a
+          // chat that already failed must not fail differently because the
+          // alert could not be written.
+          void alertCatChatFailure({
+            code: errPayload.code,
+            provider: activeProvider,
+            model: activeModel,
+          });
           controller.enqueue(encoder.encode(`event: error\n`));
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(errPayload)}\n\n`));
         } finally {
