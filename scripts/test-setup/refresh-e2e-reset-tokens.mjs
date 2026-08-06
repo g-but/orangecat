@@ -28,9 +28,20 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
 const anonKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-// Unique per run (workflow run id in CI, pid+time locally) so no other run
-// can touch this user's recovery token or password.
-const runTag = process.env.GITHUB_RUN_ID || `${process.pid}-${Date.now()}`;
+// Unique per ATTEMPT (workflow run id + attempt in CI, pid+time locally) so no
+// other run can touch this user's recovery token or password.
+//
+// The attempt number is not decoration. GITHUB_RUN_ID is stable across a
+// re-run, so keying on it alone meant the second attempt of any run that got
+// this far tried to create a user that already existed — `createUser` 422s with
+// `email_exists` and the job exits 1. Effect: **re-running CI could never
+// succeed**, which silently disabled every recovery path built on re-running,
+// including auto-merge-sweep.sh's cancelled-run retry (added for #603/#604) and
+// its base-branch twin. It surfaced on 2026-08-06 when an Actions outage
+// cancelled main's CI and re-running it turned a stalled queue into a red main.
+const runTag = process.env.GITHUB_RUN_ID
+  ? `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT || '1'}`
+  : `${process.pid}-${Date.now()}`;
 const email = `e2e-reset-${runTag}@orangecat.ch`;
 
 if (!url || !serviceKey || !anonKey) {
@@ -62,12 +73,31 @@ try {
   console.warn('stale reset-user cleanup skipped:', e?.message ?? e);
 }
 
-const { error: createErr } = await admin.auth.admin.createUser({
-  email,
-  password: `Reset-${runTag}-Aa1!`,
-  email_confirm: true,
-  user_metadata: { preferred_username: `e2e_reset_${runTag}`, name: 'E2E Reset User' },
-});
+async function createResetUser() {
+  return admin.auth.admin.createUser({
+    email,
+    password: `Reset-${runTag}-Aa1!`,
+    email_confirm: true,
+    user_metadata: { preferred_username: `e2e_reset_${runTag}`, name: 'E2E Reset User' },
+  });
+}
+
+let { error: createErr } = await createResetUser();
+
+// Belt and braces for the same class the attempt suffix above fixes: this
+// fixture is disposable by definition, so a leftover of the SAME tag is
+// something to clear, never something to fail on. Anything that makes CI
+// unrunnable twice in a row disables every retry-based recovery path we have.
+if (createErr?.code === 'email_exists') {
+  console.warn(`reset fixture ${email} already existed — replacing it`);
+  const { data } = await admin.auth.admin.listUsers({ page: 1, perPage: 100 });
+  const stale = (data?.users ?? []).find(u => u.email === email);
+  if (stale) {
+    await admin.auth.admin.deleteUser(stale.id);
+  }
+  ({ error: createErr } = await createResetUser());
+}
+
 if (createErr) {
   console.error('createUser for reset fixture failed', createErr);
   process.exit(1);
