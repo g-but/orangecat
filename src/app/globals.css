@@ -434,7 +434,7 @@
   /* The one recommended prompt: states its reason, then the prompt itself.
      Weighted above the alternatives so there is a single obvious next action. */
   .oc-chat-lead {
-    @apply flex w-full flex-col gap-1.5 rounded-xl border border-border-interactive bg-surface-raised px-4 py-3.5 text-left transition-colors hover:bg-surface-raised/70;
+    @apply flex w-full flex-col gap-1.5 rounded-xl border border-interactive bg-surface-raised px-4 py-3.5 text-left transition-colors hover:bg-surface-raised/70;
   }
   .oc-chat-lead-reason {
     @apply text-xs leading-snug text-fg-secondary;
