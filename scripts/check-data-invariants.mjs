@@ -193,12 +193,58 @@ async function checkPaidWithoutTimestamp() {
   }
 }
 
+/**
+ * A Cat send that stored nothing.
+ *
+ * A DEFAULT conversation is created in exactly one place — chat-prepare, while
+ * serving a send — so a default conversation with zero messages means a request
+ * reached the server and the user's message was never written. That was a real
+ * bug until 2026-08-06: the streaming path saved a turn only `if (fullContent)`,
+ * so a total provider-chain failure discarded the exchange. Six real accounts
+ * are still frozen in that state from June 2026, each having tried Cat once.
+ *
+ * It went unnoticed for two months because the leftover row is indistinguishable
+ * from "opened the page and never typed" — the failure erased its own evidence
+ * and then counted as engagement. Hence a scheduled check rather than a test.
+ *
+ * Scoped to 30 days so the historical rows stay as evidence (they are the only
+ * trace of those six attempts) without permanently reddening the gate. Empty
+ * NON-default conversations are legitimate: the rail's "new chat" button makes
+ * one before anything is typed.
+ */
+async function checkSilentlyDroppedCatTurns() {
+  const since = new Date(Date.now() - 30 * 864e5).toISOString();
+  const convs = await rest(
+    `cat_conversations?select=id,user_id,created_at&is_default=eq.true&created_at=gte.${since}`
+  );
+  if (convs.length === 0) {
+    notes.push('cat_conversations: no default conversations created in the last 30 days');
+    return;
+  }
+
+  const ids = convs.map(c => c.id);
+  const msgs = await rest(`cat_messages?select=conversation_id&conversation_id=in.(${ids.join(',')})`);
+  const answered = new Set(msgs.map(m => m.conversation_id));
+  const dropped = convs.filter(c => !answered.has(c.id));
+
+  if (dropped.length > 0) {
+    violation(
+      'cat_conversations.send_stored_nothing',
+      `${dropped.length} default conversation(s) hold zero messages — a send reached the server and the user's message was not persisted`,
+      dropped.slice(0, 5).map(c => c.id)
+    );
+  } else {
+    notes.push(`cat_conversations: all ${convs.length} recent send(s) stored their turn`);
+  }
+}
+
 async function main() {
   const checks = [
     checkOrphanedWalletLinks,
     checkDuplicatePrimaryLinks,
     checkUnpayableActiveWallets,
     checkPaidWithoutTimestamp,
+    checkSilentlyDroppedCatTurns,
   ];
 
   for (const check of checks) {
