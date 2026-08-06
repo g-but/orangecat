@@ -112,19 +112,19 @@ const GROQ_MODELS = {
     contextWindow: 128000,
     maxOutputTokens: 8192,
   },
-  // Mixture of experts - very capable
-  'mixtral-8x7b-32768': {
-    name: 'Mixtral 8x7B',
-    contextWindow: 32768,
-    maxOutputTokens: 32768,
-  },
-  // Google's Gemma
-  'gemma2-9b-it': {
-    name: 'Gemma 2 9B',
-    contextWindow: 8192,
-    maxOutputTokens: 8192,
-  },
 } as const;
+
+/**
+ * Configured Groq model ids, for the catalog-drift probe.
+ *
+ * Groq decommissions models without notice, exactly as OpenRouter retires free
+ * ones. `mixtral-8x7b-32768` and `gemma2-9b-it` sat here long after Groq had
+ * removed them (both answered 400 "has been decommissioned" when measured on
+ * 2026-08-06) — selecting either was a guaranteed failure. OpenRouter got a
+ * standing probe after its third rot incident; Groq had none, which is why this
+ * drift went unnoticed. See probeGroqModelCatalog in services/cat/health-probes.
+ */
+export const CONFIGURED_GROQ_MODEL_IDS = Object.keys(GROQ_MODELS);
 
 /**
  * Default Groq model — the platform baseline a free (non-BYOK) user gets.
@@ -166,14 +166,27 @@ export const GROQ_CHAT_MAX_TOKENS = 2048;
  * measured against the platform key 2026-08-02: "Limit 12000". Once a Cat
  * prompt outgrows this (memories + history + page excerpt), EVERY message
  * pays a guaranteed-failing Groq round-trip before falling back.
+ *
+ * 12000 is also the best on this key: measured 2026-08-06, llama-3.1-8b-instant
+ * is 6000 and openai/gpt-oss-{20b,120b} are 8000. There is no higher-TPM model
+ * to escape to — the prompt has to shrink.
+ *
+ * It is a ROLLING per-minute budget, not a per-request ceiling: back-to-back
+ * requests in the same minute share it, so a second call can 413 on a payload
+ * the first one accepted. Measure fit with a single call in a drained window.
  */
 export const GROQ_ON_DEMAND_TPM_LIMIT = 12_000;
 
 /**
- * Pre-flight fit check for the on-demand tier. The chars/4 estimate
- * deliberately over-counts tokens (the measured 413 payload was ~6 chars per
- * token), so borderline prompts skip a little early instead of 413ing —
+ * Pre-flight fit check for the on-demand tier. The chars/4 estimate slightly
+ * over-counts, so borderline prompts skip a little early instead of 413ing —
  * callers only invoke this when another chain link can serve the request.
+ *
+ * The real ratio for Cat's own prompt is ~4.5 chars/token, measured twice
+ * against the live API on 2026-08-06 (60,747 chars → 13,827 prompt tokens;
+ * 54,444 → 12,119). An earlier comment here claimed ~6, which made the prompt
+ * look 52% over budget when it is ~39% over — the diet target was wrong by a
+ * third. Do not restate this ratio from memory; measure it.
  * The reserved output budget counts against the same TPM bucket, so it's
  * part of the estimate.
  */
