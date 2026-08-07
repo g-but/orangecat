@@ -9,9 +9,7 @@
  * Last Modified Summary: Comprehensive test environment setup
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import '@testing-library/jest-dom';
 
@@ -47,15 +45,23 @@ function createStorageMock() {
   };
 }
 
+// Suites may opt into the node environment (@jest-environment node) for pure
+// server-side code — every browser-global touch below must be conditional.
+const IS_JSDOM = typeof window !== 'undefined';
+
 // Replace window.localStorage / sessionStorage with our spy-able mocks.
-Object.defineProperty(window, 'localStorage', {
-  value: createStorageMock(),
-  writable: true,
-});
-Object.defineProperty(window, 'sessionStorage', {
-  value: createStorageMock(),
-  writable: true,
-});
+const localStorageMockInstance = createStorageMock();
+const sessionStorageMockInstance = createStorageMock();
+if (IS_JSDOM) {
+  Object.defineProperty(window, 'localStorage', {
+    value: localStorageMockInstance,
+    writable: true,
+  });
+  Object.defineProperty(window, 'sessionStorage', {
+    value: sessionStorageMockInstance,
+    writable: true,
+  });
+}
 
 // Prevent React act warnings from polluting test output in older tests.
 // (These are warning-level logs; suppress them globally.)
@@ -108,25 +114,27 @@ global.fetch = jest.fn();
 // localStorage / sessionStorage are already replaced above with spy-able,
 // store-backed mocks (createStorageMock) — these are just handles to them.
 // One mock, one source of truth: don't define a second stub here.
-const localStorageMock = window.localStorage as unknown as ReturnType<typeof createStorageMock>;
-const sessionStorageMock = window.sessionStorage as unknown as ReturnType<typeof createStorageMock>;
+const localStorageMock = localStorageMockInstance;
+const sessionStorageMock = sessionStorageMockInstance;
 
 // Mock window.location
-delete (window as any).location;
-window.location = {
-  href: 'http://localhost:3000',
-  origin: 'http://localhost:3000',
-  protocol: 'http:',
-  host: 'localhost:3000',
-  hostname: 'localhost',
-  port: '3000',
-  pathname: '/',
-  search: '',
-  hash: '',
-  assign: jest.fn(),
-  replace: jest.fn(),
-  reload: jest.fn(),
-} as any;
+if (IS_JSDOM) {
+  delete (window as any).location;
+  window.location = {
+    href: 'http://localhost:3000',
+    origin: 'http://localhost:3000',
+    protocol: 'http:',
+    host: 'localhost:3000',
+    hostname: 'localhost',
+    port: '3000',
+    pathname: '/',
+    search: '',
+    hash: '',
+    assign: jest.fn(),
+    replace: jest.fn(),
+    reload: jest.fn(),
+  } as any;
+}
 
 // Mock console methods to reduce noise in tests
 const originalConsole = { ...console };
@@ -288,7 +296,6 @@ afterAll(() => {
 // =====================================================================
 
 declare global {
-  // eslint-disable-next-line no-var
   var testUtils: {
     resetMocks: () => void;
     mockSuccessResponse: (data: any) => void;
@@ -467,8 +474,10 @@ jest.mock('@supabase/supabase-js', () => {
 });
 
 // Ensure Storage.prototype functions are jest.fn for spying in tests
-Object.defineProperty(Storage.prototype, 'setItem', { value: jest.fn(), writable: true });
-Object.defineProperty(Storage.prototype, 'getItem', { value: jest.fn(), writable: true });
+if (typeof Storage !== 'undefined') {
+  Object.defineProperty(Storage.prototype, 'setItem', { value: jest.fn(), writable: true });
+  Object.defineProperty(Storage.prototype, 'getItem', { value: jest.fn(), writable: true });
+}
 
 // =====================================================================
 // 🧪 PROFILE MAPPER MOCKS

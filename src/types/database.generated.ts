@@ -4469,6 +4469,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      solon_trusted_keys: {
+        Row: {
+          added_at: string;
+          bitcoin_address: string;
+          display_name: string;
+          id: string;
+          member_type: string;
+          public_key_hex: string | null;
+          revoked_at: string | null;
+          solon_member_id: string;
+          voting_weight: number;
+        };
+        Insert: {
+          added_at?: string;
+          bitcoin_address: string;
+          display_name: string;
+          id?: string;
+          member_type: string;
+          public_key_hex?: string | null;
+          revoked_at?: string | null;
+          solon_member_id: string;
+          voting_weight?: number;
+        };
+        Update: {
+          added_at?: string;
+          bitcoin_address?: string;
+          display_name?: string;
+          id?: string;
+          member_type?: string;
+          public_key_hex?: string | null;
+          revoked_at?: string | null;
+          solon_member_id?: string;
+          voting_weight?: number;
+        };
+        Relationships: [];
+      };
       stakeholder_relationships: {
         Row: {
           confidence: number | null;
