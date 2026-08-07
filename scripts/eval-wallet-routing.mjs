@@ -136,17 +136,54 @@ const svcHeaders = {
   'Content-Type': 'application/json',
 };
 
+const REST_RETRIES = 4;
+const REST_BACKOFF_MS = 1500;
+
+/**
+ * PostgREST call with the same transient tolerance as eval-cat.mjs. A dropped
+ * connection or a schema-cache 503 anywhere in here does not throw a verdict —
+ * it killed a whole run with "harness error — fetch failed" before this existed,
+ * losing the two probes that had already passed. 4xx is a real answer about the
+ * request and is never retried.
+ */
 async function rest(method, path, { body, prefer } = {}) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    method,
-    headers: { ...svcHeaders, ...(prefer ? { Prefer: prefer } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    throw new Error(`PostgREST ${method} ${path} → ${res.status}: ${await res.text()}`);
+  let lastErr;
+  for (let attempt = 1; attempt <= REST_RETRIES; attempt++) {
+    let res;
+    try {
+      res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+        method,
+        headers: { ...svcHeaders, ...(prefer ? { Prefer: prefer } : {}) },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    } catch (err) {
+      lastErr = new Error(`PostgREST ${method} ${path} → transport: ${err.message}`);
+      await restBackoff(attempt, 'transport');
+      continue;
+    }
+    if (res.ok) {
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    }
+    const detail = await res.text();
+    lastErr = new Error(`PostgREST ${method} ${path} → ${res.status}: ${detail}`);
+    if (res.status < 500) {
+      throw lastErr;
+    }
+    await restBackoff(attempt, `${res.status}`);
   }
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
+  throw lastErr;
+}
+
+async function restBackoff(attempt, why) {
+  if (attempt >= REST_RETRIES) {
+    return;
+  }
+  const wait = REST_BACKOFF_MS * attempt;
+  console.error(
+    `eval-wallet-routing: PostgREST transient (${why}) — retry ${attempt}/${REST_RETRIES - 1} in ${wait}ms`
+  );
+  await new Promise(r => setTimeout(r, wait));
 }
 
 /** Rebuild the cookie @supabase/ssr expects (see eval-cat.mjs for the format). */
