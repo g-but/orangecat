@@ -3,8 +3,8 @@
  *
  * OrangeCat is the platform's OAuth2/OIDC authorization server ("Login with
  * OrangeCat"). The provider code (slices 1a–1c) is inert until a client row
- * exists; this script creates / updates that row. FleetCrown is the second
- * first-party client (the first being the OrangeCat app itself).
+ * exists; this script creates / updates that row. Registered relying parties
+ * live in CLIENT_SPECS below — one least-privilege SSOT per client.
  *
  * Secrets are NEVER committed: the client secret is read from env (or generated)
  * and only its sha256 hash is stored — mirroring integration_keys and the
@@ -19,15 +19,17 @@
  *     `--rotate` is passed (which mints a new secret and prints it).
  *
  * Run against the LIVE self-hosted DB (supabase.orangecat.ch) from the box:
- *   ORANGECAT_OWNER_SEED=1 npx tsx scripts/oauth/register-client.ts
- *   ORANGECAT_OWNER_SEED=1 npx tsx scripts/oauth/register-client.ts --rotate
+ *   ORANGECAT_OWNER_SEED=1 npx tsx scripts/oauth/register-client.ts --client fleetcrown
+ *   ORANGECAT_OWNER_SEED=1 npx tsx scripts/oauth/register-client.ts --client solon
+ *   ORANGECAT_OWNER_SEED=1 npx tsx scripts/oauth/register-client.ts --client solon --rotate
+ * (no --client defaults to fleetcrown, preserving the original invocation)
  *
  * Requires in the environment (already in .env.local on the box):
  *   NEXT_PUBLIC_SUPABASE_URL   — self-hosted Supabase URL
  *   SUPABASE_SERVICE_ROLE_KEY  — service role (bypasses the table's RLS)
- * Optional:
- *   FLEETCROWN_OAUTH_SECRET    — use a pre-agreed secret instead of generating one
- *   FLEETCROWN_REDIRECT_URIS   — comma-separated; ADDED to the built-in defaults
+ * Optional, per client (<ID> = client id uppercased):
+ *   <ID>_OAUTH_SECRET          — use a pre-agreed secret instead of generating one
+ *   <ID>_REDIRECT_URIS         — comma-separated; ADDED to the built-in defaults
  *
  * Created: 2026-06-17
  */
@@ -55,52 +57,86 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
 }
 
 const rotate = process.argv.includes('--rotate');
+const clientArgIdx = process.argv.indexOf('--client');
+const clientId = (clientArgIdx !== -1 && process.argv[clientArgIdx + 1]) || 'fleetcrown';
 const sha256 = (s: string): string => createHash('sha256').update(s).digest('hex');
 
-/**
- * The FleetCrown relying-party spec — the registered SSOT, deliberately
- * least-privilege (this mirrors the row first registered + go-live-verified on
- * 2026-06-17; the secret already lives in FleetCrown's env).
- *
- * - allowed_scopes: only what FleetCrown actually needs today. NOT the full
- *   supported set — `effectiveScopes()` narrows per-request, but the *ceiling*
- *   stays minimal so a token can never be minted for a capability FC shouldn't
- *   have. Widen here intentionally (and re-run) when FC needs a new capability.
- * - redirect_uris: the Auth.js v5 callback ({origin}/api/auth/callback/orangecat)
- *   for FleetCrown's production origin. Exact-match is enforced (no wildcards).
- *   Append dev/preview origins via FLEETCROWN_REDIRECT_URIS when needed.
- */
+/** Auth.js v5 callback path — identical for every relying party we register. */
 const CALLBACK_PATH = '/api/auth/callback/orangecat';
-const DEFAULT_ORIGINS = [
-  'https://fleetcrown.orangecat.ch', // production origin (PLATFORM_AND_COLLABORATION.md)
-];
 
-const extraRedirects = (process.env.FLEETCROWN_REDIRECT_URIS ?? '')
+interface ClientSpec {
+  name: string;
+  /** Production origins; the callback path is appended to each. */
+  origins: string[];
+  /** Space-separated scope ceiling — validated against the scope registry. */
+  scopes: string;
+  is_confidential: boolean;
+  is_trusted: boolean;
+}
+
+/**
+ * The registered relying parties — one least-privilege SSOT per client.
+ *
+ * - scopes: only what the client actually needs today. NOT the full supported
+ *   set — `effectiveScopes()` narrows per-request, but the *ceiling* stays
+ *   minimal so a token can never be minted for a capability the client
+ *   shouldn't have. Widen here intentionally (and re-run) when one needs a
+ *   new capability.
+ * - origins: exact-match redirect enforcement (no wildcards). Append
+ *   dev/preview origins via <ID>_REDIRECT_URIS when needed.
+ */
+const CLIENT_SPECS: Record<string, ClientSpec> = {
+  // Mirrors the row first registered + go-live-verified on 2026-06-17; the
+  // secret already lives in FleetCrown's env.
+  fleetcrown: {
+    name: 'FleetCrown',
+    origins: ['https://fleetcrown.orangecat.ch'], // production origin (PLATFORM_AND_COLLABORATION.md)
+    scopes: 'openid profile email project.read project.write timeline.write wallet.read',
+    is_confidential: true, // has a server (Auth.js v5) — keeps a secret
+    is_trusted: true, // first-party — skips the consent screen after first grant
+  },
+  // Solon needs IDENTITY and nothing else: login links a Solon member to an
+  // OrangeCat actor (Member.ocActorId). It never acts on OrangeCat's behalf —
+  // governance authority flows the other way, through Bitcoin-signed votes
+  // that OrangeCat re-verifies (src/services/solon/decision-verify.ts).
+  solon: {
+    name: 'Solon',
+    origins: ['https://solon.orangecat.ch'],
+    scopes: 'openid profile email',
+    is_confidential: true,
+    is_trusted: true,
+  },
+};
+
+const spec = CLIENT_SPECS[clientId];
+if (!spec) {
+  die(`Unknown client "${clientId}". Registered specs: ${Object.keys(CLIENT_SPECS).join(', ')}`);
+}
+
+const ENV_PREFIX = clientId.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+const extraRedirects = (process.env[`${ENV_PREFIX}_REDIRECT_URIS`] ?? '')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
 
 const redirectUris = Array.from(
-  new Set([...DEFAULT_ORIGINS.map(o => `${o}${CALLBACK_PATH}`), ...extraRedirects])
+  new Set([...spec.origins.map(o => `${o}${CALLBACK_PATH}`), ...extraRedirects])
 );
 
 // Validate against the OAuth scope registry SSOT so a typo can't register an
 // unknown scope (parseAndValidateScopes drops unknowns into `.unknown`).
-const FLEETCROWN_SCOPES =
-  'openid profile email project.read project.write timeline.write wallet.read';
-const { granted: allowedScopes, unknown: unknownScopes } =
-  parseAndValidateScopes(FLEETCROWN_SCOPES);
+const { granted: allowedScopes, unknown: unknownScopes } = parseAndValidateScopes(spec.scopes);
 if (unknownScopes.length) {
-  die(`Unknown scope(s) in FLEETCROWN_SCOPES: ${unknownScopes.join(', ')}`);
+  die(`Unknown scope(s) for "${clientId}": ${unknownScopes.join(', ')}`);
 }
 
 const CLIENT = {
-  client_id: 'fleetcrown',
-  name: 'FleetCrown',
+  client_id: clientId,
+  name: spec.name,
   redirect_uris: redirectUris,
   allowed_scopes: allowedScopes,
-  is_confidential: true, // FleetCrown has a server (Auth.js v5) — keeps a secret
-  is_trusted: true, // first-party — skips the consent screen after first grant
+  is_confidential: spec.is_confidential,
+  is_trusted: spec.is_trusted,
 } as const;
 
 const admin: SupabaseClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
@@ -128,7 +164,7 @@ async function run(): Promise<void> {
   let newSecret: string | null = null;
   let secretHash: string | null = existing?.client_secret_hash ?? null;
   if (!existing || rotate) {
-    newSecret = process.env.FLEETCROWN_OAUTH_SECRET || randomBytes(32).toString('base64url');
+    newSecret = process.env[`${ENV_PREFIX}_OAUTH_SECRET`] || randomBytes(32).toString('base64url');
     secretHash = sha256(newSecret);
   }
 
@@ -158,12 +194,12 @@ async function run(): Promise<void> {
 
   if (newSecret) {
     console.log('\n  ┌──────────────────────────────────────────────────────────────');
-    console.log('  │ CLIENT SECRET (shown ONCE — store in FleetCrown env now):');
+    console.log(`  │ CLIENT SECRET (shown ONCE — store in ${CLIENT.name}'s env now):`);
     console.log(`  │   client_id     = ${CLIENT.client_id}`);
     console.log(`  │   client_secret = ${newSecret}`);
     console.log('  └──────────────────────────────────────────────────────────────');
-    if (process.env.FLEETCROWN_OAUTH_SECRET) {
-      console.log('  (used FLEETCROWN_OAUTH_SECRET from the environment)');
+    if (process.env[`${ENV_PREFIX}_OAUTH_SECRET`]) {
+      console.log(`  (used ${ENV_PREFIX}_OAUTH_SECRET from the environment)`);
     }
   } else {
     console.log('\n  Secret unchanged (pass --rotate to mint a new one).');
