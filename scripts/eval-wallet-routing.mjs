@@ -403,18 +403,53 @@ async function main() {
       console.log(`${score.ok ? '✓' : '✗'} ${probe.id} — ${score.detail}`);
     }
   } finally {
-    // Deleting the auth user is the whole cleanup: conversations, messages and
-    // the profile all cascade. Asserting it is a free live re-test of PR #637.
+    // Delete everything this run wrote, explicitly, and only THEN the user.
+    //
+    // The first version assumed deleting the auth user was the whole cleanup
+    // and asserted it by checking `profiles` came back empty. It always did —
+    // profiles cascade since #637 — so the check passed on every run while
+    // `cat_conversations` quietly orphaned: 20 rows, 7 vanished owners, found
+    // only by going and looking. The assertion proved the thing already fixed
+    // rather than the thing being done, which is the failure mode to watch for
+    // whenever a cleanup check is written next to a recent cascade fix.
+    //
+    // So: own the rows. Every table below is one this harness writes to.
+    for (const { id } of (await rest('GET', `cat_conversations?user_id=eq.${userId}&select=id`)) ??
+      []) {
+      await rest('DELETE', `cat_messages?conversation_id=eq.${id}`, { prefer: 'return=minimal' });
+    }
+    for (const path of [
+      `cat_conversations?user_id=eq.${userId}`,
+      `cat_memories?user_id=eq.${userId}`,
+      `cat_pending_actions?user_id=eq.${userId}`,
+      `wallets?profile_id=eq.${userId}`,
+    ]) {
+      await rest('DELETE', path, { prefer: 'return=minimal' });
+    }
     const del = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
       method: 'DELETE',
       headers: svcHeaders,
     });
-    const left = await rest('GET', `profiles?id=eq.${userId}&select=id`);
+
+    // Verify per table, not by proxy. `profiles` is still checked because that
+    // one IS a cascade and re-testing it live every run is free.
+    const leftovers = [];
+    for (const [label, path] of [
+      ['profiles', `profiles?id=eq.${userId}&select=id`],
+      ['cat_conversations', `cat_conversations?user_id=eq.${userId}&select=id`],
+      ['cat_memories', `cat_memories?user_id=eq.${userId}&select=id`],
+      ['wallets', `wallets?profile_id=eq.${userId}&select=id`],
+    ]) {
+      const rows = await rest('GET', path);
+      if (rows?.length) {
+        leftovers.push(`${label}=${rows.length}`);
+      }
+    }
     console.error(
-      `eval-wallet-routing: deleted probe user (${del.status}); profile rows left behind: ${left?.length ?? '?'}`
+      `eval-wallet-routing: deleted probe user (${del.status}); leftovers: ${leftovers.join(', ') || 'none'}`
     );
-    if (left?.length) {
-      console.error('eval-wallet-routing: CASCADE REGRESSION — probe user left an orphaned profile');
+    if (leftovers.length) {
+      console.error('eval-wallet-routing: CLEANUP INCOMPLETE — probe user left rows behind');
       failures++;
     }
   }
