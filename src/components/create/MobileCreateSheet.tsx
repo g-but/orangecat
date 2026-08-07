@@ -49,7 +49,7 @@ export function MobileCreateSheet({ isOpen, onClose, onSelect }: MobileCreateShe
 
         {/* Speaking beats picking a type you don't know the name of yet. Above
             the grid because it's the faster path, not an afterthought. */}
-        <VoiceCreate className="mb-4" onNavigate={onClose} />
+        <VoiceCreate className="mb-3" onNavigate={onClose} />
 
         {/* Options Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

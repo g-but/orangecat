@@ -124,7 +124,13 @@ export function QuotaMeter({ quota, className }: QuotaMeterProps) {
         {requestsRemaining} of {dailyLimit}
         <span className="hidden sm:inline"> {noun}</span> left
         <span className="hidden sm:inline"> today</span>
-        <span className="sr-only"> {explanation}</span>
+        {/* Only the part the visible chip doesn't already say. It used to
+            repeat the whole sentence, so a screen reader announced the count
+            twice — and copying the page text produced it twice too. */}
+        <span className="sr-only">
+          {' '}
+          {noun} — {CAT_UPSELL.byokShort}
+        </span>
       </Link>
       {isNearCap && (
         <Link

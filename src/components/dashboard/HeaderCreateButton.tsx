@@ -47,10 +47,12 @@ export function HeaderCreateButton() {
             <div className="px-3 py-2 text-xs font-semibold text-fg-secondary uppercase tracking-wider">
               Create New
             </div>
-            {/* Above the list: naming the thing out loud is faster than finding
-                it, and doesn't require knowing our vocabulary for it. */}
-            <VoiceCreate className="px-1 pb-2" onNavigate={close} />
+            {/* First row, styled as a row: naming the thing out loud is faster
+                than finding it in a list of fourteen, and doesn't require
+                knowing our vocabulary for it. It reads as part of the menu
+                rather than a panel bolted on top of one. */}
             <div className="space-y-0.5">
+              <VoiceCreate onNavigate={close} />
               {CREATE_OPTIONS.map((option, index) => (
                 <div key={option.name}>
                   <Link

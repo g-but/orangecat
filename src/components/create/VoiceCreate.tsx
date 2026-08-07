@@ -27,6 +27,7 @@ import { useDictation, type DictationError } from '@/hooks/useDictation';
 import { unwrapApiResponse } from '@/lib/api/client-response';
 import { logger } from '@/utils/logger';
 import { cn } from '@/lib/utils';
+import { FEATURES } from '@/config/features';
 
 interface VoiceCreateProps {
   /** Called once we're navigating away, so a containing sheet can close. */
@@ -94,8 +95,10 @@ export function VoiceCreate({ onNavigate, className }: VoiceCreateProps) {
     onError: error => setMessage(ERROR_COPY[error]),
   });
 
-  // No mic on this device — the entity menu below is the whole UI, unchanged.
-  if (!supported) {
+  // One flag governs every voice surface, so they can never disagree about
+  // whether the product has voice. No mic on this device is the same outcome:
+  // the entity menu below is the whole UI, unchanged.
+  if (!FEATURES.voiceInput || !supported) {
     return null;
   }
 
@@ -105,6 +108,7 @@ export function VoiceCreate({ onNavigate, className }: VoiceCreateProps) {
     : busy
       ? 'Working out what you meant…'
       : 'Say what you want to make';
+  const sublabel = '“Sell my bike for 200 francs”';
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -115,34 +119,25 @@ export function VoiceCreate({ onNavigate, className }: VoiceCreateProps) {
         aria-label={label}
         aria-pressed={isRecording}
         className={cn(
-          'flex w-full touch-manipulation items-center gap-3 rounded-md border p-3 text-left transition-colors',
-          isRecording
-            ? 'border-status-negative bg-status-negative-subtle'
-            : 'border-strong hover:bg-surface-raised',
+          'group flex w-full touch-manipulation items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors',
+          isRecording ? 'bg-status-negative-subtle' : 'hover:bg-surface-raised',
           busy && 'opacity-70'
         )}
       >
-        <span
-          className={cn(
-            'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md',
-            isRecording ? 'bg-status-negative-subtle' : 'bg-accent-warm/10'
-          )}
-        >
+        <span className="oc-icon-tile h-9 w-9">
           {busy ? (
-            <Loader2 className="h-5 w-5 animate-spin text-fg-secondary" />
+            <Loader2 className="h-4 w-4 animate-spin text-fg-secondary" />
           ) : isRecording ? (
-            <Square className="h-4 w-4 fill-current text-status-negative" />
+            <Square className="h-3.5 w-3.5 fill-current text-status-negative" />
           ) : (
-            <Mic className="h-5 w-5 text-accent-primary" />
+            <Mic className="h-4 w-4 text-accent-primary" />
           )}
         </span>
-        <span className="min-w-0">
-          <span className="block text-sm font-medium text-fg-primary">{label}</span>
-          {!isRecording && !busy && (
-            <span className="block truncate text-xs text-fg-secondary">
-              “Sell my bike for 200 francs”
-            </span>
-          )}
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium text-fg-primary">{label}</span>
+          <span className="block truncate text-xs text-fg-secondary">
+            {isRecording || busy ? 'Speak naturally — we work out the rest' : sublabel}
+          </span>
         </span>
       </button>
 

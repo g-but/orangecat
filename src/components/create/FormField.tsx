@@ -17,8 +17,6 @@ import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import type { FormFieldProps } from './types';
 import type { Currency } from '@/types/settings';
-import { DictationButton } from '@/components/ui/DictationButton';
-import { FEATURES } from '@/config/features';
 import { AvailabilityEditor } from './fields/AvailabilityEditor';
 
 // ==================== COMPONENT ====================
@@ -45,7 +43,7 @@ export function FormField({
     switch (type) {
       case 'textarea':
         return (
-          <div className="flex items-start gap-2">
+          <>
             <Textarea
               id={name}
               value={(value as string) || ''}
@@ -57,16 +55,7 @@ export function FormField({
               disabled={disabled}
               className={baseInputClass}
             />
-            {FEATURES.voiceInput && (
-              <DictationButton
-                size="sm"
-                ariaLabel={`Voice input for ${label}`}
-                onTranscript={t =>
-                  onChange(((value as string) || '').trim().length ? `${value as string} ${t}` : t)
-                }
-              />
-            )}
-          </div>
+          </>
         );
 
       case 'number':
@@ -232,28 +221,17 @@ export function FormField({
       case 'text':
       default:
         return (
-          <div className="flex items-center gap-2">
-            <Input
-              id={name}
-              type="text"
-              value={(value as string) || ''}
-              onChange={e => onChange(e.target.value)}
-              onFocus={onFocus}
-              onBlur={onBlur}
-              placeholder={placeholder}
-              disabled={disabled}
-              className={baseInputClass}
-            />
-            {FEATURES.voiceInput && (
-              <DictationButton
-                size="sm"
-                ariaLabel={`Voice input for ${label}`}
-                onTranscript={t =>
-                  onChange(((value as string) || '').trim().length ? `${value as string} ${t}` : t)
-                }
-              />
-            )}
-          </div>
+          <Input
+            id={name}
+            type="text"
+            value={(value as string) || ''}
+            onChange={e => onChange(e.target.value)}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            placeholder={placeholder}
+            disabled={disabled}
+            className={baseInputClass}
+          />
         );
     }
   };

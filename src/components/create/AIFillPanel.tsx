@@ -3,6 +3,8 @@
 import { Sparkles, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { AIAssistChip } from './AIAssistChip';
+import { DictationButton } from '@/components/ui/DictationButton';
+import { FEATURES } from '@/config/features';
 
 interface AIFillPanelProps {
   description: string;
@@ -17,9 +19,16 @@ interface AIFillPanelProps {
 /**
  * The empty-form surface: describe what you want, AI fills the fields.
  *
+ * Speaking and typing are the same act here, so they share one control. The
+ * mic used to sit beside every individual field, which put a microphone icon
+ * on half the form and made voice look like a property of text inputs rather
+ * than a way to talk to the AI. There is one AI entry point per form and the
+ * mic belongs in it — same arrangement as the Cat composer (input above,
+ * actions bottom-right), so the two read as the same tool.
+ *
  * Mobile-first ordering — the textarea is the ask, examples are the shortcut
- * for anyone who does not want to compose from scratch, and the CTA is full
- * width on phones so it is never a thumb-stretch to the corner.
+ * for anyone who does not want to compose from scratch, and the actions sit in
+ * one row so the primary CTA is never a thumb-stretch to the corner.
  */
 export function AIFillPanel({
   description,
@@ -42,7 +51,7 @@ export function AIFillPanel({
             onSubmit();
           }
         }}
-        placeholder="Describe what you want to create — AI fills the form for you."
+        placeholder="Describe or dictate what you want to create — AI fills the form for you."
         disabled={isBlocked}
         rows={3}
         // text-base on mobile: anything smaller makes iOS zoom in on focus
@@ -66,16 +75,30 @@ export function AIFillPanel({
         </div>
       )}
 
-      <Button
-        type="button"
-        size="lg"
-        onClick={onSubmit}
-        disabled={isBlocked || !description.trim()}
-        className="w-full gap-2 sm:ml-auto sm:w-auto"
-      >
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-        <span>{busy ? 'Filling form…' : 'Fill form'}</span>
-      </Button>
+      {/* One row, actions right: dictate into the same box you would type in,
+          then fill. Matches the Cat composer's mic-then-send ordering. */}
+      <div className="flex items-center justify-end gap-2">
+        {FEATURES.voiceInput && (
+          <DictationButton
+            size="sm"
+            disabled={isBlocked}
+            ariaLabel="Dictate what you want to create"
+            onTranscript={t =>
+              onDescriptionChange(description.trim().length ? `${description} ${t}` : t)
+            }
+          />
+        )}
+        <Button
+          type="button"
+          size="lg"
+          onClick={onSubmit}
+          disabled={isBlocked || !description.trim()}
+          className="flex-1 gap-2 sm:flex-none"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          <span>{busy ? 'Filling form…' : 'Fill form'}</span>
+        </Button>
+      </div>
     </div>
   );
 }
