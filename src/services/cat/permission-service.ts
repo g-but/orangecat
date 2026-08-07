@@ -12,6 +12,7 @@
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { CAT_ACTIONS, ACTION_CATEGORIES, type ActionCategory } from '@/config/cat-actions';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getActiveAllocationPolicy } from '@/services/solon/allocation-policy';
 
 // ==================== TYPES ====================
 
@@ -243,8 +244,9 @@ export class CatPermissionService {
       };
     }
 
+    let spentTodayBtc: number | undefined;
     if (caps.maxBtcPerDay !== null) {
-      const spentTodayBtc = await this.getDailySpendBtc(userId, options.excludeLogId);
+      spentTodayBtc = await this.getDailySpendBtc(userId, options.excludeLogId);
       if (spentTodayBtc + amountBtc > caps.maxBtcPerDay) {
         const remaining = Math.max(0, caps.maxBtcPerDay - spentTodayBtc);
         return {
@@ -253,30 +255,70 @@ export class CatPermissionService {
           spentTodayBtc,
         };
       }
-      return { allowed: true, spentTodayBtc };
     }
 
-    return { allowed: true };
+    // Platform-wide ceiling — the Solon-governed allocation policy. This is the
+    // Cat's leash for the platform as a whole, an additional min() over the
+    // user's own caps. Changing it requires a Bitcoin-signed Solon vote; the
+    // limit and its provenance are public at /governance.
+    const platform = await getActiveAllocationPolicy(this.supabase);
+    if (platform) {
+      if (amountBtc > platform.content.max_cat_btc_per_action) {
+        return {
+          allowed: false,
+          reason: `Amount ${amountBtc} BTC exceeds the platform's per-action ceiling of ${platform.content.max_cat_btc_per_action} BTC (allocation policy v${platform.version}, set by governance — see /governance).`,
+          spentTodayBtc,
+        };
+      }
+      const platformSpentBtc = await this.getPlatformDailySpendBtc(options.excludeLogId);
+      if (platformSpentBtc + amountBtc > platform.content.max_cat_daily_spend_btc) {
+        const remaining = Math.max(0, platform.content.max_cat_daily_spend_btc - platformSpentBtc);
+        return {
+          allowed: false,
+          reason: `This payment would exceed the platform's daily ceiling of ${platform.content.max_cat_daily_spend_btc} BTC (${remaining} BTC remaining today, allocation policy v${platform.version} — see /governance).`,
+          spentTodayBtc,
+        };
+      }
+    }
+
+    return { allowed: true, spentTodayBtc };
   }
 
   /**
    * BTC spent (or in flight) today across all payment actions, from the action log.
    */
   async getDailySpendBtc(userId: string, excludeLogId?: string): Promise<number> {
+    return this.sumDailySpendBtc({ userId, excludeLogId });
+  }
+
+  /**
+   * BTC spent (or in flight) today platform-wide — every user's Cat payments
+   * combined. Feeds the Solon-governed allocation policy ceiling.
+   */
+  async getPlatformDailySpendBtc(excludeLogId?: string): Promise<number> {
+    return this.sumDailySpendBtc({ excludeLogId });
+  }
+
+  private async sumDailySpendBtc(filter: {
+    userId?: string;
+    excludeLogId?: string;
+  }): Promise<number> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     let query = this.supabase
       .from(DATABASE_TABLES.CAT_ACTION_LOG)
       .select('amount_btc')
-      .eq('user_id', userId)
       .eq('category', 'payments')
       .in('status', ['executing', 'completed'])
       .gte('created_at', today.toISOString());
 
+    if (filter.userId) {
+      query = query.eq('user_id', filter.userId);
+    }
     // The caller's own in-flight log row must not count against its budget check.
-    if (excludeLogId) {
-      query = query.neq('id', excludeLogId);
+    if (filter.excludeLogId) {
+      query = query.neq('id', filter.excludeLogId);
     }
 
     const { data } = await query;
