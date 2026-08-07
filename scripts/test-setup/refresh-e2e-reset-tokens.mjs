@@ -45,6 +45,13 @@ const admin = createClient(url, serviceKey, {
 
 // Opportunistic cleanup of yesterday's throwaway reset users. Best-effort —
 // a failure here must never block the run.
+//
+// deleteUser only removes the auth.users row. public.profiles has NO foreign
+// key to auth.users, so the profile (and its actor) survived every cleanup:
+// by 2026-08-06 that had left 113 orphaned profiles in PRODUCTION, 136 of 188
+// rows in the table were CI exhaust, and every product metric read off
+// `profiles` was inflated by it. Delete the rows this script created, in
+// every table it touched — not just the one the API happens to cascade.
 try {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   for (let page = 1; page <= 10; page++) {
@@ -52,6 +59,11 @@ try {
     const users = data?.users ?? [];
     for (const u of users) {
       if (/^e2e-reset-/.test(u.email || '') && new Date(u.created_at).getTime() < cutoff) {
+        // Order matters: drop the dependents first, so a failure part-way
+        // leaves the auth user behind as the marker that cleanup is unfinished
+        // rather than stranding rows with no auth user to find them by.
+        await admin.from('actors').delete().eq('user_id', u.id);
+        await admin.from('profiles').delete().eq('id', u.id);
         await admin.auth.admin.deleteUser(u.id);
         console.log(`cleaned up stale reset user ${u.email}`);
       }

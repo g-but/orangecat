@@ -238,6 +238,58 @@ async function checkSilentlyDroppedCatTurns() {
   }
 }
 
+/**
+ * Profiles whose auth user is gone.
+ *
+ * `public.profiles` has NO foreign key to `auth.users`, so deleting an auth
+ * user leaves the profile — with its email, phone, location, bio and payment
+ * addresses — behind forever. Nothing enforced it and nothing watched it, so
+ * the per-CI-run throwaway users accumulated silently: on 2026-08-06 the table
+ * held 188 rows of which 136 were CI exhaust and 115 were orphans, and every
+ * product metric read off `profiles` was inflated by it.
+ *
+ * Beyond the noise this is the account-deletion path: the same missing
+ * constraint means a real user pressing "delete my account" keeps their PII.
+ * Until profiles is either cascaded or anonymised on delete, this check is the
+ * thing standing between that bug and silence.
+ */
+async function checkOrphanedProfiles() {
+  // PostgREST cannot join auth.users, so compare id sets. Profiles are small
+  // enough (tens) that fetching both is cheaper than adding an RPC.
+  const profiles = await rest('profiles?select=id,email');
+  if (profiles.length === 0) {
+    notes.push('profiles: table is empty');
+    return;
+  }
+
+  const seen = new Set();
+  for (let page = 0; page < 20; page++) {
+    const res = await fetch(
+      `${SUPABASE_URL}/auth/v1/admin/users?page=${page + 1}&per_page=200`,
+      { headers: { apikey: SERVICE_KEY, authorization: `Bearer ${SERVICE_KEY}` } }
+    );
+    if (!res.ok) {
+      throw new Error(`GoTrue admin list ${res.status}`);
+    }
+    const users = (await res.json())?.users ?? [];
+    for (const u of users) {
+      seen.add(u.id);
+    }
+    if (users.length < 200) break;
+  }
+
+  const orphans = profiles.filter(p => !seen.has(p.id));
+  if (orphans.length > 0) {
+    violation(
+      'profiles.orphaned_from_auth',
+      `${orphans.length} profile(s) have no auth user — deleting an account leaves its PII behind (profiles has no FK to auth.users)`,
+      orphans.slice(0, 5).map(p => p.email || p.id)
+    );
+  } else {
+    notes.push(`profiles: all ${profiles.length} row(s) have a live auth user`);
+  }
+}
+
 async function main() {
   const checks = [
     checkOrphanedWalletLinks,
@@ -245,6 +297,7 @@ async function main() {
     checkUnpayableActiveWallets,
     checkPaidWithoutTimestamp,
     checkSilentlyDroppedCatTurns,
+    checkOrphanedProfiles,
   ];
 
   for (const check of checks) {
