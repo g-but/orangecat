@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Sparkles, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -128,6 +128,29 @@ export function AIPrefillBar({
     }
     callAI(description, 'fill', TYPED_REQUEST);
   }, [description, callAI]);
+
+  /**
+   * Fill immediately when the description arrived from speech.
+   *
+   * Someone who just said "rent out my apartment in Basel for 1800 a month"
+   * has already told us everything; landing them on their own words next to a
+   * button to press is a step they did not ask for and would not expect. The
+   * onboarding flow deliberately does NOT set this — there the description is
+   * a proposal the user should read before committing to it — so the trigger
+   * is opt-in via `?autofill=1` rather than "any description in the URL".
+   */
+  const autofillRequested = mode === 'create' && searchParams.get('autofill') === '1';
+  const autofilled = useRef(false);
+  useEffect(() => {
+    if (!autofillRequested || autofilled.current || busy || hasFilled) {
+      return;
+    }
+    if (description.trim().length < AI_ASSIST_MIN_INPUT_LENGTH.fill) {
+      return;
+    }
+    autofilled.current = true;
+    callAI(description, 'fill', TYPED_REQUEST);
+  }, [autofillRequested, description, busy, hasFilled, callAI]);
 
   const handleRefine = useCallback(() => {
     if (instruction.trim().length < AI_ASSIST_MIN_INPUT_LENGTH.refine) {

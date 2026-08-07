@@ -93,18 +93,58 @@ function coerceValue(value: unknown, field: FieldConfig): unknown {
   }
 }
 
+/** A Bitcoin amount the user actually stated — "0.01 BTC", "₿0.5", "in bitcoin". */
+const MENTIONS_BITCOIN = /\b(btc|bitcoin|sats?|satoshis?)\b|₿/i;
+
+/**
+ * Drop `*_btc` values the user never gave in Bitcoin.
+ *
+ * Some entities only have a BTC-denominated price field — an asset has
+ * `rental_price_btc` and no fiat equivalent — so a model told "1800 a month"
+ * has one field to put it in and converts. It has no exchange rate, so the
+ * number is invented: "rent out my apartment in Basel for 1800 a month" came
+ * back as `rental_price_btc: 0.072`, roughly double what the person said, next
+ * to `currency: CHF` contradicting it.
+ *
+ * The prompt says not to. A prompt is a request; this is the enforcement, and
+ * the stakes justify it — the number goes on a listing someone gets charged
+ * against. Absent beats invented: the field stays empty and the user fills in
+ * the amount they meant.
+ */
+function dropUnstatedBitcoinAmounts(
+  data: Record<string, unknown>,
+  sourceText: string
+): Record<string, unknown> {
+  if (MENTIONS_BITCOIN.test(sourceText)) {
+    return data;
+  }
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (/_btc$/.test(key) && typeof value === 'number') {
+      continue;
+    }
+    cleaned[key] = value;
+  }
+  return cleaned;
+}
+
 /**
  * Validate/coerce `data` against `fields`. Declared fields are coerced to the
  * declared type (invalid → dropped); undeclared fields pass through unchanged.
+ *
+ * `sourceText` is what the user wrote; it is used to reject Bitcoin amounts
+ * they never stated. Omit it only where no user text exists.
  */
 export function sanitizeAiFields(
   data: Record<string, unknown>,
-  fields: FieldConfig[]
+  fields: FieldConfig[],
+  sourceText = ''
 ): Record<string, unknown> {
   const byName = new Map(fields.map(field => [field.name, field]));
   const result: Record<string, unknown> = {};
+  const safe = dropUnstatedBitcoinAmounts(data, sourceText);
 
-  for (const [key, raw] of Object.entries(data)) {
+  for (const [key, raw] of Object.entries(safe)) {
     const field = byName.get(key);
     if (!field) {
       result[key] = raw;

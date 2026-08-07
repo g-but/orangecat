@@ -230,7 +230,7 @@ export async function generateFormPrefill({
 
     // Enforce declared field types before merging — the prompt asks for option
     // values / numbers / ISO dates, the sanitizer guarantees them.
-    const aiData = sanitizeAiFields(parsed.data, target.fields);
+    const aiData = sanitizeAiFields(parsed.data, target.fields, description);
 
     const { data, changedFields } = mergePrefillResult(aiData, existingData, intent);
 

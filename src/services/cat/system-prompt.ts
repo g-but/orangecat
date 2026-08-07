@@ -11,10 +11,7 @@
  */
 
 import { CAT_CREATABLE_ENTITY_TYPES } from '@/types/cat';
-import {
-  CLASSIFIED_SECTION_HEADINGS,
-  selectPromptSections,
-} from '@/config/cat-prompt-sections';
+import { CLASSIFIED_SECTION_HEADINGS, selectPromptSections } from '@/config/cat-prompt-sections';
 import { CAT_ACTIONS } from '@/config/cat-actions';
 
 interface CatSystemPromptContext {

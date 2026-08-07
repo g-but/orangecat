@@ -74,7 +74,9 @@ export function VoiceCreate({ onNavigate, className }: VoiceCreateProps) {
 
         const path = ENTITY_REGISTRY[intent.entityType].createPath;
         onNavigate?.();
-        router.push(`${path}?description=${encodeURIComponent(intent.description)}`);
+        // autofill=1: they spoke, so run the fill on arrival rather than parking
+        // their own words next to a button.
+        router.push(`${path}?description=${encodeURIComponent(intent.description)}&autofill=1`);
       } catch (error) {
         logger.warn('[VoiceCreate] routing failed', { error });
         setTranscript(text);
@@ -138,7 +140,7 @@ export function VoiceCreate({ onNavigate, className }: VoiceCreateProps) {
           <span className="block text-sm font-medium text-fg-primary">{label}</span>
           {!isRecording && !busy && (
             <span className="block truncate text-xs text-fg-secondary">
-              “Sell my old road bike for 200 francs”
+              “Sell my bike for 200 francs”
             </span>
           )}
         </span>

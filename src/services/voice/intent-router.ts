@@ -23,6 +23,7 @@ import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 import { DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
 import { ENTITY_REGISTRY, type EntityType } from '@/config/entity-registry';
 import { PREFILLABLE_ENTITY_TYPES } from '@/services/cat/tool-use-detection';
+import { AI_ASSIST_MIN_INPUT_LENGTH } from '@/config/ai-form-assist';
 import { logger } from '@/utils/logger';
 
 /** Mirrors offer-engine / form-prefill-service: capable and reliable at JSON. */
@@ -38,8 +39,14 @@ const OPENROUTER_MODEL = DEFAULT_FREE_MODEL_ID;
  */
 export const MIN_ROUTE_CONFIDENCE = 0.6;
 
-/** Long enough to carry an intent — below this there is nothing to route. */
-const MIN_TRANSCRIPT_LENGTH = 8;
+/**
+ * Long enough to carry an intent — below this there is nothing to route.
+ *
+ * Tied to the prefill floor rather than picked separately: anything short
+ * enough to be refused there would route to a create form and then silently
+ * fail to fill it, stranding the user on their own words with no explanation.
+ */
+const MIN_TRANSCRIPT_LENGTH = AI_ASSIST_MIN_INPUT_LENGTH.fill;
 const MAX_TRANSCRIPT_LENGTH = 4000;
 
 export interface VoiceIntent {

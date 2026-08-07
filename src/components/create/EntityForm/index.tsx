@@ -65,6 +65,7 @@ export function EntityForm<T extends Record<string, unknown>>({
 
   const {
     formState,
+    initialFormData,
     aiGeneratedFields,
     lastSavedAt,
     handleFieldChange,
@@ -112,6 +113,36 @@ export function EntityForm<T extends Record<string, unknown>>({
     wizardMode,
     actorId,
   });
+
+  /**
+   * What the AI must not overwrite — only what the user actually put there.
+   *
+   * On create the form is already full of schema defaults ("other", "daily",
+   * a currency), and the prefill service treats any non-empty value as
+   * something the user typed and refuses to replace it. That silently reduced
+   * "fill this form from my sentence" to "fill whichever fields happened to
+   * start empty": saying "rent out my apartment in Basel for 1800 a month"
+   * set Title and Location, then left Asset Type on "Other" and the rental
+   * period on "daily" — contradicting the sentence they came from.
+   *
+   * Sending only fields that differ from their initial value keeps the
+   * protection where it belongs (a value the user really did type) without
+   * letting a default masquerade as one. On edit every value is genuinely the
+   * entity's, so the whole record passes through unchanged.
+   */
+  const aiExistingData = useMemo(() => {
+    if (mode === 'edit') {
+      return formState.data;
+    }
+    const touched: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(formState.data as Record<string, unknown>)) {
+      const initial = (initialFormData as Record<string, unknown>)[key];
+      if (JSON.stringify(value) !== JSON.stringify(initial)) {
+        touched[key] = value;
+      }
+    }
+    return touched;
+  }, [mode, formState.data, initialFormData]);
 
   if (!hydrated || authLoading) {
     return <Loading fullScreen message="Loading..." />;
@@ -162,7 +193,7 @@ export function EntityForm<T extends Record<string, unknown>>({
         formType={config.type}
         onPrefill={handleAIPrefill}
         disabled={formState.isSubmitting}
-        existingData={formState.data}
+        existingData={aiExistingData}
         mode={mode}
         fields={aiAssistFields}
       />
