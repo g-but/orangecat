@@ -1,10 +1,11 @@
 /**
- * Bitcoin signed-message VERIFICATION — OrangeCat's independent port of
- * Solon's src/lib/bitcoin/message.ts (verify side only; OrangeCat never
- * signs). This must exist here, not be fetched from Solon: the whole point of
- * decision verification is that OrangeCat checks signatures with its own
- * code against its own pinned keys. Pinned to Solon's implementation by a
- * fixed test vector generated there (__tests__/unit/solon/decision-verify).
+ * Bitcoin signed-message crypto — OrangeCat's independent port of Solon's
+ * src/lib/bitcoin/message.ts. Verification exists here (not fetched from
+ * Solon) because the whole point of decision verification is that OrangeCat
+ * checks signatures with its own code against its own pinned keys; signing
+ * exists for exactly one key — CAT_SOLON_PRIVKEY — so the Cat can attest its
+ * own governance proposals. Pinned to Solon's implementation by fixed test
+ * vectors generated there (__tests__/unit/solon/).
  *
  * Format (Bitcoin Core / Electrum "Signed Message"):
  *   magic    = "\x18Bitcoin Signed Message:\n"
@@ -17,9 +18,13 @@
  */
 import * as secp from '@noble/secp256k1';
 import { sha256 } from '@noble/hashes/sha2.js';
+import { hmac } from '@noble/hashes/hmac.js';
 import { ripemd160 } from '@noble/hashes/legacy.js';
 import { bech32 } from '@scure/base';
 import bs58check from 'bs58check';
+
+// @noble/secp256k1 v2 needs an HMAC-SHA256 for RFC6979 deterministic signing.
+secp.etc.hmacSha256Sync = (key, ...msgs) => hmac(sha256, key, secp.etc.concatBytes(...msgs));
 
 const MAGIC = new TextEncoder().encode('Bitcoin Signed Message:\n');
 
@@ -122,4 +127,39 @@ export function solonVoteMessage(params: {
   memberAddress: string;
 }): string {
   return `Solon vote\nsession:${params.sessionId}\nchoice:${params.choice}\nvoter:${params.memberAddress}`;
+}
+
+/**
+ * The canonical proposal message — byte-identical to Solon's
+ * proposalMessage(). For policy proposals the contentHash binds the exact
+ * proposed content into the signature, so nothing can be swapped after
+ * signing.
+ */
+export function solonProposalMessage(params: {
+  orgSlug: string;
+  category: string;
+  title: string;
+  proposerAddress: string;
+  contentHash?: string | null;
+}): string {
+  const base = `Solon proposal\norg:${params.orgSlug}\ncategory:${params.category}\ntitle:${params.title}\nproposer:${params.proposerAddress}`;
+  return params.contentHash ? `${base}\ncontent:${params.contentHash}` : base;
+}
+
+/** Mainnet P2PKH address for a private key — how an agent knows its own identity. */
+export function addressFromPrivateKey(privateKeyHex: string): string {
+  return p2pkhAddress(secp.getPublicKey(privateKeyHex, true));
+}
+
+/**
+ * Sign a message as a standard base64 Bitcoin message signature (compressed
+ * key, header 31–34). Used for exactly one key: the Cat's own Solon voting
+ * key from CAT_SOLON_PRIVKEY — user keys never exist on this system.
+ */
+export function signBitcoinMessage(message: string, privateKeyHex: string): string {
+  const digest = messageDigest(message);
+  const sig = secp.sign(digest, privateKeyHex);
+  const header = 27 + (sig.recovery ?? 0) + 4;
+  const out = secp.etc.concatBytes(Uint8Array.of(header), sig.toCompactRawBytes());
+  return Buffer.from(out).toString('base64');
 }

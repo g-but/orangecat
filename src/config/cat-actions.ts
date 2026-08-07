@@ -1181,6 +1181,40 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     enabled: true,
   },
 
+  propose_governance_change: {
+    id: 'propose_governance_change',
+    name: 'Propose Governance Change',
+    description:
+      'Propose new platform spending ceilings for the Cat via a Solon vote — files only, voters decide',
+    category: 'organization',
+    icon: ShieldCheck,
+    riskLevel: 'high',
+    requiresConfirmation: true, // a human okays the filing before it leaves the system
+    parameters: [
+      { name: 'title', type: 'string', required: true, description: 'Proposal title' },
+      {
+        name: 'rationale',
+        type: 'string',
+        required: true,
+        description: 'Why — shown to voters',
+      },
+      {
+        name: 'max_cat_daily_spend_btc',
+        type: 'btc',
+        required: true,
+        description: 'Proposed platform daily ceiling (BTC)',
+      },
+      {
+        name: 'max_cat_btc_per_action',
+        type: 'btc',
+        required: true,
+        description: 'Proposed per-payment ceiling (BTC)',
+      },
+    ],
+    examples: ['Propose raising your daily spending ceiling to 0.002 BTC'],
+    enabled: true,
+  },
+
   invite_to_organization: {
     id: 'invite_to_organization',
     name: 'Invite to Organization',
