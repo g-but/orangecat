@@ -96,9 +96,34 @@ else
       || echo "[auto-merge] could not re-run ${main_run_id}" >&2
     exit 0
   fi
+  # A red base must not become a trap for the PR that repairs it.
+  #
+  # "Never merge onto red" is right for an unrelated change: it stops a broken
+  # base quietly collecting more changes and getting harder to diagnose. But
+  # when the PR *is* the repair, the same rule deadlocks the repo — the fix
+  # cannot travel the path its own redness blocks, and only a human can move
+  # it. Seen in maonakamoto/aoz-housing on 2026-08-07: E2E red on master, the
+  # fix sitting green in a PR, every sweep refusing politely. That is the same
+  # shape as the cancelled-base deadlock handled just above — a guard that is
+  # correct about the code and wrong about the queue.
+  #
+  # So identify WHICH jobs are red, and let a PR through only if its own checks
+  # pass every one of them. This is not a weakening: a PR's checks run on the
+  # MERGE result (refs/pull/N/merge), so green-on-those-jobs is direct evidence
+  # that the post-merge base is better than the pre-merge base. A PR that does
+  # not cover the failing jobs is still refused, and so is a base failure whose
+  # jobs cannot be identified at all.
+  main_red_jobs=""
   if [ "$main_conclusion" != "success" ]; then
-    echo "[auto-merge] ${BASE_BRANCH} CI is ${main_conclusion} — refusing to merge onto a broken base" >&2
-    exit 0
+    main_run_id=$(printf '%s' "$main_ci" | jq -r '.databaseId')
+    main_red_jobs=$(gh run view "$main_run_id" --repo "$REPO" --json jobs \
+      --jq '[.jobs[] | select(.conclusion == "failure") | .name] | .[]' 2>/dev/null || true)
+    if [ -z "$main_red_jobs" ]; then
+      echo "[auto-merge] ${BASE_BRANCH} CI is ${main_conclusion} and no failing job could be identified — refusing to merge onto a broken base" >&2
+      exit 0
+    fi
+    echo "[auto-merge] ${BASE_BRANCH} CI is ${main_conclusion} — failing: $(printf '%s' "$main_red_jobs" | tr '\n' ' ')" >&2
+    echo "[auto-merge] only a PR that is green on those exact jobs may merge (its checks run on the merge result)"
   fi
 fi
 
@@ -215,6 +240,29 @@ for number in $(printf '%s' "$prs_json" | jq -r '.[].number'); do
       echo "[auto-merge] #${number} update-branch failed — leaving for the next sweep" >&2
     fi
     break
+  fi
+
+  # Red base: this PR merges only if it proves every failing job green.
+  if [ -n "$main_red_jobs" ]; then
+    pr_green=$(printf '%s' "$pr" | jq -r '
+      [ .statusCheckRollup[]?
+        | select(((.conclusion // .state // "") | test("^(SUCCESS|NEUTRAL|SKIPPED)$")))
+        | (.name // .context) ] | .[]')
+    uncovered=""
+    while IFS= read -r job; do
+      [ -z "$job" ] && continue
+      printf '%s\n' "$pr_green" | grep -Fxq "$job" || uncovered="${uncovered}${job}; "
+    done <<INNER_EOF
+$main_red_jobs
+INNER_EOF
+    if [ -n "$uncovered" ]; then
+      echo "[auto-merge] #${number} skip: ${BASE_BRANCH} is red on [${uncovered%; }] and this PR does not prove those green — ${title}"
+      continue
+    fi
+    echo "[auto-merge] #${number} is green on every job ${BASE_BRANCH} fails — merging it to repair the base: ${title}" >&2
+    if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+      echo "- 🔧 #${number} merged onto a red \`${BASE_BRANCH}\` because it passes every failing job — ${title}" >> "$GITHUB_STEP_SUMMARY"
+    fi
   fi
 
   echo "[auto-merge] #${number} green and ready — merging: ${title}"
