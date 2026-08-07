@@ -56,6 +56,23 @@ async function rest(path) {
   return res.json();
 }
 
+/** PostgREST RPC (POST). `rest` only does GET; functions need a body. */
+async function rpc(fn, body = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: {
+      apikey: SERVICE_KEY,
+      authorization: `Bearer ${SERVICE_KEY}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new Error(`PostgREST ${res.status} on rpc/${fn}: ${await res.text()}`);
+  }
+  return res.json();
+}
+
 /**
  * entity_type → table. MUST mirror src/config/entity-registry.ts; a type
  * missing here is reported as UNKNOWN rather than silently passing, so a new
@@ -238,6 +255,38 @@ async function checkSilentlyDroppedCatTurns() {
   }
 }
 
+/**
+ * Profiles whose auth user is gone.
+ *
+ * public.profiles carried NO foreign key until 2026-08-06, so deleting a user
+ * left the profile standing: a public page and a taken username for an account
+ * that no longer exists, and a row counted by every signup metric. That is how
+ * 73% of production profiles came to be `e2e-reset-*` CI fixtures while the
+ * real number (39) stayed invisible — the platform could not see its own users.
+ *
+ * The migration's ON DELETE CASCADE makes new orphans impossible. This check is
+ * the backstop that notices if the constraint is ever dropped, bypassed, or
+ * left NOT VALID while a delete path writes around it — and it is the reason
+ * the count is worth watching rather than assuming.
+ *
+ * auth.users is not exposed through PostgREST, so this goes through the
+ * service_role-only count_orphaned_profiles() function.
+ */
+async function checkOrphanedProfiles() {
+  const count = Number(await rpc('count_orphaned_profiles'));
+
+  if (count > 0) {
+    violation(
+      'profiles.orphaned',
+      `${count} profile(s) have no auth user — a deleted account left its public profile behind, ` +
+        `and every user-count metric is inflated by that much`,
+      []
+    );
+  } else {
+    notes.push('profiles: every profile belongs to a live auth user');
+  }
+}
+
 async function main() {
   const checks = [
     checkOrphanedWalletLinks,
@@ -245,6 +294,7 @@ async function main() {
     checkUnpayableActiveWallets,
     checkPaidWithoutTimestamp,
     checkSilentlyDroppedCatTurns,
+    checkOrphanedProfiles,
   ];
 
   for (const check of checks) {

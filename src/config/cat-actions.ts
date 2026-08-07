@@ -32,6 +32,7 @@ import {
   Shield,
   ShieldCheck,
   ShieldAlert,
+  Zap,
   type LucideIcon,
 } from 'lucide-react';
 import { API_ROUTES } from '@/config/api-routes';
@@ -659,6 +660,13 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     parameters: [
       { name: 'content', type: 'string', required: true, description: 'Post content' },
       {
+        name: 'visibility',
+        type: 'string',
+        required: false,
+        description: 'public (default) or private',
+        default: 'public',
+      },
+      {
         name: 'entity_id',
         type: 'entity_id',
         required: false,
@@ -689,7 +697,13 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     riskLevel: 'high',
     requiresConfirmation: true,
     parameters: [
-      { name: 'recipient_id', type: 'user_id', required: true, description: 'User to message' },
+      { name: 'recipient_id', type: 'user_id', required: false, description: 'User to message' },
+      {
+        name: 'recipient',
+        type: 'string',
+        required: true,
+        description: '@username — the only handle Cat can know; the handler resolves it to an id',
+      },
       { name: 'content', type: 'string', required: true, description: 'Message content' },
     ],
     examples: [
@@ -1002,10 +1016,44 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     enabled: true,
   },
 
+  connect_wallet: {
+    id: 'connect_wallet',
+    name: 'Connect Wallet',
+    description:
+      'Make the user able to RECEIVE Bitcoin — store the Lightning address, Bitcoin address/xpub or NWC string they paste. The setup step, NOT add_wallet (a savings goal on top of a rail they already have). No wallet at all? Point them at a provider first, then run this.',
+    category: 'payments',
+    icon: Zap,
+    riskLevel: 'high',
+    requiresConfirmation: true,
+    parameters: [
+      {
+        name: 'wallet_string',
+        type: 'string',
+        required: true,
+        description:
+          'Exactly what the user pasted — a Lightning address (you@provider.com), a Bitcoin address or xpub/ypub/zpub, or a nostr+walletconnect:// string. Do not reformat it.',
+      },
+      {
+        name: 'label',
+        type: 'string',
+        required: false,
+        description: 'Name for the wallet if a new one has to be created (default "Main wallet")',
+      },
+    ],
+    examples: [
+      'My lightning address is me@primal.net',
+      'Here is my wallet: bc1q…',
+      'Connect this wallet: nostr+walletconnect://…',
+      'Set me up so people can pay me',
+    ],
+    enabled: true,
+  },
+
   add_wallet: {
     id: 'add_wallet',
     name: 'Add Wallet',
-    description: "Create a savings goal wallet or budget wallet on the user's profile",
+    description:
+      "Create a savings goal or budget wallet on the user's profile — a bucket to save toward, NOT a way to get paid. Use connect_wallet to give the user a receiving rail; this action reuses one they already have.",
     category: 'payments',
     icon: Wallet,
     riskLevel: 'medium',
@@ -1148,7 +1196,13 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
         required: true,
         description: 'Organization ID',
       },
-      { name: 'user_id', type: 'user_id', required: true, description: 'User to invite' },
+      { name: 'user_id', type: 'user_id', required: false, description: 'User to invite' },
+      {
+        name: 'username',
+        type: 'string',
+        required: true,
+        description: '@username of the invitee — what Cat can know; the handler resolves it',
+      },
       {
         name: 'role',
         type: 'string',

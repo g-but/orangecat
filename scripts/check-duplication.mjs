@@ -15,6 +15,20 @@
  * Baseline history:
  *   1.3  (2026-08-02) — post phase-B dedup refactor; measured 1.20% with
  *                       `jscpd src --min-tokens 70`.
+ *   1.1  (2026-08-06) — ratcheted down from 1.3: the reduction had already
+ *                       happened and the baseline never followed it, leaving
+ *                       0.29% of headroom for new duplication to occupy
+ *                       without tripping the gate. Stopped at 1.1 rather than
+ *                       1.0 on the belief that CI and local disagreed
+ *                       (1.01% vs 0.99%) — that was wrong. The two numbers
+ *                       came from different commits, not different machines.
+ *   1.0  (2026-08-06) — measured 0.99% (2191/222073 lines, 138 clones),
+ *                       identical in CI and locally, so the rule above applies
+ *                       literally: round the measurement up to the next 0.1.
+ *                       The measurement is deterministic, so the remaining
+ *                       ~0.01% (≈22 lines) is genuine headroom, not noise — if
+ *                       this trips, a real block got duplicated, which is
+ *                       precisely the signal the ratchet exists to give.
  *
  * Run: npm run check:duplication   (part of `npm run verify`; exit 1 on FAIL)
  */
@@ -25,7 +39,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 /** Max allowed duplicated-lines percentage across src/ (see ratchet rule above). */
-const BASELINE_PERCENT = 1.3;
+const BASELINE_PERCENT = 1.0;
 
 /** Keep detection settings pinned so the number is comparable across runs. */
 const MIN_TOKENS = '70';

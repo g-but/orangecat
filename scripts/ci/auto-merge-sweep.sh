@@ -58,7 +58,7 @@ echo "[auto-merge] sweeping open PRs against ${BASE_BRANCH} in ${REPO}"
 # batching this script exists to prevent.
 main_sha=$(gh api "repos/${REPO}/commits/${BASE_BRANCH}" --jq '.sha')
 main_ci=$(gh run list --repo "$REPO" --workflow ci.yml --branch "$BASE_BRANCH" --limit 1 \
-  --json status,conclusion,headSha --jq '.[0] // empty')
+  --json databaseId,status,conclusion,headSha --jq '.[0] // empty')
 
 if [ -z "$main_ci" ]; then
   echo "[auto-merge] no CI history for ${BASE_BRANCH} — proceeding"
@@ -73,6 +73,27 @@ else
   fi
   if [ "$main_status" != "completed" ]; then
     echo "[auto-merge] ${BASE_BRANCH} CI is still running — deferring to the next sweep"
+    exit 0
+  fi
+  # A CANCELLED base run is a deadlock, not a red base.
+  #
+  # This script already learned the lesson for PRs (see the re-run below, added
+  # after #603/#604 stranded) and left the identical hole on the base branch: a
+  # cancelled main run is not "success", so the guard refused — and because the
+  # ONLY thing that produces a new main CI run is a merge, and merges are what
+  # the guard is blocking, nothing could ever clear it. On 2026-08-06 a GitHub
+  # Actions outage cancelled main's run and the queue sat stuck for seven hours
+  # behind five green PRs; it took a human `gh run rerun` to move.
+  #
+  # Cancellation carries no verdict about the code, so re-run it and let the
+  # next sweep judge the real result. A genuine `failure` still blocks — that IS
+  # a verdict. If the re-run is cancelled again, the next sweep retries; the
+  # `status != completed` check above keeps that from stacking runs.
+  if [ "$main_conclusion" = "cancelled" ]; then
+    main_run_id=$(printf '%s' "$main_ci" | jq -r '.databaseId')
+    echo "[auto-merge] ${BASE_BRANCH} CI was cancelled — re-running ${main_run_id} rather than stalling the queue"
+    gh run rerun "$main_run_id" --repo "$REPO" \
+      || echo "[auto-merge] could not re-run ${main_run_id}" >&2
     exit 0
   fi
   if [ "$main_conclusion" != "success" ]; then
@@ -164,9 +185,36 @@ for number in $(printf '%s' "$prs_json" | jq -r '.[].number'); do
     sleep 5
   done
 
+  # A conflicted PR is not "not ready yet" — it is stuck, and nothing else will
+  # unstick it. Skipping it quietly is how #639 sat DIRTY while main moved on:
+  # every sweep passed over it in silence and no signal ever reached a human.
+  # Say it loudly, and put it in the job summary where it is actually seen.
+  if [ "$mergeable" = "CONFLICTING" ]; then
+    echo "[auto-merge] #${number} CONFLICTS with ${BASE_BRANCH} and will never merge itself — ${title}" >&2
+    if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+      echo "- ⚠️ #${number} conflicts with \`${BASE_BRANCH}\` and needs resolving — ${title}" >> "$GITHUB_STEP_SUMMARY"
+    fi
+    continue
+  fi
+
   if [ "$mergeable" != "MERGEABLE" ]; then
     echo "[auto-merge] #${number} skip: not mergeable (${mergeable}/${state}) — ${title}"
     continue
+  fi
+
+  # Keep the branch current instead of merging a PR that was proven against an
+  # older main. This is also how conflicts surface EARLY: a branch updated on
+  # the sweep after the merge that broke it fails here, minutes later, rather
+  # than hours later when someone finally looks. One update per sweep, for the
+  # same reason only one PR is merged per sweep.
+  if [ "$state" = "BEHIND" ]; then
+    echo "[auto-merge] #${number} is behind ${BASE_BRANCH} — updating it before merging: ${title}"
+    if gh api -X PUT "repos/${REPO}/pulls/${number}/update-branch" --silent 2>/dev/null; then
+      echo "[auto-merge] #${number} updated; its checks now run against current ${BASE_BRANCH}"
+    else
+      echo "[auto-merge] #${number} update-branch failed — leaving for the next sweep" >&2
+    fi
+    break
   fi
 
   echo "[auto-merge] #${number} green and ready — merging: ${title}"

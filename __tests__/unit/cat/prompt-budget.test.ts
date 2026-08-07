@@ -32,7 +32,7 @@ const GROQ_PROMPT_CEILING_CHARS = (GROQ_ON_DEMAND_TPM_LIMIT - GROQ_CHAT_MAX_TOKE
  * that real users need, so it has to be a conscious, argued decision — which is
  * exactly what was missing while it grew to 60k.
  */
-const PROMPT_BUDGET_CHARS = 60_500;
+const PROMPT_BUDGET_CHARS = 54_600;
 
 function assembledStaticPrompt(): string {
   // Mirrors chat-orchestrator: system prompt + few-shot examples. User context,

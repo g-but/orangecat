@@ -13,6 +13,9 @@
 
 import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 import { DEFAULT_FREE_MODEL_ID, getFreeModels } from '@/config/ai-models';
+import { CONFIGURED_GROQ_MODEL_IDS, promptFitsGroqOnDemand } from '@/services/ai/groq';
+import { buildCatSystemPrompt } from './system-prompt';
+import { getCatFewShotExamplesText } from './few-shot-examples';
 
 export type ProbeClass =
   | 'ok'
@@ -41,6 +44,17 @@ export interface CatHealthReport {
    * (model rot). Empty = no drift; null = catalog check unavailable.
    */
   missingFreeModels: string[] | null;
+  /**
+   * Configured Groq model ids missing from the live Groq catalog. Empty = no
+   * drift; null = check unavailable (no key, or the catalog fetch failed).
+   */
+  missingGroqModels: string[] | null;
+  /**
+   * Whether Groq can serve a REAL Cat request, not just a ping. False while the
+   * prompt exceeds the on-demand TPM limit — the state in which the old report
+   * still said "Cat is healthy".
+   */
+  groqCanServeCatPrompt: boolean;
   catCanAnswer: boolean;
   summary: string;
 }
@@ -173,27 +187,91 @@ export async function probeFreeModelCatalog(): Promise<string[] | null> {
   }
 }
 
+/**
+ * The same drift check for Groq. Groq decommissions models exactly as
+ * OpenRouter retires free ones, but only OpenRouter was ever watched — so
+ * `mixtral-8x7b-32768` and `gemma2-9b-it` stayed in the config long after Groq
+ * had removed them, and selecting either was a guaranteed 400. Groq's /models
+ * endpoint needs the key; with no key we cannot tell drift from absence, so we
+ * return null (unknown) rather than claiming everything is fine.
+ */
+export async function probeGroqModelCatalog(): Promise<string[] | null> {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) {
+    return null;
+  }
+  try {
+    const res = await fetch(`${PROVIDER_BASE_URLS.groq}/models`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    if (!res.ok) {
+      return null;
+    }
+    const body = (await res.json()) as { data?: Array<{ id?: string }> };
+    const live = new Set((body.data ?? []).map(m => m.id));
+    if (live.size === 0) {
+      return null;
+    }
+    return CONFIGURED_GROQ_MODEL_IDS.filter(id => !live.has(id));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Does Groq's on-demand tier actually admit a REAL Cat request?
+ *
+ * The provider probe pings with a few tokens, so it returns 200 whenever the
+ * key and the service are fine — which is not the question a user is asking
+ * when they say "why isn't Cat answering?". Cat's static prompt alone exceeds
+ * the on-demand TPM limit, so every real message 413s while the probe stays
+ * green. That combination reported "Cat is healthy" on a day when OpenRouter's
+ * daily cap was exhausted and Cat could not answer a single person.
+ *
+ * A health check has to exercise the payload, not just the endpoint.
+ */
+export function groqCanServeCatPrompt(): boolean {
+  return promptFitsGroqOnDemand([
+    { content: buildCatSystemPrompt({}) },
+    { content: getCatFewShotExamplesText() },
+  ]);
+}
+
 /** Probe both providers and summarize. */
 export async function runCatHealthProbes(): Promise<CatHealthReport> {
-  const [groq, openrouter, missingFreeModels] = await Promise.all([
+  const [groq, openrouter, missingFreeModels, missingGroqModels] = await Promise.all([
     probeGroq(),
     probeOpenRouter(),
     probeFreeModelCatalog(),
+    probeGroqModelCatalog(),
   ]);
+  // Groq being up is not the same as Groq being usable for Cat.
+  const groqUsable = groq.class === 'ok' && groqCanServeCatPrompt();
   const drift =
-    missingFreeModels && missingFreeModels.length > 0
+    (missingFreeModels && missingFreeModels.length > 0
       ? ` ⚠️ Registry free models no longer on OpenRouter: ${missingFreeModels.join(', ')} — update src/config/ai-models.ts.`
+      : '') +
+    (missingGroqModels && missingGroqModels.length > 0
+      ? ` ⚠️ Configured Groq models no longer exist: ${missingGroqModels.join(', ')} — update GROQ_MODELS in src/services/ai/groq.ts.`
+      : '');
+  const oversized =
+    groq.class === 'ok' && !groqUsable
+      ? ` ⚠️ ${groq.provider} is up but cannot serve Cat: the prompt exceeds its per-minute token limit, so every real message falls through to ${openrouter.provider}.`
       : '';
+
   return {
     probes: { groq, openrouter },
     missingFreeModels,
-    catCanAnswer: groq.class === 'ok' || openrouter.class === 'ok',
+    missingGroqModels,
+    groqCanServeCatPrompt: groqUsable,
+    catCanAnswer: groqUsable || openrouter.class === 'ok',
     summary:
-      (groq.class === 'ok'
+      (groqUsable
         ? `Cat is healthy: ${groq.provider} probe returned OK.`
         : openrouter.class === 'ok'
-          ? `Primary (${groq.provider}) is degraded (${groq.class}); fallback (${openrouter.provider}) is healthy.`
-          : `Both providers are degraded: groq=${groq.class}, openrouter=${openrouter.class}.`) +
+          ? `Primary (${groq.provider}) cannot serve Cat (${groq.class === 'ok' ? 'prompt too large' : groq.class}); fallback (${openrouter.provider}) is healthy.`
+          : `Cat cannot answer: groq=${groq.class === 'ok' ? 'prompt too large' : groq.class}, openrouter=${openrouter.class}.`) +
+      oversized +
       drift,
   };
 }
