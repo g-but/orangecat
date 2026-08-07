@@ -287,6 +287,55 @@ async function checkOrphanedProfiles() {
   }
 }
 
+/**
+ * Cat conversations whose owner is gone.
+ *
+ * cat_conversations.user_id carried no foreign key at all until 2026-08-07,
+ * while every sibling in the family (cat_messages, cat_memories,
+ * cat_pending_actions, wallets) already cascaded from the account. Deleting a
+ * user therefore removed their profile, memories, pending actions and wallets
+ * and left their conversations — private chats with Cat — standing forever.
+ *
+ * The migration's ON DELETE CASCADE makes new orphans impossible; this is the
+ * backstop for the constraint being dropped or written around, exactly as
+ * checkOrphanedProfiles is for #637.
+ *
+ * Checked against `profiles` rather than auth.users: profiles cascade from
+ * auth.users, so "no profile" and "no account" are the same set, and profiles
+ * is reachable through PostgREST without another service_role-only function.
+ */
+async function checkOrphanedCatConversations() {
+  const convs = await rest('cat_conversations?select=id,user_id');
+  if (convs.length === 0) {
+    notes.push('cat_conversations: table is empty');
+    return;
+  }
+  const ownerIds = [...new Set(convs.map(c => c.user_id))];
+  const live = new Set();
+  // Chunked so the id list cannot outgrow the URL as the table grows.
+  for (let i = 0; i < ownerIds.length; i += 100) {
+    const chunk = ownerIds.slice(i, i + 100);
+    const found = await rest(`profiles?select=id&id=in.(${chunk.join(',')})`);
+    for (const p of found) {
+      live.add(p.id);
+    }
+  }
+
+  const orphans = convs.filter(c => !live.has(c.user_id));
+  if (orphans.length > 0) {
+    violation(
+      'cat_conversations.orphaned',
+      `${orphans.length} conversation(s) belong to accounts that no longer exist — ` +
+        `a deleted account left its private Cat history behind`,
+      orphans.slice(0, 5).map(o => o.id)
+    );
+  } else {
+    notes.push(
+      `cat_conversations: ${convs.length} conversation(s), all owned by a live account`
+    );
+  }
+}
+
 async function main() {
   const checks = [
     checkOrphanedWalletLinks,
@@ -295,6 +344,7 @@ async function main() {
     checkPaidWithoutTimestamp,
     checkSilentlyDroppedCatTurns,
     checkOrphanedProfiles,
+    checkOrphanedCatConversations,
   ];
 
   for (const check of checks) {
