@@ -382,6 +382,7 @@ export const footerNavigation = {
     { name: 'Bitcoin guide', href: ROUTES.STUDY_BITCOIN },
   ],
   support: [
+    { name: 'Ask the Cat', href: ROUTES.FEEDBACK },
     { name: 'Support OrangeCat', href: ROUTES.SUPPORT },
     { name: 'FAQ', href: ROUTES.FAQ },
     { name: 'Status', href: ROUTES.STATUS },
