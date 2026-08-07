@@ -6,6 +6,7 @@ import { useDropdown } from '@/hooks/useDropdown';
 import { cn } from '@/lib/utils';
 import { HeaderIconButton } from '@/components/layout/HeaderIconButton';
 import { CREATE_OPTIONS, shouldShowDivider } from './SmartCreateButton';
+import { VoiceCreate } from '@/components/create/VoiceCreate';
 
 export function HeaderCreateButton() {
   const { isOpen, dropdownRef, buttonRef, toggle, close } = useDropdown({
@@ -46,6 +47,9 @@ export function HeaderCreateButton() {
             <div className="px-3 py-2 text-xs font-semibold text-fg-secondary uppercase tracking-wider">
               Create New
             </div>
+            {/* Above the list: naming the thing out loud is faster than finding
+                it, and doesn't require knowing our vocabulary for it. */}
+            <VoiceCreate className="px-1 pb-2" onNavigate={close} />
             <div className="space-y-0.5">
               {CREATE_OPTIONS.map((option, index) => (
                 <div key={option.name}>

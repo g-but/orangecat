@@ -6,10 +6,139 @@ import { NWCClient } from '@/lib/nostr/nwc';
 import { generateInvoice } from '@/domain/payments/invoiceGenerationService';
 import { resolveSenderNwcUri, sendToRecipient } from '@/domain/payments/sendPaymentService';
 import { resolveSellerWallet, getSellerUserId } from '@/domain/payments/walletResolutionService';
+import { getOwnerReceiveStatus } from '@/domain/wallets/receiveStatus';
+import { encrypt, isEncryptionConfigured } from '@/domain/payments/encryptionService';
+import { classifyWalletInput, validateAddressOrXpub } from '@/types/wallet';
+import { isValidLightningAddress } from '@/lib/validation/base';
 import { getAdminClient } from '@/lib/supabase/admin';
 import type { ActionHandler } from './types';
 
 export const paymentHandlers: Record<string, ActionHandler> = {
+  /**
+   * Give the user a way to be PAID.
+   *
+   * Measured 2026-08-06: 3 of 76 production profiles could receive anything at
+   * all. The Cat already knew — its context says "❌ No lightning address
+   * configured" — but the only wallet verb it had was add_wallet, which refuses
+   * without an existing address and sent the user to Settings. So the interface
+   * that meets every user could describe the problem and not fix it.
+   *
+   * One parameter on purpose: the user pastes whatever their wallet app gave
+   * them and `classifyWalletInput` works out what it is. Asking a model to pick
+   * between three near-identical fields is asking it to guess, and guessing
+   * wrong here means money routed to the wrong rail.
+   *
+   * The success message is derived from `getOwnerReceiveStatus` — the same
+   * resolution a payer's request runs — never from "the write succeeded". A
+   * stored value that the payment path cannot use is exactly the divergence
+   * receiveStatus.ts exists to prevent; the Cat must not re-open it by claiming
+   * "you can now be paid" on the strength of an INSERT.
+   */
+  connect_wallet: async (supabase, userId, _actorId, params) => {
+    const raw = (params.wallet_string as string | undefined)?.trim();
+    if (!raw) {
+      return {
+        success: false,
+        error:
+          'wallet_string is required — ask the user to paste their Lightning address, Bitcoin address/xpub, or NWC connection string.',
+      };
+    }
+
+    const kind = classifyWalletInput(raw);
+    const receiveField: Record<string, unknown> = {};
+
+    if (kind === 'lightning') {
+      if (!isValidLightningAddress(raw)) {
+        return {
+          success: false,
+          error: `"${raw}" is not a valid Lightning address. It looks like an email: name@provider.com.`,
+        };
+      }
+      receiveField.lightning_address = raw;
+    } else if (kind === 'nwc') {
+      // Wallet connections are spending credentials. Refuse rather than store
+      // one we cannot encrypt — a plaintext NWC URI in the database is a wallet
+      // anyone with read access can drain.
+      if (!isEncryptionConfigured()) {
+        return {
+          success: false,
+          error:
+            'This deployment cannot store wallet connections securely right now, so I will not save it. A Lightning address works instead and carries no spending permission.',
+        };
+      }
+      receiveField.nwc_connection_uri = encrypt(raw);
+    } else if (kind === 'onchain' || kind === 'xpub') {
+      const validation = validateAddressOrXpub(raw);
+      if (!validation.valid) {
+        return { success: false, error: validation.error ?? 'That Bitcoin address is not valid.' };
+      }
+      receiveField.address_or_xpub = raw;
+    } else {
+      return {
+        success: false,
+        error:
+          'That does not look like a Lightning address (name@provider.com), a Bitcoin address or xpub, or a nostr+walletconnect:// string. Ask the user to paste it again straight from their wallet app.',
+      };
+    }
+
+    // Attach to the wallet a payer would already resolve to, so connecting a
+    // rail never silently creates a second wallet that outranks the first.
+    const { data: existing } = await supabase
+      .from(DATABASE_TABLES.WALLETS)
+      .select('id, label')
+      .eq('profile_id', userId)
+      .eq('is_active', true)
+      .order('is_primary', { ascending: false })
+      .limit(1);
+
+    const target = existing?.[0] as { id: string; label: string } | undefined;
+    const label = ((params.label as string | undefined) || 'Main wallet').trim();
+
+    const { error } = target
+      ? await supabase.from(DATABASE_TABLES.WALLETS).update(receiveField).eq('id', target.id)
+      : await supabase.from(DATABASE_TABLES.WALLETS).insert({
+          profile_id: userId,
+          label,
+          is_active: true,
+          is_primary: true,
+          behavior_type: 'general',
+          category: 'general',
+          ...receiveField,
+        });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    const status = await getOwnerReceiveStatus(userId);
+    const walletName = target?.label ?? label;
+
+    // The write landed but the payment path still resolves nothing — say so.
+    // Telling someone they can be paid when they cannot is the one outcome
+    // worse than not helping at all.
+    if (!status.rail) {
+      return {
+        success: true,
+        data: {
+          rail: null,
+          displayMessage: `⚠️ Saved to "${walletName}", but payments still do not resolve to it. Tell the user honestly that it is stored and not yet working, and offer to check their wallets page.`,
+        },
+      };
+    }
+
+    const canReceiveLightningAddress = status.lightningAddressActive;
+    return {
+      success: true,
+      data: {
+        rail: status.rail,
+        lightningAddressActive: canReceiveLightningAddress,
+        displayMessage: canReceiveLightningAddress
+          ? `⚡ Connected to "${walletName}" — the user can now be paid, and their @orangecat.ch Lightning address is live.`
+          : `✅ Connected to "${walletName}" — the user can now be paid over ${status.rail}.`,
+      },
+    };
+  },
+
   add_wallet: async (supabase, userId, _actorId, params) => {
     // Create a savings goal or budget wallet for the user's profile.
     // Wallets require a lightning address — we use the one provided, or fall back to
@@ -49,7 +178,7 @@ export const paymentHandlers: Record<string, ActionHandler> = {
       return {
         success: false,
         error:
-          'No lightning address available. Add one in Settings → Wallets first, or provide a lightning_address parameter.',
+          'The user has no receiving rail yet, so a savings goal would have nowhere to be paid. Run connect_wallet first with the Lightning address they paste — and if they have no wallet at all, point them at one from the list in their Payment Capabilities context, then come back to this.',
       };
     }
 

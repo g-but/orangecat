@@ -1,3 +1,4 @@
+import { classifyWalletInput } from '@/types/wallet';
 import type { CatAction } from '@/config/cat-actions';
 
 export function generateActionDescription(
@@ -106,6 +107,20 @@ export function generateActionDescription(
         .filter(f => parameters[f] !== undefined)
         .join(', ');
       return `Update profile${fields ? ': ' + fields : ''}`;
+    }
+    case 'connect_wallet': {
+      // Show the KIND, never the string itself. This confirmation is what the
+      // user reads before approving where their money lands, and an NWC URI is a
+      // spending credential that must not be echoed back into the transcript.
+      const kind = classifyWalletInput((parameters.wallet_string as string | undefined) ?? '');
+      const kindLabel: Record<string, string> = {
+        lightning: 'Lightning address',
+        onchain: 'Bitcoin address',
+        xpub: 'extended public key',
+        nwc: 'wallet connection',
+        unknown: 'wallet details',
+      };
+      return `Connect wallet: set your ${kindLabel[kind]} as where you get paid`;
     }
     case 'add_wallet': {
       const walletLabel = parameters.label as string | undefined;

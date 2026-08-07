@@ -7,6 +7,7 @@
  */
 import type { DocumentContext, EntitySummary, FullUserContext } from './document-context-types';
 import { ENTITY_STATUS } from '@/config/database-constants';
+import { renderLightningAddressProviders } from '@/config/wallet-providers';
 import { economicProfileGaps, economicCompleteness } from '@/services/cat/economic-profile';
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
@@ -605,14 +606,25 @@ export function renderPaymentCapabilities(
     );
   } else {
     capLines.push(
-      '❌ **No NWC wallet** — cannot auto-send payments; if user asks to send Bitcoin, tell them to connect a Nostr Wallet Connect wallet first (Settings → Wallets)'
+      '❌ **No NWC wallet** — cannot auto-send payments; if the user asks to send Bitcoin, ask them to paste a nostr+walletconnect:// string and run connect_wallet'
     );
   }
   if (lightningAddress) {
     capLines.push(`📬 **Lightning address**: ${lightningAddress} (others can pay the user here)`);
   } else {
+    // The user cannot be paid. Everything else the Cat might help them build —
+    // a product, a project, a cause — ends at a page nobody can pay, so this is
+    // the one gap worth naming unprompted. Giving the Cat only the diagnosis
+    // ("no lightning address") is what left it describing the problem and
+    // handing the user a Settings link instead of fixing it.
     capLines.push(
-      '📬 **No lightning address configured** — user cannot receive lightning payments without one'
+      '📬 **CANNOT BE PAID — no receiving wallet.** Nothing they list or publish can be funded until this is fixed. Raise it once, warmly, when money comes up; do not nag.',
+      '',
+      'Two ways to fix it, and the right one depends on their answer to "do you already have a Bitcoin wallet?":',
+      '1. **They have one** → ask them to paste whatever it gives them (a Lightning address like you@provider.com, a Bitcoin address or xpub, or a nostr+walletconnect:// string) and run `connect_wallet` with it verbatim. Do not reformat it.',
+      '2. **They have none** → a Lightning address is what OrangeCat needs, and these hand one over fastest:',
+      renderLightningAddressProviders(),
+      'Then ask them to come back with the address and run `connect_wallet`. Never claim they can be paid until that action has run and reported success.'
     );
   }
   return `## Payment Capabilities\n${capLines.join('\n')}`;

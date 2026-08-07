@@ -1,0 +1,27 @@
+-- Promote profiles_id_fkey from NOT VALID to validated.
+--
+-- 20260806150000 added the constraint NOT VALID on purpose: that enforces every
+-- future write and makes ON DELETE CASCADE fire immediately, WITHOUT requiring
+-- the 115 pre-existing orphaned profiles to be deleted first. Purging live
+-- production rows was a separate, owner-level decision and the migration was
+-- right not to smuggle it in.
+--
+-- That decision has since been made and carried out: measured 2026-08-07,
+-- `public.profiles` and `auth.users` both hold 85 rows and
+-- count_orphaned_profiles() returns 0. The cascade was also proven against
+-- production inside a rolled-back transaction — inserting an auth user creates
+-- the profile via on_auth_user_created, deleting the user removes it, which
+-- before the constraint left the profile standing.
+--
+-- So the only thing left is the asterisk. A NOT VALID constraint tells every
+-- future reader "the rule holds from here on, but nobody has checked what came
+-- before" — and the planner cannot rely on it either. VALIDATE performs that
+-- check once and removes the ambiguity permanently.
+--
+-- Safety: VALIDATE CONSTRAINT takes only SHARE UPDATE EXCLUSIVE — it does not
+-- block reads or writes — and it scans the table without rewriting it. If any
+-- orphan somehow exists at apply time it raises instead of deleting anything,
+-- which aborts the deploy (scripts/apply-migrations.sh runs before the code) and
+-- leaves production exactly as it was. Failure here is a report, not damage.
+
+ALTER TABLE public.profiles VALIDATE CONSTRAINT profiles_id_fkey;

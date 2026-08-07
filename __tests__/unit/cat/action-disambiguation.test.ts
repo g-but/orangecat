@@ -40,6 +40,17 @@ const CONFUSABLE: ConfusablePair[] = [
     shadowedBy: 'forget_memories',
     consequence: 'the model deletes private memories the user never asked it to touch',
   },
+  {
+    // "add a wallet" and "connect my wallet" are the same sentence to a model,
+    // but only one of them makes the user payable. add_wallet is the older,
+    // broader verb and refuses outright when there is no receiving rail — so a
+    // user with no wallet (73 of 76 production profiles in August 2026) hits a
+    // dead end at exactly the moment they were ready to be paid.
+    action: 'connect_wallet',
+    shadowedBy: 'add_wallet',
+    consequence:
+      'the model creates an empty savings goal and the user still cannot receive a single payment',
+  },
 ];
 
 describe('confusable Cat verbs stay disambiguated', () => {

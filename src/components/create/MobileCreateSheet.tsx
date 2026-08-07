@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { CREATE_OPTIONS, type CreateOption } from '@/components/dashboard/SmartCreateButton';
+import { VoiceCreate } from '@/components/create/VoiceCreate';
 
 interface MobileCreateSheetProps {
   /** Whether the sheet is visible */
@@ -45,6 +46,10 @@ export function MobileCreateSheet({ isOpen, onClose, onSelect }: MobileCreateShe
 
         {/* Header */}
         <h3 className="text-lg font-semibold text-fg-primary mb-4 px-2">Create New</h3>
+
+        {/* Speaking beats picking a type you don't know the name of yet. Above
+            the grid because it's the faster path, not an afterthought. */}
+        <VoiceCreate className="mb-4" onNavigate={onClose} />
 
         {/* Options Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
