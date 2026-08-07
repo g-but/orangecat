@@ -176,6 +176,9 @@ export const DATABASE_TABLES = {
   // Plans
   USER_PLANS: 'user_plans',
 
+  // Solon governance (platform allocation policies)
+  ALLOCATION_POLICIES: 'allocation_policies',
+
   // OAuth provider ("Login with OrangeCat")
   OAUTH_CLIENTS: 'oauth_clients',
   OAUTH_AUTH_CODES: 'oauth_auth_codes',

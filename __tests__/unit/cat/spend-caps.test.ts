@@ -79,6 +79,8 @@ describe('effectiveSpendCaps', () => {
 function buildCapsSupabase(config: {
   permissionRows: Record<string, unknown>[];
   logRows?: { amount_btc: number | null }[];
+  /** Active allocation policy row (Solon platform ceiling); null = none. */
+  policyRow?: Record<string, unknown> | null;
 }) {
   const neqCalls: unknown[][] = [];
   const makeChain = (table: string) => {
@@ -92,6 +94,9 @@ function buildCapsSupabase(config: {
       neqCalls.push(args);
       return chain;
     });
+    chain.maybeSingle = jest
+      .fn()
+      .mockResolvedValue({ data: config.policyRow ?? null, error: null });
     chain.then = (resolve: (value: { data: unknown }) => unknown) =>
       Promise.resolve(resolve({ data: rows }));
     return chain;
