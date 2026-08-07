@@ -364,7 +364,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     apiEndpoint: '/api/assets',
     hasTemplates: true,
     description: 'Property and valuables you own — rent them out, or pledge them as collateral',
-    createActionLabel: 'Rent out or pledge something you own',
+    createActionLabel: 'Rent out or use as collateral',
     category: 'finance',
     createPriority: 1,
     paymentPattern: 'none',

@@ -33,6 +33,7 @@ const BITCOIN_RULES = `BITCOIN AND MONEY:
 - OrangeCat settles payments in Bitcoin/Lightning; fiat currencies are for pricing and display only
 - Express Bitcoin amounts in BTC (e.g., 0.001 BTC) EVERYWHERE — in prices and in any title/description text. NEVER write "sats" or "satoshis"; rephrase to BTC even if the user's description used sats.
 - Keep fiat prices in the currency the user mentioned — do not convert
+- A field whose name ends in _btc holds Bitcoin ONLY. If the user gave the amount in fiat ("1800 a month", "200 francs"), LEAVE THAT FIELD OUT — do not convert it. You have no exchange rate, so any number you write there is invented, and it is a number someone will be charged. Put the figure in the fiat price field if one exists, otherwise mention it in the description and leave the amount for the user to enter.
 - Price examples: "0.001 BTC", "CHF 50", "$25", "€100"`;
 
 const OUTPUT_FORMAT = `OUTPUT FORMAT:
