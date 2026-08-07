@@ -1,0 +1,162 @@
+'use client';
+
+/**
+ * Say what you want to make, and land in it.
+ *
+ * The create menu asks a question most people can't answer yet: is the bike in
+ * your garage a product, or an asset? Is the lesson you'd give a service, or an
+ * event? You have to know OrangeCat's vocabulary before you can start. Speaking
+ * skips that — you say "sell my old road bike for 200 francs" and the form that
+ * opens is already the right one, already filled in.
+ *
+ * Nothing new happens downstream: the transcript is routed to an entity type,
+ * then handed to the create path as `?description=`, which the existing AI
+ * prefill bar picks up exactly as it does for the onboarding flow.
+ *
+ * When the routing is uncertain it says so and leaves the menu alone. Dropping
+ * someone into the wrong form to avoid admitting uncertainty costs them more
+ * than the question does.
+ */
+
+import { useCallback, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Mic, Square, Loader2, AlertCircle } from 'lucide-react';
+import { API_ROUTES } from '@/config/api-routes';
+import { ENTITY_REGISTRY, type EntityType } from '@/config/entity-registry';
+import { useDictation, type DictationError } from '@/hooks/useDictation';
+import { unwrapApiResponse } from '@/lib/api/client-response';
+import { logger } from '@/utils/logger';
+import { cn } from '@/lib/utils';
+
+interface VoiceCreateProps {
+  /** Called once we're navigating away, so a containing sheet can close. */
+  onNavigate?: () => void;
+  className?: string;
+}
+
+const ERROR_COPY: Record<DictationError, string> = {
+  permission_denied: 'Microphone blocked — allow mic access for this site, then try again.',
+  no_microphone: 'No microphone available on this device.',
+  transcription_failed: 'Could not hear that — check your connection and try again.',
+  no_speech: 'Did not catch any speech — try speaking a little closer.',
+};
+
+export function VoiceCreate({ onNavigate, className }: VoiceCreateProps) {
+  const router = useRouter();
+  const [routing, setRouting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  /** Kept on an uncertain result so their words aren't lost when they pick manually. */
+  const [transcript, setTranscript] = useState<string | null>(null);
+
+  const handleTranscript = useCallback(
+    async (text: string) => {
+      setMessage(null);
+      setTranscript(null);
+      setRouting(true);
+      try {
+        const res = await fetch(API_ROUTES.VOICE.INTENT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript: text }),
+        });
+        const data = await unwrapApiResponse<{
+          intent: { entityType: EntityType; description: string } | null;
+        }>(res, 'Could not work out what you meant.');
+
+        const intent = data?.intent ?? null;
+        if (!intent || !ENTITY_REGISTRY[intent.entityType]) {
+          // Heard, but not understood. Show what we heard so the words aren't
+          // wasted — they can pick a type below and the text is already there.
+          setTranscript(text);
+          setMessage('Not sure what to make of that — pick one below and it will be filled in.');
+          return;
+        }
+
+        const path = ENTITY_REGISTRY[intent.entityType].createPath;
+        onNavigate?.();
+        router.push(`${path}?description=${encodeURIComponent(intent.description)}`);
+      } catch (error) {
+        logger.warn('[VoiceCreate] routing failed', { error });
+        setTranscript(text);
+        setMessage('Could not work that out just now — pick one below instead.');
+      } finally {
+        setRouting(false);
+      }
+    },
+    [router, onNavigate]
+  );
+
+  const { supported, isRecording, isTranscribing, toggle } = useDictation({
+    endpoint: API_ROUTES.CAT.TRANSCRIBE,
+    onTranscript: handleTranscript,
+    onError: error => setMessage(ERROR_COPY[error]),
+  });
+
+  // No mic on this device — the entity menu below is the whole UI, unchanged.
+  if (!supported) {
+    return null;
+  }
+
+  const busy = isTranscribing || routing;
+  const label = isRecording
+    ? 'Listening — tap to finish'
+    : busy
+      ? 'Working out what you meant…'
+      : 'Say what you want to make';
+
+  return (
+    <div className={cn('space-y-2', className)}>
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={busy}
+        aria-label={label}
+        aria-pressed={isRecording}
+        className={cn(
+          'flex w-full touch-manipulation items-center gap-3 rounded-md border p-3 text-left transition-colors',
+          isRecording
+            ? 'border-status-negative bg-status-negative-subtle'
+            : 'border-strong hover:bg-surface-raised',
+          busy && 'opacity-70'
+        )}
+      >
+        <span
+          className={cn(
+            'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md',
+            isRecording ? 'bg-status-negative-subtle' : 'bg-accent-warm/10'
+          )}
+        >
+          {busy ? (
+            <Loader2 className="h-5 w-5 animate-spin text-fg-secondary" />
+          ) : isRecording ? (
+            <Square className="h-4 w-4 fill-current text-status-negative" />
+          ) : (
+            <Mic className="h-5 w-5 text-accent-primary" />
+          )}
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-medium text-fg-primary">{label}</span>
+          {!isRecording && !busy && (
+            <span className="block truncate text-xs text-fg-secondary">
+              “Sell my old road bike for 200 francs”
+            </span>
+          )}
+        </span>
+      </button>
+
+      {message && (
+        <p className="flex items-start gap-2 px-1 text-xs text-fg-secondary">
+          <AlertCircle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-status-warning" />
+          <span>
+            {message}
+            {transcript && (
+              <span className="mt-1 block italic text-fg-tertiary">“{transcript}”</span>
+            )}
+          </span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+export default VoiceCreate;

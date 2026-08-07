@@ -68,6 +68,10 @@ export const API_ROUTES = {
   ENTITY_WALLETS: '/api/entity-wallets',
   /** What Bitcoin costs — our own origin, so no third-party call from a browser. */
   RATES: '/api/rates',
+  VOICE: {
+    /** One spoken sentence → which thing they meant to create. */
+    INTENT: '/api/voice/intent',
+  },
   RECEIVE: {
     REQUEST: '/api/receive/request',
   },
