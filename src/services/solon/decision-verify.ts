@@ -54,10 +54,17 @@ interface DecisionDocument {
 
 const SUPERMAJORITY_FRACTION = 2 / 3;
 
+/**
+ * Decision ids are Solon session UUIDs. The id can arrive from an
+ * HMAC-verified but still external webhook payload, so it must never reach a
+ * URL (or a query) unvalidated — anything non-UUID is rejected outright.
+ */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** Fetch a decision document from Solon. Exported for tests to mock. */
 export async function fetchDecisionDocument(decisionId: string): Promise<DecisionDocument> {
   const base = process.env.SOLON_BASE_URL || SOLON_BASE_URL_DEFAULT;
-  const res = await fetch(`${base}/api/v1/decisions/${decisionId}`, {
+  const res = await fetch(`${base}/api/v1/decisions/${encodeURIComponent(decisionId)}`, {
     signal: AbortSignal.timeout(15_000),
   });
   if (!res.ok) {
@@ -76,6 +83,10 @@ export async function verifyAndApplyDecision(
   decisionId: string,
   options: { fetchDocument?: (id: string) => Promise<DecisionDocument> } = {}
 ): Promise<DecisionApplyResult> {
+  if (!UUID_RE.test(decisionId)) {
+    return { applied: false, reason: 'decision id is not a UUID' };
+  }
+
   // Idempotency first — a webhook may ring twice, the cron may overlap it.
   const { data: existing } = await supabase
     .from(DATABASE_TABLES.ALLOCATION_POLICIES)

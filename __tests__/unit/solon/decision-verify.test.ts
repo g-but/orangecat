@@ -26,9 +26,10 @@ jest.mock('@/utils/logger', () => ({
 const VECTOR = {
   address: '1Q1pE5vPGEEMqRcVRMbtBK842Y6Pzo6nK9',
   p2wpkh: 'bc1ql3e9pgs3mmwuwrh95fecme0s0qtn2880lsvsd5',
-  message: 'Solon vote\nsession:sess-fixed\nchoice:yes\nvoter:1Q1pE5vPGEEMqRcVRMbtBK842Y6Pzo6nK9',
+  message:
+    'Solon vote\nsession:11111111-2222-4333-8444-555555555555\nchoice:yes\nvoter:1Q1pE5vPGEEMqRcVRMbtBK842Y6Pzo6nK9',
   signature:
-    'Hwvk4fF9AO21zJOyCQWThpIF+uchldYZFGSbReWNdAAAEptkPg/z3JeEiYw04pS/hIfECIB67viEcBLlTyK7re8=',
+    'IPTWOIU6N/j674TVg2T2ej7uRDi5AkcGVRtfY9CC04ezFV6g6um12yrjJ5W8silm95MnfPeVFjIz0HYtd6Aises=',
 };
 
 describe('verifyBitcoinMessage (pinned to Solon signer output)', () => {
@@ -59,7 +60,11 @@ describe('verifyBitcoinMessage (pinned to Solon signer output)', () => {
 
   it('derives the canonical vote message byte-identically to Solon', () => {
     expect(
-      solonVoteMessage({ sessionId: 'sess-fixed', choice: 'yes', memberAddress: VECTOR.address })
+      solonVoteMessage({
+        sessionId: '11111111-2222-4333-8444-555555555555',
+        choice: 'yes',
+        memberAddress: VECTOR.address,
+      })
     ).toBe(VECTOR.message);
   });
 });
@@ -70,7 +75,7 @@ const CONTENT = { max_cat_daily_spend_btc: 0.002, max_cat_btc_per_action: 0.0005
 
 function buildDocument(overrides: Record<string, unknown> = {}) {
   return {
-    decision_id: 'sess-fixed',
+    decision_id: '11111111-2222-4333-8444-555555555555',
     organization: { id: SOLON_ORG_ID, slug: 'orangecat' },
     proposal: {
       policyKey: 'allocation_policy',
@@ -133,11 +138,25 @@ function buildSupabase(config: {
 const PINNED = [{ bitcoin_address: VECTOR.address, voting_weight: 1 }];
 
 describe('verifyAndApplyDecision', () => {
-  it('refuses when no keys are pinned', async () => {
-    const supabase = buildSupabase({ pinned: [] });
-    const result = await verifyAndApplyDecision(supabase as never, 'sess-fixed', {
+  it('refuses a non-UUID decision id before it can reach any URL', async () => {
+    const supabase = buildSupabase({ pinned: PINNED });
+    const result = await verifyAndApplyDecision(supabase as never, '../../admin', {
       fetchDocument: async () => buildDocument(),
     });
+    expect(result.applied).toBe(false);
+    expect(result.reason).toContain('not a UUID');
+    expect(supabase.from).not.toHaveBeenCalled();
+  });
+
+  it('refuses when no keys are pinned', async () => {
+    const supabase = buildSupabase({ pinned: [] });
+    const result = await verifyAndApplyDecision(
+      supabase as never,
+      '11111111-2222-4333-8444-555555555555',
+      {
+        fetchDocument: async () => buildDocument(),
+      }
+    );
     expect(result.applied).toBe(false);
     expect(result.reason).toContain('no trusted keys pinned');
   });
@@ -146,9 +165,13 @@ describe('verifyAndApplyDecision', () => {
     const supabase = buildSupabase({
       pinned: [{ bitcoin_address: '1SomeoneElse', voting_weight: 1 }],
     });
-    const result = await verifyAndApplyDecision(supabase as never, 'sess-fixed', {
-      fetchDocument: async () => buildDocument(),
-    });
+    const result = await verifyAndApplyDecision(
+      supabase as never,
+      '11111111-2222-4333-8444-555555555555',
+      {
+        fetchDocument: async () => buildDocument(),
+      }
+    );
     expect(result.applied).toBe(false);
     expect(result.reason).toContain('unpinned');
   });
@@ -160,18 +183,27 @@ describe('verifyAndApplyDecision', () => {
       max_cat_daily_spend_btc: 100,
       max_cat_btc_per_action: 100,
     };
-    const result = await verifyAndApplyDecision(supabase as never, 'sess-fixed', {
-      fetchDocument: async () => doc,
-    });
+    const result = await verifyAndApplyDecision(
+      supabase as never,
+      '11111111-2222-4333-8444-555555555555',
+      {
+        fetchDocument: async () => doc,
+      }
+    );
     expect(result.applied).toBe(false);
     expect(result.reason).toContain('content hash mismatch');
   });
 
   it('refuses a signed message that does not bind this session', async () => {
     const supabase = buildSupabase({ pinned: PINNED });
-    const result = await verifyAndApplyDecision(supabase as never, 'other-session', {
-      fetchDocument: async () => buildDocument({ decision_id: 'other-session' }),
-    });
+    const result = await verifyAndApplyDecision(
+      supabase as never,
+      '99999999-2222-4333-8444-555555555555',
+      {
+        fetchDocument: async () =>
+          buildDocument({ decision_id: '99999999-2222-4333-8444-555555555555' }),
+      }
+    );
     expect(result.applied).toBe(false);
     expect(result.reason).toContain('does not bind');
   });
@@ -184,9 +216,13 @@ describe('verifyAndApplyDecision', () => {
       pinned: PINNED,
     });
     const doc = buildDocument({ votes: [] });
-    const result = await verifyAndApplyDecision(supabase as never, 'sess-fixed', {
-      fetchDocument: async () => doc,
-    });
+    const result = await verifyAndApplyDecision(
+      supabase as never,
+      '11111111-2222-4333-8444-555555555555',
+      {
+        fetchDocument: async () => doc,
+      }
+    );
     expect(result.applied).toBe(false);
     expect(result.reason).toContain('no votes');
   });
@@ -200,18 +236,26 @@ describe('verifyAndApplyDecision', () => {
       ],
     });
     // 1 of 3 weight cast = 33% < 50% quorum.
-    const result = await verifyAndApplyDecision(supabase as never, 'sess-fixed', {
-      fetchDocument: async () => buildDocument(),
-    });
+    const result = await verifyAndApplyDecision(
+      supabase as never,
+      '11111111-2222-4333-8444-555555555555',
+      {
+        fetchDocument: async () => buildDocument(),
+      }
+    );
     expect(result.applied).toBe(false);
     expect(result.reason).toContain('quorum');
   });
 
   it('refuses non-APPROVED outcomes without touching the database', async () => {
     const supabase = buildSupabase({ pinned: PINNED });
-    const result = await verifyAndApplyDecision(supabase as never, 'sess-fixed', {
-      fetchDocument: async () => buildDocument({ outcome: 'REJECTED' }),
-    });
+    const result = await verifyAndApplyDecision(
+      supabase as never,
+      '11111111-2222-4333-8444-555555555555',
+      {
+        fetchDocument: async () => buildDocument({ outcome: 'REJECTED' }),
+      }
+    );
     expect(result.applied).toBe(false);
     expect(supabase._writes).toHaveLength(0);
   });
@@ -242,7 +286,7 @@ describe('verifyAndApplyDecision', () => {
                 version: 2,
                 status: 'draft',
                 verified_at: new Date().toISOString(),
-                solon_decision_id: 'sess-fixed',
+                solon_decision_id: '11111111-2222-4333-8444-555555555555',
               },
               error: null,
             });
@@ -253,9 +297,13 @@ describe('verifyAndApplyDecision', () => {
       return chain;
     }) as never;
 
-    const result = await verifyAndApplyDecision(supabase as never, 'sess-fixed', {
-      fetchDocument: async () => buildDocument(),
-    });
+    const result = await verifyAndApplyDecision(
+      supabase as never,
+      '11111111-2222-4333-8444-555555555555',
+      {
+        fetchDocument: async () => buildDocument(),
+      }
+    );
 
     expect(result).toEqual({ applied: true, version: 2 });
     const inserted = supabase._writes.find(w => w.op === 'insert');
