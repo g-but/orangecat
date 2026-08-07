@@ -64,6 +64,10 @@ const AUTH_ALLOWLIST: Record<string, string> = {
   // token (x-payment-token) instead of an account.
   'v1/payments/public/route.ts': 'anonymous public-support initiation by design',
   'v1/payments/public/[id]/route.ts': 'payment-token-gated claim action by design',
+  // Machine-to-machine webhook: HMAC-verified (SOLON_WEBHOOK_SECRET, timing
+  // safe) rather than session-authed, and a doorbell only — the decision is
+  // re-fetched and every signature re-verified before anything activates.
+  'solon/events/route.ts': 'HMAC-authenticated Solon webhook (doorbell, not courier)',
 };
 
 /**
@@ -78,6 +82,8 @@ const RATE_LIMIT_TOKENS =
 const RATE_LIMIT_ALLOWLIST: Record<string, string> = {
   'admin/reindex-embeddings/route.ts':
     'REINDEX_SECRET-gated machine reconciler driven by DB triggers — a quota would drop legitimate reindex bursts',
+  'solon/events/route.ts':
+    'HMAC-gated machine webhook; unauthenticated requests are rejected before any work, and verification is idempotent per decision',
 };
 
 describe('API route guards (source-level gate)', () => {

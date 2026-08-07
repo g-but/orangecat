@@ -10,9 +10,18 @@ module.exports = {
         tsconfig: 'tsconfig.test.json',
       },
     ],
+    // @noble/@scure ship ESM-only .js (used by the Solon decision verifier);
+    // scoped here so no other node_modules JS goes through a transform.
+    '[\\/]node_modules[\\/](@noble|@scure)[\\/].+\\.js$': [
+      'ts-jest',
+      {
+        tsconfig: { allowJs: true },
+        diagnostics: false,
+      },
+    ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@supabase/.*|@playwright/.*|isows/.*|bs58check|bs58|safe-buffer|base-x))',
+    'node_modules/(?!(@supabase/.*|@playwright/.*|isows/.*|bs58check|bs58|safe-buffer|base-x|@noble/.*|@scure/.*))',
   ],
   testTimeout: 30000,
   collectCoverageFrom: [
