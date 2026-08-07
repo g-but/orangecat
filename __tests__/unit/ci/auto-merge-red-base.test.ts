@@ -134,6 +134,46 @@ describe('a PR that repairs the base may merge onto it', () => {
   });
 });
 
+describe('the carve-out cannot break the sweep it lives in', () => {
+  it('survives a repo with no CI history at all', () => {
+    // `set -u` is on and the merge site always reads the failing-job list. When
+    // that assignment lived only in the else-branch of the "has CI history"
+    // check, a repo taking the "proceeding" path died with
+    //   main_red_jobs: unbound variable
+    // and the ENTIRE sweep exited 1 — auto-merge dead, for every PR, in any
+    // repo whose base branch had never run CI. Caught before shipping only
+    // because this case was executed rather than reasoned about.
+    const dir = mkdtempSync(join(tmpdir(), 'automerge-nohistory-'));
+    const log = join(dir, 'calls.log');
+    writeFileSync(
+      join(dir, 'gh'),
+      `#!/usr/bin/env bash
+echo "$@" >> ${JSON.stringify(log)}
+case "$1 $2" in
+  "api repos/"*) echo '${SHA}' ;;
+  "run list") ;;
+  "pr list") echo '${prJson(['CI']).replace(/'/g, "'\\''")}' ;;
+  "pr view") echo '{"mergeable":"MERGEABLE","mergeStateStatus":"CLEAN"}' ;;
+  *) ;;
+esac
+exit 0
+`
+    );
+    chmodSync(join(dir, 'gh'), 0o755);
+
+    // execFileSync throws on a non-zero exit, which is exactly the regression.
+    const stdout = execFileSync('bash', ['-c', 'scripts/ci/auto-merge-sweep.sh 2>&1'], {
+      env: { ...process.env, PATH: `${dir}:${process.env.PATH}` },
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    expect(stdout).toContain('no CI history');
+    expect(stdout).not.toContain('unbound');
+    expect(readFileSync(log, 'utf8')).toContain('pr merge 26');
+  });
+});
+
 describe('a green base is completely unaffected', () => {
   it('merges normally and never asks which jobs failed', () => {
     const { calls } = sweep('success', [], ['E2E Tests', 'Build']);
