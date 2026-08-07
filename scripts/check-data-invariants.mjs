@@ -336,6 +336,65 @@ async function checkOrphanedCatConversations() {
   }
 }
 
+/**
+ * Actors whose account is gone.
+ *
+ * `actors.user_id` is the last member of this family carrying NO foreign key —
+ * profiles (#637) and cat_conversations (#651) both cascade now, and the sweep
+ * that fixed them stopped one table short. So deleting an account still leaves
+ * its actor standing: the row that owns every product, service, project, cause,
+ * event, loan and asset the person ever created.
+ *
+ * Unlike its siblings this cannot be closed by adding `ON DELETE CASCADE`, and
+ * that is why it is a check rather than a migration:
+ *
+ *   - CASCADE would delete the actor, which cascades on into `contracts`,
+ *     `investments` and `bookings` — destroying the COUNTERPARTY's record of an
+ *     agreement because the other side closed their account.
+ *   - SET NULL is rejected outright by `actor_type_check`, which requires
+ *     `actor_type = 'user'` to have a non-null `user_id`.
+ *
+ * The honest fix is a tombstone — keep the actor, sever the identity — which
+ * needs a deleted/anonymous actor_type and so is a schema decision, not a
+ * drive-by. Until that lands this check is what stands between the leak and
+ * silence, and it is not a formality: 15 orphaned actors were live in
+ * production when it was written.
+ *
+ * Checked against `profiles` rather than auth.users, for the same reason as
+ * checkOrphanedCatConversations: profiles cascade from auth.users, so "no
+ * profile" and "no account" are the same set, reachable through PostgREST
+ * without another service_role-only function.
+ */
+async function checkOrphanedActors() {
+  const actors = await rest('actors?select=id,user_id,display_name&user_id=not.is.null');
+  if (actors.length === 0) {
+    notes.push('actors: no user-owned actors');
+    return;
+  }
+  const ownerIds = [...new Set(actors.map(a => a.user_id))];
+  const live = new Set();
+  // Chunked so the id list cannot outgrow the URL as the table grows.
+  for (let i = 0; i < ownerIds.length; i += 100) {
+    const chunk = ownerIds.slice(i, i + 100);
+    const found = await rest(`profiles?select=id&id=in.(${chunk.join(',')})`);
+    for (const p of found) {
+      live.add(p.id);
+    }
+  }
+
+  const orphans = actors.filter(a => !live.has(a.user_id));
+  if (orphans.length > 0) {
+    violation(
+      'actors.orphaned',
+      `${orphans.length} actor(s) belong to accounts that no longer exist — ` +
+        `a deleted account left behind the row that owns everything it published`,
+      orphans.slice(0, 5).map(o => o.display_name || o.id)
+    );
+  } else {
+    notes.push(`actors: ${actors.length} user actor(s), all owned by a live account`);
+  }
+}
+
 async function main() {
   const checks = [
     checkOrphanedWalletLinks,
@@ -345,6 +404,7 @@ async function main() {
     checkSilentlyDroppedCatTurns,
     checkOrphanedProfiles,
     checkOrphanedCatConversations,
+    checkOrphanedActors,
   ];
 
   for (const check of checks) {

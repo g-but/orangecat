@@ -65,6 +65,10 @@ const admin = createClient(url, serviceKey, {
 // signup numbers mostly synthetic. If that constraint is ever dropped, this
 // script silently starts leaking again; the nightly `profiles.orphaned`
 // invariant is what would notice.
+//
+// The actor does NOT go with it. `actors.user_id` is the one member of this
+// family still carrying no foreign key, so it has to be deleted by hand here.
+// See the `actors.orphaned` invariant for why an FK is not a drive-by fix.
 try {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   for (let page = 1; page <= 10; page++) {
@@ -72,6 +76,11 @@ try {
     const users = data?.users ?? [];
     for (const u of users) {
       if (/^e2e-reset-/.test(u.email || '') && new Date(u.created_at).getTime() < cutoff) {
+        // Actor first: it is the row nothing else will clean up, so if the
+        // deletion fails part-way the auth user is left behind as the marker
+        // that cleanup is unfinished, rather than an actor with no account to
+        // find it by.
+        await admin.from('actors').delete().eq('user_id', u.id);
         await admin.auth.admin.deleteUser(u.id);
         console.log(`cleaned up stale reset user ${u.email}`);
       }
