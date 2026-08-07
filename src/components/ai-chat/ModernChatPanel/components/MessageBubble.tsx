@@ -40,6 +40,7 @@ const ACTION_LABELS: Record<string, string> = {
   // Payments & wallets
   send_payment: 'Payment',
   fund_project: 'Contribution',
+  connect_wallet: 'Wallet connected',
   add_wallet: 'Wallet',
   // Context
   add_context: 'Context saved',
@@ -289,8 +290,8 @@ export function MessageBubble({
         {!isUser && message.fallback && displayContent && (
           <p className="mt-1 text-xs text-fg-tertiary italic">
             ↻ {PROVIDER_LABELS[message.fallback.from] ?? message.fallback.from} was rate-limited;
-            answered on {PROVIDER_LABELS[message.fallback.to] ?? message.fallback.to} instead —
-            both run on OrangeCat&apos;s free pool, not your keys.
+            answered on {PROVIDER_LABELS[message.fallback.to] ?? message.fallback.to} instead — both
+            run on OrangeCat&apos;s free pool, not your keys.
           </p>
         )}
 

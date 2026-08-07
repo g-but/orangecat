@@ -2,77 +2,83 @@
 
 import { useState, useMemo } from 'react';
 import Button from '@/components/ui/Button';
+import { WALLET_PROVIDERS } from '@/config/wallet-providers';
 import { RecommendedWalletCard } from './RecommendedWalletCard';
 import { WalletRecommendationFilterBar } from './WalletRecommendationFilterBar';
 import type { RecommendedWallet } from './RecommendedWalletCard';
 import type { RecommendationFilters } from './WalletRecommendationFilterBar';
 
-const WALLETS: RecommendedWallet[] = [
+/**
+ * Editorial only — which self-custody wallets this page features, in what order,
+ * and how it describes them. Name, website, platform and custody come from
+ * `@/config/wallet-providers`, so this page cannot drift from the guide page or
+ * from what the Cat tells someone who has no wallet yet.
+ */
+const CARD_EDITORIAL: Array<{
+  providerId: string;
+  description: string;
+  level: RecommendedWallet['level'];
+  downloadLinks?: RecommendedWallet['downloadLinks'];
+  recommended: boolean;
+}> = [
   {
-    name: 'BlueWallet',
+    providerId: 'bluewallet',
     description: 'Best all-around mobile wallet with easy Lightning and on-chain support',
-    platform: 'mobile',
     level: 'beginner',
-    lightning: true,
-    custodial: false,
     downloadLinks: {
       ios: 'https://apps.apple.com/app/bluewallet-bitcoin-wallet/id1376878040',
       android: 'https://play.google.com/store/apps/details?id=io.bluewallet.bluewallet',
     },
-    website: 'https://bluewallet.io',
     recommended: true,
   },
   {
-    name: 'Phoenix Wallet',
+    providerId: 'phoenix',
     description: 'Simple mobile Lightning wallet with automatic channel management',
-    platform: 'mobile',
     level: 'beginner',
-    lightning: true,
-    custodial: false,
     downloadLinks: {
       ios: 'https://apps.apple.com/app/phoenix-wallet/id6449854979',
-      android: 'https://phoenix.acinq.co',
+      android: WALLET_PROVIDERS.phoenix.website,
     },
-    website: 'https://phoenix.acinq.co',
     recommended: true,
   },
   {
-    name: 'Breez',
+    providerId: 'breez',
     description: 'Non-custodial Lightning wallet with creator tools and instant payments',
-    platform: 'mobile',
     level: 'beginner',
-    lightning: true,
-    custodial: false,
     downloadLinks: {
       ios: 'https://apps.apple.com/app/breez-lightning-client-pos/id1473040547',
       android: 'https://play.google.com/store/apps/details?id=com.breez.client',
     },
-    website: 'https://breez.technology',
     recommended: false,
   },
   {
-    name: 'Electrum',
+    providerId: 'electrum',
     description: 'Powerful, lightweight desktop wallet with advanced features',
-    platform: 'desktop',
     level: 'advanced',
-    lightning: false,
-    custodial: false,
-    website: 'https://electrum.org',
     downloadLinks: {},
     recommended: false,
   },
   {
-    name: 'Sparrow Wallet',
+    providerId: 'sparrow',
     description: 'Privacy-focused desktop wallet with CoinJoin and full control',
-    platform: 'desktop',
     level: 'advanced',
-    lightning: false,
-    custodial: false,
-    website: 'https://sparrowwallet.com',
     downloadLinks: {},
     recommended: false,
   },
 ];
+
+const WALLETS: RecommendedWallet[] = CARD_EDITORIAL.map(({ providerId, ...editorial }) => {
+  const provider = WALLET_PROVIDERS[providerId];
+  return {
+    name: provider.name,
+    website: provider.website,
+    // This page only shows phone/laptop apps; the filter bar has no third option.
+    platform: provider.formFactor === 'desktop' ? 'desktop' : 'mobile',
+    lightning: provider.lightning,
+    custodial: provider.custody === 'custodial',
+    ...editorial,
+  };
+});
 
 export default function WalletRecommendationCards() {
   const [filters, setFilters] = useState<RecommendationFilters>({

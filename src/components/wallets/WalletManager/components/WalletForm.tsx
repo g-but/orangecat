@@ -12,6 +12,7 @@ import { ChevronDown, ChevronRight, Check, Wallet, ExternalLink } from 'lucide-r
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
+import { LIGHTNING_ADDRESS_PROVIDERS } from '@/config/wallet-providers';
 import {
   WalletFormData,
   WALLET_CATEGORIES,
@@ -198,28 +199,22 @@ export function WalletForm({
               Pick one, create a free account, then copy your <strong>Lightning address</strong>{' '}
               back into the box above:
             </p>
-            <a
-              href="https://primal.net"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between rounded border border-subtle px-2.5 py-1.5 text-fg-primary hover:border-strong"
-            >
-              <span>
-                <strong>Primal</strong> — phone app, gives you a <code>you@primal.net</code> address
-              </span>
-              <ExternalLink className="h-3 w-3 flex-shrink-0 text-fg-tertiary" />
-            </a>
-            <a
-              href="https://coinos.io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between rounded border border-subtle px-2.5 py-1.5 text-fg-primary hover:border-strong"
-            >
-              <span>
-                <strong>Coinos</strong> — works in your browser, nothing to download
-              </span>
-              <ExternalLink className="h-3 w-3 flex-shrink-0 text-fg-tertiary" />
-            </a>
+            {/* Same list the Cat reads, so chat and form never recommend
+                different wallets — see @/config/wallet-providers. */}
+            {LIGHTNING_ADDRESS_PROVIDERS.map(provider => (
+              <a
+                key={provider.id}
+                href={provider.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between rounded border border-subtle px-2.5 py-1.5 text-fg-primary hover:border-strong"
+              >
+                <span>
+                  <strong>{provider.name}</strong> — {provider.oneLiner}
+                </span>
+                <ExternalLink className="h-3 w-3 flex-shrink-0 text-fg-tertiary" />
+              </a>
+            ))}
           </div>
         )}
       </div>

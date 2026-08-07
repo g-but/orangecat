@@ -76,6 +76,29 @@ export const DEFAULT_PERMISSIONS: Partial<Record<ActionCategory, boolean>> = {
 };
 
 /**
+ * Per-action defaults that override the category default.
+ *
+ * `payments: false` is right for actions that MOVE money, and wrong for the one
+ * that decides where the user's own money arrives. Without this override,
+ * connect_wallet — the action that makes a profile payable at all — is denied
+ * for every new user, and the only way to reach it is to enable the whole
+ * payments category, which ALSO unlocks send_payment. Defaulting one harmless
+ * action on is strictly safer than pushing people to unlock the harmful ones.
+ *
+ * The bar for adding a row here: the action moves no funds, writes only the
+ * user's own row under RLS, and still requires confirmation. An explicitly
+ * stored permission always wins — this is a default, not an override of intent.
+ */
+export const DEFAULT_ACTION_PERMISSIONS: Partial<Record<string, boolean>> = {
+  connect_wallet: true,
+};
+
+/** Resolve the shipped default for an action: per-action first, then category. */
+export function defaultAllowedFor(actionId: string, category: ActionCategory): boolean {
+  return DEFAULT_ACTION_PERMISSIONS[actionId] ?? DEFAULT_PERMISSIONS[category] ?? false;
+}
+
+/**
  * Combine caps from the matched permission rows (specific action + category '*').
  * The stricter (lower) non-null cap wins. Exported for tests.
  */
@@ -176,7 +199,7 @@ export class CatPermissionService {
     }
 
     // Fall back to defaults
-    const defaultAllowed = DEFAULT_PERMISSIONS[action.category] ?? false;
+    const defaultAllowed = defaultAllowedFor(action.id, action.category);
     return {
       allowed: defaultAllowed,
       reason: defaultAllowed ? undefined : 'Permission not granted',

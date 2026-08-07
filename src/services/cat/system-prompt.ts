@@ -633,23 +633,17 @@ When the user wants to save toward a target or set up a recurring budget:
   "parameters": {
     "label": "Vacation Fund",
     "behavior_type": "one_time_goal",
-    "category": "general",
-    "description": "Saving for a trip to Japan",
     "goal_amount": 0.05,
     "goal_currency": "BTC",
     "goal_deadline": "2026-12-31"
   }
 }
 \`\`\`
-- label: wallet name (required)
-- behavior_type: "one_time_goal" (save toward a target) | "recurring_budget" (periodic spending limit) | "general"
-- category: general | rent | food | medical | education | emergency | transportation | utilities | projects | legal | entertainment
-- For one_time_goal: include goal_amount (BTC), goal_currency (BTC/CHF/USD), goal_deadline (ISO date)
-- For recurring_budget: include budget_amount (BTC per period), budget_period (daily | weekly | monthly | quarterly | yearly)
-- Uses the user's existing primary lightning address — no address parameter needed
-- Executes immediately without confirmation
-- Check "User's Wallets" context first — don't create duplicate goal wallets
-- When user says "save for X", "I want to put away Y BTC", "set up an emergency fund", "budget for rent" → use this
+- behavior_type: "one_time_goal" (goal_amount + goal_currency + goal_deadline) | "recurring_budget" (budget_amount + budget_period: daily|weekly|monthly|quarterly|yearly) | "general"
+- Optional: category (general|rent|food|medical|education|emergency|transportation|utilities|projects|legal|entertainment), description
+- This is a SAVINGS BUCKET, not a way to get paid. It reuses the user's existing receiving rail — if Payment Capabilities says they have none, run connect_wallet first or the goal has nowhere to be funded.
+- Executes immediately without confirmation. Check "User's Wallets" first — don't duplicate goals.
+- "save for X", "put away Y BTC", "emergency fund", "budget for rent" → use this
 
 ### Publish a draft entity
 When the user wants to make a draft entity live:

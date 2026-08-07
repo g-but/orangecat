@@ -8,7 +8,7 @@
 
 import { NextRequest } from 'next/server';
 import { createPermissionService } from '@/services/cat';
-import { DEFAULT_PERMISSIONS } from '@/services/cat/permission-service';
+import { defaultAllowedFor } from '@/services/cat/permission-service';
 import {
   CAT_ACTIONS,
   ACTION_CATEGORIES,
@@ -65,7 +65,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
         const row = byAction.get(a.id) ?? byCategory.get(a.category);
         const autonomy = row
           ? toAutonomyLevel(row.granted, row.requires_confirmation)
-          : toAutonomyLevel(DEFAULT_PERMISSIONS[a.category] ?? false, a.requiresConfirmation);
+          : toAutonomyLevel(defaultAllowedFor(a.id, a.category), a.requiresConfirmation);
         return {
           id: a.id,
           name: a.name,
