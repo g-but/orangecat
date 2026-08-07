@@ -139,7 +139,12 @@ describe('selection is worth doing', () => {
     // forbid. Everything this branch itself added was paid back by trimming
     // instead: the action-appendix preamble, the add_wallet enum and the
     // save_economic_profile line are all tighter than they were.
-    expect(remaining).toBeLessThanOrEqual(3_400);
+    //
+    // Raised 3,400 -> 3,650 for `propose_governance_change`: the Cat can now
+    // file Solon governance proposals about its own spending leash — a new
+    // capability worth its prompt cost. Its description and parameters were
+    // already cut to the bone to keep the hard 54.6k static budget green.
+    expect(remaining).toBeLessThanOrEqual(3_650);
   });
 
   it('leaves the prompt unchanged when the flag is off (default)', () => {

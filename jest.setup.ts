@@ -12,6 +12,14 @@
 /* eslint-disable no-console */
 
 import '@testing-library/jest-dom';
+import { TextEncoder as NodeTextEncoder, TextDecoder as NodeTextDecoder } from 'node:util';
+
+// jsdom ships no TextEncoder/TextDecoder; server-side modules (e.g. the Solon
+// Bitcoin-message crypto) use them at import time. Node's are spec-compliant.
+if (typeof globalThis.TextEncoder === 'undefined') {
+  globalThis.TextEncoder = NodeTextEncoder as typeof globalThis.TextEncoder;
+  globalThis.TextDecoder = NodeTextDecoder as typeof globalThis.TextDecoder;
+}
 
 // -----------------------------------------------------------------------------
 // Global Test Environment Configuration
