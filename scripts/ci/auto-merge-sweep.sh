@@ -185,9 +185,36 @@ for number in $(printf '%s' "$prs_json" | jq -r '.[].number'); do
     sleep 5
   done
 
+  # A conflicted PR is not "not ready yet" — it is stuck, and nothing else will
+  # unstick it. Skipping it quietly is how #639 sat DIRTY while main moved on:
+  # every sweep passed over it in silence and no signal ever reached a human.
+  # Say it loudly, and put it in the job summary where it is actually seen.
+  if [ "$mergeable" = "CONFLICTING" ]; then
+    echo "[auto-merge] #${number} CONFLICTS with ${BASE_BRANCH} and will never merge itself — ${title}" >&2
+    if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+      echo "- ⚠️ #${number} conflicts with \`${BASE_BRANCH}\` and needs resolving — ${title}" >> "$GITHUB_STEP_SUMMARY"
+    fi
+    continue
+  fi
+
   if [ "$mergeable" != "MERGEABLE" ]; then
     echo "[auto-merge] #${number} skip: not mergeable (${mergeable}/${state}) — ${title}"
     continue
+  fi
+
+  # Keep the branch current instead of merging a PR that was proven against an
+  # older main. This is also how conflicts surface EARLY: a branch updated on
+  # the sweep after the merge that broke it fails here, minutes later, rather
+  # than hours later when someone finally looks. One update per sweep, for the
+  # same reason only one PR is merged per sweep.
+  if [ "$state" = "BEHIND" ]; then
+    echo "[auto-merge] #${number} is behind ${BASE_BRANCH} — updating it before merging: ${title}"
+    if gh api -X PUT "repos/${REPO}/pulls/${number}/update-branch" --silent 2>/dev/null; then
+      echo "[auto-merge] #${number} updated; its checks now run against current ${BASE_BRANCH}"
+    else
+      echo "[auto-merge] #${number} update-branch failed — leaving for the next sweep" >&2
+    fi
+    break
   fi
 
   echo "[auto-merge] #${number} green and ready — merging: ${title}"
