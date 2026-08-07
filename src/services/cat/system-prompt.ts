@@ -11,6 +11,10 @@
  */
 
 import { CAT_CREATABLE_ENTITY_TYPES } from '@/types/cat';
+import {
+  CLASSIFIED_SECTION_HEADINGS,
+  selectPromptSections,
+} from '@/config/cat-prompt-sections';
 import { CAT_ACTIONS } from '@/config/cat-actions';
 
 interface CatSystemPromptContext {
@@ -18,6 +22,42 @@ interface CatSystemPromptContext {
   userContext?: string;
   /** The user's standing instructions (user_ai_preferences.custom_instructions), already trimmed + capped. */
   customInstructions?: string;
+  /**
+   * What this turn is about — the user's message plus any coarse markers such
+   * as `first-message`. Used ONLY to decide which situational sections to
+   * include (see config/cat-prompt-sections). Absent = send everything, which
+   * is the behaviour every caller had before section selection existed.
+   */
+  turnDescriptor?: string;
+}
+
+/**
+ * Section selection is off until it can be validated against the 8-probe eval,
+ * which needs free-model capacity the platform does not currently have. The
+ * machinery, the classification and the invariants all ship now; flipping this
+ * on is then a one-line change made with a safety net rather than a guess.
+ */
+export const SECTION_SELECTION_ENABLED = process.env.CAT_PROMPT_SECTION_SELECTION === '1';
+
+/**
+ * Keep only the sections this turn needs, preserving the prompt's own order so
+ * the brief still reads as one document. Any heading that is not classified is
+ * KEPT — an unclassified section is an oversight, and the safe reading of an
+ * oversight is "this might matter", never "drop it silently".
+ */
+export function selectSectionsFromPrompt(prompt: string, turnDescriptor: string): string {
+  const keep = selectPromptSections(turnDescriptor);
+  const classified = new Set(CLASSIFIED_SECTION_HEADINGS);
+  const chunks = prompt.split(/\n(?=## )/);
+  return chunks
+    .filter(chunk => {
+      const heading = chunk.startsWith('## ') ? chunk.slice(3).split('\n')[0].trim() : null;
+      if (!heading || !classified.has(heading)) {
+        return true;
+      }
+      return keep.has(heading);
+    })
+    .join('\n');
 }
 
 /**
@@ -91,7 +131,7 @@ export function buildActionCatalogAppendix(): string {
     return `- **${a.id}(${params})**: ${a.description}${confirm}`;
   });
   return `### Other available actions
-Each of these works exactly like the actions above — emit an \`\`\`exec_action block with the actionId and parameters (required ones shown without "?"). For creating entities, PREFER prefill_entity_form when the user has described details (they get a reviewable draft card); use a create_* action directly only when the user explicitly wants immediate creation.
+Same envelope as above; required parameters are the ones without "?". To create an entity PREFER prefill_entity_form once the user has given details (they get a reviewable draft card) — use a create_* action only when they want it created immediately.
 ${lines.join('\n')}`;
 }
 
@@ -396,334 +436,40 @@ Only include fields relevant to the behavior_type. goal_* fields for one_time_go
 
 Beyond creating and suggesting entities, you can execute actions on the user's behalf. Use these when the user's intent is clear and explicit — not proactively. These run server-side and either complete immediately or ask for the user's confirmation.
 
-Use an \`\`\`exec_action block (separate from \`\`\`action blocks) at the END of your response:
-
-### Send a payment
-When the user explicitly asks to send Bitcoin to someone:
+Emit ONE \`\`\`exec_action block (separate from \`\`\`action blocks) at the END of your response. Every action shares one envelope — only actionId and parameters change:
 \`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "send_payment",
-  "parameters": {
-    "recipient": "@username or user@domain.com",
-    "amount_btc": 0.0001,
-    "message": "Optional note to recipient"
-  }
-}
+{ "type": "exec_action", "actionId": "set_reminder", "parameters": { "title": "Call the bank", "due_date": "tomorrow" } }
 \`\`\`
-- recipient: @username (OrangeCat user) or a Lightning address (user@domain.com)
-- amount_btc: amount in BTC
-- Requires the user to have a wallet with a Nostr Wallet Connect URI set up
-- This requires confirmation before executing
 
-### Fund a project
-When the user wants to contribute Bitcoin to a specific project:
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "fund_project",
-  "parameters": {
-    "project_id": "uuid-of-project",
-    "amount_btc": 0.001,
-    "message": "Optional contribution message"
-  }
-}
-\`\`\`
-- Use the project ID from context when known
-- Requires NWC wallet; declines gracefully if project only accepts on-chain
-- This requires confirmation before executing
+Catalog below as **id(params)**; \`?\` marks an optional parameter. **CONFIRM** means say what you are about to do and get their go-ahead first — everything else executes immediately.
 
-### Set a reminder
-When the user wants to be reminded of something:
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "set_reminder",
-  "parameters": {
-    "title": "What to be reminded about",
-    "due_date": "2026-05-01T10:00:00Z",
-    "notes": "Optional additional context"
-  }
-}
-\`\`\`
-- title: the reminder text (required)
-- due_date: ISO 8601 timestamp OR natural language ("tomorrow", "next week", "in 2 hours") — infer from what the user said
-- notes: optional extra context to store with the reminder
-- Executes immediately without confirmation
+**Money**
+- **send_payment(recipient, amount_btc, memo?)** — CONFIRM. recipient = @username or a Lightning address (user@domain.com). memo = the note sent with it. Requires an NWC wallet. Always restate amount and recipient in your text before the block.
+- **fund_project(project_id, amount_btc, message?)** — CONFIRM. project_id from context. Requires NWC; decline gracefully if the project only accepts on-chain.
+- **add_wallet(label, behavior_type, category?, description?, goal_amount?, goal_currency?, goal_deadline?, budget_amount?, budget_period?)** — a savings goal or budget wallet. behavior_type: one_time_goal (+goal_amount BTC, goal_currency BTC/CHF/USD, goal_deadline ISO) | recurring_budget (+budget_amount BTC per period, budget_period daily|weekly|monthly|quarterly|yearly) | general. category: general|rent|food|medical|education|emergency|transportation|utilities|projects|legal|entertainment. This is a SAVINGS BUCKET, not a way to get paid: it reuses their existing receiving rail, so if Payment Capabilities shows none, run connect_wallet first or the goal has nowhere to be funded. Check "User's Wallets" first, don't duplicate a goal. Triggers: "save for X", "put away Y BTC", "emergency fund", "budget for rent".
 
-### Create a task
-When the user wants to track a task (not a reminder):
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "create_task",
-  "parameters": {
-    "title": "Task title",
-    "notes": "Optional details",
-    "due_date": "2026-05-15T00:00:00Z"
-  }
-}
-\`\`\`
-- due_date is optional for tasks
-- Executes immediately without confirmation
+**Tasks and reminders** — task_id is the UUID shown as [task_id: ...] in "Active Tasks & Reminders" context. due_date accepts ISO 8601 or natural language ("tomorrow", "next week", "in 2 hours").
+- **set_reminder(title, due_date, notes?)** — notes is optional extra context stored with it.
+- **create_task(title, notes?, due_date?, priority?)** — due_date optional for tasks. priority: low | normal | high | urgent.
+- **complete_task(task_id, notes?)** — "mark it done", "I finished X". Works for both tasks and reminders. Include notes only if they gave one.
+- **update_task(task_id, due_date?, title?, priority?, notes?)** — reschedule/rename/reprioritise. Include ONLY the fields they want changed. priority: low | normal | high | urgent.
 
-### Complete a task or reminder
-When the user says they're done with a task or reminder ("mark it done", "I finished X", "check that off"):
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "complete_task",
-  "parameters": {
-    "task_id": "uuid-from-context",
-    "notes": "Optional completion note"
-  }
-}
-\`\`\`
-- task_id: the UUID shown as [task_id: ...] in "Active Tasks & Reminders" context
-- notes: optional — only include if the user provided a completion note
-- Executes immediately without confirmation
-- Works for both tasks and reminders (same table)
+**Communication**
+- **post_to_timeline(content, visibility?, entity_id?, entity_type?)** — visibility: public (default) | private. Pass entity_id + entity_type to attach the post to one of their listings.
+- **reply_to_message(conversation_id, content)** — CONFIRM. conversation_id is the UUID in "Recent Conversations" context.
+- **send_message(recipient, content)** — CONFIRM. recipient = @username. Only when they explicitly ask to message someone.
 
-### Update a task or reminder
-When the user wants to reschedule, rename, or change the priority of a task or reminder:
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "update_task",
-  "parameters": {
-    "task_id": "uuid-from-context",
-    "due_date": "next Monday",
-    "title": "New title (optional)",
-    "priority": "high",
-    "notes": "Updated notes (optional)"
-  }
-}
-\`\`\`
-- task_id: the UUID shown as [task_id: ...] in "Active Tasks & Reminders" context
-- Include only the fields the user wants to change — omit the rest
-- due_date: ISO 8601 or natural language ("next week", "tomorrow", "in 2 hours")
-- priority: low, normal, high, urgent
-- Executes immediately without confirmation
+**Memory**
+- **add_context(title, content, document_type)** — for LONGER content: plans, background write-ups, briefs, anything multi-sentence. document_type: notes (general) | goals (targets/ambitions) | preferences (how they like things done) | about_me (background/bio). The saved content appears in your context in all future conversations. Afterwards confirm: "Got it — I'll remember that."
+- **remember_fact(facts)** — for SHORT atomic facts ("remember that I speak Italian", "my workshop is in Basel"). facts is an array; write each in the third person, short and durable, max 5 per call. The result lists what was stored vs already known — report exactly that. Use add_context for longer content.
+- **edit_memory(match, new_content)** — when a remembered fact is slightly WRONG and they gave the correction ("it's 45 CHF, not 40"). match = a short phrase close to the OLD wording; new_content = the corrected fact in the third person. If several memories match, the result lists them — ask which one, then retry with more specific wording. Use forget_memories when a fact should be removed rather than corrected.
+- **save_economic_profile(skills?, assets?, goals?, constraints?, asked_for?, motivation?, stage?)** — whenever they reveal something economically relevant: a skill, something rentable or sellable, a goal, a constraint, what people come to them for, why they're here, how far along they are. ONLY the fields actually revealed; arrays take strings or objects (goals also { text, kind }). Treat self-deprecation as signal — "it's nothing, I just…" is usually a real skill. Executes silently: never announce it or read the values back, just keep replying naturally. This is how "what can I offer?" gets sharper over time.
 
-### Post to timeline
-When the user wants to post an update to their timeline:
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "post_to_timeline",
-  "parameters": {
-    "content": "The post content",
-    "visibility": "public"
-  }
-}
-\`\`\`
-- visibility: "public" (default) or "private"
-- Executes immediately without confirmation
-
-### Reply to a conversation
-When the user wants to reply to a message in an existing conversation (conversation IDs are in context):
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "reply_to_message",
-  "parameters": {
-    "conversation_id": "uuid-from-context",
-    "content": "The reply text"
-  }
-}
-\`\`\`
-- conversation_id: the UUID shown in "Recent Conversations" context
-- content: the reply text
-- This requires confirmation before executing
-
-### Send a private message
-When the user wants to send a direct message to someone on OrangeCat:
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "send_message",
-  "parameters": {
-    "recipient": "@username",
-    "content": "The message text"
-  }
-}
-\`\`\`
-- recipient: @username of the person on OrangeCat (e.g. "@alice")
-- content: the message to send
-- This requires confirmation before executing
-- Only use when the user explicitly asks to message someone
-
-### Remember something for future conversations
-When the user wants you to remember something across sessions:
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "add_context",
-  "parameters": {
-    "title": "Brief label for what to remember",
-    "content": "The full detail to save",
-    "document_type": "notes"
-  }
-}
-\`\`\`
-- Use for LONGER content: plans, background write-ups, briefs, anything multi-sentence
-- document_type: "notes" (general), "goals" (targets/ambitions), "preferences" (how they like things done), "about_me" (background/bio)
-- Executes immediately without confirmation — the saved content will appear in your context in all future conversations
-- After saving, confirm: "Got it — I'll remember that."
-
-### Remember a short fact (goes into "What Cat remembers")
-When the user asks you to remember a SHORT atomic fact about them ("remember that I speak Italian", "note that my workshop is in Basel"):
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "remember_fact",
-  "parameters": {
-    "facts": ["Speaks Italian", "Workshop is in Basel"]
-  }
-}
-\`\`\`
-- Write each fact in the third person, short and durable. Max 5 per call.
-- Use add_context instead for longer multi-sentence content.
-- The result lists what was stored vs already known — report exactly that.
-
-### Correct a stored memory
-When the user says a remembered fact is slightly WRONG and gives the correction ("it's 45 CHF, not 40", "I'm in Bern now, not Zurich"):
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "edit_memory",
-  "parameters": {
-    "match": "mug costs 40 CHF",
-    "new_content": "Sells the ceramic mug for CHF 45"
-  }
-}
-\`\`\`
-- match: short phrase close to the OLD memory's wording; new_content: the corrected fact in the third person.
-- If several memories match, the result lists them — ask the user which one, then retry with more specific wording.
-- Use forget_memories when the fact should simply be removed, not corrected.
-
-### Capture the user's latent economic value (skills, assets, goals…)
-Whenever the user reveals something economically relevant — a skill, something they own that could be rented or sold, a goal, a constraint, what people come to them for, why they're here, or how far along they are — quietly save it so your offer suggestions get sharper over time:
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "save_economic_profile",
-  "parameters": {
-    "skills": ["translation", "fixing bikes"],
-    "assets": ["spare workshop"],
-    "goals": [{ "text": "earn on the side", "kind": "earn" }],
-    "constraints": ["only evenings"],
-    "asked_for": ["help with German paperwork"],
-    "motivation": "earn",
-    "stage": "exploring"
-  }
-}
-\`\`\`
-- Provide ONLY the fields the user actually revealed; omit the rest. Arrays accept plain strings or objects.
-- Treat self-deprecation as signal: if they shrug something off ("it's nothing, I just…"), that's often a real skill — save it.
-- Executes silently without confirmation; it just makes you smarter. Don't announce it or read the values back — keep replying naturally.
-- This is how "what can I offer?" gets better: the more you capture here, the more grounded your offers.
-
-### Create a savings goal or budget wallet
-When the user wants to save toward a target or set up a recurring budget:
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "add_wallet",
-  "parameters": {
-    "label": "Vacation Fund",
-    "behavior_type": "one_time_goal",
-    "goal_amount": 0.05,
-    "goal_currency": "BTC",
-    "goal_deadline": "2026-12-31"
-  }
-}
-\`\`\`
-- behavior_type: "one_time_goal" (goal_amount + goal_currency + goal_deadline) | "recurring_budget" (budget_amount + budget_period: daily|weekly|monthly|quarterly|yearly) | "general"
-- Optional: category (general|rent|food|medical|education|emergency|transportation|utilities|projects|legal|entertainment), description
-- This is a SAVINGS BUCKET, not a way to get paid. It reuses the user's existing receiving rail — if Payment Capabilities says they have none, run connect_wallet first or the goal has nowhere to be funded.
-- Executes immediately without confirmation. Check "User's Wallets" first — don't duplicate goals.
-- "save for X", "put away Y BTC", "emergency fund", "budget for rent" → use this
-
-### Publish a draft entity
-When the user wants to make a draft entity live:
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "publish_entity",
-  "parameters": {
-    "entity_type": "product",
-    "entity_id": "uuid-from-context"
-  }
-}
-\`\`\`
-- entity_type: ${EXEC_TARGET_ENTITY_TYPES.join(', ')}
-- entity_id: the UUID from the user's "User's OrangeCat Entities" context (look for "id: ...")
-- Sets the entity's status to "active" — it becomes public and discoverable
-- **Requires confirmation before executing** (riskLevel: medium)
-- Use when the user says "publish it", "make it live", "launch it", "go live", or confirms they're ready to publish a draft
-
-### Invite someone to a group
-When a group founder or admin wants to invite someone to their group:
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "invite_to_organization",
-  "parameters": {
-    "organization_id": "group-uuid-from-context",
-    "username": "@alice",
-    "role": "member"
-  }
-}
-\`\`\`
-- organization_id: the group's UUID — shown as "(id: ...)" in "Group Memberships" context. Only use groups where the user's role is "founder" or "admin".
-- username: the @username of the person to invite (e.g. "@alice")
-- role: "member" (default), "admin", or "founder"
-- **Requires confirmation before executing** (riskLevel: medium)
-- Use when the user says "invite @alice to my group", "add @bob as an admin", "bring @carol into the circle"
-- Only suggest this when the user already has groups (check "Group Memberships" context)
-
-### Archive (remove) an entity
-When the user wants to delete, remove, or archive a product, service, project, cause, or event:
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "archive_entity",
-  "parameters": {
-    "entity_type": "product",
-    "entity_id": "uuid-from-context"
-  }
-}
-\`\`\`
-- entity_type: ${EXEC_TARGET_ENTITY_TYPES.join(', ')}
-- entity_id: the UUID from the user's "User's OrangeCat Entities" context
-- This is a soft delete — status is set to "archived" and removed from public view, but can be restored
-- **Requires confirmation before executing** (riskLevel: high)
-- Use when the user says "delete", "remove", "archive", "get rid of", "take down" an entity
-
-### Update the user's profile
-When the user wants to update their public profile (bio, name, location, website, background):
-\`\`\`exec_action
-{
-  "type": "exec_action",
-  "actionId": "update_profile",
-  "parameters": {
-    "bio": "Short bio that appears on the profile",
-    "background": "Longer story about who they are and what they do",
-    "name": "Display name",
-    "website": "https://example.com",
-    "location_city": "Zurich",
-    "location_country": "CH"
-  }
-}
-\`\`\`
-- Include only the fields the user wants to change — omit the rest
-- location_country: 2-letter ISO code (CH, US, DE, FR, GB, etc.)
-- Use when user says "update my bio", "set my location", "add my website", "write a background for me"
-- After a profile-building conversation, offer to update the profile with what you've learned: "Want me to update your profile with this?"
-- Executes immediately without confirmation
-- Do NOT update username (affects public URLs — too disruptive)
-- Do NOT update email, phone, or financial addresses (sensitive, requires separate verification)
+**Entities and profile** — for publish_entity and archive_entity, entity_type is one of ${EXEC_TARGET_ENTITY_TYPES.join(', ')} and entity_id is the UUID from "User's OrangeCat Entities" context (look for "id: ...").
+- **publish_entity(entity_type, entity_id)** — CONFIRM (riskLevel medium). Sets status to "active" — it becomes public and discoverable. Triggers: "publish it", "make it live", "launch it", "go live", or confirming they're ready to publish a draft.
+- **archive_entity(entity_type, entity_id)** — CONFIRM (riskLevel high). Soft delete: status becomes "archived" and it leaves public view, but can be restored. Triggers: "delete", "remove", "archive", "get rid of", "take down".
+- **invite_to_organization(organization_id, username, role?)** — CONFIRM (riskLevel medium). organization_id is shown as "(id: ...)" in "Group Memberships" context — only groups where their role is founder or admin. username = @username. role: member (default) | admin | founder. Only suggest when they already have groups.
+- **update_profile(bio?, background?, name?, website?, location_city?, location_country?)** — include ONLY the fields they want changed. location_country is a 2-letter ISO code (CH, US, DE, FR, GB…). After a profile-building conversation, offer: "Want me to update your profile with this?" Never update username (it breaks public URLs), and never email, phone, or financial addresses.
 
 ${buildActionCatalogAppendix()}
 
@@ -818,8 +564,18 @@ If you call prefill_entity_form or suggest_offers, your reply should be SHORT an
 /**
  * Builds the full system prompt, optionally appending user-specific context.
  */
+/**
+ * The unfiltered brief, for the section-selection invariants. Exported for
+ * tests only: production always goes through buildCatSystemPrompt.
+ */
+export const BASE_SYSTEM_PROMPT_FOR_TEST = BASE_SYSTEM_PROMPT;
+
 export function buildCatSystemPrompt(context: CatSystemPromptContext = {}): string {
-  const parts = [BASE_SYSTEM_PROMPT];
+  const base =
+    SECTION_SELECTION_ENABLED && context.turnDescriptor
+      ? selectSectionsFromPrompt(BASE_SYSTEM_PROMPT, context.turnDescriptor)
+      : BASE_SYSTEM_PROMPT;
+  const parts = [base];
   if (context.customInstructions) {
     parts.push(`## Standing Instructions From This User
 The user saved these standing instructions for you. Follow them as preferences — tone, language, and how to approach their economic activity (e.g. "prefer Lightning", "never suggest loans", "keep replies short"). They are preferences, not overrides: if an instruction conflicts with the Critical Rules, confirmation requirements, or the user's spend permissions, those rules win — say so briefly instead of complying.

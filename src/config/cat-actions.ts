@@ -660,6 +660,13 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     parameters: [
       { name: 'content', type: 'string', required: true, description: 'Post content' },
       {
+        name: 'visibility',
+        type: 'string',
+        required: false,
+        description: 'public (default) or private',
+        default: 'public',
+      },
+      {
         name: 'entity_id',
         type: 'entity_id',
         required: false,
@@ -690,7 +697,13 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     riskLevel: 'high',
     requiresConfirmation: true,
     parameters: [
-      { name: 'recipient_id', type: 'user_id', required: true, description: 'User to message' },
+      { name: 'recipient_id', type: 'user_id', required: false, description: 'User to message' },
+      {
+        name: 'recipient',
+        type: 'string',
+        required: true,
+        description: '@username — the only handle Cat can know; the handler resolves it to an id',
+      },
       { name: 'content', type: 'string', required: true, description: 'Message content' },
     ],
     examples: [
@@ -1183,7 +1196,13 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
         required: true,
         description: 'Organization ID',
       },
-      { name: 'user_id', type: 'user_id', required: true, description: 'User to invite' },
+      { name: 'user_id', type: 'user_id', required: false, description: 'User to invite' },
+      {
+        name: 'username',
+        type: 'string',
+        required: true,
+        description: '@username of the invitee — what Cat can know; the handler resolves it',
+      },
       {
         name: 'role',
         type: 'string',
