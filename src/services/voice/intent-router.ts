@@ -19,16 +19,10 @@
  * over, and the whole point was to save them that.
  */
 
-import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
-import { DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
 import { ENTITY_REGISTRY, type EntityType } from '@/config/entity-registry';
 import { PREFILLABLE_ENTITY_TYPES } from '@/services/cat/tool-use-detection';
 import { AI_ASSIST_MIN_INPUT_LENGTH } from '@/config/ai-form-assist';
-import { logger } from '@/utils/logger';
-
-/** Mirrors offer-engine / form-prefill-service: capable and reliable at JSON. */
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const OPENROUTER_MODEL = DEFAULT_FREE_MODEL_ID;
+import { callPlatformJson } from '@/services/cat/platform-llm';
 
 /**
  * Below this we ask instead of routing.
@@ -83,33 +77,6 @@ Rules:
 - confidence reflects how clearly the sentence names one creatable thing. A vague sentence ("I need to sort my finances") is LOW confidence, not a guess at "project".
 - If it is not a request to create something at all — a question, a greeting, a note to self — use confidence 0.`;
 
-function providerCall(): { url: string; model: string; headers: Record<string, string> } | null {
-  const groqKey = process.env.GROQ_API_KEY;
-  const openRouterKey = process.env.OPENROUTER_API_KEY;
-  const useGroq = !!groqKey;
-  const apiKey = useGroq ? groqKey : openRouterKey;
-  if (!apiKey) {
-    logger.warn('voice-intent: no platform AI key configured', {}, 'VoiceIntent');
-    return null;
-  }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${apiKey}`,
-  };
-  if (!useGroq) {
-    headers['HTTP-Referer'] = process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.ch';
-  }
-
-  return {
-    url: useGroq
-      ? `${PROVIDER_BASE_URLS.groq}/chat/completions`
-      : `${PROVIDER_BASE_URLS.openrouter}/chat/completions`,
-    model: useGroq ? GROQ_MODEL : OPENROUTER_MODEL,
-    headers,
-  };
-}
-
 /**
  * Validate the model's answer rather than trust it.
  *
@@ -161,47 +128,22 @@ export async function routeVoiceIntent(transcript: string): Promise<VoiceIntent 
     return null;
   }
 
-  const provider = providerCall();
-  if (!provider) {
+  // One platform-LLM path for every structured Cat feature (platform-llm.ts):
+  // provider choice, json-mode fallback, and failure logging live there once.
+  // Classification, not composition — near-deterministic on purpose so the
+  // same sentence doesn't land in a different form on a second try.
+  const raw = await callPlatformJson(SYSTEM_PROMPT, text, {
+    temperature: 0.1,
+    maxTokens: 400,
+    timeoutMs: 15_000,
+  });
+  if (!raw) {
     return null;
   }
 
-  try {
-    const response = await fetch(provider.url, {
-      method: 'POST',
-      headers: provider.headers,
-      body: JSON.stringify({
-        model: provider.model,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: text },
-        ],
-        // Classification, not composition — near-deterministic on purpose so the
-        // same sentence doesn't land in a different form on a second try.
-        temperature: 0.1,
-        max_tokens: 400,
-        response_format: { type: 'json_object' },
-      }),
-    });
-
-    if (!response.ok) {
-      logger.warn('voice-intent: model call failed', { status: response.status }, 'VoiceIntent');
-      return null;
-    }
-
-    const json = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-    const raw = json.choices?.[0]?.message?.content;
-    if (!raw) {
-      return null;
-    }
-
-    const intent = parseIntent(raw, text);
-    if (!intent || intent.confidence < MIN_ROUTE_CONFIDENCE) {
-      return null;
-    }
-    return intent;
-  } catch (error) {
-    logger.warn('voice-intent: model call threw', { error: String(error) }, 'VoiceIntent');
+  const intent = parseIntent(raw, text);
+  if (!intent || intent.confidence < MIN_ROUTE_CONFIDENCE) {
     return null;
   }
+  return intent;
 }

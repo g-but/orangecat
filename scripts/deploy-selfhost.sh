@@ -247,6 +247,8 @@ echo "=== ship ops scripts + nightly Cat-eval timer ==="
 {
   ssh "${SSH_OPTS[@]}" "$OC_BOX" "mkdir -p $OC_APP_BASE/scripts"
   scp "${SSH_OPTS[@]}" -q scripts/eval-cat.mjs "$OC_BOX:$OC_APP_BASE/scripts/eval-cat.mjs"
+  # eval-cat.mjs imports this next to itself — ship them together or the timer breaks.
+  scp "${SSH_OPTS[@]}" -q scripts/eval-auth.mjs "$OC_BOX:$OC_APP_BASE/scripts/eval-auth.mjs"
   scp "${SSH_OPTS[@]}" -q scripts/eval-cat-outcomes.mjs \
     "$OC_BOX:$OC_APP_BASE/scripts/eval-cat-outcomes.mjs"
   scp "${SSH_OPTS[@]}" -q scripts/check-data-invariants.mjs \

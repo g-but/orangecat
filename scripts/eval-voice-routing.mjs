@@ -29,6 +29,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { signInWithPassword, buildAuthCookie } from './eval-auth.mjs';
 
 // .env.local is a local-dev fallback only — real env always wins.
 try {
@@ -75,41 +76,19 @@ const CASES = [
 /** Below this the run is a regression, not a bad day. */
 const MIN_PASS_RATE = 0.85;
 
-async function signIn() {
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: { apikey: ANON_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
-  });
-  if (!res.ok) {
-    throw new Error(`GoTrue sign-in failed: ${res.status} ${await res.text()}`);
-  }
-  return res.json();
-}
-
-/** Same cookie shape @supabase/ssr expects — see eval-cat.mjs for the detail. */
-function buildAuthCookie(session) {
-  const name = `sb-${new URL(SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
-  const value = `base64-${Buffer.from(JSON.stringify(session)).toString('base64url')}`;
-  const MAX = 3180;
-  if (value.length <= MAX) {
-    return `${name}=${value}`;
-  }
-  const chunks = [];
-  for (let i = 0; i < value.length; i += MAX) {
-    chunks.push(`${name}.${chunks.length}=${value.slice(i, i + MAX)}`);
-  }
-  return chunks.join('; ');
-}
-
 async function main() {
   if (!SUPABASE_URL || !ANON_KEY) {
     console.error('Missing NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY');
     process.exit(2);
   }
 
-  const session = await signIn();
-  const cookie = buildAuthCookie(session);
+  const session = await signInWithPassword({
+    supabaseUrl: SUPABASE_URL,
+    anonKey: ANON_KEY,
+    email: EMAIL,
+    password: PASSWORD,
+  });
+  const cookie = buildAuthCookie(SUPABASE_URL, session);
 
   let passed = 0;
   const failures = [];

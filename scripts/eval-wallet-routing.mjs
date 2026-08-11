@@ -45,6 +45,7 @@
  */
 
 import { readFileSync, existsSync } from 'node:fs';
+import { buildAuthCookie as buildSharedAuthCookie } from './eval-auth.mjs';
 
 // .env.local is a local-dev fallback only — real env always wins.
 if (existsSync('.env.local')) {
@@ -186,20 +187,8 @@ async function restBackoff(attempt, why) {
   await new Promise(r => setTimeout(r, wait));
 }
 
-/** Rebuild the cookie @supabase/ssr expects (see eval-cat.mjs for the format). */
-function buildAuthCookie(session) {
-  const name = `sb-${new URL(SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
-  const value = `base64-${Buffer.from(JSON.stringify(session)).toString('base64url')}`;
-  const MAX = 3180;
-  if (value.length <= MAX) {
-    return `${name}=${value}`;
-  }
-  const parts = [];
-  for (let i = 0; i * MAX < value.length; i++) {
-    parts.push(`${name}.${i}=${value.slice(i * MAX, (i + 1) * MAX)}`);
-  }
-  return parts.join('; ');
-}
+/** Cookie forging shared with the other evals (eval-auth.mjs). */
+const buildAuthCookie = session => buildSharedAuthCookie(SUPABASE_URL, session);
 
 async function runProbe(probe, cookie, conversationId) {
   const controller = new AbortController();

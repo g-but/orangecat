@@ -57,6 +57,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { signInWithPassword, buildAuthCookie } from './eval-auth.mjs';
 
 // ---------------------------------------------------------------------------
 // Env
@@ -244,37 +245,6 @@ async function sleepBackoff(attempt, why) {
   const wait = REST_BACKOFF_MS * attempt;
   console.warn(`eval-cat: PostgREST transient (${why}) — retry ${attempt}/${REST_RETRIES - 1} in ${wait}ms`);
   await new Promise((r) => setTimeout(r, wait));
-}
-
-// ---------------------------------------------------------------------------
-// Auth: sign in via GoTrue REST, forge the @supabase/ssr auth cookie
-// ---------------------------------------------------------------------------
-
-async function signIn() {
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: { apikey: ANON_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: EVAL_EMAIL, password: EVAL_PASSWORD }),
-  });
-  if (!res.ok) {throw new Error(`GoTrue sign-in failed: ${res.status} ${await res.text()}`);}
-  return res.json(); // { access_token, refresh_token, expires_at, user, ... }
-}
-
-/**
- * Rebuild the cookie @supabase/ssr expects: name `sb-<host-label>-auth-token`,
- * value `base64-<base64url(session JSON)>`, chunked into `.0`,`.1`,… pieces
- * at 3180 chars (MAX_CHUNK_SIZE in @supabase/ssr).
- */
-function buildAuthCookie(session) {
-  const name = `sb-${new URL(SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
-  const value = `base64-${Buffer.from(JSON.stringify(session)).toString('base64url')}`;
-  const MAX = 3180;
-  if (value.length <= MAX) {return `${name}=${value}`;}
-  const parts = [];
-  for (let i = 0; i * MAX < value.length; i++) {
-    parts.push(`${name}.${i}=${value.slice(i * MAX, (i + 1) * MAX)}`);
-  }
-  return parts.join('; ');
 }
 
 // ---------------------------------------------------------------------------
@@ -618,9 +588,14 @@ async function main() {
     }
   }
 
-  const session = await signIn();
+  const session = await signInWithPassword({
+    supabaseUrl: SUPABASE_URL,
+    anonKey: ANON_KEY,
+    email: EVAL_EMAIL,
+    password: EVAL_PASSWORD,
+  });
   const userId = session.user.id;
-  const cookie = buildAuthCookie(session);
+  const cookie = buildAuthCookie(SUPABASE_URL, session);
 
   await resetDailyCap(userId);
   await sweepStaleEvalConversations(userId).catch(err =>
