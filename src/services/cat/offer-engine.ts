@@ -13,21 +13,15 @@
  */
 
 import type { AnySupabaseClient } from '@/lib/supabase/types';
-import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 import type { EntityType } from '@/config/entity-registry';
 import { PREFILLABLE_ENTITY_TYPES } from './tool-use-detection';
 import { fetchFullContextForCat } from '@/services/ai/document-context';
 import { buildFullContextString } from '@/services/ai/context-string-builder';
 import { listMemories } from './memory';
 import { getDemandSignals } from './demand-signals';
+import { callPlatformJson } from './platform-llm';
 import { logger } from '@/utils/logger';
-import { DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
 
-// Capable, JSON-reliable defaults (mirrors form-prefill-service's provider choice).
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
-// Free OpenRouter ids rot (404 without notice) — always take the registry
-// default, which the free-model catalog probe keeps honest.
-const OPENROUTER_MODEL = DEFAULT_FREE_MODEL_ID;
 const MAX_OFFERS = 5;
 
 export interface ProposedOffer {
@@ -85,41 +79,6 @@ export async function generateOffers(
   const contextBlob = buildFullContextString(context);
   const memoryBlob = memories.length ? memories.map(m => `- ${m.content}`).join('\n') : '(none)';
 
-  const raw = await callOfferModel(contextBlob, memoryBlob, demandBlob, count, opts?.focus);
-  if (!raw) {
-    return [];
-  }
-  return parseOffers(raw, count);
-}
-
-async function callOfferModel(
-  contextBlob: string,
-  memoryBlob: string,
-  demandBlob: string,
-  count: number,
-  focus?: string
-): Promise<string | null> {
-  const groqKey = process.env.GROQ_API_KEY;
-  const openRouterKey = process.env.OPENROUTER_API_KEY;
-  const useGroq = !!groqKey;
-  const apiKey = useGroq ? groqKey : openRouterKey;
-  if (!apiKey) {
-    logger.warn('offer-engine: no platform AI key configured', {}, 'OfferEngine');
-    return null;
-  }
-
-  const url = useGroq
-    ? `${PROVIDER_BASE_URLS.groq}/chat/completions`
-    : `${PROVIDER_BASE_URLS.openrouter}/chat/completions`;
-  const model = useGroq ? GROQ_MODEL : OPENROUTER_MODEL;
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${apiKey}`,
-  };
-  if (!useGroq) {
-    headers['HTTP-Referer'] = process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.ch';
-  }
-
   const userPrompt = `Everything OrangeCat knows about this user:
 
 ${contextBlob}
@@ -129,36 +88,19 @@ ${memoryBlob}
 
 PLATFORM LANDSCAPE — what's already active on OrangeCat right now (real, the only demand/supply data you have):
 ${demandBlob || '(the platform is very early — few or no listings yet)'}
-${focus ? `\nFocus the suggestions around: ${focus}\n` : ''}
+${opts?.focus ? `\nFocus the suggestions around: ${opts.focus}\n` : ''}
 Propose up to ${count} grounded offers as JSON.`;
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.5,
-        max_tokens: 1600,
-        response_format: { type: 'json_object' },
-      }),
-    });
-    if (!response.ok) {
-      logger.warn('offer-engine: model call failed', { status: response.status }, 'OfferEngine');
-      return null;
-    }
-    const json = (await response.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    return json.choices?.[0]?.message?.content ?? null;
-  } catch (err) {
-    logger.warn('offer-engine: model call threw', { err: String(err) }, 'OfferEngine');
-    return null;
+  // One platform-LLM path for every structured Cat feature (platform-llm.ts):
+  // provider choice, json-mode fallback, and failure logging live there once.
+  const raw = await callPlatformJson(SYSTEM_PROMPT, userPrompt, {
+    temperature: 0.5,
+    maxTokens: 1600,
+  });
+  if (!raw) {
+    return [];
   }
+  return parseOffers(raw, count);
 }
 
 function parseOffers(raw: string, count: number): ProposedOffer[] {
