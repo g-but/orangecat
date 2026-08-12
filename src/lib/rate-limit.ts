@@ -97,6 +97,11 @@ const upstashWriteLimiter = createUpstashLimiter('write', 30, '1 m');
 // (even rotating IPs) can't flood a victim's NWC relay. Generous enough to
 // absorb a legitimately viral post's concurrent tippers.
 const upstashTipRecipientLimiter = createUpstashLimiter('tip-recipient', 20, '5 m');
+// Public Ask-Cat / feedback endpoint: each submission costs a platform LLM
+// call, and the caller may be anonymous — so a tight per-IP budget on top of
+// the general limiter. 8 per 5 min is plenty for a real person having a
+// conversation, and starves a script.
+const upstashAskCatLimiter = createUpstashLimiter('ask-cat', 8, '5 m');
 
 // ==================== FALLBACK IN-MEMORY LIMITER ====================
 
@@ -152,6 +157,10 @@ const fallbackWriteLimiter = new InMemoryRateLimiter({ windowMs: 60 * 1000, maxR
 const fallbackTipRecipientLimiter = new InMemoryRateLimiter({
   windowMs: 5 * 60 * 1000,
   maxRequests: 20,
+});
+const fallbackAskCatLimiter = new InMemoryRateLimiter({
+  windowMs: 5 * 60 * 1000,
+  maxRequests: 8,
 });
 
 // ==================== RATE LIMIT FUNCTIONS ====================
@@ -220,6 +229,24 @@ export async function rateLimitTipRecipient(username: string): Promise<RateLimit
   }
 
   return fallbackTipRecipientLimiter.check(key);
+}
+
+/**
+ * Rate limit public Ask-Cat / feedback submissions per IP.
+ * 8 per 5 minutes — each one is a platform LLM call from a possibly anonymous
+ * visitor. Apply IN ADDITION to the general per-IP `rateLimit`.
+ */
+export async function rateLimitAskCat(request: RequestLike): Promise<RateLimitResult> {
+  const ip =
+    request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
+  const key = `ask-cat:${ip}`;
+
+  if (upstashAskCatLimiter) {
+    const result = await upstashAskCatLimiter.limit(key);
+    return toRateLimitResult(result);
+  }
+
+  return fallbackAskCatLimiter.check(key);
 }
 
 /**

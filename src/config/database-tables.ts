@@ -152,6 +152,9 @@ export const DATABASE_TABLES = {
   CAT_CREDIT_ENTRIES: 'cat_credit_entries',
   CAT_CREDIT_TOPUPS: 'cat_credit_topups',
 
+  // Public feedback + Ask Cat (server-only writes; see /api/feedback)
+  PLATFORM_FEEDBACK: 'platform_feedback',
+
   // Search (aggregate demand signal — server-only)
   SEARCH_QUERIES: 'search_queries',
 

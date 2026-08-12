@@ -296,6 +296,7 @@ export const ROUTES = {
   ARTICLE_EDIT: (slug: string) => `/articles/${slug}/edit`,
   DOCS: '/docs',
   FAQ: '/faq',
+  FEEDBACK: '/feedback',
   PRICING: '/pricing',
   SUPPORT: '/support',
   TECHNOLOGY: '/technology',

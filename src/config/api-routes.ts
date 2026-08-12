@@ -32,6 +32,8 @@ export const API_ROUTES = {
   SEARCH: {
     LOG: '/api/search/log',
   },
+  // Public feedback + Ask Cat (no auth required)
+  FEEDBACK: '/api/feedback',
   INTEGRATION_KEYS: {
     BASE: '/api/integration-keys',
     BY_ID: (id: string) => `/api/integration-keys/${id}`,

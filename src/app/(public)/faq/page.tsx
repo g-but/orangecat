@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { ChevronDown, Bot, Coins, Users, Shield, Zap, HelpCircle } from 'lucide-react';
 import { PageHeading } from '@/components/layout/PageHeading';
+import { ROUTES } from '@/config/routes';
 import { cn } from '@/lib/utils';
 
 interface FaqItem {
@@ -147,7 +149,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         question: 'Do I need Bitcoin to use OrangeCat?',
         answer:
-          "You can sign up and publish without owning Bitcoin. To receive payments you need a Lightning or Bitcoin wallet. Fiat methods such as Twint and privacy coins are not available now; the roadmap explains the accountability tradeoffs.",
+          'You can sign up and publish without owning Bitcoin. To receive payments you need a Lightning or Bitcoin wallet. Fiat methods such as Twint and privacy coins are not available now; the roadmap explains the accountability tradeoffs.',
       },
       {
         question: 'What is the Lightning Network?',
@@ -314,15 +316,23 @@ export default function FAQPage() {
             <div className="text-center bg-surface-raised border border-default rounded-lg p-8">
               <h3 className="text-lg font-semibold text-fg-primary mb-2">Still have questions?</h3>
               <p className="text-fg-secondary mb-4">
-                Ask your Cat — open the chat panel in your dashboard and type your question. Or
-                reach out directly.
+                Ask the Cat directly — no account needed. It answers right away, and a human reads
+                every message.
               </p>
-              <a
-                href="mailto:hello@orangecat.ch"
-                className="inline-flex items-center gap-2 bg-fg-primary hover:bg-muted-strong text-fg-inverted font-medium px-5 py-2.5 rounded-lg transition-colors"
-              >
-                Contact Us
-              </a>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  href={ROUTES.FEEDBACK}
+                  className="inline-flex items-center gap-2 bg-fg-primary hover:bg-muted-strong text-fg-inverted font-medium px-5 py-2.5 rounded-lg transition-colors"
+                >
+                  Ask the Cat
+                </Link>
+                <a
+                  href="mailto:hello@orangecat.ch"
+                  className="inline-flex items-center gap-2 border border-default text-fg-primary hover:bg-surface-base font-medium px-5 py-2.5 rounded-lg transition-colors"
+                >
+                  Contact us
+                </a>
+              </div>
             </div>
           </div>
         </div>
