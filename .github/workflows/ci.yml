@@ -100,12 +100,16 @@ jobs:
           FLEETCROWN_FEEDBACK_TOKEN: ${{ vars.FLEETCROWN_FEEDBACK_TOKEN }}
         run: npm run build
 
-      - name: Assemble standalone (static + public)
+      - name: Assemble standalone (static + public + content)
         # Copy the assets into the standalone tree so both the E2E run below and
-        # the uploaded artifact are complete and runnable as-is.
+        # the uploaded artifact are complete and runnable as-is. content/ holds
+        # the blog mdx files read from the filesystem at request time — file
+        # tracing does not follow request-time fs reads, and shipping without
+        # them is exactly how every blog post rendered as an empty stub in prod.
         run: |
           cp -r .next/static .next/standalone/.next/static
           [ -d public ] && cp -r public .next/standalone/public || true
+          [ -d content ] && cp -r content .next/standalone/content || true
 
       - name: Upload standalone artifact (main → shipped by CD)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
