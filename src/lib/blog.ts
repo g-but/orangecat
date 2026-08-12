@@ -60,11 +60,19 @@ export function getBlogPost(slug: string): BlogPost | null {
     const fileContents = fs.readFileSync(fullPath, 'utf8');
     const { data, content } = matter(fileContents);
 
+    // A post without a title means its frontmatter didn't parse (or was never
+    // written). Fabricating 'Untitled' + a render-day date published broken
+    // cards to production — skip the post and say why instead.
+    if (!data.title || !data.date) {
+      console.warn(`Skipping blog post "${slug}": missing title/date frontmatter`);
+      return null;
+    }
+
     return {
       slug,
-      title: data.title || 'Untitled',
+      title: data.title,
       excerpt: data.excerpt || '',
-      date: data.date || new Date().toISOString().split('T')[0],
+      date: data.date,
       readTime: data.readTime || calculateReadingTime(content),
       tags: data.tags || [],
       featured: data.featured || false,

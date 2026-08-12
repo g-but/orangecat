@@ -1,7 +1,7 @@
 import { fromTable } from '@/lib/supabase/untyped';
 import { redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
-import HomePublicClient from '@/components/home/HomePublicClient';
+import HomePublic from '@/components/home/HomePublic';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { ROUTES } from '@/config/routes';
@@ -50,5 +50,5 @@ export default async function Home() {
     redirect(ROUTES.DASHBOARD.HOME);
   }
 
-  return <HomePublicClient />;
+  return <HomePublic />;
 }

@@ -1,6 +1,3 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { HOW_IT_WORKS_STEPS, SECTION_HEADERS, CTA_LABELS } from '@/config/landing-page';
@@ -30,14 +27,7 @@ export default function HowItWorksSection() {
           {/* Steps Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {HOW_IT_WORKS_STEPS.map((step, index) => (
-              <motion.div
-                key={step.number}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="relative"
-              >
+              <div key={step.number} className="relative">
                 {/* Card */}
                 <div className="oc-surface oc-card-link h-full p-6 sm:p-8">
                   {/* Step Number Badge */}
@@ -83,19 +73,13 @@ export default function HowItWorksSection() {
                     </svg>
                   </div>
                 )}
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
 
         {/* Bottom CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="text-center mt-10 sm:mt-12"
-        >
+        <div className="text-center mt-10 sm:mt-12">
           <p className="text-sm sm:text-base text-fg-secondary mb-4 sm:mb-6">
             Ready to get started?
           </p>
@@ -104,7 +88,7 @@ export default function HowItWorksSection() {
               {CTA_LABELS.createAccount}
             </Button>
           </Link>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

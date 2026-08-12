@@ -1,14 +1,13 @@
-'use client';
+import type { Metadata } from 'next';
+import { LegalDocumentPage } from '@/components/legal/LegalDocumentPage';
+import { PRIVACY_POLICY } from '@/config/legal-content';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description:
+    'How OrangeCat collects, uses, and shares your personal information — including what Bitcoin and Lightning payments mean for your privacy.',
+};
 
 export default function PrivacyPage() {
-  return (
-    <div className="min-h-screen bg-surface-page">
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-fg-primary mb-4">Privacy Policy</h1>
-        <p className="text-fg-secondary mb-6">
-          We respect your privacy. This page will be updated with our detailed policy.
-        </p>
-      </div>
-    </div>
-  );
+  return <LegalDocumentPage document={PRIVACY_POLICY} />;
 }

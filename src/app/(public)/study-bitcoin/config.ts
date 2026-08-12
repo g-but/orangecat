@@ -7,11 +7,13 @@ export interface LearningPath {
   title: string;
   description: string;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
-  duration: string;
+  /** Only set for available courses — unbuilt content has no honest duration. */
+  duration?: string;
   icon: IconComponent;
   color: string;
   bgColor: string;
-  lessons: number;
+  /** Only set for available courses — unbuilt content has no honest lesson count. */
+  lessons?: number;
   href: string;
   status: 'available' | 'coming-soon';
 }
@@ -52,11 +54,9 @@ export const LEARNING_PATHS: LearningPath[] = [
     title: 'Bitcoin Basics',
     description: 'Start your Bitcoin journey with fundamental concepts',
     level: 'Beginner',
-    duration: '2-3 hours',
     icon: BookOpen,
     color: 'text-fg-primary',
     bgColor: 'bg-surface-raised/40',
-    lessons: 8,
     href: '/study-bitcoin/basics',
     status: 'coming-soon',
   },
@@ -65,11 +65,9 @@ export const LEARNING_PATHS: LearningPath[] = [
     title: 'Security Best Practices',
     description: 'Protect your Bitcoin with advanced security techniques',
     level: 'Intermediate',
-    duration: '3-4 hours',
     icon: Shield,
     color: 'text-green-600',
     bgColor: 'bg-green-50',
-    lessons: 10,
     href: '/study-bitcoin/security',
     status: 'coming-soon',
   },
@@ -78,11 +76,9 @@ export const LEARNING_PATHS: LearningPath[] = [
     title: 'Lightning Network',
     description: "Understand Bitcoin's second layer for instant payments",
     level: 'Intermediate',
-    duration: '2-3 hours',
     icon: Zap,
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-50',
-    lessons: 7,
     href: '/study-bitcoin/lightning',
     status: 'coming-soon',
   },
@@ -137,11 +133,6 @@ export const WHY_LEARN_BENEFITS: Benefit[] = [
     icon: Globe,
     title: 'Global Currency',
     description: 'Send money anywhere in the world without borders or restrictions',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Investment Opportunity',
-    description: 'Understand the potential of digital assets and blockchain technology',
   },
   {
     icon: Lightbulb,

@@ -1,6 +1,3 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Lightbulb } from 'lucide-react';
 import Button from '@/components/ui/Button';
@@ -35,13 +32,9 @@ export default function ProofSection() {
 
         {/* Use Case Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-10 lg:mb-12">
-          {EXAMPLE_USE_CASES.map((useCase, index) => (
-            <motion.div
+          {EXAMPLE_USE_CASES.map(useCase => (
+            <div
               key={useCase.category}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.15 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
               className={`oc-surface oc-card-link p-5 sm:p-6 lg:p-8 ${useCase.gradient}`}
             >
               {/* Category Badge */}
@@ -67,18 +60,12 @@ export default function ProofSection() {
                   {useCase.transparencyExample}
                 </p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* CTA Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="text-center"
-        >
+        <div className="text-center">
           <p className="text-sm sm:text-base text-fg-secondary mb-4 sm:mb-6">
             These are just examples. What will you create?
           </p>
@@ -95,7 +82,7 @@ export default function ProofSection() {
               </Button>
             </Link>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

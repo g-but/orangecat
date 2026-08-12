@@ -28,6 +28,15 @@ const nextConfig = {
   // Fix workspace root detection to prevent watching entire home directory
   outputFileTracingRoot: __dirname,
 
+  // Blog posts are read from content/blog at request time (src/lib/blog.ts).
+  // File tracing only follows require/import graphs, so the standalone build
+  // shipped WITHOUT the mdx files — every post rendered as a frontmatter-less
+  // stub in prod. Explicitly include them for every route that reads them.
+  outputFileTracingIncludes: {
+    '/blog': ['./content/blog/**'],
+    '/blog/[slug]': ['./content/blog/**'],
+  },
+
   // Support MDX files
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
 

@@ -1,6 +1,3 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Shield, Eye, TrendingUp, CheckCircle2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
@@ -26,12 +23,7 @@ export default function TransparencySection() {
         {/* Two-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 mb-10 sm:mb-12 lg:mb-16">
           {/* Left: How it Works */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.15 }}
-            transition={{ duration: 0.6 }}
-          >
+          <div>
             <div className="bg-surface-base rounded-lg border border-default shadow-sm p-6 sm:p-8">
               <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-surface-base border border-default rounded-lg flex items-center justify-center">
@@ -100,15 +92,10 @@ export default function TransparencySection() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Right: Example Profile Preview */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.15 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
+          <div>
             <div className="bg-surface-base rounded-lg border border-default shadow-sm p-6 sm:p-8">
               {/* Example Label */}
               <div className="flex items-center justify-between mb-4 sm:mb-6">
@@ -193,7 +180,7 @@ export default function TransparencySection() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Bottom CTA */}

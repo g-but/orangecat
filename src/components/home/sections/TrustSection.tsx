@@ -1,6 +1,3 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Check, X, ArrowRight, Plus } from 'lucide-react';
 import {
@@ -29,13 +26,7 @@ export default function TrustSection() {
         </div>
 
         {/* Comparison Table - Desktop */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.5 }}
-          className="mb-12 sm:mb-20 hidden md:block"
-        >
+        <div className="mb-12 sm:mb-20 hidden md:block">
           <div className="bg-surface-base rounded-lg shadow-sm border border-default overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -53,13 +44,9 @@ export default function TrustSection() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-fg-tertiary">
-                  {PLATFORM_COMPARISON.map((row, index) => (
-                    <motion.tr
+                  {PLATFORM_COMPARISON.map(row => (
+                    <tr
                       key={row.feature}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true, amount: 0.15 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
                       className={row.highlight ? 'bg-status-positive-subtle' : ''}
                     >
                       <td className="px-6 py-4 text-sm font-medium text-fg-primary">
@@ -81,23 +68,19 @@ export default function TrustSection() {
                           </span>
                         </div>
                       </td>
-                    </motion.tr>
+                    </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Comparison Cards - Mobile */}
         <div className="mb-12 space-y-3 md:hidden">
-          {PLATFORM_COMPARISON.map((row, index) => (
-            <motion.div
+          {PLATFORM_COMPARISON.map(row => (
+            <div
               key={row.feature}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.15 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
               className={`bg-surface-base rounded-lg shadow-sm border border-default p-4 ${row.highlight ? 'ring-2 ring-status-positive' : ''}`}
             >
               <h4 className="text-sm font-semibold text-fg-primary mb-3">{row.feature}</h4>
@@ -121,21 +104,14 @@ export default function TrustSection() {
                   </span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Benefits Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          {PLATFORM_BENEFITS.map((benefit, index) => (
-            <motion.div
-              key={benefit.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.15 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="text-center"
-            >
+          {PLATFORM_BENEFITS.map(benefit => (
+            <div key={benefit.title} className="text-center">
               <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-surface-raised mb-3 sm:mb-4">
                 <benefit.icon className="w-6 h-6 sm:w-8 sm:h-8 text-fg-primary" />
               </div>
@@ -143,18 +119,12 @@ export default function TrustSection() {
                 {benefit.title}
               </h3>
               <p className="text-sm text-fg-secondary leading-relaxed">{benefit.description}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Trust Signals */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-10 sm:mt-12 lg:mt-16 text-center"
-        >
+        <div className="mt-10 sm:mt-12 lg:mt-16 text-center">
           <div className="inline-flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-6 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-surface-raised rounded-lg">
             {TRUST_SIGNALS.map((signal, index) => (
               <div key={signal} className="flex items-center gap-1.5 sm:gap-2">
@@ -166,16 +136,10 @@ export default function TrustSection() {
               </div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* Final CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="mt-12 sm:mt-16 lg:mt-20 text-center"
-        >
+        <div className="mt-12 sm:mt-16 lg:mt-20 text-center">
           <p className="text-base sm:text-lg text-fg-secondary mb-6">
             Ready to make something? It&apos;s free, no gatekeepers.
           </p>
@@ -195,7 +159,7 @@ export default function TrustSection() {
               {CTA_LABELS.discoverAction}
             </Link>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -1,6 +1,3 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -15,25 +12,6 @@ import { ROUTES } from '@/config/routes';
  * Links to /discover for users who want to explore more.
  */
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5 },
-  },
-};
-
 export default function WhatCanYouDoSection() {
   const { whatCanYouDo } = SECTION_HEADERS;
 
@@ -41,13 +19,7 @@ export default function WhatCanYouDoSection() {
     <section className="py-12 sm:py-16 lg:py-24 bg-surface-page">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-10 sm:mb-12 lg:mb-16"
-        >
+        <div className="text-center mb-10 sm:mb-12 lg:mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-raised text-fg-primary mb-4">
             <Sparkles className="w-4 h-4" />
             <span className="text-sm font-medium">For Makers</span>
@@ -58,25 +30,15 @@ export default function WhatCanYouDoSection() {
           <p className="text-base sm:text-lg lg:text-xl text-fg-secondary max-w-3xl mx-auto">
             {whatCanYouDo.subtitle}
           </p>
-        </motion.div>
+        </div>
 
         {/* Categories Grid - 4 cards in 2x2 grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.15 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-10 lg:mb-12"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-10 lg:mb-12">
           {SUPER_APP_CATEGORIES.map(category => {
             const Icon = category.icon;
 
             return (
-              <motion.div
-                key={category.id}
-                variants={itemVariants}
-                className="oc-surface oc-card-link overflow-hidden"
-              >
+              <div key={category.id} className="oc-surface oc-card-link overflow-hidden">
                 {/* Category Header */}
                 <div className="p-4 sm:p-6 border-b border-default bg-surface-raised/30">
                   <div className="flex items-center gap-3 mb-2">
@@ -113,19 +75,13 @@ export default function WhatCanYouDoSection() {
                     </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
-        </motion.div>
+        </div>
 
         {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center"
-        >
+        <div className="text-center">
           <p className="text-sm sm:text-base text-fg-secondary mb-4 sm:mb-6">
             Ready to make something? These features work together seamlessly.
           </p>
@@ -146,7 +102,7 @@ export default function WhatCanYouDoSection() {
               {CTA_LABELS.discoverAction}
             </Link>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

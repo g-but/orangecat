@@ -1,3 +1,17 @@
+import { CAT_FRONTIER_MODELS_LIST } from './cat-plans';
+
+/**
+ * The "where this is going" paragraph shared by /pricing and /support —
+ * previously duplicated verbatim on both pages. Split around the emphasized
+ * word so the pages can render <strong>{emphasis}</strong> without owning
+ * divergent copies of the copy.
+ */
+export const PRO_DESTINATION_COPY = {
+  before: 'The destination is ',
+  emphasis: 'Pro',
+  after: `: frontier models — ${CAT_FRONTIER_MODELS_LIST} — fully managed by OrangeCat, no keys, no setup. The kind of effortless AI a serious company runs on.`,
+} as const;
+
 export const CURRENT_CAPABILITIES = [
   'Public pages for people, projects, groups, products, services, events, and other entities.',
   'Non-custodial Bitcoin payments through Lightning, Lightning Address, NWC, and on-chain addresses.',
