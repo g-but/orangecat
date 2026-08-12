@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { BookOpen, Wallet, Target } from 'lucide-react';
-import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLayout';
+import { PageLayout, PageSection } from '@/components/layout/PageLayout';
+import { PageHeading } from '@/components/layout/PageHeading';
 import Button from '@/components/ui/Button';
 import { LEARNING_PATHS, QUICK_RESOURCES, WHY_LEARN_BENEFITS } from './config';
 import { ROUTES } from '@/config/routes';
@@ -24,11 +25,13 @@ export default function StudyBitcoinPage() {
 
   return (
     <PageLayout maxWidth="7xl">
-      <PageHeader
-        title="Study Bitcoin"
-        subtitle="Your comprehensive guide to understanding Bitcoin"
-        description="From basics to advanced concepts, learn everything you need to know about Bitcoin and the future of money."
-      >
+      {/* Standard centered public-page heading (same pattern as /pricing). */}
+      <div className="mb-12 text-center">
+        <PageHeading className="mb-4">Study Bitcoin</PageHeading>
+        <p className="mx-auto max-w-2xl text-lg text-fg-secondary">
+          From basics to advanced concepts, learn everything you need to know about Bitcoin and the
+          future of money.
+        </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <Button href={ROUTES.BITCOIN_WALLET_GUIDE} size="lg" className="min-h-12">
             <Wallet className="w-5 h-5 mr-2" />
@@ -39,7 +42,7 @@ export default function StudyBitcoinPage() {
             Browse All Topics
           </Button>
         </div>
-      </PageHeader>
+      </div>
 
       <PageSection background="white">
         <div className="text-center mb-12">
@@ -56,7 +59,8 @@ export default function StudyBitcoinPage() {
       </PageSection>
 
       <PageSection>
-        <div className="text-center mb-12">
+        {/* Anchor target for the "Browse All Topics" button above. */}
+        <div id="learning-paths" className="text-center mb-12 scroll-mt-24">
           <h2 className="text-2xl font-semibold text-fg-primary mb-4">Learning Paths</h2>
           <p className="text-lg text-fg-secondary max-w-3xl mx-auto mb-8">
             Structured courses designed to take you from beginner to Bitcoin expert
@@ -105,7 +109,7 @@ export default function StudyBitcoinPage() {
             Understanding Bitcoin is essential in today&apos;s digital economy
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {WHY_LEARN_BENEFITS.map((benefit, index) => {
             const Icon = benefit.icon;
             return (

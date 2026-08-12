@@ -48,7 +48,7 @@ export default async function GovernancePage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-page">
+    <div className="bg-surface-page pb-16">
       <div className="bg-surface-base border-b border-subtle">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
           <h1 className="font-heading tracking-display text-4xl font-bold text-fg-primary">
@@ -120,6 +120,23 @@ export default async function GovernancePage() {
             </div>
           </div>
         ))}
+
+        {/* Closing: point readers at the primary sources so "independently
+            verifiable" is a link, not just a claim. */}
+        <div className="mt-8 border-t border-subtle pt-8">
+          <h2 className="text-xl font-semibold text-fg-primary">Verify it yourself</h2>
+          <p className="mt-2 text-fg-secondary">
+            Don&apos;t take this page&apos;s word for it. Every decision document is served by the{' '}
+            <a href={`${solonBase}/api/v1/decisions`} className="underline" rel="noopener">
+              Solon decision API
+            </a>
+            , and the live governed state of the whole stack is published at{' '}
+            <a href={`${solonBase}/ecosystem`} className="underline" rel="noopener">
+              solon.orangecat.ch/ecosystem
+            </a>
+            .
+          </p>
+        </div>
       </div>
     </div>
   );

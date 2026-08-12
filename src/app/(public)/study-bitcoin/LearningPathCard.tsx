@@ -47,16 +47,24 @@ export function LearningPathCard({ path }: LearningPathCardProps) {
         </h3>
         <p className="text-fg-secondary mb-4 leading-relaxed">{path.description}</p>
 
-        <div className="flex items-center gap-4 text-sm text-fg-secondary mb-6">
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            {path.duration}
+        {/* Duration/lesson counts only exist for courses that actually exist —
+            coming-soon paths carry neither, so we render nothing for them. */}
+        {(path.duration || path.lessons) && (
+          <div className="flex items-center gap-4 text-sm text-fg-secondary mb-6">
+            {path.duration && (
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                {path.duration}
+              </div>
+            )}
+            {path.lessons && (
+              <div className="flex items-center gap-1">
+                <BookOpen className="w-4 h-4" />
+                {path.lessons} lessons
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-1">
-            <BookOpen className="w-4 h-4" />
-            {path.lessons} lessons
-          </div>
-        </div>
+        )}
 
         <Link
           href={path.status === 'available' ? path.href : '#'}
