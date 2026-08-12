@@ -1,3 +1,5 @@
+import { SOLON_BASE_URL_DEFAULT } from './solon';
+
 const DEFAULT_ORANGECAT_ORIGIN = 'https://www.orangecat.ch';
 
 function publicUrl(name: string, fallback: string): URL {
@@ -10,10 +12,8 @@ function publicUrl(name: string, fallback: string): URL {
 }
 
 const orangeCatOrigin = publicUrl('NEXT_PUBLIC_ORANGECAT_URL', DEFAULT_ORANGECAT_ORIGIN);
-const fleetCrownOrigin = publicUrl(
-  'NEXT_PUBLIC_FLEETCROWN_URL',
-  'https://fleetcrown.orangecat.ch'
-);
+const fleetCrownOrigin = publicUrl('NEXT_PUBLIC_FLEETCROWN_URL', 'https://fleetcrown.orangecat.ch');
+const solonOrigin = publicUrl('NEXT_PUBLIC_SOLON_URL', SOLON_BASE_URL_DEFAULT);
 
 function orangeCatPage(path: string): string {
   return new URL(path, orangeCatOrigin).toString();
@@ -25,8 +25,7 @@ export const ECOSYSTEM = {
   orangeCat: {
     title: 'OrangeCat',
     projectId:
-      process.env.NEXT_PUBLIC_ORANGECAT_PROJECT_ID ??
-      'cb093f00-8745-4579-98df-050ebfb37181',
+      process.env.NEXT_PUBLIC_ORANGECAT_PROJECT_ID ?? 'cb093f00-8745-4579-98df-050ebfb37181',
     siteUrl: orangeCatOrigin.toString(),
     profileUrl: orangeCatPage('/profile/mao-nakamoto'),
   },
@@ -36,6 +35,10 @@ export const ECOSYSTEM = {
       process.env.NEXT_PUBLIC_FLEETCROWN_ORANGECAT_PROJECT_ID ??
       '8130c927-114a-45b7-8cc2-99efd5224025',
     siteUrl: fleetCrownOrigin.toString(),
+  },
+  solon: {
+    title: 'Solon',
+    siteUrl: solonOrigin.toString(),
   },
   support: {
     lightningAddress:
@@ -68,3 +71,31 @@ export const ORANGECAT_FLEETCROWN_INTEGRATION = {
   relation: 'FleetCrown is a customer of OrangeCat.',
   note: 'OrangeCat is the public funding layer; FleetCrown is the building layer.',
 } as const;
+
+/**
+ * The three-pillar stack OrangeCat belongs to. Solon is the governance
+ * pillar: OrangeCat's platform allocation policy changes only via a
+ * Bitcoin-signed Solon vote whose decision document OrangeCat re-verifies
+ * locally (src/services/solon/decision-verify.ts) — a Solon decision is
+ * evidence, not authority.
+ */
+export const ECOSYSTEM_PILLARS = [
+  {
+    key: 'orangecat',
+    title: ECOSYSTEM.orangeCat.title,
+    role: 'Economy',
+    siteUrl: ECOSYSTEM.orangeCat.siteUrl,
+  },
+  {
+    key: 'fleetcrown',
+    title: ECOSYSTEM.fleetCrown.title,
+    role: 'Engineering',
+    siteUrl: ECOSYSTEM.fleetCrown.siteUrl,
+  },
+  {
+    key: 'solon',
+    title: ECOSYSTEM.solon.title,
+    role: 'Governance',
+    siteUrl: ECOSYSTEM.solon.siteUrl,
+  },
+] as const;
