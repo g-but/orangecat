@@ -109,6 +109,16 @@ const headerNavigationConfig = {
           href: ROUTES.WHITEPAPER,
           description: 'The economic coordination thesis',
         },
+        {
+          name: 'Governance',
+          href: ROUTES.GOVERNANCE,
+          description: 'Solon-governed platform policies',
+        },
+        {
+          name: 'Pricing',
+          href: ROUTES.PRICING,
+          description: 'Cat plans — free, BYOK, credits, supporter',
+        },
       ],
     },
     { name: 'Blog', href: ROUTES.BLOG },
@@ -400,12 +410,6 @@ export const footerNavigation = {
     { name: 'Governance', href: ROUTES.GOVERNANCE },
     { name: 'Community', href: ROUTES.COMMUNITY },
     { name: 'About OrangeCat', href: ROUTES.ABOUT },
-  ],
-  company: [
-    { name: 'About OrangeCat', href: ROUTES.ABOUT },
-    { name: 'Careers', href: '/company/careers' },
-    { name: 'Blog', href: ROUTES.BLOG },
-    { name: 'FAQ', href: ROUTES.FAQ },
   ],
   legal: [
     { name: 'Privacy', href: ROUTES.PRIVACY },
