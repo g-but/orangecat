@@ -8,10 +8,10 @@ import {
   CAT_WIRED_PROVIDERS,
   CAT_FREE_DAILY_LIMIT,
   CAT_SUPPORTER_DAILY_LIMIT,
-  CAT_FRONTIER_MODELS_LIST,
   CAT_FRONTIER_MODELS_OR,
   type CatPlan,
 } from '@/config/cat-plans';
+import { PRO_DESTINATION_COPY } from '@/config/public-content';
 import { ROUTES } from '@/config/routes';
 import { cn } from '@/lib/utils';
 
@@ -60,9 +60,9 @@ export default function PricingPage() {
           </h2>
           <div className="space-y-4 text-fg-primary">
             <p>
-              The destination is <strong>Pro</strong>: frontier models — {CAT_FRONTIER_MODELS_LIST}{' '}
-              — fully managed by OrangeCat, no keys, no setup. The kind of effortless AI a serious
-              company runs on.
+              {PRO_DESTINATION_COPY.before}
+              <strong>{PRO_DESTINATION_COPY.emphasis}</strong>
+              {PRO_DESTINATION_COPY.after}
             </p>
             <p>
               We&apos;re not there yet, and we won&apos;t pretend otherwise. OrangeCat doesn&apos;t

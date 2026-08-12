@@ -1,10 +1,21 @@
 import Link from 'next/link';
-import { ArrowRight, Bitcoin, KeyRound, Sparkles, Check, Bot, Cat, ExternalLink } from 'lucide-react';
+import {
+  ArrowRight,
+  Bitcoin,
+  KeyRound,
+  Landmark,
+  Sparkles,
+  Check,
+  Bot,
+  Cat,
+  ExternalLink,
+} from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ROUTES } from '@/config/routes';
-import { CAT_FRONTIER_MODELS_LIST, CAT_FRONTIER_MODELS_OR } from '@/config/cat-plans';
+import { CAT_FRONTIER_MODELS_OR } from '@/config/cat-plans';
+import { PRO_DESTINATION_COPY } from '@/config/public-content';
 import { FoundingSupporterDonation } from '@/components/support/FoundingSupporterDonation';
-import { ECOSYSTEM_LINKS } from '@/config/ecosystem';
+import { ECOSYSTEM, ECOSYSTEM_LINKS } from '@/config/ecosystem';
 
 export const metadata = {
   title: 'Become a founding supporter',
@@ -12,24 +23,28 @@ export const metadata = {
     'OrangeCat is building toward fully managed, permissionless AI and economic participation. Back it in Bitcoin as a founding supporter — and use Cat with your own key today.',
 };
 
+/** The three pillars of the stack — mirrors ECOSYSTEM_PILLARS in config/ecosystem.ts. */
 const SUPPORT_TARGETS = [
   {
     title: 'OrangeCat',
+    role: 'Economy',
     body: 'Fund the public economic layer for people, projects, groups, products, and services.',
     href: ECOSYSTEM_LINKS.orangeCat,
     icon: Cat,
   },
   {
     title: 'FleetCrown',
+    role: 'Engineering',
     body: 'Fund Loki, supervised agent fleets, and the production layer that turns plans into working systems.',
     href: ECOSYSTEM_LINKS.fleetCrown,
     icon: Bot,
   },
   {
-    title: 'Mao Nakamoto',
-    body: 'Support the founder and follow the entities being built across both products.',
-    href: ECOSYSTEM_LINKS.mao,
-    icon: Bitcoin,
+    title: 'Solon',
+    role: 'Governance',
+    body: 'The governance pillar — Bitcoin-signed votes and independently verifiable decisions for the whole stack.',
+    href: ECOSYSTEM.solon.siteUrl,
+    icon: Landmark,
   },
 ] as const;
 
@@ -66,11 +81,11 @@ export default function SupportPage() {
             Choose what to support
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-center text-fg-secondary">
-            OrangeCat is the public funding surface for both sibling products. Each link opens the
-            canonical OrangeCat page for that entity.
+            One stack, three pillars: the economy, the engineering that builds it, and the
+            governance that keeps both honest.
           </p>
           <div className="mt-7 grid gap-4 md:grid-cols-3">
-            {SUPPORT_TARGETS.map(({ title, body, href, icon: Icon }) => (
+            {SUPPORT_TARGETS.map(({ title, role, body, href, icon: Icon }) => (
               <a
                 key={title}
                 href={href}
@@ -80,6 +95,9 @@ export default function SupportPage() {
               >
                 <Icon className="h-5 w-5 text-fg-secondary" aria-hidden />
                 <h3 className="mt-4 font-semibold text-fg-primary">{title}</h3>
+                <p className="text-xs font-medium uppercase tracking-caps text-fg-tertiary">
+                  {role}
+                </p>
                 <p className="mt-2 text-sm leading-relaxed text-fg-secondary">{body}</p>
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-fg-primary">
                   Open page <ExternalLink className="h-3.5 w-3.5" aria-hidden />
@@ -87,15 +105,27 @@ export default function SupportPage() {
               </a>
             ))}
           </div>
+          <p className="mx-auto mt-5 max-w-2xl text-center text-sm text-fg-secondary">
+            Prefer to back the founder directly?{' '}
+            <a
+              href={ECOSYSTEM_LINKS.mao}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-fg-primary underline underline-offset-4"
+            >
+              Support Mao Nakamoto
+            </a>{' '}
+            and follow the entities being built across the stack.
+          </p>
         </section>
 
         {/* Honest narrative */}
         <section className="mx-auto mt-16 max-w-2xl space-y-4 text-fg-primary">
           <h2 className="font-heading text-2xl font-bold tracking-display">Why Bitcoin, why now</h2>
           <p>
-            The destination is <strong>Pro</strong>: frontier models — {CAT_FRONTIER_MODELS_LIST} —
-            managed entirely by OrangeCat, no keys, no setup. The effortless AI a serious company
-            runs on.
+            {PRO_DESTINATION_COPY.before}
+            <strong>{PRO_DESTINATION_COPY.emphasis}</strong>
+            {PRO_DESTINATION_COPY.after}
           </p>
           <p>
             We&apos;re not there yet, and we won&apos;t pretend otherwise.{' '}
