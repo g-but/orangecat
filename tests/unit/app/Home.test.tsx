@@ -1,23 +1,15 @@
 /**
  * Home Page Tests
  *
- * Tests for the public home page client component.
- * HomePublicClient is a static component that renders sections.
+ * Tests for the public home page. HomePublic renders every section directly
+ * in the RSC tree (no next/dynamic) so the whole page is server-rendered —
+ * these tests assert all sections are present in the initial render.
  */
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
-// Mock all dynamic imports to return simple divs
-jest.mock('next/dynamic', () => {
-  return function mockDynamic() {
-    return function MockComponent() {
-      return <div data-testid="dynamic-section" />;
-    };
-  };
-});
-
-// Mock the HeroSection component (file is HeroSectionStatic, no separate HeroSection)
+// Mock the hero section (file is HeroSectionStatic, no separate HeroSection)
 jest.mock('@/components/home/sections/HeroSectionStatic', () => {
   return function MockHeroSection() {
     return (
@@ -30,40 +22,41 @@ jest.mock('@/components/home/sections/HeroSectionStatic', () => {
   };
 });
 
-// Mock the useAuth hook (not used by HomePublicClient but might be used by children)
-jest.mock('@/hooks/useAuth', () => ({
-  useAuth: jest.fn(() => ({
-    user: null,
-    isLoading: false,
-    hydrated: true,
-  })),
-}));
-
-// Mock the useRouter hook
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(() => ({
-    push: jest.fn(),
-  })),
-  redirect: jest.fn(),
-}));
+// Mock the below-the-fold sections to keep the test focused on composition.
+const mockSection = (testId: string) => {
+  const MockSection = () => <div data-testid={testId} />;
+  MockSection.displayName = `MockSection(${testId})`;
+  return MockSection;
+};
+jest.mock('@/components/home/sections/WhatCanYouDoSection', () =>
+  mockSection('what-can-you-do-section')
+);
+jest.mock('@/components/home/sections/ProofSection', () => mockSection('proof-section'));
+jest.mock('@/components/home/sections/HowItWorksSection', () =>
+  mockSection('how-it-works-section')
+);
+jest.mock('@/components/home/sections/TransparencySection', () =>
+  mockSection('transparency-section')
+);
+jest.mock('@/components/home/sections/TrustSection', () => mockSection('trust-section'));
 
 // Import after mocks are set up
-import HomePublicClient from '@/components/home/HomePublicClient';
+import HomePublic from '@/components/home/HomePublic';
 
-describe('HomePublicClient', () => {
+describe('HomePublic', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('renders the home page with hero section', () => {
-    render(<HomePublicClient />);
+    render(<HomePublic />);
 
     // Check that the hero section is rendered
     expect(screen.getByTestId('hero-section')).toBeInTheDocument();
   });
 
   it('renders the main heading', () => {
-    render(<HomePublicClient />);
+    render(<HomePublic />);
 
     // Check for the main heading
     const heading = screen.getByRole('heading', { name: /the bitcoin yellow pages/i });
@@ -71,22 +64,28 @@ describe('HomePublicClient', () => {
   });
 
   it('renders the get started link', () => {
-    render(<HomePublicClient />);
+    render(<HomePublic />);
 
     // Check for the CTA link
     expect(screen.getByRole('link', { name: /get started free/i })).toBeInTheDocument();
   });
 
-  it('renders dynamic sections with suspense fallback', () => {
-    render(<HomePublicClient />);
+  it('renders every below-the-fold section server-side (no lazy loading)', () => {
+    render(<HomePublic />);
 
-    // Check that dynamic sections are present (mocked)
-    const dynamicSections = screen.getAllByTestId('dynamic-section');
-    expect(dynamicSections.length).toBeGreaterThan(0);
+    for (const testId of [
+      'what-can-you-do-section',
+      'proof-section',
+      'how-it-works-section',
+      'transparency-section',
+      'trust-section',
+    ]) {
+      expect(screen.getByTestId(testId)).toBeInTheDocument();
+    }
   });
 
   it('has a minimum height container', () => {
-    const { container } = render(<HomePublicClient />);
+    const { container } = render(<HomePublic />);
 
     // The root div should have min-h-screen class
     const rootDiv = container.firstChild;
