@@ -178,7 +178,13 @@ export default function SecurityPage() {
                 </Button>
               </a>
               <Link href={ROUTES.DOCS}>
-                <Button variant="outline" size="lg">
+                {/* Outline inverted for the dark band — the default outline
+                    (dark text/border) is invisible on bg-surface-public. */}
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-fg-inverted/40 text-fg-inverted hover:bg-fg-inverted/10"
+                >
                   View Documentation
                 </Button>
               </Link>

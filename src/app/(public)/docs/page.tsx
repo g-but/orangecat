@@ -129,8 +129,8 @@ export default function DocsPage() {
             <p className="text-fg-secondary leading-relaxed">
               Other rails are intentionally unavailable today. Fiat methods such as Twint rely on
               banks and private reconciliation without producing a shared public ledger. Privacy
-              coins make public attribution impossible by design. Both stay on the roadmap while
-              the Bitcoin funding loop is hardened.
+              coins make public attribution impossible by design. Both stay on the roadmap while the
+              Bitcoin funding loop is hardened.
             </p>
             <div className="grid sm:grid-cols-3 gap-4">
               {/* Highlight cards — uniform neutral tiles per migration 6/N */}
@@ -291,7 +291,13 @@ export default function DocsPage() {
                 </Button>
               </Link>
               <Link href={ROUTES.FAQ}>
-                <Button variant="outline" size="lg">
+                {/* Outline inverted for the dark band — the default outline
+                    (dark text/border) is invisible on bg-surface-public. */}
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-fg-inverted/40 text-fg-inverted hover:bg-fg-inverted/10"
+                >
                   View FAQ
                 </Button>
               </Link>
