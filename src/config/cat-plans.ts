@@ -126,7 +126,6 @@ export const CAT_FRONTIER_MODELS_LIST = CAT_FRONTIER_MODELS.join(', ');
 /** "Claude, GPT, or Grok" */
 export const CAT_FRONTIER_MODELS_OR = `${CAT_FRONTIER_MODELS.slice(0, -1).join(', ')}, or ${CAT_FRONTIER_MODELS[CAT_FRONTIER_MODELS.length - 1]}`;
 
-
 /**
  * Deep links into /settings/ai — the EXACT section where each plan is acted
  * on. Config-level so every surface (pricing cards, /settings/usage, chat
@@ -170,7 +169,7 @@ export const CAT_PLANS: CatPlan[] = [
     ],
     cta: SUPPORTER_LIVE
       ? { label: 'Become a Supporter', href: SUPPORTER_CHECKOUT_URL, variant: 'accent' }
-      : { label: 'Back us as a founding supporter', href: ROUTES.SUPPORT, variant: 'outline' },
+      : { label: 'Become a supporter', href: ROUTES.SUPPORT, variant: 'outline' },
     status: SUPPORTER_LIVE ? 'available' : 'coming-soon',
     badge: SUPPORTER_LIVE ? 'Live' : 'Activating',
   },
@@ -202,7 +201,7 @@ export const CAT_PLANS: CatPlan[] = [
     ],
     cta: CAT_CREDITS_LIVE
       ? { label: 'Top up credits', href: SETTINGS_AI_ANCHORS.credits, variant: 'accent' }
-      : { label: 'Back us as a founding supporter', href: ROUTES.SUPPORT, variant: 'outline' },
+      : { label: 'Become a supporter', href: ROUTES.SUPPORT, variant: 'outline' },
     status: CAT_CREDITS_LIVE ? 'available' : 'coming-soon',
     badge: CAT_CREDITS_LIVE ? 'Live' : 'Activating',
   },

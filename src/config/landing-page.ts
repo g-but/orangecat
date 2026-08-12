@@ -110,7 +110,7 @@ export const SUPER_APP_CATEGORIES: SuperAppCategory[] = [
       {
         title: 'AI Assistants',
         description:
-          'Deploy AI agents for your group or project. They can earn, spend, and coordinate autonomously.',
+          'Deploy AI agents for your group or project. They can earn, spend, and coordinate — within owner-approved limits.',
       },
     ],
   },

@@ -36,7 +36,7 @@ export default function TechnologyPage() {
               Built on Bitcoin
             </h1>
             <p className="mt-6 max-w-3xl mx-auto text-xl text-fg-secondary">
-              Direct, transparent, and unstoppable economic participation powered by the
+              Direct, transparent, censorship-resistant economic participation powered by the
               world&apos;s most secure network
             </p>
           </div>
@@ -144,8 +144,10 @@ export default function TechnologyPage() {
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-status-positive mr-2 mt-0.5 flex-shrink-0" />
                     <div>
-                      <span className="font-medium">Edge Functions</span>
-                      <p className="text-sm text-fg-secondary">Serverless API endpoints</p>
+                      <span className="font-medium">Next.js API Routes</span>
+                      <p className="text-sm text-fg-secondary">
+                        Self-hosted API endpoints on our own infrastructure
+                      </p>
                     </div>
                   </li>
                 </ul>

@@ -24,7 +24,7 @@ const whyBitcoin = [
     icon: Shield,
     title: 'Trustless & Secure',
     description:
-      "Bitcoin's blockchain ensures every transaction is permanent, transparent, and immutable. No chargebacks, no fraud.",
+      "Bitcoin's blockchain ensures every transaction is permanent, transparent, and immutable. No chargebacks.",
   },
   {
     icon: Zap,

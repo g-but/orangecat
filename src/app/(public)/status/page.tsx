@@ -124,7 +124,7 @@ export default async function StatusPage() {
           </div>
           <div className="px-6 py-8 text-center">
             <Clock className="w-8 h-8 text-fg-tertiary dark:text-fg-secondary/50 mx-auto mb-3" />
-            <p className="text-fg-secondary">No incidents reported in the last 30 days.</p>
+            <p className="text-fg-secondary">We do not yet publish an incident history.</p>
           </div>
         </div>
 

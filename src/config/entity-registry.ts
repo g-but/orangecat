@@ -298,7 +298,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     publicBasePath: '/ai-assistants',
     apiEndpoint: '/api/ai-assistants',
     hasTemplates: true,
-    description: 'Autonomous AI services you create and monetize',
+    description: 'Supervised AI services you create and monetize',
     createActionLabel: 'Build an AI assistant',
     category: 'business',
     createPriority: 5,
