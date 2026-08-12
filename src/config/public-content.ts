@@ -33,8 +33,7 @@ export const ROADMAP_PHASES = [
   {
     marker: 'LATER',
     title: 'More rails and deeper coordination',
-    summary:
-      'Broaden only after the Bitcoin fund-to-build loop works reliably for ordinary users.',
+    summary: 'Broaden only after the Bitcoin fund-to-build loop works reliably for ordinary users.',
     items: [
       'Fiat rails such as Twint require bank, identity, reconciliation, and custody decisions. They are not available now.',
       'Privacy coins improve confidentiality but cannot provide the same public funding audit trail. They are not available now.',
@@ -46,10 +45,11 @@ export const ROADMAP_PHASES = [
 
 export const WHITEPAPER_SECTIONS = [
   {
-    title: 'Two seamless siblings',
+    title: 'Three pillars, one stack',
     paragraphs: [
-      'OrangeCat is the public economic layer: the place where an entity is explained, shared, supported, offered, or joined. FleetCrown is the production layer: the place where Loki plans work and supervised agents help turn the entity into something real.',
-      'They remain separate products because public economic coordination and local agent execution have different security boundaries. They should nevertheless feel like one journey: fund what is being built, and build what people choose to fund.',
+      'OrangeCat is the public economic layer: the place where an entity is explained, shared, supported, offered, or joined. FleetCrown is the production layer: the place where Loki plans work and supervised agents help turn the entity into something real. Solon is the governance layer: the place where platform-level rules are proposed, voted on with Bitcoin-signed messages, and published as decision documents anyone can re-verify.',
+      'They remain separate products because public economic coordination, local agent execution, and rule-making have different security boundaries. They should nevertheless feel like one journey: fund what is being built, build what people choose to fund, and govern both in the open.',
+      'The governance tie is enforced, not aspirational: OrangeCat’s platform allocation policy — the ceiling on what the Cat may spend — changes only via a Solon vote, and OrangeCat re-verifies every vote signature against its own pinned keys before honoring a decision. A Solon decision is evidence, not authority.',
     ],
   },
   {

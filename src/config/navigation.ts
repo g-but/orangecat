@@ -119,6 +119,12 @@ const headerNavigationConfig = {
       external: true,
       description: 'Build with Loki and supervised agent fleets',
     },
+    {
+      name: 'Solon',
+      href: ECOSYSTEM.solon.siteUrl,
+      external: true,
+      description: 'Bitcoin-signed governance — where the stack decides',
+    },
   ],
 };
 
@@ -390,6 +396,8 @@ export const footerNavigation = {
   ],
   ecosystem: [
     { name: 'FleetCrown', href: ECOSYSTEM.fleetCrown.siteUrl, external: true },
+    { name: 'Solon', href: ECOSYSTEM.solon.siteUrl, external: true },
+    { name: 'Governance', href: ROUTES.GOVERNANCE },
     { name: 'Community', href: ROUTES.COMMUNITY },
     { name: 'About OrangeCat', href: ROUTES.ABOUT },
   ],
@@ -412,7 +420,7 @@ export const footerNavigation = {
     },
     {
       name: 'GitHub',
-      href: 'https://github.com/g-but/orangecat',
+      href: 'https://github.com/maonakamoto/orangecat',
       icon: GitHubIcon,
     },
   ],
@@ -421,7 +429,7 @@ export const footerNavigation = {
   // change. External URLs are marked with `external: true`.
   bottomBar: [
     { name: 'Documentation', href: ROUTES.DOCS },
-    { name: 'Source Code', href: 'https://github.com/g-but/orangecat', external: true },
+    { name: 'Source Code', href: 'https://github.com/maonakamoto/orangecat', external: true },
     { name: 'Roadmap', href: ROUTES.ROADMAP },
     { name: 'Support', href: ROUTES.SUPPORT },
   ] as { name: string; href: string; external?: boolean }[],

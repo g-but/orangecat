@@ -284,6 +284,7 @@ export const ROUTES = {
     INTELLIGENT: '/onboarding/intelligent',
   },
   COMMUNITY: '/community',
+  GOVERNANCE: '/governance',
   ABOUT: '/about',
   HOW_IT_WORKS: '/how-it-works',
   BLOG: '/blog',
