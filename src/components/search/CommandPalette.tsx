@@ -115,7 +115,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       label="Command palette"
       className={cn(
         'fixed left-1/2 top-[15vh] z-[100] w-[min(640px,calc(100vw-2rem))]',
-        '-translate-x-1/2 overflow-hidden rounded-xl',
+        '-translate-x-1/2 overflow-hidden rounded-md',
         'border border-subtle bg-surface-page shadow-2xl'
       )}
       overlayClassName="fixed inset-0 z-[99] bg-black/60 backdrop-blur-sm"

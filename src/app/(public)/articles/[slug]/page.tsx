@@ -110,7 +110,7 @@ export default async function ArticlePage({ params }: PageProps) {
             <img
               src={article.coverImage}
               alt=""
-              className="mb-10 aspect-[2/1] w-full rounded-xl border border-subtle object-cover"
+              className="mb-10 aspect-[2/1] w-full rounded-md border border-subtle object-cover"
             />
           )}
 
@@ -204,7 +204,7 @@ export default async function ArticlePage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="mt-8 flex flex-col items-start gap-3 rounded-xl border border-subtle bg-surface-raised/25 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-8 flex flex-col items-start gap-3 rounded-md border border-subtle bg-surface-raised/25 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-fg-secondary">
                 Have something to say? Publishing on OrangeCat is free.
               </p>

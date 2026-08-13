@@ -49,7 +49,7 @@ export default function CoverImageUpload({
   // Cover already chosen — show a preview with replace/remove.
   if (value && !urlMode) {
     return (
-      <div className="group relative overflow-hidden rounded-xl border border-subtle">
+      <div className="group relative overflow-hidden rounded-md border border-subtle">
         {/* eslint-disable-next-line @next/next/no-img-element -- value may be a user-pasted URL on any host (urlMode); next/image would throw for hosts outside images.remotePatterns */}
         <img src={value} alt="Cover preview" className="aspect-[2/1] w-full object-cover" />
         <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
@@ -122,7 +122,7 @@ export default function CoverImageUpload({
           handleFile(e.dataTransfer.files?.[0]);
         }}
         className={cn(
-          'flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-8 text-center transition-colors',
+          'flex w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed px-4 py-8 text-center transition-colors',
           dragging
             ? 'border-accent-warm bg-accent-warm/5'
             : 'border-default hover:bg-surface-raised/40',

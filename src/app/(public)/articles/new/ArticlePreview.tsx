@@ -24,7 +24,7 @@ export default function ArticlePreview({
         <img
           src={coverImage}
           alt=""
-          className="mb-8 aspect-[2/1] w-full rounded-xl border border-subtle object-cover"
+          className="mb-8 aspect-[2/1] w-full rounded-md border border-subtle object-cover"
         />
       )}
       <h1 className="text-3xl font-semibold leading-tight tracking-display text-fg-primary">
