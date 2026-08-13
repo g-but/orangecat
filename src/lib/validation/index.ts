@@ -18,3 +18,4 @@ export * from './groups';
 export * from './circles';
 export * from './proposals';
 export * from './platform-feedback';
+export * from './newsletter';
