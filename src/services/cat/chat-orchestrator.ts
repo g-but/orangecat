@@ -17,7 +17,7 @@ import { apiSuccess } from '@/lib/api/standardResponse';
 import type { AuthenticatedRequest } from '@/lib/api/withAuth';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { prepareCatChat } from '@/services/cat/chat-prepare';
-import { verifyAnswer } from '@/services/agent-core/verify';
+import { enforceGrounding } from '@/services/cat/grounding';
 import { parseActionsFromResponse } from '@/services/cat/response-parser';
 import { saveMessages } from '@/services/cat/conversation-history';
 import { buildFailedTurnMessages } from '@/services/cat/failed-turn';
@@ -356,40 +356,40 @@ export async function orchestrateCatChat(
                 encoder.encode(`data: ${JSON.stringify({ content: fullContent })}\n\n`)
               );
             }
-            // Groundedness check on the finished reply.
+            // Groundedness check, then a one-shot repair.
             //
-            // OBSERVE-ONLY for now, deliberately. The rules in the system prompt
-            // are the control; this measures whether they held. Auto-rewriting
-            // replies for a live multi-tenant product before the false-positive
-            // rate is known would risk mangling correct answers at scale — so
-            // the flag rides out on the `done` event and into the log, and
-            // enforcement (the one-shot repair Loki already runs) turns on once
-            // real traffic shows the rate is low.
+            // Streaming makes this awkward and the compromise is deliberate: the
+            // fabricated text has already reached the screen by the time it can
+            // be checked, so the repair cannot un-say it live. What it CAN do is
+            // fix the two things that outlast the moment — what gets persisted
+            // into the conversation, and what the client renders once told — so
+            // a reload never shows the fabrication and the model never reads its
+            // own invention back as history next turn.
             //
             // Scoped to entity-attribution: Cat must stay free to name Lightning,
             // Twint or PayPal in general advice. See agent-core/verify.ts.
-            const groundingCheck = verifyAnswer({
-              answer: fullContent,
-              facts: [],
-              userMessage: message,
-              extraEvidence: prepared.grounding.evidence,
-              mode: 'entity-attribution',
-              subjects: prepared.grounding.subjects,
+            const groundingCheck = await enforceGrounding({
+              content: fullContent,
+              message,
+              grounding: prepared.grounding,
+              service: activeService,
+              model: activeModel,
+              userId: user.id,
+              conversationId,
             });
-            if (!groundingCheck.ok) {
-              console.warn('[cat] ungrounded claims about user data', {
-                userId: user.id,
-                conversationId,
-                model: activeModel,
-                violations: groundingCheck.violations.map(v => `${v.kind}:${v.text}`).slice(0, 8),
-              });
+            const correctedContent = groundingCheck.corrected;
+            if (correctedContent) {
+              // Everything downstream — action parsing, persistence — must run on
+              // the repaired text. Parsing actions from the ORIGINAL would let a
+              // claim we just deleted still drive a side effect.
+              fullContent = correctedContent;
             }
 
             const { actions, quickReplies } = parseActionsFromResponse(fullContent);
             const execResults = await runExecActions(supabase, user.id, actorId, actions);
             controller.enqueue(
               encoder.encode(
-                `data: ${JSON.stringify({ done: true, usage, model: activeModel, provider: activeProvider, actions: actions.length > 0 ? actions : undefined, execResults: execResults.length > 0 ? execResults : undefined, quickReplies, suggestUpgrade: wantsAgentic && !isAgenticModel(activeModel), grounding: { ok: groundingCheck.ok, unsupported: groundingCheck.violations.map(v => v.text).slice(0, 8) } })}\n\n`
+                `data: ${JSON.stringify({ done: true, usage, model: activeModel, provider: activeProvider, actions: actions.length > 0 ? actions : undefined, execResults: execResults.length > 0 ? execResults : undefined, quickReplies, suggestUpgrade: wantsAgentic && !isAgenticModel(activeModel), grounding: { ok: groundingCheck.ok, unsupported: groundingCheck.violations.map(v => v.text).slice(0, 8) }, ...(correctedContent ? { correctedContent } : {}) })}\n\n`
               )
             );
           };
