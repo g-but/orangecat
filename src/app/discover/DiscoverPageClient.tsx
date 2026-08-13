@@ -110,6 +110,7 @@ export default function DiscoverPageClient({ topContent }: { topContent?: ReactN
     radiusKm,
     onRadiusChange: setRadiusKm,
     onClearFilters: clearFilters,
+    searchPlaceholder: activeTab === 'profiles' ? 'Search people…' : 'Search…',
   };
 
   return (

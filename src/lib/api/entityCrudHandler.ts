@@ -111,7 +111,12 @@ interface EntityHandlerConfig {
 }
 
 interface EntityRouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }> | { id: string };
+}
+
+async function routeId(params: EntityRouteParams['params']): Promise<string | undefined> {
+  const resolved = await params;
+  return resolved?.id;
 }
 
 // ==================== HELPERS ====================
@@ -169,7 +174,8 @@ function createGetHandler(config: EntityHandlerConfig) {
   const table = tableName ?? meta.tableName;
 
   return async function GET(request: NextRequest, { params }: EntityRouteParams) {
-    const uuidCheck = validateUUID(params.id, `${meta.name} ID`);
+    const entityId = await routeId(params);
+    const uuidCheck = validateUUID(entityId, `${meta.name} ID`);
     if (!uuidCheck.valid) {
       return uuidCheck.error!;
     }
@@ -195,8 +201,6 @@ function createGetHandler(config: EntityHandlerConfig) {
       if (requireAuthForGet && !userId) {
         return apiUnauthorized();
       }
-
-      const entityId = params.id;
 
       let query = fromTable(supabase, table).select('*').eq('id', entityId);
 
@@ -304,7 +308,8 @@ function createPutHandler(config: EntityHandlerConfig) {
   }
 
   return async function PUT(request: NextRequest, { params }: EntityRouteParams) {
-    const uuidCheck = validateUUID(params.id, `${meta.name} ID`);
+    const entityId = await routeId(params);
+    const uuidCheck = validateUUID(entityId, `${meta.name} ID`);
     if (!uuidCheck.valid) {
       return uuidCheck.error!;
     }
@@ -319,8 +324,6 @@ function createPutHandler(config: EntityHandlerConfig) {
       if (authError || !user) {
         return apiUnauthorized();
       }
-
-      const entityId = params.id;
 
       // Check if entity exists
       const { data: existingData, error: fetchError } = await fromTable(supabase, table)
@@ -425,7 +428,8 @@ function createDeleteHandler(config: EntityHandlerConfig) {
   const table = tableName ?? meta.tableName;
 
   return async function DELETE(_request: NextRequest, { params }: EntityRouteParams) {
-    const uuidCheck = validateUUID(params.id, `${meta.name} ID`);
+    const entityId = await routeId(params);
+    const uuidCheck = validateUUID(entityId, `${meta.name} ID`);
     if (!uuidCheck.valid) {
       return uuidCheck.error!;
     }
@@ -440,8 +444,6 @@ function createDeleteHandler(config: EntityHandlerConfig) {
       if (authError || !user) {
         return apiUnauthorized();
       }
-
-      const entityId = params.id;
 
       // Check if entity exists
       const { data: existingData, error: fetchError } = await fromTable(supabase, table)

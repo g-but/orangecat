@@ -21,13 +21,11 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    // Hide anonymous-user profiles from the people picker. handle_new_user
-    // assigns them an auto-generated `user_<8hex>` username from the auth
-    // UUID prefix — those entries surface as a bunch of "User @user_2dd6f19e"
-    // rows in messaging recipient search, which isn't useful for anyone:
-    // they have no email, no real name, no bio. Email-based signups get an
-    // email-prefix username, so they pass this filter.
-    query = query.not('username', 'ilike', 'user\\_________');
+    // Hide anonymous-user and CI fixture profiles from the people picker.
+    query = query
+      .not('username', 'ilike', 'user\\_________')
+      .not('username', 'ilike', 'e2e-reset-%')
+      .not('username', 'ilike', 'e2e\\_%');
 
     if (search) {
       // Search across username OR name (escape % and _ for LIKE patterns)
@@ -40,7 +38,8 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
       throw error;
     }
 
-    const profiles = data || [];
+    const { isFixtureProfile } = await import('@/config/public-directory');
+    const profiles = (data || []).filter(p => !isFixtureProfile(p));
     return apiSuccessPaginated(profiles, page, limit, count ?? profiles.length);
   } catch (error) {
     return handleApiError(error);

@@ -39,10 +39,18 @@ export function useBulkDelete({
     try {
       await Promise.all(
         Array.from(selectedIds).map(async id => {
-          const response = await fetch(`${apiEndpoint}/${id}`, { method: 'DELETE' });
+          const response = await fetch(`${apiEndpoint}/${id}`, {
+            method: 'DELETE',
+            credentials: 'same-origin',
+          });
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `Failed to delete ${entityName} ${id}`);
+            const err = errorData.error;
+            const message =
+              typeof err === 'string'
+                ? err
+                : (err as { message?: string } | undefined)?.message;
+            throw new Error(message || `Failed to delete ${entityName} ${id}`);
           }
           return response.json().catch(() => ({}));
         })

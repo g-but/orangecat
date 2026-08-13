@@ -43,7 +43,12 @@ export function useEntityCreateEdit<T extends Record<string, unknown>>(
       setLoading(false);
       return;
     }
-    if (!user?.id || !hydrated) {
+    if (!hydrated) {
+      return;
+    }
+    if (!user?.id) {
+      setEditError(`Sign in to edit this ${getEntityMetadata(entityType).name.toLowerCase()}`);
+      setLoading(false);
       return;
     }
 
@@ -51,19 +56,24 @@ export function useEntityCreateEdit<T extends Record<string, unknown>>(
 
     const fetchEntity = async () => {
       try {
-        const response = await fetch(`${meta.apiEndpoint}/${editId}`);
+        const response = await fetch(`${meta.apiEndpoint}/${editId}`, {
+          credentials: 'same-origin',
+        });
         if (response.ok) {
           const result = await response.json();
-          if (result.success && result.data) {
-            setEntityData(result.data as Partial<T>);
+          const row = result.data?.data ?? result.data;
+          if (result.success && row && typeof row === 'object') {
+            setEntityData(row as Partial<T>);
           } else {
             setEditError(`Failed to load ${meta.name.toLowerCase()} data`);
           }
         } else {
           setEditError(
-            response.status === 404
-              ? `${meta.name} not found`
-              : `Failed to load ${meta.name.toLowerCase()} data`
+            response.status === 401
+              ? `Sign in to edit this ${meta.name.toLowerCase()}`
+              : response.status === 404
+                ? `${meta.name} not found`
+                : `Failed to load ${meta.name.toLowerCase()} data`
           );
         }
       } catch (error) {

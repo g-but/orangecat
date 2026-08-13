@@ -214,17 +214,20 @@ export async function fetchDiscoverGenericData(
       setServices((servicesRes.data ?? []) as unknown as GenericPublicEntity[]);
     }
     if (should('groups')) {
+      const { isFixtureGroupTitle } = await import('@/config/public-directory');
       setGroups(
-        ((groupsRes.data ?? []) as unknown as GroupRow[]).map(
-          r =>
-            ({
-              id: r.id,
-              title: r.name,
-              description: r.description ?? null,
-              created_at: r.created_at,
-              slug: r.slug ?? null,
-            }) satisfies GenericPublicEntity
-        )
+        ((groupsRes.data ?? []) as unknown as GroupRow[])
+          .filter(r => !isFixtureGroupTitle(r.name))
+          .map(
+            r =>
+              ({
+                id: r.id,
+                title: r.name,
+                description: r.description ?? null,
+                created_at: r.created_at,
+                slug: r.slug ?? null,
+              }) satisfies GenericPublicEntity
+          )
       );
     }
     if (should('circles')) {
