@@ -2,17 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit3, MessageSquare, LucideIcon } from 'lucide-react';
+import { Plus, Edit3 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { useProjectStore } from '@/stores/projectStore';
 import DraftContinueDialog from './DraftContinueDialog';
 import { ROUTES } from '@/config/routes';
-import {
-  getEntitiesForCreateMenu,
-  COLOR_CLASSES,
-  type EntityMetadata,
-  type EntityCategory,
-} from '@/config/entity-registry';
+
+export type { CreateOption } from '@/config/create-options';
+export { CREATE_OPTIONS, shouldShowDivider } from '@/config/create-options';
 
 interface SmartCreateButtonProps {
   children?: React.ReactNode;
@@ -22,52 +19,6 @@ interface SmartCreateButtonProps {
   showIcon?: boolean;
   fullWidth?: boolean;
   forceNewProject?: boolean;
-}
-
-export interface CreateOption {
-  name: string;
-  description: string;
-  href: string;
-  icon: LucideIcon;
-  color: string;
-  bgColor: string;
-  category: EntityCategory | 'content';
-}
-
-function generateCreateOptions(): CreateOption[] {
-  const postOption: CreateOption = {
-    name: 'Post',
-    description: 'Share an update on your timeline',
-    href: '/timeline?compose=true',
-    icon: MessageSquare,
-    color: 'text-fg-primary',
-    bgColor: 'bg-surface-raised',
-    category: 'content',
-  };
-
-  const entityOptions: CreateOption[] = getEntitiesForCreateMenu().map((entity: EntityMetadata) => {
-    const colors = COLOR_CLASSES[entity.colorTheme];
-    return {
-      name: entity.name,
-      description: entity.createActionLabel,
-      href: entity.createPath,
-      icon: entity.icon,
-      color: colors.text,
-      bgColor: colors.bg,
-      category: entity.category,
-    };
-  });
-
-  return [postOption, ...entityOptions];
-}
-
-export const CREATE_OPTIONS = generateCreateOptions();
-
-export function shouldShowDivider(current: CreateOption, next: CreateOption | undefined): boolean {
-  if (!next) {
-    return false;
-  }
-  return current.category !== next.category;
 }
 
 export default function SmartCreateButton({

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { CREATE_OPTIONS, type CreateOption } from '@/components/dashboard/SmartCreateButton';
+import { CREATE_OPTIONS, type CreateOption } from '@/config/create-options';
 import { VoiceCreate } from '@/components/create/VoiceCreate';
 
 interface MobileCreateSheetProps {

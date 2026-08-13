@@ -5,7 +5,7 @@ import { Plus } from 'lucide-react';
 import { useDropdown } from '@/hooks/useDropdown';
 import { cn } from '@/lib/utils';
 import { HeaderIconButton } from '@/components/layout/HeaderIconButton';
-import { CREATE_OPTIONS, shouldShowDivider } from './SmartCreateButton';
+import { CREATE_OPTIONS, shouldShowDivider } from '@/config/create-options';
 import { VoiceCreate } from '@/components/create/VoiceCreate';
 
 export function HeaderCreateButton() {

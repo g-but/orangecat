@@ -21,13 +21,12 @@ export default async function CreateEntityRedirect({
   // /dashboard/ai-assistants/create), but the registry keys are
   // snake_case singular (ai_assistant). Try the most likely
   // normalizations: the slug as-is, hyphen → underscore, and the
-  // trailing-`s` plural stripped. Falls back to /create if nothing
-  // matches, which itself redirects to projects/create.
+  // trailing-`s` plural stripped. Unknown slugs fall back to the chooser.
   const candidates = [
     entityType,
     entityType.replace(/-/g, '_'),
     entityType.replace(/-/g, '_').replace(/s$/, ''),
   ];
   const meta = candidates.map(slug => ENTITY_REGISTRY[slug as EntityType]).find(Boolean);
-  redirect(meta?.createPath ?? '/create');
+  redirect(meta?.createPath ?? '/create'); // chooser, not a silent project create
 }
