@@ -67,7 +67,7 @@ export function EmptyState({
 
       {isLoadingSuggestions && (
         <div className="mt-8 flex w-full max-w-2xl flex-col gap-2">
-          <div className="h-20 animate-pulse rounded-xl bg-surface-raised" />
+          <div className="h-20 animate-pulse rounded-md bg-surface-raised" />
           <div className="flex gap-2">
             {[1, 2, 3].map(i => (
               <div key={i} className="h-11 flex-1 animate-pulse rounded-lg bg-surface-raised" />

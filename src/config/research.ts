@@ -103,7 +103,7 @@ export const RESEARCH_FIELD_COLORS: Record<ResearchField, string> = {
   neuroscience: 'bg-green-100 text-green-800',
   psychology: 'bg-rose-100 text-rose-800',
   economics: 'bg-amber-100 text-amber-800',
-  philosophy: 'bg-slate-100 text-slate-800',
+  philosophy: 'bg-surface-raised text-fg-primary',
   engineering: 'bg-cyan-100 text-cyan-800',
   medicine: 'bg-red-100 text-red-800',
   environmental_science: 'bg-emerald-100 text-emerald-800',
