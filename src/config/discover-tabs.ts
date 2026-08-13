@@ -7,6 +7,13 @@
 
 import type { EntityType } from '@/config/entity-registry';
 
+/** First-fold copy on /discover. The listings below are the action. */
+export const DISCOVER_HERO = {
+  title: 'Find something real',
+  lede: 'Projects, products, and people. Bitcoin settles.',
+  cta: 'List yours',
+} as const;
+
 export type DiscoverTabType =
   | 'all'
   | 'projects'
