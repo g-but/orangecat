@@ -124,6 +124,7 @@ export function ChatInput({
                   onClick={onStop}
                   className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-fg-primary text-fg-inverted transition-opacity hover:opacity-90"
                   aria-label="Stop generating"
+                  title="Stop generating"
                 >
                   <Square className="h-3.5 w-3.5 fill-current" />
                 </button>
@@ -139,6 +140,7 @@ export function ChatInput({
                       : 'cursor-not-allowed text-fg-secondary'
                   )}
                   aria-label="Send message"
+                  title="Send message (Enter)"
                 >
                   <Send className="h-4 w-4" />
                 </button>
