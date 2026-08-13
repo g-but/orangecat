@@ -363,6 +363,8 @@ export function useChatMessages({
             model?: string;
             provider?: string;
             actions?: CatAction[];
+            /** Server-repaired reply — replaces what streamed. See services/cat/grounding.ts. */
+            correctedContent?: string;
             execResults?: ExecActionResult[];
             quickReplies?: string[];
             tool_call?: ToolCallEvent;
@@ -436,6 +438,17 @@ export function useChatMessages({
           }
           if (event?.done && event.suggestUpgrade) {
             suggestUpgrade = true;
+          }
+          // The server checked the finished reply against the user's own data
+          // and rewrote it to drop claims that data did not support. Streaming
+          // means the original already rendered, so swap it here — otherwise the
+          // screen keeps a fabrication that the persisted conversation no longer
+          // contains, and the two disagree on reload.
+          if (event?.done && event.correctedContent) {
+            const corrected = event.correctedContent;
+            setMessages(prev =>
+              prev.map(m => (m.id === assistantId ? { ...m, content: corrected } : m))
+            );
           }
         });
 
