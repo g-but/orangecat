@@ -154,6 +154,7 @@ export const DATABASE_TABLES = {
 
   // Public feedback + Ask Cat (server-only writes; see /api/feedback)
   PLATFORM_FEEDBACK: 'platform_feedback',
+  NEWSLETTER_SUBSCRIBERS: 'newsletter_subscribers',
 
   // Search (aggregate demand signal — server-only)
   SEARCH_QUERIES: 'search_queries',

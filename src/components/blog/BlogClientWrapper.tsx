@@ -2,6 +2,7 @@
 
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import NewsletterSignup from '@/components/blog/NewsletterSignup';
 import { BlogPost } from '@/lib/blog';
 import { useBlogFilters } from './useBlogFilters';
 import { BlogFilters } from './BlogFilters';
@@ -71,16 +72,7 @@ export default function BlogClientWrapper({
             Subscribe to our newsletter for the latest updates and insights about Bitcoin funding
           </p>
           <div className="max-w-md mx-auto">
-            <div className="flex gap-4">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-2 border border-strong bg-surface-base text-fg-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              <Button variant="primary" size="sm">
-                Subscribe
-              </Button>
-            </div>
+            <NewsletterSignup source="blog" />
           </div>
         </Card>
       </div>

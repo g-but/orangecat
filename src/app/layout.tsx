@@ -74,6 +74,10 @@ export const metadata: Metadata = {
   keywords:
     'AI economic agent, bitcoin, finance, community, fund, invest, lend, products, services, lightning network, peer-to-peer, pseudonymous, non-custodial',
   metadataBase: new URL(SITE_URL),
+  // Feed autodiscovery — browsers/readers find /rss.xml from any page.
+  alternates: {
+    types: { 'application/rss+xml': `${SITE_URL}/rss.xml` },
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',

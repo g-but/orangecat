@@ -386,6 +386,7 @@ export const bottomNavItems: NavItem[] = [];
 export const footerNavigation = {
   product: [
     { name: 'Discover', href: ROUTES.DISCOVER },
+    { name: 'Pay links', href: ROUTES.PAY_LANDING },
     { name: 'How it works', href: ROUTES.HOW_IT_WORKS },
     { name: 'Roadmap', href: ROUTES.ROADMAP },
     { name: 'Changelog', href: ROUTES.CHANGELOG },

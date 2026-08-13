@@ -139,6 +139,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
+  // Dynamically rendered share card — without an image, chat apps and social
+  // feeds show a bare text link.
+  const ogImage = `${SITE_URL}/api/og/blog/${slug}`;
+
   return {
     title: post.title,
     description: post.excerpt,
@@ -150,11 +154,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       publishedTime: post.date,
       authors: [post.author || `${APP_NAME} Team`],
       tags: post.tags,
+      url: `${SITE_URL}/blog/${slug}`,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: post.title }],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
+      images: [ogImage],
     },
   };
 }

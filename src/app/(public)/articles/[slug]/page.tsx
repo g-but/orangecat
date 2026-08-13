@@ -42,6 +42,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const isIndexable = article.visibility === 'public';
+  // Author-supplied cover wins; otherwise the generated share card. Non-public
+  // articles get no image URL at all — the OG route 404s for them anyway, and
+  // metadata for a private draft should leak nothing.
+  const ogImage = article.coverImage
+    ? article.coverImage
+    : isIndexable
+      ? `${SITE_URL}/api/og/article/${encodeURIComponent(article.slug)}`
+      : undefined;
+
   return {
     title: article.title,
     description: article.excerpt,
@@ -55,14 +64,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: 'article',
       publishedTime: article.publishedAt,
       authors: [article.author.name],
-      images: article.coverImage ? [article.coverImage] : undefined,
+      images: ogImage ? [ogImage] : undefined,
       url: `${SITE_URL}/articles/${article.slug}`,
     },
     twitter: {
-      card: article.coverImage ? 'summary_large_image' : 'summary',
+      card: ogImage ? 'summary_large_image' : 'summary',
       title: article.title,
       description: article.excerpt,
-      images: article.coverImage ? [article.coverImage] : undefined,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }

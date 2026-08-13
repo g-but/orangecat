@@ -6,6 +6,8 @@
 
 import { cache } from 'react';
 import { createServerClient } from '@/lib/supabase/server';
+import { looseClient } from '@/lib/supabase/untyped';
+import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { getUserActorId } from '@/domain/actors';
 import { logger } from '@/utils/logger';
 import { ARTICLE_METADATA_FLAG } from '@/config/articles';
@@ -156,6 +158,44 @@ export async function listPublishedArticles(limit = 30): Promise<Article[]> {
     logger.error('Failed to list published articles', { err }, 'Articles');
     return [];
   }
+}
+
+/** Minimal reference to a public article — enough for sitemap/feed URLs. */
+export interface PublicArticleRef {
+  slug: string;
+  publishedAt: string;
+}
+
+/**
+ * List slug + publish date of public articles. Unlike the functions above,
+ * the CALLER supplies the client: sitemap generation runs outside a request
+ * (no cookies for createServerClient), so it passes the admin client instead.
+ */
+export async function listPublicArticleRefs(
+  client: AnySupabaseClient,
+  limit = 500
+): Promise<PublicArticleRef[]> {
+  const { data, error } = await looseClient(client)
+    .from(ENRICHED_VIEW)
+    .select('metadata, event_timestamp')
+    .eq(`metadata->>${ARTICLE_METADATA_FLAG}`, 'true')
+    .eq('visibility', 'public')
+    .eq('is_deleted', false)
+    .order('event_timestamp', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`listPublicArticleRefs failed: ${error.message}`);
+  }
+
+  return (data ?? []).flatMap(row => {
+    const metadata = row.metadata as { article?: ArticleMetadataPayload } | null;
+    const slug = metadata?.article?.slug;
+    if (!slug) {
+      return [];
+    }
+    return [{ slug, publishedAt: String(row.event_timestamp) }];
+  });
 }
 
 /**

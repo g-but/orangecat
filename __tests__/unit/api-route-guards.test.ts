@@ -68,6 +68,10 @@ const AUTH_ALLOWLIST: Record<string, string> = {
   // safe) rather than session-authed, and a doorbell only — the decision is
   // re-fetched and every signature re-verified before anything activates.
   'solon/events/route.ts': 'HMAC-authenticated Solon webhook (doorbell, not courier)',
+  // A blog reader has no account by definition. Per-IP rate limited; the
+  // insert goes through the service-role client into a policy-less RLS table,
+  // and the response never reveals whether an address was already subscribed.
+  'newsletter/subscribe/route.ts': 'anonymous newsletter capture by design',
 };
 
 /**
