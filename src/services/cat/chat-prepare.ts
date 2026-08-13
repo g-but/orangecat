@@ -20,6 +20,7 @@ import {
 } from '@/services/cat/conversation-history';
 import { recallMemories } from '@/services/cat/memory';
 import { fetchFullContextForCat, buildFullContextString } from '@/services/ai/document-context';
+import { buildAssistantRules } from '@/services/agent-core/contract';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 export interface CatChatPrepareOpts {
@@ -38,6 +39,54 @@ export interface PreparedCatChat {
   /** system + history + the user's message — ready for any chat-completions API. */
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
   conversationId: string | null;
+  /**
+   * Everything Cat was legitimately shown this turn, for the groundedness check
+   * on the way back out. Prompting alone is not a control — a weak model under
+   * format pressure trades rules away, which is exactly how the sibling
+   * assistant invented a contact's employer. The rules make the right answer
+   * cheap; this makes the wrong one detectable.
+   */
+  grounding: {
+    /** The rendered context — the corpus a claim about the user must trace to. */
+    evidence: string[];
+    /** Names of the user's own records, scoping the check to attribution. */
+    subjects: string[];
+  };
+}
+
+/**
+ * Names of the user's own records, so the verifier can tell a claim ABOUT THEM
+ * ("Elena works at X") from general economic explanation ("Lightning is fast").
+ *
+ * Best-effort and duck-typed: this reads across several context sub-objects
+ * whose shapes evolve, and a missing name costs one unchecked sentence, whereas
+ * a throw here would cost the whole turn.
+ */
+function collectSubjects(ctx: unknown): string[] {
+  const names = new Set<string>();
+  const visit = (value: unknown, depth: number) => {
+    if (depth > 3 || value === null || typeof value !== 'object') {
+      return;
+    }
+    if (Array.isArray(value)) {
+      for (const v of value.slice(0, 100)) {
+        visit(v, depth + 1);
+      }
+      return;
+    }
+    for (const [key, v] of Object.entries(value as Record<string, unknown>)) {
+      if (typeof v === 'string' && /^(title|name|display_name|username|full_name)$/.test(key)) {
+        const trimmed = v.trim();
+        if (trimmed.length > 2) {
+          names.add(trimmed);
+        }
+      } else if (typeof v === 'object') {
+        visit(v, depth + 1);
+      }
+    }
+  };
+  visit(ctx, 0);
+  return [...names];
 }
 
 export async function prepareCatChat(
@@ -59,12 +108,30 @@ export async function prepareCatChat(
   userContext.memories = memories;
   const contextString = buildFullContextString(userContext);
 
+  // Grounding rules ride between the brief and the examples.
+  //
+  // Placement is deliberate: AFTER the context (so "the context above" resolves)
+  // and BEFORE the few-shot examples (so the examples are read as illustrations
+  // of a constrained assistant rather than licence to match their confidence).
+  //
+  // Added only when there IS context. With nothing fetched there is nothing to
+  // be grounded in, and a rule pointing at an empty block teaches a weak model
+  // that the rules are decorative.
+  //
+  // Rule 5 explicitly protects general economic knowledge — Cat must still be
+  // able to explain Lightning or Twint. The restriction is on inventing facts
+  // about THIS user's people and entities, which is the failure that actually
+  // costs trust. See services/agent-core/README.md.
+  const groundingRules = contextString
+    ? `\n\n${buildAssistantRules({ subjectNoun: 'profile, entities, contacts and transactions' })}`
+    : '';
+
   // Examples are appended as labeled text (not injected as fake conversation
   // turns) so weaker models can't mistake the example people for the real
   // user. The per-turn reply-language directive goes DEAD LAST: weak models
   // weight the prompt tail most, and burying the language rule mid-prompt
   // let them default to the browser locale's language.
-  const systemPrompt = `${buildCatSystemPrompt({ userContext: contextString || undefined, customInstructions })}\n\n${getCatFewShotExamplesText()}${buildReplyLanguageDirective(message)}`;
+  const systemPrompt = `${buildCatSystemPrompt({ userContext: contextString || undefined, customInstructions })}${groundingRules}\n\n${getCatFewShotExamplesText()}${buildReplyLanguageDirective(message)}`;
 
   let conversationId: string | null = null;
   let historyMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
@@ -87,5 +154,11 @@ export async function prepareCatChat(
       { role: 'user', content: message },
     ],
     conversationId,
+    grounding: {
+      // History counts as evidence: a name Cat established two turns ago is
+      // fair to reuse, and treating it as novel would flag every follow-up.
+      evidence: [contextString, ...historyMessages.map(m => m.content)].filter(Boolean),
+      subjects: collectSubjects(userContext),
+    },
   };
 }
