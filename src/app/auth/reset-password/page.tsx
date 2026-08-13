@@ -50,7 +50,17 @@ export default function ResetPasswordPage() {
           }
         });
     } else if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      // The browser client runs with detectSessionInUrl, so by the time this
+      // effect fires it has usually ALREADY exchanged the code and cleaned the
+      // URL — getSession() awaits that. A second manual exchange would consume
+      // nothing (the code is single-use) and throw, wrongly dropping the user
+      // to the OTP form. Only exchange manually if no session materialized.
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
+        if (session) {
+          setStep('reset');
+          return;
+        }
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
           setStep('otp');
           setError(null);
