@@ -42,7 +42,7 @@ export async function searchProfiles(
         p_offset: offset,
       } as any);
 
-      if (!error && data) {
+      if (!error && Array.isArray(data) && data.length > 0) {
         // Apply additional location filters if needed
         let results = data as RawSearchProfile[];
         results = applyLocationFilters(results, filters);
@@ -67,7 +67,7 @@ export async function searchProfiles(
         p_offset: offset,
       } as any);
 
-      if (!error && data) {
+      if (!error && Array.isArray(data) && data.length > 0) {
         // Apply location filters to RPC results if needed
         let results = data as RawSearchProfile[];
         if (filters) {
