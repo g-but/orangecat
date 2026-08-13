@@ -10,6 +10,7 @@
  */
 
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { publicProfilePath } from '@/config/public-profile-path';
 
 /**
  * Route contexts categorize routes by their accessibility and purpose
@@ -415,7 +416,7 @@ export const ROUTES = {
 
   // Public profile routes (shareable)
   PROFILES: {
-    VIEW: (username: string) => `/profiles/${username}`,
+    VIEW: publicProfilePath,
     ME: '/profiles/me',
   },
 

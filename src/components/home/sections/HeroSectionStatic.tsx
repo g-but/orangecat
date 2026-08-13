@@ -3,7 +3,7 @@ import { ArrowRight, Globe, Cat } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { BrandMarkIcon } from '@/components/shell/BrandMarkIcon';
 import { ROUTES } from '@/config/routes';
-import { FEE_CLAIMS } from '@/config/landing-page';
+import { CTA_LABELS, FEE_CLAIMS, HERO_COPY } from '@/config/landing-page';
 
 /**
  * Static Hero Section - Renders immediately without animations
@@ -20,30 +20,22 @@ export default function HeroSectionStatic() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-base border border-default mb-6">
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 bg-status-positive rounded-full" />
-                <span className="text-sm font-medium text-fg-primary">Your AI economic agent</span>
+                <span className="text-sm font-medium text-fg-primary">{HERO_COPY.badgeLead}</span>
               </div>
               <span className="text-fg-tertiary">•</span>
-              <span className="text-sm font-medium text-fg-primary">Any identity</span>
+              <span className="text-sm font-medium text-fg-primary">{HERO_COPY.badgeIdentity}</span>
               <span className="text-fg-tertiary">•</span>
-              <span className="text-sm font-medium text-fg-primary">Zero fees</span>
+              <span className="text-sm font-medium text-fg-primary">
+                {FEE_CLAIMS.feeBadgeLabel}
+              </span>
             </div>
 
-            {/* Main Headline — display typography (Space Grotesk) per migration 7/N */}
             <h1 className="font-heading tracking-display text-3xl sm:text-5xl lg:text-6xl font-bold text-fg-primary leading-[1.05] mb-4 sm:mb-6">
-              Turn who you are <span className="text-fg-primary">into income.</span>
+              {HERO_COPY.headline}
             </h1>
 
-            {/* Subheadline */}
-            <p className="text-lg sm:text-xl lg:text-2xl text-fg-secondary leading-relaxed mb-3 sm:mb-4">
-              Your Cat interviews you, sets up your services, products, and projects, and surfaces
-              real ways to earn — funded in Bitcoin, under any identity.
-            </p>
-
-            {/* Supporting text */}
-            <p className="text-base sm:text-lg text-fg-secondary leading-relaxed mb-6 sm:mb-8">
-              It doesn&apos;t wait for you. The Cat proposes opportunities grounded in what you
-              already have and helps you act on them. And when an idea needs building, hand it to
-              FleetCrown to run the work.
+            <p className="text-lg sm:text-xl lg:text-2xl text-fg-secondary leading-relaxed mb-6 sm:mb-8">
+              {HERO_COPY.lede}
             </p>
 
             {/* CTA Buttons */}
@@ -51,14 +43,14 @@ export default function HeroSectionStatic() {
               <Link href={ROUTES.AUTH} className="w-full sm:w-auto">
                 <Button variant="accent" size="lg" className="w-full sm:w-auto">
                   <Cat className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  Meet your Cat
+                  {CTA_LABELS.primaryAction}
                   <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </Link>
               <Link href={ROUTES.DISCOVER} className="w-full sm:w-auto">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto">
                   <Globe className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  Discover
+                  {CTA_LABELS.discoverAction}
                 </Button>
               </Link>
             </div>
@@ -126,11 +118,11 @@ export default function HeroSectionStatic() {
 
                 {/* CTA Button in Demo */}
                 <Link
-                  href={ROUTES.DISCOVER}
+                  href={ROUTES.AUTH}
                   className="block w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-fg-primary text-fg-inverted text-sm sm:text-base font-semibold rounded-lg hover:bg-muted-strong transition-colors duration-150 flex items-center justify-center gap-2"
                 >
                   <Cat className="w-4 h-4 sm:w-5 sm:h-5" />
-                  Explore Platform
+                  {CTA_LABELS.primaryAction}
                 </Link>
 
                 <div className="flex flex-wrap gap-2 text-xs font-medium">

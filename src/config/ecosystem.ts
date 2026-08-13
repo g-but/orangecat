@@ -1,3 +1,4 @@
+import { publicProfilePath } from './public-profile-path';
 import { SOLON_BASE_URL_DEFAULT } from './solon';
 
 const DEFAULT_ORANGECAT_ORIGIN = 'https://www.orangecat.ch';
@@ -27,7 +28,7 @@ export const ECOSYSTEM = {
     projectId:
       process.env.NEXT_PUBLIC_ORANGECAT_PROJECT_ID ?? 'cb093f00-8745-4579-98df-050ebfb37181',
     siteUrl: orangeCatOrigin.toString(),
-    profileUrl: orangeCatPage('/profile/mao-nakamoto'),
+    profileUrl: orangeCatPage(publicProfilePath('mao-nakamoto')),
   },
   fleetCrown: {
     title: 'FleetCrown',
