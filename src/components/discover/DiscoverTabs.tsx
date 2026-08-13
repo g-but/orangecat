@@ -42,11 +42,28 @@ export default function DiscoverTabs({
   const allCount = Object.values(counts).reduce((sum, n) => sum + (n || 0), 0);
 
   return (
-    // Wrapping pills, not a horizontally-scrolling row: every entity type stays
-    // visible and flows onto more rows on narrow screens (mobile-first). The old
-    // overflow-x-auto hid Research / AI Assistants / People behind a scroll.
     <div className="rounded-t-lg border-b border-default bg-surface-base px-4 py-3 sm:px-6">
-      <nav className="flex flex-wrap gap-2" aria-label="Filter by type">
+      {/* Mobile: one control. Fifteen wrapping pills ate the first screen. */}
+      <label className="block sm:hidden">
+        <span className="mb-1.5 block text-sm font-medium text-fg-secondary">Type</span>
+        <select
+          className="min-h-11 w-full rounded-lg border border-default bg-surface-base px-3 text-sm font-medium text-fg-primary"
+          value={activeTab}
+          onChange={event => onTabChange(event.target.value as DiscoverTabType)}
+          aria-label="Filter by type"
+        >
+          {tabs.map(({ id, label }) => {
+            const count = id === 'all' ? allCount : counts[id] || 0;
+            return (
+              <option key={id} value={id}>
+                {label}
+                {!loading && count > 0 ? ` (${count})` : ''}
+              </option>
+            );
+          })}
+        </select>
+      </label>
+      <nav className="hidden flex-wrap gap-2 sm:flex" aria-label="Filter by type">
         {tabs.map(({ id, label, Icon }) => {
           const isActive = activeTab === id;
           const count = id === 'all' ? allCount : counts[id] || 0;

@@ -1,31 +1,23 @@
-import { Plus, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import { ROUTES } from '@/config/routes';
-import Button from '@/components/ui/Button';
+import { DISCOVER_HERO } from '@/config/discover-tabs';
 
 export default function DiscoverHero() {
   return (
-    <section className="relative overflow-hidden bg-surface-page border-b border-default">
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="text-center">
-          <h1 className="text-fluid-3xl font-extrabold tracking-tight text-fg-primary mb-4">
-            <span className="block">Discover Opportunities</span>
-            <span className="block text-fg-primary">Fund, Invest & Connect</span>
+    <section className="border-b border-default bg-surface-page">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:py-8 lg:px-8">
+        <div>
+          <h1 className="font-heading text-2xl font-bold tracking-tight text-fg-primary sm:text-3xl">
+            {DISCOVER_HERO.title}
           </h1>
-
-          <p className="mt-4 max-w-2xl mx-auto text-fluid-lg text-fg-secondary">
-            Projects, causes, products, services, loans, investments, events, and more — from
-            creators and communities around the world.
-          </p>
-
-          {/* Creator CTA */}
-          <div className="mt-6">
-            <Button href={ROUTES.AUTH} variant="gradient" size="lg">
-              <Plus className="w-4 h-4" />
-              Start Creating
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
+          <p className="mt-1 text-base text-fg-secondary sm:text-lg">{DISCOVER_HERO.lede}</p>
         </div>
+        <Link
+          href={ROUTES.CREATE}
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-fg-primary"
+        >
+          {DISCOVER_HERO.cta} →
+        </Link>
       </div>
     </section>
   );
