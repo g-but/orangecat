@@ -142,6 +142,13 @@ const nextConfig = {
         destination: '/auth?mode=register',
         permanent: true,
       },
+      // The standalone forgot-password page duplicated the in-form flow
+      // (two surfaces, one purpose). /auth?mode=forgot is the one surface.
+      {
+        source: '/auth/forgot-password',
+        destination: '/auth?mode=forgot',
+        permanent: true,
+      },
       // Legacy per-assistant chat routes — superseded by /dashboard/cat.
       // No inbound links from the app; preserved here in case bookmarks exist.
       {

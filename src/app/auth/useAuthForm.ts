@@ -27,12 +27,16 @@ export function useAuthForm() {
 
   const [mode, setMode] = useState<AuthMode>(() => {
     const modeParam = searchParams?.get('mode');
-    return modeParam === 'login' || modeParam === 'register' ? modeParam : 'login';
+    // 'forgot' included: /auth?mode=forgot is a linkable entry (reset emails,
+    // support replies) — dropping it silently showed the login form instead.
+    return modeParam === 'login' || modeParam === 'register' || modeParam === 'forgot'
+      ? modeParam
+      : 'login';
   });
 
   useEffect(() => {
     const modeParam = searchParams?.get('mode');
-    if (modeParam === 'login' || modeParam === 'register') {
+    if (modeParam === 'login' || modeParam === 'register' || modeParam === 'forgot') {
       setMode(modeParam);
     }
   }, [searchParams]);
@@ -128,10 +132,26 @@ export function useAuthForm() {
   }, [submissionClearError]);
 
   useEffect(() => {
-    if (session?.user && hydrated) {
-      const redirectUrl = searchParams?.get('from') || '/dashboard';
-      router.replace(redirectUrl);
+    if (!(session?.user && hydrated)) {
+      return;
     }
+    const fromParam = searchParams?.get('from') || '/dashboard';
+    // Same-origin paths only — `from` is attacker-suppliable via the URL.
+    const redirectUrl =
+      fromParam.startsWith('/') && !fromParam.startsWith('//') ? fromParam : '/dashboard';
+    router.replace(redirectUrl);
+    // The soft replace can race the server's view of the fresh auth cookie
+    // (e.g. right after anonymous sign-in): middleware 307s back to /auth,
+    // this page renders the "Welcome back!" spinner, and nothing ever retries
+    // — an eternal spinner even though the session exists. A hard navigation
+    // after a grace period re-runs the server pass with the cookies as they
+    // are NOW, which settles it.
+    const fallback = setTimeout(() => {
+      if (window.location.pathname.startsWith('/auth')) {
+        window.location.assign(redirectUrl);
+      }
+    }, 2500);
+    return () => clearTimeout(fallback);
   }, [session, hydrated, router, searchParams]);
 
   const handleMFAVerificationComplete = () => {

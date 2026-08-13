@@ -57,6 +57,12 @@ export async function approveAuthorization(formData: FormData): Promise<void> {
     redirect(`/auth?from=${encodeURIComponent('/oauth/authorize')}`);
   }
 
+  // Mirrors the gate on the authorize page: hidden-field replays must not let
+  // an anonymous (email-less) account mint a federated identity.
+  if (user!.is_anonymous) {
+    redirect('/oauth/error?reason=anonymous_account');
+  }
+
   const scopes = effectiveScopes(client!, scopeStr.split(/\s+/).filter(Boolean));
   if (scopes.length === 0) {
     redirect(withParams(redirectUri, { error: 'invalid_scope', state }));

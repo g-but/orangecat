@@ -13,10 +13,13 @@ export async function POST(_request: Request) {
       data: { user: _user },
     } = await supabase.auth.getUser();
 
-    // Sign out using Supabase
+    // Sign out using Supabase. The cookie purge below still runs on failure,
+    // so the browser ends up signed out either way — but the failure itself
+    // must not vanish (GoTrue-side sessions would silently outlive "logout").
     const { error } = await supabase.auth.signOut();
 
     if (error) {
+      logger.error('Supabase signOut failed; falling back to cookie purge', { error }, 'Auth');
     }
 
     const cookieStore = await cookies();

@@ -12,7 +12,9 @@ export default async function OAuthErrorPage({
   const message =
     reason === 'invalid_client_or_redirect'
       ? "The application is unknown, disabled, or its return URL isn't registered."
-      : 'The sign-in request was invalid.';
+      : reason === 'anonymous_account'
+        ? 'Anonymous accounts can’t sign in to other apps. Add an email address to your account (Settings → Account) and try again.'
+        : 'The sign-in request was invalid.';
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-center">
