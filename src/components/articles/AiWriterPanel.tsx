@@ -27,6 +27,7 @@ export default function AiWriterPanel({
   const [topics, setTopics] = useState<ProposedTopic[]>([]);
   const [noTopics, setNoTopics] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [justApplied, setJustApplied] = useState(false);
 
   const anyBusy = busy !== null || disabled;
   // The prompt box is the primary steer; fall back to the title field.
@@ -36,10 +37,12 @@ export default function AiWriterPanel({
     setBusy(topic ?? 'draft');
     setError(null);
     setNoTopics(false);
+    setJustApplied(false);
     try {
       const draft = await fetchArticleDraft({ topic: topic || steer || undefined });
       onApplyDraft(draft);
       setTopics([]);
+      setJustApplied(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not draft that. Please try again.');
     } finally {
@@ -51,6 +54,7 @@ export default function AiWriterPanel({
     setBusy('topics');
     setError(null);
     setNoTopics(false);
+    setJustApplied(false);
     try {
       const found = await fetchWritingTopics({
         kind: 'article',
@@ -78,21 +82,46 @@ export default function AiWriterPanel({
             Grounded in what you care about and what you&apos;ve written before.
           </p>
 
-          <input
-            type="text"
-            value={prompt}
-            onChange={e => setPrompt(e.target.value)}
-            disabled={anyBusy}
-            placeholder="What do you want to write about? (optional)"
-            aria-label="What do you want to write about?"
-            onKeyDown={e => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                void writeDraft();
-              }
-            }}
-            className="mt-3 w-full rounded-md border border-default bg-surface-page px-3 py-2 text-sm text-fg-primary placeholder:text-fg-tertiary focus:border-accent-warm focus:outline-none disabled:opacity-50"
-          />
+          <div className="relative mt-3">
+            <input
+              type="text"
+              value={prompt}
+              onChange={e => {
+                setPrompt(e.target.value);
+                setJustApplied(false);
+              }}
+              disabled={anyBusy}
+              placeholder="What do you want to write about? (optional)"
+              aria-label="What do you want to write about?"
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void writeDraft();
+                }
+              }}
+              className="w-full rounded-md border border-default bg-surface-page py-2 pl-3 pr-10 text-sm text-fg-primary placeholder:text-fg-tertiary focus:border-accent-warm focus:outline-none disabled:opacity-50"
+            />
+            <button
+              type="button"
+              disabled={anyBusy}
+              onClick={() => writeDraft()}
+              title="Write a draft from this prompt"
+              aria-label="Write a draft from this prompt"
+              className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-fg-secondary transition-colors hover:bg-surface-raised hover:text-accent-warm disabled:opacity-50"
+            >
+              {busy === 'draft' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ArrowRight className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+
+          {justApplied && (
+            <p className="mt-2 text-xs font-medium text-status-positive">
+              Draft added — check the editor below.
+            </p>
+          )}
 
           <div className="mt-2.5 flex flex-wrap gap-2">
             <button
