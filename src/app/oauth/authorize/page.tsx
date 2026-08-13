@@ -99,6 +99,19 @@ export default async function AuthorizePage({
     redirect(`/auth?from=${encodeURIComponent(returnTo)}`);
   }
 
+  // 3.5) Anonymous accounts stop here. Federating an identity with no email
+  // would hand relying parties (FleetCrown, Solon) an unattributable account —
+  // Solon rejects those downstream anyway; blocking at the root gives one
+  // honest explanation instead of N per-app failures.
+  if (user.is_anonymous) {
+    return (
+      <ErrorPanel
+        title="Add an email to continue"
+        detail={`You're exploring OrangeCat anonymously. To sign in to ${client.name}, first add an email address to your account (Settings → Account), then try again. Nothing was shared.`}
+      />
+    );
+  }
+
   // 4) Trusted client + remembered grant → skip the screen, mint + redirect.
   if (client.is_trusted && (await hasRememberedGrant(user!.id, clientId, scopes))) {
     const actor = await getOrCreateUserActor(user!.id);
