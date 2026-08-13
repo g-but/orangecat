@@ -336,15 +336,52 @@ export const TRUST_SIGNALS = [
  * Consistent CTA labels across the site
  */
 export const CTA_LABELS = {
-  primaryAction: 'Start Creating',
-  secondaryAction: 'Explore the Platform',
+  primaryAction: 'Meet your Cat',
+  secondaryAction: 'Discover',
   discoverAction: 'Discover',
   createAccount: 'Create Free Account',
-  startCreating: 'Start Creating',
+  startCreating: 'Meet your Cat',
   viewProject: 'View Project',
-  learnMore: 'Learn More',
+  learnMore: 'How it works',
   browseAll: 'Browse All',
 } as const;
+
+/** First-fold copy. One sentence, then the two actions. */
+export const HERO_COPY = {
+  badgeLead: 'Your AI economic agent',
+  badgeIdentity: 'Any identity',
+  headline: 'Turn who you are into income.',
+  lede: 'Your Cat sets up ways to earn. Bitcoin settles. You stay in charge.',
+} as const;
+
+/**
+ * The three first moves a visitor can take. Everything else on the old
+ * homepage (category grid, example personas, four-step explainer, comparison
+ * table) lives on /how-it-works or /discover.
+ */
+export const FIRST_MOVES = [
+  {
+    id: 'cat',
+    title: 'Meet your Cat',
+    body: 'It interviews you and sets up offerings from what you already have.',
+    href: '/auth',
+    cta: 'Start',
+  },
+  {
+    id: 'discover',
+    title: 'See what exists',
+    body: 'Real projects, products, and people already settling in Bitcoin.',
+    href: '/discover',
+    cta: 'Discover',
+  },
+  {
+    id: 'learn',
+    title: 'How it works',
+    body: 'Four short steps if you want the picture before you start.',
+    href: '/how-it-works',
+    cta: 'Read',
+  },
+] as const;
 
 // ==================== SECTION HEADERS ====================
 
