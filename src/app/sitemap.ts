@@ -4,8 +4,17 @@ import { looseClient } from '@/lib/supabase/untyped';
 import { ENTITY_REGISTRY, type EntityType } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { ENTITY_STATUS } from '@/config/database-constants';
+import { getPublishedPosts } from '@/lib/blog';
+import { listPublicArticleRefs } from '@/services/articles/get-article';
+import { logger } from '@/utils/logger';
 
 const BASE_URL = 'https://orangecat.ch';
+
+// The DB-backed sections need runtime env (service-role key). At build time on
+// CI that key is absent, so a purely-static sitemap would be baked in forever —
+// which is exactly how profiles/entities silently vanished from prod. Hourly
+// revalidation regenerates the sitemap on the box, where the env exists.
+export const revalidate = 3600;
 
 interface SitemapProfile {
   username: string | null;
@@ -87,6 +96,49 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     },
   ];
+
+  // Content pages. The blog is filesystem-sourced and can never fail at
+  // runtime; keep it (and everything above) strictly independent of the DB
+  // queries below so a query failure can only ever cost the DB-backed entries.
+  const contentPages: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    ...getPublishedPosts().map(post => ({
+      url: `${BASE_URL}/blog/${post.slug}`,
+      lastModified: new Date(post.date),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
+    {
+      url: `${BASE_URL}/articles`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+  ];
+
+  // Published community articles (DB-backed, but independent of the entity
+  // walk below — each section degrades alone).
+  let articlePages: MetadataRoute.Sitemap = [];
+  try {
+    const refs = await listPublicArticleRefs(createAdminClient());
+    articlePages = refs.map(ref => ({
+      url: `${BASE_URL}/articles/${encodeURIComponent(ref.slug)}`,
+      lastModified: new Date(ref.publishedAt),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    }));
+  } catch (error) {
+    logger.error(
+      'sitemap: article query failed — article URLs omitted this generation',
+      { error: error instanceof Error ? error.message : String(error) },
+      'Sitemap'
+    );
+  }
 
   let dynamicPages: MetadataRoute.Sitemap = [];
 
@@ -174,9 +226,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }));
       dynamicPages = [...dynamicPages, ...wishlistPages];
     }
-  } catch {
-    // If DB query fails, return static pages only — sitemap should never break the build
+  } catch (error) {
+    // The sitemap must never break the build/response — but a swallowed error
+    // here once hid ALL dynamic URLs from prod for months. Say what happened.
+    logger.error(
+      'sitemap: profile/entity queries failed — dynamic URLs omitted this generation',
+      { error: error instanceof Error ? error.message : String(error) },
+      'Sitemap'
+    );
   }
 
-  return [...staticPages, ...dynamicPages];
+  return [...staticPages, ...contentPages, ...articlePages, ...dynamicPages];
 }
