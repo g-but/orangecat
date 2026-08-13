@@ -54,6 +54,12 @@ const eslintConfig = [
   {
     // Translated from the former .eslintignore (flat config ignores it).
     ignores: [
+      // Vendored: byte-for-byte mirror of fleetcrown/src/lib/agent/core.
+      // `eslint --fix` here would rewrite quotes and break the SHA-256 drift
+      // gate that keeps the two copies from silently disagreeing about what
+      // "grounded" means. Edit the canonical copy in FleetCrown and re-run
+      // its `npm run sync:agent-core`. See src/services/agent-core/README.md.
+      'src/services/agent-core/**',
       '.next/**',
       'out/**',
       'dist/**',
