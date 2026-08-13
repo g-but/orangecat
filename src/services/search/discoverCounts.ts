@@ -69,7 +69,13 @@ export async function fetchDiscoverCounts(supabase: AnySupabaseClient): Promise<
         .select('*', { count: 'exact', head: true })
         .eq('status', ENTITY_STATUS.ACTIVE)
     ),
-    head(supabase.from(DATABASE_TABLES.PROFILES).select('*', { count: 'exact', head: true })),
+    head(
+      supabase
+        .from(DATABASE_TABLES.PROFILES)
+        .select('*', { count: 'exact', head: true })
+        .not('username', 'ilike', 'e2e-reset-%')
+        .not('username', 'ilike', 'user\\_________')
+    ),
     head(
       supabase
         .from(getTableName('loan'))

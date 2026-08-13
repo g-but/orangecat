@@ -112,7 +112,12 @@ export function usePeopleConnections(userId: string | undefined, hydrated: boole
       if (allRes.ok) {
         const allData = await allRes.json();
         if (allData.success) {
-          const arr = Array.isArray(allData.data?.data) ? allData.data.data : [];
+          const raw = allData.data;
+          const arr = Array.isArray(raw)
+            ? raw
+            : Array.isArray(raw?.data)
+              ? raw.data
+              : [];
           const transformed: Connection[] = arr.map((p: ConnectionResponseItem) => ({
             profile: {
               id: p.id,

@@ -46,8 +46,6 @@ export function ProfileSupportSection({
     };
   }, [username]);
 
-  // Unknown or unpayable: render nothing. A profile is not the place to
-  // announce that someone hasn't set up a wallet.
   if (!canReceive) {
     return null;
   }

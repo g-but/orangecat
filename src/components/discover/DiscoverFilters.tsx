@@ -53,6 +53,7 @@ interface DiscoverFiltersProps {
   radiusKm: number;
   onRadiusChange: (value: number) => void;
   onClearFilters: () => void;
+  searchPlaceholder?: string;
 }
 
 export default function DiscoverFilters({
@@ -79,6 +80,7 @@ export default function DiscoverFilters({
   radiusKm,
   onRadiusChange,
   onClearFilters,
+  searchPlaceholder = 'Search…',
 }: DiscoverFiltersProps) {
   const isMobile = variant === 'mobile';
 
@@ -92,7 +94,7 @@ export default function DiscoverFilters({
           </div>
           <Input
             type="text"
-            placeholder="Search projects..."
+            placeholder={searchPlaceholder}
             value={searchTerm}
             onChange={e => onSearchChange(e.target.value)}
             className="rounded-md border-default bg-surface-base py-2 pl-10 pr-4 text-sm"

@@ -67,7 +67,9 @@ describe('useEntityCreateEdit', () => {
     expect(result.current.loading).toBe(true);
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(global.fetch).toHaveBeenCalledWith('/api/causes/cause-1');
+    expect(global.fetch).toHaveBeenCalledWith('/api/causes/cause-1', {
+      credentials: 'same-origin',
+    });
     expect(result.current.editId).toBe('cause-1');
     expect(result.current.entityData).toEqual(row);
     expect(result.current.editError).toBeNull();
@@ -85,7 +87,9 @@ describe('useEntityCreateEdit', () => {
     const { result } = renderHook(() => useEntityCreateEdit('group'));
 
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(global.fetch).toHaveBeenCalledWith('/api/groups/g-1');
+    expect(global.fetch).toHaveBeenCalledWith('/api/groups/g-1', {
+      credentials: 'same-origin',
+    });
     expect(result.current.entityData).toEqual({ id: 'g-1', name: 'DAO' });
   });
 

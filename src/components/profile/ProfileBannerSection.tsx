@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Share2, Users, Settings } from 'lucide-react';
+import { Share2, Users, Settings, Bitcoin, MessageSquare } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import ProfileShare from '@/components/sharing/ProfileShare';
@@ -111,6 +111,24 @@ export function ProfileBannerSection({
           )}
         </div>
 
+        {profile.username && (
+          <Link href={ROUTES.PAY(profile.username)}>
+            <Button variant="accent" size="sm" className="shadow-sm text-xs sm:text-sm">
+              <Bitcoin className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Pay</span>
+            </Button>
+          </Link>
+        )}
+
+        {!isOwnProfile && profile.id && (
+          <Link href={`${ROUTES.MESSAGES}?to=${encodeURIComponent(profile.id)}`}>
+            <Button variant="outline" size="sm" className="bg-surface-base/90 shadow-sm text-xs sm:text-sm">
+              <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Message</span>
+            </Button>
+          </Link>
+        )}
+
         {isOwnProfile ? (
           <Link href={ROUTES.DASHBOARD.INFO_EDIT}>
             <Button variant="primary" size="sm" className="shadow-sm text-xs sm:text-sm">
@@ -122,7 +140,7 @@ export function ProfileBannerSection({
           <Button
             onClick={onFollowToggle}
             disabled={isFollowLoading}
-            variant={isFollowing ? 'secondary' : 'accent'}
+            variant={isFollowing ? 'secondary' : 'outline'}
             size="sm"
             className="shadow-sm text-xs sm:text-sm"
           >

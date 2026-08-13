@@ -91,11 +91,11 @@ export default function PersonCard({
                   Unfollow
                 </Button>
               )}
-              {(profile.bitcoin_address || profile.lightning_address) && (
-                <Link href={`/profiles/${profile.username || profile.id}`}>
+              {profile.username && (
+                <Link href={`/pay/${encodeURIComponent(profile.username)}`}>
                   <Button size="sm" variant="outline">
                     <ExternalLink className="w-3 h-3 mr-1" />
-                    Send BTC
+                    Pay
                   </Button>
                 </Link>
               )}
