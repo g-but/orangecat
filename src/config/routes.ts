@@ -289,6 +289,7 @@ export const ROUTES = {
   ABOUT: '/about',
   HOW_IT_WORKS: '/how-it-works',
   BLOG: '/blog',
+  RSS: '/rss.xml',
   CHANGELOG: '/changelog',
   ROADMAP: '/roadmap',
   WHITEPAPER: '/whitepaper',
