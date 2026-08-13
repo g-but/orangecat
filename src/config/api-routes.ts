@@ -34,6 +34,7 @@ export const API_ROUTES = {
   },
   // Public feedback + Ask Cat (no auth required)
   FEEDBACK: '/api/feedback',
+  NEWSLETTER_SUBSCRIBE: '/api/newsletter/subscribe',
   INTEGRATION_KEYS: {
     BASE: '/api/integration-keys',
     BY_ID: (id: string) => `/api/integration-keys/${id}`,

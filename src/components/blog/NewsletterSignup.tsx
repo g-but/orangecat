@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { API_ROUTES } from '@/config/api-routes';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
@@ -30,7 +31,7 @@ export default function NewsletterSignup({ source }: NewsletterSignupProps) {
     setErrorMessage('');
 
     try {
-      const response = await fetch('/api/newsletter/subscribe', {
+      const response = await fetch(API_ROUTES.NEWSLETTER_SUBSCRIBE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, source }),
