@@ -112,3 +112,30 @@ export const PAY_COPY = {
   copyLink: 'Copy link',
   copiedLink: 'Link copied',
 } as const;
+
+/** Copy for the public /pay landing page (what pay links ARE). */
+export const PAY_LANDING_COPY = {
+  title: 'Get paid with a link',
+  subtitle:
+    'Everyone on OrangeCat has a payment page at orangecat.ch/pay/<username>. Share it anywhere — the person paying you needs a Bitcoin wallet, not an account.',
+  points: [
+    {
+      title: 'No account for the payer',
+      description:
+        'Send your link in a chat, pin it in a bio, print it on an invoice. Whoever opens it can pay you on the spot — no signup, no app install.',
+    },
+    {
+      title: 'Non-custodial, zero fee',
+      description:
+        'Payments go straight to your wallet over Bitcoin and Lightning. OrangeCat never holds your funds and takes 0%.',
+    },
+    {
+      title: 'A link that keeps working',
+      description:
+        'Invoices expire in about an hour; your pay link never does. It mints a fresh invoice the moment someone arrives, so it survives sitting in a thread overnight.',
+    },
+  ],
+  ctaFind: 'Find people to pay',
+  ctaOwn: 'Get your own pay link',
+  ctaOwnHint: 'Create an account and your page at /pay/<username> works immediately.',
+} as const;

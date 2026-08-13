@@ -426,6 +426,7 @@ export const ROUTES = {
   /** Owner's "get paid" screen — one tap to a scannable QR. */
   RECEIVE: '/receive',
   /** Public, account-free page a payer lands on. The shareable half of RECEIVE. */
+  PAY_LANDING: '/pay',
   PAY: (username: string) => `/pay/${encodeURIComponent(username)}`,
   /** Outbound half of the money surface — pay a person or a pasted invoice. */
   SEND: '/send',
