@@ -44,11 +44,21 @@ const buildAssetUpdatePayload = createUpdatePayloadBuilder([
   { from: 'show_on_profile' },
 ]);
 
+function buildListedAssetUpdatePayload(data: Record<string, unknown>) {
+  const payload = buildAssetUpdatePayload(data);
+  if (payload.is_for_sale !== undefined || payload.is_for_rent !== undefined) {
+    const listed = Boolean(payload.is_for_sale || payload.is_for_rent);
+    payload.status = listed ? 'active' : 'draft';
+    payload.public_visibility = listed;
+  }
+  return payload;
+}
+
 // Create handlers using generic factory
 const { GET, PUT, DELETE } = createEntityCrudHandlers({
   entityType: 'asset',
   schema: assetSchema,
-  buildUpdatePayload: buildAssetUpdatePayload,
+  buildUpdatePayload: buildListedAssetUpdatePayload,
   ownershipField: 'actor_id',
   useActorOwnership: true,
   requireAuthForGet: true, // Assets require auth to view

@@ -31,8 +31,9 @@ export async function createAsset(userId: string, input: AssetFormData) {
       requires_deposit: input.requires_deposit ?? false,
       deposit_amount_btc: input.deposit_amount_btc ?? null,
       verification_status: 'unverified' as const,
-      status: STATUS.ASSETS.DRAFT,
-      public_visibility: false,
+      // Offered for rent or sale = listed. A draft nobody can find is not a listing.
+      status: input.is_for_sale || input.is_for_rent ? STATUS.ASSETS.ACTIVE : STATUS.ASSETS.DRAFT,
+      public_visibility: Boolean(input.is_for_sale || input.is_for_rent),
       // Respect the form's profile-visibility toggle; the schema already carries
       // it but this insert omitted it → DB default true always won.
       show_on_profile: input.show_on_profile ?? true,
