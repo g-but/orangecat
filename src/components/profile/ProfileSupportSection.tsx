@@ -46,6 +46,10 @@ export function ProfileSupportSection({
     };
   }, [username]);
 
+  if (!canReceive) {
+    return null;
+  }
+
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 pt-6">
@@ -55,16 +59,12 @@ export function ProfileSupportSection({
               <Zap className="h-4 w-4 text-bitcoinOrange" />
               {PAY_COPY.title(displayName)}
             </h3>
-            <p className="mt-1 text-sm text-fg-secondary">
-              {canReceive === false ? PAY_COPY.noWallet(displayName) : PAY_COPY.disclaimer}
-            </p>
+            <p className="mt-1 text-sm text-fg-secondary">{PAY_COPY.disclaimer}</p>
           </div>
-          {canReceive !== false && (
-            <TipButton username={username} recipientName={displayName} />
-          )}
+          <TipButton username={username} recipientName={displayName} />
         </div>
 
-        {(isOwner || canReceive) && <SharePayLink username={username} />}
+        {isOwner && <SharePayLink username={username} />}
       </CardContent>
     </Card>
   );
