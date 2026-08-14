@@ -401,6 +401,9 @@ export const ROUTES = {
     CAT_WELCOME: '/dashboard/cat?welcome=true',
     DOCUMENTS: ENTITY_REGISTRY['document'].basePath,
     DOCUMENTS_CREATE: ENTITY_REGISTRY['document'].createPath,
+    // Program blueprints — multi-entity sets created in one pass.
+    PROGRAMS: '/dashboard/programs',
+    PROGRAM_VIEW: (id: string) => `/dashboard/programs/${id}`,
     // Note: there is no /dashboard/settings page. Account settings live at
     // ROUTES.SETTINGS; AI settings at ROUTES.SETTINGS_AI.
   },

@@ -521,6 +521,7 @@ const STREAMING_ALLOW = new Map([
   // status codes, so the loading skeleton is worth more than the 404.
   ['(authenticated)/dashboard/documents/[id]', 'auth-gated; skeleton kept deliberately'],
   ['(authenticated)/dashboard/wishlists/items/[itemId]', 'auth-gated; skeleton kept deliberately'],
+  ['(authenticated)/dashboard/programs/[id]', 'auth-gated; skeleton kept deliberately'],
 ]);
 
 const streamingFailures = [];

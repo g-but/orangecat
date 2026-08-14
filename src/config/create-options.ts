@@ -5,8 +5,10 @@ import {
   type EntityCategory,
   type EntityMetadata,
 } from '@/config/entity-registry';
+import { PROGRAM_BLUEPRINTS } from '@/config/program-blueprints';
+import { ROUTES } from '@/config/routes';
 
-export type CreateOptionCategory = EntityCategory | 'content';
+export type CreateOptionCategory = EntityCategory | 'content' | 'program';
 
 export interface CreateOption {
   name: string;
@@ -30,6 +32,7 @@ export const CREATE_CATEGORY_LABELS: Record<CreateOptionCategory, string> = {
   community: 'People',
   finance: 'Money',
   personal: 'For you',
+  program: 'Whole programs',
 };
 
 function optionFromEntity(entity: EntityMetadata): CreateOption {
@@ -45,6 +48,22 @@ function optionFromEntity(entity: EntityMetadata): CreateOption {
   };
 }
 
+/**
+ * A program blueprint creates several entities at once, so it belongs in the
+ * create menu next to the single-entity options rather than hidden behind them.
+ */
+function optionFromBlueprint(blueprint: (typeof PROGRAM_BLUEPRINTS)[number]): CreateOption {
+  return {
+    name: blueprint.name,
+    description: blueprint.tagline,
+    href: ROUTES.DASHBOARD.PROGRAM_VIEW(blueprint.id),
+    icon: blueprint.icon,
+    color: 'text-fg-primary',
+    bgColor: 'bg-surface-raised',
+    category: 'program',
+  };
+}
+
 export function buildCreateOptions(): CreateOption[] {
   const post: CreateOption = {
     name: 'Post',
@@ -55,7 +74,11 @@ export function buildCreateOptions(): CreateOption[] {
     bgColor: 'bg-surface-raised',
     category: 'content',
   };
-  return [post, ...getEntitiesForCreateMenu().map(optionFromEntity)];
+  return [
+    post,
+    ...getEntitiesForCreateMenu().map(optionFromEntity),
+    ...PROGRAM_BLUEPRINTS.map(optionFromBlueprint),
+  ];
 }
 
 export const CREATE_OPTIONS = buildCreateOptions();
