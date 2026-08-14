@@ -284,6 +284,29 @@ function HeaderNavDropdown({ item, isActive }: HeaderNavDropdownProps) {
               return null;
             }
 
+            // External children leave the app: new tab, noopener, and a visible
+            // indicator — the same treatment top-level and mobile links get.
+            if (child.external) {
+              return (
+                <a
+                  key={child.href}
+                  href={child.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block px-4 py-2.5 min-h-11 text-sm text-fg-secondary transition-colors hover:text-fg-primary hover:bg-surface-raised"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <div className="flex items-center gap-1 font-medium">
+                    {child.name}
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                  </div>
+                  {child.description && (
+                    <div className="text-xs text-fg-secondary mt-0.5">{child.description}</div>
+                  )}
+                </a>
+              );
+            }
+
             return (
               <Link
                 key={child.href}

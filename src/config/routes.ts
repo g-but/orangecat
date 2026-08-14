@@ -285,6 +285,7 @@ export const ROUTES = {
   },
   COMMUNITY: '/community',
   GOVERNANCE: '/governance',
+  ECOSYSTEM: '/ecosystem',
   ABOUT: '/about',
   HOW_IT_WORKS: '/how-it-works',
   BLOG: '/blog',

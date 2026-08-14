@@ -38,7 +38,7 @@ import {
   Handshake,
   CalendarCheck,
 } from 'lucide-react';
-import { ECOSYSTEM } from './ecosystem';
+import { ECOSYSTEM_PILLARS } from './ecosystem';
 
 /**
  * Counter source identifier for nav items showing a live numeric badge.
@@ -124,16 +124,23 @@ const headerNavigationConfig = {
     { name: 'Blog', href: ROUTES.BLOG },
     { name: 'Support', href: ROUTES.SUPPORT },
     {
-      name: 'FleetCrown',
-      href: ECOSYSTEM.fleetCrown.siteUrl,
-      external: true,
-      description: 'Build with Loki and supervised agent fleets',
-    },
-    {
-      name: 'Solon',
-      href: ECOSYSTEM.solon.siteUrl,
-      external: true,
-      description: 'Bitcoin-signed governance — where the stack decides',
+      // The sibling products used to sit loose in the top bar, one link each,
+      // with nothing saying they belong together. One menu, three pillars —
+      // led by the page that explains the stack.
+      name: 'Ecosystem',
+      children: [
+        {
+          name: 'The stack',
+          href: ROUTES.ECOSYSTEM,
+          description: 'One stack, three pillars — and what binds them',
+        },
+        ...ECOSYSTEM_PILLARS.filter(pillar => !pillar.isSelf).map(pillar => ({
+          name: pillar.title,
+          href: pillar.siteUrl,
+          external: true,
+          description: pillar.tagline,
+        })),
+      ],
     },
   ],
 };
@@ -406,8 +413,14 @@ export const footerNavigation = {
     { name: 'Security', href: ROUTES.SECURITY },
   ],
   ecosystem: [
-    { name: 'FleetCrown', href: ECOSYSTEM.fleetCrown.siteUrl, external: true },
-    { name: 'Solon', href: ECOSYSTEM.solon.siteUrl, external: true },
+    { name: 'The stack', href: ROUTES.ECOSYSTEM },
+    // Sibling products come from the pillar SSOT, so a fourth pillar (or a
+    // moved domain) never has to be remembered here.
+    ...ECOSYSTEM_PILLARS.filter(pillar => !pillar.isSelf).map(pillar => ({
+      name: pillar.title,
+      href: pillar.siteUrl,
+      external: true,
+    })),
     { name: 'Governance', href: ROUTES.GOVERNANCE },
     { name: 'Community', href: ROUTES.COMMUNITY },
     { name: 'About OrangeCat', href: ROUTES.ABOUT },
