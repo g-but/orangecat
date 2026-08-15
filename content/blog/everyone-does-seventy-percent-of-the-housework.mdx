@@ -1,0 +1,154 @@
+---
+title: "Everyone Does 70% of the Housework"
+excerpt: "Ask housemates what share of the cleaning they do and the answers add up to far more than 100%. Building a fairness feature for shared housing, the research told me what to build — and much more usefully, what not to."
+date: "2026-08-15"
+tags: ["Product", "Behavioural Science", "Engineering", "Housing", "Fairness"]
+featured: false
+author: "Mao Nakamoto"
+published: true
+---
+
+# Everyone Does 70% of the Housework
+
+There is a study from 1979 that I think about more than almost anything else I have read. Ross and Sicoly asked married couples, separately, what proportion of the housework each of them did. Then they added the two answers together.
+
+The totals came out well over 100%.
+
+The explanation is not that people lie. It is that your own contributions are simply more *available* to your memory than anyone else's. You remember scrubbing the shower because you were there, bored, with wet knees. You did not witness your housemate doing the same thing on Tuesday while you were at work. Both of you are reporting honestly from the evidence you have, and both of you are wrong in the same direction.
+
+Once you have seen this, a lot of domestic conflict stops looking like a conflict about character and starts looking like a conflict about **information**.
+
+I spent this week building a chore fairness feature for a shared-housing product, and this study ended up shaping the code more than any product requirement did.
+
+## The setting matters
+
+The product places people into shared flats. Some of the residents are asylum seekers in Swiss housing — which changes the problem in two ways that I want to state plainly before anything else.
+
+First, **these people did not choose each other**. A student flatshare is a group of friends who opted in and can opt out. Assigned housing is neither. All the informal repair mechanisms that keep a normal flatshare functioning — you picked these people, you can leave, you have shared social ties that punish bad behaviour — are weaker or absent.
+
+Second, **the cost of a bad mechanism is not a bad mood**. It is a staff mediation hour, a relocation, and a person's stability during the worst year of their life. The organisation running this measures success in incidents per month and relocations due to conflict. A feature that generates a new reason to argue is not neutral; it is actively expensive.
+
+So the bar is not "does this look like a nice fairness feature". The bar is "can this make things worse, and how".
+
+## What the research says you should not build
+
+I went looking for what is actually known about cooperation in small groups. Most of what I found was a list of things to avoid, which is a much more useful output than a list of features.
+
+**About half of people are conditional cooperators.** Fischbacher, Gächter and Fehr ran public-goods experiments at the University of Zurich in 2001 and found that people are not cleanly split into cooperators and free riders. Roughly half contribute *in proportion to what they believe others are contributing*. A smaller group free-rides regardless. The practical consequence is stark: in a group of conditional cooperators, a single visible defection triggers a cascade of withdrawal, and cooperation decays even though almost nobody involved wanted it to.
+
+This is the argument *for* showing contribution at all. If half your household is watching to see whether effort is reciprocated, then the information environment is not a nice-to-have — it is the mechanism. An honour system with no visibility does not fail because people are selfish. It fails because conditional cooperators cannot see what they are conditioning on.
+
+**Extrinsic rewards can destroy the norm they were meant to support.** Frey and Jegen's work on motivation crowding — also Zurich — collects a large body of evidence that paying people for something they were already doing out of obligation or identity can reduce how much they do it. The external reward reframes a moral act as a transaction, and once it is a transaction people optimise it.
+
+This killed every version of the feature involving points, karma, streaks or a monthly quota. In a flatshare people are *already* cleaning out of some mix of self-respect, obligation and not wanting to be the person who doesn't. That motivation is doing real work. Bolting a scoring system on top of it risks trading something durable for something that stops working the moment the score stops being enforced.
+
+**Punishment does not reliably land on the free riders.** This is the finding that unsettled me most. Herrmann, Thöni and Gächter published a study in *Science* in 2008 running the same public-goods-with-punishment game across many societies. In a number of them they found substantial *antisocial punishment* — people punishing the **high** contributors, not the low ones. Where antisocial punishment was common, the ability to punish destroyed cooperation instead of sustaining it.
+
+For a product placing people from many different countries into one flat, that is close to a disqualifying result for any peer-enforcement mechanic. A public ranking is a punishment mechanic whether or not you call it one. So: no leaderboard, no rank, no medal, no visible position.
+
+**Equal is not the same as fair.** The fair-division literature defines fairness in terms of *envy-freeness* — nobody prefers someone else's allocation to their own — and that is defined over each person's own disutility. Twenty minutes of cleaning the bathroom is not the same cost to two different people. An equal-time split silently assumes it is.
+
+I did not solve this, and I want to be honest that I did not. Eliciting how much each person hates each chore is expensive to ask and trivially easy to game. What I did instead is make **swapping a first-class action** rather than a violation, on the theory that voluntary trade is the cheap decentralised approximation of envy-freeness. If you would rather do the bins twice than the bathroom once, the system should let you arrange that without it counting against you.
+
+## So what does that leave?
+
+Strip out everything the research warns against and you are left with a narrow, almost boring feature. Three parts.
+
+### 1. A definition of done that is a list of actions, not an outcome
+
+The single most common shape of a chore dispute is not "you didn't do it". It is **"that's not clean"**.
+
+That argument is unwinnable, because "clean" is a gradient and two people with genuinely different standards can both be honestly right about whether it has been met. Nobody is lying. There is no fact to appeal to.
+
+So the checklist in this feature is constrained to binary, observable **actions**:
+
+```
+☐ Boden gewischt
+☐ Abfalleimer geleert
+☐ Spiegel gewischt
+```
+
+Not "Bad ist sauber". The difference is the whole trick: housemates never have to agree on what *sauber* means, only on whether the floor got wiped. You can verify the second one by looking.
+
+The checklist is also allowed to be **partially** ticked, and a partial completion stays visibly partial in the history. Forcing all-or-nothing pushes people to either overclaim or log nothing at all, and both of those corrupt the record you are trying to build. Someone who did four of five things did four things, and the fifth is now legible to whoever comes next instead of being a surprise.
+
+The most interesting thing here is what the empty state does. When a task has no agreed checklist, the app says so out loud rather than hiding the section. *"For this task it has not yet been agreed what counts as done."* In most real disputes that sentence is the actual finding, and a blank space would keep it invisible.
+
+### 2. A balance in minutes, not a count of completions
+
+The previous version of this screen counted completed tasks per person and drew a bar chart scaled to the highest number. Two problems, one visible and one not.
+
+The visible one: **counting rows makes taking the bins out (2 minutes) worth the same as scrubbing the shower (25 minutes)**. Whoever does the cheap frequent things wins. That is a bad incentive dressed up as a metric.
+
+So the unit is now time. Each completion is weighted by the logged duration, falling back to the task's estimate, falling back to a deliberately small default — an unestimated chore should never outweigh a measured one, because that rewards vagueness. Time is also the unit Switzerland's own federal statistics office uses to value unpaid household work, which means it is a number a Swiss institution can read without translation.
+
+The invisible problem was worse: **a bar chart scaled to the maximum is a leaderboard**. It always paints someone's bar full. It always implies a winner, which implies a loser.
+
+What replaced it is an expense-style balance. Total the minutes, divide by the household, and show each person their **signed distance from their own share** — a diverging bar with the centre line at "exactly your share", scaled to the largest *imbalance* rather than the largest contribution. A near-even month now looks near-even instead of manufacturing a podium.
+
+The balances always sum to exactly zero, and there is a test that pins that invariant, because a fairness number that does not close is not a fairness number.
+
+There is one deliberate asymmetry with the money ledger it borrows from. In the expense feature, a balance is settled by a transfer. **A chore balance cannot be settled by anything except doing the next thing.** So the module that computes it has no "simplify debts" counterpart, on purpose, and the UI says so: *ein Saldo wird nicht zurückgezahlt, sondern mit der nächsten Aufgabe ausgeglichen*.
+
+And then the part I spent the longest on, which is not code at all. Sitting above the numbers is one sentence explaining that almost everyone overestimates their own share, because we all remember our own work better than other people's.
+
+That sentence is doing the heaviest lifting on the screen. Without it, a negative balance reads as an accusation, and people argue with accusations. With it, the same number arrives as a **correction that applies to everyone in the room** — including whoever is currently feeling smug about being in the green. Ross and Sicoly is not trivia in the footnotes here. It is the feature's entire tone.
+
+### 3. A rotation that is a default, not a lock
+
+Whose turn it is, is *derived* — a pure function of the rota order and how many times the task has been completed. Nothing is stored, so the turn can never drift out of sync with the completion log, and the log stays the single source of truth for what actually happened.
+
+Two rules fall out of taking that seriously:
+
+- **Completing a task advances the rota regardless of who did it.** If I cover your turn, the rota moves on. Any other design makes covering for a housemate cost you your place in the queue, which is a spectacular way to discourage exactly the behaviour you want.
+- **Anyone may do anything at any time.** The turn is a suggestion about who is up next, not a permission check. The UI says this in as many words.
+
+The honest case for a rota is not that it allocates work — an honour system allocates work fine. It is that it **removes the need to ask**. Without a rota, someone has to raise it, and the raising is the expensive part: that is the moment a household conversation becomes a household conflict. With one, the demand comes from the plan instead of from a person. The rota is not a manager. It is a way for nobody to have to be one.
+
+## The engineering, briefly
+
+A few decisions that are easy to get wrong and annoying to fix later:
+
+**Store ticked items by label, not by index.** If a completion records `[0, 1, 3]` and the house later amends the checklist, you have silently rewritten history — that completion now claims someone did things they never did. Labels cost a few bytes and cannot lie retroactively.
+
+**Intersect ticked items with the task's real checklist server-side.** A client should not be able to invent a done-criterion the household never agreed on. Cheap to enforce, and the test for it is three lines.
+
+**Scope the balance to the calendar month.** All-time totals let a long-term resident coast for months on credit earned last year, and make a newcomer look permanently delinquent for having arrived in March. Neither is information anyone can act on. A month is short enough to still be correctable and long enough that one heavy week does not define you.
+
+**One loader, not two queries that look alike.** The page and the JSON endpoint both need this number. A balance that disagreed between them would be worse than showing no balance at all.
+
+One bug I found while doing this is worth its own paragraph, because it is a pattern rather than an incident. The existing API test file contained a **hand-copied duplicate of the validation schema** inside its mock. When I added a field to the real schema, the test kept passing while the route silently dropped the new data — the mock had quietly become a second definition of the truth. This exact failure had already cost this codebase two dropped form fields once before. The fix is to spread the real module and stub only the one function you actually need to fake. Replacing the copy immediately surfaced a second latent problem: the copy had been *laxer* than the real schema, so a validation rule the production code enforces had never once been exercised by a test.
+
+If you take one thing from this section: **a mock that restates your schema is not a test double, it is a fork.**
+
+## What I got wrong on the way in
+
+My first instinct was a monthly minutes target. Everyone owes N minutes, here is your progress bar. It is satisfying, it is obviously measurable, and I had it half-designed before the crowding-out literature talked me out of it.
+
+The problem is that a quota converts a shared norm into an individual obligation, and once it is an obligation people discharge it. Exactly N minutes, no more, and nothing that is not on the list. Worse, it introduces the possibility of *failing*, and in this specific setting the people who would fail it most often are the ones having the hardest month — the person in a mental health crisis, the person who just got a rejection letter. Building an automatic system that names them as delinquent is not a fairness feature. It is a harm-generation feature with good intentions.
+
+The version that shipped can tell you that you are 40 minutes behind. It cannot tell you that you have failed, and there is nothing for it to escalate to. That gap is deliberate and I would defend it hard.
+
+## The part where I admit what this doesn't prove
+
+None of the research above was conducted on this population, in this housing, with this software. Public-goods games in a university lab are a model of cooperation, not a measurement of it. Ross and Sicoly studied married couples in Canada in the 1970s. The honest claim is that these findings shaped my *priors about what could go wrong*, which is a genuinely different thing from evidence that this design works.
+
+What would count as evidence is the thing the organisation is already tracking: incidents per month, relocations caused by incompatibility, and staff hours spent on mediation. Those numbers exist, there is a baseline, and if this feature is doing anything they should move. If they do not move, the feature is decoration and should be said to be decoration.
+
+I would also want to know whether the explanatory sentence above the balance actually changes how people read a negative number, because that is the single riskiest assumption in the whole design and it is the cheapest one to be wrong about.
+
+## The thing I actually learned
+
+I set out to build a fairness feature and spent most of the time removing things.
+
+No score. No quota. No streak. No rank. No badge. No peer-punishment mechanic. No public shaming, however gently designed. What survived was a checklist of things you can see, a number with an explanation attached, and a rota that never tells anyone no.
+
+That is a much smaller feature than the one I sketched on day one, and I am fairly confident it is a better one — not because less is inherently more, but because in a house where nobody chose each other and nobody can leave, **every mechanism you add is a new surface for conflict**. The research was not a source of features. It was a list of the ways a well-meant fairness system turns into the thing it was built to prevent.
+
+The last question I asked before shipping was not "is this fair?" It was: *when this number is wrong, or someone reads it in the worst possible light on the worst possible day, what does it do to them?*
+
+That is a better question, and I got to it far too late.
+
+---
+
+*The compatibility-based housing system this was built for is open work in progress. If you run assigned or shared housing and any of this is relevant to you, I would genuinely like to hear where it breaks.*
