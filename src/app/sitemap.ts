@@ -4,6 +4,7 @@ import { looseClient } from '@/lib/supabase/untyped';
 import { ENTITY_REGISTRY, type EntityType } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { ENTITY_STATUS } from '@/config/database-constants';
+import { isFixtureUsername } from '@/config/public-directory';
 import { getPublishedPosts } from '@/lib/blog';
 import { listPublicArticleRefs } from '@/services/articles/get-article';
 import { logger } from '@/utils/logger';
@@ -162,6 +163,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (profiles) {
       const profilePages: MetadataRoute.Sitemap = profiles
         .filter((p): p is SitemapProfile & { username: string } => p.username !== null)
+        .filter((p) => !isFixtureUsername(p.username))
         .map(profile => ({
           // encodeURIComponent: usernames containing '@' (we observed
           // literal webdev@example.com profiles live) produce invalid
