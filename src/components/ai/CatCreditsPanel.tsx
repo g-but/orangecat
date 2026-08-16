@@ -107,7 +107,7 @@ export function CatCreditsPanel() {
           title={topupEnabled ? 'Top up with Lightning' : 'Lightning top-up is coming soon'}
           className={
             topupEnabled
-              ? 'rounded-md bg-accent-warm px-4 py-2 text-sm font-medium text-white hover:bg-accent-warm-hover'
+              ? 'rounded-md bg-accent-warm px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-warm-hover'
               : 'cursor-not-allowed rounded-md border border-subtle px-4 py-2 text-sm font-medium text-fg-tertiary opacity-60'
           }
         >

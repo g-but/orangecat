@@ -30,7 +30,7 @@ export function CatStatusNote({ health }: { health: CatHealthReport | null }) {
           <button
             type="button"
             onClick={() => router.push(ROUTES.SETTINGS_AI)}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent-warm/90"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-xs font-semibold text-on-accent transition-colors hover:bg-accent-warm/90"
           >
             <Key className="h-3.5 w-3.5" />
             Add your own free key

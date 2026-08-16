@@ -86,7 +86,7 @@ export default function ImageGeneratePanel({
         </p>
         <Link
           href={ROUTES.SETTINGS_AI}
-          className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent-warm/90"
+          className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-xs font-semibold text-on-accent transition-colors hover:bg-accent-warm/90"
         >
           <Key className="h-3.5 w-3.5" />
           Add a key ({IMAGE_PROVIDER_NAMES})
@@ -112,7 +112,7 @@ export default function ImageGeneratePanel({
           type="button"
           onClick={handleGenerate}
           disabled={prompt.trim().length < IMAGE_PROMPT_LIMITS.min || busy}
-          className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-accent-warm/90 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-warm/90 disabled:opacity-50"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           {busy ? 'Generating… ~30s' : result ? 'Generate again' : 'Generate'}

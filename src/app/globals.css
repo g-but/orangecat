@@ -160,6 +160,17 @@
     --primary: 0 0% 9%;
     --primary-foreground: 0 0% 98%;
     --public-accent: #ff5c00;
+    /* The label colour for text sitting ON --public-accent. White on this
+       orange is 3.10:1, below the 4.5 AA floor — which put "Get Started" and
+       "Meet your Cat" under it, along with every other bg-accent-warm button.
+       Near-black is 6.10:1. Declared identically in BOTH theme blocks because
+       the accent itself is theme-independent: a label that flipped with the
+       theme would be unreadable in one of them.
+       Mirrors --on-accent in @fleet/design-tokens v1.1.0, which is the SSOT
+       for Solon and FleetCrown. OrangeCat still declares its ramp locally
+       rather than consuming that package; until it does, this value has to be
+       kept in step by hand. */
+    --on-accent: 0 0% 8%;
     --secondary: var(--surface-raised);
     --secondary-foreground: var(--text-primary);
     --muted: var(--surface-raised);
@@ -249,6 +260,17 @@
     --primary: 0 0% 93%;
     --primary-foreground: 0 0% 9%;
     --public-accent: #ff5c00;
+    /* The label colour for text sitting ON --public-accent. White on this
+       orange is 3.10:1, below the 4.5 AA floor — which put "Get Started" and
+       "Meet your Cat" under it, along with every other bg-accent-warm button.
+       Near-black is 6.10:1. Declared identically in BOTH theme blocks because
+       the accent itself is theme-independent: a label that flipped with the
+       theme would be unreadable in one of them.
+       Mirrors --on-accent in @fleet/design-tokens v1.1.0, which is the SSOT
+       for Solon and FleetCrown. OrangeCat still declares its ramp locally
+       rather than consuming that package; until it does, this value has to be
+       kept in step by hand. */
+    --on-accent: 0 0% 8%;
     --secondary: var(--surface-raised);
     --secondary-foreground: var(--text-primary);
     --muted: var(--surface-raised);

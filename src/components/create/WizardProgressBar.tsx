@@ -58,7 +58,7 @@ export function WizardProgressBar({
                   isCompleted
                     ? 'bg-status-positive text-white'
                     : isCurrent
-                      ? 'bg-accent-warm text-white ring-4 ring-accent-warm/20'
+                      ? 'bg-accent-warm text-on-accent ring-4 ring-accent-warm/20'
                       : 'bg-surface-raised text-fg-secondary'
                 }`}
               >

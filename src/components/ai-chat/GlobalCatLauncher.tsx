@@ -50,7 +50,7 @@ export default function GlobalCatLauncher() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Ask Cat"
-          className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-accent-warm text-white shadow-lg transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-warm focus-visible:ring-offset-2 md:bottom-6 md:right-6"
+          className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-accent-warm text-on-accent shadow-lg transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-warm focus-visible:ring-offset-2 md:bottom-6 md:right-6"
           title="Ask Cat about this page"
         >
           <Cat className="h-6 w-6" />
