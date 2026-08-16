@@ -7,7 +7,7 @@
  * where the header — which carries it in the embedded variant — isn't shown.
  */
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Send, Square, Trash2 } from 'lucide-react';
 import { CAT_HUB_COPY } from '@/config/cat-hub';
@@ -47,9 +47,19 @@ export function ChatInput({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value);
-    e.target.style.height = 'auto';
-    e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
   };
+
+  // Keyed on `value` (not the onChange event) so the textarea also resizes
+  // when it changes programmatically — cleared after send, or grown after a
+  // dictated transcript is inserted — not just while the user is typing.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) {
+      return;
+    }
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+  }, [value]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
