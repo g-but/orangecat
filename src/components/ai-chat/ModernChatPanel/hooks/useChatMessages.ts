@@ -162,8 +162,23 @@ export function useChatMessages({
     justCreatedConversationIdRef
   );
 
+  // Streaming appends a new `messages` array on every token, so this fires
+  // dozens of times per reply. Auto-follow only while already near the
+  // bottom — otherwise a smooth scrollIntoView on every token yanks the
+  // thread back down each time the user scrolls up to read earlier
+  // messages, which reads as the whole panel being scroll-locked/stuck.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const sentinel = messagesEndRef.current;
+    const scrollContainer = sentinel?.closest<HTMLElement>('.oc-chat-scroll');
+    if (!scrollContainer) {
+      sentinel?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    const distanceFromBottom =
+      scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight;
+    if (distanceFromBottom < 120) {
+      sentinel?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   const stopGeneration = useCallback(() => {
