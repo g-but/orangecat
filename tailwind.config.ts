@@ -194,6 +194,11 @@ const config: Config = {
           DEFAULT: 'var(--accent-primary)',
           hover: 'var(--accent-hover)',
         },
+        // The label colour for text ON accent-warm. `bg-accent-warm text-white`
+        // is 3.10:1 and fails AA; `text-on-accent` is 6.10:1. Paired with the
+        // background it belongs to so nobody has to remember which ink an
+        // orange button takes.
+        'on-accent': 'hsl(var(--on-accent))',
         status: {
           positive: 'hsl(var(--status-positive))',
           'positive-subtle': 'hsl(var(--status-positive-subtle))',

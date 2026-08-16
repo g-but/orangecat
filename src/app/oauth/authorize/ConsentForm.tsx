@@ -53,7 +53,7 @@ export function ConsentForm({
         <button
           type="submit"
           formAction={approveAuthorization}
-          className="flex-1 rounded-btn bg-accent-warm px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover"
+          className="flex-1 rounded-btn bg-accent-warm px-4 py-2.5 text-sm font-medium text-on-accent hover:bg-accent-hover"
         >
           Allow
         </button>

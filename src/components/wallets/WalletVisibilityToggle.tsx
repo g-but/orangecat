@@ -89,7 +89,7 @@ export function WalletVisibilityToggle({
               <span
                 className={cn(
                   'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
-                  active ? 'border-accent-warm bg-accent-warm text-white' : 'border-default'
+                  active ? 'border-accent-warm bg-accent-warm text-on-accent' : 'border-default'
                 )}
               >
                 {isPending ? (

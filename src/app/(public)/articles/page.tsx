@@ -30,7 +30,7 @@ export default async function ArticlesIndexPage() {
           </div>
           <Link
             href={ROUTES.ARTICLES_NEW}
-            className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-md bg-accent-warm px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-warm-hover"
+            className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-md bg-accent-warm px-3.5 py-2 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-warm-hover"
           >
             <PenLine className="h-4 w-4" />
             <span className="hidden sm:inline">{ARTICLE_COPY.index.write}</span>

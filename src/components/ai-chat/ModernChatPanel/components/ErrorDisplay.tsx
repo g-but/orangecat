@@ -52,7 +52,7 @@ export function ErrorDisplay({ error, code, onRetry, onDismiss }: ErrorDisplayPr
             {isLocalSetup && (
               <button
                 onClick={() => router.push(ROUTES.SETTINGS_AI)}
-                className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-warm/90 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-xs font-semibold text-on-accent hover:bg-accent-warm/90 transition-colors"
               >
                 <Laptop className="h-3.5 w-3.5" />
                 Local model setup
@@ -62,7 +62,7 @@ export function ErrorDisplay({ error, code, onRetry, onDismiss }: ErrorDisplayPr
               <>
                 <button
                   onClick={() => router.push(ROUTES.SETTINGS_AI)}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-warm/90 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-accent-warm px-3 py-1.5 text-xs font-semibold text-on-accent hover:bg-accent-warm/90 transition-colors"
                 >
                   <Key className="h-3.5 w-3.5" />
                   Add a free key
