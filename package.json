@@ -104,7 +104,7 @@
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.4",
     "@google/generative-ai": "^0.24.1",
-    "@hono/node-server": "^2.0.12",
+    "@hono/node-server": "^2.1.1",
     "@hookform/resolvers": "^5.5.7",
     "@marsidev/react-turnstile": "^1.5.5",
     "@mdx-js/loader": "^3.1.0",
