@@ -7,9 +7,11 @@
  * bootstrap — its first change requires a Bitcoin-signed Solon vote.
  */
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ALLOCATION_POLICY_KEY, SOLON_BASE_URL_DEFAULT } from '@/config/solon';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { ROUTES } from '@/config/routes';
 
 export const metadata: Metadata = {
   title: 'Governance',
@@ -134,6 +136,13 @@ export default async function GovernancePage() {
             <a href={`${solonBase}/ecosystem`} className="underline" rel="noopener">
               solon.orangecat.ch/ecosystem
             </a>
+            .
+          </p>
+          <p className="mt-3 text-fg-secondary">
+            For why the governance layer sits outside the product it governs, see{' '}
+            <Link href={ROUTES.ECOSYSTEM} className="underline text-fg-primary">
+              the three-pillar stack
+            </Link>
             .
           </p>
         </div>
