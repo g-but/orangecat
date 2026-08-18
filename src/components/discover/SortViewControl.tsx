@@ -2,6 +2,7 @@
 
 import { Grid3X3, List } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SortOption } from '@/services/search';
 
 export type ViewMode = 'grid' | 'list';
@@ -14,8 +15,6 @@ interface SortViewControlProps {
   onViewModeChange: (mode: ViewMode) => void;
 }
 
-const SELECT_CLASS =
-  'w-full rounded-md border border-default bg-surface-base px-3 py-2 text-sm text-fg-primary';
 const LABEL_CLASS = 'block text-sm font-medium text-fg-primary mb-2';
 const VIEW_WRAP_CLASS = 'flex gap-1 rounded-md border border-default bg-surface-base p-1';
 
@@ -27,10 +26,15 @@ export function SortViewControl({
   onViewModeChange,
 }: SortViewControlProps) {
   const sortSelect = (
-    <select value={sortBy} onChange={e => onSortChange(e.target.value)} className={SELECT_CLASS}>
-      <option value="recent">Newest</option>
-      <option value="relevance">Relevance</option>
-    </select>
+    <Select value={sortBy} onValueChange={onSortChange}>
+      <SelectTrigger aria-label="Sort by">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="recent">Newest</SelectItem>
+        <SelectItem value="relevance">Relevance</SelectItem>
+      </SelectContent>
+    </Select>
   );
 
   const viewButtons = (

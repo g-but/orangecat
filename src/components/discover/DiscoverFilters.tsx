@@ -3,31 +3,28 @@
 import { Search, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { simpleCategories } from '@/config/categories';
 import { SortOption } from '@/services/search';
 import { SortViewControl, type ViewMode } from './SortViewControl';
+import { FilterChip } from './FilterChip';
 
-// Status styles mapping for Tailwind (dynamic classes don't work with string interpolation)
-const STATUS_STYLES = {
-  active: {
-    selected: 'bg-surface-raised border-strong text-fg-primary',
-    label: 'Active',
-  },
-  paused: {
-    selected: 'bg-surface-raised border-strong text-fg-primary',
-    label: 'Paused',
-  },
-  completed: {
-    selected: 'bg-surface-raised border-strong text-fg-primary',
-    label: 'Completed',
-  },
-  cancelled: {
-    selected: 'bg-surface-raised border-strong text-fg-primary',
-    label: 'Cancelled',
-  },
+const RADIUS_OPTIONS = [
+  { value: 0, label: 'Anywhere' },
+  { value: 10, label: 'Within 10 km' },
+  { value: 25, label: 'Within 25 km' },
+  { value: 50, label: 'Within 50 km' },
+  { value: 100, label: 'Within 100 km' },
+] as const;
+
+const STATUS_LABELS = {
+  active: 'Active',
+  paused: 'Paused',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
 } as const;
 
-type StatusKey = keyof typeof STATUS_STYLES;
+type StatusKey = keyof typeof STATUS_LABELS;
 
 interface DiscoverFiltersProps {
   variant: 'desktop' | 'mobile';
@@ -119,18 +116,13 @@ export default function DiscoverFilters({
         <div className="mb-6">
           <label className="block text-sm font-medium text-fg-primary mb-2">Project Status</label>
           <div className="flex flex-wrap gap-2">
-            {(Object.keys(STATUS_STYLES) as StatusKey[]).map(statusKey => (
-              <button
+            {(Object.keys(STATUS_LABELS) as StatusKey[]).map(statusKey => (
+              <FilterChip
                 key={statusKey}
+                label={STATUS_LABELS[statusKey]}
+                selected={selectedStatuses.includes(statusKey)}
                 onClick={() => onToggleStatus(statusKey)}
-                className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
-                  selectedStatuses.includes(statusKey)
-                    ? STATUS_STYLES[statusKey].selected
-                    : 'border-default bg-surface-base text-fg-primary hover:bg-surface-raised/80'
-                }`}
-              >
-                {STATUS_STYLES[statusKey].label}
-              </button>
+              />
             ))}
           </div>
           <p className="text-xs text-fg-secondary mt-2">
@@ -144,17 +136,12 @@ export default function DiscoverFilters({
           <label className="block text-sm font-medium text-fg-primary mb-2">Categories</label>
           <div className="flex flex-wrap gap-2">
             {simpleCategories.map(cat => (
-              <button
+              <FilterChip
                 key={cat.value}
+                label={cat.label}
+                selected={selectedCategories.includes(cat.value)}
                 onClick={() => onToggleCategory(cat.value)}
-                className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
-                  selectedCategories.includes(cat.value)
-                    ? 'bg-surface-raised border-strong text-fg-primary'
-                    : 'border-default bg-surface-base text-fg-primary hover:bg-surface-raised/80'
-                }`}
-              >
-                {cat.label}
-              </button>
+              />
             ))}
           </div>
         </div>
@@ -162,35 +149,33 @@ export default function DiscoverFilters({
 
       <div className="space-y-3 mb-6">
         <label className="block text-sm font-medium text-fg-primary">Location</label>
-        <input
+        <Input
           value={country}
           onChange={e => onCountryChange(e.target.value)}
           placeholder="Country"
-          className="w-full rounded-md border border-default bg-surface-base px-3 py-2 text-sm text-fg-primary"
         />
-        <input
+        <Input
           value={city}
           onChange={e => onCityChange(e.target.value)}
           placeholder="City/Region"
-          className="w-full rounded-md border border-default bg-surface-base px-3 py-2 text-sm text-fg-primary"
         />
-        <input
+        <Input
           value={postal}
           onChange={e => onPostalChange(e.target.value)}
           placeholder="Postal code"
-          className="w-full rounded-md border border-default bg-surface-base px-3 py-2 text-sm text-fg-primary"
         />
-        <select
-          value={radiusKm}
-          onChange={e => onRadiusChange(Number(e.target.value))}
-          className="w-full rounded-md border border-default bg-surface-base px-3 py-2 text-sm text-fg-primary"
-        >
-          <option value={0}>Anywhere</option>
-          <option value={10}>Within 10 km</option>
-          <option value={25}>Within 25 km</option>
-          <option value={50}>Within 50 km</option>
-          <option value={100}>Within 100 km</option>
-        </select>
+        <Select value={String(radiusKm)} onValueChange={v => onRadiusChange(Number(v))}>
+          <SelectTrigger aria-label="Search radius">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {RADIUS_OPTIONS.map(opt => (
+              <SelectItem key={opt.value} value={String(opt.value)}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {!isMobile &&
@@ -241,4 +226,4 @@ export default function DiscoverFilters({
 }
 
 export type { StatusKey };
-export { STATUS_STYLES };
+export { STATUS_LABELS };
