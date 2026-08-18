@@ -193,6 +193,9 @@ export function renderEconomicProfile(ep: FullUserContext['economicProfile']): s
     if (ep.assets.length) {
       parts.push(`**Assets**: ${ep.assets.map(a => a.name).join(', ')}`);
     }
+    if (ep.notAvailableFor.length) {
+      parts.push(`**Not currently taking on (public)**: ${ep.notAvailableFor.join('; ')}`);
+    }
     if (ep.goals.length) {
       parts.push(
         `**Goals**: ${ep.goals.map(g => (g.kind ? `${g.text} [${g.kind}]` : g.text)).join('; ')}`

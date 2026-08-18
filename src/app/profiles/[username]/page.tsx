@@ -6,7 +6,7 @@ import ProfilePageClient from '@/components/profile/ProfilePageClient';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import { fetchProfileListingCounts } from '@/services/profile/listingCounts';
-import { getEconomicProfile } from '@/services/cat/economic-profile';
+import { getPublicEconomicProfile } from '@/services/cat/economic-profile';
 import { listArticlesByAuthor } from '@/services/articles/get-article';
 import { safeJsonLdString } from '@/lib/seo/structured-data';
 import type { ScalableProfile } from '@/services/profile/types';
@@ -255,9 +255,12 @@ export default async function PublicProfilePage({ params }: PageProps) {
   } = await supabase.auth.getUser();
   const isOwnProfile = !!currentUser && currentUser.id === profile.id;
 
-  // The Cat's extracted "what I can offer" signals (skills/assets/asked-for).
-  // Degrades to null if the store is empty/absent — the section then hides.
-  const economicProfile = await getEconomicProfile(supabase, profile.id);
+  // The Cat's extracted "what I can offer" signals (skills/assets/asked-for/
+  // not-available-for). Public slice only — getPublicEconomicProfile reads
+  // user_economic_profile_public, which is visible to any visitor, not just
+  // the owner (the base table's RLS is owner-only). Degrades to null if the
+  // store is empty/absent — the section then hides.
+  const economicProfile = await getPublicEconomicProfile(supabase, profile.id);
 
   // Redact before anything derives from the row, so hidden data never leaves the
   // server — not in the client payload, not in the JSON-LD below.

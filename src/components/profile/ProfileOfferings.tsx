@@ -8,17 +8,22 @@
  * visitor (or a potential client) actually wants — and gives the owner a
  * one-click path from a skill to the matching monetizable entity.
  *
- * Only the offer-facing fields are shown (skills, asked-for, assets). Private
- * signals (constraints, motivation) are deliberately omitted.
+ * Only the offer-facing fields are shown (skills, asked-for, assets, and
+ * not-available-for — the scope they explicitly aren't taking on right now).
+ * Private signals (constraints, motivation) are deliberately omitted — the
+ * PublicEconomicProfile type this reads doesn't even carry them.
  */
 
 import Link from 'next/link';
-import { Sparkles, Plus } from 'lucide-react';
+import { Sparkles, Plus, MinusCircle } from 'lucide-react';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
-import { suggestedEntityForSkill, type EconomicProfile } from '@/services/cat/economic-profile';
+import {
+  suggestedEntityForSkill,
+  type PublicEconomicProfile,
+} from '@/services/cat/economic-profile';
 
 interface ProfileOfferingsProps {
-  economicProfile?: EconomicProfile | null;
+  economicProfile?: PublicEconomicProfile | null;
   isOwnProfile?: boolean;
 }
 
@@ -29,7 +34,13 @@ export default function ProfileOfferings({ economicProfile, isOwnProfile }: Prof
   const skills = economicProfile.skills ?? [];
   const askedFor = economicProfile.askedFor ?? [];
   const assets = economicProfile.assets ?? [];
-  if (skills.length === 0 && askedFor.length === 0 && assets.length === 0) {
+  const notAvailableFor = economicProfile.notAvailableFor ?? [];
+  if (
+    skills.length === 0 &&
+    askedFor.length === 0 &&
+    assets.length === 0 &&
+    notAvailableFor.length === 0
+  ) {
     return null;
   }
 
@@ -99,7 +110,7 @@ export default function ProfileOfferings({ economicProfile, isOwnProfile }: Prof
       )}
 
       {assets.length > 0 && (
-        <div>
+        <div className={notAvailableFor.length > 0 ? 'mb-3' : undefined}>
           <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-fg-tertiary">
             Assets
           </p>
@@ -110,6 +121,25 @@ export default function ProfileOfferings({ economicProfile, isOwnProfile }: Prof
                 className="inline-flex items-center rounded-full border border-default bg-surface-base px-2.5 py-0.5 text-xs text-fg-secondary"
               >
                 {asset.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {notAvailableFor.length > 0 && (
+        <div>
+          <p className="mb-1.5 flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-fg-tertiary">
+            <MinusCircle className="h-3 w-3" />
+            Not currently taking on
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {notAvailableFor.map(item => (
+              <span
+                key={item}
+                className="inline-flex items-center rounded-full border border-dashed border-default px-2.5 py-0.5 text-xs text-fg-tertiary"
+              >
+                {item}
               </span>
             ))}
           </div>

@@ -14,7 +14,7 @@ import ProfileWalletsTab from '@/components/profile/ProfileWalletsTab';
 import ProfileEntityTab from '@/components/profile/ProfileEntityTab';
 import ProfileArticlesTab from '@/components/profile/ProfileArticlesTab';
 import ProfileOfferings from '@/components/profile/ProfileOfferings';
-import type { EconomicProfile } from '@/services/cat/economic-profile';
+import type { PublicEconomicProfile } from '@/services/cat/economic-profile';
 import {
   Users,
   User,
@@ -69,7 +69,7 @@ interface ProfileLayoutProps {
   /** Server-side own-profile detection (avoids hydration flash) */
   serverIsOwnProfile?: boolean;
   /** The Cat's extracted "what I can offer" signals for this profile. */
-  economicProfile?: EconomicProfile | null;
+  economicProfile?: PublicEconomicProfile | null;
 }
 
 export default function ProfileLayout({
