@@ -28,9 +28,15 @@ import type {
 
 const MAX_USERNAME_SUFFIX_ATTEMPTS = 6;
 
-function claimsTable() {
-  return looseClient(getAdminClient()).from(DATABASE_TABLES.PROFILE_CLAIMS);
-}
+// Every function below calls `.from(DATABASE_TABLES.PROFILE_CLAIMS)` inline —
+// deliberately not through a shared helper. scripts/db/audit-schema-drift.mjs
+// (the CD schema-drift gate) statically resolves `.select()`/`.eq()`/
+// `.update()` calls by scanning the text window after the *nearest preceding*
+// literal `.from(DATABASE_TABLES.X)` in the file; a wrapper that hides that
+// call behind a function name makes it invisible to the scanner, and every
+// column reference after it gets silently misattributed to whichever table
+// the scanner last resolved (here: `profiles`, from the lookup in
+// getProfileClaimPreview) — false-positive drift that blocked deploy 2026-08-18.
 
 function isExpired(row: Pick<ProfileClaimRow, 'expires_at'>): boolean {
   return new Date(row.expires_at).getTime() < Date.now();
@@ -41,7 +47,8 @@ export async function createProfileClaim(input: {
   draft: ProfileClaimDraft;
   suggestedUsername?: string;
 }): Promise<ProfileClaimResult<{ id: string }>> {
-  const { data, error } = await claimsTable()
+  const { data, error } = await looseClient(getAdminClient())
+    .from(DATABASE_TABLES.PROFILE_CLAIMS)
     .insert({
       created_by: input.createdBy,
       draft: input.draft,
@@ -60,7 +67,8 @@ export async function createProfileClaim(input: {
 export async function listProfileClaimsCreatedBy(
   createdBy: string
 ): Promise<ProfileClaimResult<ProfileClaimRow[]>> {
-  const { data, error } = await claimsTable()
+  const { data, error } = await looseClient(getAdminClient())
+    .from(DATABASE_TABLES.PROFILE_CLAIMS)
     .select('*')
     .eq('created_by', createdBy)
     .order('created_at', { ascending: false });
@@ -76,7 +84,11 @@ export async function listProfileClaimsCreatedBy(
 export async function getProfileClaimPreview(
   id: string
 ): Promise<ProfileClaimResult<ProfileClaimPreview>> {
-  const { data: row, error } = await claimsTable().select('*').eq('id', id).maybeSingle();
+  const { data: row, error } = await looseClient(getAdminClient())
+    .from(DATABASE_TABLES.PROFILE_CLAIMS)
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
 
   if (error) {
     logger.error('Failed to load profile claim', { error, id });
@@ -115,7 +127,8 @@ export async function revokeProfileClaim(
   id: string,
   requestedBy: string
 ): Promise<ProfileClaimResult<null>> {
-  const { data: row, error: fetchError } = await claimsTable()
+  const { data: row, error: fetchError } = await looseClient(getAdminClient())
+    .from(DATABASE_TABLES.PROFILE_CLAIMS)
     .select('created_by, status')
     .eq('id', id)
     .maybeSingle();
@@ -133,7 +146,10 @@ export async function revokeProfileClaim(
     return { ok: false, code: 'already_claimed', message: 'Only a pending claim can be revoked' };
   }
 
-  const { error } = await claimsTable().update({ status: 'revoked' }).eq('id', id);
+  const { error } = await looseClient(getAdminClient())
+    .from(DATABASE_TABLES.PROFILE_CLAIMS)
+    .update({ status: 'revoked' })
+    .eq('id', id);
   if (error) {
     return { ok: false, dbError: error };
   }
@@ -183,7 +199,8 @@ export async function claimProfileClaim(params: {
 }): Promise<ProfileClaimResult<{ username: string | null }>> {
   const { claimId, userId, userSupabase } = params;
 
-  const { data: existing, error: fetchError } = await claimsTable()
+  const { data: existing, error: fetchError } = await looseClient(getAdminClient())
+    .from(DATABASE_TABLES.PROFILE_CLAIMS)
     .select('*')
     .eq('id', claimId)
     .maybeSingle();
@@ -205,7 +222,8 @@ export async function claimProfileClaim(params: {
   }
 
   const nowIso = new Date().toISOString();
-  const { data: won, error: casError } = await claimsTable()
+  const { data: won, error: casError } = await looseClient(getAdminClient())
+    .from(DATABASE_TABLES.PROFILE_CLAIMS)
     .update({ status: 'claimed', claimed_by: userId, claimed_at: nowIso })
     .eq('id', claimId)
     .eq('status', 'pending')
@@ -246,7 +264,8 @@ export async function claimProfileClaim(params: {
   if (profileError || !updatedProfile) {
     // Best-effort rollback so a failed profile write doesn't leave the claim
     // permanently stuck in "claimed" with nothing to show for it.
-    await claimsTable()
+    await looseClient(getAdminClient())
+      .from(DATABASE_TABLES.PROFILE_CLAIMS)
       .update({ status: 'pending', claimed_by: null, claimed_at: null })
       .eq('id', claimId);
     logger.error('Failed to apply claimed draft to profile', { error: profileError, claimId, userId });
