@@ -19,7 +19,7 @@ export const contextHandlers: Record<string, ActionHandler> = {
       return {
         success: false,
         error:
-          'Nothing to save — provide at least one of: skills, assets, goals, constraints, asked_for, motivation, stage.',
+          'Nothing to save — provide at least one of: skills, assets, goals, constraints, asked_for, not_available_for, motivation, stage.',
       };
     }
 
@@ -31,6 +31,7 @@ export const contextHandlers: Record<string, ActionHandler> = {
       patch.skills?.length && `${patch.skills.length} skill(s)`,
       patch.assets?.length && `${patch.assets.length} asset(s)`,
       patch.goals?.length && `${patch.goals.length} goal(s)`,
+      patch.notAvailableFor?.length && `${patch.notAvailableFor.length} scope note(s)`,
     ]
       .filter(Boolean)
       .join(', ');

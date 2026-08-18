@@ -17,6 +17,7 @@ const empty: EconomicProfile = {
   goals: [],
   constraints: [],
   askedFor: [],
+  notAvailableFor: [],
   motivation: null,
   stage: null,
 };
@@ -27,6 +28,7 @@ const full: EconomicProfile = {
   goals: [{ text: 'earn on the side', kind: 'earn' }],
   constraints: ['only weekends'],
   askedFor: ['clear emails'],
+  notAvailableFor: ['full-time roles'],
   motivation: 'earn',
   stage: 'exploring',
 };

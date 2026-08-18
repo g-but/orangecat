@@ -149,6 +149,7 @@ export const DATABASE_TABLES = {
   CAT_WATCHES: 'cat_watches',
   CAT_INTERESTS: 'cat_interests',
   USER_ECONOMIC_PROFILE: 'user_economic_profile',
+  USER_ECONOMIC_PROFILE_PUBLIC: 'user_economic_profile_public',
   CAT_CREDIT_ENTRIES: 'cat_credit_entries',
   CAT_CREDIT_TOPUPS: 'cat_credit_topups',
 

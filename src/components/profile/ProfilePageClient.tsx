@@ -5,14 +5,14 @@ import { Project } from '@/types/database';
 import ProfileLayout from '@/components/profile/ProfileLayout';
 import type { EntityType } from '@/config/entity-registry';
 import type { Article } from '@/services/articles/types';
-import type { EconomicProfile } from '@/services/cat/economic-profile';
+import type { PublicEconomicProfile } from '@/services/cat/economic-profile';
 
 interface ProfilePageClientProps {
   profile: ScalableProfile;
   projects?: Project[];
   articles?: Article[];
   isOwnProfile?: boolean;
-  economicProfile?: EconomicProfile | null;
+  economicProfile?: PublicEconomicProfile | null;
   stats: {
     projectCount: number;
     totalRaised: number;

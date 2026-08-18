@@ -39,9 +39,25 @@ export interface EconomicProfile {
   constraints: string[];
   /** The richest signal: what people come to this person for. */
   askedFor: string[];
+  /**
+   * Public — the inverse of `constraints`: work they explicitly say they are
+   * NOT taking on right now (e.g. "full-time roles", "backend-only gigs").
+   * Shown on the profile, unlike `constraints`/`motivation`/`stage` which stay
+   * private. Lets advisory/fractional-role offers (e.g. "fractional CTO")
+   * state scope up front instead of only what they do.
+   */
+  notAvailableFor: string[];
   motivation?: string | null;
   stage?: string | null;
 }
+
+/** The subset of an EconomicProfile that's ever shown to someone other than
+ * the owner — served from user_economic_profile_public, which excludes the
+ * private constraints/motivation/stage columns at the database layer. */
+export type PublicEconomicProfile = Pick<
+  EconomicProfile,
+  'skills' | 'assets' | 'askedFor' | 'notAvailableFor'
+>;
 
 const EMPTY: EconomicProfile = {
   skills: [],
@@ -49,6 +65,7 @@ const EMPTY: EconomicProfile = {
   goals: [],
   constraints: [],
   askedFor: [],
+  notAvailableFor: [],
   motivation: null,
   stage: null,
 };
@@ -68,6 +85,7 @@ export function isEconomicProfileEmpty(p: EconomicProfile | null): boolean {
     p.goals.length === 0 &&
     p.constraints.length === 0 &&
     p.askedFor.length === 0 &&
+    p.notAvailableFor.length === 0 &&
     !p.motivation &&
     !p.stage
   );
@@ -156,7 +174,7 @@ export async function getEconomicProfile(
   try {
     const { data, error } = await supabase
       .from(DATABASE_TABLES.USER_ECONOMIC_PROFILE)
-      .select('skills, assets, goals, constraints, asked_for, motivation, stage')
+      .select('skills, assets, goals, constraints, asked_for, not_available_for, motivation, stage')
       .eq('user_id', userId)
       .maybeSingle();
     if (error) {
@@ -180,6 +198,7 @@ export async function getEconomicProfile(
       goals: asArray<EconomicGoal>(row.goals),
       constraints: asArray<string>(row.constraints),
       askedFor: asArray<string>(row.asked_for),
+      notAvailableFor: asArray<string>(row.not_available_for),
       motivation: (row.motivation as string | null) ?? null,
       stage: (row.stage as string | null) ?? null,
     };
@@ -188,6 +207,10 @@ export async function getEconomicProfile(
     return null;
   }
 }
+
+// getPublicEconomicProfile lives in ./economic-profile-public — the accessor
+// safe for a viewer who isn't the profile's owner (kept there to stay under
+// this file's line budget; see that file's header for why).
 
 function dedupe<T>(items: T[]): T[] {
   const seen = new Set<string>();
@@ -220,6 +243,7 @@ export async function saveEconomicProfile(
       goals: dedupe([...current.goals, ...(patch.goals ?? [])]),
       constraints: dedupe([...current.constraints, ...(patch.constraints ?? [])]),
       asked_for: dedupe([...current.askedFor, ...(patch.askedFor ?? [])]),
+      not_available_for: dedupe([...current.notAvailableFor, ...(patch.notAvailableFor ?? [])]),
       motivation: patch.motivation !== undefined ? patch.motivation : current.motivation,
       stage: patch.stage !== undefined ? patch.stage : current.stage,
       updated_at: new Date().toISOString(),
@@ -289,12 +313,16 @@ export async function removeFromEconomicProfile(
   }
 
   const matchedTerms = new Set<string>();
-  const dims: Array<{ label: string; key: 'skills' | 'assets' | 'goals' | 'constraints' | 'askedFor' }> = [
+  const dims: Array<{
+    label: string;
+    key: 'skills' | 'assets' | 'goals' | 'constraints' | 'askedFor' | 'notAvailableFor';
+  }> = [
     { label: 'skill', key: 'skills' },
     { label: 'asset', key: 'assets' },
     { label: 'goal', key: 'goals' },
     { label: 'constraint', key: 'constraints' },
     { label: 'asked-for', key: 'askedFor' },
+    { label: 'not-available-for', key: 'notAvailableFor' },
   ];
   const next: Record<string, unknown[]> = {};
   for (const dim of dims) {
@@ -325,6 +353,7 @@ export async function removeFromEconomicProfile(
         goals: next.goals,
         constraints: next.constraints,
         asked_for: next.askedFor,
+        not_available_for: next.notAvailableFor,
         motivation: current.motivation,
         stage: current.stage,
         updated_at: new Date().toISOString(),
@@ -376,6 +405,7 @@ export function normalizeEconomicPatch(
     goals,
     constraints: strs(o.constraints),
     askedFor: strs(o.asked_for ?? o.askedFor),
+    notAvailableFor: strs(o.not_available_for ?? o.notAvailableFor),
     motivation: typeof o.motivation === 'string' && o.motivation.trim() ? o.motivation : undefined,
     stage: typeof o.stage === 'string' && o.stage.trim() ? o.stage : undefined,
   };
@@ -385,6 +415,7 @@ export function normalizeEconomicPatch(
     goals.length > 0 ||
     (patch.constraints?.length ?? 0) > 0 ||
     (patch.askedFor?.length ?? 0) > 0 ||
+    (patch.notAvailableFor?.length ?? 0) > 0 ||
     !!patch.motivation ||
     !!patch.stage;
   return hasAny ? patch : null;
@@ -396,13 +427,14 @@ Pull, where present:
 - skills: things they can do (names). Treat self-deprecation ("it's nothing", "just a hobby", "anyone can do that") as a real skill worth capturing.
 - assets: things they OWN that could be rented or sold.
 - goals: what they want; each {text, kind} where kind is earn | fund | learn | connect | build.
-- constraints: limits like "only evenings", "no upfront capital".
+- constraints: PRIVATE limits like "only evenings", "no upfront capital" — never shown publicly.
 - asked_for: what people come to them for.
+- not_available_for: PUBLIC scope limits they'd want a prospective client/collaborator to see up front — e.g. "not taking full-time roles", "advisory only, no hands-on coding", "nothing under 3 months". Distinct from constraints: only capture this when they're describing what kind of engagement they will or won't take, not private life constraints.
 - motivation: why they're here — earn | community | meaning | learn | unsure.
 - stage: exploring | has-offers | scaling.
 
 Rules: ground everything in THIS exchange; omit anything not stated; never infer demand, prices, or stats. Output ONLY a JSON object with those keys (arrays empty if none), nothing else. Example:
-{"skills":["translation"],"assets":[],"goals":[{"text":"earn on the side","kind":"earn"}],"constraints":[],"asked_for":["writing clear emails"],"motivation":"earn","stage":null}`;
+{"skills":["translation"],"assets":[],"goals":[{"text":"earn on the side","kind":"earn"}],"constraints":[],"asked_for":["writing clear emails"],"not_available_for":[],"motivation":"earn","stage":null}`;
 
 /**
  * Passive, deterministic economic extraction — runs after each self-disclosing turn

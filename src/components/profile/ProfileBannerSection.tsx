@@ -77,7 +77,7 @@ export function ProfileBannerSection({
             onClick={onShareToggle}
             variant="outline"
             size="sm"
-            className="bg-surface-base/90 dark:bg-surface-base/90 backdrop-blur-sm hover:bg-surface-raised dark:hover:bg-surface-base shadow-sm text-xs sm:text-sm"
+            className="min-h-11 min-w-11 bg-surface-base/90 dark:bg-surface-base/90 backdrop-blur-sm hover:bg-surface-raised dark:hover:bg-surface-base shadow-sm text-xs sm:text-sm"
           >
             <Share2 className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
             <span className="hidden sm:inline">Share</span>
@@ -113,7 +113,11 @@ export function ProfileBannerSection({
 
         {profile.username && (
           <Link href={ROUTES.PAY(profile.username)}>
-            <Button variant="accent" size="sm" className="shadow-sm text-xs sm:text-sm">
+            <Button
+              variant="accent"
+              size="sm"
+              className="min-h-11 min-w-11 shadow-sm text-xs sm:text-sm"
+            >
               <Bitcoin className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
               <span className="hidden sm:inline">Pay</span>
             </Button>
@@ -122,7 +126,11 @@ export function ProfileBannerSection({
 
         {!isOwnProfile && profile.id && (
           <Link href={`${ROUTES.MESSAGES}?to=${encodeURIComponent(profile.id)}`}>
-            <Button variant="outline" size="sm" className="bg-surface-base/90 shadow-sm text-xs sm:text-sm">
+            <Button
+              variant="outline"
+              size="sm"
+              className="min-h-11 min-w-11 bg-surface-base/90 shadow-sm text-xs sm:text-sm"
+            >
               <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
               <span className="hidden sm:inline">Message</span>
             </Button>
@@ -131,7 +139,11 @@ export function ProfileBannerSection({
 
         {isOwnProfile ? (
           <Link href={ROUTES.DASHBOARD.INFO_EDIT}>
-            <Button variant="primary" size="sm" className="shadow-sm text-xs sm:text-sm">
+            <Button
+              variant="primary"
+              size="sm"
+              className="min-h-11 min-w-11 shadow-sm text-xs sm:text-sm"
+            >
               <Settings className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
               <span className="hidden sm:inline">Edit Profile</span>
             </Button>
@@ -142,7 +154,7 @@ export function ProfileBannerSection({
             disabled={isFollowLoading}
             variant={isFollowing ? 'secondary' : 'outline'}
             size="sm"
-            className="shadow-sm text-xs sm:text-sm"
+            className="min-h-11 min-w-11 shadow-sm text-xs sm:text-sm"
           >
             <Users className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
             <span className="hidden sm:inline">

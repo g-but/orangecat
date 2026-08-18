@@ -1259,7 +1259,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     id: 'save_economic_profile',
     name: 'Save Economic Profile',
     description:
-      'Save latent economic value the user reveals — skills, things they own to rent/sell, goals, constraints, what people come to them for, motivation, or stage — into their structured economic profile so Cat can suggest better offers.',
+      'Save latent economic value the user reveals — skills, things they own to rent/sell, goals, constraints, what people come to them for, engagement scope they are not taking on, motivation, or stage — into their structured economic profile so Cat can suggest better offers. Skills, asked-for, and not-available-for are shown on their public profile; constraints, motivation, and stage stay private.',
     category: 'context',
     icon: TrendingUp,
     riskLevel: 'low',
@@ -1296,6 +1296,13 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
         description: 'What people come to them for (the richest signal)',
       },
       {
+        name: 'not_available_for',
+        type: 'array',
+        required: false,
+        description:
+          'PUBLIC — engagements they explicitly do not take on right now, shown on their profile next to what they offer. E.g. "full-time roles", "backend-only gigs", "advisory only, no hands-on coding", "nothing under 3 months". Only for engagement scope, not private life constraints (those go in constraints).',
+      },
+      {
         name: 'motivation',
         type: 'string',
         required: false,
@@ -1312,6 +1319,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       "I'm a translator and I fix bikes on weekends",
       'I have a spare workshop I could rent out',
       'I want to earn from my design skills',
+      "I do fractional CTO work — technical advisory and product strategy, but I'm not taking on full-time roles or hands-on coding right now",
     ],
     enabled: true,
   },
