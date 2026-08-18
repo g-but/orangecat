@@ -18,6 +18,7 @@ export const DATABASE_TABLES = {
 
   // Social
   PROFILES: 'profiles',
+  PROFILE_CLAIMS: 'profile_claims',
   FOLLOWS: 'follows',
   ACTORS: 'actors',
 
