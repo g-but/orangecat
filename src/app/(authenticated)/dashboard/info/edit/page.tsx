@@ -53,7 +53,7 @@ export default function DashboardInfoEditPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <Link href={ROUTES.DASHBOARD.INFO}>
-              <Button variant="ghost" size="sm" className="mr-2">
+              <Button variant="ghost" size="sm" className="mr-2 min-h-11">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to View
               </Button>

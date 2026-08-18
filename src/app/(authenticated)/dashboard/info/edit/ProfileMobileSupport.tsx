@@ -86,7 +86,8 @@ export function ProfileMobileSupport({
               <h3 className="text-lg font-semibold text-fg-primary">Help & Guidance</h3>
               <button
                 onClick={() => setShowMobileGuidance(false)}
-                className="p-2 hover:bg-surface-raised rounded-lg transition-colors"
+                aria-label="Close help"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 transition-colors hover:bg-surface-raised"
               >
                 <svg
                   className="w-5 h-5 text-fg-secondary"
