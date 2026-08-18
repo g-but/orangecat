@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { ROUTES } from '@/config/routes';
+import { API_ROUTES } from '@/config/api-routes';
 import { logger } from '@/utils/logger';
 
 interface ProfileClaimListItem {
@@ -49,7 +50,7 @@ function ClaimRow({
   const handleRevoke = async () => {
     setIsRevoking(true);
     try {
-      const res = await fetch(`/api/profile-claims/${claim.id}`, { method: 'DELETE' });
+      const res = await fetch(API_ROUTES.PROFILE_CLAIMS.BY_ID(claim.id), { method: 'DELETE' });
       const body = await res.json();
       if (!res.ok || !body.success) {
         toast.error(body?.error?.message || 'Could not revoke this link.');
@@ -103,7 +104,7 @@ export default function ProfileClaimsPage() {
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/profile-claims');
+      const res = await fetch(API_ROUTES.PROFILE_CLAIMS.BASE);
       const body = await res.json();
       if (body.success) {
         setClaims(body.data.claims);

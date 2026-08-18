@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { APP_NAME } from '@/config/brand';
 import { ROUTES } from '@/config/routes';
+import { API_ROUTES } from '@/config/api-routes';
 import { publicProfilePath } from '@/config/public-profile-path';
 import type { ProfileClaimPreview } from '@/domain/profileClaims/types';
 
@@ -30,7 +31,7 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
   const handleClaim = async () => {
     setIsClaiming(true);
     try {
-      const res = await fetch(`/api/profile-claims/${claimId}/claim`, { method: 'POST' });
+      const res = await fetch(API_ROUTES.PROFILE_CLAIMS.CLAIM(claimId), { method: 'POST' });
       const body = await res.json();
       if (!res.ok || !body.success) {
         toast.error(body?.error?.message || 'Could not claim this profile. Please try again.');

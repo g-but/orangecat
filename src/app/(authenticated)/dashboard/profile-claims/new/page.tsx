@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { ROUTES } from '@/config/routes';
+import { API_ROUTES } from '@/config/api-routes';
 import { logger } from '@/utils/logger';
 
 interface SocialLinkField {
@@ -54,7 +55,7 @@ export default function NewProfileClaimPage() {
         .filter(link => link.platform.trim() && link.value.trim())
         .map(link => ({ platform: link.platform.trim(), value: link.value.trim() }));
 
-      const res = await fetch('/api/profile-claims', {
+      const res = await fetch(API_ROUTES.PROFILE_CLAIMS.BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
