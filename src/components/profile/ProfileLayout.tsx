@@ -24,6 +24,7 @@ import {
   Info,
   Wallet,
   FileText,
+  Calendar,
 } from 'lucide-react';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import type { EntityType } from '@/config/entity-registry';
@@ -32,6 +33,14 @@ import { cn } from '@/lib/utils';
 import { useProfileActions } from './useProfileActions';
 import { ProfileBannerSection } from './ProfileBannerSection';
 import { MAKER_STATUS_METADATA, isMakerStatus } from '@/config/maker-status';
+
+const JOINED_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' });
+
+/** "Joined Aug 2026" — quiet identity metadata, not a headline stat. */
+function formatJoinedDate(createdAt: string): string | null {
+  const date = new Date(createdAt);
+  return Number.isNaN(date.getTime()) ? null : JOINED_DATE_FORMATTER.format(date);
+}
 
 // Entity types displayed as generic ProfileEntityTab tabs, in order.
 const PROFILE_ENTITY_TABS: EntityType[] = [
@@ -86,6 +95,7 @@ export default function ProfileLayout({
 }: ProfileLayoutProps) {
   const { user } = useAuth();
   const isOwnProfile = serverIsOwnProfile ?? profile.id === user?.id;
+  const joinedDate = profile.created_at ? formatJoinedDate(profile.created_at) : null;
 
   const {
     showShare,
@@ -223,9 +233,17 @@ export default function ProfileLayout({
             <h1 className="mb-1 break-words text-xl font-bold text-fg-primary sm:mb-2 sm:text-2xl md:text-3xl">
               {profile.name || profile.username || 'User'}
             </h1>
-            <p className="mb-3 break-all text-sm font-medium text-fg-secondary sm:mb-4 sm:text-base md:text-lg">
-              @{profile.username}
-            </p>
+            <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 sm:mb-4">
+              <p className="break-all text-sm font-medium text-fg-secondary sm:text-base md:text-lg">
+                @{profile.username}
+              </p>
+              {joinedDate && (
+                <span className="inline-flex items-center gap-1 text-xs text-fg-tertiary">
+                  <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                  Joined {joinedDate}
+                </span>
+              )}
+            </div>
             {isMakerStatus(profile.current_status) && (
               <span className="mb-3 inline-flex items-center rounded-full bg-surface-raised border border-default px-2.5 py-1 text-xs font-medium text-fg-primary sm:mb-4">
                 {MAKER_STATUS_METADATA[profile.current_status].label}
