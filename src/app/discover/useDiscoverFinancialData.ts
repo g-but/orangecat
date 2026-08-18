@@ -10,6 +10,8 @@ import type { Loan } from '@/types/loans';
 import { narrowLoans } from '@/services/loans/queries/narrow';
 import type { Investment } from '@/types/investments';
 import type { GenericPublicEntity } from '@/components/entity/variants/GenericPublicCard';
+import { sortGenericResults } from '@/services/search/processors';
+import type { SortOption } from '@/services/search/types';
 
 interface DiscoverFinancialData {
   loans: Loan[];
@@ -22,7 +24,8 @@ interface DiscoverFinancialData {
 
 export function useDiscoverFinancialData(
   activeTab: DiscoverTabType,
-  searchTerm: string
+  searchTerm: string,
+  sortBy: SortOption
 ): DiscoverFinancialData {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loansLoading, setLoansLoading] = useState(false);
@@ -58,7 +61,7 @@ export function useDiscoverFinancialData(
           logger.error('Error fetching loans', error, 'Discover');
           setLoans([]);
         } else {
-          setLoans(narrowLoans(data || []));
+          setLoans(sortGenericResults(narrowLoans(data || []), sortBy, searchTerm));
         }
       } catch (error) {
         logger.error('Error fetching loans', error, 'Discover');
@@ -69,7 +72,7 @@ export function useDiscoverFinancialData(
     };
 
     fetchLoans();
-  }, [activeTab, searchTerm]);
+  }, [activeTab, searchTerm, sortBy]);
 
   useEffect(() => {
     if (activeTab !== 'all' && activeTab !== 'investments') {
@@ -99,7 +102,9 @@ export function useDiscoverFinancialData(
         } else {
           // `investments.status`/`currency` are text columns with app-level
           // unions; investor_count is enriched, not selected.
-          setInvestments((data || []) as unknown as Investment[]);
+          setInvestments(
+            sortGenericResults((data || []) as unknown as Investment[], sortBy, searchTerm)
+          );
         }
       } catch (error) {
         logger.error('Error fetching investments', error, 'Discover');
@@ -110,7 +115,7 @@ export function useDiscoverFinancialData(
     };
 
     fetchInvestments();
-  }, [activeTab, searchTerm]);
+  }, [activeTab, searchTerm, sortBy]);
 
   useEffect(() => {
     if (activeTab !== 'all' && activeTab !== 'assets') {
@@ -140,7 +145,7 @@ export function useDiscoverFinancialData(
           logger.error('Error fetching assets', error, 'Discover');
           setAssets([]);
         } else {
-          setAssets((data || []) as GenericPublicEntity[]);
+          setAssets(sortGenericResults((data || []) as GenericPublicEntity[], sortBy, searchTerm));
         }
       } catch (error) {
         logger.error('Error fetching assets', error, 'Discover');
@@ -151,7 +156,7 @@ export function useDiscoverFinancialData(
     };
 
     fetchAssets();
-  }, [activeTab, searchTerm]);
+  }, [activeTab, searchTerm, sortBy]);
 
   return { loans, loansLoading, investments, investmentsLoading, assets, assetsLoading };
 }

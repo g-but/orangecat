@@ -8,6 +8,10 @@
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { STATUS, ENTITY_STATUS } from '@/config/database-constants';
+import {
+  FIXTURE_USERNAME_ILIKE_PATTERNS,
+  EXACT_FIXTURE_USERNAMES,
+} from '@/config/public-directory';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 export interface DiscoverCounts {
@@ -47,6 +51,19 @@ export const ZERO_DISCOVER_COUNTS: DiscoverCounts = {
 export async function fetchDiscoverCounts(supabase: AnySupabaseClient): Promise<DiscoverCounts> {
   const head = (q: unknown) => q as Promise<{ count: number | null }>;
 
+  // Same fixture exclusion the profiles list/search query applies (SSOT:
+  // config/public-directory.ts) — kept in sync explicitly so this badge
+  // count can't drift from what the People tab actually lists again.
+  let profilesQuery = supabase
+    .from(DATABASE_TABLES.PROFILES)
+    .select('*', { count: 'exact', head: true });
+  for (const prefix of FIXTURE_USERNAME_ILIKE_PATTERNS) {
+    profilesQuery = profilesQuery.not('username', 'ilike', prefix);
+  }
+  for (const name of EXACT_FIXTURE_USERNAMES) {
+    profilesQuery = profilesQuery.neq('username', name);
+  }
+
   const [
     projectsRes,
     profilesRes,
@@ -69,13 +86,7 @@ export async function fetchDiscoverCounts(supabase: AnySupabaseClient): Promise<
         .select('*', { count: 'exact', head: true })
         .eq('status', ENTITY_STATUS.ACTIVE)
     ),
-    head(
-      supabase
-        .from(DATABASE_TABLES.PROFILES)
-        .select('*', { count: 'exact', head: true })
-        .not('username', 'ilike', 'e2e-reset-%')
-        .not('username', 'ilike', 'user\\_________')
-    ),
+    head(profilesQuery),
     head(
       supabase
         .from(getTableName('loan'))

@@ -10,7 +10,11 @@ import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import type { SearchProfile, SearchFilters, RawSearchProfile } from '../types';
 import { sanitizeQuery, haversineDistance } from './helpers';
-import { isFixtureProfile } from '@/config/public-directory';
+import {
+  isFixtureProfile,
+  FIXTURE_USERNAME_ILIKE_PATTERNS,
+  EXACT_FIXTURE_USERNAMES,
+} from '@/config/public-directory';
 
 /**
  * Search profiles with filters
@@ -26,9 +30,13 @@ export async function searchProfiles(
     .from(DATABASE_TABLES.PROFILES)
     .select(
       'id, username, name, bio, avatar_url, created_at, location_country, location_city, location_zip, latitude, longitude, current_status'
-    )
-    .not('username', 'ilike', 'e2e-reset-%')
-    .not('username', 'ilike', 'user\\_________');
+    );
+  for (const prefix of FIXTURE_USERNAME_ILIKE_PATTERNS) {
+    profileQuery = profileQuery.not('username', 'ilike', prefix);
+  }
+  for (const name of EXACT_FIXTURE_USERNAMES) {
+    profileQuery = profileQuery.neq('username', name);
+  }
 
   // Priority 1: If radius is specified, use PostGIS RPC (handles both query and radius)
   if (filters?.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
