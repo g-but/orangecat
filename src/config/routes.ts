@@ -402,6 +402,8 @@ export const ROUTES = {
     CAT_WELCOME: '/dashboard/cat?welcome=true',
     DOCUMENTS: ENTITY_REGISTRY['document'].basePath,
     DOCUMENTS_CREATE: ENTITY_REGISTRY['document'].createPath,
+    PROFILE_CLAIMS: '/dashboard/profile-claims',
+    PROFILE_CLAIMS_NEW: '/dashboard/profile-claims/new',
     // Note: there is no /dashboard/settings page. Account settings live at
     // ROUTES.SETTINGS; AI settings at ROUTES.SETTINGS_AI.
   },
@@ -420,6 +422,9 @@ export const ROUTES = {
     VIEW: publicProfilePath,
     ME: '/profiles/me',
   },
+
+  /** Public, no-account-needed landing for a pre-drafted profile. */
+  CLAIM: (claimId: string) => `/claim/${encodeURIComponent(claimId)}`,
 
   // Timeline routes
   TIMELINE: '/timeline',

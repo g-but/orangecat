@@ -232,6 +232,11 @@ export const API_ROUTES = {
     BY_ID: (id: string) => `/api/bookings/${id}`,
     RECEIVE_INFO: (id: string) => `/api/bookings/${id}/receive-info`,
   },
+  PROFILE_CLAIMS: {
+    BASE: '/api/profile-claims',
+    BY_ID: (id: string) => `/api/profile-claims/${id}`,
+    CLAIM: (id: string) => `/api/profile-claims/${id}/claim`,
+  },
 } as const;
 
 /** Download filename served by API_ROUTES.ACCOUNT_EXPORT (and used by its UI button). */
