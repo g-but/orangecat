@@ -208,42 +208,9 @@ export async function getEconomicProfile(
   }
 }
 
-/**
- * The public-facing slice only — served from user_economic_profile_public,
- * which the RLS policies on the base table cannot expose to a visitor who
- * isn't the owner. Use this (never getEconomicProfile) anywhere a profile is
- * rendered for someone who might not be its owner, e.g. the public profile
- * page.
- */
-export async function getPublicEconomicProfile(
-  supabase: AnySupabaseClient,
-  userId: string
-): Promise<PublicEconomicProfile | null> {
-  try {
-    const { data, error } = await supabase
-      .from(DATABASE_TABLES.USER_ECONOMIC_PROFILE_PUBLIC)
-      .select('skills, assets, asked_for, not_available_for')
-      .eq('user_id', userId)
-      .maybeSingle();
-    if (error) {
-      logger.warn('getPublicEconomicProfile query failed', { error }, 'EconomicProfile');
-      return null;
-    }
-    if (!data) {
-      return null;
-    }
-    const row = data as Record<string, unknown>;
-    return {
-      skills: asArray<EconomicSkill>(row.skills),
-      assets: asArray<EconomicAsset>(row.assets),
-      askedFor: asArray<string>(row.asked_for),
-      notAvailableFor: asArray<string>(row.not_available_for),
-    };
-  } catch (err) {
-    logger.warn('getPublicEconomicProfile failed', { err: String(err) }, 'EconomicProfile');
-    return null;
-  }
-}
+// getPublicEconomicProfile lives in ./economic-profile-public — the accessor
+// safe for a viewer who isn't the profile's owner (kept there to stay under
+// this file's line budget; see that file's header for why).
 
 function dedupe<T>(items: T[]): T[] {
   const seen = new Set<string>();
