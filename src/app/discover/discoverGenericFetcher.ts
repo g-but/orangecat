@@ -3,6 +3,8 @@ import supabase from '@/lib/supabase/browser';
 import type { FilterChain } from '@/lib/supabase/untyped';
 import { getTableName } from '@/config/entity-registry';
 import { STATUS, ENTITY_STATUS } from '@/config/database-constants';
+import { sortGenericResults } from '@/services/search/processors';
+import type { SortOption } from '@/services/search/types';
 import type { DiscoverTabType } from '@/components/discover/DiscoverTabs';
 import type { GenericPublicEntity } from '@/components/entity/variants/GenericPublicCard';
 
@@ -41,6 +43,7 @@ type ResearchRow = {
 export async function fetchDiscoverGenericData(
   activeTab: DiscoverTabType,
   searchTerm: string,
+  sortBy: SortOption,
   setters: GenericSetters
 ) {
   const {
@@ -201,58 +204,65 @@ export async function fetchDiscoverGenericData(
         : Promise.resolve({ data: null, error: null }),
     ]);
 
+    const sorted = (items: GenericPublicEntity[]) =>
+      sortGenericResults(items, sortBy, searchTerm);
+
     if (should('causes')) {
-      setCauses((causesRes.data ?? []) as unknown as GenericPublicEntity[]);
+      setCauses(sorted((causesRes.data ?? []) as unknown as GenericPublicEntity[]));
     }
     if (should('events')) {
-      setEvents((eventsRes.data ?? []) as unknown as GenericPublicEntity[]);
+      setEvents(sorted((eventsRes.data ?? []) as unknown as GenericPublicEntity[]));
     }
     if (should('products')) {
-      setProducts((productsRes.data ?? []) as unknown as GenericPublicEntity[]);
+      setProducts(sorted((productsRes.data ?? []) as unknown as GenericPublicEntity[]));
     }
     if (should('services')) {
-      setServices((servicesRes.data ?? []) as unknown as GenericPublicEntity[]);
+      setServices(sorted((servicesRes.data ?? []) as unknown as GenericPublicEntity[]));
     }
     if (should('groups')) {
       const { isFixtureGroupTitle } = await import('@/config/public-directory');
       setGroups(
-        ((groupsRes.data ?? []) as unknown as GroupRow[])
-          .filter(r => !isFixtureGroupTitle(r.name))
-          .map(
-            r =>
-              ({
-                id: r.id,
-                title: r.name,
-                description: r.description ?? null,
-                created_at: r.created_at,
-                slug: r.slug ?? null,
-              }) satisfies GenericPublicEntity
-          )
+        sorted(
+          ((groupsRes.data ?? []) as unknown as GroupRow[])
+            .filter(r => !isFixtureGroupTitle(r.name))
+            .map(
+              r =>
+                ({
+                  id: r.id,
+                  title: r.name,
+                  description: r.description ?? null,
+                  created_at: r.created_at,
+                  slug: r.slug ?? null,
+                }) satisfies GenericPublicEntity
+            )
+        )
       );
     }
     if (should('circles')) {
-      setCircles((circlesRes.data ?? []) as unknown as GenericPublicEntity[]);
+      setCircles(sorted((circlesRes.data ?? []) as unknown as GenericPublicEntity[]));
     }
     if (should('wishlists')) {
-      setWishlists((wishlistsRes.data ?? []) as unknown as GenericPublicEntity[]);
+      setWishlists(sorted((wishlistsRes.data ?? []) as unknown as GenericPublicEntity[]));
     }
     if (should('research')) {
       setResearch(
-        ((researchRes.data ?? []) as unknown as ResearchRow[]).map(
-          r =>
-            ({
-              id: r.id,
-              title: r.title,
-              description: r.description ?? null,
-              status: r.status ?? null,
-              category: r.field ?? null,
-              created_at: r.created_at,
-            }) satisfies GenericPublicEntity
+        sorted(
+          ((researchRes.data ?? []) as unknown as ResearchRow[]).map(
+            r =>
+              ({
+                id: r.id,
+                title: r.title,
+                description: r.description ?? null,
+                status: r.status ?? null,
+                category: r.field ?? null,
+                created_at: r.created_at,
+              }) satisfies GenericPublicEntity
+          )
         )
       );
     }
     if (should('ai_assistants')) {
-      setAiAssistants((aiRes.data ?? []) as unknown as GenericPublicEntity[]);
+      setAiAssistants(sorted((aiRes.data ?? []) as unknown as GenericPublicEntity[]));
     }
   } catch (error) {
     logger.error('Error fetching discover entities', error, 'Discover');

@@ -1,9 +1,9 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { SlidersHorizontal } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import BottomSheet from '@/components/ui/BottomSheet';
 import { useAuth } from '@/hooks/useAuth';
 import DiscoverTabs from '@/components/discover/DiscoverTabs';
 import DiscoverFilters from '@/components/discover/DiscoverFilters';
@@ -148,34 +148,39 @@ export default function DiscoverPageClient({ topContent }: { topContent?: ReactN
             />
 
             <div className="bg-surface-base/70 dark:bg-surface-base/70 backdrop-blur-sm rounded-b-lg border border-default dark:border-default/60 border-t-0 p-6">
-              {/* Mobile Filter Button */}
+              {/* Mobile filter trigger — opens a bottom sheet rather than
+                  re-rendering the desktop form inline in the page flow, so
+                  filtering doesn't push results off-screen on a phone. */}
               <div className="lg:hidden mb-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="w-full"
-                >
+                <Button variant="outline" onClick={() => setShowFilters(true)} className="w-full">
                   <SlidersHorizontal className="w-4 h-4 mr-2" />
-                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                  Filters
+                  {hasFilters && (
+                    <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-warm px-1.5 text-xs font-medium text-white">
+                      •
+                    </span>
+                  )}
                 </Button>
               </div>
 
-              {/* Mobile Filter Panel */}
-              <AnimatePresence>
-                {showFilters && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="lg:hidden mb-6 overflow-hidden"
+              <BottomSheet
+                isOpen={showFilters}
+                onClose={() => setShowFilters(false)}
+                title="Filters"
+                maxHeight="90vh"
+              >
+                <div className="p-4">
+                  <DiscoverFilters variant="mobile" {...filterProps} />
+                  <Button
+                    variant="accent"
+                    size="lg"
+                    className="mt-6 w-full"
+                    onClick={() => setShowFilters(false)}
                   >
-                    <div className="bg-surface-base/70 dark:bg-surface-base/70 backdrop-blur-sm rounded-lg border border-default dark:border-default/60 p-5">
-                      <DiscoverFilters variant="mobile" {...filterProps} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    Show results
+                  </Button>
+                </div>
+              </BottomSheet>
 
               {/* Error State */}
               {searchError && (

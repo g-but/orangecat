@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { fetchDiscoverGenericData } from './discoverGenericFetcher';
 import type { DiscoverTabType } from '@/components/discover/DiscoverTabs';
 import type { GenericPublicEntity } from '@/components/entity/variants/GenericPublicCard';
+import type { SortOption } from '@/services/search/types';
 
 const GENERIC_TABS: DiscoverTabType[] = [
   'causes',
@@ -33,7 +34,8 @@ interface DiscoverGenericData {
 
 export function useDiscoverGenericData(
   activeTab: DiscoverTabType,
-  searchTerm: string
+  searchTerm: string,
+  sortBy: SortOption
 ): DiscoverGenericData {
   const [causes, setCauses] = useState<GenericPublicEntity[]>([]);
   const [events, setEvents] = useState<GenericPublicEntity[]>([]);
@@ -50,7 +52,7 @@ export function useDiscoverGenericData(
     if (!GENERIC_TABS.includes(activeTab)) {
       return;
     }
-    fetchDiscoverGenericData(activeTab, searchTerm, {
+    fetchDiscoverGenericData(activeTab, searchTerm, sortBy, {
       setGenericLoading,
       setCauses,
       setEvents,
@@ -62,7 +64,7 @@ export function useDiscoverGenericData(
       setResearch,
       setAiAssistants,
     });
-  }, [activeTab, searchTerm]);
+  }, [activeTab, searchTerm, sortBy]);
 
   return {
     causes,

@@ -14,6 +14,10 @@ import { PUBLIC_SEARCH_STATUSES } from '@/config/project-statuses';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import { ENTITY_STATUS } from '@/config/database-constants';
+import {
+  FIXTURE_USERNAME_ILIKE_PATTERNS,
+  EXACT_FIXTURE_USERNAMES,
+} from '@/config/public-directory';
 import type {
   SearchResult,
   SearchProfile,
@@ -163,6 +167,64 @@ export function sortResults(
   });
 }
 
+// ==================== GENERIC ENTITY RELEVANCE ====================
+//
+// calculateRelevanceScore()/sortResults() above are typed against the
+// profile/loan/project SearchResult union. The other ~10 entity types shown
+// on /discover (causes, events, products, services, groups, circles,
+// wishlists, research, ai_assistants, assets, investments) are fetched
+// through a separate path (discoverGenericFetcher.ts,
+// useDiscoverFinancialData.ts) that always sorted "Newest" — changing the
+// Sort control silently did nothing for those tabs. They share one shape
+// worth relevance-scoring generically (title/name + description), so one
+// scorer covers all of them instead of writing ~10 bespoke ones.
+
+export interface GenericRelevanceItem {
+  title?: string | null;
+  name?: string | null;
+  description?: string | null;
+}
+
+export function calculateGenericRelevanceScore(item: GenericRelevanceItem, query: string): number {
+  if (!query) {
+    return 0;
+  }
+  const q = query.toLowerCase();
+  const title = (item.title ?? item.name ?? '').toLowerCase();
+  const description = (item.description ?? '').toLowerCase();
+
+  let score = 0;
+  if (title === q) {
+    score += 100;
+  } else if (title.includes(q)) {
+    score += 60;
+  }
+  if (description.includes(q)) {
+    score += 30;
+  }
+  return score;
+}
+
+/** Sort any title/description-shaped entity list by the same Sort control the typed search path uses. */
+export function sortGenericResults<T extends GenericRelevanceItem & { created_at: string }>(
+  items: T[],
+  sortBy: SortOption,
+  query?: string
+): T[] {
+  if (items.length <= 1) {
+    return items;
+  }
+  return [...items].sort((a, b) => {
+    if (sortBy === 'relevance' && query) {
+      const diff = calculateGenericRelevanceScore(b, query) - calculateGenericRelevanceScore(a, query);
+      if (diff !== 0) {
+        return diff;
+      }
+    }
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+}
+
 // ==================== FACETS ====================
 
 // OPTIMIZATION: Cached facets with smarter update strategy
@@ -179,10 +241,24 @@ export async function getSearchFacets(): Promise<SearchResponse['facets']> {
   }
 
   try {
+    // Same fixture exclusion the profiles list/search query applies (SSOT:
+    // config/public-directory.ts) — this facets count was drifting from it,
+    // counting curl-test/playwright-test/... fixture profiles the actual
+    // People results already hide.
+    let profilesFacetQuery = supabase
+      .from(DATABASE_TABLES.PROFILES)
+      .select('id', { count: 'exact', head: true });
+    for (const pattern of FIXTURE_USERNAME_ILIKE_PATTERNS) {
+      profilesFacetQuery = profilesFacetQuery.not('username', 'ilike', pattern);
+    }
+    for (const name of EXACT_FIXTURE_USERNAMES) {
+      profilesFacetQuery = profilesFacetQuery.neq('username', name);
+    }
+
     // OPTIMIZATION: Use Promise.all for parallel queries
     const [profilesResult, projectsResult, loansResult] = await Promise.all([
       // Use count queries with head:true for better performance
-      supabase.from(DATABASE_TABLES.PROFILES).select('id', { count: 'exact', head: true }),
+      profilesFacetQuery,
       supabase
         .from(getTableName('project'))
         .select('id', { count: 'exact', head: true })

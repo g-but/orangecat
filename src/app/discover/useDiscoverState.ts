@@ -108,8 +108,8 @@ export function useDiscoverState() {
     });
 
   const counts = useDiscoverCounts();
-  const financial = useDiscoverFinancialData(activeTab, searchTerm);
-  const generic = useDiscoverGenericData(activeTab, searchTerm);
+  const financial = useDiscoverFinancialData(activeTab, searchTerm, sortBy);
+  const generic = useDiscoverGenericData(activeTab, searchTerm, sortBy);
 
   const projects = useMemo(
     () => searchResults.filter(r => r.type === 'project').map(r => r.data as SearchFundingPage),

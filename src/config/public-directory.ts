@@ -3,16 +3,79 @@
  *
  * CI and workflow audits mint disposable users and groups. Those rows are
  * real in the database; they are not people a visitor came to find.
+ *
+ * The rules live here once — as data (patterns, exact names) rather than a
+ * hand-written SQL clause — so a SQL-level filter (a query builder, or a
+ * `count: 'exact', head: true` query, which returns no rows to filter in JS)
+ * and `isFixtureUsername()` (a post-fetch JS filter, needed for RPC results
+ * a SQL predicate can't reach) can't drift apart. That drift is exactly how
+ * discoverCounts.ts's people count went stale against the actual list query
+ * it's supposed to badge — it hand-copied two of the JS filter's clauses and
+ * missed the rest. A SQL consumer loops `FIXTURE_USERNAME_ILIKE_PATTERNS`
+ * through `.not('username', 'ilike', pattern)` and `EXACT_FIXTURE_USERNAMES`
+ * through `.neq('username', name)` — see discoverCounts.ts / queries/profiles.ts.
  */
 
-const FIXTURE_USERNAME =
-  /^(e2e-reset-|e2e_|wf0\d+|audit[-_]|user_[0-9a-f]{8}$)/i;
+/**
+ * `ilike` patterns for CI/audit fixture usernames — safe as SQL filters.
+ * `_` is the SQL LIKE single-character wildcard, used deliberately for the
+ * `user_<8 hex chars>` shape (`user` + `_` + 8 wildcard chars); everywhere
+ * else it's escaped (`\\_`) to mean a literal underscore.
+ */
+export const FIXTURE_USERNAME_ILIKE_PATTERNS = [
+  'e2e-reset-%',
+  'e2e\\_%',
+  'wf0%',
+  'audit-%',
+  'audit\\_%',
+  'user\\_________',
+] as const;
+
+/** Exact `user_<8 hex chars>` shape minted by CI fixtures — the JS-side equivalent of the ilike pattern above. */
+const FIXTURE_HEX_USER = /^user_[0-9a-f]{8}$/i;
+
+/**
+ * Known CI-tool smoke-test accounts. Exact strings, not a pattern — every
+ * entry here is a literal login used by this repo's own E2E/manual test
+ * runs, confirmed against @example.com / *.test signups in
+ * scripts/db/data_sample.sql, not guessed from a naming convention that
+ * could also match a real user's handle.
+ */
+export const EXACT_FIXTURE_USERNAMES = [
+  'curl-test',
+  'node-test',
+  'fetch-browser-test',
+  'playwright-test',
+  'profiletest',
+  'cypress-test',
+  'puppeteer-test',
+  'vitest-test',
+  'jest-test',
+] as const;
+const EXACT_FIXTURE_USERNAME_SET = new Set<string>(EXACT_FIXTURE_USERNAMES);
+
 const FIXTURE_DISPLAY_NAME = /^(e2e reset user|user)$/i;
 const FIXTURE_GROUP_TITLE = /^(audit\s+wf|ephemeral\s+verify|workflow\s+audit)/i;
 
 export function isFixtureUsername(username: string | null | undefined): boolean {
   const u = (username ?? '').trim();
-  return u.length === 0 || FIXTURE_USERNAME.test(u);
+  if (u.length === 0) {
+    return true;
+  }
+  const lower = u.toLowerCase();
+  if (EXACT_FIXTURE_USERNAME_SET.has(lower)) {
+    return true;
+  }
+  if (FIXTURE_HEX_USER.test(u)) {
+    return true;
+  }
+  return (
+    lower.startsWith('e2e-reset-') ||
+    lower.startsWith('e2e_') ||
+    /^wf0\d+/.test(lower) ||
+    lower.startsWith('audit-') ||
+    lower.startsWith('audit_')
+  );
 }
 
 export function isFixtureDisplayName(name: string | null | undefined): boolean {
@@ -29,10 +92,3 @@ export function isFixtureProfile(profile: {
 export function isFixtureGroupTitle(title: string | null | undefined): boolean {
   return FIXTURE_GROUP_TITLE.test((title ?? '').trim());
 }
-
-/** PostgREST `not.ilike` clauses that drop the known fixture username shapes. */
-export const DIRECTORY_USERNAME_EXCLUSIONS = [
-  'username.not.ilike.e2e-reset-%',
-  'username.not.ilike.e2e\\_%',
-  'username.not.ilike.user\\_________',
-] as const;
