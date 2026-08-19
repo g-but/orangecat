@@ -35,7 +35,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
   );
 
   const StatusBadge = () =>
-    hasStatus ? (
+    isMakerStatus(profile.current_status) ? (
       <span className="inline-flex items-center rounded-full border border-default bg-surface-raised px-2 py-0.5 text-[11px] font-medium text-fg-secondary">
         {MAKER_STATUS_METADATA[profile.current_status].label}
       </span>
