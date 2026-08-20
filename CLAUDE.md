@@ -72,10 +72,12 @@ push branch → open PR → CI green → auto-merge.yml squash-merges it
             → CI on main → CD deploys to bitbaum → health check
 ```
 
-`.github/workflows/auto-merge.yml` (policy in `scripts/ci/auto-merge-sweep.sh`)
-merges **one** PR per sweep, and only when: it is not a draft, carries no hold
-label, every check has finished green, GitHub calls it cleanly mergeable, and
-main's own CI is currently green. One car per sweep is deliberate — a PR's
+`.github/workflows/auto-merge.yml` calls the fleet's canonical sweep — the
+policy no longer lives in this repo. It is defined once in
+`maonakamoto/dotfiles`, `scripts/ci/auto-merge-sweep.sh`, and a fix made to a
+local copy here would reach nobody. The sweep merges **one** PR per sweep, and
+only when: it is not a draft, carries no hold label, every check has finished
+green, GitHub calls it cleanly mergeable, and main's own CI is currently green. One car per sweep is deliberate — a PR's
 checks prove that PR against the main it branched from, not against the other
 PRs queued beside it, so each merge is verified on main before the next couples.
 
@@ -90,9 +92,14 @@ later PRs as drafts until the earlier ones are on main.
 **Two explicit hand-offs keep this chain alive. Never remove either.** Both
 exist because `GITHUB_TOKEN` is deliberately inert:
 
-1. **The CI re-arm** at the end of `scripts/ci/auto-merge-sweep.sh`. A push made
-   with the default `GITHUB_TOKEN` does not trigger workflows, so without the
-   explicit `workflow_dispatch` a merge lands on main and CI never runs.
+1. **The CI re-arm** at the end of the canonical sweep (configured here via
+   `rearm_workflows` in auto-merge.yml). A push made with the default
+   `GITHUB_TOKEN` does not trigger workflows, so without the explicit
+   `workflow_dispatch` a merge lands on main and CI never runs. The sweep also
+   RECONCILES deployment directly (`deploy_workflow: cd.yml`): it compares
+   main's tip against the last successful cd.yml run and dispatches cd.yml when
+   they differ, so even if the whole chain below breaks, a merged commit is
+   shipped by the next sweep rather than stranded.
 2. **The `post-main` job** in `ci.yml`. GitHub also suppresses the `workflow_run`
    event for a run that was itself created with `GITHUB_TOKEN` — so the CI run
    the re-arm just started chains to *nothing*. CD and Main Red Alert both hang
