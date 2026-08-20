@@ -1,6 +1,7 @@
 import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
 import nextTypeScript from 'eslint-config-next/typescript';
 import unusedImports from 'eslint-plugin-unused-imports';
+import * as espree from 'espree';
 
 // ESLint 9 flat config. eslint-config-next 16 requires ESLint >=9 and `next lint`
 // was removed in Next 16, so this replaces .eslintrc.json + .eslintignore. The
@@ -100,7 +101,7 @@ const eslintConfig = [
     // Scoped to the same code files eslint-config-next registers react/@next/@typescript-eslint/import
     // for, so those rule references resolve to a registered plugin.
     files: ['**/*.{js,jsx,mjs,ts,tsx,mts,cts}'],
-    settings: { react: { version: 'detect' } },
+    settings: { react: { version: '19.2.8' } }, // 'detect' hits ESLint 10's removed context.getFilename() inside eslint-plugin-react
     rules: {
       '@typescript-eslint/no-unused-vars': 'off',
       // Code quality rules
@@ -255,6 +256,15 @@ const eslintConfig = [
         },
       ],
     },
+  },
+
+  {
+    // ESLint 10 dropped the implicit scopeManager.addGlobals that Next's
+    // bundled babel-eslint-parser (the default for plain .js/.mjs under
+    // eslint-config-next) relied on. None of these files need Babel/JSX-only
+    // syntax, so use the plain espree parser instead.
+    files: ['**/*.js', '**/*.mjs'],
+    languageOptions: { parser: espree },
   },
 ];
 
