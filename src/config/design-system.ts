@@ -53,7 +53,7 @@ export const COMPONENT_STYLES = {
       // chromatic color reserved for top-of-funnel conversion ("Start
       // Creating", "Get Started", "Sign Up"). Everything else stays
       // monochromatic.
-      accent: 'bg-accent-warm text-white hover:bg-accent-warm-hover',
+      accent: 'bg-accent-warm text-on-accent hover:bg-accent-warm-hover',
     },
     sizes: {
       sm: 'h-9 min-h-9 px-3 text-sm min-w-16',
