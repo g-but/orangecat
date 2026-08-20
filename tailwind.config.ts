@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  darkMode: ['class'],
+  darkMode: ['class', '.dark'],
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -11,19 +11,6 @@ const config: Config = {
     // Without this Tailwind's scanner skips the constants dir and the
     // class string is on the DOM but the rule is never generated.
     './src/constants/**/*.{ts,tsx}',
-  ],
-  safelist: [
-    {
-      // Initiative color system — values come dynamically from src/data/initiatives/ config
-      pattern:
-        /^(bg|text|border|from|to|ring|hover:bg|hover:border|hover:text)-(purple|blue|green|orange|pink|indigo|red|yellow|teal|amber|violet|sky|emerald|rose|fuchsia|slate|gray|cyan)-(50|100|200|300|400|500|600|700|800|900)$/,
-      variants: ['hover'],
-    },
-    // Opacity variants used in gradients
-    {
-      pattern:
-        /^(bg|from|to)-(purple|blue|green|orange|pink|indigo|red|yellow|teal|amber|violet|sky|emerald|rose|fuchsia|slate|gray|cyan)-(50|100|200|300|400|500|600|700|800|900)\/(50|90)$/,
-    },
   ],
   theme: {
     extend: {

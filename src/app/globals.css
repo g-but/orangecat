@@ -1,6 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+/* Initiative color system (src/data/initiatives/) and gradient opacity
+ * variants use dynamically-composed class names, invisible to Tailwind's
+ * static content scanner. v3 covered this via tailwind.config.ts's
+ * `safelist` (removed — v4's Config type no longer supports it); v4's
+ * equivalent is forcing generation via @source inline() brace-expansion. */
+@source inline("{bg,text,border,from,to,ring,hover:bg,hover:text,hover:border,hover:from,hover:to,hover:ring}-{purple,blue,green,orange,pink,indigo,red,yellow,teal,amber,violet,sky,emerald,rose,fuchsia,slate,gray,cyan}-{50,100,200,300,400,500,600,700,800,900}");
+@source inline("{bg,from,to}-{purple,blue,green,orange,pink,indigo,red,yellow,teal,amber,violet,sky,emerald,rose,fuchsia,slate,gray,cyan}-{50,100,200,300,400,500,600,700,800,900}/{50,90}");
 
 @layer base {
   html {
@@ -504,7 +511,11 @@
 
   /* Professional mobile input - subtle feedback */
   .input-mobile {
-    @apply input;
+    @apply w-full px-3 sm:px-4 py-3 border border-input rounded-md bg-surface-base text-fg-primary;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-ring;
+    @apply text-base min-h-[44px];
+    -webkit-appearance: none;
+    -webkit-text-size-adjust: 100%;
     /* Larger touch target */
     @apply min-h-[48px] py-4;
     /* Fast, subtle visual feedback */
@@ -554,7 +565,7 @@
   }
 
   .bitcoin-card {
-    @apply card border-bitcoinOrange/30 hover:border-border-strong hover:shadow-sm;
+    @apply border-bitcoinOrange/30 hover:border-border-strong hover:shadow-sm;
   }
 
   /* KPI Cards */
@@ -659,7 +670,12 @@
 
   /* PWA-specific layouts */
   .pwa-layout {
-    @apply viewport-fix safe-area-padding;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
     /* Prevent horizontal bounce scrolling, allow vertical */
     overscroll-behavior-x: none;
     overscroll-behavior-y: auto;
