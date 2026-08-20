@@ -206,7 +206,7 @@ export default function EcosystemPage() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               href={ROUTES.SUPPORT}
-              className="inline-flex min-h-11 items-center gap-2 rounded-md bg-accent-warm px-5 text-sm font-medium text-white transition-colors hover:bg-accent-warm-hover"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md bg-accent-warm px-5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-warm-hover"
             >
               Choose what to support <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>

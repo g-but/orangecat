@@ -156,7 +156,7 @@ export default function DiscoverPageClient({ topContent }: { topContent?: ReactN
                   <SlidersHorizontal className="w-4 h-4 mr-2" />
                   Filters
                   {hasFilters && (
-                    <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-warm px-1.5 text-xs font-medium text-white">
+                    <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-warm px-1.5 text-xs font-medium text-on-accent">
                       •
                     </span>
                   )}
