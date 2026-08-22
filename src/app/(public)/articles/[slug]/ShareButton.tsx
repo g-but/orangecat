@@ -20,6 +20,15 @@ function XGlyph({ className }: { className?: string }) {
   );
 }
 
+/** LinkedIn's glyph, same deal — inline, currentColor, no SDK. */
+function LinkedInGlyph({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45Z" />
+    </svg>
+  );
+}
+
 export default function ShareButton({ title, url }: { title: string; url: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -56,6 +65,18 @@ export default function ShareButton({ title, url }: { title: string; url: string
       >
         <XGlyph className="h-3.5 w-3.5" />
         Post
+      </a>
+      <a
+        // LinkedIn's share endpoint takes only the URL — the card comes from
+        // the article's OpenGraph tags, same as X.
+        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Share "${title}" on LinkedIn`}
+        className={buttonClass}
+      >
+        <LinkedInGlyph className="h-3.5 w-3.5" />
+        LinkedIn
       </a>
       <button type="button" onClick={share} className={buttonClass}>
         {copied ? (
