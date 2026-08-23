@@ -17,6 +17,7 @@ import { verifyCronSecret } from '@/lib/api/cronAuth';
 import { apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api/standardResponse';
 import { runPaymentReconcileSweep } from '@/services/payments/reconcile';
 import { runTopUpReconcileSweep } from '@/services/cat/topup-reconcile';
+import { runSyndicationSweep } from '@/services/syndication/sweep';
 import { logger } from '@/utils/logger';
 
 export async function GET(request: Request) {
@@ -33,8 +34,16 @@ export async function GET(request: Request) {
     return null;
   });
 
+  // Feed syndication shares the tick for the same reason the sweeps above do
+  // (no new timers on deploy) and throttles itself internally, so on most
+  // ticks this returns immediately. Never lets a feed hiccup fail the cron.
+  const syndication = await runSyndicationSweep().catch(error => {
+    logger.error('Syndication sweep failed', { error }, 'Syndication');
+    return null;
+  });
+
   if (!payments && !credits) {
     return apiInternalError('Reconciliation sweep failed');
   }
-  return apiSuccess({ ...(payments ?? {}), payments, credits });
+  return apiSuccess({ ...(payments ?? {}), payments, credits, syndication });
 }
