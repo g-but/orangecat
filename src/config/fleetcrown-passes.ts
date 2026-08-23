@@ -18,8 +18,10 @@
  *   - the notifier READS them via parseFleetCrownPass()
  * Same source → they cannot drift (guarded by __tests__/unit/fleetcrown).
  *
- * Prices mirror FleetCrown's /pricing (CHF 15/40/90 per month); OrangeCat
- * converts CHF → BTC at checkout. Change a price here and re-run the seed.
+ * Prices mirror FleetCrown's /pricing. Both are currently "to be announced"
+ * (price: null; the seed writes 0 so nothing is charged) — announce by setting
+ * numbers here AND in FleetCrown's src/config/plans.ts, then re-run the seed.
+ * OrangeCat converts CHF → BTC at checkout.
  */
 
 /** The paid FleetCrown tiers sold as OrangeCat passes (excludes the free tier). */
@@ -41,7 +43,7 @@ export function passTags(plan: FleetCrownPlan, periodDays: number): [string, str
 
 /** Extract {plan, periodDays} from a product's tags, or null if not a pass. */
 export function parseFleetCrownPass(
-  tags: unknown,
+  tags: unknown
 ): { plan: FleetCrownPlan; periodDays: number } | null {
   if (!Array.isArray(tags)) {
     return null;
@@ -69,8 +71,11 @@ export interface FleetCrownPass {
   plan: FleetCrownPlan;
   title: string;
   description: string;
-  /** Price in `currency`; OrangeCat converts to BTC at checkout. */
-  price: number;
+  /**
+   * Price in `currency`; OrangeCat converts to BTC at checkout.
+   * null = to be announced — the seed writes 0 so the pass charges nothing.
+   */
+  price: number | null;
   currency: 'CHF';
   periodDays: number;
   /** The marker tags stored on the product (built from passTags()). */
@@ -89,7 +94,7 @@ interface PassSpec {
   plan: FleetCrownPlan;
   title: string;
   description: string;
-  price: number;
+  price: number | null;
 }
 
 const PASS_SPECS: PassSpec[] = [
@@ -100,7 +105,7 @@ const PASS_SPECS: PassSpec[] = [
       'One month of FleetCrown Personal, paid in Bitcoin. Room for a real ' +
       'project portfolio, the full captain dashboard, and your own runner and ' +
       'agent keys. Renewable — pay again to extend.',
-    price: 15,
+    price: null,
   },
   {
     plan: 'pro',
@@ -108,7 +113,7 @@ const PASS_SPECS: PassSpec[] = [
     description:
       'One month of FleetCrown Pro, paid in Bitcoin. For operators running many ' +
       'projects at once — no ceiling as your fleet grows. Renewable.',
-    price: 40,
+    price: null,
   },
   {
     plan: 'team',
@@ -116,12 +121,12 @@ const PASS_SPECS: PassSpec[] = [
     description:
       'One month of FleetCrown Team, paid in Bitcoin. Shared projects and fleet ' +
       'visibility for a studio. Renewable.',
-    price: 90,
+    price: null,
   },
 ];
 
 /** The canonical pass catalogue the seed inserts and the notifier honours. */
-export const FLEETCROWN_PASSES: FleetCrownPass[] = PASS_SPECS.map((s) => ({
+export const FLEETCROWN_PASSES: FleetCrownPass[] = PASS_SPECS.map(s => ({
   plan: s.plan,
   title: s.title,
   description: s.description,

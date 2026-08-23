@@ -89,7 +89,7 @@ async function checkSellerWallet(actor: ActorRow): Promise<void> {
     console.warn(
       `  ⚠ SELLER HAS NO ACTIVE WALLET — buyers cannot pay until one is connected\n` +
         `    on OrangeCat for actor '${OWNER_ACTOR_SLUG}'. The passes will exist but\n` +
-        `    checkout fails with "Seller has no wallet connected".`,
+        `    checkout fails with "Seller has no wallet connected".`
     );
   } else {
     console.log(`  ✓ seller wallet present (${data.length} active)`);
@@ -115,7 +115,8 @@ async function upsertPass(actor: ActorRow, pass: FleetCrownPass): Promise<string
     actor_id: actor.id,
     title: pass.title,
     description: pass.description,
-    price: pass.price,
+    // null price = "to be announced" — write 0 so the pass charges nothing yet.
+    price: pass.price ?? 0,
     currency: pass.currency,
     product_type: 'digital',
     status: 'active', // API defaults to draft; a purchasable pass must be active
@@ -132,11 +133,7 @@ async function upsertPass(actor: ActorRow, pass: FleetCrownPass): Promise<string
     return existingId;
   }
 
-  const { data, error } = await admin
-    .from('user_products')
-    .insert(row)
-    .select('id')
-    .single();
+  const { data, error } = await admin.from('user_products').insert(row).select('id').single();
   if (error) die(`Failed to insert '${pass.title}': ${error.message}`);
   console.log(`+ created ${pass.plan} pass "${pass.title}" (${data.id})`);
   return data.id as string;
@@ -162,8 +159,8 @@ async function main(): Promise<void> {
   console.log(
     '\nAlso set ORANGECAT_WEBHOOK_SECRET to the SAME value on BOTH the OrangeCat and\n' +
       'FleetCrown boxes — until then the settlement → grant webhook stays inert\n' +
-      '(both ends fail closed by design).',
+      '(both ends fail closed by design).'
   );
 }
 
-main().catch((err) => die(err instanceof Error ? err.message : String(err)));
+main().catch(err => die(err instanceof Error ? err.message : String(err)));
