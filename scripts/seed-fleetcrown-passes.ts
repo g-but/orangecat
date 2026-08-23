@@ -115,11 +115,13 @@ async function upsertPass(actor: ActorRow, pass: FleetCrownPass): Promise<string
     actor_id: actor.id,
     title: pass.title,
     description: pass.description,
-    // null price = "to be announced" — write 0 so the pass charges nothing yet.
-    price: pass.price ?? 0,
+    // price null = "to be announced": pause the pass so nothing can be bought
+    // at a stale price (user_products_price_check forbids 0) and leave the
+    // stored price column untouched. An announced price re-activates it.
+    ...(pass.price === null ? {} : { price: pass.price }),
     currency: pass.currency,
     product_type: 'digital',
-    status: 'active', // API defaults to draft; a purchasable pass must be active
+    status: pass.price === null ? 'paused' : 'active',
     show_on_profile: false, // reached from FleetCrown's /pricing, not browsed on OC
     tags: pass.tags,
     is_test: false,

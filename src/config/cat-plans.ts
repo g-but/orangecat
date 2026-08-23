@@ -97,9 +97,10 @@ export const CAT_FREE_DAILY_LIMIT = 10;
 export const CAT_SUPPORTER_DAILY_LIMIT = 200;
 /**
  * null = price to be announced: the plan card stays, no number is shown, and
- * the Supporter product entity is held at 0 so nothing is charged. Announce a
- * price by setting the number here AND updating the product's `price` — this
- * is the display side, the product is the charge side.
+ * the Supporter product entity is PAUSED so nothing can be bought at a stale
+ * price (the schema forbids price 0). Announce a price by setting the number
+ * here AND updating + re-activating the product — this is the display side,
+ * the product is the charge side.
  */
 export const SUPPORTER_PRICE_CHF: number | null = null;
 

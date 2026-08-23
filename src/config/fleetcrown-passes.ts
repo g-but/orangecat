@@ -19,9 +19,10 @@
  * Same source → they cannot drift (guarded by __tests__/unit/fleetcrown).
  *
  * Prices mirror FleetCrown's /pricing. Both are currently "to be announced"
- * (price: null; the seed writes 0 so nothing is charged) — announce by setting
- * numbers here AND in FleetCrown's src/config/plans.ts, then re-run the seed.
- * OrangeCat converts CHF → BTC at checkout.
+ * (price: null; the seed pauses the pass products so nothing can be bought at
+ * a stale price) — announce by setting numbers here AND in FleetCrown's
+ * src/config/plans.ts, then re-run the seed. OrangeCat converts CHF → BTC at
+ * checkout.
  */
 
 /** The paid FleetCrown tiers sold as OrangeCat passes (excludes the free tier). */
@@ -73,7 +74,7 @@ export interface FleetCrownPass {
   description: string;
   /**
    * Price in `currency`; OrangeCat converts to BTC at checkout.
-   * null = to be announced — the seed writes 0 so the pass charges nothing.
+   * null = to be announced — the seed pauses the pass so it cannot be bought.
    */
   price: number | null;
   currency: 'CHF';
