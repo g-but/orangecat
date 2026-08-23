@@ -28,10 +28,17 @@ import { cn } from '@/lib/utils';
 interface ContextSwitcherProps {
   profile: Profile;
   isExpanded: boolean;
+  /** Expands the sidebar — invoked when the collapsed-mode avatar is clicked */
+  onExpand?: () => void;
   className?: string;
 }
 
-export function ContextSwitcher({ profile, isExpanded, className }: ContextSwitcherProps) {
+export function ContextSwitcher({
+  profile,
+  isExpanded,
+  onExpand,
+  className,
+}: ContextSwitcherProps) {
   const router = useRouter();
   const { context, userGroups, loadingGroups, switchToIndividual, switchToGroup, isGroupContext } =
     useNavigationContext();
@@ -83,31 +90,42 @@ export function ContextSwitcher({ profile, isExpanded, className }: ContextSwitc
     !!profile.username &&
     profile.username.toLowerCase() !== (profile.name || '').toLowerCase();
 
-  // Collapsed mode: just show the avatar, no dropdown
+  // Collapsed mode: the avatar expands the sidebar and opens the switcher —
+  // same action it triggers when expanded, one click instead of a dead pixel
   if (!isExpanded) {
     return (
       <div className={cn('px-2 py-3 border-b border-subtle flex justify-center', className)}>
-        <div className="relative">
-          {avatarUrl ? (
-            <Image
-              src={avatarUrl}
-              alt={displayName}
-              width={32}
-              height={32}
-              className="rounded-md object-cover"
-              unoptimized={avatarUrl?.includes('supabase.co')}
-            />
-          ) : (
-            <DefaultAvatar size={32} className="rounded-md" />
-          )}
-          {/* Context indicator dot */}
-          <div
-            className={cn(
-              'absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-sm border-2 border-surface-page',
-              isGroupContext ? 'bg-surface-raised' : 'bg-status-positive'
+        <button
+          onClick={() => {
+            setIsOpen(true);
+            onExpand?.();
+          }}
+          className="rounded-md p-1.5 transition-colors hover:bg-surface-raised"
+          aria-label={`Switch context — ${displayName}`}
+          title={`Switch context — ${displayName}`}
+        >
+          <div className="relative">
+            {avatarUrl ? (
+              <Image
+                src={avatarUrl}
+                alt={displayName}
+                width={32}
+                height={32}
+                className="rounded-md object-cover"
+                unoptimized={avatarUrl?.includes('supabase.co')}
+              />
+            ) : (
+              <DefaultAvatar size={32} className="rounded-md" />
             )}
-          />
-        </div>
+            {/* Context indicator dot */}
+            <div
+              className={cn(
+                'absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-sm border-2 border-surface-page',
+                isGroupContext ? 'bg-surface-raised' : 'bg-status-positive'
+              )}
+            />
+          </div>
+        </button>
       </div>
     );
   }

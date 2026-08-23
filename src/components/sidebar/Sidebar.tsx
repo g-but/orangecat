@@ -113,7 +113,13 @@ export function Sidebar({
           {/* Wrapper to ensure tooltips can overflow */}
           <div className="flex h-full min-w-0 flex-col overflow-hidden">
             {/* Context Switcher (replaces static user profile) */}
-            {user && profile && <ContextSwitcher profile={profile} isExpanded={isExpanded} />}
+            {user && profile && (
+              <ContextSwitcher
+                profile={profile}
+                isExpanded={isExpanded}
+                onExpand={toggleSidebarCollapse}
+              />
+            )}
 
             {/* Navigation Sections */}
             <SidebarNavigation
