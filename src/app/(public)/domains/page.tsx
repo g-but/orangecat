@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 import { Globe, ShieldCheck, Server } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ROUTES } from '@/config/routes';
-import { DOMAINS_SERVICE_URL, CUSTOM_DOMAIN_PRICE_CHF_PER_MONTH } from '@/config/domains-offer';
+import {
+  DOMAINS_SERVICE_URL,
+  WEBSITE_BUILD_SERVICE_URL,
+  CUSTOM_DOMAIN_PRICE_CHF_PER_MONTH,
+} from '@/config/domains-offer';
 
 export const metadata: Metadata = {
   title: 'OrangeCat Domains',
@@ -85,6 +89,15 @@ export default function DomainsPage() {
                 <li>Hosting, deploys, TLS, monitoring</li>
                 <li>Blog · roadmap · changelog, ready to use</li>
               </ul>
+              {/* The rung before hosting: no site yet. Priced on the service
+                  page, never restated here. */}
+              <p className="mt-6 border-t border-subtle pt-4 text-sm text-fg-secondary">
+                Don&apos;t have a site yet?{' '}
+                <Link href={WEBSITE_BUILD_SERVICE_URL} className="underline">
+                  I&apos;ll build one
+                </Link>{' '}
+                — billed hourly, quoted before anything starts.
+              </p>
             </div>
             <div className="rounded-xl border border-interactive bg-surface-raised p-8">
               <h3 className="text-lg font-semibold text-fg-primary">Custom domain</h3>
