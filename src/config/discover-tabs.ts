@@ -25,7 +25,7 @@ export type DiscoverTabType =
   | 'events'
   | 'products'
   | 'services'
-  | 'groups'
+  | 'organizations'
   | 'circles'
   | 'wishlists'
   | 'research'
@@ -42,7 +42,7 @@ export const VALID_TAB_TYPES: DiscoverTabType[] = [
   'events',
   'products',
   'services',
-  'groups',
+  'organizations',
   'circles',
   'wishlists',
   'research',
@@ -59,7 +59,7 @@ export const DISCOVER_TAB_TO_ENTITY: Partial<Record<DiscoverTabType, EntityType>
   products: 'product',
   services: 'service',
   events: 'event',
-  groups: 'group',
+  organizations: 'organization',
   circles: 'circle',
   wishlists: 'wishlist',
   research: 'research',
@@ -76,12 +76,18 @@ export const DISCOVER_ENTITY_TAB_IDS = [
   'products',
   'services',
   'events',
-  'groups',
+  'organizations',
   'circles',
   'wishlists',
   'research',
   'ai_assistants',
 ] as const satisfies readonly DiscoverTabType[];
+
+/** Legacy query ?type=groups → organizations */
+export function normalizeDiscoverTabType(raw: string | null | undefined): DiscoverTabType {
+  const value = raw === 'groups' ? 'organizations' : (raw ?? 'all');
+  return VALID_TAB_TYPES.includes(value as DiscoverTabType) ? (value as DiscoverTabType) : 'all';
+}
 
 export interface DiscoverTabFilterConfig {
   projectStatus: boolean;

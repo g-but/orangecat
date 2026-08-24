@@ -73,7 +73,7 @@ export function renderCurrentSession(r: FullUserContext['runtime']): string | nu
     const actorLabel =
       r.currentActor.type === 'individual'
         ? `**Acting as**: yourself${r.currentActor.name ? ` (${r.currentActor.name})` : ''}`
-        : `**Acting as**: group "${r.currentActor.name ?? 'unnamed'}" (you have permission to act on this group's behalf)`;
+        : `**Acting as**: organization "${r.currentActor.name ?? 'unnamed'}" (you have permission to act on this organization's behalf)`;
     lines.push(actorLabel);
   }
   lines.push(
@@ -322,7 +322,7 @@ export function renderGroupMemberships(
     if (g.description) {
       parts.push(`: ${g.description.substring(0, 200)}`);
     }
-    // Include group ID so Cat can reference it in invite_to_organization exec_action
+    // Include organization ID so Cat can reference it in invite_to_organization exec_action
     parts.push(` (id: ${g.id})`);
     return parts.join('');
   });
@@ -598,15 +598,24 @@ export function renderInboundActivity(
 export function renderPaymentCapabilities(
   paymentCapabilities: FullUserContext['paymentCapabilities']
 ): string {
-  const { hasNwcWallet, lightningAddress } = paymentCapabilities;
+  const { hasNwcWallet, lightningAddress, catMaySendPayment } = paymentCapabilities;
   const capLines: string[] = [];
   if (hasNwcWallet) {
     capLines.push(
-      '⚡ **NWC wallet connected** — can use send_payment and fund_project exec_action blocks to send Bitcoin automatically'
+      '⚡ **NWC wallet connected** — hardware side of send_payment / fund_project is ready'
     );
   } else {
     capLines.push(
       '❌ **No NWC wallet** — cannot auto-send payments; if the user asks to send Bitcoin, ask them to paste a nostr+walletconnect:// string and run connect_wallet'
+    );
+  }
+  if (catMaySendPayment) {
+    capLines.push(
+      '✅ **Cat Permissions: send_payment allowed** (always CONFIRM). You may use send_payment when recipient + amount are known.'
+    );
+  } else {
+    capLines.push(
+      '🚫 **Cat Permissions: Payments OFF** — you must NOT emit send_payment or claim you can send for them. Point them to [Send](/send) for a manual payment, or [Cat Permissions](/dashboard/cat/permissions) to enable Payments (Ask first). Role-named payees still use People first.'
     );
   }
   if (lightningAddress) {
@@ -624,7 +633,8 @@ export function renderPaymentCapabilities(
       '1. **They have one** → ask them to paste whatever it gives them (a Lightning address like you@provider.com, a Bitcoin address or xpub, or a nostr+walletconnect:// string) and run `connect_wallet` with it verbatim. Do not reformat it.',
       '2. **They have none** → a Lightning address is what OrangeCat needs, and these hand one over fastest:',
       renderLightningAddressProviders(),
-      'Then ask them to come back with the address and run `connect_wallet`. Never claim they can be paid until that action has run and reported success.'
+      'Then ask them to come back with the address and run `connect_wallet`. Never claim they can be paid until that action has run and reported success.',
+      `Also: [Receive](/receive) and [Wallets](/dashboard/wallets) are the human UI for the same job.`
     );
   }
   return `## Payment Capabilities\n${capLines.join('\n')}`;

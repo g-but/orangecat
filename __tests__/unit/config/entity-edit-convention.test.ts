@@ -55,15 +55,15 @@ describe('entity edit convention (createPath?edit=<id>)', () => {
     const covered = new Set(LIST_CONFIGS.map(c => c.entityType));
     const expected = (Object.keys(ENTITY_REGISTRY) as EntityType[]).filter(
       // wallet: no create form; group: edit entry point lives on GroupDetail
-      t => t !== 'wallet' && t !== 'group'
+      t => t !== 'wallet' && t !== 'organization'
     );
     expected.forEach(t => expect(covered.has(t)).toBe(true));
   });
 
-  it('group edit uses the same convention (id-addressed createPath)', () => {
+  it('organization edit uses the same convention (id-addressed createPath)', () => {
     // GroupDetail builds its Edit link inline; pin the convention pieces.
-    const meta = ENTITY_REGISTRY['group'];
-    expect(meta.createPath).toBe('/dashboard/groups/create');
-    expect(`${meta.createPath}?edit=g-1`).toBe('/dashboard/groups/create?edit=g-1');
+    const meta = ENTITY_REGISTRY.organization;
+    expect(meta.createPath).toBe('/dashboard/organizations/create');
+    expect(`${meta.createPath}?edit=g-1`).toBe('/dashboard/organizations/create?edit=g-1');
   });
 });

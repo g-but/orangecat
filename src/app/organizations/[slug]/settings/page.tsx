@@ -63,7 +63,7 @@ export default function GroupSettingsPage() {
     return <Loading fullScreen message="Loading group settings..." />;
   }
 
-  const groupsBase = ENTITY_REGISTRY['group'].basePath;
+  const groupsBase = ENTITY_REGISTRY['organization'].basePath;
 
   if (!group) {
     return (

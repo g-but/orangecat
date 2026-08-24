@@ -1,8 +1,8 @@
 # My Cat – Conversational Entry for Orangecat
 
 created_date: 2026-01-18  
-last_modified_date: 2026-06-03  
-last_modified_summary: Chat-first Cat hub — full-height composer, minimal toolbar, context/controls as secondary panels; shell chrome via `getRouteChrome`.
+last_modified_date: 2026-08-14  
+last_modified_summary: Money/Cat surface audit — permissions Payments-off CTA, accurate high-risk banner, Discover featured-on-All-only, people-first deep links to /send and /discover?type=profiles, catMaySendPayment in context.
 
 Status: Draft (MVP shipped), Iterating
 
@@ -114,15 +114,49 @@ Make creation on Orangecat conversational. Users describe what they want (voice 
 - Streaming enabled for both remote (SSE via `/api/cat/chat`) and local (Ollama/OpenAI-compatible event streams).
 - Local mode minimizes latency; remote mode can use auto-router for cost/perf tradeoffs.
 
-## 12) Roadmap
+## 12) Memory extraction quality
+
+Auto-memory (`src/services/cat/memory.ts`) must never turn a one-off request into a "Cat noted" card.
+
+Defence in depth (free-pool models ignore prompts often):
+
+1. **Gate** — `looksLikeSelfDisclosure` skips utility/action turns (`send` / `pay` / `transfer` / …), even when they contain `"my "` (e.g. "send btc to my mother").
+2. **Prompt** — `EXTRACTION_SYSTEM` forbids inferring bare kinship or payment intent from requests.
+3. **Filter** — `isWorthRemembering` / `parseFacts` deterministically drop junk (`"Has a mother"`, `"Wants to send Bitcoin"`) before insert.
+
+Named/detailed relationships stay allowed ("Sister Maya handles bookkeeping"). Users manage stored facts in Settings → AI. Regression coverage: `__tests__/unit/cat/memory-extraction-quality.test.ts`.
+
+## 13) People first — resolve before rails
+
+Cat's job is minimum cognitive load: few words, few taps, few page loads. When someone says **"send BTC to my mother"** (or any role/nickname payee) and Cat does not already know who that is:
+
+| Do                                                                                  | Don't                                                        |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Resolve the person first (search, Family, @handle)                                  | Open with "give me her Lightning address + amount"           |
+| Prefer **Family** group (`label: family`) for kinship                               | Treat it as Proxy Mode (that's "set up OrangeCat _for_ her") |
+| Offer tappable paths + deep links (`/dashboard/people`, `/discover?section=people`) | Dump a multi-step essay                                      |
+| Remember useful facts later ("Mother is @maya")                                     | Store "Has a mother"                                         |
+
+**Enforcement (prompting alone is not enough on free-pool models):**
+
+1. Brief + few-shot — `system-prompt.ts` / `few-shot-examples.ts`
+2. Tail directive — same pattern as reply-language
+3. **Hard short-circuit** — `people-first.ts` + `chat-orchestrator` returns a canned reply with quick_replies and **never calls Nemotron/Groq** for unresolved role payees
+
+Provenance shows `OrangeCat · people-first`. Tests: `__tests__/unit/cat/people-first.test.ts`.
+
+## 14) Roadmap
 
 - “Do not store keys” (client-only encryption) mode.
 - Optional local Whisper endpoint, with mic capture → local transcription.
 - Expand entity prefill to Products/Projects; extraction helpers per entity type.
 - Fine‑tune per‑user rate limits and quotas.
+- Optional: one-tap “Invite to Family + pay” composite once Family draft exists.
 
-## 13) References
+## 15) References
 
 - Implementation guide: `docs/my-cat-voice-and-local-models.md`
 - Entities & workflow: `src/components/create/`, `src/config/entity-registry.ts`
 - Models & providers: `src/config/ai-models.ts`, `src/services/ai/openrouter.ts`
+- Memory service: `src/services/cat/memory.ts`
+- Group labels (Family): `src/config/group-labels.ts`

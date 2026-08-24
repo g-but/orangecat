@@ -64,11 +64,19 @@ describe('routeVoiceIntent', () => {
     await expect(routeVoiceIntent(SENTENCE)).resolves.toBeNull();
   });
 
-  it('rejects a type that exists but cannot be prefilled', async () => {
-    // `group` is a real entity and deliberately excluded from prefill.
-    modelReplies({ entityType: 'group', description: 'a group for cyclists', confidence: 0.95 });
+  it('routes a clear group sentence to the group entity type', async () => {
+    modelReplies({
+      entityType: 'organization',
+      description: 'a group for cyclists',
+      confidence: 0.95,
+    });
 
-    await expect(routeVoiceIntent('start a group for cyclists')).resolves.toBeNull();
+    const intent = await routeVoiceIntent('start a group for cyclists');
+
+    expect(intent).toMatchObject({
+      entityType: 'organization',
+      description: 'a group for cyclists',
+    });
   });
 
   it('keeps their words when the model returns a type but no description', async () => {

@@ -12,6 +12,7 @@ import {
   validateTargetUrl,
   fetchWebsiteText,
   extractReadableText,
+  getUnsupportedUrlAnalysisMessage,
   type FetchLike,
   type FetchResponseLike,
   type LookupLike,
@@ -20,6 +21,7 @@ import {
   PLATFORM_TOOL_DEFINITION,
   hasWebsiteAnalysisIntent,
   messageMightNeedTools,
+  PREFILLABLE_ENTITY_TYPES,
 } from '@/services/cat/tool-use-detection';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -450,5 +452,29 @@ describe('fetchWebsiteText with schemeless input', () => {
     });
     expect(result.ok).toBe(false);
     expect(fetchFn).not.toHaveBeenCalled();
+  });
+});
+
+describe('getUnsupportedUrlAnalysisMessage', () => {
+  it('flags LinkedIn profile URLs before fetch', () => {
+    expect(getUnsupportedUrlAnalysisMessage('https://www.linkedin.com/in/example')).toContain(
+      'LinkedIn'
+    );
+    expect(getUnsupportedUrlAnalysisMessage('linkedin.com/company/foo')).toContain('organization');
+  });
+
+  it('flags Instagram and Facebook profile URLs', () => {
+    expect(getUnsupportedUrlAnalysisMessage('https://instagram.com/foo')).toContain('social');
+    expect(getUnsupportedUrlAnalysisMessage('https://facebook.com/foo')).toContain('social');
+  });
+
+  it('returns null for normal public websites', () => {
+    expect(getUnsupportedUrlAnalysisMessage('https://example.org/about')).toBeNull();
+  });
+});
+
+describe('PREFILLABLE_ENTITY_TYPES', () => {
+  it('includes group so nonprofits can be drafted from URL or description', () => {
+    expect(PREFILLABLE_ENTITY_TYPES).toContain('organization');
   });
 });

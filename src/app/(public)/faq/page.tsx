@@ -174,14 +174,14 @@ const FAQ_SECTIONS: FaqSection[] = [
     color: 'text-fg-primary',
     items: [
       {
-        question: 'What are Groups?',
+        question: 'What are Organizations?',
         answer:
-          'Groups are organizations on OrangeCat with a shared identity, treasury, and governance. A group can have members with different roles, propose and vote on decisions, manage shared funds, and run economic activities collectively. Think DAOs, cooperatives, clubs, or any collective that needs to coordinate.',
+          'Organizations are standing collectives on OrangeCat with a shared identity, treasury, and governance. An organization can have members with different roles, propose and vote on decisions, manage shared funds, and run economic activities collectively. Think DAOs, cooperatives, clubs, nonprofits, or any collective that needs to coordinate. (In the database the table is still named groups; the product EntityType is organization.)',
       },
       {
         question: 'What is a Circle?',
         answer:
-          'Circles are lighter-weight communities — less formal than groups, more suited for interest communities, study groups, or loose collaborations. Circles can share a space for discussion and coordination without the full governance machinery of a Group.',
+          'Circles are lighter-weight communities — less formal than organizations, more suited for interest communities, study groups, or loose collaborations. Circles can share a space for discussion and coordination without the full governance machinery of an Organization.',
       },
     ],
   },

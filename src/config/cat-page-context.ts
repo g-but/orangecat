@@ -39,7 +39,7 @@ const ENTITY_PATTERNS: Pattern[] = [
   { re: /^\/projects\/([^/]+)/, type: 'project', label: 'a project' },
   { re: /^\/profiles\/([^/]+)/, type: 'profile', label: "a member's profile" },
   { re: /^\/(?:articles|blog)\/([^/]+)/, type: 'article', label: 'an article' },
-  { re: /^\/groups\/([^/]+)/, type: 'group', label: 'a group' },
+  { re: /^\/(?:organizations|groups)\/([^/]+)/, type: 'organization', label: 'an organization' },
   { re: /^\/events\/([^/]+)/, type: 'event', label: 'an event' },
   { re: /^\/causes\/([^/]+)/, type: 'cause', label: 'a cause' },
   { re: /^\/assets\/([^/]+)/, type: 'asset', label: 'an asset' },

@@ -158,7 +158,7 @@ export function GroupsDashboard() {
             <GroupList
               groups={filteredMyGroups}
               onGroupClick={group =>
-                router.push(`${ENTITY_REGISTRY['group'].basePath}/${group.slug}`)
+                router.push(`${ENTITY_REGISTRY['organization'].basePath}/${group.slug}`)
               }
             />
           )}
@@ -184,7 +184,7 @@ export function GroupsDashboard() {
             <GroupList
               groups={filteredAvailable}
               onGroupClick={group =>
-                router.push(`${ENTITY_REGISTRY['group'].basePath}/${group.slug}`)
+                router.push(`${ENTITY_REGISTRY['organization'].basePath}/${group.slug}`)
               }
             />
           )}

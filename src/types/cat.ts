@@ -30,7 +30,7 @@ export const CAT_CREATABLE_ENTITY_TYPES = [
   'investment',
   'research',
   'wishlist',
-  'group',
+  'organization',
   'circle',
   'ai_assistant',
   'document',
@@ -40,7 +40,7 @@ type CatCreatableEntityType = (typeof CAT_CREATABLE_ENTITY_TYPES)[number];
 
 /**
  * An action suggesting entity creation, embedded as ```action JSON blocks in AI responses.
- * title is required for most entity types; groups use `name` instead.
+ * title is required for most entity types; organizations use `name` instead.
  * The response parser normalises name→title so the UI always has a label to display.
  */
 export interface SuggestedAction {

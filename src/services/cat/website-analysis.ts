@@ -95,6 +95,41 @@ export function isUrlOnlyMessage(message: string): boolean {
   return extractHttpUrls(trimmed).length === 1;
 }
 
+/**
+ * Social/profile hosts that cannot be scraped reliably (login walls, SPA).
+ * Returns a Cat-facing instruction string, or null if fetch may proceed.
+ */
+export function getUnsupportedUrlAnalysisMessage(rawUrl: string): string | null {
+  let hostname: string;
+  try {
+    hostname = new URL(normalizeToHttpUrl(rawUrl)).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  const isLinkedIn = hostname === 'linkedin.com' || hostname.endsWith('.linkedin.com');
+  const isInstagram = hostname === 'instagram.com' || hostname.endsWith('.instagram.com');
+  const isFacebook =
+    hostname === 'facebook.com' ||
+    hostname.endsWith('.facebook.com') ||
+    hostname === 'fb.com' ||
+    hostname.endsWith('.fb.com');
+  if (isLinkedIn) {
+    return (
+      'LinkedIn profiles and company pages cannot be read automatically — LinkedIn serves login walls and JavaScript-rendered content. ' +
+      "Ask the user for the organisation's public website URL, or a short description they can paste. " +
+      'You may still call prefill_entity_form with entityType "organization" (nonprofits/orgs), "service", or "product" based on what they tell you — never invent details.'
+    );
+  }
+  if (isInstagram || isFacebook) {
+    return (
+      'This social profile URL cannot be read automatically — the platform serves login walls and JavaScript-rendered content. ' +
+      'Ask the user for a public website URL or a short description. ' +
+      'You may still call prefill_entity_form from their description — never invent details.'
+    );
+  }
+  return null;
+}
+
 /** Normalized comparison key so "https://X.com/" and "https://x.com" match. */
 function urlKey(href: string): string {
   try {

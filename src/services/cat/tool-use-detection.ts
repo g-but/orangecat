@@ -245,10 +245,8 @@ export function hasCreateIntent(message: string): boolean {
 /** Entity types Cat can DRAFT via the prefill tool. Derived from the creatable SSOT so the
  *  two lists can't drift. `group` is creatable but not prefillable — it uses a `name`, not the
  *  form-field prefill flow. Add an entry here only by removing it from this exclusion set. */
-const NON_PREFILLABLE_ENTITY_TYPES = new Set<string>(['group']);
-export const PREFILLABLE_ENTITY_TYPES = CAT_CREATABLE_ENTITY_TYPES.filter(
-  t => !NON_PREFILLABLE_ENTITY_TYPES.has(t)
-);
+/** All creatable entity types Cat can draft via prefill_entity_form / voice routing. */
+export const PREFILLABLE_ENTITY_TYPES = [...CAT_CREATABLE_ENTITY_TYPES];
 
 export const PLATFORM_TOOL_DEFINITION = [
   {

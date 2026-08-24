@@ -48,6 +48,9 @@ export interface Profile {
 }
 
 type ProfileType = 'individual' | 'project' | 'organization' | 'collective';
+// Note: profile_type "organization" is account metadata ("this profile
+// represents a collective"), NOT EntityType. Collective listings use entity
+// type `organization` — see entity-guides.ts / docs/architecture/ENTITY_TYPES.md.
 
 interface AssociatedEntity {
   id: string;

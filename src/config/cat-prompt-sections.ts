@@ -73,7 +73,11 @@ export const SITUATIONAL_SECTIONS: ReadonlyArray<{ heading: string; when: RegExp
   { heading: 'Orienting a New Person (first reply)', when: /first-message/ },
   {
     heading: 'Proxy Mode',
-    when: /my friend|my mother|my father|my sister|my brother|someone i know|on behalf|for a friend|helping someone/,
+    when: /on behalf|for a friend|helping someone|doesn'?t use (a )?(computer|phone|tech)|set(ting)? up for|manage (this|it) for|proxy/,
+  },
+  {
+    heading: 'People first — resolve before rails',
+    when: /\b(mother|mom|mum|father|dad|sister|brother|landlord|parents?|wife|husband|partner)\b|(send|pay|transfer|tip|message|invite).{0,48}\b(her|him|them)\b|find (her|him|my (mom|mother|dad))/,
   },
   {
     heading: 'Choosing the Entity Type (decision rubric — apply before EVERY proposal)',

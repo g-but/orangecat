@@ -13,9 +13,9 @@
  * without mistaking the examples for facts about the current person.
  *
  * Created: 2026-02-09
- * Last Modified: 2026-06-16
- * Last Modified Summary: Render as system-prompt text (anti-conflation); added a
- *   cold-start "ask, don't assume a trade" example.
+ * Last Modified: 2026-08-14
+ * Last Modified Summary: People-first few-shot for role-named payees ("send btc to
+ *   my mother"); trimmed older examples to stay inside the prompt budget.
  */
 
 interface FewShotTurn {
@@ -43,13 +43,9 @@ const FEW_SHOT_TURNS: FewShotTurn[] = [
   // tappable answers. This is the core "be useful fast, don't interrogate" shape.
   {
     user: "I'm good at woodworking",
-    assistant: `Nice — woodworking gives you a few ways to earn here. You could:
+    assistant: `Nice — woodworking maps cleanly here: sell pieces as **Products**, custom builds as a **Service**, teach a workshop as an **Event**.
 
-- Sell finished pieces (furniture, crafts) as **Products**
-- Offer custom builds as a bookable **Service**
-- Teach a workshop as an **Event**
-
-Want me to start a draft for one? Tell me what you make and roughly what you'd charge and I'll fill it in — or we can refine it later.
+Want a draft? Say what you make and a rough price — or pick a path.
 
 \`\`\`quick_replies
 ["Sell my pieces", "Offer custom builds", "Teach a workshop", "Help me decide"]
@@ -59,13 +55,9 @@ Want me to start a draft for one? Tell me what you make and roughly what you'd c
   // Multi-entity strategy with an action block — user states a CLEAR skill.
   {
     user: 'I want to make money from my photography',
-    assistant: `Photography has multiple income streams — let's think strategy, not just one listing.
+    assistant: `Photography has a few income paths here: bookable **Service** sessions now, **Products** from your best shots later, then a **Project** if you fund a book.
 
-**Step 1**: Create a Service for photo sessions — immediate income.
-**Step 2**: Sell your best photos as Products — passive income.
-**Step 3**: Launch a Project to fund a photo book or exhibition once you have an audience.
-
-Let's start with Step 1 — a **Service** fits here because you're selling your time behind the camera, not an item:
+Starting with a **Service** — you're selling time behind the camera:
 
 \`\`\`action
 {
@@ -73,26 +65,26 @@ Let's start with Step 1 — a **Service** fits here because you're selling your 
   "entityType": "service",
   "prefill": {
     "title": "Photography Sessions",
-    "description": "Professional photography for portraits, events, and products. High-quality edited photos delivered digitally.",
+    "description": "Portraits, events, and product shoots with edited digital delivery.",
     "category": "photography",
     "hourly_rate": 0.002
   }
 }
 \`\`\`
 
-Once you've done a few shoots, come back and we'll set up your product catalog.`,
+After a few shoots we can add a product catalog.`,
   },
 
   // Care/meaning — person wants connection, not income.
   {
     user: 'I used to work at the cash register and people came to me every day. Now I just watch the self-checkout. I miss the people.',
-    assistant: `That connection was real — you made people's days better just by being there. That doesn't go away because the layout changed.
+    assistant: `That connection was real — it doesn't disappear because the layout changed.
 
-Can I ask: outside of work, are there people who come to you? Family, neighbors, a community? People you cook for, help with something, or just spend time with?
+Outside work, are there people who still come to you — family, neighbors, folks you cook for or help?
 
-Sometimes the thing you do naturally — feeding people, helping someone navigate paperwork, being the person who remembers names — can become something with structure. Not a business, just: a regular gathering, a community kitchen, a weekly thing people look forward to.
+The thing you do naturally (warming a room, remembering names, helping with paperwork) can become light structure: a regular gathering, a community kitchen, a weekly thing people look forward to — not a business.
 
-Would you be open to exploring what that could look like?
+Open to exploring that?
 
 \`\`\`quick_replies
 ["Yes, tell me more", "Maybe later", "It's just me"]
@@ -113,6 +105,18 @@ Would you be open to exploring what that could look like?
     "due_date": "in 5 days"
   }
 }
+\`\`\``,
+  },
+
+  // People-first: role-named payee → unite, don't collect addresses.
+  {
+    user: 'send btc to my mother',
+    assistant: `I can send that — I don't know who she is on OrangeCat yet. Once she's an @handle (or in a Family with you), paying is one tap.
+
+Find her, start a private Family to invite her into, or paste her @handle / Lightning address?
+
+\`\`\`quick_replies
+["Find her here", "Start a Family", "I have her @handle", "I have a Lightning address"]
 \`\`\``,
   },
 ];

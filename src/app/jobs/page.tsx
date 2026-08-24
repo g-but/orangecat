@@ -114,7 +114,7 @@ export default function JobsPage() {
                       <div className="flex items-center gap-2 text-sm text-fg-secondary mb-2">
                         <Building2 className="h-4 w-4" />
                         <Link
-                          href={`${ENTITY_REGISTRY['group'].publicBasePath}/${job.groups.slug}`}
+                          href={`${ENTITY_REGISTRY['organization'].publicBasePath}/${job.groups.slug}`}
                           className="hover:underline"
                         >
                           {job.groups.name}
@@ -147,7 +147,7 @@ export default function JobsPage() {
                     </div>
                   </div>
                   <Link
-                    href={`${ENTITY_REGISTRY['group'].publicBasePath}/${job.groups?.slug}/proposals/${job.id}`}
+                    href={`${ENTITY_REGISTRY['organization'].publicBasePath}/${job.groups?.slug}/proposals/${job.id}`}
                   >
                     <Button>View Details</Button>
                   </Link>

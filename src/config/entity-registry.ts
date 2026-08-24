@@ -15,8 +15,8 @@
  * - Reduces magic strings throughout codebase
  *
  * Created: 2025-12-16
- * Last Modified: 2025-12-24
- * Last Modified Summary: Added category, priority, createActionLabel fields; fixed wallet path; added color mapping for Tailwind
+ * Last Modified: 2026-08-20
+ * Last Modified Summary: EntityType key is `organization` (DB table remains `groups`); meaning SSOT in entity-guides.ts
  */
 
 import type { Database as GeneratedDatabase } from '@/types/database.generated';
@@ -51,7 +51,7 @@ export const ENTITY_TYPES = [
   'service',
   'cause',
   'ai_assistant',
-  'group',
+  'organization',
   'circle',
   'asset',
   'loan',
@@ -95,7 +95,7 @@ export interface EntityMetadata {
   tableName: string;
   /** Column name for user/owner ID (used for RLS queries) */
   userIdField: string;
-  /** Public display-title column. Most entities use `title`; groups use `name`. */
+  /** Public display-title column. Most entities use `title`; organizations use `name`. */
   titleColumn?: string;
   /** Lucide icon component */
   icon: LucideIcon;
@@ -165,7 +165,8 @@ export const ENTITY_TABLE_NAMES = {
   service: 'user_services',
   cause: 'user_causes',
   ai_assistant: 'ai_assistants',
-  group: 'groups',
+  /** Physical Postgres table is still `groups` — do not rename the table. */
+  organization: 'groups',
   circle: 'circles',
   asset: 'assets',
   loan: 'loans',
@@ -307,22 +308,23 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
   },
 
   // ==================== COMMUNITY (Network building) ====================
-  group: {
-    type: 'group',
-    name: 'Group',
-    namePlural: 'Groups',
-    tableName: ENTITY_TABLE_NAMES.group,
+  organization: {
+    type: 'organization',
+    name: 'Organization',
+    namePlural: 'Organizations',
+    tableName: ENTITY_TABLE_NAMES.organization,
     userIdField: 'created_by',
     titleColumn: 'name',
     icon: Users,
     colorTheme: 'tiffany',
-    basePath: '/dashboard/groups',
-    createPath: '/dashboard/groups/create',
-    publicBasePath: '/groups',
+    basePath: '/dashboard/organizations',
+    createPath: '/dashboard/organizations/create',
+    publicBasePath: '/organizations',
     apiEndpoint: '/api/groups',
     hasTemplates: false,
-    description: 'Community groups and organizations',
-    createActionLabel: 'Start a community group',
+    description:
+      'Standing collective identity (nonprofit, company, DAO, …) — membership, governance, treasury',
+    createActionLabel: 'Start an organization',
     category: 'community',
     createPriority: 1,
     paymentPattern: 'none',

@@ -102,7 +102,7 @@ describe('getSharedWalletUsage', () => {
   it('returns null for group treasuries (wallet not in wallets table)', async () => {
     mockResolve.mockResolvedValue({ method: 'nwc', wallet_id: 'gw1' });
     walletRow = null;
-    expect(await getSharedWalletUsage(supabase, 'group', ENTITY_ID)).toBeNull();
+    expect(await getSharedWalletUsage(supabase, 'organization', ENTITY_ID)).toBeNull();
   });
 
   it('degrades to null when resolution throws — disclosure never breaks the page', async () => {

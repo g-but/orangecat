@@ -91,7 +91,9 @@ export function EventCard({ event, groupSlug, onUpdate: _onUpdate }: EventCardPr
           {event.is_public && <Badge variant="secondary">Public</Badge>}
         </div>
 
-        <Link href={`${ENTITY_REGISTRY['group'].publicBasePath}/${groupSlug}/events/${event.id}`}>
+        <Link
+          href={`${ENTITY_REGISTRY['organization'].publicBasePath}/${groupSlug}/events/${event.id}`}
+        >
           <Button variant="outline" className="w-full mt-2">
             View Details
           </Button>

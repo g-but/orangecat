@@ -10,7 +10,7 @@ const GENERIC_TABS: DiscoverTabType[] = [
   'events',
   'products',
   'services',
-  'groups',
+  'organizations',
   'circles',
   'wishlists',
   'research',

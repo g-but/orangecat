@@ -22,7 +22,7 @@ export function ProposalsListPage({
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-6">
-        <Link href={`${ENTITY_REGISTRY['group'].publicBasePath}/${groupSlug}`}>
+        <Link href={`${ENTITY_REGISTRY['organization'].publicBasePath}/${groupSlug}`}>
           <Button variant="ghost" size="sm" className="mb-2">
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to {groupName}

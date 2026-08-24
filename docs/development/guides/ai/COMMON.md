@@ -20,7 +20,7 @@ All work must align with the OrangeCat platform's modern, unified architecture.
 
 - **Stack:** Next.js, React (Server Components), TypeScript, TailwindCSS
 - **Backend:** Supabase (PostgreSQL, Auth, RLS)
-- **Core Principle:** The project follows a **DRY (Don't Repeat Yourself)** and **SSOT (Single Source of Truth)** philosophy. The most critical file for this is `src/config/entity-registry.ts`.
+- **Core Principle:** The project follows a **DRY (Don't Repeat Yourself)** and **SSOT (Single Source of Truth)** philosophy. Entity metadata: `src/config/entity-registry.ts`. Entity meaning (when to use which type): `src/config/entity-guides.ts`. Human guide: `docs/architecture/ENTITY_TYPES.md`. Standing collectives use EntityType `organization` (DB table `groups`; legacy alias `group`).
 
 ---
 

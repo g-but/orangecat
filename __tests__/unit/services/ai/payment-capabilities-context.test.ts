@@ -11,12 +11,20 @@
 import { renderPaymentCapabilities } from '@/services/ai/context-sections';
 import { LIGHTNING_ADDRESS_PROVIDERS, WALLET_PROVIDERS } from '@/config/wallet-providers';
 
-const withAddress = { hasNwcWallet: true, lightningAddress: 'mao@orangecat.ch' };
-const withoutAddress = { hasNwcWallet: false, lightningAddress: null };
+const withAddress = {
+  hasNwcWallet: true,
+  lightningAddress: 'mao@orangecat.ch',
+  catMaySendPayment: true,
+};
+const withoutAddress = {
+  hasNwcWallet: false,
+  lightningAddress: null,
+  catMaySendPayment: false,
+};
 
 describe('payment capabilities context', () => {
   it('gives a user who cannot be paid both routes out, not just the diagnosis', () => {
-    const rendered = renderPaymentCapabilities(withoutAddress as never);
+    const rendered = renderPaymentCapabilities(withoutAddress);
 
     // Route 1: they already have a wallet — the verb that ends with them payable.
     expect(rendered).toContain('connect_wallet');
@@ -25,7 +33,7 @@ describe('payment capabilities context', () => {
   });
 
   it('only lists providers that actually hand out a Lightning address', () => {
-    const rendered = renderPaymentCapabilities(withoutAddress as never);
+    const rendered = renderPaymentCapabilities(withoutAddress);
 
     // A wallet can support Lightning and still never give the user a
     // name@domain address — which is the only thing OrangeCat can store. Listing
@@ -38,7 +46,7 @@ describe('payment capabilities context', () => {
   });
 
   it('is honest that custodial providers are custodial', () => {
-    const rendered = renderPaymentCapabilities(withoutAddress as never);
+    const rendered = renderPaymentCapabilities(withoutAddress);
     const custodial = LIGHTNING_ADDRESS_PROVIDERS.filter(p => p.custody === 'custodial');
 
     // Every fast option starts custodial today. Recommending one without saying
@@ -48,10 +56,27 @@ describe('payment capabilities context', () => {
   });
 
   it('spends nothing on setup instructions for a user who is already payable', () => {
-    const rendered = renderPaymentCapabilities(withAddress as never);
+    const rendered = renderPaymentCapabilities(withAddress);
 
     expect(rendered).toContain('mao@orangecat.ch');
     expect(rendered).not.toContain(WALLET_PROVIDERS.primal.website);
     expect(rendered).not.toContain('CANNOT BE PAID');
+  });
+
+  it('tells Cat not to send_payment when Payments permissions are off', () => {
+    const rendered = renderPaymentCapabilities({
+      hasNwcWallet: true,
+      lightningAddress: 'mao@orangecat.ch',
+      catMaySendPayment: false,
+    });
+    expect(rendered).toContain('Payments OFF');
+    expect(rendered).toContain('/send');
+    expect(rendered).toContain('/dashboard/cat/permissions');
+    expect(rendered).not.toContain('send_payment allowed');
+  });
+
+  it('names send_payment when both NWC and permissions are ready', () => {
+    const rendered = renderPaymentCapabilities(withAddress);
+    expect(rendered).toContain('send_payment allowed');
   });
 });

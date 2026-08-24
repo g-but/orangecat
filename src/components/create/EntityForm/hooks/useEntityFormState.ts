@@ -73,7 +73,7 @@ export function useEntityFormState<T extends Record<string, unknown>>({
     (field: keyof T, value: unknown) => {
       const updatedData = { ...formState.data, [field]: value };
 
-      if (field === 'name' && config.type === 'group') {
+      if (field === 'name' && config.type === 'organization') {
         (updatedData as Record<string, unknown>).slug = slugify(value as string);
       }
 

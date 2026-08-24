@@ -44,7 +44,7 @@ export type ActionCategory =
   | 'entities' // Create/manage products, services, projects, etc.
   | 'communication' // Timeline posts, messages
   | 'payments' // Bitcoin transactions
-  | 'organization' // Group/org management
+  | 'organizations' // Organization management (standing collectives; DB table groups)
   | 'settings' // User settings
   | 'context'; // Managing My Cat's context
 
@@ -1157,25 +1157,30 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     enabled: true,
   },
 
-  // ---------- ORGANIZATION ACTIONS ----------
+  // ---------- ORGANIZATION ACTIONS (DB table: groups) ----------
 
   create_organization: {
     id: 'create_organization',
     name: 'Create Organization',
-    description: 'Create a new organization or group',
-    category: 'organization',
+    description: 'Create a new organization (nonprofit, company, DAO, cooperative, …)',
+    category: 'organizations',
     icon: Users,
     riskLevel: 'medium',
     requiresConfirmation: true,
     parameters: [
       { name: 'name', type: 'string', required: true, description: 'Organization name' },
       { name: 'description', type: 'string', required: false, description: 'Description' },
-      { name: 'type', type: 'string', required: false, description: 'Organization type' },
+      {
+        name: 'label',
+        type: 'string',
+        required: false,
+        description: 'Organization label (nonprofit, company, dao, cooperative, …)',
+      },
     ],
     examples: [
       'Create an organization for my project',
-      'Set up a group for collaborators',
-      'Start a company on OrangeCat',
+      'Set up a nonprofit on OrangeCat',
+      'Start a company organization',
     ],
     apiEndpoint: API_ROUTES.GROUPS.BASE,
     enabled: true,
@@ -1186,7 +1191,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     name: 'Propose Governance Change',
     description:
       'Propose new platform spending ceilings for the Cat via a Solon vote — files only, voters decide',
-    category: 'organization',
+    category: 'organizations',
     icon: ShieldCheck,
     riskLevel: 'high',
     requiresConfirmation: true, // a human okays the filing before it leaves the system
@@ -1219,7 +1224,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     id: 'invite_to_organization',
     name: 'Invite to Organization',
     description: 'Invite a user to join your organization',
-    category: 'organization',
+    category: 'organizations',
     icon: Users,
     riskLevel: 'medium',
     requiresConfirmation: true,
@@ -1228,7 +1233,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
         name: 'organization_id',
         type: 'entity_id',
         required: true,
-        description: 'Organization ID',
+        description: 'Organization ID (maps to groups.id)',
       },
       { name: 'user_id', type: 'user_id', required: false, description: 'User to invite' },
       {
@@ -1247,7 +1252,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     ],
     examples: [
       'Invite Alice to my organization',
-      'Add Bob as an admin to the group',
+      'Add Bob as an admin to the organization',
       'Bring in that developer as a contributor',
     ],
     enabled: true,
@@ -1710,9 +1715,9 @@ export const ACTION_CATEGORIES: Record<
     description: 'Send Bitcoin and fund projects',
     icon: Wallet,
   },
-  organization: {
+  organizations: {
     name: 'Organizations',
-    description: 'Create and manage organizations',
+    description: 'Create and manage organizations (standing collectives)',
     icon: Users,
   },
   settings: {

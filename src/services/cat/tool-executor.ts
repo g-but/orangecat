@@ -12,7 +12,11 @@ import { resolveAiAssistTarget } from '@/lib/ai/assist-target';
 import { isValidEntityType, type EntityType } from '@/config/entity-registry';
 import { PREFILLABLE_ENTITY_TYPES } from './tool-use-detection';
 import { handleExploreTopic, handleQueryMyData } from './tool-handlers-lookup';
-import { fetchWebsiteText, resolveRequestedUrl } from './website-analysis';
+import {
+  fetchWebsiteText,
+  resolveRequestedUrl,
+  getUnsupportedUrlAnalysisMessage,
+} from './website-analysis';
 import { runCatHealthProbes } from './health-probes';
 import type {
   ToolResultMessage,
@@ -73,6 +77,21 @@ export async function executeToolCall(
       args: { url: requestedUrl },
     });
 
+    const unsupported = getUnsupportedUrlAnalysisMessage(requestedUrl);
+    if (unsupported) {
+      onToolCall?.({
+        id: toolCall.id,
+        name: toolName,
+        status: 'failed',
+        error: 'unsupported_profile_url',
+      });
+      return {
+        role: 'tool',
+        tool_call_id: toolCall.id,
+        content: unsupported,
+      };
+    }
+
     const result = await fetchWebsiteText(requestedUrl);
     if (!result.ok) {
       onToolCall?.({ id: toolCall.id, name: toolName, status: 'failed', error: result.error });
@@ -100,7 +119,7 @@ ${result.text}
 ---
 INSTRUCTIONS (hard constraints):
 - Propose AT MOST 3 entities by calling prefill_entity_form — put all calls in your NEXT message, one call per entity.
-- Every entity MUST be directly evidenced by the site text above: a service they visibly offer, a product they visibly sell, or the organization itself as a project or group. In each description, quote or reference the exact wording from the site that evidences it.
+- Every entity MUST be directly evidenced by the site text above: a service they visibly offer, a product they visibly sell, a nonprofit/association as a group, or a mission/initiative as a project or cause. In each description, quote or reference the exact wording from the site that evidences it.
 - NEVER invent prices. Leave price out of the description unless the site states one; if it states a fiat price, keep it in that currency (e.g. "CHF 120"). Bitcoin amounts are always BTC — never sats.
 - If the site text is thin or ambiguous, call NO further tools; the final reply should say so honestly and ask the user ONE clarifying question instead of proposing anything.
 - In the final user-facing reply, briefly say what you read on the site and point to the draft cards — do not restate field values or add anything the site does not say.`,

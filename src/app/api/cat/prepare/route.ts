@@ -47,6 +47,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     return apiSuccess({
       messages: prepared.messages,
       conversationId: prepared.conversationId,
+      /** When set, the browser SHOULD show this instead of calling the local model. */
+      peopleFirstReply: prepared.peopleFirstReply,
     });
   } catch (error) {
     logger.error('Cat prepare failed', { error }, 'cat/prepare');

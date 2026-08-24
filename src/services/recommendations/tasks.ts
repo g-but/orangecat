@@ -219,9 +219,9 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     description: 'Connect with like-minded people and collaborate',
     priority: 'medium',
     category: 'engage',
-    action: { label: 'Explore Groups', href: ROUTES.DISCOVER_TYPE('groups') },
+    action: { label: 'Explore Organizations', href: ROUTES.DISCOVER_TYPE('organizations') },
     icon: Users,
-    condition: ctx => ctx.profileCompletion >= 75 && (ctx.entityCounts.group ?? 0) === 0,
+    condition: ctx => ctx.profileCompletion >= 75 && (ctx.entityCounts.organization ?? 0) === 0,
   },
   {
     id: 'create-event',
@@ -324,8 +324,8 @@ export const SMART_QUESTIONS: SmartQuestion[] = [
   {
     id: 'grow-network-q',
     question: 'Want to grow your network? Join a group!',
-    action: { label: 'Find Groups', href: ROUTES.DISCOVER_TYPE('groups') },
-    condition: ctx => ctx.profileCompletion === 100 && (ctx.entityCounts.group ?? 0) === 0,
+    action: { label: 'Find Organizations', href: ROUTES.DISCOVER_TYPE('organizations') },
+    condition: ctx => ctx.profileCompletion === 100 && (ctx.entityCounts.organization ?? 0) === 0,
   },
   {
     id: 'try-ai-q',

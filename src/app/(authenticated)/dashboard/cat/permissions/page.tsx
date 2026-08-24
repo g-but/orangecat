@@ -192,20 +192,68 @@ export default function CatPermissionsPage() {
 
           <PermissionStats summary={summary} />
 
-          {summary.highRiskEnabled && (
-            <div className="mb-6 flex items-start gap-3 rounded-md border border-subtle bg-status-warning-subtle p-4">
-              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-status-warning dark:text-status-warning" />
-              <div>
-                <p className="font-medium text-status-warning dark:text-status-warning">
-                  High-risk actions enabled
-                </p>
-                <p className="text-base text-fg-secondary">
-                  You have enabled actions that can send Bitcoin or post public content. Cat will
-                  always ask for confirmation before executing them.
-                </p>
-              </div>
-            </div>
-          )}
+          {(() => {
+            const payments = summary.categories.find(c => c.category === 'payments');
+            const paymentsOff = !payments?.enabled || (payments?.enabledActionCount ?? 0) === 0;
+            const highRiskOn = availableActions.filter(
+              a => a.riskLevel === 'high' && a.autonomy !== 'off'
+            );
+            const bitcoinRisk = highRiskOn.some(a => a.category === 'payments');
+            const publicRisk = highRiskOn.some(
+              a => a.category === 'communication' || a.id === 'publish_interest'
+            );
+
+            return (
+              <>
+                {paymentsOff && (
+                  <div className="mb-6 flex flex-col gap-3 rounded-md border border-default bg-surface-raised p-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="font-medium text-fg-primary">Cat cannot send Bitcoin for you</p>
+                      <p className="mt-1 text-sm text-fg-secondary">
+                        Payments are off ({payments?.enabledActionCount ?? 0}/
+                        {payments?.actionCount ?? 0}). Enable the Payments category below if you
+                        want Cat to pay with confirmation — or send yourself in one tap.
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      <Link
+                        href={ROUTES.SEND}
+                        className="inline-flex items-center justify-center rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-fg hover:opacity-90"
+                      >
+                        Open Send
+                      </Link>
+                      <Link
+                        href={ROUTES.DASHBOARD.WALLETS}
+                        className="inline-flex items-center justify-center rounded-md border border-default px-3 py-2 text-sm font-medium text-fg-primary hover:bg-surface-base"
+                      >
+                        Wallets
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {summary.highRiskEnabled && (
+                  <div className="mb-6 flex items-start gap-3 rounded-md border border-subtle bg-status-warning-subtle p-4">
+                    <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-status-warning dark:text-status-warning" />
+                    <div>
+                      <p className="font-medium text-status-warning dark:text-status-warning">
+                        High-risk actions enabled
+                      </p>
+                      <p className="text-base text-fg-secondary">
+                        {bitcoinRisk && publicRisk
+                          ? 'You have enabled actions that can send Bitcoin or publish publicly. Cat will always ask for confirmation before executing them.'
+                          : bitcoinRisk
+                            ? 'You have enabled actions that can send Bitcoin. Cat will always ask for confirmation before executing them.'
+                            : publicRisk
+                              ? 'You have enabled actions that can publish publicly (posts, interests, messages). Cat will always ask for confirmation before executing them.'
+                              : 'You have enabled high-risk actions. Cat will always ask for confirmation before executing them.'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
 
           <div className="space-y-4">
             {summary.categories.map(cat => (

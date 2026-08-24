@@ -1,12 +1,12 @@
 /**
  * Unified Groups API Route
  *
- * Handles CRUD operations for groups (circles + organizations).
- * Uses unified GroupsService.
+ * Handles CRUD operations for groups (standing collectives).
+ * Legacy product language said "organizations"; the entity type is `group`.
  *
  * Created: 2025-01-30
- * Last Modified: 2026-01-28
- * Last Modified Summary: Refactored to use withAuth middleware
+ * Last Modified: 2026-08-20
+ * Last Modified Summary: Dropped organization dual-name from file header.
  */
 
 import { createGroupSchema } from '@/services/groups/validation';
@@ -27,7 +27,8 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     const { supabase } = request;
 
     const searchParams = request.nextUrl.searchParams;
-    const type = searchParams.get('type'); // 'circle', 'organization', etc.
+    const type = searchParams.get('type'); // group label filter if provided
+
     const category = searchParams.get('category');
     const page = parseInt(searchParams.get('page') || '1');
     // Accept both 'pageSize' and 'limit' for backward compatibility

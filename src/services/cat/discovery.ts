@@ -65,7 +65,7 @@ function applyPublicGate(query: unknown, type: EntityType): unknown {
       return (q.eq('visibility', 'public') as typeof q).eq('is_active', true);
     case 'circle':
       return (q.eq('visibility', 'public') as typeof q).eq('status', 'active');
-    case 'group':
+    case 'organization':
       return q.eq('is_public', true);
     case 'research':
     case 'ai_assistant':

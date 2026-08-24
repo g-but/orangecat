@@ -53,7 +53,7 @@ export function EntityCreationSuccess({
   // Soft-nudge (C-2): if this entity type receives payments and the owner has no
   // connected wallet, publishing produces a live-but-unpayable entity and they're
   // never told. Prompt them to connect one — without blocking publish. Skips
-  // entity types that don't take payments (group/circle/asset/loan/document).
+  // entity types that don't take payments (organization/circle/asset/loan/document).
   const { user } = useAuth();
   const receivesPayments =
     !!ENTITY_REGISTRY[entityType as EntityType]?.paymentPattern &&

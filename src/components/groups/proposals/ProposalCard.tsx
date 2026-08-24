@@ -150,7 +150,7 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
 
           <div className="pt-2">
             <Link
-              href={`${ENTITY_REGISTRY['group'].publicBasePath}/${proposal.groupSlug}/proposals/${proposal.id}`}
+              href={`${ENTITY_REGISTRY['organization'].publicBasePath}/${proposal.groupSlug}/proposals/${proposal.id}`}
             >
               <Button variant="outline" className="w-full">
                 View Details

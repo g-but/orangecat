@@ -8,6 +8,7 @@ import { STORAGE_KEYS } from '@/config/storage-keys';
 import { readPageExcerptForCat, type CatPageDescriptor } from '@/config/cat-page-context';
 import { getLocalRuntime, parseLocalModelId } from '@/config/local-ai';
 import { streamLocalChat } from '@/services/ai/local-runtime';
+import { parseActionsFromResponse } from '@/services/cat/response-parser';
 import type {
   Message,
   CatAction,
@@ -243,6 +244,7 @@ export function useChatMessages({
             data?: {
               messages?: Array<{ role: string; content: string }>;
               conversationId?: string | null;
+              peopleFirstReply?: string | null;
             };
           };
           const prepared = prepBody?.data;
@@ -251,6 +253,38 @@ export function useChatMessages({
               'Could not prepare your conversation. Try again.',
               'STREAM_ERROR'
             );
+          }
+
+          // Same product guarantee as the server chat path: unresolved
+          // role-payee turns never ask a model for Lightning-address homework.
+          if (prepared.peopleFirstReply?.trim()) {
+            const parsed = parseActionsFromResponse(prepared.peopleFirstReply.trim());
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === assistantId
+                  ? {
+                      ...m,
+                      content: parsed.message,
+                      quickReplies: parsed.quickReplies,
+                      modelUsed: 'people-first',
+                      provider: 'orangecat',
+                    }
+                  : m
+              )
+            );
+            if (prepared.conversationId) {
+              void fetch(API_ROUTES.CAT.LOCAL_COMPLETE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  conversationId: prepared.conversationId,
+                  message: content,
+                  reply: parsed.message,
+                  model: 'people-first',
+                }),
+              }).catch(() => {});
+            }
+            return;
           }
 
           let reply = '';

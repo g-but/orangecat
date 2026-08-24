@@ -50,7 +50,7 @@ export async function resolveSellerWallet(
   // A group is itself the receiving organization. Never silently route club
   // support into the founder's personal wallet just because `groups.created_by`
   // is also its ownership field.
-  if (entityType === 'group') {
+  if (entityType === 'organization') {
     return resolveGroupWallet(admin, entityId);
   }
 

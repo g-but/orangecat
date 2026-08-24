@@ -11,7 +11,7 @@ describe('Cat Tier 1: runtime context block', () => {
     conversations: [],
     inboundActivity: { recentSales: [], upcomingBookings: [] },
     memberGroups: [],
-    paymentCapabilities: { hasNwcWallet: false, lightningAddress: null },
+    paymentCapabilities: { hasNwcWallet: false, lightningAddress: null, catMaySendPayment: false },
     runtime: {
       preferredCurrency: 'CHF',
       locale: 'de-CH',

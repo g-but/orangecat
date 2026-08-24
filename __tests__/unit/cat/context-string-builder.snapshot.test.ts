@@ -139,11 +139,15 @@ const FULL_CTX = {
       pushedAt: '2026-06-28T00:00:00Z',
     },
   ],
-  paymentCapabilities: { hasNwcWallet: true, lightningAddress: 'mao@orangecat.ch' },
+  paymentCapabilities: {
+    hasNwcWallet: true,
+    lightningAddress: 'mao@orangecat.ch',
+    catMaySendPayment: true,
+  },
   runtime: {
     preferredCurrency: 'CHF',
     locale: 'en-US',
-    currentActor: { id: 'actor-1', type: 'group', name: 'Builders Guild' },
+    currentActor: { id: 'actor-1', type: 'organization', name: 'Builders Guild' },
     btcRate: { rate: 95000, currency: 'CHF' },
     lastVisitedPath: '/dashboard/projects/proj-1',
   },

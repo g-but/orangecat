@@ -117,8 +117,9 @@ export default function DiscoverPageClient({ topContent }: { topContent?: ReactN
       {/* Hero Section */}
       <DiscoverHero />
 
-      {/* Server-rendered SEO content (recently-published entities) */}
-      {topContent}
+      {/* SEO featured strip — only on All. On People/Products/… it fights
+          the filter and dumps unrelated causes above the results. */}
+      {activeTab === 'all' ? topContent : null}
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

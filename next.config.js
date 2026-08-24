@@ -167,6 +167,27 @@ const nextConfig = {
         destination: '/dashboard/cat',
         permanent: true,
       },
+      // EntityType rename: group → organization (URLs). API remains /api/groups.
+      {
+        source: '/groups',
+        destination: '/organizations',
+        permanent: true,
+      },
+      {
+        source: '/groups/:path*',
+        destination: '/organizations/:path*',
+        permanent: true,
+      },
+      {
+        source: '/dashboard/groups',
+        destination: '/dashboard/organizations',
+        permanent: true,
+      },
+      {
+        source: '/dashboard/groups/:path*',
+        destination: '/dashboard/organizations/:path*',
+        permanent: true,
+      },
     ];
   },
 

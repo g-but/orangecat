@@ -188,7 +188,7 @@ export interface DefaultGuidance {
 
 export interface EntityConfig<T extends Record<string, any> = Record<string, any>> {
   /** Entity type identifier */
-  type: EntityType | 'organization';
+  type: EntityType;
   /** Display name (singular) */
   name: string;
   /** Display name (plural) */

@@ -5,12 +5,14 @@
  *
  * Determines and manages the active navigation context:
  * - Individual: User's personal dashboard
- * - Group: A specific group's dashboard
+ * - Organization: A specific organization dashboard
  *
  * Context is determined by URL pattern and user selection.
  * Persisted to localStorage for session continuity.
  *
  * Created: 2026-02-25
+ * Last Modified: 2026-08-20
+ * Last Modified Summary: Context type renamed group → organization (EntityType alignment).
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -19,7 +21,7 @@ import { useAuth } from './useAuth';
 import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
 
-type NavigationContextType = 'individual' | 'group';
+type NavigationContextType = 'individual' | 'organization';
 
 export interface GroupContextInfo {
   id: string;
@@ -31,25 +33,42 @@ export interface GroupContextInfo {
 
 interface NavigationContext {
   type: NavigationContextType;
-  /** Present when type === 'group' */
+  /** Present when type === 'organization' */
   group?: GroupContextInfo;
 }
 
 interface UseNavigationContextReturn {
   context: NavigationContext;
-  /** Groups the user belongs to (for the switcher) */
+  /** Organizations the user belongs to (for the switcher) */
   userGroups: GroupContextInfo[];
-  /** Whether groups are still loading */
+  /** Whether memberships are still loading */
   loadingGroups: boolean;
   /** Switch to individual context */
   switchToIndividual: () => void;
-  /** Switch to a group context */
+  /** Switch to an organization context */
   switchToGroup: (group: GroupContextInfo) => void;
-  /** Whether user is in a group context */
+  /** Whether user is in an organization context */
   isGroupContext: boolean;
 }
 
 const STORAGE_KEY = 'orangecat_nav_context';
+
+function normalizeStoredContext(parsed: {
+  type?: string;
+  group?: GroupContextInfo;
+}): NavigationContext | null {
+  if (parsed.type === 'organization' && parsed.group) {
+    return { type: 'organization', group: parsed.group };
+  }
+  // Legacy persisted shape used type: 'group'
+  if (parsed.type === 'group' && parsed.group) {
+    return { type: 'organization', group: parsed.group };
+  }
+  if (parsed.type === 'individual') {
+    return { type: 'individual' };
+  }
+  return null;
+}
 
 export function useNavigationContext(): UseNavigationContextReturn {
   const pathname = usePathname();
@@ -59,45 +78,42 @@ export function useNavigationContext(): UseNavigationContextReturn {
   const [userGroups, setUserGroups] = useState<GroupContextInfo[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
 
-  // Detect context from URL
   useEffect(() => {
     if (!pathname) {
       return;
     }
 
-    // Check if URL indicates a group context
-    // Pattern: /groups/[slug]/... or /dashboard/groups/[slug]/...
-    const groupMatch = pathname.match(/\/groups\/([^/]+)/);
-    if (groupMatch) {
-      const slug = groupMatch[1];
-      // Only set if we don't already have this group's context
-      if (context.type !== 'group' || context.group?.slug !== slug) {
+    const orgMatch = pathname.match(/\/(?:organizations|groups)\/([^/]+)/);
+    if (orgMatch) {
+      const slug = orgMatch[1];
+      if (slug === 'join' || slug === 'create') {
+        return;
+      }
+      if (context.type !== 'organization' || context.group?.slug !== slug) {
         const existingGroup = userGroups.find(g => g.slug === slug);
         if (existingGroup) {
-          setContext({ type: 'group', group: existingGroup });
+          setContext({ type: 'organization', group: existingGroup });
         }
-        // If group not in userGroups yet, URL-based detection will be updated
-        // when userGroups loads
       }
     }
   }, [pathname, userGroups, context.type, context.group?.slug]);
 
-  // Load persisted context on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved) as NavigationContext;
-        if (parsed.type === 'group' && parsed.group) {
-          setContext(parsed);
+        const normalized = normalizeStoredContext(
+          JSON.parse(saved) as { type?: string; group?: GroupContextInfo }
+        );
+        if (normalized) {
+          setContext(normalized);
         }
       }
     } catch {
-      // Ignore parse errors
+      // Ignore corrupt storage
     }
   }, []);
 
-  // Load user's groups
   useEffect(() => {
     if (!user?.id) {
       setUserGroups([]);
@@ -105,29 +121,34 @@ export function useNavigationContext(): UseNavigationContextReturn {
     }
 
     let cancelled = false;
-
-    async function loadGroups() {
-      setLoadingGroups(true);
+    setLoadingGroups(true);
+    (async () => {
       try {
         const response = await fetch(`${API_ROUTES.GROUPS.BASE}?membership=mine&pageSize=50`);
         if (!response.ok) {
           setUserGroups([]);
           return;
         }
-        const data = await response.json();
-        if (!cancelled && data.success && data.data?.groups) {
-          const groups: GroupContextInfo[] = data.data.groups.map(
-            (g: { id: string; slug: string; name: string; avatar_url?: string }) => ({
-              id: g.id,
-              slug: g.slug,
-              name: g.name,
-              avatar_url: g.avatar_url,
-            })
-          );
+        const data = (await response.json()) as {
+          success?: boolean;
+          data?: {
+            groups?: Array<{ id: string; slug: string; name: string; avatar_url?: string }>;
+          };
+        };
+        if (cancelled) {
+          return;
+        }
+        if (data.success && data.data?.groups) {
+          const groups: GroupContextInfo[] = data.data.groups.map(g => ({
+            id: g.id,
+            slug: g.slug,
+            name: g.name,
+            avatar_url: g.avatar_url,
+          }));
           setUserGroups(groups);
         }
       } catch (error) {
-        logger.warn('Failed to load user groups for context switcher', { error });
+        logger.warn('Failed to load user organizations for context switcher', { error });
         if (!cancelled) {
           setUserGroups([]);
         }
@@ -136,9 +157,8 @@ export function useNavigationContext(): UseNavigationContextReturn {
           setLoadingGroups(false);
         }
       }
-    }
+    })();
 
-    loadGroups();
     return () => {
       cancelled = true;
     };
@@ -155,7 +175,7 @@ export function useNavigationContext(): UseNavigationContextReturn {
   }, []);
 
   const switchToGroup = useCallback((group: GroupContextInfo) => {
-    const newContext: NavigationContext = { type: 'group', group };
+    const newContext: NavigationContext = { type: 'organization', group };
     setContext(newContext);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newContext));
@@ -171,7 +191,7 @@ export function useNavigationContext(): UseNavigationContextReturn {
       loadingGroups,
       switchToIndividual,
       switchToGroup,
-      isGroupContext: context.type === 'group',
+      isGroupContext: context.type === 'organization',
     }),
     [context, userGroups, loadingGroups, switchToIndividual, switchToGroup]
   );

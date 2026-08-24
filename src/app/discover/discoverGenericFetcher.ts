@@ -140,13 +140,13 @@ export async function fetchDiscoverGenericData(
           )
         : Promise.resolve({ data: null, error: null }),
 
-      should('groups')
+      should('organizations')
         ? buildQuery(
             supabase
-              .from(getTableName('group'))
+              .from(getTableName('organization'))
               .select('id, name, description, is_public, created_at, slug')
               .eq('is_public', true),
-            'groups',
+            'organizations',
             8,
             'name,description'
           )
@@ -213,7 +213,7 @@ export async function fetchDiscoverGenericData(
     if (should('services')) {
       setServices((servicesRes.data ?? []) as unknown as GenericPublicEntity[]);
     }
-    if (should('groups')) {
+    if (should('organizations')) {
       setGroups(
         ((groupsRes.data ?? []) as unknown as GroupRow[]).map(
           r =>

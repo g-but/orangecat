@@ -41,14 +41,12 @@ export function signFleetCrownBuildIntent(
   };
   const header = encode({ alg: 'HS256', typ: 'JWT' });
   const body = encode(payload);
-  const signature = createHmac('sha256', secret)
-    .update(`${header}.${body}`)
-    .digest('base64url');
+  const signature = createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
   return `${header}.${body}.${signature}`;
 }
 
 export function suggestedHandoffFor(type: EntityType, title: string): string[] {
-  if (type === 'group' || type === 'circle') {
+  if (type === 'organization' || type === 'circle') {
     return [
       `Clarify the mission, membership model, and launch criteria for ${title}.`,
       'Draft a business plan and conservative financial model.',

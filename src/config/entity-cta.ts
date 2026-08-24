@@ -33,7 +33,7 @@ export const ENTITY_PRIMARY_CTA: Record<EntityType, string> = {
   // AI services
   ai_assistant: 'Chat',
   // Governance / community
-  group: 'Join',
+  organization: 'Join',
   circle: 'Join',
   // Cat context / wallets (no public transaction verb)
   document: 'View',

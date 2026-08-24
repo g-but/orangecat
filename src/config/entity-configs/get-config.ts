@@ -19,7 +19,7 @@ import { assetConfig } from './asset-config';
 import { projectConfig } from './project-config';
 import { aiAssistantConfig } from './ai-assistant-config';
 import { eventConfig } from './event-config';
-import { groupConfig } from './group-config';
+import { organizationConfig } from './organization-config';
 import { wishlistConfig } from './wishlist-config';
 import { researchWizardConfig } from './research-wizard-config';
 import { documentFormConfig } from './document-form-config';
@@ -41,7 +41,7 @@ const ENTITY_CONFIGS: Partial<Record<EntityType, EntityConfig<any>>> = {
   project: projectConfig,
   ai_assistant: aiAssistantConfig,
   event: eventConfig,
-  group: groupConfig,
+  organization: organizationConfig,
   wishlist: wishlistConfig,
   research: researchWizardConfig,
   document: documentFormConfig,

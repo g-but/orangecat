@@ -327,7 +327,7 @@ export const AI_FILL_EXAMPLES: Partial<Record<EntityType, string[]>> = {
     'A research assistant that summarises Bitcoin news every morning',
     'A bookkeeping assistant that categorises invoices for small businesses',
   ],
-  group: [
+  organization: [
     'A Zurich Bitcoin builders collective with a shared treasury',
     'A neighbourhood repair cooperative, membership by invitation',
     'A small studio of three freelancers sharing project work',

@@ -139,7 +139,7 @@ describe('fetchDiscoverCounts (public /api/discover/counts)', () => {
     },
     { table: getTableName('product'), predicates: [['eq', ['status', STATUS.PRODUCTS.ACTIVE]]] },
     { table: getTableName('service'), predicates: [['eq', ['status', STATUS.SERVICES.ACTIVE]]] },
-    { table: getTableName('group'), predicates: [['eq', ['is_public', true]]] },
+    { table: getTableName('organization'), predicates: [['eq', ['is_public', true]]] },
     {
       table: getTableName('circle'),
       predicates: [

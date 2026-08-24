@@ -265,7 +265,7 @@ export function EmptyState() {
     <div className="p-6 text-center">
       <Search className="w-8 h-8 text-fg-tertiary dark:text-fg-secondary/40 mx-auto mb-2" />
       <p className="text-sm text-fg-secondary">Start typing to search</p>
-      <p className="text-xs text-fg-tertiary/70 mt-1">Find projects, people, and organizations</p>
+      <p className="text-xs text-fg-tertiary/70 mt-1">Find projects, people, and groups</p>
       <p className="text-xs text-fg-tertiary/70 mt-2">Use ↑↓ arrows to navigate, Enter to select</p>
     </div>
   );

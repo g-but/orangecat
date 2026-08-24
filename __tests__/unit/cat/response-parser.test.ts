@@ -37,14 +37,14 @@ describe('parseActionsFromResponse — create_entity', () => {
   it('parses a group action using name as primary field and normalises to title', () => {
     const content = response("Let's create a group:", {
       type: 'create_entity',
-      entityType: 'group',
+      entityType: 'organization',
       prefill: { name: 'Local Builders Guild', label: 'guild', description: 'We build stuff.' },
     });
 
     const { actions } = parseActionsFromResponse(content);
     expect(actions).toHaveLength(1);
     const action = actions[0] as import('@/types/cat').SuggestedAction;
-    expect(action.entityType).toBe('group');
+    expect(action.entityType).toBe('organization');
     // name should be promoted to title for UI rendering
     expect(action.prefill.title).toBe('Local Builders Guild');
     expect(action.prefill.name).toBe('Local Builders Guild');
@@ -53,7 +53,7 @@ describe('parseActionsFromResponse — create_entity', () => {
   it('parses a group action that has both title and name', () => {
     const content = response('Group time:', {
       type: 'create_entity',
-      entityType: 'group',
+      entityType: 'organization',
       prefill: { title: 'Circle of Trust', name: 'Circle of Trust', label: 'circle' },
     });
 
@@ -88,7 +88,7 @@ describe('parseActionsFromResponse — create_entity', () => {
 
   it('accepts all CAT_CREATABLE_ENTITY_TYPES including group', () => {
     const { CAT_CREATABLE_ENTITY_TYPES } = require('@/types/cat');
-    expect(CAT_CREATABLE_ENTITY_TYPES).toContain('group');
+    expect(CAT_CREATABLE_ENTITY_TYPES).toContain('organization');
     expect(CAT_CREATABLE_ENTITY_TYPES).toContain('product');
     expect(CAT_CREATABLE_ENTITY_TYPES).toContain('service');
     expect(CAT_CREATABLE_ENTITY_TYPES).toContain('project');

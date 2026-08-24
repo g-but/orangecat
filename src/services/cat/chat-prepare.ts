@@ -12,8 +12,15 @@
 
 import { buildCatSystemPrompt } from '@/services/cat/system-prompt';
 import { getCustomInstructions } from '@/services/cat/custom-instructions';
-import { buildReplyLanguageDirective } from '@/services/cat/reply-language';
+import { buildReplyLanguageDirective, detectReplyLanguage } from '@/services/cat/reply-language';
 import { getCatFewShotExamplesText } from '@/services/cat/few-shot-examples';
+import {
+  buildPeopleFirstDirective,
+  buildPeopleFirstReply,
+  matchMoneySurfaceShortcut,
+  matchUnresolvedRolePayment,
+  rolePayeeKnownInMemories,
+} from '@/services/cat/people-first';
 import {
   resolveConversationIdOrDefault,
   getMessagesForContext,
@@ -39,6 +46,11 @@ export interface PreparedCatChat {
   /** system + history + the user's message — ready for any chat-completions API. */
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
   conversationId: string | null;
+  /**
+   * When set, the orchestrator MUST return this reply without calling a model.
+   * Free-pool models ignore people-first prompt rules; this is the product guarantee.
+   */
+  peopleFirstReply: string | null;
   /**
    * Everything Cat was legitimately shown this turn, for the groundedness check
    * on the way back out. Prompting alone is not a control — a weak model under
@@ -128,10 +140,28 @@ export async function prepareCatChat(
 
   // Examples are appended as labeled text (not injected as fake conversation
   // turns) so weaker models can't mistake the example people for the real
-  // user. The per-turn reply-language directive goes DEAD LAST: weak models
-  // weight the prompt tail most, and burying the language rule mid-prompt
-  // let them default to the browser locale's language.
-  const systemPrompt = `${buildCatSystemPrompt({ userContext: contextString || undefined, customInstructions })}${groundingRules}\n\n${getCatFewShotExamplesText()}${buildReplyLanguageDirective(message)}`;
+  // user. Per-turn imperatives go DEAD LAST: weak models weight the prompt
+  // tail most (see reply-language.ts). People-first / known-payee sit after
+  // language when they fire — for those turns, not collecting a Lightning
+  // address matters more than locale formatting.
+  const memoryContents = memories.map(m => m.content);
+  const rolePayee = matchUnresolvedRolePayment(message);
+  const payeeKnown = rolePayee
+    ? rolePayeeKnownInMemories(rolePayee.roleKey, memoryContents)
+    : false;
+  // Unresolved role payee → short-circuit (orchestrator) + no need for a
+  // directive. Known role payee → coach the model to use memory, not re-ask.
+  // Local /prepare still gets the people-first directive when unresolved so
+  // on-device models see the same rule even if the client ignores peopleFirstReply.
+  const peopleFirstMatch = rolePayee && !payeeKnown ? rolePayee : null;
+  const moneyShortcut = matchMoneySurfaceShortcut(message);
+  const peopleFirstDirective = peopleFirstMatch
+    ? buildPeopleFirstDirective(peopleFirstMatch)
+    : rolePayee && payeeKnown
+      ? `\n\n## THIS TURN — Known payee (obey exactly)\nThe user's ${rolePayee.roleKey} is already identified in memory/context. Use that @handle or address. Do NOT ask them to re-paste a Lightning address. Confirm recipient + ask only for amount if missing. If Payment Capabilities say Payments OFF, link [Send](/send) instead of emit send_payment.`
+      : '';
+
+  const systemPrompt = `${buildCatSystemPrompt({ userContext: contextString || undefined, customInstructions })}${groundingRules}\n\n${getCatFewShotExamplesText()}${buildReplyLanguageDirective(message)}${peopleFirstDirective}`;
 
   let conversationId: string | null = null;
   let historyMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
@@ -154,6 +184,9 @@ export async function prepareCatChat(
       { role: 'user', content: message },
     ],
     conversationId,
+    peopleFirstReply: peopleFirstMatch
+      ? buildPeopleFirstReply(peopleFirstMatch, detectReplyLanguage(message))
+      : moneyShortcut,
     grounding: {
       // History counts as evidence: a name Cat established two turns ago is
       // fair to reuse, and treating it as novel would flag every follow-up.

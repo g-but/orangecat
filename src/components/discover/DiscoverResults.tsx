@@ -130,11 +130,11 @@ export default function DiscoverResults({
       makeHref: e => ROUTES.EVENTS.VIEW(e.id),
     },
     {
-      id: 'groups',
-      title: 'Groups',
+      id: 'organizations',
+      title: 'Organizations',
       icon: <Building2 className="w-5 h-5" />,
       items: groups,
-      entityType: 'group',
+      entityType: 'organization',
       makeHref: e => ROUTES.GROUPS.VIEW(e.slug ?? e.id),
     },
     {

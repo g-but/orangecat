@@ -38,9 +38,9 @@ describe('Cat action registry drift', () => {
   });
 
   it('every creatable entity type has a create path from chat', () => {
-    // group creates via create_organization; document via add_context.
+    // organization creates via create_organization; document via add_context.
     const CREATE_ACTION_FOR: Record<string, string> = {
-      group: 'create_organization',
+      organization: 'create_organization',
       document: 'add_context',
     };
     const missing = CAT_CREATABLE_ENTITY_TYPES.filter(type => {

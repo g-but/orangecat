@@ -150,7 +150,7 @@ export function ContextSwitcher({ profile, isExpanded, className }: ContextSwitc
           </div>
           {(isGroupContext || showSecondaryHandle) && (
             <p className="text-xs text-fg-secondary truncate">
-              {isGroupContext ? 'Group' : `@${profile.username}`}
+              {isGroupContext ? 'Organization' : `@${profile.username}`}
             </p>
           )}
         </div>

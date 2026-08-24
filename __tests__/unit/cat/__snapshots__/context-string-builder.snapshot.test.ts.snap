@@ -4,7 +4,7 @@ exports[`buildFullContextString — full-output snapshot renders every section i
 "# User Context for Personalized Advice
 
 ## Current Session
-**Acting as**: group "Builders Guild" (you have permission to act on this group's behalf)
+**Acting as**: organization "Builders Guild" (you have permission to act on this organization's behalf)
 **Display currency**: CHF — quote prices in this currency by default; convert to/from BTC as needed.
 **Live BTC price**: 1 BTC ≈ 95,000 CHF right now — use THIS rate for every BTC⇄fiat conversion. Never recall or guess a rate.
 **Locale**: en-US — reply in the language and conventions of this locale unless the user writes in another language.
@@ -93,7 +93,8 @@ Use the conversation id with reply_to_message to reply on the user's behalf.
 - Jul 1, 2026, 14:00 UTC with Bob [confirmed]
 
 ## Payment Capabilities
-⚡ **NWC wallet connected** — can use send_payment and fund_project exec_action blocks to send Bitcoin automatically
+⚡ **NWC wallet connected** — hardware side of send_payment / fund_project is ready
+✅ **Cat Permissions: send_payment allowed** (always CONFIRM). You may use send_payment when recipient + amount are known.
 📬 **Lightning address**: mao@orangecat.ch (others can pay the user here)
 
 ## Activity Summary

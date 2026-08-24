@@ -107,7 +107,13 @@ describe('selection preserves what Cat needs to function', () => {
 describe('selection is worth doing', () => {
   it('pulls in the relevant situational section when the turn calls for it', () => {
     expect(selectPromptSections('what should I charge for this?')).toContain('Pricing Guidance');
-    expect(selectPromptSections('my friend needs help')).toContain('Proxy Mode');
+    expect(
+      selectPromptSections("I'm setting this up for my friend who doesn't use phones")
+    ).toContain('Proxy Mode');
+    expect(selectPromptSections('send btc to my mother')).toContain(
+      'People first — resolve before rails'
+    );
+    expect(selectPromptSections('send btc to my mother')).not.toContain('Proxy Mode');
     expect(selectPromptSections('hi')).not.toContain('Pricing Guidance');
   });
 

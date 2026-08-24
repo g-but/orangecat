@@ -11,7 +11,7 @@ import { useDiscoverGenericData } from './useDiscoverGenericData';
 import { useDiscoverFilters } from './useDiscoverFilters';
 import { useDiscoverUrlSync } from './useDiscoverUrlSync';
 import { useDiscoverHandlers } from './useDiscoverHandlers';
-import { VALID_TAB_TYPES } from './discoverConstants';
+import { normalizeDiscoverTabType } from './discoverConstants';
 import type { DiscoverTabType } from '@/components/discover/DiscoverTabs';
 
 export type ViewMode = 'grid' | 'list';
@@ -31,8 +31,7 @@ export function useDiscoverState() {
   const initialSort = (['recent', 'relevance'].includes(urlSort) ? urlSort : 'recent') as
     | 'relevance'
     | 'recent';
-  const urlType = (searchParams?.get('type') || 'all') as DiscoverTabType;
-  const initialType = VALID_TAB_TYPES.includes(urlType) ? urlType : 'all';
+  const initialType = normalizeDiscoverTabType(searchParams?.get('type'));
   const initialCountry = searchParams?.get('country') || '';
   const initialCity = searchParams?.get('city') || '';
   const initialPostal = searchParams?.get('postal') || '';
@@ -130,7 +129,7 @@ export function useDiscoverState() {
     events: generic.events,
     products: generic.products,
     services: generic.services,
-    groups: generic.groups,
+    organizations: generic.groups,
     circles: generic.circles,
     wishlists: generic.wishlists,
     research: generic.research,
@@ -154,7 +153,7 @@ export function useDiscoverState() {
     events: counts.totalEventsCount,
     products: counts.totalProductsCount,
     services: counts.totalServicesCount,
-    groups: counts.totalGroupsCount,
+    organizations: counts.totalGroupsCount,
     circles: counts.totalCirclesCount,
     wishlists: counts.totalWishlistsCount,
     research: counts.totalResearchCount,

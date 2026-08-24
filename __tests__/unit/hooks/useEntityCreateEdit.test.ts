@@ -82,7 +82,7 @@ describe('useEntityCreateEdit', () => {
       json: () => Promise.resolve({ success: true, data: { id: 'g-1', name: 'DAO' } }),
     }) as unknown as typeof fetch;
 
-    const { result } = renderHook(() => useEntityCreateEdit('group'));
+    const { result } = renderHook(() => useEntityCreateEdit('organization'));
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(global.fetch).toHaveBeenCalledWith('/api/groups/g-1');

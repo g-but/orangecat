@@ -42,8 +42,18 @@ const ENTITY_GROUPS: ReadonlyArray<{
     types: ['product', 'service', 'ai_assistant', 'document'],
   },
   { id: 'fund', title: 'Fund', priority: 3, types: ['project', 'cause', 'research', 'wishlist'] },
-  { id: 'coordinate', title: 'Coordinate', priority: 4, types: ['group', 'circle', 'event'] },
-  { id: 'finance', title: 'Finance', priority: 5, types: ['wallet', 'asset', 'loan', 'investment'] },
+  {
+    id: 'coordinate',
+    title: 'Coordinate',
+    priority: 4,
+    types: ['organization', 'circle', 'event'],
+  },
+  {
+    id: 'finance',
+    title: 'Finance',
+    priority: 5,
+    types: ['wallet', 'asset', 'loan', 'investment'],
+  },
 ] as const;
 
 /** Every entity type that any group claims — the coverage test reads this. */

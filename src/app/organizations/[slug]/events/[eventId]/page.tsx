@@ -66,7 +66,7 @@ export default async function GroupEventDetailPage({ params }: PageProps) {
     }
   }
 
-  const groupHref = `${ENTITY_REGISTRY['group'].publicBasePath}/${slug}`;
+  const groupHref = `${ENTITY_REGISTRY['organization'].publicBasePath}/${slug}`;
   const startDate = new Date(event.starts_at);
   const endDate = event.ends_at ? new Date(event.ends_at) : null;
   const isPast = startDate < new Date();
@@ -90,7 +90,10 @@ export default async function GroupEventDetailPage({ params }: PageProps) {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <Breadcrumb
           items={[
-            { label: ENTITY_REGISTRY['group'].namePlural, href: ENTITY_REGISTRY['group'].publicBasePath },
+            {
+              label: ENTITY_REGISTRY['organization'].namePlural,
+              href: ENTITY_REGISTRY['organization'].publicBasePath,
+            },
             { label: group.name || slug, href: groupHref },
             { label: event.title },
           ]}

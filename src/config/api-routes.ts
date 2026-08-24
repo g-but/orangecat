@@ -195,21 +195,22 @@ export const API_ROUTES = {
   },
   PROFILE: '/api/profile',
   GROUPS: {
-    BASE: ENTITY_REGISTRY['group'].apiEndpoint,
-    EVENTS: (slug: string) => `${ENTITY_REGISTRY['group'].apiEndpoint}/${slug}/events`,
-    PROPOSALS: (slug: string) => `${ENTITY_REGISTRY['group'].apiEndpoint}/${slug}/proposals`,
+    BASE: ENTITY_REGISTRY['organization'].apiEndpoint,
+    EVENTS: (slug: string) => `${ENTITY_REGISTRY['organization'].apiEndpoint}/${slug}/events`,
+    PROPOSALS: (slug: string) => `${ENTITY_REGISTRY['organization'].apiEndpoint}/${slug}/proposals`,
     PROPOSAL: (slug: string, id: string) =>
-      `${ENTITY_REGISTRY['group'].apiEndpoint}/${slug}/proposals/${id}`,
+      `${ENTITY_REGISTRY['organization'].apiEndpoint}/${slug}/proposals/${id}`,
     PROPOSAL_VOTES: (slug: string, id: string) =>
-      `${ENTITY_REGISTRY['group'].apiEndpoint}/${slug}/proposals/${id}/votes`,
+      `${ENTITY_REGISTRY['organization'].apiEndpoint}/${slug}/proposals/${id}/votes`,
     PROPOSAL_VOTE: (slug: string, id: string) =>
-      `${ENTITY_REGISTRY['group'].apiEndpoint}/${slug}/proposals/${id}/vote`,
+      `${ENTITY_REGISTRY['organization'].apiEndpoint}/${slug}/proposals/${id}/vote`,
     PROPOSAL_ACTIVATE: (slug: string, id: string) =>
-      `${ENTITY_REGISTRY['group'].apiEndpoint}/${slug}/proposals/${id}/activate`,
-    WALLETS: (slug: string) => `${ENTITY_REGISTRY['group'].apiEndpoint}/${slug}/wallets`,
+      `${ENTITY_REGISTRY['organization'].apiEndpoint}/${slug}/proposals/${id}/activate`,
+    WALLETS: (slug: string) => `${ENTITY_REGISTRY['organization'].apiEndpoint}/${slug}/wallets`,
     WALLET_REFRESH: (slug: string, walletId: string) =>
-      `${ENTITY_REGISTRY['group'].apiEndpoint}/${slug}/wallets/${walletId}/refresh`,
-    ACTIVITIES: (slug: string) => `${ENTITY_REGISTRY['group'].apiEndpoint}/${slug}/activities`,
+      `${ENTITY_REGISTRY['organization'].apiEndpoint}/${slug}/wallets/${walletId}/refresh`,
+    ACTIVITIES: (slug: string) =>
+      `${ENTITY_REGISTRY['organization'].apiEndpoint}/${slug}/activities`,
   },
   JOBS: '/api/jobs',
   ACCOUNT_EXPORT: '/api/account/export',

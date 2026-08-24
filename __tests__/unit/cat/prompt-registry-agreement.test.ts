@@ -11,7 +11,7 @@
  *   create_task   handler supports `priority`, prompt never mentioned it
  *                 → Cat could not set a priority at creation
  *   post_to_timeline  handler reads `visibility`, registry never declared it
- *   send_message / invite_to_organization
+ *   send_message / invite_to_group
  *                 registry demanded ids Cat cannot possibly know
  *
  * None of it was detectable at runtime: an unknown parameter is not rejected,

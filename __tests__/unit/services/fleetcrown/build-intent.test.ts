@@ -12,7 +12,8 @@ describe('OrangeCat → FleetCrown build handoff', () => {
   const originalSecret = process.env.FLEETCROWN_BUILD_INTENT_SECRET;
 
   beforeEach(() => {
-    process.env.FLEETCROWN_BUILD_INTENT_SECRET = 'test-secret-that-is-at-least-thirty-two-characters';
+    process.env.FLEETCROWN_BUILD_INTENT_SECRET =
+      'test-secret-that-is-at-least-thirty-two-characters';
   });
 
   afterAll(() => {
@@ -27,20 +28,17 @@ describe('OrangeCat → FleetCrown build handoff', () => {
     const token = signFleetCrownBuildIntent({
       sub: '8be1ca55-58f7-420c-8dfa-1c9f19d6232e',
       entity: {
-        type: 'group',
+        type: 'organization',
         id: '4caf8213-4aca-43ba-af9d-93b2cd22c6d9',
         title: 'Neighbourhood club',
         description: 'A public club.',
-        publicUrl: 'https://www.orangecat.ch/groups/neighbourhood-club',
+        publicUrl: 'https://www.orangecat.ch/organizations/neighbourhood-club',
       },
-      suggestedHandoff: suggestedHandoffFor('group', 'Neighbourhood club'),
+      suggestedHandoff: suggestedHandoffFor('organization', 'Neighbourhood club'),
     });
 
     const [header, body, signature] = token.split('.');
-    const expected = createHmac(
-      'sha256',
-      process.env.FLEETCROWN_BUILD_INTENT_SECRET as string
-    )
+    const expected = createHmac('sha256', process.env.FLEETCROWN_BUILD_INTENT_SECRET as string)
       .update(`${header}.${body}`)
       .digest('base64url');
     const payload = JSON.parse(
@@ -62,8 +60,8 @@ describe('OrangeCat → FleetCrown build handoff', () => {
     expect(ENTITY_REGISTRY.document.canReceiveSupport).toBe(false);
     expect(ENTITY_REGISTRY.project.canReceiveSupport).toBe(true);
     expect(ENTITY_REGISTRY.product.canReceiveSupport).toBe(true);
-    expect(ENTITY_REGISTRY.group.canReceiveSupport).toBe(true);
-    expect(ENTITY_REGISTRY.group.titleColumn).toBe('name');
+    expect(ENTITY_REGISTRY.organization.canReceiveSupport).toBe(true);
+    expect(ENTITY_REGISTRY.organization.titleColumn).toBe('name');
   });
 
   it('bounds public contributions and accepts explicit active integration projects', () => {

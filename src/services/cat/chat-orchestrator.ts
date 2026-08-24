@@ -206,6 +206,108 @@ async function runExecActions(
   return results;
 }
 
+/** Provenance for deterministic people-first replies (no LLM round-trip). */
+const PEOPLE_FIRST_MODEL = 'people-first';
+const PEOPLE_FIRST_PROVIDER = 'orangecat';
+
+/**
+ * Product guarantee for role-named payees: return the canned people-first
+ * reply without calling a model. Free-pool models ignore the brief; this
+ * path cannot regress into Lightning-address homework.
+ */
+async function respondWithPeopleFirst(opts: {
+  reply: string;
+  message: string;
+  conversationId: string | null;
+  userId: string;
+  supabase: AuthenticatedRequest['supabase'];
+  stream: boolean;
+  rl: RateLimitResult;
+}): Promise<Response> {
+  const { reply, message, conversationId, userId, supabase, stream, rl } = opts;
+  const { message: cleanedMessage, quickReplies } = parseActionsFromResponse(reply);
+
+  if (conversationId) {
+    void saveMessages(supabase, conversationId, userId, [
+      { role: 'user', content: message },
+      {
+        role: 'assistant',
+        content: cleanedMessage,
+        model_used: PEOPLE_FIRST_MODEL,
+        provider: PEOPLE_FIRST_PROVIDER,
+      },
+    ]).catch((err: unknown) => {
+      logger.error('Failed to persist people-first messages', { err }, 'cat/chat');
+    });
+  }
+
+  if (stream) {
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({
+              model: PEOPLE_FIRST_MODEL,
+              provider: PEOPLE_FIRST_PROVIDER,
+            })}\n\n`
+          )
+        );
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ content: cleanedMessage })}\n\n`)
+        );
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({
+              done: true,
+              model: PEOPLE_FIRST_MODEL,
+              provider: PEOPLE_FIRST_PROVIDER,
+              quickReplies,
+              grounding: { ok: true, unsupported: [] as string[] },
+            })}\n\n`
+          )
+        );
+        controller.close();
+      },
+    });
+    return applyRateLimitHeaders(
+      new Response(readable, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache, no-transform',
+          Connection: 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        },
+      }),
+      rl
+    );
+  }
+
+  return applyRateLimitHeaders(
+    apiSuccess({
+      message: cleanedMessage,
+      quickReplies,
+      modelUsed: PEOPLE_FIRST_MODEL,
+      provider: PEOPLE_FIRST_PROVIDER,
+      usage: {
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0,
+        apiCostBtc: 0,
+        isFreeModel: true,
+        usedByok: false,
+      },
+      userStatus: {
+        hasByok: false,
+        freeMessagesPerDay: 0,
+        freeMessagesRemaining: 0,
+      },
+    }),
+    rl
+  );
+}
+
 /**
  * Orchestrate a single Cat chat exchange and return the HTTP Response.
  *
@@ -234,6 +336,33 @@ export async function orchestrateCatChat(
     conversationId: requestedConversationId,
   } = body;
 
+  // Prompt assembly first — shared with /api/cat/prepare. Also lets us
+  // short-circuit people-first turns BEFORE spending a provider round-trip
+  // (free-pool models ignore the people-first brief; see people-first.ts).
+  const prepared = await prepareCatChat(supabase, user.id, {
+    message,
+    requestedConversationId,
+    preferredCurrency,
+    locale,
+    lastVisitedPath,
+    currentPath,
+    currentEntity,
+    pageExcerpt,
+  });
+  const conversationId = prepared.conversationId;
+
+  if (prepared.peopleFirstReply) {
+    return respondWithPeopleFirst({
+      reply: prepared.peopleFirstReply,
+      message,
+      conversationId,
+      userId: user.id,
+      supabase,
+      stream: Boolean(stream),
+      rl,
+    });
+  }
+
   // Resolve provider, BYOK keys, model, and platform limits
   const resolved = await resolveProvider(supabase, user.id, request.headers, {
     requestedModel,
@@ -260,21 +389,6 @@ export async function orchestrateCatChat(
 
   // Resolve actor ID for exec_action execution
   const actorId = await getUserActorId(supabase, user.id);
-
-  // Prompt assembly (context + memories + custom instructions + history)
-  // lives in chat-prepare — shared with /api/cat/prepare so LOCAL models
-  // (Ollama / LM Studio in the user's browser) get the identical brain.
-  const prepared = await prepareCatChat(supabase, user.id, {
-    message,
-    requestedConversationId,
-    preferredCurrency,
-    locale,
-    lastVisitedPath,
-    currentPath,
-    currentEntity,
-    pageExcerpt,
-  });
-  const conversationId = prepared.conversationId;
 
   // Does this message want more than chat (discovery, creation, multi-step)?
   // If so AND the answering model isn't agentic (frontier), we flag the

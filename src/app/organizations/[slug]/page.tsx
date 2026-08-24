@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const title = g.name;
   const description = g.description || `Join ${g.name} on ${APP_NAME}. Bitcoin community group.`;
-  const url = `${SITE_URL}/groups/${slug}`;
+  const url = `${SITE_URL}/organizations/${slug}`;
   // Dynamic share card — fills the gap audited 2026-06-03 (group OG
   // previously had no image; every WhatsApp/Slack share rendered text-only).
   const ogImage = `${SITE_URL}/api/og/group/${slug}`;
@@ -99,7 +99,7 @@ export default async function GroupDetailPage({ params }: PageProps) {
     '@type': 'Organization',
     name: g.name,
     description: g.description || `Community group on ${APP_NAME}`,
-    url: `${SITE_URL}/groups/${slug}`,
+    url: `${SITE_URL}/organizations/${slug}`,
   };
 
   return (

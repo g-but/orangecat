@@ -1,8 +1,19 @@
 # Entity Relationships & Architecture
 
+> **Superseded (2026-08-20).** This document describes a legacy
+> individuals / projects / **organizations** model that is no longer the product
+> SSOT. Use:
+>
+> - `docs/architecture/ENTITY_TYPES.md` — human guide
+> - `src/config/entity-registry.ts` — code metadata
+> - `src/config/entity-guides.ts` — when to use each type
+>
+> Standing collectives are **`group`**, not `organization`. Kept for historical
+> reference only — do not extend.
+
 **Created:** 2025-10-17
-**Last Modified:** 2025-12-21
-**Last Modified Summary:** Updated for simplified database schema with unified projects entity and multi-entity transactions
+**Last Modified:** 2026-08-20
+**Last Modified Summary:** Marked superseded in favour of ENTITY_TYPES SSOT.
 
 ## Entity Overview
 
@@ -51,7 +62,7 @@ updated_at          TIMESTAMP
 ### What Individuals Can Do
 
 - ✅ Create personal projects
-- ✅ Create personal projects  
+- ✅ Create personal projects
 - ✅ Found organizations
 - ✅ Join organizations as members
 - ✅ Receive donations/support
@@ -61,28 +72,33 @@ updated_at          TIMESTAMP
 ### API Endpoints
 
 **Get Profile:**
+
 ```
 GET /api/profiles/{userId}
 GET /api/profiles/username/{username}
 ```
 
 **Update Profile:**
+
 ```
 PATCH /api/profiles/{userId}
 Body: { full_name, bio, website, bitcoin_address, avatar_url, ... }
 ```
 
 **Get User's Projects:**
+
 ```
 GET /api/profiles/{userId}/projects
 ```
 
 **Get User's Projects:**
+
 ```
 GET /api/profiles/{userId}/projects
 ```
 
 **Get User's Organizations:**
+
 ```
 GET /api/profiles/{userId}/organizations
 ```
@@ -131,6 +147,7 @@ updated_at              TIMESTAMP
 ### API Endpoints
 
 **Create Organization:**
+
 ```
 POST /api/organizations/create
 Body: {
@@ -141,17 +158,20 @@ Response: { id, name, slug, created_at, ... }
 ```
 
 **Get Organization:**
+
 ```
 GET /api/organizations/{slug}
 GET /api/organizations/{id}
 ```
 
 **List Organizations:**
+
 ```
 GET /api/organizations?page=1&type=nonprofit&sort=created_at
 ```
 
 **Update Organization:**
+
 ```
 PATCH /api/organizations/{id}
 Body: { name, description, ... }
@@ -159,27 +179,32 @@ Body: { name, description, ... }
 ```
 
 **Add Member:**
+
 ```
 POST /api/organizations/{id}/members
 Body: { user_id, role: 'admin|moderator|member|guest' }
 ```
 
 **Remove Member:**
+
 ```
 DELETE /api/organizations/{id}/members/{user_id}
 ```
 
 **Get Members:**
+
 ```
 GET /api/organizations/{id}/members
 ```
 
 **Get Organization Projects:**
+
 ```
 GET /api/organizations/{id}/projects
 ```
 
 **Get Organization Projects:**
+
 ```
 GET /api/organizations/{id}/projects
 ```
@@ -229,6 +254,7 @@ Campaign ──┐
 ### API Endpoints
 
 **Create Campaign (Personal):**
+
 ```
 POST /api/projects
 Body: {
@@ -238,6 +264,7 @@ Body: {
 ```
 
 **Create Campaign (Organization):**
+
 ```
 POST /api/organizations/{org_id}/projects
 Body: {
@@ -248,27 +275,32 @@ Body: {
 ```
 
 **Get Campaign:**
+
 ```
 GET /api/projects/{id}
 ```
 
 **List Projects:**
+
 ```
 GET /api/projects?status=active&sort=created_at
 ```
 
 **Update Campaign:**
+
 ```
 PATCH /api/projects/{id}
 Body: { title, description, status, ... }
 ```
 
 **Get Campaign Donations:**
+
 ```
 GET /api/projects/{id}/donations
 ```
 
 **Get Campaign Stats:**
+
 ```
 GET /api/projects/{id}/stats
 Response: { raised_amount, donor_count, days_remaining, ... }
@@ -320,6 +352,7 @@ Project ──┐
 ### API Endpoints
 
 **Create Project (Personal):**
+
 ```
 POST /api/projects
 Body: {
@@ -329,6 +362,7 @@ Body: {
 ```
 
 **Create Project (Organization):**
+
 ```
 POST /api/organizations/{org_id}/projects
 Body: {
@@ -339,33 +373,39 @@ Body: {
 ```
 
 **Get Project:**
+
 ```
 GET /api/projects/{slug}
 GET /api/projects/{id}
 ```
 
 **List Projects:**
+
 ```
 GET /api/projects?category=opensource&visibility=public&sort=featured
 ```
 
 **Update Project:**
+
 ```
 PATCH /api/projects/{id}
 Body: { name, description, status, tags, ... }
 ```
 
 **Get Project Projects:**
+
 ```
 GET /api/projects/{id}/projects
 ```
 
 **Add Campaign to Project:**
+
 ```
 POST /api/projects/{id}/projects/{project_id}
 ```
 
 **Remove Campaign from Project:**
+
 ```
 DELETE /api/projects/{id}/projects/{project_id}
 ```
@@ -377,7 +417,7 @@ DELETE /api/projects/{id}/projects/{project_id}
 ### Example 1: Individual Creates Campaign
 
 ```
-User (Profile) 
+User (Profile)
   ↓
 Create Campaign API
   ↓
@@ -466,7 +506,7 @@ SELECT: visibility = 'public' OR owner_id = auth.uid() OR organization_id IN (us
 -- Only owner/org can create
 INSERT: owner_id = auth.uid() OR organization_id IN (user's orgs where admin)
 
--- Only owner/org can update  
+-- Only owner/org can update
 UPDATE: owner_id = auth.uid() OR organization_id IN (user's orgs where admin/owner)
 ```
 
@@ -488,6 +528,7 @@ DELETE: EXISTS (SELECT FROM memberships WHERE role = 'owner')
 ## Complete API List
 
 ### Profiles
+
 - `GET /api/profiles/{userId}` - Get profile
 - `PATCH /api/profiles/{userId}` - Update profile
 - `GET /api/profiles/{userId}/projects` - List user's projects
@@ -495,6 +536,7 @@ DELETE: EXISTS (SELECT FROM memberships WHERE role = 'owner')
 - `GET /api/profiles/{userId}/organizations` - List user's orgs
 
 ### Organizations
+
 - `POST /api/organizations/create` - Create organization
 - `GET /api/organizations/{id}` - Get organization
 - `GET /api/organizations` - List organizations
@@ -508,6 +550,7 @@ DELETE: EXISTS (SELECT FROM memberships WHERE role = 'owner')
 - `POST /api/organizations/{id}/projects` - Create project
 
 ### Projects
+
 - `POST /api/projects` - Create project (personal)
 - `GET /api/projects/{id}` - Get project
 - `GET /api/projects` - List projects
@@ -517,6 +560,7 @@ DELETE: EXISTS (SELECT FROM memberships WHERE role = 'owner')
 - `POST /api/projects/{id}/donate` - Donate to project
 
 ### Projects
+
 - `POST /api/projects` - Create project (personal)
 - `GET /api/projects/{id}` - Get project
 - `GET /api/projects` - List projects
@@ -554,6 +598,7 @@ Home (/
 ## Summary
 
 ✅ **All 4 entities are interconnected:**
+
 - Individuals create projects, projects, and organizations
 - Organizations manage projects and projects
 - Projects are standalone or part of projects
@@ -561,12 +606,14 @@ Home (/
 - Members link people to organizations
 
 ✅ **Everything uses real database:**
+
 - No demos
 - RLS policies enforce security
 - Foreign keys maintain referential integrity
 - Triggers auto-update counts and timestamps
 
 ✅ **Ready for frontend integration:**
+
 - All APIs documented
 - Clear ownership/permission model
 - Comprehensive access control

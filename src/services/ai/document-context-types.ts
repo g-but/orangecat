@@ -73,6 +73,12 @@ export interface PaymentCapabilities {
   hasNwcWallet: boolean;
   /** User's primary lightning address (for display / recipient lookup) */
   lightningAddress: string | null;
+  /**
+   * Cat Permissions allow send_payment (Ask first / Automatic). Independent of
+   * NWC — both must be true for Cat to actually pay. When false, point them at
+   * /send or Cat Permissions instead of inventing a payment form.
+   */
+  catMaySendPayment: boolean;
 }
 
 export interface ConversationSummary {
@@ -200,7 +206,7 @@ export interface RuntimeContext {
     /** Actor UUID — owns any entity Cat creates this session. */
     id: string;
     /** Individual user or a group the user belongs to. */
-    type: 'individual' | 'group';
+    type: 'individual' | 'organization';
     /** Display name of the actor (the user's name, or the group's name). */
     name: string | null;
   } | null;

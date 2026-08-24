@@ -397,7 +397,8 @@ export class NotificationEmailService {
         displayName,
         activityType: groupMap[type],
         groupName: (data.groupName as string) || 'your group',
-        groupUrl: (data.groupUrl as string) || `${APP_URL}${ENTITY_REGISTRY['group'].basePath}`,
+        groupUrl:
+          (data.groupUrl as string) || `${APP_URL}${ENTITY_REGISTRY['organization'].basePath}`,
         invitedBy: data.invitedBy as string | undefined,
         proposalTitle: data.proposalTitle as string | undefined,
         proposalUrl: data.proposalUrl as string | undefined,

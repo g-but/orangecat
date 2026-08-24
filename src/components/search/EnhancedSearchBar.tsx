@@ -27,7 +27,7 @@ interface EnhancedSearchBarProps {
 
 export default function EnhancedSearchBar({
   className = '',
-  placeholder = 'Search projects, people, organizations...',
+  placeholder = 'Search projects, people, groups...',
   showQuickActions = true,
   autoFocus = false,
 }: EnhancedSearchBarProps) {

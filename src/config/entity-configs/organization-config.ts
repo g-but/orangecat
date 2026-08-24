@@ -1,12 +1,13 @@
 /**
- * GROUP ENTITY CONFIGURATION
+ * ORGANIZATION ENTITY CONFIGURATION
  *
- * Defines the form structure, validation, and guidance for group creation.
+ * Defines the form structure, validation, and guidance for organization creation.
  * Follows the modular EntityConfig pattern for consistency.
+ * DB table remains `groups`; labels (nonprofit, company, …) are unchanged.
  *
  * Created: 2025-12-30
- * Last Modified: 2025-12-30
- * Last Modified Summary: Initial group config following EntityConfig pattern
+ * Last Modified: 2026-08-20
+ * Last Modified Summary: Renamed EntityType group → organization (table still groups)
  */
 
 import { Users } from 'lucide-react';
@@ -25,12 +26,12 @@ import { ENTITY_REGISTRY } from '@/config/entity-registry';
 const fieldGroups: FieldGroup[] = [
   {
     id: 'label',
-    title: 'Group Type',
+    title: 'Organization Type',
     description: "Labels influence defaults but don't restrict capabilities",
     fields: [
       {
         name: 'label',
-        label: 'Group Label *',
+        label: 'Organization Label *',
         type: 'select',
         required: true,
         options: getGroupLabelsArray().map(label => ({
@@ -44,11 +45,11 @@ const fieldGroups: FieldGroup[] = [
   {
     id: 'basic',
     title: 'Basic Information',
-    description: "Set up your group's foundation",
+    description: "Set up your organization's foundation",
     fields: [
       {
         name: 'name',
-        label: 'Group Name *',
+        label: 'Organization Name *',
         type: 'text',
         placeholder: 'e.g., Bitcoin Investment Club, Ossetia Network State',
         required: true,
@@ -58,7 +59,7 @@ const fieldGroups: FieldGroup[] = [
         name: 'description',
         label: 'Description',
         type: 'textarea',
-        placeholder: "Describe your group's purpose and goals...",
+        placeholder: "Describe your organization's purpose and goals...",
         rows: 4,
         colSpan: 2,
       },
@@ -67,7 +68,7 @@ const fieldGroups: FieldGroup[] = [
   {
     id: 'settings',
     title: 'Settings',
-    description: 'Configure how your group operates',
+    description: 'Configure how your organization operates',
     fields: [
       {
         name: 'governance_preset',
@@ -94,7 +95,7 @@ const fieldGroups: FieldGroup[] = [
         name: 'is_public',
         label: 'Listed in Directory',
         type: 'checkbox',
-        hint: 'Show this group in public group listings',
+        hint: 'Show this organization in public listings',
         colSpan: 2,
       },
     ],
@@ -102,7 +103,7 @@ const fieldGroups: FieldGroup[] = [
   {
     id: 'bitcoin',
     title: 'Bitcoin & Treasury',
-    description: 'Select a wallet or enter an address for group treasury',
+    description: 'Select a wallet or enter an address for organization treasury',
     customComponent: WalletSelectorField,
     fields: [
       { name: 'bitcoin_address', label: 'Bitcoin Address', type: 'bitcoin_address' },
@@ -130,19 +131,19 @@ const defaultValues: CreateGroupSchemaType = {
 
 // ==================== EXPORT CONFIG ====================
 
-export const groupConfig = createEntityConfig<CreateGroupSchemaType>({
-  entityType: 'group',
-  name: 'Group',
-  namePlural: 'Groups',
+export const organizationConfig = createEntityConfig<CreateGroupSchemaType>({
+  entityType: 'organization',
+  name: 'Organization',
+  namePlural: 'Organizations',
   icon: Users,
   colorTheme: 'tiffany',
-  backUrl: ENTITY_REGISTRY['group'].basePath,
-  successUrl: `${ENTITY_REGISTRY['group'].publicBasePath}/[slug]`,
-  pageTitle: 'Create Group',
-  pageDescription: 'Start a new group, circle, or organization',
-  formTitle: 'Create New Group',
+  backUrl: ENTITY_REGISTRY['organization'].basePath,
+  successUrl: `${ENTITY_REGISTRY['organization'].publicBasePath}/[slug]`,
+  pageTitle: 'Create Organization',
+  pageDescription: 'Start a new organization (nonprofit, company, DAO, cooperative, …)',
+  formTitle: 'Create New Organization',
   formDescription:
-    "Choose a label and configure your group. Labels influence defaults but don't restrict capabilities.",
+    "Choose a label and configure your organization. Labels influence defaults but don't restrict capabilities.",
   fieldGroups,
   validationSchema: createGroupSchema,
   defaultValues,

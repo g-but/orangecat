@@ -19,6 +19,7 @@ import { ENTITY_REGISTRY, ENTITY_TYPES } from '@/config/entity-registry';
 const PROVIDER_LABELS: Record<string, string> = {
   groq: 'Groq',
   openrouter: 'OpenRouter',
+  orangecat: 'OrangeCat',
 };
 
 // Human-readable labels for exec_action IDs — shown when no displayMessage is available.

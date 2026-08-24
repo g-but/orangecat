@@ -118,7 +118,7 @@ export async function fetchDiscoverCounts(supabase: AnySupabaseClient): Promise<
     ),
     head(
       supabase
-        .from(getTableName('group'))
+        .from(getTableName('organization'))
         .select('*', { count: 'exact', head: true })
         .eq('is_public', true)
     ),

@@ -61,7 +61,7 @@ export function GroupDetail({ groupSlug }: GroupDetailProps) {
   // SSOT edit convention: createPath?edit=<id> (the old
   // /groups/[slug]/settings route never existed — dead link).
   const headerActions = isOwner ? (
-    <Link href={`${ENTITY_REGISTRY['group'].createPath}?edit=${group.id}`}>
+    <Link href={`${ENTITY_REGISTRY['organization'].createPath}?edit=${group.id}`}>
       <Button variant="outline">
         <Settings className="h-4 w-4 mr-2" />
         Edit Group
@@ -100,20 +100,24 @@ export function GroupDetail({ groupSlug }: GroupDetailProps) {
             LabelIcon={LabelIcon}
           />
           <EntityShare
-            entityType="group"
+            entityType="organization"
             entityId={group.id}
             title={group.name}
             description={group.description ?? undefined}
-            publicPath={`/groups/${groupSlug}`}
+            publicPath={`/organizations/${groupSlug}`}
             className="w-full justify-center"
           />
-          <PublicSupportPanel entityType="group" entityId={group.id} entityTitle={group.name} />
+          <PublicSupportPanel
+            entityType="organization"
+            entityId={group.id}
+            entityTitle={group.name}
+          />
           {isOwner && (
             <FleetCrownBuildCta
               variant="card"
-              entityType="group"
+              entityType="organization"
               entityId={group.id}
-              sourcePath={`/groups/${groupSlug}`}
+              sourcePath={`/organizations/${groupSlug}`}
             />
           )}
         </div>

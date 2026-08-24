@@ -316,7 +316,7 @@ export async function createGroupInvitation(
   }
 
   const inviteUrl = invitation.token
-    ? `${process.env.NEXT_PUBLIC_APP_URL}/groups/join/${invitation.token}`
+    ? `${process.env.NEXT_PUBLIC_APP_URL}/organizations/join/${invitation.token}`
     : undefined;
   return { ok: true, data: { invitation: { ...invitation, invite_url: inviteUrl } } };
 }

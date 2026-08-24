@@ -8,7 +8,7 @@ const SCHEMA_TYPE_MAP: Partial<Record<EntityType, string>> = {
   service: 'Service',
   event: 'Event',
   loan: 'LoanOrCredit',
-  group: 'Organization',
+  organization: 'Organization',
   cause: 'NGO',
   project: 'CreativeWork',
   ai_assistant: 'SoftwareApplication',

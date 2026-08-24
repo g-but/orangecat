@@ -46,6 +46,7 @@ const EMPTY_STATS = {
 const EMPTY_PAYMENT: import('@/services/ai/document-context').PaymentCapabilities = {
   hasNwcWallet: false,
   lightningAddress: null,
+  catMaySendPayment: false,
 };
 
 function makeContext(overrides: Partial<FullUserContext> = {}): FullUserContext {
@@ -193,7 +194,9 @@ describe('detectGaps', () => {
       entities: [makeEntity('product', 'Blue Vase', { price_btc: 0 })],
     });
     const gaps = detectGaps(ctx);
-    expect(gaps.some(g => g.prompt.includes('charge') && g.prompt.includes('Blue Vase'))).toBe(true);
+    expect(gaps.some(g => g.prompt.includes('charge') && g.prompt.includes('Blue Vase'))).toBe(
+      true
+    );
   });
 
   it('does not invent a price gap for entities that are not sold at a price', () => {

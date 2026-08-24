@@ -18,7 +18,7 @@ export type { AssetFormData } from '@/lib/validation';
 export { projectConfig } from './project-config';
 export { aiAssistantConfig } from './ai-assistant-config';
 export { eventConfig } from './event-config';
-export { groupConfig } from './group-config';
+export { organizationConfig } from './organization-config';
 export { wishlistConfig } from './wishlist-config';
 export { researchWizardConfig } from './research-wizard-config';
 export type { ResearchWizardFormData } from './research-wizard-config';

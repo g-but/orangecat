@@ -33,6 +33,7 @@ import { convertBtcToOrNull } from '@/services/currency/rates.server';
 import { fetchEntitiesForCat } from './entity-context-fetcher';
 import { getEconomicProfile } from '@/services/cat/economic-profile';
 import { getCatTrackRecord } from '@/services/cat/track-record';
+import { createPermissionService } from '@/services/cat/permission-service';
 import {
   fetchConversationsForCat,
   fetchInboundActivityForCat,
@@ -407,6 +408,7 @@ export async function fetchFullContextForCat(
     githubRepos,
     economicProfile,
     trackRecord,
+    catMaySendPayment,
   ] = await Promise.all([
     fetchProfileForCat(supabase, userId),
     fetchDocumentsForCat(supabase, userId),
@@ -423,6 +425,10 @@ export async function fetchFullContextForCat(
     fetchGitHubReposForCat(supabase, userId),
     getEconomicProfile(supabase, userId),
     getCatTrackRecord(supabase, userId),
+    createPermissionService(supabase)
+      .checkPermission(userId, 'send_payment')
+      .then(p => p.allowed)
+      .catch(() => false),
   ]);
 
   const runtime = await fetchRuntimeContextForCat(supabase, userId, runtimeHints, profile);
@@ -434,6 +440,7 @@ export async function fetchFullContextForCat(
   const paymentCapabilities: PaymentCapabilities = {
     hasNwcWallet: wallets.some(w => w.has_nwc),
     lightningAddress: wallets.find(w => w.lightning_address)?.lightning_address ?? null,
+    catMaySendPayment,
   };
 
   return {

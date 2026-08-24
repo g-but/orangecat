@@ -460,7 +460,7 @@ describe('Cat action-executor — correct DB column names', () => {
     });
   });
 
-  // ── create_organization ─────────────────────────────────────────────────────
+  // ── create_organization ────────────────────────────────────────────────────────────
   describe('create_organization', () => {
     it('uses label (not type) and generates a slug', async () => {
       const supabase = buildMockSupabase();
@@ -471,7 +471,7 @@ describe('Cat action-executor — correct DB column names', () => {
       });
 
       expect(result.status).toBe('completed');
-      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.group.tableName);
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.organization.tableName);
       expect(insert).toBeDefined();
 
       // Correct column used
@@ -491,14 +491,14 @@ describe('Cat action-executor — correct DB column names', () => {
     it('defaults label to circle when not provided', async () => {
       const supabase = buildMockSupabase();
       await run(supabase, 'create_organization', { name: 'My Group' });
-      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.group.tableName);
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.organization.tableName);
       expect(insert!.label).toBe('circle');
     });
 
     it('accepts legacy type param as fallback for label', async () => {
       const supabase = buildMockSupabase();
       await run(supabase, 'create_organization', { name: 'Coop', type: 'cooperative' });
-      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.group.tableName);
+      const insert = getEntityInsert(supabase, ENTITY_REGISTRY.organization.tableName);
       expect(insert!.label).toBe('cooperative');
     });
   });
@@ -708,12 +708,12 @@ describe('Cat action-executor — correct DB column names', () => {
     });
   });
 
-  // ── invite_to_organization ───────────────────────────────────────────────────
+  // ── invite_to_organization ─────────────────────────────────────────────────────────
   describe('invite_to_organization', () => {
     it('inserts into group_invitations with group_id, user_id, role, and invited_by', async () => {
       const supabase = buildMockSupabase();
       const result = await run(supabase, 'invite_to_organization', {
-        organization_id: 'org-xyz',
+        group_id: 'grp-xyz',
         user_id: 'invitee-789',
         role: 'admin',
       });
@@ -722,19 +722,28 @@ describe('Cat action-executor — correct DB column names', () => {
       const insert = getEntityInsert(supabase, DATABASE_TABLES.GROUP_INVITATIONS);
       expect(insert).toBeDefined();
 
-      // organization_id must be mapped to group_id (the DB column)
-      expect(insert!.group_id).toBe('org-xyz');
+      expect(insert!.group_id).toBe('grp-xyz');
       expect((insert as Record<string, unknown>).organization_id).toBeUndefined();
       expect(insert!.user_id).toBe('invitee-789');
       expect(insert!.role).toBe('admin');
-      // invited_by must be the acting userId
       expect(insert!.invited_by).toBe(USER_ID);
+    });
+
+    it('accepts legacy organization_id param as group_id', async () => {
+      const supabase = buildMockSupabase();
+      await run(supabase, 'invite_to_organization', {
+        organization_id: 'org-xyz',
+        user_id: 'invitee-789',
+      });
+
+      const insert = getEntityInsert(supabase, DATABASE_TABLES.GROUP_INVITATIONS);
+      expect(insert!.group_id).toBe('org-xyz');
     });
 
     it('defaults role to member when not provided', async () => {
       const supabase = buildMockSupabase();
       await run(supabase, 'invite_to_organization', {
-        organization_id: 'org-xyz',
+        group_id: 'grp-xyz',
         user_id: 'invitee-789',
       });
 

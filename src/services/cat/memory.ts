@@ -12,6 +12,13 @@
  *   - recallMemories():       embed the current message → nearest stored facts
  *   - extractAndStoreMemories(): after a turn, distil new durable facts → store
  *
+ * Extraction quality (defence in depth — free-pool models often ignore prompts):
+ *   1. looksLikeSelfDisclosure() — skip utility/action turns ("send btc to my
+ *      mother") even when they contain "my" / "I"
+ *   2. EXTRACTION_SYSTEM — LLM instructions with explicit negative examples
+ *   3. isWorthRemembering() — deterministic reject for bare kinship, payment
+ *      intents, and other empty "facts" before insert ("Has a mother" never lands)
+ *
  * Reuses the platform's 1536-dim pgvector setup (see content_embeddings) via the
  * match_cat_memories RPC. Privacy: cat_memories is RLS-scoped to the owner, and
  * users can view/delete everything Cat remembers (Settings → AI).
@@ -572,14 +579,29 @@ export async function editMemoryMatching(
 // ─── Extraction ─────────────────────────────────────────────────────────────
 
 /**
+ * Imperative / transactional openers. "Send BTC to my mother" contains "my "
+ * but discloses nothing durable — extracting from it yields junk like
+ * "Has a mother". Matched against the trimmed message start (optional please /
+ * can-you softener), not mid-sentence so real disclosures still pass
+ * ("I prefer Lightning when I send money").
+ */
+const ACTION_REQUEST_PREFIX =
+  /^(please\s+)?((can|could|would)\s+you\s+|help\s+me\s+|i\s+(want|need|d\s+like)\s+(to\s+)?)?(send|pay|transfer|tip|donate|buy|sell|create|delete|remove|cancel|convert|check|show|list|open)\b/i;
+
+/**
  * Cheap gate: only spend an LLM call on extraction when the user's message
  * plausibly discloses something durable about them (preference, identity, goal,
  * relationship). Mirrors the tool-use keyword pre-filter — most utility queries
- * ("convert 0.1 BTC", "what's my balance") skip extraction entirely.
+ * ("convert 0.1 BTC", "what's my balance", "send btc to my mother") skip
+ * extraction entirely.
  */
 export function looksLikeSelfDisclosure(message: string): boolean {
   const m = message.toLowerCase();
-  if (m.trim().length < 12) {
+  const trimmed = m.trim();
+  if (trimmed.length < 12) {
+    return false;
+  }
+  if (ACTION_REQUEST_PREFIX.test(trimmed)) {
     return false;
   }
   return SELF_DISCLOSURE_SIGNALS.some(s => m.includes(s));
@@ -614,18 +636,63 @@ const SELF_DISCLOSURE_SIGNALS = [
   'focused on',
 ];
 
+/** Bare kinship words — existence alone is not a durable, useful memory. */
+const BARE_KINSHIP =
+  'mother|father|mom|dad|parent|parents|family|sibling|siblings|brother|sister|wife|husband|partner|spouse|friend|friends|kids?|children';
+
+/**
+ * Deterministic quality filter. Free-pool models ignore EXCLUDE instructions
+ * often enough that prompt-only gating is insufficient — reject empty facts
+ * here so they never surface as "Cat noted".
+ *
+ * Keeps named / detailed relationships ("Sister Maya handles bookkeeping").
+ * Drops bare existence ("Has a mother"), transient payment intents, and
+ * ultra-short noise.
+ */
+export function isWorthRemembering(fact: string): boolean {
+  const f = fact
+    .trim()
+    .toLowerCase()
+    .replace(/[.!]+$/, '');
+  if (f.length < 8) {
+    return false;
+  }
+  // "Has a mother", "Has parents", "Has family"
+  if (new RegExp(`^(has|have)\\s+(a\\s+)?(${BARE_KINSHIP})$`).test(f)) {
+    return false;
+  }
+  // Transient money / transfer intents paraphrased from a one-off request
+  if (
+    /^(wants?|trying|planning|going|needs?)\s+to\s+(send|pay|transfer|tip|donate|buy|sell)\b/.test(
+      f
+    )
+  ) {
+    return false;
+  }
+  if (/^(sending|paying|transferring|donating)\b/.test(f)) {
+    return false;
+  }
+  return true;
+}
+
 const EXTRACTION_SYSTEM = `You extract durable, user-specific facts worth remembering long-term about a person, from one chat exchange.
 
 Return ONLY a JSON array of short factual statements written in the third person, e.g.:
 ["Prefers Lightning over on-chain payments", "Building FleetCrown, a life-OS for builders", "Based in Zürich"]
 
-Include ONLY stable facts: preferences, identity, goals, skills, relationships, or constraints that will still be true next week.
-EXCLUDE: one-off requests, questions, the assistant's suggestions, transient state, and anything trivial or already obvious.
+Include ONLY stable facts: preferences, identity, goals, skills, named relationships with detail, or constraints that will still be true next week.
+
+EXCLUDE — return [] rather than guessing:
+- one-off requests and anything inferred only from them (e.g. "send BTC to my mother" → do NOT store "Has a mother" or "Wants to send Bitcoin")
+- questions, the assistant's suggestions, transient state (balances, pending payments)
+- trivial or already-obvious facts ("Has a mother", "Uses the internet", "Has a family")
+- bare kinship with no name or role detail ("Has a sister" alone is worthless; "Sister Maya handles bookkeeping" is durable)
+
 If there is nothing durable worth remembering, return exactly [].
 Return at most ${MAX_FACTS_PER_TURN} facts. No prose, no markdown — just the JSON array.`;
 
 /** Parse the model's reply into a clean list of fact strings (defensive). */
-function parseFacts(raw: string): string[] {
+export function parseFacts(raw: string): string[] {
   if (!raw) {
     return [];
   }
@@ -644,6 +711,7 @@ function parseFacts(raw: string): string[] {
       .filter((x): x is string => typeof x === 'string')
       .map(s => s.trim().slice(0, MAX_FACT_CHARS))
       .filter(s => s.length >= 3)
+      .filter(isWorthRemembering)
       .slice(0, MAX_FACTS_PER_TURN);
   } catch {
     return [];
