@@ -3,7 +3,7 @@ import { CURRENCY_CODES } from '@/config/currencies';
 import { EVENT_TYPES, EVENT_STATUSES } from '@/config/events';
 import { STATUS } from '@/config/database-constants';
 import { DAYS_OF_WEEK, RECURRENCE_FREQUENCIES } from '@/config/schedule';
-import { lightningAddressSchema, optionalText, optionalUrl } from './base';
+import { lightningAddressSchema, optionalText, optionalUrl, webUrl } from './base';
 
 /**
  * Recurrence pattern for events.
@@ -98,7 +98,7 @@ export const eventSchema = z
     lightning_address: lightningAddressSchema,
 
     // Media
-    images: z.array(z.string().url()).optional().default([]),
+    images: z.array(webUrl()).optional().default([]),
     thumbnail_url: optionalUrl(),
     banner_url: optionalUrl(),
     video_url: optionalUrl(),

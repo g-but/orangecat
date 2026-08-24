@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CURRENCY_CODES } from '@/config/currencies';
-import { lightningAddressSchema, optionalText } from './base';
+import { lightningAddressSchema, optionalText, webUrl } from './base';
 import { VALID_PROJECT_STATUSES } from '@/config/project-statuses';
 
 // Project validation
@@ -42,9 +42,7 @@ export const projectSchema = z.object({
     .nullable()
     .or(z.literal('')),
   lightning_address: lightningAddressSchema,
-  website_url: z
-    .string()
-    .url('Please enter a valid website URL (e.g., https://example.com)')
+  website_url: webUrl({ message: 'Please enter a valid website URL (e.g., https://example.com)' })
     .optional()
     .nullable()
     .or(z.literal('')),

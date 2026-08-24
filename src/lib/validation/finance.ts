@@ -12,7 +12,7 @@ import {
 } from '@/types/wallet';
 import { WALLET_VISIBILITY_LEVELS } from '@/config/wallet-visibility';
 import { TIP_MAX_BTC, TIP_MIN_BTC } from '@/config/tips';
-import { lightningAddressSchema, optionalText } from './base';
+import { lightningAddressSchema, optionalText, webUrl } from './base';
 
 /**
  * Collateral item for loans.
@@ -51,7 +51,7 @@ export const assetSchema = z.object({
   location: optionalText(200),
   estimated_value: z.number().positive().optional().nullable(),
   currency: z.enum(CURRENCY_CODES).optional(),
-  documents: z.array(z.string().url()).optional().nullable().default([]),
+  documents: z.array(webUrl()).optional().nullable().default([]),
 
   // Sale options
   is_for_sale: z.boolean().optional().default(false),

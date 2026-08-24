@@ -12,6 +12,7 @@
  */
 
 import { z } from 'zod';
+import { webUrl } from '@/lib/validation/base';
 
 /** Stakeholder categories — mirrors stakeholder_relationships.kind CHECK constraint. */
 export const STAKEHOLDER_KINDS = [
@@ -33,7 +34,7 @@ export const createStakeholderSchema = z
     kind: z.enum(STAKEHOLDER_KINDS),
     toActorId: z.string().uuid().optional(),
     toProjectId: z.string().uuid().optional(),
-    toExternalUrl: z.string().url().optional(),
+    toExternalUrl: webUrl().optional(),
     toExternalName: z.string().min(1).max(200).optional(),
     status: z.string().max(50).optional(),
     confidence: z.number().int().min(0).max(100).optional(),

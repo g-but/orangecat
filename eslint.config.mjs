@@ -49,6 +49,22 @@ const restrictedSyntaxSelectors = [
     message:
       'Pass the composed-path leaf to isTypingTarget (e.composedPath()[0] ?? e.target), not a bare e.target — a bare .target is shadow-DOM-blind and reintroduces the keystroke-hijack bug.',
   },
+  {
+    // Close the stored-XSS class (2026-08-24): z.string().url() delegates to
+    // new URL(), which accepts `javascript:` and `data:`. A value that passes
+    // it and is later rendered into an href is stored XSS — and rel/target do
+    // nothing against it. Found live on the public wishlist page, where
+    // external_url went straight into an anchor labelled "View item →".
+    // Matches `.url()` anywhere on a z.string() chain, so z.string().max(n).url()
+    // is caught too. Known blind spot: assigning the chain to a variable first
+    // (`const s = z.string(); s.url()`) is invisible to an AST selector — that is
+    // exactly the escape hatch webUrl() itself uses, and the reason webUrl() has
+    // unit tests asserting the schemes it must refuse.
+    selector:
+      "CallExpression[callee.property.name='url'] > MemberExpression CallExpression[callee.object.name='z'][callee.property.name='string']",
+    message:
+      "z.string().url() accepts javascript: and data: URLs — use webUrl() from '@/lib/validation/base', which restricts to http(s). Any user-supplied URL may end up in an href.",
+  },
 ];
 
 const eslintConfig = [

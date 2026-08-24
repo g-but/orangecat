@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { webUrl } from '@/lib/validation/base';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   apiCreated,
@@ -29,9 +30,9 @@ const socialLinkSchema = z.object({
 const createClaimSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(100),
   bio: z.string().trim().max(1000).optional(),
-  avatarUrl: z.string().trim().url().max(2000).optional(),
-  bannerUrl: z.string().trim().url().max(2000).optional(),
-  website: z.string().trim().url().max(2000).optional(),
+  avatarUrl: webUrl({ max: 2000 }).optional(),
+  bannerUrl: webUrl({ max: 2000 }).optional(),
+  website: webUrl({ max: 2000 }).optional(),
   socialLinks: z.array(socialLinkSchema).max(10).optional(),
   suggestedUsername: z
     .string()

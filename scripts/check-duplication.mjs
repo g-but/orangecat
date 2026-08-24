@@ -36,6 +36,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 
 /** Max allowed duplicated-lines percentage across src/ (see ratchet rule above). */
@@ -47,12 +48,18 @@ const MIN_TOKENS = '70';
 const ROOT = new URL('..', import.meta.url).pathname;
 const outDir = mkdtempSync(join(tmpdir(), 'jscpd-ratchet-'));
 
+// Resolve jscpd the way Node does — walking UP the directory chain — instead of
+// assuming <repo>/node_modules. A git worktree has no node_modules of its own
+// and inherits the main checkout's, so a hardcoded path made `npm run verify`
+// impossible to run from any worktree (2026-08-24).
+const jscpdBin = createRequire(import.meta.url).resolve('jscpd/run-jscpd.js');
+
 let report;
 try {
   execFileSync(
     'node',
     [
-      join(ROOT, 'node_modules', 'jscpd', 'run-jscpd.js'),
+      jscpdBin,
       'src',
       '--min-tokens',
       MIN_TOKENS,

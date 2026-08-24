@@ -1,5 +1,7 @@
+import { ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import PriceDisplay from '@/components/public/PriceDisplay';
+import { safeHrefs, hrefLabel } from '@/lib/security/safeHref';
 import type { EntityDetailConfig } from '@/components/public/PublicEntityDetailPage';
 import { ROUTES } from '@/config/routes';
 import { BookEntityButton } from '@/components/bookings/BookEntityButton';
@@ -46,52 +48,81 @@ export const serviceDetailConfig: EntityDetailConfig = {
   renderDetails: entity => {
     const { amount, currency, perHour } = getServicePrice(entity);
     const durationMinutes = (entity as { duration_minutes?: number }).duration_minutes;
+    // Provider-supplied, so filtered rather than trusted — see safeHref. Rows
+    // written before the http(s)-only schema can still hold anything.
+    const portfolio = safeHrefs(entity.portfolio_links);
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {amount > 0 && (
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-fg-secondary">Price</span>
-              <PriceDisplay
-                amount={amount}
-                currency={currency}
-                className="text-xl font-bold text-fg-primary text-right"
-                suffix={perHour ? ' / hr' : undefined}
-              />
-            </div>
-          )}
-          {durationMinutes && (
-            <div className="flex items-center justify-between">
-              <span className="text-fg-secondary">Duration</span>
-              <span className="font-medium">{formatDurationMinutes(durationMinutes)}</span>
-            </div>
-          )}
-          {hasAvailability(entity.availability_schedule) && (
-            <div className="flex items-start justify-between gap-4">
-              <span className="text-fg-secondary">Availability</span>
-              <div className="text-right">
-                {formatAvailabilityLines(entity.availability_schedule).map(line => (
-                  <div key={line} className="font-medium text-fg-primary">
-                    {line}
-                  </div>
+      <>
+        {portfolio.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Previous work</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {portfolio.map(url => (
+                  <li key={url}>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="inline-flex items-center gap-2 text-fg-primary hover:underline"
+                    >
+                      <ExternalLink className="h-4 w-4 shrink-0 text-fg-secondary" />
+                      <span className="break-all">{hrefLabel(url)}</span>
+                    </a>
+                  </li>
                 ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {amount > 0 && (
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-fg-secondary">Price</span>
+                <PriceDisplay
+                  amount={amount}
+                  currency={currency}
+                  className="text-xl font-bold text-fg-primary text-right"
+                  suffix={perHour ? ' / hr' : undefined}
+                />
               </div>
-            </div>
-          )}
-          <BookEntityButton
-            className="w-full"
-            bookableType="service"
-            bookableId={entity.id as string}
-            bookableTitle={(entity.title as string) || 'this service'}
-            priceBtc={amount > 0 ? amount : undefined}
-            priceCurrency={currency}
-            durationMinutes={durationMinutes}
-          />
-        </CardContent>
-      </Card>
+            )}
+            {durationMinutes && (
+              <div className="flex items-center justify-between">
+                <span className="text-fg-secondary">Duration</span>
+                <span className="font-medium">{formatDurationMinutes(durationMinutes)}</span>
+              </div>
+            )}
+            {hasAvailability(entity.availability_schedule) && (
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-fg-secondary">Availability</span>
+                <div className="text-right">
+                  {formatAvailabilityLines(entity.availability_schedule).map(line => (
+                    <div key={line} className="font-medium text-fg-primary">
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <BookEntityButton
+              className="w-full"
+              bookableType="service"
+              bookableId={entity.id as string}
+              bookableTitle={(entity.title as string) || 'this service'}
+              priceBtc={amount > 0 ? amount : undefined}
+              priceCurrency={currency}
+              durationMinutes={durationMinutes}
+            />
+          </CardContent>
+        </Card>
+      </>
     );
   },
 };

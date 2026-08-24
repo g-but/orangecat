@@ -6,7 +6,7 @@ import {
   WISHLIST_PROOF_TYPES,
   WISHLIST_FEEDBACK_TYPES,
 } from '@/config/wishlists';
-import { optionalText, optionalUrl } from './base';
+import { optionalText, optionalUrl, webUrl } from './base';
 
 // =============================================================================
 // WISHLIST VALIDATION
@@ -37,7 +37,7 @@ export const wishlistItemSchema = z.object({
     .min(3, 'Title must be at least 3 characters')
     .max(200, 'Title must be at most 200 characters'),
   description: optionalText(1000),
-  image_url: z.string().url().optional().nullable(),
+  image_url: webUrl().optional().nullable(),
 
   // Internal reference (mutually exclusive)
   product_id: z.string().uuid().optional().nullable(),
@@ -45,7 +45,7 @@ export const wishlistItemSchema = z.object({
   asset_id: z.string().uuid().optional().nullable(),
 
   // External reference
-  external_url: z.string().url().optional().nullable(),
+  external_url: webUrl().optional().nullable(),
   external_source: z.string().max(100).optional().nullable(),
 
   // Funding
@@ -78,7 +78,7 @@ export const wishlistFulfillmentProofSchema = z.object({
   wishlist_item_id: z.string().uuid(),
   proof_type: z.enum(WISHLIST_PROOF_TYPES),
   description: z.string().min(10, 'Description must be at least 10 characters').max(1000),
-  image_url: z.string().url().optional().nullable(),
+  image_url: webUrl().optional().nullable(),
   transaction_id: z.string().max(100).optional().nullable(),
 });
 
