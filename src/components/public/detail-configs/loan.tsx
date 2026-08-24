@@ -1,4 +1,4 @@
-import { Percent, TrendingUp, User, MessageSquare } from 'lucide-react';
+import { Percent, TrendingUp, TrendingDown, User, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -9,6 +9,15 @@ import PublicEntityCTA from '@/components/public/PublicEntityCTA';
 import { ROUTES } from '@/config/routes';
 import type { EntityDetailConfig, EntityData } from '@/components/public/PublicEntityDetailPage';
 import { calculateProgress } from '@/lib/loans/progress';
+import { LOAN_TYPES, LOAN_CATEGORIES } from '@/config/loans';
+
+const labelFor = (
+  options: ReadonlyArray<{ value: string; label: string }>,
+  value: unknown
+): string | null => options.find(o => o.value === value)?.label ?? null;
+
+const isNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
 
 /**
  * Loan detail config (SSOT) — shared by the public route (/loans/[id]) and the
@@ -41,6 +50,20 @@ export const loanDetailConfig: EntityDetailConfig = {
   ),
   renderDetails: (entity: EntityData) => {
     const progress = calculateProgress(entity.original_amount, entity.remaining_balance);
+    // `current_lender` is what the create form writes; `lender_name` is what a
+    // lender-created obligation writes (src/domain/loans/obligation.ts). Both are
+    // real columns, so the page has to read both or it silently drops one path.
+    const currentLender = entity.current_lender || entity.lender_name || null;
+    const currentRate = entity.current_interest_rate;
+    const desiredRate = entity.desired_rate;
+    // Show the refinance terms whenever they exist, not only when loan_type says
+    // so — a listing with the numbers filled in must never render as if empty.
+    const showRefinance =
+      entity.loan_type === 'existing_refinance' || isNumber(currentRate) || isNumber(desiredRate);
+    const rateReduction =
+      isNumber(currentRate) && isNumber(desiredRate) && currentRate > desiredRate
+        ? currentRate - desiredRate
+        : null;
     return (
       <>
         <Card>
@@ -99,14 +122,50 @@ export const loanDetailConfig: EntityDetailConfig = {
               )}
             </div>
 
-            {entity.lender_name && (
+            {currentLender && (
               <div className="flex items-start gap-2 border-t pt-4 text-sm text-fg-secondary dark:border-default">
                 <User className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                <span className="min-w-0 break-words">Current Lender: {entity.lender_name}</span>
+                <span className="min-w-0 break-words">Current Lender: {currentLender}</span>
               </div>
             )}
           </CardContent>
         </Card>
+
+        {showRefinance && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Refinancing</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="rounded-lg bg-surface-raised p-4">
+                  <div className="mb-1 flex items-center gap-2 text-sm text-fg-secondary">
+                    <Percent className="h-4 w-4" />
+                    Current Rate
+                  </div>
+                  <div className="break-words text-lg font-semibold">
+                    {isNumber(currentRate) ? `${currentRate}% APR` : 'Not stated'}
+                  </div>
+                </div>
+                <div className="rounded-lg bg-surface-raised p-4">
+                  <div className="mb-1 flex items-center gap-2 text-sm text-fg-secondary">
+                    <TrendingDown className="h-4 w-4" />
+                    Desired Rate
+                  </div>
+                  <div className="break-words text-lg font-semibold">
+                    {isNumber(desiredRate) ? `${desiredRate}% APR` : 'Not stated'}
+                  </div>
+                </div>
+              </div>
+              {rateReduction !== null && (
+                <p className="text-sm text-fg-secondary">
+                  Seeking a {rateReduction.toFixed(1)} percentage point reduction on the current
+                  rate.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {entity.preferred_terms && (
           <Card>
@@ -130,8 +189,16 @@ export const loanDetailConfig: EntityDetailConfig = {
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
             <span className="text-fg-secondary">Loan Type</span>
+            <Badge variant="secondary">
+              {labelFor(LOAN_TYPES, entity.loan_type) ?? 'Request New Loan'}
+            </Badge>
+          </div>
+          <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-fg-secondary">Category</span>
             <Badge variant="secondary" className="capitalize">
-              {entity.loan_category_id || 'General'}
+              {labelFor(LOAN_CATEGORIES, entity.loan_category_id) ??
+                entity.loan_category_id ??
+                'General'}
             </Badge>
           </div>
           <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
