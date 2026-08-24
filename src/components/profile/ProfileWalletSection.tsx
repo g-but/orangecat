@@ -162,7 +162,7 @@ export default function ProfileWalletSection({
                     >
                       {handle.kind === 'onchain' && handle.value
                         ? truncateAddress(handle.value, 20, 10)
-                        : (handle.value ?? 'Receives Lightning payments')}
+                        : (handle.value ?? handle.emptyText)}
                     </code>
                   </div>
 
