@@ -51,6 +51,12 @@ function harness(responses: Array<{ status: number; body: string }>): string {
     process.env.SUPABASE_URL = 'http://127.0.0.1:' + port;
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:' + port;
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
+    // Set the anon key too. eval-cat.mjs exits early unless URL + ANON + SERVICE
+    // are all present, and it falls back to reading .env.local from cwd — which
+    // a git worktree does not have (the file is untracked and lives only in the
+    // main checkout). Relying on that fallback made this suite pass or fail
+    // based on where it was run rather than on the retry logic under test.
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
     const { rest } = await import('${MODULE_URL}');
     let result = null, error;
     try { result = await rest('GET', 'probe'); }

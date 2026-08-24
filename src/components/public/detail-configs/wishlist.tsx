@@ -10,6 +10,7 @@
  */
 
 import Image from 'next/image';
+import { safeHref } from '@/lib/security/safeHref';
 import Link from 'next/link';
 import { Gift, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -94,9 +95,12 @@ function ItemBody({ item }: { item: WishlistDetailItem }) {
         {item.description && (
           <p className="text-sm text-fg-secondary mt-1 line-clamp-2">{item.description}</p>
         )}
-        {item.external_url && (
+        {/* Never render item.external_url directly: it is owner-supplied and
+            older rows predate the http(s)-only schema, so a `javascript:` value
+            here would execute in a visitor's session on click. */}
+        {safeHref(item.external_url) && (
           <a
-            href={item.external_url}
+            href={safeHref(item.external_url) as string}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-fg-primary hover:underline mt-1 inline-block"

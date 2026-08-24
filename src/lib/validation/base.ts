@@ -88,8 +88,40 @@ export const optionalText = (maxLen?: number) => {
   return base.optional().nullable().or(z.literal(''));
 };
 
+/**
+ * A URL we are willing to put in an `href` or `src`.
+ *
+ * `z.string().url()` is NOT that: it delegates to `new URL()`, which happily
+ * accepts `javascript:` and `data:`. Any such value rendered into an anchor is
+ * stored XSS — the victim only has to click a link the attacker labelled, and
+ * `target="_blank" rel="noopener noreferrer"` does nothing to stop it.
+ *
+ * So scheme is part of validity here, not a separate concern: http(s) only.
+ * Use this for EVERY user-supplied URL. `eslint no-restricted-syntax` fails the
+ * build on a bare `z.string().url()` so the unsafe form cannot come back.
+ */
+export const webUrl = ({ message, max }: { message?: string; max?: number } = {}) => {
+  // Always trim: browsers strip leading whitespace and control characters
+  // before parsing a scheme, so " \n javascript:…" is live in an href. Trimming
+  // here means the stored value is the same string the browser will act on.
+  // `max` is applied BEFORE .refine(), because refine returns a ZodEffects that
+  // no longer exposes .max() to the caller.
+  const base = max ? z.string().trim().max(max) : z.string().trim();
+  return (
+    base
+      // Reached through `base` rather than chained off z.string() directly: this
+      // is the one place allowed to call .url(), and the indirection is what
+      // keeps the no-restricted-syntax ban from flagging its own implementation.
+      .url(message)
+      .refine(
+        value => /^https?:\/\//i.test(value),
+        message ?? 'Must be an http:// or https:// address'
+      )
+  );
+};
+
 /** Optional URL field that accepts empty strings */
-export const optionalUrl = () => z.string().url().optional().nullable().or(z.literal(''));
+export const optionalUrl = () => webUrl().optional().nullable().or(z.literal(''));
 
 /**
  * Coerce a coordinate value (latitude/longitude) to a number, or null when it

@@ -10,6 +10,7 @@
  */
 
 import { z } from 'zod';
+import { webUrl } from '@/lib/validation/base';
 import { GROUP_LABELS, type GroupLabel } from '@/config/group-labels';
 import { GOVERNANCE_PRESETS, type GovernancePreset } from '@/config/governance-presets';
 
@@ -35,8 +36,8 @@ export const createGroupSchema = z.object({
   description: z.string().max(2000).optional(),
   label: z.enum(validLabelsTuple),
   tags: z.array(z.string()).optional(),
-  avatar_url: z.string().url().optional().nullable().or(z.literal('')),
-  banner_url: z.string().url().optional().nullable().or(z.literal('')),
+  avatar_url: webUrl().optional().nullable().or(z.literal('')),
+  banner_url: webUrl().optional().nullable().or(z.literal('')),
   is_public: z.boolean().optional(),
   visibility: z.enum(validVisibilities).optional(),
   bitcoin_address: z.string().optional().nullable(),
@@ -53,8 +54,8 @@ export const updateGroupSchema = z.object({
   description: z.string().max(2000).optional().nullable(),
   label: z.enum(validLabelsTuple).optional(),
   tags: z.array(z.string()).optional(),
-  avatar_url: z.string().url().optional().nullable().or(z.literal('')),
-  banner_url: z.string().url().optional().nullable().or(z.literal('')),
+  avatar_url: webUrl().optional().nullable().or(z.literal('')),
+  banner_url: webUrl().optional().nullable().or(z.literal('')),
   is_public: z.boolean().optional(),
   visibility: z.enum(validVisibilities).optional(),
   bitcoin_address: z.string().optional().nullable(),

@@ -4,7 +4,7 @@ import { CAUSE_CATEGORIES, CAUSE_STATUSES, DISTRIBUTION_RULE_TYPES } from '@/con
 import { PRODUCT_TYPES, PRODUCT_FULFILLMENT_TYPES, PRODUCT_STATUSES } from '@/config/products';
 import { SERVICE_LOCATION_TYPES, SERVICE_STATUSES } from '@/config/services';
 import { DAYS_OF_WEEK } from '@/config/schedule';
-import { lightningAddressSchema, optionalText, optionalUrl } from './base';
+import { lightningAddressSchema, optionalText, optionalUrl, webUrl } from './base';
 import { ENTITY_STATUS } from '@/config/database-constants';
 
 // =============================================================================
@@ -78,7 +78,7 @@ export const userProductSchema = z.object({
   product_type: z
     .enum(PRODUCT_TYPES.map(t => t.value) as [string, ...string[]])
     .default('physical'),
-  images: z.array(z.string().url()).optional().default([]),
+  images: z.array(webUrl()).optional().default([]),
   thumbnail_url: optionalUrl(),
   inventory_count: z.number().int().min(-1).default(-1), // -1 = unlimited
   fulfillment_type: z
@@ -109,8 +109,8 @@ export const userServiceSchema = z
       .enum(SERVICE_LOCATION_TYPES.map(t => t.value) as [string, ...string[]])
       .default('remote'),
     service_area: optionalText(200),
-    images: z.array(z.string().url()).optional().default([]),
-    portfolio_links: z.array(z.string().url()).optional().default([]),
+    images: z.array(webUrl()).optional().default([]),
+    portfolio_links: z.array(webUrl()).optional().default([]),
     show_on_profile: z.boolean().optional().default(true),
     status: z.enum(SERVICE_STATUSES).default(ENTITY_STATUS.DRAFT),
   })

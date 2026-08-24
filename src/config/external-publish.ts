@@ -13,6 +13,7 @@
  * surfacing") and src/services/timeline/externalPublish.ts.
  */
 import { z } from 'zod';
+import { webUrl } from '@/lib/validation/base';
 import type { TimelineEventType, TimelineSubjectType } from '@/types/timeline';
 
 /** Recognised publishing clients (the `metadata.source` namespace for dedup). */
@@ -88,7 +89,7 @@ export const externalPublishSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
   /** Deep-link back to the source surface (e.g. the FleetCrown changelog entry). */
-  url: z.string().url().optional(),
+  url: webUrl().optional(),
   /** Structured payload preserved verbatim under timeline_events.content. */
   content: z.record(z.unknown()).optional(),
   tags: z.array(z.string().max(40)).max(20).optional(),
