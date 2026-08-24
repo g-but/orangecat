@@ -157,8 +157,9 @@ if (Object.keys(registry).length < 10) {
   process.exit(2);
 }
 
+
 /** Parse a `export const NAME = { ... } as const;`-style block into flat "NAME.A.B" → raw value strings. */
-function parseConstMap(src, constName) {
+function parseConstMap(src, constName, unparsed = []) {
   const start = src.indexOf(`export const ${constName} = {`);
   if (start === -1) {
     return {};
@@ -215,14 +216,48 @@ function parseConstMap(src, constName) {
       }
       continue;
     }
+    // Nothing matched. If the line names the registry at all, this parser just
+    // failed to read a declared route and would carry on auditing a smaller
+    // surface than the one that exists — silently.
+    // Only a KEY: line can be a declared entry. A bare continuation line of a
+    // multi-line template already belongs to the entry parsed above it.
+    if (/^\w+:/.test(t) && t.includes('ENTITY_REGISTRY')) {
+      unparsed.push(`${constName}: ${t.replace(/,$/, '')}`);
+    }
   }
   return flat;
 }
 
 const routesSrc = readFileSync(join(SRC, 'config/routes.ts'), 'utf8');
 const apiRoutesSrc = readFileSync(join(SRC, 'config/api-routes.ts'), 'utf8');
-const ROUTES_MAP = parseConstMap(routesSrc, 'ROUTES');
-const API_ROUTES_MAP = parseConstMap(apiRoutesSrc, 'API_ROUTES');
+/**
+ * A silent skip here is the worst failure this script has, because its output
+ * still looks like an answer.
+ *
+ * When the group -> organization rename switched these entries from
+ * ENTITY_REGISTRY['group'].apiEndpoint to dot access, the branch above stopped
+ * matching. Every affected route quietly vanished from the declared surface —
+ * 377 declared paths fell to 309, emitted links 418 to 252 — and the audit
+ * exited 0 while checking 40% less than it reported. The 109 "broken routes"
+ * it did print were phantoms, fanned out across every entity type, and each
+ * had to be disproved against a clean checkout before a one-character cause
+ * was visible.
+ *
+ * So an unreadable registry reference is now fatal. Auditing less than the
+ * whole surface is not a partial pass; it is a false one.
+ */
+const unparsed = [];
+const ROUTES_MAP = parseConstMap(routesSrc, 'ROUTES', unparsed);
+const API_ROUTES_MAP = parseConstMap(apiRoutesSrc, 'API_ROUTES', unparsed);
+if (unparsed.length) {
+  console.error(
+    `audit-routes: ${unparsed.length} registry reference(s) in the route config could not be\n` +
+      `read, so the audit would silently cover less than the real surface.\n` +
+      `Use ENTITY_REGISTRY['type'].field — dot access and double quotes do not parse:\n` +
+      unparsed.map(u => `  - ${u}`).join('\n')
+  );
+  process.exit(2);
+}
 
 // ---------------------------------------------------------------------------
 // 3. Template resolution
