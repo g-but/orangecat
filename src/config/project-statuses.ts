@@ -21,6 +21,22 @@ export const PROJECT_STATUS = {
   CANCELLED: 'cancelled',
 } as const;
 
+/**
+ * Statuses a signed-out visitor can see. This mirrors the `projects_public_read`
+ * RLS policy on the database (`status = 'active' OR status = 'completed' OR
+ * user_id = auth.uid()`) — keep the two in step. Anything else is owner-only,
+ * which means the owner is the only person who can act on it.
+ */
+export const PROJECT_PUBLICLY_VISIBLE_STATUSES: readonly string[] = [
+  PROJECT_STATUS.ACTIVE,
+  PROJECT_STATUS.COMPLETED,
+];
+
+/** True when the project is visible to people other than its owner. */
+export function isProjectPubliclyVisible(status: string | null | undefined): boolean {
+  return !!status && PROJECT_PUBLICLY_VISIBLE_STATUSES.includes(status);
+}
+
 export const PROJECT_STATUSES = {
   draft: {
     label: STATUS_LABELS.draft,

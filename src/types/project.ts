@@ -24,6 +24,8 @@ export interface Project {
   category?: string | null;
   tags?: string[] | null;
   funding_purpose?: string | null;
+  /** Owner-written note on where the work stands now (not the lifecycle status). */
+  work_status?: string | null;
 
   created_at: string;
   updated_at: string;

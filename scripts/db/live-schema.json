@@ -1055,7 +1055,8 @@
     "group_id",
     "actor_id",
     "is_test",
-    "show_on_profile"
+    "show_on_profile",
+    "work_status"
   ],
   "research_contributions": [
     "id",

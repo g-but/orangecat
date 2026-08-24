@@ -33,6 +33,11 @@ export const projectSchema = z.object({
     .max(500, 'Funding purpose must be 500 characters or less')
     .optional()
     .nullable(),
+  work_status: z
+    .string()
+    .max(280, 'Current status must be 280 characters or less')
+    .optional()
+    .nullable(),
   bitcoin_address: z
     .string()
     .refine(val => !val || /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,}$/.test(val), {

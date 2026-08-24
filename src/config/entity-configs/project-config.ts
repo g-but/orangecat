@@ -46,6 +46,15 @@ const fieldGroups: FieldGroup[] = [
         colSpan: 2,
         hint: "Be specific about what you're building, who it helps, and why it matters.",
       },
+      {
+        name: 'work_status',
+        label: 'Current Status',
+        type: 'textarea',
+        placeholder: 'e.g., Wiring the payment flow — beta opens next week.',
+        rows: 2,
+        colSpan: 2,
+        hint: 'Where the work stands right now. The description says what it is; this says what is happening.',
+      },
     ],
   },
   {
@@ -148,7 +157,7 @@ const wizardConfig: WizardConfig = {
       title: 'Basic Info',
       description: 'Tell us about your project',
       optional: false,
-      fields: ['title', 'description'],
+      fields: ['title', 'description', 'work_status'],
     },
     {
       id: 'funding',

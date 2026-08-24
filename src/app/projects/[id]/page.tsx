@@ -3,6 +3,9 @@ import { createServerClient } from '@/lib/supabase/server';
 import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
 import { ROUTES } from '@/config/routes';
+import { PublicEntityOwnerBar } from '@/components/public/PublicEntityOwnerBar';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { isProjectPubliclyVisible } from '@/config/project-statuses';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import { safeJsonLdString } from '@/lib/seo/structured-data';
@@ -206,6 +209,16 @@ export default async function PublicProjectPage({ params }: PageProps) {
   };
   const sellerReceive = await resolveSellerReceiveInfo(supabase, 'project', id);
 
+  // A draft project is invisible to everyone but its owner (the projects_public_read
+  // RLS policy), and nothing on the page used to say so — projects were the one
+  // entity type without the owner bar every other type already shows. Without it a
+  // project can sit unpublished for weeks while its owner assumes it is live.
+  const {
+    data: { user: viewer },
+  } = await supabase.auth.getUser();
+  const isOwner = !!viewer && !!project.user_id && viewer.id === project.user_id;
+  const isOwnerPreview = !isProjectPubliclyVisible(project.status);
+
   // Generate JSON-LD structured data for SEO
   const creatorName = profile?.name || profile?.username || 'Creator';
   const _progress = project.goal_amount
@@ -255,6 +268,17 @@ export default async function PublicProjectPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdString(structuredData) }}
       />
+      {isOwner && (
+        <PublicEntityOwnerBar
+          isOwnerPreview={isOwnerPreview}
+          entityName={ENTITY_REGISTRY.project.name}
+          entityStatus={project.status}
+          editHref={ROUTES.PROJECTS.EDIT(id)}
+          fundingLink={null}
+          entityType="project"
+          entityId={id}
+        />
+      )}
       <ProjectPageClient project={projectWithProfile} sellerReceive={sellerReceive} />
     </>
   );
