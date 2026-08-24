@@ -16,16 +16,7 @@ import { formatRelativeTime } from '@/utils/dates';
 import { logger } from '@/utils/logger';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { API_ROUTES } from '@/config/api-routes';
-
-interface ProjectUpdate {
-  id: string;
-  project_id: string;
-  type: 'update' | 'donation' | 'milestone';
-  title: string;
-  content?: string;
-  amount_btc?: number;
-  created_at: string;
-}
+import type { ProjectActivityItem } from '@/config/project-activity';
 
 interface ProjectUpdatesTimelineProps {
   projectId: string;
@@ -34,7 +25,7 @@ interface ProjectUpdatesTimelineProps {
 
 export function ProjectUpdatesTimeline({ projectId, className = '' }: ProjectUpdatesTimelineProps) {
   const { formatAmountBtc } = useDisplayCurrency();
-  const [updates, setUpdates] = useState<ProjectUpdate[]>([]);
+  const [updates, setUpdates] = useState<ProjectActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchFailed, setFetchFailed] = useState(false);
 
@@ -169,9 +160,26 @@ export function ProjectUpdatesTimeline({ projectId, className = '' }: ProjectUpd
                   {update.content && (
                     <p className="text-sm text-fg-secondary mt-1 line-clamp-2">{update.content}</p>
                   )}
-                  <p className="text-xs text-fg-secondary mt-1 flex items-center gap-1">
+                  <p className="text-xs text-fg-secondary mt-1 flex flex-wrap items-center gap-1">
                     <TrendingUp className="w-3 h-3" />
                     {formatRelativeTime(update.created_at)}
+                    {update.source && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        {update.source.url ? (
+                          <a
+                            href={update.source.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline hover:text-fg-primary"
+                          >
+                            via {update.source.label}
+                          </a>
+                        ) : (
+                          <span>via {update.source.label}</span>
+                        )}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>

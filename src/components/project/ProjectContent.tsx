@@ -22,6 +22,7 @@ interface ProjectContentProps {
     title?: string;
     description: string;
     funding_purpose: string | null;
+    work_status?: string | null;
     website_url: string | null;
     category: string | null;
     tags: string[] | null;
@@ -51,6 +52,17 @@ export default function ProjectContent({ project }: ProjectContentProps) {
             </h3>
             <p className="text-fg-primary whitespace-pre-wrap">{project.description}</p>
           </section>
+
+          {/* Where the work stands — the "what is happening now" the About text
+              cannot answer, written by the owner. */}
+          {project.work_status && (
+            <section aria-labelledby="work-status-heading">
+              <h3 id="work-status-heading" className="text-lg font-semibold mb-2">
+                Current status
+              </h3>
+              <p className="text-fg-primary whitespace-pre-wrap">{project.work_status}</p>
+            </section>
+          )}
 
           {/* Funding Purpose */}
           {project.funding_purpose && (

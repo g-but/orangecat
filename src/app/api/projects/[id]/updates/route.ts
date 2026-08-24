@@ -1,18 +1,22 @@
 /**
  * Project Updates API Endpoint
  *
- * GET /api/projects/[id]/updates - Fetch recent project updates
+ * GET /api/projects/[id]/updates - Fetch recent project activity
  *
  * Created: 2025-11-17
+ * Last Modified: 2026-08-24
+ * Last Modified Summary: Read timeline_events (where activity actually lands,
+ * including the external publish bus) instead of the never-written
+ * project_updates table; let a project's owner see their own draft's activity.
  */
 
 import { withOptionalAuth } from '@/lib/api/withAuth';
 import { apiSuccess, apiNotFound, handleApiError } from '@/lib/api/standardResponse';
-import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
-import { DATABASE_TABLES } from '@/config/database-tables';
-import { PROJECT_STATUS } from '@/config/project-statuses';
+import { isProjectPubliclyVisible } from '@/config/project-statuses';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { listProjectActivity } from '@/services/projects/activity';
+import { logger } from '@/utils/logger';
 
 interface RouteParams {
   params: Promise<{
@@ -23,8 +27,10 @@ interface RouteParams {
 /**
  * GET /api/projects/[id]/updates
  *
- * Fetches recent updates for a project (updates, donations, milestones)
- * Public endpoint - no authentication required for viewing
+ * Public endpoint — anonymous callers see public activity on published
+ * projects. The owner additionally sees their own project's activity while it
+ * is still a draft, so an unpublished project does not read as idle to the one
+ * person who can act on it.
  */
 export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
   try {
@@ -34,12 +40,11 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
       return idValidation;
     }
 
-    const { supabase } = req;
+    const { supabase, user } = req;
 
-    // Fetch project to ensure it exists and is viewable
     const { data: project, error: projectError } = await supabase
       .from(getTableName('project'))
-      .select('id, status')
+      .select('id, status, user_id')
       .eq('id', projectId)
       .single();
 
@@ -48,53 +53,21 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
       return apiNotFound('Project not found');
     }
 
-    // Only show updates for active or completed projects (privacy)
-    if (![PROJECT_STATUS.ACTIVE, PROJECT_STATUS.COMPLETED].includes(project.status)) {
+    const { status, user_id: ownerId } = project as { status: string; user_id: string | null };
+    const isOwner = !!user && !!ownerId && user.id === ownerId;
+
+    if (!isProjectPubliclyVisible(status) && !isOwner) {
       return apiSuccess({ updates: [], count: 0 });
     }
 
-    // Fetch recent updates (limit to 10 most recent)
-    const { data: updates, error: updatesError } = await supabase
-      .from(DATABASE_TABLES.PROJECT_UPDATES)
-      .select('id, project_id, type, title, content, amount_btc, created_at')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    if (updatesError) {
-      // The project_updates table has not been migrated yet. Returning an empty list
-      // lets the ProjectUpdatesTimeline component render its "No recent activity yet"
-      // empty state instead of the misleading "Could not load activity" fail branch.
-      // Postgres reports a missing relation as 42P01, but PostgREST (self-host) returns
-      // PGRST205 "Could not find the table ... in the schema cache" — without handling
-      // BOTH, every project page 500'd. Match either code or the message.
-      const errCode = (updatesError as { code?: string }).code;
-      const errMsg = (updatesError as { message?: string }).message || '';
-      const tableMissing =
-        errCode === '42P01' ||
-        errCode === 'PGRST205' ||
-        /does not exist|schema cache|could not find the table/i.test(errMsg);
-      if (tableMissing) {
-        return apiSuccess({ updates: [], count: 0 });
-      }
-      logger.error(
-        'Failed to fetch project updates',
-        { projectId, error: updatesError },
-        'ProjectUpdatesAPI'
-      );
-      return handleApiError(updatesError);
+    const result = await listProjectActivity(supabase, projectId, { includeNonPublic: isOwner });
+    if (!result.success) {
+      return handleApiError(new Error(result.error));
     }
 
-    return apiSuccess({
-      updates: updates || [],
-      count: updates?.length || 0,
-    });
+    const updates = result.data ?? [];
+    return apiSuccess({ updates, count: updates.length });
   } catch (error) {
-    logger.error(
-      'Unexpected error in project updates API',
-      { error, projectId: (await params).id },
-      'ProjectUpdatesAPI'
-    );
     return handleApiError(error);
   }
 });
