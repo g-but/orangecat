@@ -205,7 +205,7 @@
     "husky": "^9.1.7",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.2.0",
-    "jscpd": "5.0.14",
+    "jscpd": "5.0.16",
     "lint-staged": "^17.3.0",
     "node-fetch": "^3.3.2",
     "pg": "^8.21.0",
