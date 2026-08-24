@@ -19,6 +19,8 @@ export interface WalletReceiveHandle {
   value: string | null;
   /** URI to encode in a QR, or null when there is nothing scannable. */
   qrValue: string | null;
+  /** What to show in place of the handle when `value` is null. */
+  emptyText: string;
 }
 
 interface WalletHandleFields {
@@ -28,6 +30,20 @@ interface WalletHandleFields {
 }
 
 export function getWalletReceiveHandle(wallet: WalletHandleFields): WalletReceiveHandle {
+  // An xpub wallet whose key was withheld from a non-owner (see
+  // lib/wallets/publicWallet.ts) is still an on-chain destination — it just has
+  // no handle to show, because the payer gets a freshly derived address at
+  // invoice creation rather than the key itself.
+  if (!wallet.address_or_xpub && wallet.wallet_type === 'xpub') {
+    return {
+      kind: 'onchain',
+      label: 'Bitcoin',
+      value: null,
+      qrValue: null,
+      emptyText: 'A fresh address is generated when you pay',
+    };
+  }
+
   if (wallet.address_or_xpub) {
     return {
       kind: 'onchain',
@@ -36,6 +52,7 @@ export function getWalletReceiveHandle(wallet: WalletHandleFields): WalletReceiv
       // An xpub is not a payable address — encoding it as bitcoin: would produce
       // a QR that wallets reject, so only a plain address gets one.
       qrValue: wallet.wallet_type === 'xpub' ? null : `bitcoin:${wallet.address_or_xpub}`,
+      emptyText: 'A fresh address is generated when you pay',
     };
   }
 
@@ -45,6 +62,7 @@ export function getWalletReceiveHandle(wallet: WalletHandleFields): WalletReceiv
       label: 'Lightning Address',
       value: wallet.lightning_address,
       qrValue: `lightning:${wallet.lightning_address}`,
+      emptyText: 'Receives Lightning payments',
     };
   }
 
@@ -53,5 +71,6 @@ export function getWalletReceiveHandle(wallet: WalletHandleFields): WalletReceiv
     label: 'Connected wallet',
     value: null,
     qrValue: null,
+    emptyText: 'Receives Lightning payments',
   };
 }

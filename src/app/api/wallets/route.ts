@@ -15,9 +15,19 @@ import { validateOneOfIds, getValidationError } from '@/lib/api/validation';
 import { getTableName } from '@/config/entity-registry';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { WALLET_CLIENT_COLUMNS } from '@/config/database-tables';
+import { redactExtendedKeys } from '@/lib/wallets/publicWallet';
 import { createWallet } from '@/domain/wallets/createWallet';
 
-// Public wallet fields (safe to return without auth)
+// Public wallet fields (safe to return without auth).
+//
+// `address_or_xpub` holds two very different things. A plain address is meant
+// to be shared — it is how someone pays you. An EXTENDED PUBLIC KEY is not an
+// address but the key addresses are derived FROM, so publishing it hands any
+// visitor every past and future address of that wallet, and its whole balance
+// history. The payments domain already treats it that way (walletResolutionService:
+// "it must never be handed to a payer verbatim"); this listing did not, and served
+// real zpubs to anonymous callers through the admin client. Non-owner responses are
+// redacted below — see redactExtendedKeys.
 const PUBLIC_WALLET_FIELDS =
   'id, address_or_xpub, wallet_type, label, category, category_icon, lightning_address, is_primary, display_order, profile_id, project_id';
 
@@ -72,7 +82,14 @@ export const GET = withOptionalAuth(async request => {
       return handleSupabaseError('fetch wallets', error, { profileId, projectId });
     }
 
-    return apiSuccess(data || [], { cache: 'SHORT' });
+    // The owner sees their own key; nobody else does.
+    // The select uses a runtime column list, so postgrest infers a loose row
+    // type here; the redaction only reads address_or_xpub.
+    const rows = isOwner
+      ? data || []
+      : redactExtendedKeys((data || []) as unknown as Array<Record<string, unknown>>);
+
+    return apiSuccess(rows, { cache: 'SHORT' });
   } catch (error) {
     logger.error('Unexpected error in GET /api/wallets', { error });
     return handleSupabaseError('fetch wallets', error);
