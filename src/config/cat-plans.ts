@@ -95,7 +95,14 @@ export const CAT_FREE_DAILY_LIMIT = 10;
  * `supporter-days:<n>` tag; this cap and price are the config SSOT.
  */
 export const CAT_SUPPORTER_DAILY_LIMIT = 200;
-export const SUPPORTER_PRICE_CHF = 10;
+/**
+ * null = price to be announced: the plan card stays, no number is shown, and
+ * the Supporter product entity is PAUSED so nothing can be bought at a stale
+ * price (the schema forbids price 0). Announce a price by setting the number
+ * here AND updating + re-activating the product — this is the display side,
+ * the product is the charge side.
+ */
+export const SUPPORTER_PRICE_CHF: number | null = null;
 
 /**
  * Supporter checkout URL — the OrangeCat product page for the Supporter pass.
@@ -158,9 +165,12 @@ export const CAT_PLANS: CatPlan[] = [
     id: 'supporter',
     name: 'Supporter',
     tagline: 'Back OrangeCat — and get more Cat',
-    priceCopy: SUPPORTER_LIVE
-      ? `CHF ${SUPPORTER_PRICE_CHF} / mo · in Bitcoin`
-      : `CHF ${SUPPORTER_PRICE_CHF} / mo · activating`,
+    priceCopy:
+      SUPPORTER_PRICE_CHF === null
+        ? 'Price to be announced · in Bitcoin'
+        : SUPPORTER_LIVE
+          ? `CHF ${SUPPORTER_PRICE_CHF} / mo · in Bitcoin`
+          : `CHF ${SUPPORTER_PRICE_CHF} / mo · activating`,
     bullets: [
       `${CAT_SUPPORTER_DAILY_LIMIT} Cat messages every day — ${Math.round(CAT_SUPPORTER_DAILY_LIMIT / CAT_FREE_DAILY_LIMIT)}× the free tier`,
       'No keys, no metering — a flat monthly, settled in Bitcoin',

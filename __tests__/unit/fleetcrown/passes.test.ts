@@ -27,7 +27,7 @@ describe('FleetCrown passes — tag/parse contract', () => {
   });
 
   it('covers exactly the paid plans, once each', () => {
-    const plans = FLEETCROWN_PASSES.map((p) => p.plan).sort();
+    const plans = FLEETCROWN_PASSES.map(p => p.plan).sort();
     expect(plans).toEqual([...FLEETCROWN_PLANS].sort());
     expect(new Set(plans).size).toBe(FLEETCROWN_PASSES.length);
   });
@@ -59,9 +59,11 @@ describe('FleetCrown passes — tag/parse contract', () => {
     }
   });
 
-  it('prices match FleetCrown /pricing (CHF 15/40/90), guarding accidental drift', () => {
-    const byPlan = Object.fromEntries(FLEETCROWN_PASSES.map((p) => [p.plan, p.price]));
-    expect(byPlan).toEqual({ personal: 15, pro: 40, team: 90 });
+  it('prices match FleetCrown /pricing (all to-be-announced), guarding accidental drift', () => {
+    const byPlan = Object.fromEntries(FLEETCROWN_PASSES.map(p => [p.plan, p.price]));
+    // null = price not announced yet. When pricing launches, set the numbers in
+    // BOTH configs (here and FleetCrown's plans.ts) and update this guard.
+    expect(byPlan).toEqual({ personal: null, pro: null, team: null });
     for (const p of FLEETCROWN_PASSES) {
       expect(p.currency).toBe('CHF');
     }

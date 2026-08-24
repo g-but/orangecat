@@ -27,9 +27,18 @@ npm run test:unit || { echo "❌ Unit tests failed"; exit 1; }
 echo "✅ Unit tests passed"
 
 echo "🎭 Running fast E2E tests..."
+# Port 3000 is shared across the fleet — another project's dev server answers
+# /api/health with the same template shape, so identify the app before testing
+# it (2026-08-24: the gate failed a push here because :3000 was serving evig).
+# The check must read the <title>: fleet sites are HOSTED at *.orangecat.ch, so
+# "orangecat" appears in a foreign site's body links but not in its title.
 if curl -sf "${BASE_URL:-http://localhost:3000}/api/health" >/dev/null 2>&1; then
-  BASE_URL="${BASE_URL:-http://localhost:3000}" npm run test:e2e:node || { echo "❌ E2E tests failed"; exit 1; }
-  echo "✅ E2E tests passed"
+  if curl -sf "${BASE_URL:-http://localhost:3000}/" | grep -io "<title>[^<]*" | grep -qi "orangecat"; then
+    BASE_URL="${BASE_URL:-http://localhost:3000}" npm run test:e2e:node || { echo "❌ E2E tests failed"; exit 1; }
+    echo "✅ E2E tests passed"
+  else
+    echo "⏭️  Skipped fast E2E (server at ${BASE_URL:-http://localhost:3000} is not OrangeCat; CI runs full P0 matrix)"
+  fi
 else
   echo "⏭️  Skipped fast E2E (no server at ${BASE_URL:-http://localhost:3000}; CI runs full P0 matrix)"
 fi

@@ -4,15 +4,13 @@ import { Metadata } from 'next';
 import { Globe, ShieldCheck, Server } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ROUTES } from '@/config/routes';
+import { DOMAINS_SERVICE_URL, CUSTOM_DOMAIN_PRICE_CHF_PER_MONTH } from '@/config/domains-offer';
 
 export const metadata: Metadata = {
   title: 'OrangeCat Domains',
   description:
     'A working site, hosted and managed at yourname.orangecat.ch — free. Move to your own domain when you are ready, and everything keeps working.',
 };
-
-/** The live, payable service entity this page sells. */
-const DOMAINS_SERVICE_URL = '/services/25baeba0-46bc-4666-a2fb-bd845f45fd14';
 
 export default function DomainsPage() {
   return (
@@ -90,9 +88,17 @@ export default function DomainsPage() {
             </div>
             <div className="rounded-xl border border-interactive bg-surface-raised p-8">
               <h3 className="text-lg font-semibold text-fg-primary">Custom domain</h3>
-              <p className="mt-1 text-3xl font-bold text-fg-primary">
-                CHF 15<span className="text-base font-normal text-fg-secondary">/month</span>
-              </p>
+              {CUSTOM_DOMAIN_PRICE_CHF_PER_MONTH === null ? (
+                <>
+                  <p className="mt-1 text-3xl font-bold text-fg-primary">Free for now</p>
+                  <p className="mt-1 text-sm text-fg-secondary">Pricing to be announced</p>
+                </>
+              ) : (
+                <p className="mt-1 text-3xl font-bold text-fg-primary">
+                  CHF {CUSTOM_DOMAIN_PRICE_CHF_PER_MONTH}
+                  <span className="text-base font-normal text-fg-secondary">/month</span>
+                </p>
+              )}
               <ul className="mt-4 space-y-2 text-fg-secondary">
                 <li>Everything in the free tier</li>
                 <li>Your own domain, certificates included</li>
@@ -109,7 +115,9 @@ export default function DomainsPage() {
             </div>
           </div>
           <p className="mt-6 text-center text-sm text-fg-tertiary">
-            Paid in Bitcoin over Lightning — the invoice takes a minute. Questions first?{' '}
+            {CUSTOM_DOMAIN_PRICE_CHF_PER_MONTH === null
+              ? 'Nothing is charged while pricing is being worked out — early sites keep whatever terms they start on. Questions?'
+              : 'Paid in Bitcoin over Lightning — the invoice takes a minute. Questions first?'}{' '}
             <Link href="/profiles/mao" className="underline">
               Message Mao
             </Link>
