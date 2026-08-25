@@ -197,20 +197,50 @@ SUPABASE_SERVICE_ROLE_KEY=...
 npx supabase start   # not the workflow
 ```
 
-**To inspect / change the DB**, connect to the self-hosted instance directly:
+**To READ the DB**, go through PostgREST with the keys already in `.env.local`.
+This works from an agent sandbox — it is plain HTTPS to `supabase.orangecat.ch`:
 
 ```bash
-# Read/query via the pooled connection string in .env.local
-psql "$POSTGRES_URL" -c '\d+ notifications'
-
-# Schema changes: add a migration under supabase/migrations/ and apply it
-# against the self-hosted DB (psql or supabase CLI pointed at supabase.orangecat.ch).
-# Migrations are the SSOT for schema — keep them runnable on a fresh box.
+# Any table. Service-role key bypasses RLS, so treat results as privileged.
+curl -s -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+     "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/projects?select=id,title&limit=5"
 ```
 
-Note: this agent's sandbox generally cannot reach `supabase.orangecat.ch` directly
-(it's behind Caddy on the box). Box-side DB work goes through the founder /
-FleetCrown agent. Never reintroduce the managed-cloud project as a shortcut.
+Does a column exist? Ask for it — this answers from the schema, so it works on an
+EMPTY table, unlike reading `Object.keys(rows[0])` (which reports every column as
+missing when there are no rows):
+
+```bash
+# 200 = exists, 400 with code 42703 = no such column.
+".../rest/v1/<table>?select=<column>&limit=0"
+```
+
+`POSTGRES_URL` in `.env.local` points at a local tunnel (`127.0.0.1:5433`) that is
+normally NOT running, so `psql "$POSTGRES_URL"` fails from a sandbox. That is a
+missing tunnel, not a missing permission. For DDL or anything PostgREST cannot
+express, go through the box:
+
+```bash
+ssh ubuntu@167.233.22.31 \
+  'docker exec supabase-db psql -U postgres -d postgres -c "\d+ projects"'
+```
+
+**Schema changes: write the migration and merge it. Do NOT apply it by hand.**
+`scripts/deploy-selfhost.sh` runs `scripts/apply-migrations.sh` on every deploy,
+which applies pending `supabase/migrations/*.sql` in filename order — each inside
+a single transaction — and records them in `public.schema_migrations`. A failed
+migration aborts the deploy and leaves the live release untouched. So the chain
+is the same as for code: merge → CI → CD → applied.
+
+> Corrected 2026-08-25. This section previously said the sandbox "generally cannot
+> reach supabase.orangecat.ch" and that box-side DB work "goes through the founder
+> / FleetCrown agent". Both were wrong and cost real time: reads work fine over
+> PostgREST, and migrations apply themselves on deploy. Acting on the old text, an
+> agent shipped a migration announcing it needed manual application — it had
+> already been applied automatically eight minutes after merge.
+
+Never reintroduce the managed-cloud project as a shortcut.
 
 ---
 
