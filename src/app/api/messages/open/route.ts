@@ -12,12 +12,8 @@
  */
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import {
-  openOrCreateConversation,
-  enforceRateLimit,
-  getRateLimitHeaders,
-  VALIDATION,
-} from '@/features/messaging/lib';
+import { openOrCreateConversation, VALIDATION } from '@/features/messaging/lib';
+import { rateLimitAction, rateLimitHeaders, retryAfterSeconds } from '@/lib/rate-limit';
 import {
   apiSuccess,
   apiValidationError,
@@ -31,16 +27,13 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     const { user } = req;
 
     // Rate limiting
-    const rateLimitResult = enforceRateLimit('CONVERSATION_CREATE', user.id);
-    if (!rateLimitResult.allowed) {
-      const retryAfter = rateLimitResult.retryAfterMs
-        ? Math.ceil(rateLimitResult.retryAfterMs / 1000)
-        : undefined;
+    const rateLimitResult = await rateLimitAction('CONVERSATION_CREATE', user.id);
+    if (!rateLimitResult.success) {
       const response = apiRateLimited(
         'Rate limit exceeded. Please wait before creating more conversations.',
-        retryAfter
+        retryAfterSeconds(rateLimitResult)
       );
-      const headers = getRateLimitHeaders(rateLimitResult);
+      const headers = rateLimitHeaders(rateLimitResult);
       Object.entries(headers).forEach(([key, value]) => {
         response.headers.set(key, value);
       });
@@ -78,7 +71,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     });
 
     // Add rate limit headers
-    const headers = getRateLimitHeaders(rateLimitResult);
+    const headers = rateLimitHeaders(rateLimitResult);
     Object.entries(headers).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
