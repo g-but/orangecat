@@ -186,6 +186,78 @@ jobs:
           E2E_TEST_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
         run: npm run test:e2e:matrix:p0
 
+  # Runs `verify` a SECOND time, from a git worktree, because a worktree is the
+  # shape every agent in this fleet actually works in (`_claude_autoworktree_enter`)
+  # and it is a shape CI otherwise never sees.
+  #
+  # The difference that matters: `actions/checkout` + `npm ci` puts node_modules
+  # at the checkout root, so a script that hardcodes `join(ROOT,'node_modules',…)`
+  # resolves and CI goes green. A worktree contains ONLY TRACKED FILES — no
+  # node_modules of its own — and inherits the main checkout's by letting Node
+  # walk UP the directory chain. So the same code is green here and crashes there.
+  #
+  # That is not hypothetical: on 2026-08-24 `npm run verify` — the repo's SSOT for
+  # "verified" — could not run to completion from any worktree, and CI was green
+  # throughout. Re-proven by mutation before this job was written: reintroducing
+  # the hardcoded jscpd path passes a normal checkout (exit 0, "OK") and ENOENTs
+  # in a worktree.
+  #
+  # Two rules this job encodes, both load-bearing:
+  #  1. The worktree MUST be nested inside the checkout (.claude/worktrees/, which
+  #     is gitignored). That is where the real tooling puts it, and it is what lets
+  #     Node's upward resolution reach <checkout>/node_modules. A sibling path
+  #     would resolve nothing and would be testing a shape nobody works in.
+  #  2. It runs `npm run verify` VERBATIM, not a hand-picked "worktree-sensitive"
+  #     subset. Of the two real 2026-08-24 failures one was a path-resolution
+  #     script and the other was a unit test — no honest subset would have
+  #     included both, and the subset would drift from `verify` besides.
+  #
+  # Scope, stated plainly: this catches the node_modules-location and git-dir-shape
+  # classes. It does NOT catch "script reads an untracked file" (e.g. .env.local) —
+  # CI has no untracked files in either shape, so that class is already caught by
+  # the normal run and is not this job's job.
+  #
+  # Runs in parallel with build-and-smoke, so it costs runner minutes, not
+  # wall-clock on the path to deploy.
+  verify-in-worktree:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Mirror build-and-smoke's env exactly. If this job got different inputs, a
+      # failure here would be ambiguous — env drift or worktree shape? — and the
+      # signal this job exists to give would be worthless.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' && secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy-project.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY != '' && secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'dummy' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' && secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy' }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY != '' && secrets.SUPABASE_SECRET_KEY || '' }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY != '' && secrets.SUPABASE_SECRET_KEY || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        # Installs into <checkout>/node_modules and NOWHERE ELSE. The worktree
+        # below deliberately gets none of its own — that asymmetry is the test.
+        run: npm ci
+
+      - name: Create a git worktree (the shape agents work in)
+        # --detach avoids inventing a branch name that could collide on re-runs.
+        # Works from the shallow, detached-HEAD checkout actions/checkout produces.
+        run: |
+          git worktree add --detach .claude/worktrees/ci-verify HEAD
+          test ! -e .claude/worktrees/ci-verify/node_modules \
+            || { echo "::error::worktree has its own node_modules — this job would prove nothing"; exit 1; }
+
+      - name: Verify from the worktree (same script, no local node_modules)
+        working-directory: .claude/worktrees/ci-verify
+        run: npm run verify
+
   # Supply-chain gate: catch committed secrets and known-vuln dependencies before
   # they ship. Runs in parallel with build-and-smoke (independent). The
   # `security:scan` npm script existed but nothing invoked it — this wires it in.
@@ -252,6 +324,13 @@ jobs:
   # alone — its `workflow_run` fires normally, and is the better path there
   # (CD downloads the exact artifact this run built). One trigger per path.
   post-main:
+    # `verify-in-worktree` is DELIBERATELY absent here — it is not an oversight,
+    # do not add it. It proves agents can run `verify` locally; it does not say
+    # anything about whether the commit is safe to ship (build-and-smoke already
+    # ran the same `verify` on the same code). Blocking a deploy of verified code
+    # on a developer-experience gate would trade a real outage for a process bug.
+    # The enforcement point is PR-time: auto-merge requires EVERY check green, so
+    # a worktree regression cannot reach main in the first place.
     needs: [build-and-smoke, security]
     if: always() && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
