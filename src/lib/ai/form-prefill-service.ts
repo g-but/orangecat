@@ -157,6 +157,7 @@ export async function generateFormPrefill({
         success: false,
         data: {},
         confidence: {},
+        code: 'provider_not_configured',
         error: 'AI provider not configured. Please set up an API key in settings.',
       };
     }
@@ -200,6 +201,7 @@ export async function generateFormPrefill({
         success: false,
         data: {},
         confidence: {},
+        code: 'provider_unavailable',
         error: 'AI service temporarily unavailable. Please try again.',
       };
     }
@@ -213,6 +215,7 @@ export async function generateFormPrefill({
         success: false,
         data: {},
         confidence: {},
+        code: 'provider_unavailable',
         error: 'No response from AI. Please try again.',
       };
     }
@@ -224,6 +227,7 @@ export async function generateFormPrefill({
         success: false,
         data: {},
         confidence: {},
+        code: 'unparseable_response',
         error: 'Could not parse AI response. Please try with a clearer description.',
       };
     }
@@ -253,6 +257,7 @@ export async function generateFormPrefill({
       success: false,
       data: {},
       confidence: {},
+      code: 'unknown',
       error: error instanceof Error ? error.message : 'An unexpected error occurred',
     };
   }
