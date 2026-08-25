@@ -20,6 +20,7 @@ import { ReactNode, ComponentType } from 'react';
 import { LucideIcon } from 'lucide-react';
 import { ZodType, ZodTypeDef } from 'zod';
 import type { EntityType } from '@/config/entity-registry';
+import type { AiErrorCode } from '@/config/ai-errors';
 
 // ==================== FIELD TYPES ====================
 
@@ -382,7 +383,14 @@ export interface AIPrefillResponse {
   changedFields?: string[];
   /** Confidence scores for each changed field (0-1) */
   confidence: Record<string, FieldConfidence>;
-  /** Optional error message if unsuccessful */
+  /**
+   * Why it failed, as a code the UI resolves into copy + a fix link via
+   * @/config/ai-errors. Absent for validation feedback ("describe the change
+   * you want"), which is guidance the user can act on as written, not a
+   * failure needing a fix link.
+   */
+  code?: AiErrorCode;
+  /** Raw message. Carried into a bug report; not rendered when `code` is set. */
   error?: string;
 }
 

@@ -6,7 +6,9 @@ import { Sparkles, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
-import { unwrapApiResponse } from '@/lib/api/client-response';
+import { ApiResponseError, unwrapApiResponse } from '@/lib/api/client-response';
+import { isAiErrorCode, type AiErrorCode } from '@/config/ai-errors';
+import { AiErrorNotice } from '@/components/ai/AiErrorNotice';
 
 import { AIFillPanel } from './AIFillPanel';
 import { AIRefinePanel } from './AIRefinePanel';
@@ -49,6 +51,20 @@ export function AIPrefillBar({
   const [instruction, setInstruction] = useState('');
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * Set when the failure came from the AI itself, so it renders through
+   * AiErrorNotice (cause + fix link + one-click report) instead of as bare
+   * text. Validation feedback deliberately leaves this null: "describe the
+   * change you want" is already actionable and needs no fix link.
+   */
+  const [errorCode, setErrorCode] = useState<AiErrorCode | null>(null);
+
+  /** Clear both halves of the error state together — a stale notice outliving
+   *  its message is the kind of drift two separate resets invite. */
+  const clearError = useCallback(() => {
+    setError(null);
+    setErrorCode(null);
+  }, []);
   const [hasFilled, setHasFilled] = useState(false);
   const [lastChanged, setLastChanged] = useState<string[] | null>(null);
 
@@ -74,7 +90,7 @@ export function AIPrefillBar({
   const callAI = useCallback(
     async (prompt: string, intent: AiAssistIntent, requestId: string) => {
       setPending(requestId);
-      setError(null);
+      clearError();
       setLastChanged(null);
 
       try {
@@ -112,12 +128,14 @@ export function AIPrefillBar({
         }
       } catch (err) {
         logger.error('AI prefill error', err, 'AI');
+        const code = err instanceof ApiResponseError ? err.code : undefined;
+        setErrorCode(isAiErrorCode(code) ? code : null);
         setError(err instanceof Error ? err.message : 'An unexpected error occurred');
       } finally {
         setPending(null);
       }
     },
-    [formType, existingData, onPrefill]
+    [formType, existingData, onPrefill, clearError]
   );
 
   const handleGenerate = useCallback(() => {
@@ -164,21 +182,27 @@ export function AIPrefillBar({
     [callAI]
   );
 
-  const handleDescriptionChange = useCallback((value: string) => {
-    setDescription(value);
-    setError(null);
-  }, []);
+  const handleDescriptionChange = useCallback(
+    (value: string) => {
+      setDescription(value);
+      clearError();
+    },
+    [clearError]
+  );
 
-  const handleInstructionChange = useCallback((value: string) => {
-    setInstruction(value);
-    setError(null);
-  }, []);
+  const handleInstructionChange = useCallback(
+    (value: string) => {
+      setInstruction(value);
+      clearError();
+    },
+    [clearError]
+  );
 
   const handleReset = () => {
     setHasFilled(false);
     setDescription('');
     setInstruction('');
-    setError(null);
+    clearError();
     setLastChanged(null);
   };
 
@@ -241,11 +265,18 @@ export function AIPrefillBar({
         {statusMessage}
       </p>
 
-      {error && (
-        <div className="flex items-start gap-2 text-sm text-status-negative">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{error}</span>
-        </div>
+      {errorCode ? (
+        <AiErrorNotice
+          code={errorCode}
+          context={{ surface: 'form-prefill', detail: error ?? undefined }}
+        />
+      ) : (
+        error && (
+          <div className="flex items-start gap-2 text-sm text-status-negative">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )
       )}
     </div>
   );

@@ -141,6 +141,23 @@ const AI_ERRORS: Record<AiErrorCode, (ctx: AiErrorContext) => { title: string; f
   };
 
 /**
+ * Is this string one of ours?
+ *
+ * An API error envelope carries codes from several vocabularies — transport
+ * ones like VALIDATION_ERROR and RATE_LIMITED alongside these. A surface must
+ * be able to tell them apart, because feeding a transport code to
+ * describeAiError would degrade a precise, actionable validation message into
+ * a generic "something went wrong on the AI side".
+ */
+export function isAiErrorCode(value: string | undefined | null): value is AiErrorCode {
+  // hasOwnProperty, not `in`: `in` walks the prototype chain, so "toString"
+  // and "constructor" would pass and describeAiError would then call
+  // Object.prototype.toString as if it were a copy resolver — yielding a
+  // notice with no title. Codes arrive from an API envelope, i.e. off the wire.
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(AI_ERRORS, value);
+}
+
+/**
  * Resolve a code into everything a surface needs to render an actionable failure.
  * Unrecognised codes degrade to `unknown` rather than leaking a raw string —
  * a wrong-but-safe sentence beats an internal identifier shown as if it were copy.
@@ -149,7 +166,7 @@ export function describeAiError(
   code: AiErrorCode | string | undefined,
   ctx: AiErrorContext
 ): ResolvedAiError {
-  const resolved: AiErrorCode = code && code in AI_ERRORS ? (code as AiErrorCode) : 'unknown';
+  const resolved: AiErrorCode = isAiErrorCode(code) ? code : 'unknown';
   const { title, fix } = AI_ERRORS[resolved](ctx);
   return {
     code: resolved,

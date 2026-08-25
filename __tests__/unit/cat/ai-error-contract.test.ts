@@ -1,4 +1,9 @@
-import { describeAiError, type AiErrorCode, type AiSurface } from '@/config/ai-errors';
+import {
+  describeAiError,
+  isAiErrorCode,
+  type AiErrorCode,
+  type AiSurface,
+} from '@/config/ai-errors';
 import { ACTION_CATEGORY_KEYS } from '@/config/cat-actions';
 import { ROUTES } from '@/config/routes';
 
@@ -101,6 +106,33 @@ describe('describeAiError', () => {
 
   it('handles a missing code without throwing', () => {
     expect(describeAiError(undefined, { surface: SURFACE }).code).toBe('unknown');
+  });
+
+  describe('isAiErrorCode', () => {
+    it('accepts every code the registry knows', () => {
+      for (const code of ALL_CODES) {
+        expect(isAiErrorCode(code)).toBe(true);
+      }
+    });
+
+    it('rejects transport codes from the API error envelope', () => {
+      // An API error envelope mixes vocabularies. Treating a transport code as
+      // one of ours would degrade a precise validation message ("describe the
+      // change you want") into a generic "something went wrong on the AI side"
+      // — replacing actionable copy with a dead end.
+      for (const code of ['VALIDATION_ERROR', 'RATE_LIMITED', 'BAD_REQUEST', 'INTERNAL_ERROR']) {
+        expect(isAiErrorCode(code)).toBe(false);
+      }
+    });
+
+    it('rejects absent values and inherited property names', () => {
+      expect(isAiErrorCode(undefined)).toBe(false);
+      expect(isAiErrorCode(null)).toBe(false);
+      expect(isAiErrorCode('')).toBe(false);
+      // `in` walks the prototype chain, so this is a real hazard, not a nicety.
+      expect(isAiErrorCode('toString')).toBe(false);
+      expect(isAiErrorCode('constructor')).toBe(false);
+    });
   });
 
   describe('the regression it was built for', () => {

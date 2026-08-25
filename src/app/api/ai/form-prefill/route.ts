@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   apiSuccess,
+  apiError,
   apiBadRequest,
   apiValidationError,
   apiRateLimited,
@@ -123,7 +124,13 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         'AI'
       );
 
-      return apiBadRequest(result.error || 'Failed to generate form data');
+      // The code, not the prose, is what the client renders from — apiError
+      // puts it on error.code, where unwrapApiResponse picks it up.
+      return apiError(
+        result.error || 'Failed to generate form data',
+        result.code ?? 'unknown',
+        400
+      );
     }
 
     logger.info(
