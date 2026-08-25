@@ -164,6 +164,7 @@ async function runExecActions(
     return execActions.map(a => ({
       actionId: a.actionId,
       status: 'failed' as const,
+      code: 'unknown' as const,
       error: 'User has no actor record',
     }));
   }
@@ -191,6 +192,7 @@ async function runExecActions(
               : 'failed',
         data: result.data,
         displayMessage,
+        code: result.code,
         error: result.error,
         pendingActionId: result.pendingActionId,
       });
@@ -198,6 +200,7 @@ async function runExecActions(
       results.push({
         actionId: action.actionId,
         status: 'failed',
+        code: 'unknown',
         error: err instanceof Error ? err.message : 'Execution error',
       });
     }

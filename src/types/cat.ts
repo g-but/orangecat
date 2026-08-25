@@ -12,6 +12,7 @@
 
 import type { EntityType } from '@/config/entity-registry';
 import type { WalletBehaviorType, WalletCategory, BudgetPeriod } from '@/types/wallet';
+import type { AiErrorCode } from '@/config/ai-errors';
 
 /**
  * SSOT for the entity types Cat can suggest creating — a subset of the registry's EntityType.
@@ -116,6 +117,13 @@ export interface ExecActionResult {
   data?: unknown;
   /** Human-readable result from the handler, e.g. "💰 Wallet created: Vacation Fund" */
   displayMessage?: string;
+  /**
+   * Why it failed, as a code the client resolves into copy + a fix link via
+   * @/config/ai-errors. `error` is the raw upstream string: it travels with a
+   * bug report but is never rendered to the user, because rendering it is what
+   * produced dead ends like "Entity failed: Permission denied for entities actions".
+   */
+  code?: AiErrorCode;
   error?: string;
   pendingActionId?: string;
 }

@@ -257,6 +257,18 @@ export function isPublicRoute(pathname: string): boolean {
 }
 
 /**
+ * DOM id of a category card on the Cat permissions page.
+ *
+ * Both ends of the deep link derive from here — the page renders this id, and
+ * ROUTES.DASHBOARD.CAT_PERMISSIONS_CATEGORY builds the href — so a renamed or
+ * added category can never leave a failure notice pointing at an anchor that
+ * does not exist.
+ */
+export function catPermissionAnchorId(category: string): string {
+  return `category-${category}`;
+}
+
+/**
  * Route Constants
  *
  * Centralized route definitions for programmatic route generation.
@@ -398,6 +410,9 @@ export const ROUTES = {
     BOOKINGS_VIEW: (id: string) => `/dashboard/bookings/${id}`,
     CAT: '/dashboard/cat',
     CAT_PERMISSIONS: '/dashboard/cat/permissions',
+    /** Deep link straight to one category's card (see catPermissionAnchorId). */
+    CAT_PERMISSIONS_CATEGORY: (category: string) =>
+      `/dashboard/cat/permissions#${catPermissionAnchorId(category)}`,
     // Post-auth landing for new users — Cat is the primary interface.
     CAT_WELCOME: '/dashboard/cat?welcome=true',
     DOCUMENTS: ENTITY_REGISTRY['document'].basePath,

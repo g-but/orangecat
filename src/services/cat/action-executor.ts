@@ -16,6 +16,8 @@ import { STATUS } from '@/config/database-constants';
 import { logger } from '@/utils/logger';
 import { ACTION_HANDLERS } from './handlers';
 import { generateActionDescription } from './action-descriptions';
+import type { AiErrorCode } from '@/config/ai-errors';
+import { extractBtcAmount, logDeniedAction, updateActionLog } from './action-log';
 
 // Re-export parseReminderDate for back-compat (legacy tests import from here).
 export { parseReminderDate } from './handlers/date-utils';
@@ -34,6 +36,8 @@ interface ActionResult {
   actionId: string;
   status: 'completed' | 'failed' | 'pending_confirmation' | 'denied';
   data?: unknown;
+  /** Why it failed, as a code the UI resolves into copy + a fix link. */
+  code?: AiErrorCode;
   error?: string;
   pendingActionId?: string;
   logId?: string;
@@ -73,6 +77,7 @@ export class CatActionExecutor {
     if (!action) {
       return {
         success: false,
+        code: 'unknown_action',
         actionId,
         status: 'failed',
         error: `Unknown action: ${actionId}`,
@@ -82,6 +87,7 @@ export class CatActionExecutor {
     if (!action.enabled) {
       return {
         success: false,
+        code: 'action_disabled',
         actionId,
         status: 'failed',
         error: `Action is disabled: ${actionId}`,
@@ -95,9 +101,17 @@ export class CatActionExecutor {
       const reason = permission.reason || 'Permission denied';
       // Denials are audit rows too — without them the track record only ever
       // sees wins, and the Cat re-proposes its losses forever.
-      await this.logDeniedAction(userId, action, parameters, reason, conversationId, messageId);
+      await logDeniedAction(this.supabase, {
+        userId,
+        action,
+        parameters,
+        reason,
+        conversationId,
+        messageId,
+      });
       return {
         success: false,
+        code: permission.code ?? 'permission_denied',
         actionId,
         status: 'denied',
         error: reason,
@@ -110,13 +124,21 @@ export class CatActionExecutor {
     const spendCheck = await this.permissionService.checkSpendCaps(
       userId,
       actionId,
-      this.extractBtcAmount(action, parameters)
+      extractBtcAmount(action, parameters)
     );
     if (!spendCheck.allowed) {
       const reason = spendCheck.reason || 'Spend cap exceeded';
-      await this.logDeniedAction(userId, action, parameters, reason, conversationId, messageId);
+      await logDeniedAction(this.supabase, {
+        userId,
+        action,
+        parameters,
+        reason,
+        conversationId,
+        messageId,
+      });
       return {
         success: false,
+        code: spendCheck.code ?? 'spend_cap_exceeded',
         actionId,
         status: 'denied',
         error: reason,
@@ -200,6 +222,7 @@ export class CatActionExecutor {
     if (!action) {
       return {
         success: false,
+        code: 'unknown_action',
         actionId: pending.action_id,
         status: 'failed',
         error: 'Action no longer available',
@@ -305,7 +328,7 @@ export class CatActionExecutor {
         conversation_id: conversationId || null,
         message_id: messageId || null,
         started_at: new Date().toISOString(),
-        amount_btc: this.extractBtcAmount(action, parameters),
+        amount_btc: extractBtcAmount(action, parameters),
       })
       .select()
       .single();
@@ -319,13 +342,13 @@ export class CatActionExecutor {
     const spendCheck = await this.permissionService.checkSpendCaps(
       userId,
       action.id,
-      this.extractBtcAmount(action, parameters),
+      extractBtcAmount(action, parameters),
       { excludeLogId: logEntry?.id }
     );
     if (!spendCheck.allowed) {
       const reason = spendCheck.reason || 'Spend cap exceeded';
       if (logEntry) {
-        await this.updateActionLog(logEntry.id, 'denied', null, reason);
+        await updateActionLog(this.supabase, logEntry.id, 'denied', null, reason);
       }
       return {
         success: false,
@@ -339,7 +362,7 @@ export class CatActionExecutor {
     const handler = ACTION_HANDLERS[action.id];
     if (!handler) {
       if (logEntry) {
-        await this.updateActionLog(logEntry.id, 'failed', null, 'No handler for action');
+        await updateActionLog(this.supabase, logEntry.id, 'failed', null, 'No handler for action');
       }
 
       return {
@@ -356,7 +379,7 @@ export class CatActionExecutor {
 
       if (result.success) {
         if (logEntry) {
-          await this.updateActionLog(logEntry.id, 'completed', result.data);
+          await updateActionLog(this.supabase, logEntry.id, 'completed', result.data);
         }
 
         return {
@@ -368,7 +391,7 @@ export class CatActionExecutor {
         };
       } else {
         if (logEntry) {
-          await this.updateActionLog(logEntry.id, 'failed', null, result.error);
+          await updateActionLog(this.supabase, logEntry.id, 'failed', null, result.error);
         }
 
         return {
@@ -383,7 +406,7 @@ export class CatActionExecutor {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       if (logEntry) {
-        await this.updateActionLog(logEntry.id, 'failed', null, errorMessage);
+        await updateActionLog(this.supabase, logEntry.id, 'failed', null, errorMessage);
       }
 
       return {
@@ -432,66 +455,6 @@ export class CatActionExecutor {
       conversationId: data.conversation_id,
       expiresAt: data.expires_at,
     };
-  }
-
-  /**
-   * Audit a denial that happens BEFORE performAction opens a log row (early
-   * permission / spend-cap checks). One terminal insert, fire-and-safe: a
-   * failed write only warns — denying the action never depends on logging it.
-   */
-  private async logDeniedAction(
-    userId: string,
-    action: CatAction,
-    parameters: Record<string, unknown>,
-    reason: string,
-    conversationId?: string,
-    messageId?: string
-  ): Promise<void> {
-    const { error } = await this.supabase.from(DATABASE_TABLES.CAT_ACTION_LOG).insert({
-      user_id: userId,
-      action_id: action.id,
-      category: action.category,
-      parameters,
-      status: 'denied',
-      error_message: reason,
-      conversation_id: conversationId || null,
-      message_id: messageId || null,
-      completed_at: new Date().toISOString(),
-      amount_btc: this.extractBtcAmount(action, parameters),
-    });
-    if (error) {
-      logger.warn('Failed to log denied action', { error: error.message }, 'CatActionExecutor');
-    }
-  }
-
-  private async updateActionLog(
-    logId: string,
-    status: 'completed' | 'failed' | 'denied',
-    result: unknown,
-    errorMessage?: string
-  ): Promise<void> {
-    await this.supabase
-      .from(DATABASE_TABLES.CAT_ACTION_LOG)
-      .update({
-        status,
-        result: result || null,
-        error_message: errorMessage || null,
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', logId);
-  }
-
-  private extractBtcAmount(action: CatAction, parameters: Record<string, unknown>): number | null {
-    // Extract BTC amount from payment-related actions for the action log
-    if (action.category === 'payments') {
-      return (
-        (parameters.amount_btc as number) ||
-        (parameters.price_btc as number) ||
-        (parameters.price as number) ||
-        null
-      );
-    }
-    return null;
   }
 }
 

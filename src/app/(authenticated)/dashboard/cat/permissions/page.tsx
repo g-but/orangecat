@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Cat, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { ROUTES } from '@/config/routes';
+import { ROUTES, catPermissionAnchorId } from '@/config/routes';
 import { API_ROUTES } from '@/config/api-routes';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { fromAutonomyLevel, type AutonomyLevel } from '@/config/cat-autonomy';
@@ -209,7 +209,15 @@ export default function CatPermissionsPage() {
 
           <div className="space-y-4">
             {summary.categories.map(cat => (
-              <div key={cat.category} className="space-y-4">
+              // The anchor an AI failure notice deep-links to (@/config/ai-errors):
+              // "Allow it" must land on the category that was refused, not at the
+              // top of a page where the user has to hunt for it. scroll-mt keeps
+              // the card clear of the sticky header on arrival.
+              <div
+                key={cat.category}
+                id={catPermissionAnchorId(cat.category)}
+                className="scroll-mt-24 space-y-4"
+              >
                 <CategoryRow
                   cat={cat}
                   actions={availableActions.filter(a => a.category === cat.category)}
