@@ -345,6 +345,73 @@ export async function rateLimitIntegrationKeyRead(
   return fallbackIntegrationKeyReadLimiter.check(key);
 }
 
+// ==================== NAMED ACTION LIMITS ====================
+
+/**
+ * Limits for actions identified by name rather than by request shape.
+ *
+ * This replaces `src/features/messaging/lib/rate-limiter.ts`, a second rate
+ * limiter with its OWN in-memory Map. Two stores meant two answers: messaging
+ * counted in process memory only, so it silently ignored the Redis backend the
+ * rest of the app uses, and its budget could never be observed or reset
+ * alongside everything else. ADR-0002 called for one implementation; this is it.
+ *
+ * `windowMs` is the single source — the Upstash window string is derived from
+ * it, so the Redis path and the in-memory fallback cannot drift apart.
+ */
+export const ACTION_RATE_LIMITS = {
+  /** Message sending: 60 per minute. */
+  MESSAGE_SEND: { requests: 60, windowMs: 60 * 1000 },
+  /** Conversation creation: 10 per minute. */
+  CONVERSATION_CREATE: { requests: 10, windowMs: 60 * 1000 },
+} as const;
+
+export type RateLimitAction = keyof typeof ACTION_RATE_LIMITS;
+
+// Built once per action on first use. Upstash limiters are null when Redis is
+// unconfigured, which is the normal case on the self-hosted single-process
+// deployment — see the note on the in-memory fallback above.
+const upstashActionLimiters = new Map<RateLimitAction, Ratelimit | null>();
+const fallbackActionLimiters = new Map<RateLimitAction, InMemoryRateLimiter>();
+
+/**
+ * Rate limit a named action for one identifier (normally a user id).
+ *
+ * Async because the Redis path is — the previous messaging limiter was sync,
+ * which is precisely why it could never be backed by anything but local memory.
+ */
+export async function rateLimitAction(
+  action: RateLimitAction,
+  identifier: string
+): Promise<RateLimitResult> {
+  const { requests, windowMs } = ACTION_RATE_LIMITS[action];
+  const key = `${action}:${identifier}`;
+
+  if (!upstashActionLimiters.has(action)) {
+    const seconds = Math.max(1, Math.round(windowMs / 1000));
+    upstashActionLimiters.set(
+      action,
+      createUpstashLimiter(`action:${action}`, requests, `${seconds} s`)
+    );
+  }
+  const upstash = upstashActionLimiters.get(action);
+  if (upstash) {
+    return toRateLimitResult(await upstash.limit(key));
+  }
+
+  let fallback = fallbackActionLimiters.get(action);
+  if (!fallback) {
+    fallback = new InMemoryRateLimiter({ windowMs, maxRequests: requests });
+    fallbackActionLimiters.set(action, fallback);
+  }
+  return fallback.check(key);
+}
+
+/** Test seam: drop all per-action in-memory counters. */
+export function _resetActionRateLimits(): void {
+  fallbackActionLimiters.clear();
+}
+
 // ==================== RESPONSE HELPER ====================
 
 export function createRateLimitResponse(result: RateLimitResult): Response {
@@ -381,13 +448,25 @@ export function retryAfterSeconds(result: RateLimitResult): number {
 }
 
 /**
+ * Standard rate limit headers as a plain record, for callers that build a
+ * response from headers rather than mutating one. Same vocabulary as
+ * applyRateLimitHeaders — defined once here so the two cannot drift.
+ */
+export function rateLimitHeaders(result: RateLimitResult): Record<string, string> {
+  return {
+    'X-RateLimit-Limit': result.limit.toString(),
+    'X-RateLimit-Remaining': result.remaining.toString(),
+    'X-RateLimit-Reset': result.resetTime.toString(),
+    'Retry-After': retryAfterSeconds(result).toString(),
+  };
+}
+
+/**
  * Apply standard rate limit headers to an existing Response.
  */
 export function applyRateLimitHeaders<T extends Response>(response: T, result: RateLimitResult): T {
-  const headers = response.headers;
-  headers.set('X-RateLimit-Limit', result.limit.toString());
-  headers.set('X-RateLimit-Remaining', result.remaining.toString());
-  headers.set('X-RateLimit-Reset', result.resetTime.toString());
-  headers.set('Retry-After', retryAfterSeconds(result).toString());
+  for (const [name, value] of Object.entries(rateLimitHeaders(result))) {
+    response.headers.set(name, value);
+  }
   return response;
 }

@@ -10,13 +10,8 @@
 
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
-import {
-  enforceRateLimit,
-  getRateLimitHeaders,
-  PAGINATION,
-  VALIDATION,
-  MESSAGE_TYPES,
-} from '@/features/messaging/lib';
+import { PAGINATION, VALIDATION, MESSAGE_TYPES } from '@/features/messaging/lib';
+import { rateLimitAction, rateLimitHeaders, retryAfterSeconds } from '@/lib/rate-limit';
 import {
   loadConversationMessages,
   postConversationMessage,
@@ -101,13 +96,13 @@ export const POST = withAuth(
     try {
       const { user } = req;
 
-      const rateLimitResult = enforceRateLimit('MESSAGE_SEND', user.id);
-      if (!rateLimitResult.allowed) {
-        const retryAfter = rateLimitResult.retryAfterMs
-          ? Math.ceil(rateLimitResult.retryAfterMs / 1000)
-          : undefined;
-        const response = apiRateLimited('Rate limit exceeded. Please slow down.', retryAfter);
-        Object.entries(getRateLimitHeaders(rateLimitResult)).forEach(([k, v]) =>
+      const rateLimitResult = await rateLimitAction('MESSAGE_SEND', user.id);
+      if (!rateLimitResult.success) {
+        const response = apiRateLimited(
+          'Rate limit exceeded. Please slow down.',
+          retryAfterSeconds(rateLimitResult)
+        );
+        Object.entries(rateLimitHeaders(rateLimitResult)).forEach(([k, v]) =>
           response.headers.set(k, v)
         );
         return response;
@@ -134,7 +129,7 @@ export const POST = withAuth(
       if (!result.ok) {
         return apiForbidden('Not a participant in this conversation');
       }
-      return apiCreated({ id: result.id }, { headers: getRateLimitHeaders(rateLimitResult) });
+      return apiCreated({ id: result.id }, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {
       logger.error(
         'Messages POST error',
