@@ -301,14 +301,39 @@ jobs:
           cache: 'npm'
 
       - name: Dependency audit
-        # Staged rollout: CRITICAL advisories block the build now; HIGH+ are
-        # reported (annotation) but non-blocking so this gate can land without
-        # being held hostage by pre-existing debt. Escalate the second line to
-        # `--audit-level=high` (blocking) once the tree is clean.
-        run: |
-          npm audit --audit-level=critical --omit=dev
-          npm audit --audit-level=high --omit=dev \
-            || echo "::warning title=Dependency audit::HIGH-severity advisories present — triage and escalate this gate to blocking."
+        # ESCALATED 2026-08-25. The staged rollout this replaces blocked only on
+        # CRITICAL and merely annotated HIGH, explicitly "until the tree is
+        # clean". The tree is now clean — `npm audit --omit=dev` reports 0
+        # vulnerabilities — so the condition that comment set is met and the
+        # warning is gone. A warning nobody is assigned to read is not a gate; it
+        # sat non-blocking while 3 HIGH advisories accumulated (postcss ×2,
+        # js-yaml), and none of them were even version-pinned — the lockfile had
+        # just drifted below ranges that already allowed the patched releases.
+        #
+        # `--audit-level=high` and one command, not two: blocking at high already
+        # covers critical, so a separate critical line would be dead weight.
+        #
+        # `--omit=dev` is deliberate — dev-only advisories do not ship, and
+        # blocking merges on them would make this gate churn until someone
+        # weakens it. (js-yaml above was dev-only; it was patched anyway because
+        # the range already allowed it.)
+        #
+        # Tied to `node-version: 20` (npm 10) above, and that coupling is load-
+        # bearing. On npm 11, `npm audit --audit-level=critical` was observed to
+        # exit 1 against a tree whose own --json output reported
+        # {moderate:2, high:1, critical:0} — i.e. the level stops gating the exit
+        # code. Bump this runner to node 22 and the line below silently becomes
+        # "block on ANY advisory, including low", which will wedge every merge on
+        # something unfixable and get this gate weakened rather than debugged.
+        # If you bump Node here, re-check this step's exit code first.
+        #
+        # WHEN THIS BLOCKS YOU and no patched version exists upstream, do NOT
+        # lower the level — that silently re-opens the whole class. In order of
+        # preference: bump the dependency; add an `overrides` entry in
+        # package.json pinning a patched transitive; or, if genuinely unfixable,
+        # land the exception as its own commit naming the advisory and why, so
+        # the decision is reviewable instead of inherited.
+        run: npm audit --audit-level=high --omit=dev
 
   # Everything GitHub would have chained off this run, had it emitted the event.
   #
