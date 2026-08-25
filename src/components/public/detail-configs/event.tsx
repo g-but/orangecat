@@ -2,8 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import type { EntityDetailConfig } from '@/components/public/PublicEntityDetailPage';
 import { ROUTES } from '@/config/routes';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, MapPin, Users, Video, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, Users, Video, Clock, Repeat, Film } from 'lucide-react';
 import { safeHref } from '@/lib/security/safeHref';
+import { formatRecurrence } from '@/lib/recurrence';
 
 /** The structured venue fields, in postal order, as display lines. */
 const addressLines = (entity: Record<string, unknown>): string[] => {
@@ -44,6 +45,8 @@ export const eventDetailConfig: EntityDetailConfig = {
   renderDetails: entity => {
     const address = addressLines(entity);
     const joinUrl = safeHref(entity.online_url);
+    const videoUrl = safeHref(entity.video_url);
+    const recurrence = formatRecurrence(entity.is_recurring, entity.recurrence_pattern);
     return (
       <Card>
         <CardHeader>
@@ -68,6 +71,18 @@ export const eventDetailConfig: EntityDetailConfig = {
                           : ''
                       }`}
                 </div>
+              </div>
+            </div>
+          )}
+          {/* A repeating event used to render identically to a one-off — the
+              whole recurrence rule was collected and shown nowhere. */}
+          {recurrence && (
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-surface-raised/40">
+                <Repeat className="h-5 w-5 text-fg-primary" />
+              </div>
+              <div className="min-w-0">
+                <div className="break-words font-medium">{recurrence}</div>
               </div>
             </div>
           )}
@@ -105,6 +120,23 @@ export const eventDetailConfig: EntityDetailConfig = {
                   className="break-all font-medium underline underline-offset-4"
                 >
                   Join online
+                </a>
+              </div>
+            </div>
+          )}
+          {videoUrl && (
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-surface-raised/40">
+                <Film className="h-5 w-5 text-fg-primary" />
+              </div>
+              <div className="min-w-0">
+                <a
+                  href={videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="break-all font-medium underline underline-offset-4"
+                >
+                  Watch the video
                 </a>
               </div>
             </div>

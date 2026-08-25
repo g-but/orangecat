@@ -7,6 +7,11 @@ import { ROUTES } from '@/config/routes';
 import { BookEntityButton } from '@/components/bookings/BookEntityButton';
 import { hasAvailability, formatAvailabilityLines } from '@/lib/availability';
 import { formatDurationMinutes } from '@/utils/dates';
+import { SERVICE_LOCATION_TYPES } from '@/config/services';
+
+/** Label for a stored location-type value, from the config SSOT. */
+const locationTypeLabel = (value: unknown): string | null =>
+  SERVICE_LOCATION_TYPES.find(t => t.value === value)?.label ?? null;
 
 // user_services stores its price in `fixed_price` (or `hourly_rate`) in the entity's
 // chosen `currency` — NOT price_btc (no such column) and NOT in BTC. Read the real
@@ -51,6 +56,14 @@ export const serviceDetailConfig: EntityDetailConfig = {
     // Provider-supplied, so filtered rather than trusted — see safeHref. Rows
     // written before the http(s)-only schema can still hold anything.
     const portfolio = safeHrefs(entity.portfolio_links);
+    // Whether a service is remote or on-site, and how far the provider travels,
+    // decides whether a buyer can use it at all. Both were collected and shown
+    // nowhere, so every listing read as if location were irrelevant.
+    const locationType = locationTypeLabel(entity.service_location_type);
+    const serviceArea =
+      typeof entity.service_area === 'string' && entity.service_area.trim()
+        ? entity.service_area.trim()
+        : null;
     return (
       <>
         {portfolio.length > 0 && (
@@ -97,6 +110,18 @@ export const serviceDetailConfig: EntityDetailConfig = {
               <div className="flex items-center justify-between">
                 <span className="text-fg-secondary">Duration</span>
                 <span className="font-medium">{formatDurationMinutes(durationMinutes)}</span>
+              </div>
+            )}
+            {locationType && (
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-fg-secondary">Delivery</span>
+                <span className="font-medium text-right">{locationType}</span>
+              </div>
+            )}
+            {serviceArea && (
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-fg-secondary">Service area</span>
+                <span className="font-medium text-right break-words">{serviceArea}</span>
               </div>
             )}
             {hasAvailability(entity.availability_schedule) && (

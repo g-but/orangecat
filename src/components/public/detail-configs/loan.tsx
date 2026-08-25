@@ -20,6 +20,32 @@ const isNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
 
 /**
+ * These date columns are `optionalText` in the schema, not timestamps, so the
+ * stored value is whatever the form wrote. Render it as a date only when it
+ * genuinely parses, and fall back to the raw string rather than printing
+ * "Invalid Date" over the user's own input.
+ *
+ * Fixed to UTC on purpose: this renders on the server, which cannot know the
+ * reader's timezone, and an unpinned format shifts a maturity date by a day
+ * depending on where it happens to run.
+ */
+const formatLoanDate = (value: unknown): string | null => {
+  if (typeof value !== 'string' || !value.trim()) {
+    return null;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value.trim();
+  }
+  return parsed.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+};
+
+/**
  * Loan detail config (SSOT) — shared by the public route (/loans/[id]) and the
  * owner dashboard route (/dashboard/loans/[id]).
  */
@@ -60,6 +86,12 @@ export const loanDetailConfig: EntityDetailConfig = {
     // so — a listing with the numbers filled in must never render as if empty.
     const showRefinance =
       entity.loan_type === 'existing_refinance' || isNumber(currentRate) || isNumber(desiredRate);
+    const originationDate = formatLoanDate(entity.origination_date);
+    const maturityDate = formatLoanDate(entity.maturity_date);
+    const loanNumber =
+      typeof entity.loan_number === 'string' && entity.loan_number.trim()
+        ? entity.loan_number.trim()
+        : null;
     const rateReduction =
       isNumber(currentRate) && isNumber(desiredRate) && currentRate > desiredRate
         ? currentRate - desiredRate
@@ -174,6 +206,37 @@ export const loanDetailConfig: EntityDetailConfig = {
             </CardHeader>
             <CardContent>
               <p className="text-fg-primary whitespace-pre-wrap">{entity.preferred_terms}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* When the loan starts, when it comes due, and the lender's reference
+            for it — collected on existing-loan listings and rendered nowhere, so
+            a listing could not answer "how long is left on this?". */}
+        {(originationDate || maturityDate || loanNumber) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Loan Term</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {originationDate && (
+                <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-fg-secondary">Originated</span>
+                  <span className="font-medium sm:text-right">{originationDate}</span>
+                </div>
+              )}
+              {maturityDate && (
+                <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-fg-secondary">Matures</span>
+                  <span className="font-medium sm:text-right">{maturityDate}</span>
+                </div>
+              )}
+              {loanNumber && (
+                <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-fg-secondary">Loan number</span>
+                  <span className="break-all font-medium sm:text-right">{loanNumber}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
