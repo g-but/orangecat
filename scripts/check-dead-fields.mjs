@@ -59,6 +59,27 @@ const SRC = join(ROOT, 'src');
 const KNOWN_DEAD = new Set([
   // === Identifiers and routing plumbing — never reader-facing content. =======
   'asset_id', // FK: links an event to a rented venue asset
+
+  // --- Rendered, but through a parent the scanner cannot follow. -------------
+  // These three are properties of `recurrencePatternSchema`, i.e. they live
+  // INSIDE the `recurrence_pattern` JSONB column — they are not columns of their
+  // own. `recurrence_pattern` IS rendered (event.tsx → formatRecurrence), which
+  // displays all three, so they are not dead.
+  //
+  // Two scanner limits meet here, and both are deliberate to leave alone:
+  //   1. The field regex reads every schema property as top-level, so a nested
+  //      sub-schema's members look like columns.
+  //   2. Only src/components and src/app count as render surfaces, and the
+  //      formatter is a pure helper in src/lib — correctly, by separation of
+  //      concerns. Widening the scan to src/lib would let non-render code vouch
+  //      for a field and mask genuinely dead ones, which is exactly the mistake
+  //      that create-templates caused on this checker's first run.
+  // Fixing this properly means teaching the scanner that `X: someSubSchema`
+  // makes X the parent of that schema's members. Worth doing when a second
+  // nested schema appears; one instance does not justify the machinery.
+  'days_of_week',
+  'day_of_month',
+  'month_of_year',
   'from_wallet_id', // FK: internal transfer source
   'to_wallet_id', // FK: internal transfer destination
   'product_id', // FK: wishlist item → catalogue product
@@ -83,33 +104,20 @@ const KNOWN_DEAD = new Set([
   // Each line is a page that should show a thing it currently swallows. Removing
   // a line by rendering the field is always the preferred way to fix a failure
   // of this check.
-  'video_url', // event: schema-only, no form field collects it yet
   'knowledge_base_urls', // assistant: the sources it answers from
   'free_messages_per_day', // assistant: a pricing term the visitor should see
-  'service_area', // service: where the provider works
-  'service_location_type', // service: on-site / remote / hybrid
   'fulfillment_type', // how delivery or repayment actually happens
   'allocations', // funding splits
   'beneficiaries', // funding splits
   'distribution_rules', // funding splits
-  'loan_number', // loan: the borrower's reference for an existing loan
-  'maturity_date', // loan: when it comes due
-  'origination_date', // loan: when it started
   'return_frequency', // investment: how often a return is paid
   'budget_amount', // funding target
   'budget_period', // funding target window
   'goal_deadline', // funding target date
   'target_completion', // project: promised completion date
-  'quantity_wanted', // wishlist: how many the person actually wants
-  'allow_partial_funding', // wishlist: whether part-funding is welcome
   'dedicated_wallet_address', // wishlist: where funds actually go
   // Recurring events: needs one renderer that turns the whole set into a human
   // sentence ("every second Tuesday"), so these five come off together.
-  'is_recurring',
-  'recurrence_pattern',
-  'days_of_week',
-  'day_of_month',
-  'month_of_year',
 ]);
 
 /** Walk a directory, returning every .ts/.tsx path beneath it. */

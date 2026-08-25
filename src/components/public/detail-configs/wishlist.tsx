@@ -36,11 +36,21 @@ export interface WishlistDetailItem {
   priority: number;
   is_fulfilled?: boolean;
   created_at?: string;
+  quantity_wanted?: number | null;
+  allow_partial_funding?: boolean | null;
 }
 
-/** Columns both the public and owner pages select — keep them in sync via this SSOT. */
+/**
+ * Columns both the public and owner pages select — keep them in sync via this SSOT.
+ *
+ * `quantity_wanted` and `allow_partial_funding` were collected by the item form
+ * and displayed nowhere, and the reason was here: an explicit allow-list that
+ * never asked for them. A field cannot render if the query does not select it,
+ * and a narrow optional type hides that from the compiler — so widening the
+ * interface without widening this string would have changed nothing.
+ */
 export const WISHLIST_ITEM_COLUMNS =
-  'id, title, description, image_url, target_amount_btc, funded_amount_btc, is_fully_funded, is_fulfilled, external_url, priority, created_at';
+  'id, title, description, image_url, target_amount_btc, funded_amount_btc, is_fully_funded, is_fulfilled, external_url, priority, created_at, quantity_wanted, allow_partial_funding';
 
 const WISHLIST_BASE_PATH = ENTITY_REGISTRY['wishlist'].basePath;
 
@@ -89,6 +99,19 @@ function ItemBody({ item }: { item: WishlistDetailItem }) {
             )}
             {item.is_fully_funded && !item.is_fulfilled && (
               <Badge className="bg-status-positive text-xs">Funded</Badge>
+            )}
+            {/* Only the non-default values are worth pixels: quantity 1 and
+                partial-funding-allowed are the defaults, so badging them on
+                every item would be noise a giver has to read past. */}
+            {typeof item.quantity_wanted === 'number' && item.quantity_wanted > 1 && (
+              <Badge variant="secondary" className="text-xs">
+                Wants {item.quantity_wanted}
+              </Badge>
+            )}
+            {item.allow_partial_funding === false && (
+              <Badge variant="secondary" className="text-xs">
+                Full amount only
+              </Badge>
             )}
           </div>
         </div>

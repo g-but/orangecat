@@ -18,6 +18,7 @@
 import { render, screen } from '@testing-library/react';
 import { loanDetailConfig } from '@/components/public/detail-configs/loan';
 import { eventDetailConfig } from '@/components/public/detail-configs/event';
+import { serviceDetailConfig } from '@/components/public/detail-configs/service';
 
 describe('loan detail config', () => {
   const refinance = {
@@ -135,5 +136,130 @@ describe('event detail config', () => {
       </div>
     );
     expect(screen.queryByRole('link', { name: 'Join online' })).not.toBeInTheDocument();
+  });
+});
+
+describe('event recurrence', () => {
+  const base = {
+    id: 'event-2',
+    created_at: '2026-08-01T00:00:00Z',
+    title: 'Weekly standup',
+    start_date: '2026-09-01T17:00:00Z',
+  };
+
+  it('says how often a repeating event repeats, and on which days', () => {
+    render(
+      <div>
+        {eventDetailConfig.renderDetails?.({
+          ...base,
+          is_recurring: true,
+          recurrence_pattern: {
+            frequency: 'weekly',
+            interval: 2,
+            days_of_week: ['monday', 'wednesday'],
+          },
+        })}
+      </div>
+    );
+    expect(screen.getByText('Every 2 weeks on Mon, Wed')).toBeInTheDocument();
+  });
+
+  it('renders the rule even when is_recurring was never set', () => {
+    render(
+      <div>
+        {eventDetailConfig.renderDetails?.({
+          ...base,
+          recurrence_pattern: { frequency: 'monthly', day_of_month: 3 },
+        })}
+      </div>
+    );
+    expect(screen.getByText('Every month on the 3rd')).toBeInTheDocument();
+  });
+
+  it('shows nothing for a one-off event', () => {
+    render(<div>{eventDetailConfig.renderDetails?.({ ...base, is_recurring: false })}</div>);
+    expect(screen.queryByText(/^Every /)).not.toBeInTheDocument();
+    expect(screen.queryByText('Repeats')).not.toBeInTheDocument();
+  });
+
+  it('links a video URL', () => {
+    render(
+      <div>{eventDetailConfig.renderDetails?.({ ...base, video_url: 'https://ex.tld/v' })}</div>
+    );
+    expect(screen.getByRole('link', { name: 'Watch the video' })).toHaveAttribute(
+      'href',
+      'https://ex.tld/v'
+    );
+  });
+});
+
+describe('service location', () => {
+  // Deliberately priceless. PriceDisplay suspends under jsdom (no app providers
+  // or Suspense boundary), and an unresolved suspense discards the WHOLE card —
+  // silently, with no thrown error, so the assertion fails as "text not found"
+  // and reads like a missing render. Production is fine: the live page for a
+  // priced service returns 200 with Price/Duration/Book this present, checked
+  // directly. Location fields do not depend on price, so leaving it out tests
+  // exactly what changed instead of mocking a component this file does not own.
+  const service = {
+    id: 'svc-1',
+    created_at: '2026-08-01T00:00:00Z',
+    title: 'Roof repair',
+    currency: 'CHF',
+  };
+
+  it('shows how the service is delivered and how far the provider travels', () => {
+    render(
+      <div>
+        {serviceDetailConfig.renderDetails?.({
+          ...service,
+          service_location_type: 'onsite',
+          service_area: 'Zürich and Winterthur',
+        })}
+      </div>
+    );
+    expect(screen.getByText('On-site Only')).toBeInTheDocument();
+    expect(screen.getByText('Zürich and Winterthur')).toBeInTheDocument();
+  });
+});
+
+describe('loan term', () => {
+  it('shows origination, maturity and the lender reference', () => {
+    render(
+      <div>
+        {loanDetailConfig.renderDetails?.({
+          id: 'loan-2',
+          created_at: '2026-08-01T00:00:00Z',
+          currency: 'CHF',
+          // Required by the loan schema (z.number().positive()) and read
+          // unguarded by the Financial Details card — a fixture without them
+          // exercises a state no stored loan can be in.
+          original_amount: 10000,
+          remaining_balance: 8000,
+          origination_date: '2024-03-15',
+          maturity_date: '2034-03-15',
+          loan_number: 'ZKB-99812',
+        })}
+      </div>
+    );
+    expect(screen.getByText('15 March 2024')).toBeInTheDocument();
+    expect(screen.getByText('15 March 2034')).toBeInTheDocument();
+    expect(screen.getByText('ZKB-99812')).toBeInTheDocument();
+  });
+
+  it('falls back to the raw string rather than printing Invalid Date', () => {
+    render(
+      <div>
+        {loanDetailConfig.renderDetails?.({
+          id: 'loan-3',
+          created_at: '2026-08-01T00:00:00Z',
+          currency: 'CHF',
+          original_amount: 10000,
+          remaining_balance: 8000,
+          maturity_date: 'whenever the roof is done',
+        })}
+      </div>
+    );
+    expect(screen.getByText('whenever the roof is done')).toBeInTheDocument();
   });
 });
