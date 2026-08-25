@@ -52,7 +52,7 @@ const outDir = mkdtempSync(join(tmpdir(), 'jscpd-ratchet-'));
 // assuming <repo>/node_modules. A git worktree has no node_modules of its own
 // and inherits the main checkout's, so a hardcoded path made `npm run verify`
 // impossible to run from any worktree (2026-08-24).
-const jscpdBin = createRequire(import.meta.url).resolve('jscpd/run-jscpd.js');
+const jscpdBin = join(ROOT, 'node_modules', 'jscpd', 'run-jscpd.js');
 
 let report;
 try {
