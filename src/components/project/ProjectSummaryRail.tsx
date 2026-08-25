@@ -13,6 +13,29 @@ import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { formatCurrency } from '@/services/currency';
 import { API_ROUTES } from '@/config/api-routes';
 
+/**
+ * `target_completion` is `optionalText` in the schema, so the stored value is
+ * whatever the form wrote — a date string, or "end of Q3", or anything else.
+ * Format it as a date only when it genuinely parses, and otherwise show the
+ * creator's own words instead of "Invalid Date". UTC is pinned deliberately: a
+ * date formatted in the server's timezone shifts by a day for readers elsewhere.
+ */
+function formatTargetCompletion(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) {
+    return null;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value.trim();
+  }
+  return parsed.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 interface Props {
   project: {
     id: string;
@@ -25,6 +48,8 @@ interface Props {
     supporters_count?: number;
     last_support_at?: string | null;
     user_id?: string;
+    /** Free text in the schema (`optionalText`), not a timestamp — render defensively. */
+    target_completion?: string | null;
   };
   /** Honest settled-contributions total in BTC (get_entity_funding_stats). Drives
    *  "amount raised" — NOT the cached on-chain balance, which is Lightning-blind. */
@@ -35,6 +60,7 @@ interface Props {
 export default function ProjectSummaryRail({ project, settledRaisedBtc = 0, isOwner }: Props) {
   const { formatAmountBtc } = useDisplayCurrency();
   const goalCurrency = project.goal_currency || project.currency || PLATFORM_DEFAULT_CURRENCY;
+  const targetCompletion = formatTargetCompletion(project.target_completion);
   // null = no Bitcoin rate available, so the goal currency can't be quoted.
   const [amountRaised, setAmountRaised] = useState<number | null>(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -138,6 +164,23 @@ export default function ProjectSummaryRail({ project, settledRaisedBtc = 0, isOw
       <div className="w-full bg-surface-raised rounded-full h-3">
         <div className="bg-fg-primary h-3 rounded-full" style={{ width: `${progress}%` }} />
       </div>
+
+      {/* When the creator says it will be done. The project form has collected
+          this since the entity existed and no surface showed it, so backers
+          funding a milestone-accountability entity could not see the milestone.
+          Stored as free text, so a value that does not parse is shown verbatim
+          rather than rendered as "Invalid Date". Fixed to UTC — this can render
+          on the server, which cannot know the reader's timezone. */}
+      {targetCompletion && (
+        <div className="space-y-2 text-sm border-t pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-fg-secondary">Target completion</span>
+            <span className="font-semibold text-fg-primary text-right break-words">
+              {targetCompletion}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Social Proof - Supporters Count */}
       {(project.supporters_count || project.last_support_at) && (

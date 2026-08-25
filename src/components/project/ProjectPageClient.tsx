@@ -47,6 +47,14 @@ interface Project {
   bitcoin_balance_updated_at?: string | null;
   supporters_count?: number | null;
   last_support_at?: string | null;
+  /**
+   * When the creator says the work will be done. The page fetch is `select('*')`
+   * and spreads the whole row, so this value was ALREADY arriving here — it was
+   * this interface not declaring it that kept it off the screen. A narrow prop
+   * type hides a wide payload, and the compiler cannot warn about a field it was
+   * never told exists.
+   */
+  target_completion?: string | null;
   profiles?: {
     username: string | null;
     name: string | null;
@@ -183,6 +191,7 @@ export default function ProjectPageClient({ project, sellerReceive }: ProjectPag
                 supporters_count: project.supporters_count || 0,
                 last_support_at: project.last_support_at || null,
                 user_id: project.user_id,
+                target_completion: project.target_completion ?? null,
               }}
               settledRaisedBtc={project.settled_raised_btc || 0}
               isOwner={isOwner}
