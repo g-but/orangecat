@@ -14,9 +14,9 @@
 
 import Link from 'next/link';
 import { X, ArrowRight, MessageSquareWarning } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { describeAiError, type AiErrorCode, type AiErrorContext } from '@/config/ai-errors';
-import { canReportInPlace, reportToFleetCrown } from '@/lib/feedback/report';
+import { reportToFleetCrown } from '@/lib/feedback/report';
 import { ROUTES } from '@/config/routes';
 import { cn } from '@/lib/utils';
 
@@ -31,17 +31,17 @@ interface AiErrorNoticeProps {
 export function AiErrorNotice({ code, context, subject, className }: AiErrorNoticeProps) {
   const error = describeAiError(code, context);
 
-  // The widget is loaded async behind a server-side kill switch, so whether an
-  // in-place report is possible is only knowable on the client, after mount.
-  // Until then we render the static link — never a button that does nothing.
-  const [inPlace, setInPlace] = useState(false);
-  useEffect(() => {
-    setInPlace(canReportInPlace());
-  }, []);
-
   const [reported, setReported] = useState(false);
-  const handleReport = () => {
+
+  // "Report this" is ALWAYS a real link to the feedback page, upgraded in place
+  // when FleetCrown's panel can actually open. Deciding it up front — "is the
+  // widget there?" — cannot be answered honestly: it loads async behind a
+  // server-side kill switch, so any answer at render time may be wrong by the
+  // time it is clicked, and a control that might do nothing is the dead end
+  // this component exists to remove.
+  const handleReport = (e: MouseEvent<HTMLAnchorElement>) => {
     if (reportToFleetCrown({ message: error.reportMessage, diagnostics: error.diagnostics })) {
+      e.preventDefault();
       setReported(true);
     }
   };
@@ -75,18 +75,10 @@ export function AiErrorNotice({ code, context, subject, className }: AiErrorNoti
 
         {reported ? (
           <span className="text-muted-foreground">Thanks — reported.</span>
-        ) : inPlace ? (
-          <button
-            type="button"
-            onClick={handleReport}
-            className="inline-flex items-center gap-1 text-muted-foreground underline underline-offset-2 hover:no-underline"
-          >
-            <MessageSquareWarning className="h-3 w-3" />
-            Report this
-          </button>
         ) : (
           <Link
             href={ROUTES.FEEDBACK}
+            onClick={handleReport}
             className="inline-flex items-center gap-1 text-muted-foreground underline underline-offset-2 hover:no-underline"
           >
             <MessageSquareWarning className="h-3 w-3" />
