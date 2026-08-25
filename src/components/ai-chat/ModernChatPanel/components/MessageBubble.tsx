@@ -5,7 +5,7 @@
 
 import { cn } from '@/lib/utils';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
-import { Cat, User, Copy, Check, Clock, X } from 'lucide-react';
+import { Cat, User, Copy, Check, Clock } from 'lucide-react';
 import { getModelDisplayName } from '@/config/ai-models';
 import { getModelCapability } from '@/config/model-capability';
 import { renderChatMarkdown } from '@/utils/markdown';
@@ -15,6 +15,8 @@ import { PrefilledFormCard } from './PrefilledFormCard';
 import { UpgradeNudge } from './UpgradeNudge';
 import type { Message, CatAction, ExecActionResult } from '../types';
 import { ENTITY_REGISTRY, ENTITY_TYPES } from '@/config/entity-registry';
+import { CAT_ACTIONS } from '@/config/cat-actions';
+import { AiErrorNotice } from '@/components/ai/AiErrorNotice';
 
 const PROVIDER_LABELS: Record<string, string> = {
   groq: 'Groq',
@@ -79,15 +81,25 @@ function ExecResultChip({ result }: { result: ExecActionResult }) {
     );
   }
 
-  // failed
+  // Failed. This used to render `${noun} failed: ${result.error}` — the raw
+  // service string, straight through. That is how a user ended up staring at
+  // "Entity failed: Permission denied for entities actions": an internal
+  // category name, no cause they could act on, and nothing to click, while the
+  // page that grants the permission already existed one link away.
+  // Now the server sends a code and AiErrorNotice resolves the copy, the fix
+  // link and the one-click bug report from @/config/ai-errors.
   return (
-    <span
-      className="inline-flex items-center gap-1 rounded-sm border border-status-negative/20 bg-status-negative/10 px-2 py-1 text-xs text-status-negative"
-      title={result.error}
-    >
-      <X className="h-3 w-3 flex-shrink-0" />
-      {noun} failed{result.error ? `: ${result.error}` : ''}
-    </span>
+    <AiErrorNotice
+      className="w-full"
+      code={result.code}
+      subject={noun}
+      context={{
+        surface: 'cat-action',
+        actionId: result.actionId,
+        category: CAT_ACTIONS[result.actionId]?.category,
+        detail: result.error,
+      }}
+    />
   );
 }
 

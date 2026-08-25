@@ -11,6 +11,7 @@
 
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { CAT_ACTIONS, ACTION_CATEGORIES, type ActionCategory } from '@/config/cat-actions';
+import type { AiErrorCode } from '@/config/ai-errors';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getActiveAllocationPolicy } from '@/services/solon/allocation-policy';
 
@@ -32,6 +33,12 @@ interface CatPermission {
 
 interface PermissionCheck {
   allowed: boolean;
+  /**
+   * Why it was refused, as a code the UI can turn into copy + a fix link
+   * (@/config/ai-errors). `reason` stays as the audit-log string; it is not
+   * user-facing copy and must not be rendered as if it were.
+   */
+  code?: AiErrorCode;
   reason?: string;
   requiresConfirmation: boolean;
   dailyUsage?: number;
@@ -45,6 +52,7 @@ export interface SpendCaps {
 
 export interface SpendCapCheck {
   allowed: boolean;
+  code?: AiErrorCode;
   reason?: string;
   /** BTC already spent (or in flight) today across payment actions. */
   spentTodayBtc?: number;
@@ -127,11 +135,21 @@ export class CatPermissionService {
   async checkPermission(userId: string, actionId: string): Promise<PermissionCheck> {
     const action = CAT_ACTIONS[actionId];
     if (!action) {
-      return { allowed: false, reason: 'Unknown action', requiresConfirmation: true };
+      return {
+        allowed: false,
+        code: 'unknown_action',
+        reason: 'Unknown action',
+        requiresConfirmation: true,
+      };
     }
 
     if (!action.enabled) {
-      return { allowed: false, reason: 'Action is disabled', requiresConfirmation: true };
+      return {
+        allowed: false,
+        code: 'action_disabled',
+        reason: 'Action is disabled',
+        requiresConfirmation: true,
+      };
     }
 
     // Check for specific action permission first
@@ -146,6 +164,7 @@ export class CatPermissionService {
       if (!specificPerm.granted) {
         return {
           allowed: false,
+          code: 'permission_denied',
           reason: 'Permission denied for this action',
           requiresConfirmation: true,
         };
@@ -157,6 +176,7 @@ export class CatPermissionService {
         if (usage >= specificPerm.daily_limit) {
           return {
             allowed: false,
+            code: 'daily_limit_reached',
             reason: `Daily limit reached (${usage}/${specificPerm.daily_limit})`,
             requiresConfirmation: true,
             dailyUsage: usage,
@@ -188,6 +208,7 @@ export class CatPermissionService {
       if (!categoryPerm.granted) {
         return {
           allowed: false,
+          code: 'permission_denied',
           reason: `Permission denied for ${action.category} actions`,
           requiresConfirmation: true,
         };
@@ -203,6 +224,7 @@ export class CatPermissionService {
     const defaultAllowed = defaultAllowedFor(action.id, action.category);
     return {
       allowed: defaultAllowed,
+      code: defaultAllowed ? undefined : 'permission_denied',
       reason: defaultAllowed ? undefined : 'Permission not granted',
       requiresConfirmation: action.requiresConfirmation,
     };
@@ -240,6 +262,7 @@ export class CatPermissionService {
     if (caps.maxBtcPerAction !== null && amountBtc > caps.maxBtcPerAction) {
       return {
         allowed: false,
+        code: 'spend_cap_exceeded',
         reason: `Amount ${amountBtc} BTC exceeds your per-action cap of ${caps.maxBtcPerAction} BTC. Raise the cap in Cat → Permissions if intended.`,
       };
     }
@@ -251,6 +274,7 @@ export class CatPermissionService {
         const remaining = Math.max(0, caps.maxBtcPerDay - spentTodayBtc);
         return {
           allowed: false,
+          code: 'spend_cap_exceeded',
           reason: `This payment would exceed your daily budget of ${caps.maxBtcPerDay} BTC (${remaining} BTC remaining today).`,
           spentTodayBtc,
         };
@@ -266,6 +290,7 @@ export class CatPermissionService {
       if (amountBtc > platform.content.max_cat_btc_per_action) {
         return {
           allowed: false,
+          code: 'spend_cap_exceeded',
           reason: `Amount ${amountBtc} BTC exceeds the platform's per-action ceiling of ${platform.content.max_cat_btc_per_action} BTC (allocation policy v${platform.version}, set by governance — see /governance).`,
           spentTodayBtc,
         };
@@ -275,6 +300,7 @@ export class CatPermissionService {
         const remaining = Math.max(0, platform.content.max_cat_daily_spend_btc - platformSpentBtc);
         return {
           allowed: false,
+          code: 'spend_cap_exceeded',
           reason: `This payment would exceed the platform's daily ceiling of ${platform.content.max_cat_daily_spend_btc} BTC (${remaining} BTC remaining today, allocation policy v${platform.version} — see /governance).`,
           spentTodayBtc,
         };
