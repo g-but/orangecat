@@ -114,7 +114,6 @@ const KNOWN_DEAD = new Set([
   'budget_amount', // funding target
   'budget_period', // funding target window
   'goal_deadline', // funding target date
-  'target_completion', // project: promised completion date
   'dedicated_wallet_address', // wishlist: where funds actually go
   // Recurring events: needs one renderer that turns the whole set into a human
   // sentence ("every second Tuesday"), so these five come off together.
