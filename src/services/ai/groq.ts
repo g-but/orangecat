@@ -98,20 +98,21 @@ interface GroqError {
 
 // ==================== CONSTANTS ====================
 
-// Groq's best free models
+// Groq's best free models.
+//
+// Both previous entries were gone: Groq withdrew the whole llama-3.x family, so
+// this registry listed two models and served zero, and DEFAULT_GROQ_MODEL below
+// pointed at one of them. platform-llm.ts was repaired for exactly this on
+// 2026-08-26 — its comment records eight features "degrading gracefully" into
+// doing nothing. This file is the same outage, in the half nobody looked at.
+//
+// Figures are Groq's own, from GET /models on 2026-08-27. The old entries
+// claimed 128000/32768 and 128000/8192 for ids that no longer existed.
 const GROQ_MODELS = {
-  // Fast, capable model - great for chat
-  'llama-3.3-70b-versatile': {
-    name: 'Llama 3.3 70B Versatile',
-    contextWindow: 128000,
-    maxOutputTokens: 32768,
-  },
-  // Very fast, good for quick responses
-  'llama-3.1-8b-instant': {
-    name: 'Llama 3.1 8B Instant',
-    contextWindow: 128000,
-    maxOutputTokens: 8192,
-  },
+  // The platform baseline: capable, tools + JSON.
+  'openai/gpt-oss-120b': { name: 'GPT OSS 120B', contextWindow: 131072, maxOutputTokens: 65536 },
+  // Same context, smaller and faster — more headroom under Groq's daily cap.
+  'openai/gpt-oss-20b': { name: 'GPT OSS 20B', contextWindow: 131072, maxOutputTokens: 65536 },
 } as const;
 
 /**
@@ -129,24 +130,21 @@ export const CONFIGURED_GROQ_MODEL_IDS = Object.keys(GROQ_MODELS);
 /**
  * Default Groq model — the platform baseline a free (non-BYOK) user gets.
  *
- * Upgraded from llama-3.1-8b-instant → llama-3.3-70b-versatile. 8B is only
- * "Conversational" tier (weak at multi-step reasoning, grounding, tool use);
- * 70B is "Capable" (see config/model-capability.ts), a clear quality jump for
- * the baseline experience. We can't buy a better default — OrangeCat has no
- * fiat rails to pay providers — so the best free model IS the upgrade.
+ * This was `llama-3.3-70b-versatile`, itself an upgrade from
+ * `llama-3.1-8b-instant`. Groq retired both, so the default and its documented
+ * alternative died on the same day — but the reasoning survives the ids: pick
+ * the most capable free model, since we cannot buy a better one (no fiat rails
+ * to pay providers), and accept that a larger model exhausts the daily cap
+ * sooner because the chain rolls to OpenRouter when it does. gpt-oss-120b is
+ * the capable end of what Groq serves free; gpt-oss-20b is the headroom option.
  *
- * Trade-off, accepted: Groq's free tier gives 70B ~100k tokens/day vs 500k for
- * 8B, so under load the platform Groq key exhausts sooner. That's fine — the
- * fallback chain rolls to OpenRouter's gpt-oss-120b (also "Capable"), so the
- * baseline stays Capable even when Groq rate-limits; users just take the
- * already-handled provider swap. GROQ_MAX_OUTPUT_TOKENS stays at 2048 to fit
- * Groq's per-minute TPM bucket (reserved max_tokens counts against it).
+ * GROQ_MAX_OUTPUT_TOKENS stays at 2048 to fit Groq's per-minute TPM bucket
+ * (reserved max_tokens counts against it), whatever the model would allow.
  *
- * To dial back to 8B for more headroom without a deploy, set GROQ_DEFAULT_MODEL.
+ * To dial back to the smaller model without a deploy, set GROQ_DEFAULT_MODEL.
  */
 export const DEFAULT_GROQ_MODEL: keyof typeof GROQ_MODELS =
-  (process.env.GROQ_DEFAULT_MODEL as keyof typeof GROQ_MODELS | undefined) ??
-  'llama-3.3-70b-versatile';
+  (process.env.GROQ_DEFAULT_MODEL as keyof typeof GROQ_MODELS | undefined) ?? 'openai/gpt-oss-120b';
 
 /**
  * Default max output tokens for chat completions.
