@@ -16,6 +16,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { resolveHistoricalUsername } from './username-history';
 import { resolveUserWallet } from '@/domain/payments/walletResolutionService';
 import type { ResolvedWallet } from '@/domain/payments/types';
 
@@ -39,20 +40,48 @@ export async function resolveLnurlRecipient(username: string): Promise<LnurlReci
   if (!handle) {
     return null;
   }
+  // username_lower is a generated column (20260826120000), so this is an exact
+  // match on the canonical form. It replaces `ilike`, which treats `_` as a
+  // single-character wildcard — and `_` is a legal username character. Now that
+  // every newly minted handle is shaped `user_<hex>`, an ilike lookup for
+  // `user_823e4d9d2714` would also match `userX823e4d9d2714`. This lookup
+  // decides which wallet a payment settles into; it cannot be approximate.
   const { data } = await admin()
     .from(DATABASE_TABLES.PROFILES)
     .select('id, username, display_name:name')
-    .ilike('username', handle)
+    .eq('username_lower', handle.toLowerCase())
     .maybeSingle();
 
   const row = data as { id?: string; username?: string; display_name?: string } | null;
-  if (!row?.id || !row.username) {
+  if (row?.id && row.username) {
+    return {
+      userId: row.id,
+      username: row.username,
+      displayName: row.display_name || row.username,
+    };
+  }
+
+  // Not a current handle. It may be one this profile used to have: a Lightning
+  // address someone saved has no expiry, so a rename must not turn their next
+  // payment into "no such recipient".
+  const historicalId = await resolveHistoricalUsername(admin(), handle);
+  if (!historicalId) {
+    return null;
+  }
+  const { data: current } = await admin()
+    .from(DATABASE_TABLES.PROFILES)
+    .select('id, username, display_name:name')
+    .eq('id', historicalId)
+    .maybeSingle();
+
+  const owner = current as { id?: string; username?: string; display_name?: string } | null;
+  if (!owner?.id || !owner.username) {
     return null;
   }
   return {
-    userId: row.id,
-    username: row.username,
-    displayName: row.display_name || row.username,
+    userId: owner.id,
+    username: owner.username,
+    displayName: owner.display_name || owner.username,
   };
 }
 

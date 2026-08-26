@@ -22,21 +22,97 @@ jest.mock('@/lib/supabase/admin', () => ({
 const mockResolveWallet = resolveUserWallet as jest.MockedFunction<typeof resolveUserWallet>;
 const mockGetAdmin = getAdminClient as jest.MockedFunction<typeof getAdminClient>;
 
-/** Admin stub whose profiles `.ilike(...).maybeSingle()` resolves to `profile`. */
-function adminReturning(profile: Record<string, unknown> | null) {
-  return {
-    from: () => ({
+/**
+ * Table-aware admin stub.
+ *
+ * `profiles` is now looked up with `.eq('username_lower', ...)`, not `.ilike`.
+ * That is the point of the change these tests cover: ilike treats `_` as a
+ * single-character wildcard and `_` is legal in a username, so with every new
+ * handle shaped `user_<hex>` an ilike lookup for `user_823e4d9d2714` also
+ * matches `userX823e4d9d2714` — on the lookup that decides where a payment
+ * settles.
+ *
+ * `byId` serves the second profiles read, after a hit in username history.
+ */
+function adminReturning(
+  profile: Record<string, unknown> | null,
+  opts: { history?: { profile_id: string } | null; byId?: Record<string, unknown> | null } = {}
+) {
+  const calls: Array<{ table: string; column: string; value: unknown }> = [];
+  const stub = {
+    calls,
+    from: (table: string) => ({
       select: () => ({
-        ilike: () => ({
-          maybeSingle: async () => ({ data: profile, error: null }),
-        }),
+        eq: (column: string, value: unknown) => {
+          calls.push({ table, column, value });
+          const data =
+            table === 'profile_username_history'
+              ? (opts.history ?? null)
+              : column === 'id'
+                ? (opts.byId ?? null)
+                : profile;
+          return { maybeSingle: async () => ({ data, error: null }) };
+        },
       }),
     }),
   };
+  return stub;
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
+});
+
+describe('a handle the profile no longer uses', () => {
+  // 75 accounts published their email local part as a public handle and are
+  // being renamed. A username here is a Lightning address, and a saved
+  // Lightning address has no expiry — so if a rename made the old one stop
+  // resolving, somebody's next payment would fail with "no such recipient"
+  // and nobody would get an error report.
+  it('still resolves to the account, under its NEW handle', async () => {
+    mockGetAdmin.mockReturnValue(
+      adminReturning(null, {
+        history: { profile_id: 'user-1' },
+        byId: { id: 'user-1', username: 'user_a1b2c3d4e5f6', display_name: 'Mao' },
+      }) as never
+    );
+    expect(await resolveLnurlRecipient('georgy.butaev')).toEqual({
+      userId: 'user-1',
+      username: 'user_a1b2c3d4e5f6',
+      displayName: 'Mao',
+    });
+  });
+
+  it('is looked up case-insensitively, like a current handle', async () => {
+    const stub = adminReturning(null, {
+      history: { profile_id: 'user-1' },
+      byId: { id: 'user-1', username: 'user_a1b2c3d4e5f6', display_name: null },
+    });
+    mockGetAdmin.mockReturnValue(stub as never);
+    await resolveLnurlRecipient('Georgy.Butaev');
+    const historyCall = stub.calls.find((c) => c.table === 'profile_username_history');
+    expect(historyCall?.value).toBe('georgy.butaev');
+  });
+
+  it('does not resolve when the account behind it is gone', async () => {
+    mockGetAdmin.mockReturnValue(
+      adminReturning(null, { history: { profile_id: 'user-1' }, byId: null }) as never
+    );
+    expect(await resolveLnurlRecipient('georgy.butaev')).toBeNull();
+  });
+
+  it('never uses a wildcard matcher on the profiles lookup', async () => {
+    // `_` is legal in a username and ilike treats it as a wildcard, so
+    // `user_823e4d9d2714` would also match `userX823e4d9d2714`. Exact only.
+    const stub = adminReturning({ id: 'u', username: 'alice', display_name: 'A' });
+    mockGetAdmin.mockReturnValue(stub as never);
+    await resolveLnurlRecipient('Alice');
+    expect(stub.calls[0]).toEqual({
+      table: 'profiles',
+      column: 'username_lower',
+      value: 'alice',
+    });
+  });
 });
 
 describe('resolveLnurlRecipient', () => {
