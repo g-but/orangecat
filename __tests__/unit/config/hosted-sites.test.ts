@@ -21,8 +21,8 @@ import {
   siteChromeFor,
 } from '@/config/site-content';
 import { getRouteSurface } from '@/config/routes';
-import { CATALOGUE, COMPANY, MANDATE_CURVES } from '@/config/substrata';
-import { COVERAGE, coverageProgress } from '@/config/substrata-coverage';
+import { COMPANY, MANDATE_CURVES, MATERIALS } from '@/config/substrata';
+import { CHOKEPOINTS, COVERAGE, coverageProgress } from '@/config/substrata-coverage';
 
 const site = siteBySlug('substrata');
 
@@ -124,9 +124,9 @@ describe('substrata.orangecat.ch — the site is the profile, not a copy of it',
     expect(chrome?.tagline).toBe(COMPANY.tagline);
   });
 
-  it('renders every material on the desk, from the same catalogue the profile lists', () => {
-    for (const listing of CATALOGUE) {
-      expect(text).toContain(listing.title);
+  it('renders every material under coverage, from the same config the profile uses', () => {
+    for (const material of MATERIALS) {
+      expect(text).toContain(material.title);
     }
   });
 
@@ -188,8 +188,28 @@ describe('substrata.orangecat.ch — the site is the profile, not a copy of it',
     expect(pageRendersOwnHeader(sitePageAt(site!, 'map')!)).toBe(false);
   });
 
-  it('says on the desk page that prices are indicative rather than quotes', () => {
-    const deskPage = sitePageAt(site!, 'desk');
-    expect(JSON.stringify(deskPage)).toContain('not a quote');
+  it('has no desk page, because there is no desk', () => {
+    expect(sitePageAt(site!, 'desk')).toBeNull();
+    const navLabels = sitePagesFor(site!).map(page => page.navLabel);
+    expect(navLabels).not.toContain('The desk');
+  });
+
+  it('carries the non-material chokepoints, so the site shows the whole universe', () => {
+    const page = sitePageAt(site!, 'chokepoints');
+    expect(page).not.toBeNull();
+    const text = JSON.stringify(page);
+    for (const point of CHOKEPOINTS) {
+      expect(text).toContain(point.name);
+    }
+  });
+
+  it('says nowhere that the firm trades, quotes or takes a position', () => {
+    // The whole site, not one page: if a price or an invitation to deal ever
+    // reappears anywhere, this is what catches it before a reader does.
+    const everything = JSON.stringify(sitePagesFor(site!));
+    for (const phrase of ['RFQ', 'per kg', 'Indicative CHF', 'Settlement in Bitcoin']) {
+      expect(`${phrase}: ${everything.includes(phrase)}`).toBe(`${phrase}: false`);
+    }
+    expect(everything).toContain('no trading desk');
   });
 });

@@ -16,24 +16,28 @@
  * claims the profile makes in public; a test is what keeps them true.
  */
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
-  CATALOGUE,
   CHOKEPOINT_TEST,
   COMPANY,
-  DESKS,
+  COVERAGE_AREAS,
   DISCLOSURE,
   GROUP_FEATURE_KEYS,
   GROUP_PAYLOAD,
   MANDATE_CURVES,
+  MATERIALS,
   NODE_TYPES,
   PHASES,
-  PRODUCT_PAYLOADS,
-  deskFor,
-  formatChf,
+  SCOPE,
+  areaFor,
 } from '@/config/substrata';
 import {
+  CHOKEPOINTS,
   COVERAGE,
+  NODE_TYPE_LABEL,
   PRODUCER_ROLES,
+  chokepointProgress,
   coverageProgress,
   materialsFor,
 } from '@/config/substrata-coverage';
@@ -49,7 +53,7 @@ const FULFILLMENT_TYPES = ['manual', 'automatic', 'digital'];
 const PRODUCT_STATUSES = ['draft', 'active', 'paused', 'sold_out'];
 const GROUP_VISIBILITIES = ['public', 'members_only', 'private'];
 
-describe('Substrate — group profile payload', () => {
+describe('Substrata — group profile payload', () => {
   it('uses a label, governance preset and visibility the platform knows', () => {
     expect(Object.keys(GROUP_LABELS)).toContain(GROUP_PAYLOAD.label);
     expect(Object.keys(GOVERNANCE_PRESETS)).toContain(GROUP_PAYLOAD.governance_preset);
@@ -82,71 +86,100 @@ describe('Substrate — group profile payload', () => {
   });
 });
 
-describe('Substrate — the desk', () => {
-  it('lists something', () => {
-    expect(PRODUCT_PAYLOADS.length).toBe(CATALOGUE.length);
-    expect(PRODUCT_PAYLOADS.length).toBeGreaterThan(0);
-  });
+describe('Substrata — there is no trading desk, and nothing may imply one', () => {
+  // The firm publishes research and sells nothing. Standing a regulated book up
+  // is a long road through licensing, so every price, unit, lot size and
+  // invitation to deal was removed. These tests are what stop one coming back:
+  // a config that quietly regrows a price field is a config that puts an offer
+  // in front of a reader nobody is licensed to sell to.
+  const config = readFileSync(join('src', 'config', 'substrata.ts'), 'utf8');
+  const siteBuilder = readFileSync(join('src', 'config', 'site-substrata.ts'), 'utf8');
 
-  it('has unique titles, since the seed keys idempotency on (actor_id, title)', () => {
-    const titles = PRODUCT_PAYLOADS.map(p => p.title);
-    expect(new Set(titles).size).toBe(titles.length);
-  });
-
-  it.each(PRODUCT_PAYLOADS.map(p => [p.title, p] as const))(
-    '%s satisfies every user_products CHECK constraint',
-    (_title, payload) => {
-      expect(PRODUCT_CURRENCIES).toContain(payload.currency);
-      expect(PRODUCT_TYPES).toContain(payload.product_type);
-      expect(FULFILLMENT_TYPES).toContain(payload.fulfillment_type);
-      expect(PRODUCT_STATUSES).toContain(payload.status);
-      expect(payload.price).toBeGreaterThan(0);
-    }
-  );
-
-  it('prices fit numeric(20,8) — no value the column would silently round', () => {
-    for (const payload of PRODUCT_PAYLOADS) {
-      const decimals = (String(payload.price).split('.')[1] ?? '').length;
-      expect(decimals).toBeLessThanOrEqual(8);
-      expect(String(Math.trunc(payload.price)).length).toBeLessThanOrEqual(12);
+  it('carries no price, unit or lot-size field on a material', () => {
+    for (const material of MATERIALS) {
+      expect(Object.keys(material).sort()).toEqual(['area', 'spec', 'tags', 'title', 'why']);
     }
   });
 
-  it('says the price is indicative, so no listing reads as a firm quote', () => {
-    for (const payload of PRODUCT_PAYLOADS) {
-      expect(payload.description).toContain('Indicative reference');
-      expect(payload.description).toContain('not a quote');
+  it('never uses dealing language anywhere the reader can see it', () => {
+    for (const [name, source] of [
+      ['substrata.ts', config],
+      ['site-substrata.ts', siteBuilder],
+    ] as const) {
+      for (const phrase of ['RFQ', 'indicativePrice', 'Settlement in', 'per wafer']) {
+        expect(`${name} contains "${phrase}": ${source.includes(phrase)}`).toBe(
+          `${name} contains "${phrase}": false`
+        );
+      }
     }
+  });
+
+  it('states plainly what the firm does not do', () => {
+    expect(SCOPE.today.length).toBeGreaterThanOrEqual(3);
+    expect(SCOPE.today.join(' ')).toContain('do not trade');
+    expect(DISCLOSURE.today).toContain('holds no position');
+  });
+
+  it('advertises no marketplace, because there is nothing to sell', () => {
+    expect(GROUP_FEATURE_KEYS).toEqual([]);
+  });
+
+  it('keeps a desk only as a future phase, never as a running one', () => {
+    const desk = PHASES.find(phase => phase.id === 'desk');
+    expect(desk).toBeDefined();
+    expect(desk!.status).toBe('not-started');
   });
 });
 
-describe('Substrate — the mandate is enforced, not just stated', () => {
+describe('Substrata — the mandate is enforced, not just stated', () => {
   it('every desk maps to one of the three curves', () => {
     const curveIds = MANDATE_CURVES.map(curve => curve.id);
-    for (const desk of DESKS) {
-      expect(curveIds).toContain(desk.curve);
+    for (const area of COVERAGE_AREAS) {
+      expect(curveIds).toContain(area.curve);
     }
   });
 
-  it('every listed material sits on a desk, and so on a curve', () => {
-    for (const listing of CATALOGUE) {
-      const desk = deskFor(listing);
-      expect(desk).toBeDefined();
-      expect(desk.id).toBe(listing.desk);
+  it('every material sits in a coverage area, and so on a curve', () => {
+    for (const material of MATERIALS) {
+      const area = areaFor(material);
+      expect(area).toBeDefined();
+      expect(area.id).toBe(material.area);
     }
   });
 
-  it('every listing is filed under its desk name, which is the product category', () => {
-    const deskNames = DESKS.map(desk => desk.name);
-    for (const payload of PRODUCT_PAYLOADS) {
-      expect(deskNames).toContain(payload.category);
+  it('no coverage area is left empty — an empty area is scope creep on paper', () => {
+    for (const area of COVERAGE_AREAS) {
+      expect(MATERIALS.some(material => material.area === area.id)).toBe(true);
     }
   });
 
-  it('no desk is left without a listing — an empty desk is scope creep on paper', () => {
-    for (const desk of DESKS) {
-      expect(CATALOGUE.some(listing => listing.desk === desk.id)).toBe(true);
+  it('every non-material chokepoint has a known node type and a real curve', () => {
+    const curveIds = MANDATE_CURVES.map(curve => curve.id);
+    const nodeIds = NODE_TYPES.map(node => node.id);
+    for (const point of CHOKEPOINTS) {
+      expect(curveIds).toContain(point.curve);
+      expect(nodeIds).toContain(point.type);
+      expect(NODE_TYPE_LABEL[point.type]).toBeTruthy();
+      expect(point.why.length).toBeGreaterThan(0);
     }
+  });
+
+  it('proves the node taxonomy is used, not merely declared', () => {
+    // It sat in the config for a while with nothing but materials in the
+    // universe. If this ever drops back to one kind, "a node can be anything"
+    // has become a claim the coverage does not support.
+    expect(new Set(CHOKEPOINTS.map(point => point.type)).size).toBeGreaterThanOrEqual(3);
+    expect(new Set(CHOKEPOINTS.map(point => point.curve)).size).toBe(MANDATE_CURVES.length);
+  });
+
+  it('holds non-material chokepoints to the same claim limits as producers', () => {
+    const allowed = ['curve', 'jurisdictions', 'name', 'source', 'type', 'why'].sort();
+    for (const point of CHOKEPOINTS) {
+      expect(Object.keys(point).sort()).toEqual(allowed);
+    }
+    const { sourced, total } = chokepointProgress();
+    expect(total).toBe(CHOKEPOINTS.length);
+    expect(sourced).toBeLessThanOrEqual(total);
   });
 
   it('keeps a chokepoint screen and a node taxonomy, which is what makes it extensible', () => {
@@ -157,8 +190,10 @@ describe('Substrate — the mandate is enforced, not just stated', () => {
     );
   });
 
-  it('runs exactly one phase at a time — sequencing is the whole point', () => {
-    expect(PHASES.filter(phase => phase.status === 'active')).toHaveLength(1);
+  it('runs at least one phase, and never the desk', () => {
+    const active = PHASES.filter(phase => phase.status === 'active');
+    expect(active.length).toBeGreaterThanOrEqual(1);
+    expect(active.some(phase => phase.id === 'desk')).toBe(false);
   });
 
   it('commits to disclosure before any position exists, which is the only time it is credible', () => {
@@ -166,15 +201,15 @@ describe('Substrate — the mandate is enforced, not just stated', () => {
   });
 });
 
-describe('Substrate — Phase 1 coverage universe', () => {
+describe('Substrata — Phase 1 coverage universe', () => {
   it('owes a coverage entry to every material on the desk', () => {
     expect(coverageProgress().uncoveredMaterials).toEqual([]);
   });
 
-  it('covers no material the desk does not trade — coverage follows the book', () => {
-    const traded = CATALOGUE.map(listing => listing.title);
+  it('covers no material outside the list — coverage follows the universe', () => {
+    const covered = MATERIALS.map(material => material.title);
     for (const entry of COVERAGE) {
-      expect(traded).toContain(entry.material);
+      expect(covered).toContain(entry.material);
     }
   });
 
@@ -235,24 +270,5 @@ describe('Substrate — Phase 1 coverage universe', () => {
     const everyName = COVERAGE.flatMap(entry => entry.producers.map(p => p.name));
     const overlapping = [...new Set(everyName)].filter(name => materialsFor(name).length > 1);
     expect(overlapping.length).toBeGreaterThan(0);
-  });
-});
-
-describe('Substrate — price formatting', () => {
-  it('groups thousands, so a five-figure quote cannot be misread', () => {
-    expect(formatChf(15000)).toBe('15’000');
-    expect(formatChf(1400)).toBe('1’400');
-    expect(formatChf(3.2)).toBe('3.2');
-    expect(formatChf(95)).toBe('95');
-    expect(formatChf(1234567)).toBe('1’234’567');
-  });
-
-  it('formats every listed price the same way wherever it is shown', () => {
-    for (const listing of CATALOGUE) {
-      const payload = PRODUCT_PAYLOADS.find(p => p.title === listing.title);
-      expect(payload?.description).toContain(
-        `CHF ${formatChf(listing.indicativePriceChf)} per ${listing.unit}`
-      );
-    }
   });
 });

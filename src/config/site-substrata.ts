@@ -16,20 +16,26 @@
  */
 
 import {
-  CATALOGUE,
   CHOKEPOINT_TEST,
   COMPANY,
-  COMPLIANCE,
-  DESKS,
   DISCLOSURE,
   EXCLUSION_RULE,
   LISTING_COPY,
   MANDATE_CURVES,
+  MATERIALS,
   NODE_TYPES,
   PHASES,
-  formatChf,
+  SCOPE,
+  areaFor,
 } from './substrata';
-import { COVERAGE, PRODUCER_ROLES, coverageProgress } from './substrata-coverage';
+import {
+  CHOKEPOINTS,
+  COVERAGE,
+  NODE_TYPE_LABEL,
+  PRODUCER_ROLES,
+  chokepointProgress,
+  coverageProgress,
+} from './substrata-coverage';
 import type { SiteChrome, SitePage, SiteSection } from './site-content';
 
 const ROLE_LABEL: Record<string, string> = Object.fromEntries(
@@ -41,9 +47,9 @@ export function substrataSiteChrome(): SiteChrome {
     name: COMPANY.name,
     tagline: COMPANY.tagline,
     footerNote:
-      `${COMPANY.name} publishes its research openly and trades the materials it covers. ` +
-      'Every note states the firm’s position at time of publication. Listed prices are ' +
-      'indicative reference levels, not quotes.',
+      `${COMPANY.name} publishes research. It does not trade, broker or quote, holds no ` +
+      'position in anything it covers, and nothing here is an offer or investment advice. ' +
+      'Rows marked unverified are research leads, not findings.',
   };
 }
 
@@ -53,7 +59,7 @@ export function substrataSiteChrome(): SiteChrome {
 
 function homePage(): SitePage {
   const progress = coverageProgress();
-  const activePhase = PHASES.find(phase => phase.status === 'active');
+  const activePhases = PHASES.filter(phase => phase.status === 'active');
   const companies = new Set(COVERAGE.flatMap(entry => entry.producers.map(p => p.name))).size;
 
   return {
@@ -78,8 +84,8 @@ function homePage(): SitePage {
         heading: 'Where the research stands',
         stats: [
           {
-            label: 'Materials on the desk',
-            value: String(CATALOGUE.length),
+            label: 'Materials covered',
+            value: String(MATERIALS.length),
             note: 'Each one a chokepoint, not a commodity.',
           },
           {
@@ -88,9 +94,9 @@ function homePage(): SitePage {
             note: `Across ${companies} distinct companies.`,
           },
           {
-            label: 'Desks',
-            value: String(DESKS.length),
-            note: 'Five parts of one chain, from feedstock to actuation.',
+            label: 'Non-material chokepoints',
+            value: String(CHOKEPOINTS.length),
+            note: 'Tools, capacity, queues and know-how that gate the same curves.',
           },
         ],
       },
@@ -128,9 +134,12 @@ function homePage(): SitePage {
         })),
       },
       {
-        kind: 'prose',
-        heading: activePhase ? activePhase.label : 'Current phase',
-        paragraphs: activePhase ? [activePhase.detail] : [],
+        kind: 'definitions',
+        heading: 'Running now',
+        blurb:
+          'Two phases at once. A desk is not one of them — see Disclosure for what this ' +
+          'firm does and does not do.',
+        items: activePhases.map(phase => ({ term: phase.label, detail: phase.detail })),
       },
     ],
   };
@@ -205,23 +214,33 @@ function materialAnchor(material: string): string {
 function mapPage(): SitePage {
   const progress = coverageProgress();
 
-  const materialTables: SiteSection[] = COVERAGE.map(entry => ({
-    kind: 'table' as const,
-    heading: entry.material,
-    anchor: materialAnchor(entry.material),
-    blurb: entry.thesis,
-    columns: ['Company', 'Jurisdiction', 'Step in the chain', 'Status'],
-    // Jurisdiction codes and statuses are scanned down a column, not read
-    // across a row — mono keeps them aligned and comparable.
-    monoColumns: [1],
-    statusColumn: 3,
-    rows: entry.producers.map(producer => [
-      producer.name,
-      producer.jurisdictions.join(' '),
-      ROLE_LABEL[producer.role] ?? producer.role,
-      producer.source ? 'Sourced' : 'Unverified lead',
-    ]),
-  }));
+  // The material's own research — why it gates, and which grade actually ships
+  // — used to live on the desk page. With no desk there is no desk page, and
+  // that content belongs here anyway: it is research, not a product listing.
+  const materialById = new Map(MATERIALS.map(material => [material.title, material]));
+
+  const materialTables: SiteSection[] = COVERAGE.map(entry => {
+    const material = materialById.get(entry.material);
+    return {
+      kind: 'table' as const,
+      heading: entry.material,
+      anchor: materialAnchor(entry.material),
+      blurb: material
+        ? `${entry.thesis} Traded grade: ${material.spec} · ${areaFor(material).name}`
+        : entry.thesis,
+      columns: ['Company', 'Jurisdiction', 'Step in the chain', 'Status'],
+      // Jurisdiction codes and statuses are scanned down a column, not read
+      // across a row — mono keeps them aligned and comparable.
+      monoColumns: [1],
+      statusColumn: 3,
+      rows: entry.producers.map(producer => [
+        producer.name,
+        producer.jurisdictions.join(' '),
+        ROLE_LABEL[producer.role] ?? producer.role,
+        producer.source ? 'Sourced' : 'Unverified lead',
+      ]),
+    };
+  });
 
   return {
     path: 'map',
@@ -269,50 +288,78 @@ function mapPage(): SitePage {
 }
 
 // =====================================================================
-// THE DESK
+// CHOKEPOINTS BEYOND MATERIALS
 // =====================================================================
 
-function deskPage(): SitePage {
-  const deskSections: SiteSection[] = DESKS.map(desk => ({
+function chokepointsPage(): SitePage {
+  const progress = chokepointProgress();
+
+  // Cards, not a table. A table of names and country codes scans nicely and
+  // says nothing — the claim IS the reason it gates, and a research page that
+  // hides its reasoning behind a tidy grid has published a list, not research.
+  const byCurve = MANDATE_CURVES.map(curve => ({
     kind: 'cards' as const,
-    heading: desk.name,
-    blurb: desk.covers,
+    heading: curve.label,
+    blurb: curve.detail,
     columns: 2 as const,
-    cards: CATALOGUE.filter(listing => listing.desk === desk.id).map(listing => ({
-      title: listing.title,
-      body: listing.why,
-      meta: `CHF ${formatChf(listing.indicativePriceChf)} / ${listing.unit}  ·  ${listing.spec}`,
+    cards: CHOKEPOINTS.filter(point => point.curve === curve.id).map(point => ({
+      title: point.name,
+      body: point.why,
+      meta: [
+        NODE_TYPE_LABEL[point.type],
+        point.jurisdictions.length ? point.jurisdictions.join(' ') : 'Not geographic',
+        point.source ? 'Sourced' : 'Unverified lead',
+      ].join('  ·  '),
     })),
   }));
 
   return {
-    path: 'desk',
-    navLabel: 'The desk',
-    title: 'The desk',
-    intro: 'The materials we trade, and what we will tell you about them before you ask.',
+    path: 'chokepoints',
+    navLabel: 'Chokepoints',
+    title: 'Chokepoints',
+    intro: 'The constraints that are not materials — and often are the tighter ones.',
     sections: [
       {
         kind: 'prose',
         paragraphs: [
-          'Fifteen materials, five desks, one book. Every line here passed the same two tests ' +
-            'the research universe uses, which is why the desk and the map cover exactly the ' +
-            'same ground — the sourcing work and the research work are the same work.',
-          'Prices shown are indicative reference levels in Swiss francs for the stated unit: ' +
-            'the number to size a budget with, not a quote. Firm pricing is by RFQ against ' +
-            'grade, lot size, origin and delivery window, because every one of these markets ' +
-            'prices that way. Settlement in Bitcoin or in francs, your choice.',
+          'A material is only one kind of chokepoint. For the compute and power curves it ' +
+            'is frequently not the binding one: a lithography tool with a single supplier, ' +
+            'packaging capacity allocated years before it is used, a transformer order ' +
+            'book, an interconnection queue, and process knowledge that does not transfer ' +
+            'when a competitor buys the same equipment all gate the same three curves — ' +
+            'and none of them appears on a periodic table.',
+          'They enter coverage on exactly the tests a material does: does it move a curve, ' +
+            'and does it genuinely gate it. The unit of coverage was never the substance. ' +
+            'It is the constraint.',
+          'Each row claims what the node is and why it gates, and nothing about capacity, ' +
+            'market share or price — the same rule as the producer map, for the same ' +
+            'reason. Rows read “unverified lead” until an analyst attaches a primary source.',
         ],
       },
-      ...deskSections,
       {
-        kind: 'definitions',
-        heading: 'Before you send an RFQ',
-        items: COMPLIANCE.screening.map((rule, index) => ({
-          term: `Screening ${index + 1}`,
-          detail: rule,
-        })),
+        kind: 'stats',
+        heading: 'The universe so far',
+        stats: [
+          { label: 'Materials', value: String(MATERIALS.length) },
+          { label: 'Non-material chokepoints', value: String(progress.total) },
+          {
+            label: 'Kinds of node',
+            value: String(new Set(CHOKEPOINTS.map(point => point.type)).size),
+            note: 'Machines, processes, companies and people.',
+          },
+        ],
       },
-      { kind: 'prose', paragraphs: [COMPLIANCE.outOfScope] },
+      {
+        kind: 'meter',
+        heading: 'Verification',
+        label: 'Chokepoint rows confirmed against a primary source',
+        value: progress.sourced,
+        of: progress.total,
+        caption:
+          'Newer than the producer map and further from finished. Published anyway, ' +
+          'because a lead somebody can correct is worth more than a note nobody sees.',
+      },
+      ...byCurve,
     ],
   };
 }
@@ -326,39 +373,39 @@ function disclosurePage(): SitePage {
     path: 'disclosure',
     navLabel: 'Disclosure',
     title: 'Disclosure',
-    intro: 'We publish research on materials we trade. Here is how that is kept straight.',
+    intro: 'What this firm does, what it does not do, and what it holds.',
     sections: [
       {
+        kind: 'definitions',
+        heading: 'Today',
+        blurb: DISCLOSURE.today,
+        items: SCOPE.today.map((rule, index) => ({ term: `Position ${index + 1}`, detail: rule })),
+      },
+      {
         kind: 'prose',
+        heading: 'On the desk that does not exist',
         paragraphs: [
-          'A firm that publishes research, trades the same materials, and intends to eventually ' +
-            'own parts of the chain is publishing on its own positions. That is a workable ' +
-            'model, but only with the rule written before the first position exists — ' +
-            'afterwards, every rule looks like a response to something. So it was written on ' +
-            'day one, in the same file as the mandate.',
-          DISCLOSURE.openByDefault,
+          'Acting on this map rather than only publishing it would mean a regulated book: ' +
+            'licensing, compliance, capital and counterparty onboarding, none of it quick ' +
+            'and none of it started. It is an intention. Until it is real, no page here ' +
+            'carries a price, a lot size or an invitation to deal, because a firm that ' +
+            'advertises a capability it does not have has already told you how much its ' +
+            'other claims are worth.',
+          'The rules below are written now, in advance, for the reason a disclosure policy ' +
+            'is only ever credible before it is needed. Written after the first position, ' +
+            'every clause reads as a response to something.',
         ],
       },
       {
         kind: 'definitions',
-        heading: 'The rules',
+        heading: 'The rules, when there is something to disclose',
         items: DISCLOSURE.rules.map((rule, index) => ({
           term: `Rule ${index + 1}`,
           detail: rule,
         })),
       },
-      {
-        kind: 'definitions',
-        heading: 'Trade compliance',
-        blurb:
-          'Several of these materials are dual-use and export-controlled. The focus itself is ' +
-          'the first control: the mandate admits compute, energy and actuation, and nothing else.',
-        items: COMPLIANCE.screening.map((rule, index) => ({
-          term: `Control ${index + 1}`,
-          detail: rule,
-        })),
-      },
-      { kind: 'prose', heading: 'Out of scope', paragraphs: [COMPLIANCE.outOfScope] },
+      { kind: 'prose', heading: 'Why it is free', paragraphs: [DISCLOSURE.openByDefault] },
+      { kind: 'prose', heading: 'Out of scope', paragraphs: [SCOPE.outOfScope] },
     ],
   };
 }
@@ -366,5 +413,5 @@ function disclosurePage(): SitePage {
 // =====================================================================
 
 export function substrataSitePages(): SitePage[] {
-  return [homePage(), mandatePage(), mapPage(), deskPage(), disclosurePage()];
+  return [homePage(), mandatePage(), mapPage(), chokepointsPage(), disclosurePage()];
 }

@@ -10,9 +10,8 @@
  * the same way a person's does.
  *
  * Idempotent: resolves the founder by actor slug at runtime, upserts the group
- * by slug, the actor by group_id, membership and features by their unique keys,
- * and each listing by (actor_id, title). Never truncates. Safe to re-run.
- * Owner-gated so it can't fire by accident.
+ * by slug, the actor by group_id, and membership by its unique key. Never
+ * truncates. Safe to re-run. Owner-gated so it can't fire by accident.
  *
  * Run against the LIVE self-hosted DB (supabase.orangecat.ch) from the box:
  *   ORANGECAT_OWNER_SEED=1 npx tsx scripts/seed-substrata.ts
@@ -31,8 +30,6 @@ import {
   FOUNDER_ACTOR_SLUG,
   GROUP_FEATURE_KEYS,
   GROUP_PAYLOAD,
-  PRODUCT_PAYLOADS,
-  type MaterialProductPayload,
 } from '../src/config/substrata';
 
 loadEnv({ path: '.env.local' });
@@ -175,53 +172,6 @@ async function ensureFeatures(groupId: string, founder: FounderRow): Promise<voi
   console.log(`  ✓ features: ${GROUP_FEATURE_KEYS.join(', ')}`);
 }
 
-/** Idempotently write one catalogue listing, matched on (actor_id, title). */
-async function upsertListing(
-  groupId: string,
-  groupActorId: string,
-  founder: FounderRow,
-  listing: MaterialProductPayload
-): Promise<void> {
-  const { data: existing, error: probeErr } = await admin
-    .from('user_products')
-    .select('id')
-    .eq('actor_id', groupActorId)
-    .eq('title', listing.title)
-    .maybeSingle();
-  if (probeErr) die(`Failed to look up listing '${listing.title}': ${probeErr.message}`);
-
-  const row = {
-    // user_products.user_id is NOT NULL and records who acts; ownership for
-    // every read path is actor_id, which points at the group.
-    user_id: founder.user_id,
-    actor_id: groupActorId,
-    group_id: groupId,
-    title: listing.title,
-    description: listing.description,
-    price: listing.price,
-    currency: listing.currency,
-    product_type: listing.product_type,
-    fulfillment_type: listing.fulfillment_type,
-    category: listing.category,
-    status: listing.status,
-    tags: listing.tags,
-    inventory_count: listing.inventory_count,
-    show_on_profile: listing.show_on_profile,
-    is_test: false,
-  };
-
-  if (existing) {
-    const { error } = await admin.from('user_products').update(row).eq('id', existing.id);
-    if (error) die(`Failed to update listing '${listing.title}': ${error.message}`);
-    console.log(`  ↻ ${listing.title}`);
-    return;
-  }
-
-  const { error } = await admin.from('user_products').insert(row);
-  if (error) die(`Failed to insert listing '${listing.title}': ${error.message}`);
-  console.log(`  + ${listing.title}`);
-}
-
 async function main(): Promise<void> {
   console.log(`Seeding "${COMPANY.name}" against ${SUPABASE_URL} …`);
   const founder = await resolveFounder();
@@ -232,11 +182,9 @@ async function main(): Promise<void> {
   await ensureFounderMembership(groupId, founder);
   await ensureFeatures(groupId, founder);
 
-  console.log(`catalogue (${PRODUCT_PAYLOADS.length} listings):`);
-  for (const listing of PRODUCT_PAYLOADS) {
-    await upsertListing(groupId, groupActorId, founder, listing);
-  }
-
+  // Deliberately no product listings. Substrata publishes research and sells
+  // nothing, so seeding a catalogue would put a shop on the profile of a firm
+  // that has none. If a licensed desk ever exists, that commit adds them.
   console.log(`✓ done. View at /groups/${COMPANY.slug}.`);
 }
 

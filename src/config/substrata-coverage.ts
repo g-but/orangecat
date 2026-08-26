@@ -29,7 +29,7 @@
  * Created: 2026-08-26
  */
 
-import { CATALOGUE } from './substrata';
+import { MATERIALS, type CurveId, type NodeType } from './substrata';
 
 // =====================================================================
 // SHAPE
@@ -320,7 +320,7 @@ export function coverageProgress(): CoverageProgress {
   return {
     total: rows.length,
     sourced: rows.filter(producer => producer.source !== null).length,
-    uncoveredMaterials: CATALOGUE.map(listing => listing.title).filter(
+    uncoveredMaterials: MATERIALS.map(material => material.title).filter(
       title => !covered.has(title)
     ),
   };
@@ -331,4 +331,174 @@ export function materialsFor(companyName: string): string[] {
   return COVERAGE.filter(entry =>
     entry.producers.some(producer => producer.name === companyName)
   ).map(entry => entry.material);
+}
+
+// =====================================================================
+// CHOKEPOINTS THAT ARE NOT MATERIALS
+//
+// A material is only one kind of chokepoint, and for the compute and power
+// curves it is often not the tightest one. A tool with a single supplier,
+// packaging capacity allocated years ahead, a transformer order book, an
+// interconnection queue and a process that lives in people rather than in
+// equipment all gate the same curves — and none of them appears on a periodic
+// table. The two tests do not care what a node is made of, so these enter the
+// universe the same way and carry the same verification discipline: each row
+// claims what the node is and why it gates, and nothing about capacity,
+// share or price, because those are the numbers this firm has not sourced.
+// =====================================================================
+
+export interface Chokepoint {
+  name: string;
+  type: NodeType;
+  curve: CurveId;
+  /** ISO 3166-1 alpha-2 codes where the constraint physically sits, if narrow. */
+  jurisdictions: string[];
+  /** Why this gates a curve. The research claim, and the whole of it. */
+  why: string;
+  /** Primary source. `null` = unverified research lead, exactly as above. */
+  source: string | null;
+}
+
+function node(
+  name: string,
+  type: NodeType,
+  curve: CurveId,
+  jurisdictions: string[],
+  why: string
+): Chokepoint {
+  return { name, type, curve, jurisdictions, why, source: null };
+}
+
+/** Display label per node type, so the site never prints a raw enum. */
+export const NODE_TYPE_LABEL: Record<NodeType, string> = {
+  material: 'Material',
+  company: 'Company',
+  person: 'People',
+  machine: 'Machine',
+  process: 'Process',
+};
+
+export const CHOKEPOINTS: readonly Chokepoint[] = [
+  // ---------- Compute per joule ----------
+  node(
+    'EUV lithography scanners',
+    'machine',
+    'compute-per-joule',
+    ['NL'],
+    'One company on earth builds them, the queue is measured in years, and no second source is in progress. Every leading-edge wafer in the world is downstream of one factory.'
+  ),
+  node(
+    'EUV projection optics',
+    'process',
+    'compute-per-joule',
+    ['DE'],
+    'The mirror systems inside the scanner are polished to a tolerance one supplier has ever achieved. It is a chokepoint inside a chokepoint, and the constraint is know-how, not capacity.'
+  ),
+  node(
+    'Advanced packaging capacity',
+    'process',
+    'compute-per-joule',
+    ['TW', 'KR', 'US'],
+    'Accelerator output is gated by how many dies can be packaged onto an interposer, not by wafer starts. Capacity is allocated years ahead, which makes the allocation itself the scarce good.'
+  ),
+  node(
+    'High-bandwidth memory stacking yield',
+    'process',
+    'compute-per-joule',
+    ['KR', 'US'],
+    'Three suppliers, and the yield on stacking and bonding is knowledge that does not transfer when someone else buys the same equipment.'
+  ),
+  node(
+    'Leading-edge foundry capacity',
+    'company',
+    'compute-per-joule',
+    ['TW', 'KR', 'US'],
+    'A handful of fabs can run the newest node at volume. New capacity is a multi-year, multi-billion commitment, so the supply curve cannot answer a demand shock.'
+  ),
+  node(
+    'Photoresist formulation',
+    'process',
+    'compute-per-joule',
+    ['JP'],
+    'The chemistry is qualified per process per fab and is overwhelmingly Japanese. Substituting a resist is a re-qualification programme, not a purchase.'
+  ),
+  node(
+    'Semiconductor process engineers',
+    'person',
+    'compute-per-joule',
+    [],
+    'The constraint nobody can buy. A fab ramp moves at the speed of people who have done it before, which is why capacity announcements and capacity slip on different clocks.'
+  ),
+
+  // ---------- Joules delivered ----------
+  node(
+    'Large power transformer slots',
+    'machine',
+    'joules-delivered',
+    ['KR', 'DE', 'JP', 'US'],
+    'Lead times run to several years, and a datacentre cannot be energised without one. This gates more announced compute today than chip supply does.'
+  ),
+  node(
+    'Grid interconnection queues',
+    'process',
+    'joules-delivered',
+    [],
+    'Not a material, not a machine, and frequently the binding constraint: a multi-year administrative queue between a signed site and a live megawatt.'
+  ),
+  node(
+    'Heavy-duty gas turbine order books',
+    'machine',
+    'joules-delivered',
+    ['US', 'DE'],
+    'The fastest route to firm power at scale, and the order books are effectively sold out. A slot is worth more than the turbine price implies.'
+  ),
+  node(
+    'High-voltage cable and switchgear',
+    'machine',
+    'joules-delivered',
+    ['DE', 'IT', 'KR'],
+    'The unglamorous half of energisation. Same multi-year lead times as transformers, same inability to respond quickly to a demand shock.'
+  ),
+
+  // ---------- Actuation ----------
+  node(
+    'Rare-earth magnet sintering',
+    'process',
+    'actuation',
+    ['CN'],
+    'Even where the metal is mined elsewhere, sintering and grain-boundary diffusion are concentrated in one jurisdiction. The chokepoint sits downstream of the mine, where most coverage is not looking.'
+  ),
+  node(
+    'Precision reduction drives',
+    'company',
+    'actuation',
+    ['JP'],
+    'Harmonic and cycloidal drives set what a robot joint can do. Few qualified suppliers, and the tolerances are decades of accumulated manufacturing practice.'
+  ),
+  node(
+    'Robot-grade encoders and force sensors',
+    'company',
+    'actuation',
+    ['JP', 'DE'],
+    'Closing the loop is what separates a manipulator from an arm. Narrow supply, and qualification is per-application.'
+  ),
+];
+
+export interface ChokepointProgress {
+  total: number;
+  sourced: number;
+  byCurve: Record<string, number>;
+}
+
+/** Same honesty as the producer map: a row counts only once it has a source. */
+export function chokepointProgress(): ChokepointProgress {
+  const byCurve: Record<string, number> = {};
+  for (const point of CHOKEPOINTS) {
+    byCurve[point.curve] = (byCurve[point.curve] ?? 0) + 1;
+  }
+  return {
+    total: CHOKEPOINTS.length,
+    sourced: CHOKEPOINTS.filter(point => point.source !== null).length,
+    byCurve,
+  };
 }
