@@ -289,13 +289,21 @@ async function checkSilentlyDroppedCatTurns() {
  * number RISES, which means a new write path started deriving handles from
  * emails again.
  */
-// Measured on production 2026-08-26 AFTER the trigger fix landed. The first
-// reading taken while writing that fix said 72; five accounts signed up in the
-// hour between, so a baseline of 72 would have failed on its very first
-// nightly run — a gate red about code that is fine, which is the habit this
-// ratchet exists to avoid. The number is a floor now rather than a moving
-// target: handle_new_user no longer mints these, so nothing can add to it.
-const EMAIL_DERIVED_USERNAME_BASELINE = 77;
+// Zero, and it stays zero.
+//
+// This started as a ratchet against a live population: 77 profiles published
+// their owner's email local part as a public, crawlable handle, and they could
+// not simply be renamed because a username here is also a Lightning address.
+// scripts/rename-email-derived-usernames.sql retired all of them on
+// 2026-08-26 behind profile_username_history, so the old handles still resolve
+// and the count is genuinely 0 — verified against production, along with 0
+// display names still set to an email local part.
+//
+// A violation now means a write path started minting them again. There are
+// three that used to: the handle_new_user trigger, ensureProfile(), and two
+// profile form pre-fills. Each is covered by a test, so a regression here means
+// a FOURTH one was added.
+const EMAIL_DERIVED_USERNAME_BASELINE = 0;
 
 async function checkEmailDerivedUsernames() {
   const count = Number(await rpc('count_email_derived_usernames'));
@@ -303,18 +311,14 @@ async function checkEmailDerivedUsernames() {
   if (count > EMAIL_DERIVED_USERNAME_BASELINE) {
     violation(
       'profiles.username_from_email',
-      `${count} profiles publish their email local part as a public, crawlable handle — ` +
-        `up from the ${EMAIL_DERIVED_USERNAME_BASELINE} known on 2026-08-26, so a write path ` +
-        `is minting them again (handle_new_user, a script, or a manual fix)`,
+      `${count} profile(s) publish their email local part as a public, crawlable handle. ` +
+        `All of them were retired on 2026-08-26 and every known write path is covered by a ` +
+        `test, so this means a NEW one is minting them — find it before the count grows, and ` +
+        `retire these with scripts/rename-email-derived-usernames.sql`,
       []
     );
-  } else if (count < EMAIL_DERIVED_USERNAME_BASELINE) {
-    notes.push(
-      `profiles: ${count} email-derived handles left (was ${EMAIL_DERIVED_USERNAME_BASELINE}) — ` +
-        `lower EMAIL_DERIVED_USERNAME_BASELINE so the ratchet holds the new floor`
-    );
   } else {
-    notes.push(`profiles: ${count} email-derived handles, unchanged — no new ones minted`);
+    notes.push('profiles: no handle is an email local part');
   }
 }
 
