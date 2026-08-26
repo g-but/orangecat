@@ -26,8 +26,9 @@
  *                            or transaction events ever, while top-level posts
  *                            (a different, existing RPC) ran through last week.
  *                            Written in 20260826020000.
- *   set_typing_indicator   — typing indicators never appear.
- *   update_presence        — presence never updates.
+ *   set_typing_indicator   — typing indicators never appeared. Call deleted
+ *                            2026-08-26 in favour of a direct upsert under RLS.
+ *   update_presence        — presence never updated. Same resolution.
  *
  * One instance is a bug; four is a class, so: this gate.
  *
@@ -65,11 +66,14 @@ const MIGRATIONS = join(ROOT, 'supabase/migrations');
  * already fixed.
  */
 const KNOWN_MISSING = new Set([
-  // Messaging presence + typing. Both are fire-and-forget calls whose failure is
-  // swallowed, so the features are inert rather than broken: no error reaches
-  // the user, the indicator simply never appears.
-  'update_presence',
-  'set_typing_indicator',
+  // Empty, and the goal is to keep it that way. All four functions this gate
+  // was written for are resolved: create_timeline_event was written
+  // (20260826020000), and update_presence / set_typing_indicator were DELETED
+  // rather than written — `user_presence` is keyed by user_id, `typing_indicators`
+  // is UNIQUE (conversation_id, user_id), and both carry RLS policies that
+  // already permit exactly the writes those functions would have made. A
+  // SECURITY DEFINER function there would have re-implemented an existing check
+  // by hand, which is a privileged surface bought for nothing.
 ]);
 
 /** `supabase.rpc('name'` / `callRpc(client, 'name'` — the two shapes in this repo. */
