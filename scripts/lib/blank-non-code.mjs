@@ -27,7 +27,7 @@
  * Regex literals are only recognised where a regex can legally begin (after
  * `(,=:[!&|?{};` or a newline), so a division sign is never mistaken for one.
  */
-function blankNonCode(src) {
+function walk(src, { keepStrings = false } = {}) {
   const out = src.split('');
   const blank = (from, to) => {
     for (let k = from; k < to && k < out.length; k++) if (out[k] !== '\n') out[k] = ' ';
@@ -59,7 +59,7 @@ function blankNonCode(src) {
         if (src[j] === ch) break;
         j++;
       }
-      blank(i + 1, j);
+      if (!keepStrings) blank(i + 1, j);
       i = j + 1;
       prevSignificant = ch;
       continue;
@@ -79,7 +79,7 @@ function blankNonCode(src) {
         j++;
       }
       if (src[j] === '/') {
-        blank(i + 1, j);
+        if (!keepStrings) blank(i + 1, j);
         i = j + 1;
         prevSignificant = '/';
         continue;
@@ -91,4 +91,25 @@ function blankNonCode(src) {
   return out.join('');
 }
 
-export { blankNonCode };
+/**
+ * Blank comments AND string/regex contents. Use when you are parsing STRUCTURE
+ * (bracket depth, property names) and the literals are noise.
+ */
+function blankNonCode(src) {
+  return walk(src);
+}
+
+/**
+ * Blank comments only, leaving string contents intact. Use when the thing you
+ * are looking for IS a string literal — an RPC name, a table name, a route.
+ *
+ * This exists because check-rpc-exists.mjs reached for blankNonCode first and
+ * reported "RPCs called: 0": every name it searched for lives inside quotes, so
+ * the tokenizer had erased them all. The gate was green because it was blind,
+ * which is the exact failure it was written to catch.
+ */
+function blankComments(src) {
+  return walk(src, { keepStrings: true });
+}
+
+export { blankNonCode, blankComments };
