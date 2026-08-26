@@ -1,7 +1,8 @@
 /**
- * Seed "Substrate Materials" — a trading company whose entire book is the
- * materials a technological singularity consumes — as an OrangeCat group
- * profile with its own actor and catalogue.
+ * Seed "Substrate" — an open-source research firm covering the chokepoints
+ * between here and a technological singularity, with a trading desk on the
+ * materials it knows best — as an OrangeCat group profile with its own actor
+ * and catalogue.
  *
  * OrangeCat is the SSOT for economic entities. A company is a `group` (label
  * 'company') that owns an `actors` row of actor_type 'group'; everything the
@@ -14,7 +15,7 @@
  * Owner-gated so it can't fire by accident.
  *
  * Run against the LIVE self-hosted DB (supabase.orangecat.ch) from the box:
- *   ORANGECAT_OWNER_SEED=1 npx tsx scripts/seed-singularity-materials.ts
+ *   ORANGECAT_OWNER_SEED=1 npx tsx scripts/seed-substrate.ts
  *
  * Requires in the environment (already in .env.local on the box):
  *   NEXT_PUBLIC_SUPABASE_URL   — self-hosted Supabase URL
@@ -32,7 +33,7 @@ import {
   GROUP_PAYLOAD,
   PRODUCT_PAYLOADS,
   type MaterialProductPayload,
-} from '../src/config/singularity-materials';
+} from '../src/config/substrate';
 
 loadEnv({ path: '.env.local' });
 

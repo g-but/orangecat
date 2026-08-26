@@ -1,24 +1,31 @@
 /**
- * "Substrate Materials" — OrangeCat-side SSOT
+ * "Substrate" — OrangeCat-side SSOT
  *
- * A trading company with exactly one focus: the physical inputs that a
- * technological singularity actually consumes. Intelligence is not made of
- * software. It is made of purified tin, neon, polysilicon, ruthenium,
- * electrical steel and rare-earth metal — and every one of those has a
- * chokepoint, a lead time and a counterparty.
+ * An open-source research firm covering the chokepoints between here and a
+ * technological singularity, with a trading desk on the materials it knows
+ * best. Intelligence is not made of software. It is made of purified tin,
+ * neon, polysilicon, ruthenium, transformer steel and rare-earth metal — and
+ * behind each of those is a producer, a lead time and a counterparty that
+ * almost nobody has written down in public.
  *
- * This file is the single source of truth for the company's identity, its
- * mandate (the inclusion test that makes "solely focused" a rule rather than a
- * slogan), its desks, its listed catalogue, and its compliance stance. The seed
- * that registers it on-platform (scripts/seed-singularity-materials.ts) reads
- * this file and nothing else, so the copy is written ONCE here and reused by
- * the seed today and by any /groups rendering or Cat context later.
+ * THE ASSET IS THE MAP, NOT THE BOOK. Trading a commodity and researching a
+ * robotics company are the same work: knowing who makes what, at what grade,
+ * on what lead time, and who is dependent on them. So the map is the product;
+ * the desk is one way to monetise it, and eventually the chain the firm
+ * intends to integrate is the chain it already mapped.
  *
- * On-platform shape: a `group` with label 'company' (public, so the profile is
- * readable by anyone), its own `actors` row of actor_type 'group', and a
- * catalogue of `user_products` owned by that group actor. Ownership follows the
- * same convention as Revive My Old Ride — the founder's `mao` actor creates it;
- * swap to a dedicated actor later by changing FOUNDER_ACTOR_SLUG.
+ * This file is the single source of truth for the firm's identity, its mandate
+ * (the tests that make "focused" a rule rather than a slogan), its phases, its
+ * desks, its listed catalogue, and its compliance and disclosure stance. The
+ * Phase 1 coverage universe lives next door in `substrate-coverage.ts`. The
+ * seed that registers the firm on-platform (scripts/seed-substrate.ts) reads
+ * these two files and nothing else.
+ *
+ * On-platform shape: a `group` with label 'company' (public, so the research
+ * and the book are both readable), its own `actors` row of actor_type 'group',
+ * and a catalogue of `user_products` owned by that group actor. Ownership
+ * follows the Revive My Old Ride convention — the founder's `mao` actor
+ * creates it; swap to a dedicated actor by changing FOUNDER_ACTOR_SLUG.
  *
  * Created: 2026-08-26
  */
@@ -27,7 +34,7 @@
 // OWNERSHIP
 // =====================================================================
 
-/** Actor slug of the user who founds the company (created_by + founder seat). */
+/** Actor slug of the user who founds the firm (created_by + founder seat). */
 export const FOUNDER_ACTOR_SLUG = 'mao';
 
 // =====================================================================
@@ -35,62 +42,188 @@ export const FOUNDER_ACTOR_SLUG = 'mao';
 // =====================================================================
 
 export const COMPANY = {
-  name: 'Substrate Materials',
-  /** Also the actor slug and the public path: /groups/substrate-materials */
-  slug: 'substrate-materials',
-  tagline: 'The materials intelligence is made of.',
+  name: 'Substrate',
+  /** Also the actor slug and the public path: /groups/substrate */
+  slug: 'substrate',
+  tagline: 'The chokepoints between here and the singularity, written down in public.',
 } as const;
 
 // =====================================================================
-// THE MANDATE — why this company is "solely focused"
+// THE MANDATE — first test: which curve does it move?
 // =====================================================================
 
 /**
- * The inclusion test. A material is traded only if it sits on the critical path
- * of one of three curves. Everything else — however profitable — is declined.
- * This is the whole of the company's strategy; the desks below are just the
- * test applied to five parts of the supply chain.
+ * Coverage and trading both start here. A node enters the universe only if it
+ * sits on the critical path of one of three curves. Everything else — however
+ * interesting, however profitable — is out of scope.
  */
 export const MANDATE_CURVES = [
   {
     id: 'compute-per-joule',
     label: 'Compute per joule',
-    test: 'Does this material make a thought cheaper to have?',
+    test: 'Does this make a thought cheaper to have?',
     detail:
-      'Feedstock, lithography consumables and thermal materials — the inputs ' +
-      'that decide how much computation a watt can buy.',
+      'Feedstock, lithography consumables, thermal materials, and the firms ' +
+      'that make them — what decides how much computation a watt can buy.',
   },
   {
     id: 'joules-delivered',
     label: 'Joules delivered',
-    test: 'Does this material get power to where the compute is?',
+    test: 'Does this get power to where the compute is?',
     detail:
-      'Transformer steel, conductors, superconducting tape and the cryogens ' +
-      'that keep them cold. A datacentre that cannot be energised is a shed.',
+      'Transformer steel, conductors, superconducting tape, the cryogens that ' +
+      'keep them cold, and the interconnect queue. A datacentre that cannot ' +
+      'be energised is a shed.',
   },
   {
     id: 'actuation',
     label: 'Actuation',
-    test: 'Does this material give intelligence hands?',
+    test: 'Does this give intelligence hands?',
     detail:
-      'Permanent-magnet feed and the metals behind precision drives — the ' +
+      'Permanent-magnet feed, precision drives, additive manufacturing — the ' +
       'step where a model stops advising and starts doing physical work.',
+  },
+] as const;
+
+export type CurveId = (typeof MANDATE_CURVES)[number]['id'];
+
+// =====================================================================
+// THE MANDATE — second test: is it actually a chokepoint?
+// =====================================================================
+
+/**
+ * Being on a curve is not enough; most of a supply chain is substitutable and
+ * therefore uninteresting. A node earns coverage when it GATES a curve. These
+ * four factors are the screen, and they are why the universe stays countable
+ * as the firm expands from materials into robotics, compute and manufacturing.
+ */
+export const CHOKEPOINT_TEST = [
+  {
+    id: 'concentration',
+    question: 'How few suppliers actually qualify?',
+    detail: 'Qualified is not the same as capable — a producer nobody has certified is not supply.',
+  },
+  {
+    id: 'substitutability',
+    question: 'What happens if it disappears — a workaround, or a stop?',
+    detail: 'A material with a drop-in replacement is a price story, not a chokepoint.',
+  },
+  {
+    id: 'lead-time',
+    question: 'How long from order to delivery, and from decision to new capacity?',
+    detail: 'Large power transformers gate more datacentres today than chip supply does.',
+  },
+  {
+    id: 'demand-inelasticity',
+    question: 'Can the buyer walk away at any price?',
+    detail: 'If the machine does not exist without it, the demand curve is a wall.',
   },
 ] as const;
 
 /**
  * The exclusion rule, stated plainly because it is the harder half of focus.
- * A trading desk that will quote anything is a trading desk with no thesis.
+ * A firm that will cover anything has no edge, and a desk that will quote
+ * anything has no thesis.
  */
 export const EXCLUSION_RULE = {
-  rule: 'If a material moves none of the three curves, we do not quote it.',
+  rule: 'On a curve, and a chokepoint. Fail either test and we neither cover it nor quote it.',
   explainer:
-    'We decline business every week. Not because the margin is bad, but ' +
-    'because a book that drifts into general commodities loses the only edge ' +
-    'a specialist has: knowing, for fifteen materials, every qualified ' +
-    'producer, every purity grade that actually ships, and every lead time ' +
-    'that is real rather than quoted.',
+    'We decline business and coverage every week. Not because either is ' +
+    'unprofitable, but because a universe that drifts into general commodities ' +
+    'and general tech loses the only edge a specialist has: knowing, for a ' +
+    'countable number of nodes, every qualified producer, every grade that ' +
+    'actually ships, and every lead time that is real rather than quoted.',
 } as const;
+
+// =====================================================================
+// NODE TYPES — how the universe grows without becoming "everything"
+// =====================================================================
+
+/**
+ * The unit of coverage is a chokepoint NODE, not an asset class. A node can be
+ * a material, a company, a person, a machine or a process — the tests above
+ * apply identically to all of them. This is what lets the firm move from rare
+ * earths into robotics, AI hardware and additive manufacturing without a
+ * change of strategy: you do not decide to cover robotics, you ARRIVE at it by
+ * tracing dysprosium downstream. The graph grows by traversal, not by ambition.
+ */
+export const NODE_TYPES = [
+  {
+    id: 'material',
+    label: 'Material',
+    detail: 'A substance with a grade, a purity and a producer.',
+  },
+  {
+    id: 'company',
+    label: 'Company',
+    detail: 'Public or private. Most of the interesting ones are private.',
+  },
+  { id: 'person', label: 'Person', detail: 'Where the process knowledge actually lives.' },
+  {
+    id: 'machine',
+    label: 'Machine',
+    detail: 'Tools with single-digit annual output and multi-year queues.',
+  },
+  {
+    id: 'process',
+    label: 'Process',
+    detail: 'Know-how that does not transfer with a purchase order.',
+  },
+] as const;
+
+export type NodeType = (typeof NODE_TYPES)[number]['id'];
+
+// =====================================================================
+// PHASES — research first, trade second, integrate third
+// =====================================================================
+
+/**
+ * Research leads because it costs nothing but attention, because it IS the
+ * sourcing work the desk needs anyway, and because publishing is the
+ * distribution engine: put the map out, the people who work in it correct it,
+ * and you become the place people check. The research is given away; what is
+ * monetised is the position it buys — deal flow, counterparty access, and a
+ * view of where the chain is thin.
+ */
+export const PHASES = [
+  {
+    id: 'producers-of-the-fifteen',
+    label: 'Phase 1 — the producers of the fifteen',
+    status: 'active',
+    detail:
+      'Map every qualified producer of the fifteen materials already on the ' +
+      'desk. Mostly private, mostly uncovered: the sell side writes about ' +
+      'chip designers, not about who fires crucible-grade quartz. Every ' +
+      'profile is simultaneously research and a counterparty for the desk.',
+  },
+  {
+    id: 'one-hop-out',
+    label: 'Phase 2 — one hop out',
+    status: 'planned',
+    detail:
+      'From each producer, one hop upstream (their inputs) and one downstream ' +
+      '(their buyers). This is where robotics, AI hardware and additive ' +
+      'manufacturing enter the universe on their own — as counterparties in a ' +
+      'chain already being mapped, not as a new vertical.',
+  },
+  {
+    id: 'desk-beyond-commodities',
+    label: 'Phase 3 — the desk beyond commodities',
+    status: 'planned',
+    detail:
+      'Apply the same map to equities, private positions and offtake. The ' +
+      'research does not change; only the instrument does.',
+  },
+  {
+    id: 'integration',
+    label: 'Phase 4 — integration',
+    status: 'planned',
+    detail:
+      'Take positions in the chain, upstream and downstream. By construction ' +
+      'the acquisition pipeline is the coverage universe — you buy into what ' +
+      'you already understand better than the seller does.',
+  },
+] as const;
 
 // =====================================================================
 // DESKS
@@ -102,7 +235,7 @@ export interface Desk {
   id: DeskId;
   /** Also the `category` written onto every listing on this desk. */
   name: string;
-  curve: (typeof MANDATE_CURVES)[number]['id'];
+  curve: CurveId;
   covers: string;
 }
 
@@ -162,10 +295,13 @@ export const DESKS: readonly Desk[] = [
 // is by RFQ against grade, lot size, origin and delivery window, because every
 // one of these markets prices that way. The unit is carried in the copy, since
 // `user_products` has no unit column.
+//
+// This list is also the Phase 1 work queue: `substrate-coverage.ts` owes a
+// producer map to every title here, and a test enforces the correspondence.
 // =====================================================================
 
 export interface MaterialListing {
-  /** Product title as it appears on the profile. */
+  /** Product title as it appears on the profile, and the coverage key. */
   title: string;
   desk: DeskId;
   /** Unit the indicative price refers to, e.g. 'kg', 'wafer', 'metre'. */
@@ -324,7 +460,7 @@ export const CATALOGUE: readonly MaterialListing[] = [
     spec: '≥99% dysprosium metal. Export-licence and end-use documentation required.',
     tags: ['dysprosium', 'rare-earth', 'magnets', 'export-controlled'],
   },
-] as const;
+];
 
 // =====================================================================
 // COMPLIANCE — the reason a focused book stays a legal one
@@ -352,6 +488,34 @@ export const COMPLIANCE = {
 } as const;
 
 // =====================================================================
+// DISCLOSURE — installed now because it cannot be retrofitted
+// =====================================================================
+
+/**
+ * A firm that publishes research, trades the same materials, and intends to
+ * eventually own parts of the chain is publishing on its own positions. That
+ * is a workable model, but only with a disclosure rule written before the
+ * first position exists — afterwards, every rule looks like a response to
+ * something. So it is written here, in the same file as the mandate.
+ */
+export const DISCLOSURE = {
+  rules: [
+    'Every published note states the firm’s position in what it covers — long, ' +
+      'short, flat, brokering, or in negotiation — at time of publication.',
+    'Research is never withheld, delayed or softened because the desk holds a ' +
+      'position. If those two conflict, the position is the thing that moves.',
+    'Nothing is published to move a price the desk is about to trade against. ' +
+      'Notes go out on a schedule, not on a fill.',
+    'Sources are named. An unsourced claim is marked unverified rather than ' +
+      'stated, however confident the analyst is.',
+  ],
+  openByDefault:
+    'The research is free and public. What is monetised is the position the ' +
+    'research buys — counterparty access, deal flow, and knowing where the ' +
+    'chain is thin — not the research itself.',
+} as const;
+
+// =====================================================================
 // PUBLIC LISTING COPY
 // =====================================================================
 
@@ -359,20 +523,26 @@ export const LISTING_COPY = {
   headline: COMPANY.name,
   subhead: COMPANY.tagline,
   body: [
-    'Substrate Materials is a trading company with one book: the physical ' +
-      'inputs a technological singularity consumes. Not "tech commodities" ' +
-      'broadly — the fifteen or so materials that sit on the critical path ' +
-      'between a design and a working machine.',
-    'A material is listed only if it moves one of three curves: compute per ' +
-      'joule, joules delivered, or actuation. Everything else we decline, ' +
-      'including business we could profitably do. Focus is the product — for ' +
-      'fifteen materials we know every qualified producer, every purity grade ' +
-      'that actually ships, and every lead time that is real rather than quoted.',
+    'Substrate is an open-source research firm covering the physical ' +
+      'chokepoints between here and a technological singularity — and a ' +
+      'trading desk on the materials it knows best. The research is free. ' +
+      'The map is the product.',
+    'A node enters coverage only if it passes two tests: it moves one of ' +
+      'three curves — compute per joule, joules delivered, or actuation — and ' +
+      'it genuinely gates that curve, on concentration, substitutability, ' +
+      'lead time and demand inelasticity. A node can be a material, a ' +
+      'company, a person, a machine or a process; the tests do not care. That ' +
+      'is how the universe reaches robotics and additive manufacturing ' +
+      'without ever becoming "everything": you arrive at them by tracing a ' +
+      'chain you were already mapping.',
+    'First phase: every qualified producer of the fifteen materials on the ' +
+      'desk. The sell side writes about chip designers. Almost nobody writes ' +
+      'about who fires crucible-grade quartz, and that is the gap.',
     'Quotes are by RFQ against grade, lot size, origin and delivery window. ' +
       'Listed prices are indicative reference levels for budgeting. ' +
       'Settlement in Bitcoin or in francs, counterparty’s choice.',
   ],
-  cta: 'Send us an RFQ',
+  cta: 'Read the map, or send us an RFQ',
 } as const;
 
 // =====================================================================
@@ -396,16 +566,19 @@ export const GROUP_PAYLOAD: CompanyGroupPayload = {
   description: [LISTING_COPY.subhead, '', ...LISTING_COPY.body].join('\n'),
   label: 'company',
   tags: [
+    'research',
+    'open-source-research',
+    'supply-chain',
     'trading',
-    'materials',
     'semiconductors',
     'rare-earths',
     'energy',
     'robotics',
     'singularity',
   ],
-  // The 'company' label defaults to members_only; a trading counterparty has to
-  // be able to read the book before it can send an RFQ, so this one is public.
+  // The 'company' label defaults to members_only. This firm publishes its
+  // research and expects counterparties to read the book before sending an
+  // RFQ, so both halves have to be readable without an account.
   is_public: true,
   visibility: 'public',
   governance_preset: 'hierarchical',
@@ -415,7 +588,7 @@ export const GROUP_PAYLOAD: CompanyGroupPayload = {
  * Features enabled on creation. `marketplace` is what lets the group list the
  * catalogue. `treasury` is deliberately NOT enabled: GROUP_FEATURES.treasury
  * requires a `bitcoin_address` on the group, and there is no wallet for this
- * company yet. Enable it in the same commit that adds the address.
+ * firm yet. Enable it in the same commit that adds the address.
  */
 export const GROUP_FEATURE_KEYS: readonly string[] = ['marketplace'];
 
