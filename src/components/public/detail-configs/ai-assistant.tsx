@@ -60,12 +60,26 @@ export const aiAssistantDetailConfig: EntityDetailConfig = {
     ) : undefined,
   renderHeaderExtra: entity => {
     const pricing = getAiPricing(entity);
+    const freePerDay = Number(entity.free_messages_per_day ?? 0);
+    // Only shown when the assistant actually charges. On a free assistant every
+    // message costs nothing regardless of this number, so "50 free per day"
+    // would advertise a cap that does not exist — and `isFree` here is exactly
+    // "computeCreatorChargeBtc returns 0", the same condition the charge path
+    // uses, so the badge cannot disagree with the bill.
+    const showFreeAllowance = !pricing.isFree && Number.isFinite(freePerDay) && freePerDay > 0;
     return (
-      <AssistantPriceChip
-        isFree={pricing.isFree}
-        amountBtc={pricing.amount}
-        suffix={pricing.suffix}
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <AssistantPriceChip
+          isFree={pricing.isFree}
+          amountBtc={pricing.amount}
+          suffix={pricing.suffix}
+        />
+        {showFreeAllowance && (
+          <Badge variant="secondary">
+            First {freePerDay} free each day
+          </Badge>
+        )}
+      </div>
     );
   },
   renderDetails: entity => {

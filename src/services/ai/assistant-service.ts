@@ -130,7 +130,6 @@ export async function createAssistant(
       system_prompt: d.system_prompt,
       welcome_message: d.welcome_message,
       personality_traits: d.personality_traits || [],
-      knowledge_base_urls: d.knowledge_base_urls || [],
       model_preference: d.model_preference || 'any',
       max_tokens_per_response: d.max_tokens_per_response || 1000,
       temperature: d.temperature || 0.7,

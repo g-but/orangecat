@@ -176,7 +176,6 @@ const defaultValues: AIAssistantFormData = {
   system_prompt: '',
   welcome_message: '',
   personality_traits: [],
-  knowledge_base_urls: [],
   model_preference: 'any',
   max_tokens_per_response: 1000,
   temperature: 0.7,

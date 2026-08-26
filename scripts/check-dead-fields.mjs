@@ -55,6 +55,15 @@ const SRC = join(ROOT, 'src');
  *                     the loan refinance terms and the event venue address,
  *                     online join link, RSVP deadline and all-day flag. Those
  *                     six came off by being fixed, not by being excused.
+ *   32 (2026-08-25) — service delivery/area, wishlist item quantity + partial
+ *                     funding, event recurrence + video, loan term.
+ *   29 (2026-08-26) — the assistant pair, resolved in opposite directions:
+ *                     free_messages_per_day now renders (it is enforced), and
+ *                     knowledge_base_urls was DELETED from the schema (it is
+ *                     not — nothing reads those URLs). A field can leave this
+ *                     list by being shown or by being admitted not to exist;
+ *                     what it must never do is leave by being displayed as
+ *                     something the system does not actually do.
  */
 const KNOWN_DEAD = new Set([
   // === Identifiers and routing plumbing — never reader-facing content. =======
@@ -104,8 +113,6 @@ const KNOWN_DEAD = new Set([
   // Each line is a page that should show a thing it currently swallows. Removing
   // a line by rendering the field is always the preferred way to fix a failure
   // of this check.
-  'knowledge_base_urls', // assistant: the sources it answers from
-  'free_messages_per_day', // assistant: a pricing term the visitor should see
   'fulfillment_type', // how delivery or repayment actually happens
   'allocations', // funding splits
   'beneficiaries', // funding splits
