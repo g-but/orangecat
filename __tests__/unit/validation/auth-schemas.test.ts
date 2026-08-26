@@ -97,16 +97,29 @@ describe('registerSchema', () => {
       }
     });
 
-    it('rejects a username longer than 20 characters', () => {
+    // Registration used to stop at 20 while profile edit allowed 30, so a
+    // 21-character name was unregisterable but reachable by renaming — and 42
+    // production usernames (4 of them real accounts) are already longer than 20,
+    // which means narrowing profile edit to match would have broken those users'
+    // ability to save their own profile. The rules were unified upward at 30.
+    it('accepts a 30-character username, the same limit profile edit allows', () => {
       const result = registerSchema.safeParse({
         ...validPayload,
-        username: 'a'.repeat(21),
+        username: 'a'.repeat(30),
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects a username longer than 30 characters', () => {
+      const result = registerSchema.safeParse({
+        ...validPayload,
+        username: 'a'.repeat(31),
       });
       expect(result.success).toBe(false);
       if (!result.success) {
         const usernameErrors = result.error.flatten().fieldErrors.username;
         expect(usernameErrors).toBeDefined();
-        expect(usernameErrors![0]).toMatch(/less than 20 characters/i);
+        expect(usernameErrors![0]).toMatch(/at most 30 characters/i);
       }
     });
 

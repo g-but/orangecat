@@ -8,6 +8,31 @@ import {
   HELP_WANTED_VALUES,
   MAX_HELP_WANTED_SELECTIONS,
 } from '@/config/maker-status';
+import {
+  USERNAME_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_PATTERN,
+  USERNAME_RULE_MESSAGE,
+  reservedReason,
+} from '@/config/usernames';
+
+/**
+ * The one username schema. Registration and profile-edit both use it, so a name
+ * you cannot sign up with is not a name you can switch to later — which is
+ * exactly what the two divergent copies of these rules used to allow (register
+ * capped at 20 characters, profile edit at 30).
+ *
+ * The reserved check lives here rather than in a route so that every path which
+ * validates a username gets it, including ones written later.
+ */
+export const usernameSchema = z
+  .string()
+  .min(USERNAME_MIN_LENGTH, `Username must be at least ${USERNAME_MIN_LENGTH} characters`)
+  .max(USERNAME_MAX_LENGTH, `Username must be at most ${USERNAME_MAX_LENGTH} characters`)
+  .regex(USERNAME_PATTERN, USERNAME_RULE_MESSAGE)
+  .refine(value => reservedReason(value) === null, value => ({
+    message: `"${value}" is reserved — ${reservedReason(value) ?? 'not available'}`,
+  }));
 
 /**
  * Lightning Address Validation
@@ -51,7 +76,6 @@ export function isValidLightningAddress(address: string): boolean {
 // place: src/types/wallet.ts. A regex approximation that accepts typo'd
 // addresses is worse than none.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{3,30}$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function isValidUUID(value: string): boolean {
@@ -68,12 +92,7 @@ export function isValidEmail(email: string): boolean {
   return EMAIL_PATTERN.test(email.trim());
 }
 
-export function isValidUsername(username: string): boolean {
-  if (!username || typeof username !== 'string') {
-    return false;
-  }
-  return USERNAME_PATTERN.test(username.trim());
-}
+export { isValidUsername } from '@/config/usernames';
 
 // =============================================================================
 // REUSABLE FIELD HELPERS
@@ -163,14 +182,7 @@ export const lightningAddressSchema = z
 // Note: Server-side normalizes empty strings to undefined before validation
 // Username is optional (can be set during registration/profile update)
 export const profileSchema = z.object({
-  username: z
-    .string()
-    .min(3, 'Username must be at least 3 characters')
-    .max(30, 'Username must be at most 30 characters')
-    .regex(
-      /^[a-zA-Z0-9_-]+$/,
-      'Username can only contain letters, numbers, underscores, and hyphens'
-    ), // Required field - no optional/nullable
+  username: usernameSchema, // Required field - no optional/nullable
   name: optionalText(100),
   bio: optionalText(500),
   // Structured location fields for better search functionality

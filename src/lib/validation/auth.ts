@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { usernameSchema } from './base';
 import { passwordSchema } from './password';
 
 export const loginSchema = z.object({
@@ -9,14 +10,9 @@ export const loginSchema = z.object({
 export const registerSchema = z
   .object({
     email: z.string().email('Please enter a valid email'),
-    username: z
-      .string()
-      .min(3, 'Username must be at least 3 characters')
-      .max(20, 'Username must be less than 20 characters')
-      .regex(
-        /^[a-zA-Z0-9_-]+$/,
-        'Username can only contain letters, numbers, hyphens, and underscores'
-      ),
+    // Was a third copy of these rules, capped at 20 while profile edit allowed
+    // 30 — so a name you could not register was one you could rename to.
+    username: usernameSchema,
     password: passwordSchema,
     confirmPassword: z.string(),
   })
