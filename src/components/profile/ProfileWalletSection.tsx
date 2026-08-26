@@ -12,6 +12,8 @@ import BitcoinDonationCard from '@/components/bitcoin/BitcoinDonationCard';
 import BitcoinWalletStatsCompact from '@/components/bitcoin/BitcoinWalletStatsCompact';
 import { WalletsSkeleton } from '@/components/profile/ProfileSkeleton';
 import { getWalletReceiveHandle } from '@/lib/wallet-receive-handle';
+import { computeWalletGoalProgress } from '@/lib/wallet-goal';
+import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 
 interface ProfileWalletSectionProps {
   wallets: Wallet[];
@@ -38,7 +40,8 @@ export default function ProfileWalletSection({
   legacyBalance,
   onEditClick,
 }: ProfileWalletSectionProps) {
-  const { formatAmountBtc } = useDisplayCurrency();
+  const { formatAmountBtc, formatPrice } = useDisplayCurrency();
+  const { convertFromBTC } = useCurrencyConversion();
 
   // Show loading skeleton
   if (loading) {
@@ -59,9 +62,16 @@ export default function ProfileWalletSection({
             .filter(w => w.is_active)
             .map(wallet => {
               const categoryInfo = WALLET_CATEGORIES[wallet.category];
-              const progressPercent = wallet.goal_amount
-                ? (wallet.balance_btc / wallet.goal_amount) * 100
-                : 0;
+              // Balance is BTC, the goal is in goal_currency — see
+              // lib/wallet-goal.ts for why dividing them directly is wrong.
+              const goal = computeWalletGoalProgress(
+                {
+                  balanceBtc: wallet.balance_btc,
+                  goalAmount: wallet.goal_amount,
+                  goalCurrency: wallet.goal_currency,
+                },
+                convertFromBTC
+              );
               const handle = getWalletReceiveHandle(wallet);
 
               return (
@@ -95,25 +105,36 @@ export default function ProfileWalletSection({
                     </div>
                   )}
 
-                  {/* Goal progress — tracked from the on-chain balance */}
-                  {handle.kind === 'onchain' && wallet.goal_amount && (
+                  {/* Goal progress — tracked from the on-chain balance. Both
+                      amounts in the goal's own currency; bar only when the
+                      balance could be converted into it. */}
+                  {handle.kind === 'onchain' && goal && (
                     <div className="mb-3">
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-fg-secondary">Goal</span>
                         <span className="font-medium">
-                          {formatAmountBtc(wallet.balance_btc)} / {wallet.goal_amount}{' '}
-                          {wallet.goal_currency}
+                          {goal.balanceInGoalCurrency === null
+                            ? formatPrice(goal.goalAmount, goal.currency)
+                            : `${formatPrice(goal.balanceInGoalCurrency, goal.currency)} / ${formatPrice(goal.goalAmount, goal.currency)}`}
                         </span>
                       </div>
-                      <div className="w-full bg-surface-raised rounded-full h-2">
-                        <div
-                          className="bg-bitcoinOrange h-2 rounded-full transition-all"
-                          style={{ width: `${Math.min(progressPercent, 100)}%` }}
-                        />
-                      </div>
-                      <div className="text-xs text-fg-secondary mt-1">
-                        {progressPercent.toFixed(1)}% funded
-                      </div>
+                      {goal.percent === null ? (
+                        <div className="text-xs text-fg-secondary mt-1">
+                          Progress needs a {goal.currency} rate, which isn’t available right now.
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-full bg-surface-raised rounded-full h-2">
+                            <div
+                              className="bg-bitcoinOrange h-2 rounded-full transition-all"
+                              style={{ width: `${Math.min(goal.percent, 100)}%` }}
+                            />
+                          </div>
+                          <div className="text-xs text-fg-secondary mt-1">
+                            {goal.percent.toFixed(1)}% funded
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
 

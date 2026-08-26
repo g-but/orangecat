@@ -11,6 +11,9 @@ import type { WalletCardProps } from '../types';
 import { truncateAddress } from '@/utils/string';
 import { displayBTC } from '@/services/currency/formatting';
 import { getWalletReceiveHandle } from '@/lib/wallet-receive-handle';
+import { computeWalletGoalProgress } from '@/lib/wallet-goal';
+import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 export function WalletCard({
   wallet,
@@ -24,6 +27,10 @@ export function WalletCard({
   onFieldFocus,
   isConnectionUnusable = false,
 }: WalletCardProps) {
+  // Before the edit-mode early return: hooks must run on every render.
+  const { convertFromBTC } = useCurrencyConversion();
+  const { formatPrice } = useDisplayCurrency();
+
   if (isEditing && isOwner) {
     return (
       <WalletForm
@@ -55,7 +62,16 @@ export function WalletCard({
   }
 
   const categoryInfo = WALLET_CATEGORIES[wallet.category];
-  const progressPercent = wallet.goal_amount ? (wallet.balance_btc / wallet.goal_amount) * 100 : 0;
+  // Balance is BTC, the goal is in goal_currency — see lib/wallet-goal.ts for
+  // why dividing them directly (as this line used to) is wrong.
+  const goal = computeWalletGoalProgress(
+    {
+      balanceBtc: wallet.balance_btc,
+      goalAmount: wallet.goal_amount,
+      goalCurrency: wallet.goal_currency,
+    },
+    convertFromBTC
+  );
 
 
   // The public receive handle to show + copy. A wallet may have an on-chain
@@ -189,22 +205,35 @@ export function WalletCard({
         </div>
       )}
 
-      {/* Goal progress — tracked from the on-chain balance, so same condition */}
-      {tracksOnChainBalance && wallet.goal_amount && (
+      {/* Goal progress — tracked from the on-chain balance, so same condition.
+          Both sides of the "saved / target" pair are shown in the goal's own
+          currency; a bar and a percentage appear only when the balance could
+          actually be converted into it. */}
+      {tracksOnChainBalance && goal && (
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
             <span className="text-fg-secondary font-medium">Goal</span>
             <span className="font-semibold text-fg-primary">
-              {displayBTC(wallet.balance_btc)} / {wallet.goal_amount} {wallet.goal_currency}
+              {goal.balanceInGoalCurrency === null
+                ? formatPrice(goal.goalAmount, goal.currency)
+                : `${formatPrice(goal.balanceInGoalCurrency, goal.currency)} / ${formatPrice(goal.goalAmount, goal.currency)}`}
             </span>
           </div>
-          <div className="w-full bg-surface-raised rounded-full h-2.5 mb-1">
-            <div
-              className="bg-bitcoinOrange h-2.5 rounded-full transition-all"
-              style={{ width: `${Math.min(progressPercent, 100)}%` }}
-            />
-          </div>
-          <div className="text-xs text-fg-secondary">{progressPercent.toFixed(1)}% funded</div>
+          {goal.percent === null ? (
+            <div className="text-xs text-fg-secondary">
+              Progress needs a {goal.currency} rate, which isn’t available right now.
+            </div>
+          ) : (
+            <>
+              <div className="w-full bg-surface-raised rounded-full h-2.5 mb-1">
+                <div
+                  className="bg-bitcoinOrange h-2.5 rounded-full transition-all"
+                  style={{ width: `${Math.min(goal.percent, 100)}%` }}
+                />
+              </div>
+              <div className="text-xs text-fg-secondary">{goal.percent.toFixed(1)}% funded</div>
+            </>
+          )}
         </div>
       )}
 
