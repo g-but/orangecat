@@ -1,14 +1,21 @@
 'use client';
 
-import { callRpc } from '@/lib/supabase/untyped';
 import { useCallback, useEffect, useRef } from 'react';
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import { useAuth } from '@/hooks/useAuth';
 import { debugLog } from '../lib/constants';
 import { useTypingSubscription } from './useTypingSubscription';
 
 const DEFAULT_STOP_DELAY = 2000;
 const DEFAULT_REFRESH_INTERVAL = 5000;
+/**
+ * How long a typing row stays valid. Readers filter on `expires_at > now()`, so
+ * this is the self-healing window: a tab that closes mid-sentence stops showing
+ * as typing within it. It must exceed DEFAULT_REFRESH_INTERVAL, or the bubble
+ * blinks out between heartbeats.
+ */
+const TYPING_TTL = 10_000;
 
 export interface TypingUser {
   userId: string;
@@ -51,16 +58,37 @@ export function useTypingIndicator(
       if (!conversationId || !user?.id || !enabled) {
         return;
       }
-      try {
-        await callRpc(supabase, 'set_typing_indicator', {
-          p_conversation_id: conversationId,
-          p_user_id: user.id,
-          p_is_typing: isTyping,
-        });
-        debugLog('[useTypingIndicator] sent typing status:', isTyping);
-      } catch (error) {
+      // Was an RPC to `set_typing_indicator`, a function that has never existed:
+      // production answered PGRST202 into the catch, so no typing row was ever
+      // written and the indicator could never appear. No database function is
+      // needed — the table is UNIQUE (conversation_id, user_id) and its RLS
+      // policies already permit exactly these three operations for the owner,
+      // scoped to conversations they actually belong to.
+      const { error } = isTyping
+        ? await supabase.from(DATABASE_TABLES.TYPING_INDICATORS).upsert(
+            {
+              conversation_id: conversationId,
+              user_id: user.id,
+              started_at: new Date().toISOString(),
+              // Readers select `expires_at > now()`, so this is what makes the
+              // indicator self-clearing if the tab closes mid-sentence. It must
+              // outlive the refresh interval or the bubble flickers between
+              // heartbeats.
+              expires_at: new Date(Date.now() + TYPING_TTL).toISOString(),
+            },
+            { onConflict: 'conversation_id,user_id' }
+          )
+        : await supabase
+            .from(DATABASE_TABLES.TYPING_INDICATORS)
+            .delete()
+            .eq('conversation_id', conversationId)
+            .eq('user_id', user.id);
+
+      if (error) {
         debugLog('[useTypingIndicator] error sending typing status:', error);
+        return;
       }
+      debugLog('[useTypingIndicator] sent typing status:', isTyping);
     },
     [conversationId, user?.id, enabled]
   );

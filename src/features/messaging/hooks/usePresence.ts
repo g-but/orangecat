@@ -1,6 +1,5 @@
 'use client';
 
-import { callRpc } from '@/lib/supabase/untyped';
 import { useCallback, useState } from 'react';
 import supabase from '@/lib/supabase/browser';
 import { useAuth } from '@/hooks/useAuth';
@@ -50,13 +49,27 @@ export function usePresence(options: UsePresenceOptions = {}): UsePresenceReturn
       if (!user?.id || !enabled) {
         return;
       }
-      try {
-        await callRpc(supabase, 'update_presence', { p_status: status });
-        setMyStatusState(status);
-        debugLog('[usePresence] updated status:', status);
-      } catch (error) {
+      // Was an RPC to `update_presence`, a function that has never existed:
+      // production answered PGRST202 and the error landed in the catch below, so
+      // presence has never been written. A plain upsert needs no database
+      // function at all — `user_presence` is keyed by user_id and its RLS
+      // policies already allow exactly this ("Users can update their own
+      // presence" INSERT, "Users can modify their own presence" UPDATE), which
+      // is a stronger guarantee than a SECURITY DEFINER function that has to
+      // re-implement the same check by hand.
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from(DATABASE_TABLES.USER_PRESENCE)
+        .upsert({ user_id: user.id, status, last_seen_at: now, updated_at: now }, {
+          onConflict: 'user_id',
+        });
+
+      if (error) {
         debugLog('[usePresence] error updating presence:', error);
+        return;
       }
+      setMyStatusState(status);
+      debugLog('[usePresence] updated status:', status);
     },
     [user?.id, enabled]
   );
