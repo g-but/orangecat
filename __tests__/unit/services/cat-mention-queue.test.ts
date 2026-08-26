@@ -9,7 +9,7 @@
  * and is treated as already queued. That bug was written and caught here.
  */
 
-import { enqueueCatMention, failCatMention, MAX_ATTEMPTS } from '@/services/mentions/queue';
+import { enqueueMention, failMention, MAX_ATTEMPTS } from '@/services/mentions/queue';
 import { noteCatMention } from '@/services/mentions/note-mention';
 
 function adminSpy(opts: { insertError?: { code?: string; message: string } } = {}) {
@@ -20,10 +20,10 @@ function adminSpy(opts: { insertError?: { code?: string; message: string } } = {
   return { admin: admin as never, insert, update };
 }
 
-describe('enqueueCatMention', () => {
+describe('enqueueMention', () => {
   it('records the debt', async () => {
     const { admin, insert } = adminSpy();
-    await expect(enqueueCatMention(admin, {
+    await expect(enqueueMention(admin, {
       sourceType: 'message', sourceId: 'm1', requesterId: 'u1', conversationId: 'c1',
     })).resolves.toBe(true);
     expect(insert).toHaveBeenCalledWith(expect.objectContaining({ source_id: 'm1' }));
@@ -33,29 +33,29 @@ describe('enqueueCatMention', () => {
     // 23505 = unique violation. An at-least-once producer firing twice must not
     // look like a failure, or the caller retries forever.
     const { admin } = adminSpy({ insertError: { code: '23505', message: 'duplicate key' } });
-    await expect(enqueueCatMention(admin, {
+    await expect(enqueueMention(admin, {
       sourceType: 'message', sourceId: 'm1', requesterId: 'u1', conversationId: 'c1',
     })).resolves.toBe(true);
   });
 
   it('reports a real failure as a failure', async () => {
     const { admin } = adminSpy({ insertError: { code: '42P01', message: 'no such table' } });
-    await expect(enqueueCatMention(admin, {
+    await expect(enqueueMention(admin, {
       sourceType: 'message', sourceId: 'm1', requesterId: 'u1', conversationId: 'c1',
     })).resolves.toBe(false);
   });
 });
 
-describe('failCatMention', () => {
+describe('failMention', () => {
   it('returns the mention to pending while attempts remain', async () => {
     const { admin, update } = adminSpy();
-    await failCatMention(admin, { attempts: 1 } as never, 'timeout');
+    await failMention(admin, { attempts: 1 } as never, 'timeout');
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ status: 'pending' }));
   });
 
   it('abandons it once attempts are exhausted, keeping the reason', async () => {
     const { admin, update } = adminSpy();
-    await failCatMention(admin, { attempts: MAX_ATTEMPTS } as never, 'model unreachable');
+    await failMention(admin, { attempts: MAX_ATTEMPTS } as never, 'model unreachable');
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({ status: 'failed', last_error: 'model unreachable' })
     );
@@ -70,7 +70,7 @@ describe('noteCatMention', () => {
       insert,
       client: {
         from: (table: string) => {
-          if (table === 'cat_mention_queue') {
+          if (table === 'mention_queue') {
             return { insert };
           }
           return {
