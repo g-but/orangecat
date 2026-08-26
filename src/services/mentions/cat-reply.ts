@@ -19,7 +19,7 @@ import {
 } from '@/config/cat-identity';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { callPlatformJson, parseJsonLoose } from '@/services/cat/platform-llm';
-import { sendMessage } from '@/features/messaging/server/mutations';
+import { writeMessage } from '@/features/messaging/server/write-message';
 import { logger } from '@/utils/logger';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -121,7 +121,15 @@ export async function replyToConversationMention(
   }
 
   await ensureCatIsParticipant(admin, conversationId, catId);
-  await sendMessage(conversationId, catId, reply, 'text', { is_cat_reply: true });
+  // writeMessage, not sendMessage: the latter requires a signed-in user whose id
+  // matches the sender, which is right for a person and impossible for a worker.
+  // Going through it threw Unauthorized and the reply was silently lost.
+  await writeMessage(admin, {
+    conversationId,
+    senderId: catId,
+    content: reply,
+    metadata: { is_cat_reply: true },
+  });
   return true;
 }
 
