@@ -58,8 +58,13 @@ export default function ProfileWalletSection({
         </h3>
 
         <div className="grid gap-4 lg:grid-cols-2">
+          {/* No `.filter(w => w.is_active)` here, deliberately. GET /api/wallets
+              already applies `.eq('is_active', true)` server-side for both the
+              owner and the public path, and `is_active` is NOT one of the
+              PUBLIC_WALLET_FIELDS — so for a visitor the filter tested
+              `undefined` and dropped every wallet. This section rendered its
+              heading and no cards at all. */}
           {wallets
-            .filter(w => w.is_active)
             .map(wallet => {
               const categoryInfo = WALLET_CATEGORIES[wallet.category];
               // Balance is BTC, the goal is in goal_currency — see
@@ -94,9 +99,14 @@ export default function ProfileWalletSection({
                     </div>
                   </div>
 
-                  {/* Balance — read from the chain against the wallet's
-                      address, so it means nothing for a Lightning wallet. */}
-                  {handle.kind === 'onchain' && (
+                  {/* Balance — read from the chain against the wallet's address,
+                      so it means nothing for a Lightning wallet. The second
+                      condition matters as much as the first: `balance_btc` is
+                      not among PUBLIC_WALLET_FIELDS, so on a visitor's request
+                      it is absent, and formatting it produced the literal
+                      string "₿NaN" on a public page. A balance we did not fetch
+                      is not a balance of zero — show nothing. */}
+                  {handle.kind === 'onchain' && typeof wallet.balance_btc === 'number' && (
                     <div className="bg-surface-raised rounded-lg p-3 mb-3">
                       <div className="text-sm text-fg-secondary mb-1">Current Balance</div>
                       <div className="text-xl font-bold text-bitcoinOrange">
