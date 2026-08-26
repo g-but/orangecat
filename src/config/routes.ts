@@ -111,7 +111,7 @@ export type RouteContext = 'authenticated' | 'public' | 'universal' | 'auth' | '
 // the matching list below. Both layers exist so source-tree organisation
 // and runtime classification can never silently drift.
 
-export type RouteSurface = 'app' | 'public' | 'auth';
+export type RouteSurface = 'app' | 'public' | 'auth' | 'site';
 
 const APP_SURFACES = [
   '/dashboard',
@@ -152,6 +152,14 @@ const APP_SURFACES = [
 
 const AUTH_SURFACES = ['/auth'] as const;
 
+// A hosted site is somebody else's website that happens to run on our
+// infrastructure (see src/config/sites.ts). It carries none of OrangeCat's
+// chrome — no header, no sidebar, no footer, no marketing nav — because on
+// substrate.orangecat.ch the visitor is not on OrangeCat, they are on
+// Substrate. This is a fourth surface rather than a chrome override precisely
+// so that nothing can accidentally opt it back into the app shell.
+const SITE_SURFACES = ['/sites'] as const;
+
 /** O(n) prefix-match against a sorted list. Pathname like `/discover/123`
  *  matches `'/discover'`. Exact `/` matches only `'/'`.
  */
@@ -169,6 +177,9 @@ function matchesPrefix(pathname: string, routes: readonly string[]): boolean {
  * header variant, and footer must all derive from this.
  */
 export function getRouteSurface(pathname: string): RouteSurface {
+  if (matchesPrefix(pathname, SITE_SURFACES)) {
+    return 'site';
+  }
   if (matchesPrefix(pathname, AUTH_SURFACES)) {
     return 'auth';
   }

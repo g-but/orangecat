@@ -43,6 +43,10 @@ export function AppShell({ children }: AppShellProps) {
   // search are noise on a sign-in screen and dilute the focus from the
   // form. Stripe/Linear/Notion all do this.
   const isAuthSurface = surface === 'auth';
+  // A hosted site is a different company's website that happens to run here.
+  // It brings its own header and footer; ours would be someone else's branding
+  // on their domain.
+  const isSiteSurface = surface === 'site';
 
   // Wait for auth hydration to prevent sidebar flash
   // During hydration, user is null even if authenticated - this prevents the sidebar from flickering
@@ -107,6 +111,17 @@ export function AppShell({ children }: AppShellProps) {
 
   // Get filtered sections based on auth state
   const filteredSections = getFilteredSections();
+
+  // Hosted site: no OrangeCat chrome whatsoever, and no message-sync manager
+  // either — a visitor to substrate.orangecat.ch has no OrangeCat session and
+  // no reason for one. The site's own layout supplies everything.
+  if (isSiteSurface) {
+    return (
+      <div className="min-h-screen bg-surface-page">
+        <main id="main-content">{children}</main>
+      </div>
+    );
+  }
 
   // Auth surface: no global chrome at all. The /auth page is its own
   // self-contained universe with its own minimal back-link.

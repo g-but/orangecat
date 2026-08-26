@@ -611,6 +611,20 @@ export interface MaterialProductPayload {
   show_on_profile: boolean;
 }
 
+/**
+ * Group thousands with the Swiss apostrophe, so a ruthenium quote reads
+ * CHF 15’000 rather than CHF 15000 — at these magnitudes an unseparated
+ * number is a misreading waiting to happen. Done by hand rather than with
+ * Intl, because this string is asserted in tests and baked into rows the seed
+ * writes to the database: it must not vary with the ICU data of whatever
+ * machine happens to run the seed.
+ */
+export function formatChf(amount: number): string {
+  const [whole, fraction] = String(amount).split('.');
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, '’');
+  return fraction ? `${grouped}.${fraction}` : grouped;
+}
+
 const DESK_BY_ID: Record<DeskId, Desk> = DESKS.reduce(
   (acc, desk) => ({ ...acc, [desk.id]: desk }),
   {} as Record<DeskId, Desk>
@@ -631,7 +645,7 @@ export function toProductPayload(listing: MaterialListing): MaterialProductPaylo
       '',
       `Traded as: ${listing.spec}`,
       `Desk: ${desk.name}`,
-      `Indicative reference: CHF ${listing.indicativePriceChf} per ${listing.unit} — ` +
+      `Indicative reference: CHF ${formatChf(listing.indicativePriceChf)} per ${listing.unit} — ` +
         'a budgeting level, not a quote. Firm pricing by RFQ against grade, lot ' +
         'size, origin and delivery window.',
     ].join('\n'),

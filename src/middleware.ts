@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { getRouteSurface, ROUTES } from '@/config/routes';
+import { SITES_PATH_PREFIX, siteForHost } from '@/config/sites';
 
 // Edge middleware route classification reads from the SAME SSOT used by
 // AppShell / MobileBottomNav / Footer / Header (src/config/routes.ts).
@@ -33,6 +34,22 @@ export async function middleware(request: NextRequest) {
     pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|webp|css|js|woff|woff2)$/)
   ) {
     return NextResponse.next();
+  }
+
+  // Hosted sites (src/config/sites.ts): a request arriving on a site's own
+  // host is somebody else's website, so rewrite it onto /sites/<slug> and let
+  // that standalone layout answer. Rewrite, not redirect — the visitor's URL
+  // bar must keep saying substrate.orangecat.ch, which is the entire point of
+  // what /domains sells. Requests already on /sites/... pass through, so the
+  // path form stays previewable from any host.
+  const hostedSite = siteForHost(request.headers.get('host'));
+  if (hostedSite && !pathname.startsWith(`${SITES_PATH_PREFIX}/`)) {
+    const target = request.nextUrl.clone();
+    target.pathname = `${SITES_PATH_PREFIX}/${hostedSite.slug}${pathname === '/' ? '' : pathname}`;
+    const rewritten = NextResponse.rewrite(target);
+    rewritten.headers.set('x-pathname', target.pathname);
+    rewritten.headers.set('x-hosted-site', hostedSite.slug);
+    return rewritten;
   }
 
   const response = NextResponse.next({

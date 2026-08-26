@@ -29,6 +29,7 @@ import {
   PHASES,
   PRODUCT_PAYLOADS,
   deskFor,
+  formatChf,
 } from '@/config/substrate';
 import {
   COVERAGE,
@@ -234,5 +235,24 @@ describe('Substrate — Phase 1 coverage universe', () => {
     const everyName = COVERAGE.flatMap(entry => entry.producers.map(p => p.name));
     const overlapping = [...new Set(everyName)].filter(name => materialsFor(name).length > 1);
     expect(overlapping.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Substrate — price formatting', () => {
+  it('groups thousands, so a five-figure quote cannot be misread', () => {
+    expect(formatChf(15000)).toBe('15’000');
+    expect(formatChf(1400)).toBe('1’400');
+    expect(formatChf(3.2)).toBe('3.2');
+    expect(formatChf(95)).toBe('95');
+    expect(formatChf(1234567)).toBe('1’234’567');
+  });
+
+  it('formats every listed price the same way wherever it is shown', () => {
+    for (const listing of CATALOGUE) {
+      const payload = PRODUCT_PAYLOADS.find(p => p.title === listing.title);
+      expect(payload?.description).toContain(
+        `CHF ${formatChf(listing.indicativePriceChf)} per ${listing.unit}`
+      );
+    }
   });
 });
