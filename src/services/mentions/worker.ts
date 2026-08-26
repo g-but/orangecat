@@ -33,15 +33,21 @@ export async function runCatMentions(
 ): Promise<MentionRunResult> {
   const result: MentionRunResult = { claimed: 0, answered: 0, failed: 0 };
 
+  // BEFORE claiming, and before the empty-queue exit, because otherwise the
+  // system deadlocks on itself: resolveMentions can only flag @cat when a Cat
+  // profile exists, so with no account nothing ever queues — and if the account
+  // were only created when something was queued, nothing ever would be. The
+  // every-minute tick is therefore also what brings the Cat into existence.
+  // Cheap enough to do unconditionally: one primary-key lookup when it is a
+  // no-op, which is always after the first run.
+  const cat = await ensureCatAccount(admin);
+
   const claimed = await claimCatMentions(admin, limit);
   result.claimed = claimed.length;
   if (claimed.length === 0) {
     return result;
   }
 
-  // Established once per tick rather than per mention: it is one indexed lookup
-  // when it is a no-op, and without it there is no sender to speak as.
-  const cat = await ensureCatAccount(admin);
   if (!cat) {
     for (const mention of claimed) {
       await failCatMention(admin, mention, 'no Cat account');
