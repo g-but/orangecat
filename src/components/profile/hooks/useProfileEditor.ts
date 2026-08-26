@@ -73,11 +73,11 @@ export function useProfileEditor({
     mode: 'onChange',
     reValidateMode: 'onChange',
     defaultValues: {
-      username:
-        profile.username ||
-        (typeof userEmail === 'string' && userEmail.includes('@')
-          ? userEmail.split('@')[0]
-          : userEmail || ''),
+      // No email fallback: username is NOT NULL and always set by a creation
+      // path, so this only ever fired on a half-loaded profile — and when it
+      // did it pre-filled the PUBLIC handle field with the user's email local
+      // part, one Save away from publishing it.
+      username: profile.username || '',
       name: profile.name || '',
       bio: profile.bio || '',
       location_country: profile.location_country || '',

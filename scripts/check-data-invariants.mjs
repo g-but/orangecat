@@ -289,7 +289,13 @@ async function checkSilentlyDroppedCatTurns() {
  * number RISES, which means a new write path started deriving handles from
  * emails again.
  */
-const EMAIL_DERIVED_USERNAME_BASELINE = 72; // measured on production 2026-08-26
+// Measured on production 2026-08-26 AFTER the trigger fix landed. The first
+// reading taken while writing that fix said 72; five accounts signed up in the
+// hour between, so a baseline of 72 would have failed on its very first
+// nightly run — a gate red about code that is fine, which is the habit this
+// ratchet exists to avoid. The number is a floor now rather than a moving
+// target: handle_new_user no longer mints these, so nothing can add to it.
+const EMAIL_DERIVED_USERNAME_BASELINE = 77;
 
 async function checkEmailDerivedUsernames() {
   const count = Number(await rpc('count_email_derived_usernames'));
