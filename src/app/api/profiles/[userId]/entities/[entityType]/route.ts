@@ -46,10 +46,19 @@ const ENTITY_COLUMNS: Record<EntityType, string> = {
   wishlist:
     'id, title, description, type, visibility, is_active, event_date, cover_image_url, created_at',
   document: 'id, title, content, document_type, visibility, tags, created_at',
+  jurisdiction:
+    'id, title, description, level, country_code, region_code, locality, verification_status, status, created_at',
+  allocation:
+    'id, title, description, basis, cadence, period_start, period_end, currency, visibility, status, created_at',
 };
 
 // Entities that shouldn't appear on profile (e.g., groups have their own pages, documents are personal)
-const EXCLUDED_ENTITY_TYPES: EntityType[] = ['wallet', 'group', 'document'];
+//
+// `jurisdiction` is excluded for the same reason as `group`: a government body
+// is not a listing on the profile of whoever happened to add it to the
+// directory. An `allocation` IS on the profile — a person's published split is
+// a civic statement about themselves, which is the point of publishing it.
+const EXCLUDED_ENTITY_TYPES: EntityType[] = ['wallet', 'group', 'document', 'jurisdiction'];
 
 interface RouteContext {
   params: Promise<{ userId: string; entityType: string }>;

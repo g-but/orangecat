@@ -43,7 +43,16 @@ const ENTITY_GROUPS: ReadonlyArray<{
   },
   { id: 'fund', title: 'Fund', priority: 3, types: ['project', 'cause', 'research', 'wishlist'] },
   { id: 'coordinate', title: 'Coordinate', priority: 4, types: ['group', 'circle', 'event'] },
-  { id: 'finance', title: 'Finance', priority: 5, types: ['wallet', 'asset', 'loan', 'investment'] },
+  {
+    id: 'finance',
+    title: 'Finance',
+    priority: 5,
+    types: ['wallet', 'asset', 'loan', 'investment'],
+  },
+  // CIVIC: public money — the tiers of government, and your split across them.
+  // Its own group rather than folded into Finance: everything in Finance is
+  // money you chose to move, and the point of this pair is money you did not.
+  { id: 'civic', title: 'Civic', priority: 6, types: ['allocation', 'jurisdiction'] },
 ] as const;
 
 /** Every entity type that any group claims — the coverage test reads this. */

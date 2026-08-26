@@ -1343,6 +1343,152 @@ export type Database = {
           },
         ];
       };
+      civic_allocation_lines: {
+        Row: {
+          allocation_id: string;
+          created_at: string;
+          external_name: string | null;
+          external_url: string | null;
+          id: string;
+          jurisdiction_id: string | null;
+          note: string | null;
+          position: number;
+          recipient_entity_id: string | null;
+          recipient_entity_type: string | null;
+          share_percent: number;
+        };
+        Insert: {
+          allocation_id: string;
+          created_at?: string;
+          external_name?: string | null;
+          external_url?: string | null;
+          id?: string;
+          jurisdiction_id?: string | null;
+          note?: string | null;
+          position?: number;
+          recipient_entity_id?: string | null;
+          recipient_entity_type?: string | null;
+          share_percent: number;
+        };
+        Update: {
+          allocation_id?: string;
+          created_at?: string;
+          external_name?: string | null;
+          external_url?: string | null;
+          id?: string;
+          jurisdiction_id?: string | null;
+          note?: string | null;
+          position?: number;
+          recipient_entity_id?: string | null;
+          recipient_entity_type?: string | null;
+          share_percent?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'civic_allocation_lines_allocation_id_fkey';
+            columns: ['allocation_id'];
+            referencedRelation: 'civic_allocations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'civic_allocation_lines_jurisdiction_id_fkey';
+            columns: ['jurisdiction_id'];
+            referencedRelation: 'jurisdictions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      civic_allocations: {
+        Row: {
+          actor_id: string;
+          basis: string;
+          cadence: string;
+          content_hash: string | null;
+          created_at: string;
+          currency: string;
+          description: string | null;
+          id: string;
+          period_end: string | null;
+          period_start: string | null;
+          rationale: string | null;
+          reference_amount: number | null;
+          residency_jurisdiction_id: string | null;
+          show_on_profile: boolean;
+          signature: string | null;
+          signed_at: string | null;
+          signing_address: string | null;
+          solon_proposal_id: string | null;
+          status: string;
+          tags: string[];
+          title: string;
+          updated_at: string;
+          visibility: string;
+        };
+        Insert: {
+          actor_id: string;
+          basis?: string;
+          cadence?: string;
+          content_hash?: string | null;
+          created_at?: string;
+          currency?: string;
+          description?: string | null;
+          id?: string;
+          period_end?: string | null;
+          period_start?: string | null;
+          rationale?: string | null;
+          reference_amount?: number | null;
+          residency_jurisdiction_id?: string | null;
+          show_on_profile?: boolean;
+          signature?: string | null;
+          signed_at?: string | null;
+          signing_address?: string | null;
+          solon_proposal_id?: string | null;
+          status?: string;
+          tags?: string[];
+          title: string;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Update: {
+          actor_id?: string;
+          basis?: string;
+          cadence?: string;
+          content_hash?: string | null;
+          created_at?: string;
+          currency?: string;
+          description?: string | null;
+          id?: string;
+          period_end?: string | null;
+          period_start?: string | null;
+          rationale?: string | null;
+          reference_amount?: number | null;
+          residency_jurisdiction_id?: string | null;
+          show_on_profile?: boolean;
+          signature?: string | null;
+          signed_at?: string | null;
+          signing_address?: string | null;
+          solon_proposal_id?: string | null;
+          status?: string;
+          tags?: string[];
+          title?: string;
+          updated_at?: string;
+          visibility?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'civic_allocations_actor_id_fkey';
+            columns: ['actor_id'];
+            referencedRelation: 'actors';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'civic_allocations_residency_jurisdiction_id_fkey';
+            columns: ['residency_jurisdiction_id'];
+            referencedRelation: 'jurisdictions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       content_embeddings: {
         Row: {
           embedding: string | null;
@@ -2555,6 +2701,121 @@ export type Database = {
             foreignKeyName: 'investments_wallet_id_fkey';
             columns: ['wallet_id'];
             referencedRelation: 'wallets';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      jurisdictions: {
+        Row: {
+          actor_id: string | null;
+          annual_budget: number | null;
+          avatar_url: string | null;
+          bitcoin_address: string | null;
+          budget_url: string | null;
+          budget_year: number | null;
+          country_code: string | null;
+          cover_image_url: string | null;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          description: string | null;
+          id: string;
+          level: string;
+          lightning_address: string | null;
+          locality: string | null;
+          official_url: string | null;
+          parent_id: string | null;
+          payment_methods: Json;
+          population: number | null;
+          region_code: string | null;
+          show_on_profile: boolean;
+          slug: string | null;
+          solon_org_id: string | null;
+          status: string;
+          tags: string[];
+          title: string;
+          updated_at: string;
+          verification_evidence_url: string | null;
+          verification_status: string;
+          verified_at: string | null;
+        };
+        Insert: {
+          actor_id?: string | null;
+          annual_budget?: number | null;
+          avatar_url?: string | null;
+          bitcoin_address?: string | null;
+          budget_url?: string | null;
+          budget_year?: number | null;
+          country_code?: string | null;
+          cover_image_url?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          description?: string | null;
+          id?: string;
+          level: string;
+          lightning_address?: string | null;
+          locality?: string | null;
+          official_url?: string | null;
+          parent_id?: string | null;
+          payment_methods?: Json;
+          population?: number | null;
+          region_code?: string | null;
+          show_on_profile?: boolean;
+          slug?: string | null;
+          solon_org_id?: string | null;
+          status?: string;
+          tags?: string[];
+          title: string;
+          updated_at?: string;
+          verification_evidence_url?: string | null;
+          verification_status?: string;
+          verified_at?: string | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          annual_budget?: number | null;
+          avatar_url?: string | null;
+          bitcoin_address?: string | null;
+          budget_url?: string | null;
+          budget_year?: number | null;
+          country_code?: string | null;
+          cover_image_url?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          description?: string | null;
+          id?: string;
+          level?: string;
+          lightning_address?: string | null;
+          locality?: string | null;
+          official_url?: string | null;
+          parent_id?: string | null;
+          payment_methods?: Json;
+          population?: number | null;
+          region_code?: string | null;
+          show_on_profile?: boolean;
+          slug?: string | null;
+          solon_org_id?: string | null;
+          status?: string;
+          tags?: string[];
+          title?: string;
+          updated_at?: string;
+          verification_evidence_url?: string | null;
+          verification_status?: string;
+          verified_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'jurisdictions_actor_id_fkey';
+            columns: ['actor_id'];
+            referencedRelation: 'actors';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'jurisdictions_parent_id_fkey';
+            columns: ['parent_id'];
+            referencedRelation: 'jurisdictions';
             referencedColumns: ['id'];
           },
         ];

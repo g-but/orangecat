@@ -343,6 +343,12 @@ export const ROUTES = {
   CIRCLES: {
     VIEW: (id: string) => `${ENTITY_REGISTRY['circle'].publicBasePath}/${id}`,
   },
+  ALLOCATIONS: {
+    VIEW: (id: string) => `${ENTITY_REGISTRY['allocation'].publicBasePath}/${id}`,
+  },
+  JURISDICTIONS: {
+    VIEW: (id: string) => `${ENTITY_REGISTRY['jurisdiction'].publicBasePath}/${id}`,
+  },
   LOANS: {
     VIEW: (id: string) => `${ENTITY_REGISTRY['loan'].publicBasePath}/${id}`,
   },
@@ -398,6 +404,10 @@ export const ROUTES = {
     CAUSES_CREATE: ENTITY_REGISTRY['cause'].createPath,
     CIRCLES: ENTITY_REGISTRY['circle'].basePath,
     CIRCLES_CREATE: ENTITY_REGISTRY['circle'].createPath,
+    ALLOCATIONS: ENTITY_REGISTRY['allocation'].basePath,
+    ALLOCATIONS_CREATE: ENTITY_REGISTRY['allocation'].createPath,
+    JURISDICTIONS: ENTITY_REGISTRY['jurisdiction'].basePath,
+    JURISDICTIONS_CREATE: ENTITY_REGISTRY['jurisdiction'].createPath,
     AI_ASSISTANTS: ENTITY_REGISTRY['ai_assistant'].basePath,
     AI_ASSISTANTS_CREATE: ENTITY_REGISTRY['ai_assistant'].createPath,
     WISHLISTS: ENTITY_REGISTRY['wishlist'].basePath,

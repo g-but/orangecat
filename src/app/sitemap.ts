@@ -175,7 +175,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (profiles) {
       const profilePages: MetadataRoute.Sitemap = profiles
         .filter((p): p is SitemapProfile & { username: string } => p.username !== null)
-        .filter((p) => !isFixtureUsername(p.username))
+        .filter(p => !isFixtureUsername(p.username))
         .map(profile => ({
           // encodeURIComponent: usernames containing '@' (we observed
           // literal webdev@example.com profiles live) produce invalid
@@ -245,6 +245,55 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       }));
       dynamicPages = [...dynamicPages, ...wishlistPages];
+    }
+
+    // Jurisdictions ship in their own block rather than in SITEMAP_ENTITY_TYPES
+    // for the same reason wishlists do — they carry a second gate. Crawling the
+    // directory is the point (a body finds its own page and claims it), but a
+    // `disputed` entry is one whose identity is actively contested, and pushing
+    // that into search results is how a contested page becomes the canonical
+    // one.
+    const jurisdictionMeta = ENTITY_REGISTRY['jurisdiction'];
+    const { data: jurisdictions } = (await supabase
+      .from(jurisdictionMeta.tableName)
+      .select('id, updated_at')
+      .eq('status', ENTITY_STATUS.ACTIVE)
+      .neq('verification_status', 'disputed')) as { data: SitemapEntity[] | null };
+
+    if (jurisdictions) {
+      dynamicPages = [
+        ...dynamicPages,
+        ...jurisdictions.map(jurisdiction => ({
+          url: `${BASE_URL}${jurisdictionMeta.publicBasePath}/${jurisdiction.id}`,
+          lastModified: jurisdiction.updated_at ? new Date(jurisdiction.updated_at) : new Date(),
+          changeFrequency: 'weekly' as const,
+          priority: 0.6,
+        })),
+      ];
+    }
+
+    // Allocations need BOTH gates. `status = active` alone would publish every
+    // unlisted directive to search — and unlisted means "reachable by link, not
+    // listed", which a sitemap entry is the precise opposite of. A person's
+    // stated split is the most personal thing in this taxonomy; the default has
+    // to fail closed.
+    const allocationMeta = ENTITY_REGISTRY['allocation'];
+    const { data: allocations } = (await supabase
+      .from(allocationMeta.tableName)
+      .select('id, updated_at')
+      .eq('status', ENTITY_STATUS.ACTIVE)
+      .eq('visibility', 'public')) as { data: SitemapEntity[] | null };
+
+    if (allocations) {
+      dynamicPages = [
+        ...dynamicPages,
+        ...allocations.map(allocation => ({
+          url: `${BASE_URL}${allocationMeta.publicBasePath}/${allocation.id}`,
+          lastModified: allocation.updated_at ? new Date(allocation.updated_at) : new Date(),
+          changeFrequency: 'weekly' as const,
+          priority: 0.6,
+        })),
+      ];
     }
   } catch (error) {
     // The sitemap must never break the build/response — but a swallowed error

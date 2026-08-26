@@ -24,6 +24,8 @@ export { researchWizardConfig } from './research-wizard-config';
 export type { ResearchWizardFormData } from './research-wizard-config';
 export { documentFormConfig } from './document-form-config';
 export { circleConfig } from './circle-config';
+export { allocationConfig } from './allocation-config';
+export { jurisdictionConfig } from './jurisdiction-config';
 
 // Re-export types
 export type { EntityConfig, FieldGroup, FieldConfig } from '@/components/create/types';

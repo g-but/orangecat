@@ -29,6 +29,7 @@ export const CREATE_CATEGORY_LABELS: Record<CreateOptionCategory, string> = {
   business: 'Sell or fund',
   community: 'People',
   finance: 'Money',
+  civic: 'Public money',
   personal: 'For you',
 };
 

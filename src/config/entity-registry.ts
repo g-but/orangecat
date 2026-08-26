@@ -37,6 +37,8 @@ import {
   TrendingUp,
   FlaskConical,
   CircleDashed,
+  Landmark,
+  Scale,
 } from 'lucide-react';
 
 // ==================== ENTITY TYPES ====================
@@ -60,6 +62,8 @@ export const ENTITY_TYPES = [
   'research',
   'wishlist',
   'document',
+  'jurisdiction',
+  'allocation',
 ] as const;
 
 export type EntityType = (typeof ENTITY_TYPES)[number];
@@ -69,13 +73,20 @@ export type EntityType = (typeof ENTITY_TYPES)[number];
 /**
  * Entity categories for grouping in UI
  */
-export type EntityCategory = 'gateway' | 'business' | 'community' | 'finance' | 'personal';
+export type EntityCategory =
+  | 'gateway'
+  | 'business'
+  | 'community'
+  | 'finance'
+  | 'personal'
+  | 'civic';
 
 const ENTITY_CATEGORY_ORDER: EntityCategory[] = [
   'gateway',
   'business',
   'community',
   'finance',
+  'civic',
   'personal',
 ];
 
@@ -174,6 +185,8 @@ export const ENTITY_TABLE_NAMES = {
   research: 'research_entities',
   wishlist: 'wishlists',
   document: 'user_documents',
+  jurisdiction: 'jurisdictions',
+  allocation: 'civic_allocations',
 } as const satisfies Record<EntityType, TableName>;
 
 /** The tables entity code may query — 15 literals, not every table in the schema. */
@@ -497,6 +510,63 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     paymentPattern: 'none',
     canReceiveSupport: false,
   },
+
+  // ==================== CIVIC (Public money) ====================
+  //
+  // The two nouns behind one claim: a person should be able to say what share of
+  // their taxes and contributions goes to their municipality, their region, and
+  // their federation. `allocation` is where that is said; `jurisdiction` is who
+  // it is said about. Solon turns enough such statements into a binding decision
+  // — OrangeCat is the layer where the preference is declared and counted.
+  jurisdiction: {
+    type: 'jurisdiction',
+    name: 'Jurisdiction',
+    namePlural: 'Jurisdictions',
+    tableName: ENTITY_TABLE_NAMES.jurisdiction,
+    userIdField: 'actor_id',
+    icon: Landmark,
+    colorTheme: 'tiffany',
+    basePath: '/dashboard/jurisdictions',
+    createPath: '/dashboard/jurisdictions/create',
+    publicBasePath: '/jurisdictions',
+    apiEndpoint: '/api/jurisdictions',
+    hasTemplates: false,
+    description: 'A government body — municipality, region, or federation — as a recipient',
+    createActionLabel: 'Add a government body',
+    category: 'civic',
+    createPriority: 2,
+    // NOT supportable, and this is the security property rather than a missing
+    // feature. `canReceiveSupport: true` obliges the create form to carry a
+    // wallet selector (enforced by supportable-entities-have-wallet-group) —
+    // which would mean whoever first types "Stadt Zürich" into the directory
+    // attaches THEIR receiving wallet to it. Payment rails belong only to a
+    // body that has claimed its page and had its evidence reviewed, so they are
+    // written through the claim flow with the service role, never from here.
+    paymentPattern: 'none',
+    canReceiveSupport: false,
+  },
+  allocation: {
+    type: 'allocation',
+    name: 'Allocation',
+    namePlural: 'Allocations',
+    tableName: ENTITY_TABLE_NAMES.allocation,
+    userIdField: 'actor_id',
+    icon: Scale,
+    colorTheme: 'orange',
+    basePath: '/dashboard/allocations',
+    createPath: '/dashboard/allocations/create',
+    publicBasePath: '/allocations',
+    apiEndpoint: '/api/allocations',
+    hasTemplates: false,
+    description: 'Your split of taxes and contributions across local, regional and national',
+    createActionLabel: 'Direct where your taxes go',
+    category: 'civic',
+    createPriority: 1,
+    // A directive is a statement, not a thing to be bought or funded. Money
+    // moves through it to its lines; nobody pays the directive itself.
+    paymentPattern: 'none',
+    canReceiveSupport: false,
+  },
 };
 
 // ==================== COLOR MAPPING ====================
@@ -575,6 +645,7 @@ export function getEntitiesByCategory(): Record<EntityCategory, EntityMetadata[]
     business: [],
     community: [],
     finance: [],
+    civic: [],
     personal: [],
   };
 

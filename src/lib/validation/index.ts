@@ -16,6 +16,7 @@ export * from './wishlist';
 export * from './documents';
 export * from './groups';
 export * from './circles';
+export * from './civic';
 export * from './proposals';
 export * from './platform-feedback';
 export * from './newsletter';

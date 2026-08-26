@@ -21,6 +21,8 @@ import { projectEntityConfig } from '@/config/entities/projects';
 import { researchEntityConfig } from '@/config/entities/research';
 import { serviceEntityConfig } from '@/config/entities/services';
 import { wishlistEntityConfig } from '@/config/entities/wishlists';
+import { allocationEntityConfig } from '@/config/entities/allocations';
+import { jurisdictionEntityConfig } from '@/config/entities/jurisdictions';
 
 // wallet is intentionally absent: it has no create form (managed inline by
 // WalletManager). group has no list config; its edit entry point is the
@@ -39,6 +41,8 @@ const LIST_CONFIGS = [
   researchEntityConfig,
   serviceEntityConfig,
   wishlistEntityConfig,
+  allocationEntityConfig,
+  jurisdictionEntityConfig,
 ];
 
 describe('entity edit convention (createPath?edit=<id>)', () => {

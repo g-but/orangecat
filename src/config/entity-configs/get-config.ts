@@ -24,6 +24,8 @@ import { wishlistConfig } from './wishlist-config';
 import { researchWizardConfig } from './research-wizard-config';
 import { documentFormConfig } from './document-form-config';
 import { circleConfig } from './circle-config';
+import { allocationConfig } from './allocation-config';
+import { jurisdictionConfig } from './jurisdiction-config';
 
 /**
  * Map of entity types to their configurations
@@ -46,6 +48,8 @@ const ENTITY_CONFIGS: Partial<Record<EntityType, EntityConfig<any>>> = {
   research: researchWizardConfig,
   document: documentFormConfig,
   circle: circleConfig,
+  allocation: allocationConfig,
+  jurisdiction: jurisdictionConfig,
 };
 
 /**

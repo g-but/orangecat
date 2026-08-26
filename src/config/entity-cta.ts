@@ -35,6 +35,14 @@ export const ENTITY_PRIMARY_CTA: Record<EntityType, string> = {
   // Governance / community
   group: 'Join',
   circle: 'Join',
+  // Civic — public money.
+  // A jurisdiction's verb is the same as a cause's, and deliberately so: the
+  // page's whole argument is that money to a municipality is a contribution
+  // like any other. Whether the button is live depends on the body having
+  // claimed and proved the page (jurisdictions.verification_status).
+  jurisdiction: 'Contribute',
+  // A directive is a statement to be read and adopted, not a thing to buy.
+  allocation: 'Use this split',
   // Cat context / wallets (no public transaction verb)
   document: 'View',
   wallet: 'Send',
