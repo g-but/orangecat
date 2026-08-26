@@ -9,7 +9,7 @@
  * instead of drifting into fifty bespoke stylesheets.
  *
  * Adding a site is therefore: an entry in `sites.ts`, and a function that
- * returns `SitePage[]`. Substrate's lives in `site-substrate.ts` and is built
+ * returns `SitePage[]`. Substrata Intel's lives in `site-substrata-intel.ts` and is built
  * entirely from the config the profile already needed — the mandate, the
  * desks, the catalogue, the coverage universe. Nothing on the website is
  * authored twice.
@@ -18,7 +18,7 @@
  */
 
 import type { HostedSite } from './sites';
-import { substrateSiteChrome, substrateSitePages } from './site-substrate';
+import { substrataIntelSiteChrome, substrataIntelSitePages } from './site-substrata-intel';
 
 // =====================================================================
 // SECTIONS
@@ -43,17 +43,45 @@ export interface SiteDefinition {
   detail: string;
 }
 
+export interface SiteIndexEntry {
+  label: string;
+  /** Small trailing figure — a count, a desk name. Rendered in mono. */
+  meta?: string;
+  /** Fragment this entry jumps to; must match a section's `anchor`. */
+  anchor: string;
+}
+
 export type SiteSection =
+  /**
+   * Opens a page in place of the standard title block. An eyebrow, one display
+   * statement, and the lead. Only ever the FIRST section of a page — the shell
+   * checks for it and suppresses its own header so the two cannot both render.
+   */
+  | { kind: 'hero'; eyebrow?: string; statement: string; lead: string[] }
   | { kind: 'prose'; heading?: string; paragraphs: string[] }
   | { kind: 'stats'; heading?: string; stats: SiteStat[] }
+  /**
+   * One number that deserves a picture. Used for research coverage, where the
+   * gap between `value` and `of` IS the message — an empty bar is the honest
+   * rendering of "nothing sourced yet", and it should look empty.
+   */
+  | { kind: 'meter'; heading?: string; label: string; value: number; of: number; caption?: string }
   | { kind: 'cards'; heading?: string; blurb?: string; columns?: 2 | 3; cards: SiteCard[] }
   | { kind: 'definitions'; heading?: string; blurb?: string; items: SiteDefinition[] }
+  /** Jump list for a long page. Without one, fifteen tables is a scroll, not a document. */
+  | { kind: 'index'; heading?: string; blurb?: string; entries: SiteIndexEntry[] }
   | {
       kind: 'table';
       heading?: string;
       blurb?: string;
+      /** Fragment id, so an `index` entry can link straight here. */
+      anchor?: string;
       columns: string[];
       rows: string[][];
+      /** Column indices rendered in mono — codes, figures, statuses. */
+      monoColumns?: number[];
+      /** Column index whose cell text is also a status keyword to dot-colour. */
+      statusColumn?: number;
       note?: string;
     };
 
@@ -93,8 +121,8 @@ export interface SiteChrome {
  */
 export function sitePagesFor(site: HostedSite): SitePage[] {
   switch (site.slug) {
-    case 'substrate':
-      return substrateSitePages();
+    case 'substrataintel':
+      return substrataIntelSitePages();
     default:
       return [];
   }
@@ -102,11 +130,20 @@ export function sitePagesFor(site: HostedSite): SitePage[] {
 
 export function siteChromeFor(site: HostedSite): SiteChrome | null {
   switch (site.slug) {
-    case 'substrate':
-      return substrateSiteChrome();
+    case 'substrataintel':
+      return substrataIntelSiteChrome();
     default:
       return null;
   }
+}
+
+/**
+ * True when the page opens with its own hero, in which case the shell must not
+ * also print a title block. One rule, checked in one place, so a page can never
+ * render two competing headers.
+ */
+export function pageRendersOwnHeader(page: SitePage): boolean {
+  return page.sections[0]?.kind === 'hero';
 }
 
 /** @returns the page at this path within the site, or null. */

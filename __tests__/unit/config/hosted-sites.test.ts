@@ -14,22 +14,27 @@
  */
 
 import { HOSTED_SITES, siteBySlug, siteCanonicalHost, siteForHost, siteHref } from '@/config/sites';
-import { sitePageAt, sitePagesFor, siteChromeFor } from '@/config/site-content';
+import {
+  pageRendersOwnHeader,
+  sitePageAt,
+  sitePagesFor,
+  siteChromeFor,
+} from '@/config/site-content';
 import { getRouteSurface } from '@/config/routes';
-import { CATALOGUE, COMPANY, MANDATE_CURVES } from '@/config/substrate';
-import { COVERAGE, coverageProgress } from '@/config/substrate-coverage';
+import { CATALOGUE, COMPANY, MANDATE_CURVES } from '@/config/substrata-intel';
+import { COVERAGE, coverageProgress } from '@/config/substrata-intel-coverage';
 
-const substrate = siteBySlug('substrate');
+const site = siteBySlug('substrataintel');
 
 describe('hosted sites — host resolution', () => {
   it('resolves the free subdomain, with or without www and port', () => {
-    expect(siteForHost('substrate.orangecat.ch')?.slug).toBe('substrate');
-    expect(siteForHost('www.substrate.orangecat.ch')?.slug).toBe('substrate');
-    expect(siteForHost('Substrate.OrangeCat.ch:443')?.slug).toBe('substrate');
+    expect(siteForHost('substrataintel.orangecat.ch')?.slug).toBe('substrataintel');
+    expect(siteForHost('www.substrataintel.orangecat.ch')?.slug).toBe('substrataintel');
+    expect(siteForHost('SubstrataIntel.OrangeCat.ch:443')?.slug).toBe('substrataintel');
   });
 
   it('resolves the local development host, so the rewrite is testable without DNS', () => {
-    expect(siteForHost('substrate.localhost:3020')?.slug).toBe('substrate');
+    expect(siteForHost('substrataintel.localhost:3020')?.slug).toBe('substrataintel');
   });
 
   it('refuses everything else — a greedy match would swallow OrangeCat itself', () => {
@@ -37,9 +42,9 @@ describe('hosted sites — host resolution', () => {
       'orangecat.ch',
       'www.orangecat.ch',
       'localhost:3000',
-      'substrate.evil.example',
-      'notsubstrate.orangecat.ch',
-      'substrate.orangecat.ch.evil.example',
+      'substrataintel.evil.example',
+      'notsubstrataintel.orangecat.ch',
+      'substrataintel.orangecat.ch.evil.example',
       '',
       null,
       undefined,
@@ -58,25 +63,25 @@ describe('hosted sites — host resolution', () => {
 
 describe('hosted sites — links', () => {
   it('always emits the path form, which resolves on every host', () => {
-    expect(substrate).not.toBeNull();
-    expect(siteHref(substrate!)).toBe('/sites/substrate');
-    expect(siteHref(substrate!, 'map')).toBe('/sites/substrate/map');
-    expect(siteHref(substrate!, '/map')).toBe('/sites/substrate/map');
-    expect(siteHref(substrate!, '/')).toBe('/sites/substrate');
+    expect(site).not.toBeNull();
+    expect(siteHref(site!)).toBe('/sites/substrataintel');
+    expect(siteHref(site!, 'map')).toBe('/sites/substrataintel/map');
+    expect(siteHref(site!, '/map')).toBe('/sites/substrataintel/map');
+    expect(siteHref(site!, '/')).toBe('/sites/substrataintel');
   });
 });
 
 describe('hosted sites — chrome isolation', () => {
   it('classifies a hosted site as its own surface, not app or public', () => {
-    expect(getRouteSurface('/sites/substrate')).toBe('site');
-    expect(getRouteSurface('/sites/substrate/map')).toBe('site');
+    expect(getRouteSurface('/sites/substrataintel')).toBe('site');
+    expect(getRouteSurface('/sites/substrataintel/map')).toBe('site');
   });
 
   it('leaves the rest of the app classified as it was', () => {
     expect(getRouteSurface('/dashboard')).toBe('app');
     expect(getRouteSurface('/about')).toBe('public');
     expect(getRouteSurface('/auth')).toBe('auth');
-    expect(getRouteSurface('/groups/substrate')).toBe('app');
+    expect(getRouteSurface('/groups/substrataintel')).toBe('app');
   });
 });
 
@@ -105,16 +110,16 @@ describe('hosted sites — every site renders', () => {
   );
 
   it('returns null for a path no page claims, so the route can 404', () => {
-    expect(sitePageAt(substrate!, 'not-a-page')).toBeNull();
+    expect(sitePageAt(site!, 'not-a-page')).toBeNull();
   });
 });
 
-describe('substrate.orangecat.ch — the site is the profile, not a copy of it', () => {
-  const pages = sitePagesFor(substrate!);
+describe('substrataintel.orangecat.ch — the site is the profile, not a copy of it', () => {
+  const pages = sitePagesFor(site!);
   const text = JSON.stringify(pages);
 
   it('takes its name and tagline from the profile config', () => {
-    const chrome = siteChromeFor(substrate!);
+    const chrome = siteChromeFor(site!);
     expect(chrome?.name).toBe(COMPANY.name);
     expect(chrome?.tagline).toBe(COMPANY.tagline);
   });
@@ -140,7 +145,7 @@ describe('substrate.orangecat.ch — the site is the profile, not a copy of it',
   });
 
   it('reports coverage honestly — unsourced rows read as leads, not findings', () => {
-    const mapPage = sitePageAt(substrate!, 'map');
+    const mapPage = sitePageAt(site!, 'map');
     const rows = JSON.stringify(mapPage);
     const { sourced, total } = coverageProgress();
 
@@ -150,11 +155,41 @@ describe('substrate.orangecat.ch — the site is the profile, not a copy of it',
     if (sourced < total) {
       expect(rows).toContain('Unverified lead');
     }
-    expect(rows).toContain(`${sourced} of ${total}`);
+
+    // And the meter must carry the same two numbers, so the picture and the
+    // table can never disagree about how much is actually done.
+    const meter = mapPage!.sections.find(section => section.kind === 'meter');
+    expect(meter).toMatchObject({ value: sourced, of: total });
+  });
+
+  it('gives the map a jump index whose every anchor lands on a real table', () => {
+    const mapPage = sitePageAt(site!, 'map')!;
+    const index = mapPage.sections.find(section => section.kind === 'index');
+    expect(index).toBeDefined();
+
+    const anchors = new Set(
+      mapPage.sections.flatMap(section =>
+        section.kind === 'table' && section.anchor ? [section.anchor] : []
+      )
+    );
+    const entries = index!.kind === 'index' ? index.entries : [];
+    expect(entries.length).toBe(COVERAGE.length);
+    for (const entry of entries) {
+      expect(anchors.has(entry.anchor)).toBe(true);
+    }
+  });
+
+  it('opens the home page with a hero, and never doubles it with a title block', () => {
+    const home = sitePageAt(site!, '')!;
+    expect(home.sections[0].kind).toBe('hero');
+    expect(pageRendersOwnHeader(home)).toBe(true);
+
+    // Inner pages take the standard header instead.
+    expect(pageRendersOwnHeader(sitePageAt(site!, 'map')!)).toBe(false);
   });
 
   it('says on the desk page that prices are indicative rather than quotes', () => {
-    const deskPage = sitePageAt(substrate!, 'desk');
+    const deskPage = sitePageAt(site!, 'desk');
     expect(JSON.stringify(deskPage)).toContain('not a quote');
   });
 });

@@ -1,8 +1,8 @@
 /**
- * Substrate's website, generated from Substrate's OrangeCat profile.
+ * Substrata Intel's website, generated from its OrangeCat profile.
  *
- * Every word and number below comes from `substrate.ts` and
- * `substrate-coverage.ts` — the same objects the group profile, the product
+ * Every word and number below comes from `substrata-intel.ts` and
+ * `substrata-intel-coverage.ts` — the same objects the group profile, the product
  * catalogue and the Cat read. There is no second copy of the mandate, no
  * duplicated price list, and no separately-maintained "about" text. Change the
  * profile and the website changes with it, which is the whole claim /domains
@@ -28,15 +28,15 @@ import {
   NODE_TYPES,
   PHASES,
   formatChf,
-} from './substrate';
-import { COVERAGE, PRODUCER_ROLES, coverageProgress } from './substrate-coverage';
+} from './substrata-intel';
+import { COVERAGE, PRODUCER_ROLES, coverageProgress } from './substrata-intel-coverage';
 import type { SiteChrome, SitePage, SiteSection } from './site-content';
 
 const ROLE_LABEL: Record<string, string> = Object.fromEntries(
   PRODUCER_ROLES.map(role => [role.id, role.label])
 );
 
-export function substrateSiteChrome(): SiteChrome {
+export function substrataIntelSiteChrome(): SiteChrome {
   return {
     name: COMPANY.name,
     tagline: COMPANY.tagline,
@@ -54,14 +54,25 @@ export function substrateSiteChrome(): SiteChrome {
 function homePage(): SitePage {
   const progress = coverageProgress();
   const activePhase = PHASES.find(phase => phase.status === 'active');
+  const companies = new Set(COVERAGE.flatMap(entry => entry.producers.map(p => p.name))).size;
 
   return {
     path: '',
     navLabel: 'Home',
     title: COMPANY.name,
-    intro: COMPANY.tagline,
     sections: [
-      { kind: 'prose', paragraphs: [...LISTING_COPY.body] },
+      {
+        kind: 'hero',
+        eyebrow: 'Open-source research · Materials desk',
+        // The proposition, not the company name. A visitor who reads one line
+        // should know what this firm does and what it refuses to do.
+        statement: COMPANY.tagline,
+        // The first two paragraphs only: the proposition and the rule that
+        // bounds it. The remaining two — which phase is running, and how
+        // quotes work — are said properly by the phase block below and by the
+        // desk page, and a lead that repeats them is a lead nobody finishes.
+        lead: LISTING_COPY.body.slice(0, 2),
+      },
       {
         kind: 'stats',
         heading: 'Where the research stands',
@@ -74,14 +85,25 @@ function homePage(): SitePage {
           {
             label: 'Producers identified',
             value: String(progress.total),
-            note: `Across ${new Set(COVERAGE.flatMap(e => e.producers.map(p => p.name))).size} distinct companies.`,
+            note: `Across ${companies} distinct companies.`,
           },
           {
-            label: 'Producers sourced',
-            value: `${progress.sourced} of ${progress.total}`,
-            note: 'A row counts only once a primary source is attached.',
+            label: 'Desks',
+            value: String(DESKS.length),
+            note: 'Five parts of one chain, from feedstock to actuation.',
           },
         ],
+      },
+      {
+        kind: 'meter',
+        heading: 'Coverage',
+        label: 'Producer rows confirmed against a primary source',
+        value: progress.sourced,
+        of: progress.total,
+        caption:
+          'Phase 1 completes when these match. The bar is drawn from the same data the ' +
+          'map is drawn from, so it cannot flatter the work — an unfinished phase looks ' +
+          'unfinished here.',
       },
       {
         kind: 'cards',
@@ -98,6 +120,7 @@ function homePage(): SitePage {
       },
       {
         kind: 'definitions',
+        heading: 'The chokepoint screen',
         blurb: EXCLUSION_RULE.rule,
         items: CHOKEPOINT_TEST.map(factor => ({
           term: factor.question,
@@ -171,17 +194,30 @@ function mandatePage(): SitePage {
 // THE MAP
 // =====================================================================
 
+/** Stable fragment id for a material, so the index can link into the tables. */
+function materialAnchor(material: string): string {
+  return material
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 function mapPage(): SitePage {
   const progress = coverageProgress();
 
   const materialTables: SiteSection[] = COVERAGE.map(entry => ({
     kind: 'table' as const,
     heading: entry.material,
+    anchor: materialAnchor(entry.material),
     blurb: entry.thesis,
     columns: ['Company', 'Jurisdiction', 'Step in the chain', 'Status'],
+    // Jurisdiction codes and statuses are scanned down a column, not read
+    // across a row — mono keeps them aligned and comparable.
+    monoColumns: [1],
+    statusColumn: 3,
     rows: entry.producers.map(producer => [
       producer.name,
-      producer.jurisdictions.join(', '),
+      producer.jurisdictions.join(' '),
       ROLE_LABEL[producer.role] ?? producer.role,
       producer.source ? 'Sourced' : 'Unverified lead',
     ]),
@@ -203,23 +239,29 @@ function mapPage(): SitePage {
             'implies otherwise is worse than an empty one.',
           'A row marked “unverified lead” is exactly that: a research lead we believe is right ' +
             'and have not yet confirmed against a primary source. It is not a finding. When an ' +
-            'analyst attaches the source, the row flips to “sourced” and the count below moves. ' +
-            'That count is the honest measure of how far along this is.',
+            'analyst attaches the source, the row flips to “sourced” and the meter below moves. ' +
+            'That meter is the honest measure of how far along this is.',
           'Corrections are the reason this is public. If you work in one of these chains and a ' +
             'row is wrong, telling us makes the map better for everyone who reads it next.',
         ],
       },
       {
-        kind: 'stats',
-        stats: [
-          { label: 'Materials covered', value: String(COVERAGE.length) },
-          { label: 'Producer rows', value: String(progress.total) },
-          {
-            label: 'Confirmed against a source',
-            value: `${progress.sourced} of ${progress.total}`,
-            note: 'Phase 1 completes when these match.',
-          },
-        ],
+        kind: 'meter',
+        heading: 'Coverage',
+        label: 'Producer rows confirmed against a primary source',
+        value: progress.sourced,
+        of: progress.total,
+        caption: `${COVERAGE.length} materials, ${progress.total} producer rows. Phase 1 completes when every row carries a source.`,
+      },
+      {
+        kind: 'index',
+        heading: 'Materials',
+        blurb: 'Fifteen chokepoints. The number beside each is how many producers are mapped.',
+        entries: COVERAGE.map(entry => ({
+          label: entry.material,
+          meta: String(entry.producers.length),
+          anchor: materialAnchor(entry.material),
+        })),
       },
       ...materialTables,
     ],
@@ -239,7 +281,7 @@ function deskPage(): SitePage {
     cards: CATALOGUE.filter(listing => listing.desk === desk.id).map(listing => ({
       title: listing.title,
       body: listing.why,
-      meta: `${listing.spec} · Indicative CHF ${formatChf(listing.indicativePriceChf)} per ${listing.unit}`,
+      meta: `CHF ${formatChf(listing.indicativePriceChf)} / ${listing.unit}  ·  ${listing.spec}`,
     })),
   }));
 
@@ -323,6 +365,6 @@ function disclosurePage(): SitePage {
 
 // =====================================================================
 
-export function substrateSitePages(): SitePage[] {
+export function substrataIntelSitePages(): SitePage[] {
   return [homePage(), mandatePage(), mapPage(), deskPage(), disclosurePage()];
 }

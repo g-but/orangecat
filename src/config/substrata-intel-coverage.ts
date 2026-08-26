@@ -2,7 +2,7 @@
  * Substrate — Phase 1 coverage universe: the producers of the fifteen.
  *
  * The firm's first research product. For every material on the desk
- * (`substrate.ts` → CATALOGUE), the set of companies that mine, refine,
+ * (`substrata-intel.ts` → CATALOGUE), the set of companies that mine, refine,
  * convert or recycle it. Mostly private, mostly uncovered: there is a great
  * deal of published research on chip designers and almost none on who fires
  * crucible-grade quartz or upgrades tin to seven nines.
@@ -29,7 +29,7 @@
  * Created: 2026-08-26
  */
 
-import { CATALOGUE } from './substrate';
+import { CATALOGUE } from './substrata-intel';
 
 // =====================================================================
 // SHAPE
@@ -72,7 +72,7 @@ export interface Producer {
 }
 
 export interface MaterialCoverage {
-  /** Must exactly match a CATALOGUE title in `substrate.ts`. */
+  /** Must exactly match a CATALOGUE title in `substrata-intel.ts`. */
   material: string;
   /** What makes this material a chokepoint, in one line — the research thesis. */
   thesis: string;

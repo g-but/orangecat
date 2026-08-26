@@ -30,13 +30,13 @@ import {
   PRODUCT_PAYLOADS,
   deskFor,
   formatChf,
-} from '@/config/substrate';
+} from '@/config/substrata-intel';
 import {
   COVERAGE,
   PRODUCER_ROLES,
   coverageProgress,
   materialsFor,
-} from '@/config/substrate-coverage';
+} from '@/config/substrata-intel-coverage';
 import { GROUP_LABELS } from '@/config/group-labels';
 import { GROUP_FEATURES } from '@/config/group-features';
 import { GOVERNANCE_PRESETS } from '@/config/governance-presets';

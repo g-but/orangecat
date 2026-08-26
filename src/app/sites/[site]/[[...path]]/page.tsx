@@ -15,7 +15,12 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { HOSTED_SITES, siteBySlug, siteCanonicalHost } from '@/config/sites';
-import { siteChromeFor, sitePageAt, sitePagesFor } from '@/config/site-content';
+import {
+  pageRendersOwnHeader,
+  siteChromeFor,
+  sitePageAt,
+  sitePagesFor,
+} from '@/config/site-content';
 import { SiteFooter, SiteMasthead } from '@/components/sites/SiteChrome';
 import { SiteSections } from '@/components/sites/SiteSections';
 
@@ -80,17 +85,22 @@ export default async function HostedSitePage({ params }: RouteParams) {
       <SiteMasthead site={site} chrome={chrome} pages={pages} currentPath={currentPath} />
 
       <main className="flex-1">
-        <div className="mx-auto max-w-shell px-4 py-12 sm:px-6 lg:px-8">
-          <header className="mb-10">
-            <h1 className="font-heading tracking-display text-3xl font-bold text-fg-primary sm:text-4xl">
-              {page.title}
-            </h1>
-            {page.intro && (
-              <p className="mt-3 max-w-3xl text-lg leading-relaxed text-fg-secondary">
-                {page.intro}
-              </p>
-            )}
-          </header>
+        <div className="mx-auto max-w-shell px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+          {/* A page either opens with its own hero or gets the standard title
+              block — never both. The rule lives in site-content.ts so it holds
+              for every hosted site, not just this one. */}
+          {!pageRendersOwnHeader(page) && (
+            <header className="mb-14 border-b border-subtle pb-10">
+              <h1 className="font-heading text-3xl font-semibold tracking-display text-fg-primary sm:text-5xl">
+                {page.title}
+              </h1>
+              {page.intro && (
+                <p className="mt-4 max-w-prose text-lg leading-relaxed text-fg-secondary">
+                  {page.intro}
+                </p>
+              )}
+            </header>
+          )}
 
           <SiteSections sections={page.sections} />
         </div>
