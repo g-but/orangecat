@@ -1,0 +1,16 @@
+# SSOT: repo scripts/systemd/ — installed by deploy-selfhost.sh.
+# Instance of the generic orangecat-cron@.service template (curls
+# /api/cron/cat-mentions with CRON_SECRET).
+#
+# This is the DURABILITY path, not the latency path. The write that queued the
+# mention also kicks a run, so a reply normally lands in seconds; this tick is
+# what guarantees the question is still answered when that process died.
+[Unit]
+Description=OrangeCat @cat mention worker (every minute)
+
+[Timer]
+OnCalendar=*:*:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
