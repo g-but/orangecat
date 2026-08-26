@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { Globe, ShieldCheck, Server } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { DomainSearch } from '@/components/domains/DomainSearch';
 import { ROUTES } from '@/config/routes';
 import {
   DOMAINS_SERVICE_URL,
@@ -31,6 +32,15 @@ export default function DomainsPage() {
               <span className="font-mono text-fg-primary">yourname.orangecat.ch</span> — free. Move
               to your own domain when you&apos;re ready, and everything keeps working.
             </p>
+          </div>
+
+          {/* The rung before everything else on this page: you cannot host a
+              domain you have not found yet. */}
+          <div className="mt-10">
+            <p className="mb-4 text-center text-sm text-fg-tertiary">
+              Don&apos;t have a name yet? Check one against the registries.
+            </p>
+            <DomainSearch />
           </div>
         </div>
       </div>

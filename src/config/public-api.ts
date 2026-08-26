@@ -100,6 +100,14 @@ export const PUBLIC_API_INTEGRATION_ENDPOINTS = [
     methods: ['GET'] as const,
     endpoint: `${PUBLIC_API_BASE}/demand`,
   },
+  {
+    // Domain availability. Public and keyless — registry RDAP records are
+    // public. Shared with FleetCrown so the "a .ch not-found proves nothing"
+    // rule is enforced server-side once, not re-implemented per client.
+    name: 'domains',
+    methods: ['GET'] as const,
+    endpoint: `${PUBLIC_API_BASE}/domains`,
+  },
 ] as const;
 
 /**
