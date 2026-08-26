@@ -1,4 +1,3 @@
-import { callRpc } from '@/lib/supabase/untyped';
 import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
@@ -12,6 +11,7 @@ import { safeJsonLdString } from '@/lib/seo/structured-data';
 import type { ScalableProfile } from '@/services/profile/types';
 import { mapProjectRow } from '@/types/project';
 import { enrichProjectsWithSettledFunding } from '@/services/wallets/project-funding';
+import { countActiveProfileWallets } from '@/services/wallets/countPublicWallets';
 import { ROUTES } from '@/config/routes';
 import { APP_NAME, APP_KICKER, SITE_URL } from '@/config/brand';
 import { applyProfilePrivacy } from '@/config/profile-privacy';
@@ -211,24 +211,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
     .select('*', { count: 'exact', head: true })
     .eq('follower_id', profile.id);
 
-  // Fetch wallet count using new wallet architecture
-  let walletCount = 0;
-  try {
-    // Use the get_entity_wallets function to get active wallets for this profile
-    // get_entity_wallets is not in generated DB types — cast the rpc reference to call it
-
-    const { data: walletData } = (await callRpc(supabase, 'get_entity_wallets', {
-      p_entity_type: 'profile',
-      p_entity_id: profile.id,
-    })) as { data: Array<{ is_active: boolean }> | null };
-    walletCount = walletData ? walletData.filter(w => w.is_active).length : 0;
-  } catch {
-    // get_entity_wallets is the current wallet architecture; if it errs we just show
-    // 0 (legacy receive addresses are still counted below). The old wallet_ownerships
-    // fallback was removed — that table was never migrated onto the box and the
-    // try/catch silently swallowed its absence, so it never contributed a count.
-    walletCount = 0;
-  }
+  // Was an RPC to `get_entity_wallets`, a function that exists in no migration
+  // and returns PGRST202 in production — so this count was always 0 and the
+  // Wallets tab was hidden from visitors for every profile without a legacy
+  // address. See services/wallets/countPublicWallets.ts for the full note.
+  const walletCount = await countActiveProfileWallets(profile.id);
 
   // A profile's legacy single bitcoin_address / lightning_address is a real way to
   // receive Bitcoin (the public donation card sends to exactly these), even though
