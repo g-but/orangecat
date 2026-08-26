@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
-import { notFound, redirect } from 'next/navigation';
+import { notFound, redirect, permanentRedirect } from 'next/navigation';
 import ProfilePageClient from '@/components/profile/ProfilePageClient';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
@@ -15,6 +15,7 @@ import { countActiveProfileWallets } from '@/services/wallets/countPublicWallets
 import { ROUTES } from '@/config/routes';
 import { APP_NAME, APP_KICKER, SITE_URL } from '@/config/brand';
 import { applyProfilePrivacy } from '@/config/profile-privacy';
+import { resolveHistoricalUsername } from '@/domain/lightning-address/username-history';
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -161,6 +162,24 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const profile = profileData as unknown as ScalableProfile;
 
   if (profileError || !profile) {
+    // Before 404ing, check whether this handle is one an account used to have.
+    // Renaming the profiles that published their email local part would
+    // otherwise dead-link every inbound URL pointing at the old handle — and
+    // the person who lost the traffic would never find out. A permanent
+    // redirect also tells search engines to move their index entry rather than
+    // record a 404 against the account.
+    const movedTo = await resolveHistoricalUsername(supabase, targetUsername);
+    if (movedTo) {
+      const { data: currentData } = await supabase
+        .from(DATABASE_TABLES.PROFILES)
+        .select('username')
+        .eq('id', movedTo)
+        .single();
+      const current = currentData as { username: string | null } | null;
+      if (current?.username) {
+        permanentRedirect(ROUTES.PROFILES.VIEW(current.username));
+      }
+    }
     notFound();
   }
 
