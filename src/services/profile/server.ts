@@ -13,6 +13,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 import { STATUS } from '@/config/database-constants';
+import { neutralUsernameFor } from '@/lib/profile/neutral-username';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
@@ -138,18 +139,17 @@ export class ProfileServerService {
 
       // Profile doesn't exist, create it
       const safeEmail = typeof userEmail === 'string' ? userEmail : null;
-      const emailName = safeEmail && safeEmail.includes('@') ? safeEmail.split('@')[0] : null;
-      // Sanitize: replace dots and other invalid chars with underscores, keep only letters/numbers/underscores/hyphens
-      const sanitizedEmailName = emailName ? emailName.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
-      const username =
-        sanitizedEmailName && sanitizedEmailName.length > 0
-          ? sanitizedEmailName
-          : `user_${String(userId).slice(0, 8)}`;
+      // Never the email local part. This path creates profiles independently of
+      // the handle_new_user trigger, so fixing only the trigger left this one
+      // still publishing people's email prefixes as crawlable handles — which
+      // is what took the count from 72 to 77 while the trigger fix was being
+      // written. The display name gets no email fallback either: a name quietly
+      // set to someone's email prefix is the same leak wearing another label.
+      const username = neutralUsernameFor(userId);
       const name =
         (userMetadata?.full_name as string | undefined) ||
         (userMetadata?.name as string | undefined) ||
         (userMetadata?.display_name as string | undefined) ||
-        (emailName && emailName.length > 0 ? emailName : null) ||
         'User';
 
       const profileData: ProfileInsert = {
