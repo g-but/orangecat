@@ -8,6 +8,7 @@
 import type { AIPrefillResponse } from '@/components/create/types';
 import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
 import { DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
+import { DEFAULT_GROQ_MODEL } from '@/services/ai/groq';
 import {
   AI_ASSIST_MIN_INPUT_LENGTH,
   USER_OVERRIDABLE_FIELDS,
@@ -19,8 +20,14 @@ import { getSystemPrompt, getUserPrompt, parseAIResponse } from './prompts/form-
 import { sanitizeAiFields } from './sanitize-ai-fields';
 import type { AiAssistTarget } from './assist-target';
 
-// Default models for form prefill (fast, good at JSON generation)
-const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile';
+// Default models for form prefill (fast, good at JSON generation).
+//
+// The Groq id is IMPORTED, not written here. This file used to carry its own
+// literal `llama-3.3-70b-versatile` while `services/ai/groq.ts` already owned
+// that decision two lines' worth of import away — so when Groq retired the
+// llama-3.x family there were two places to fix and only one got found. The
+// OpenRouter id beside it was already sourced from the registry, which is what
+// made the asymmetry easy to miss in review.
 const DEFAULT_OPENROUTER_MODEL = DEFAULT_FREE_MODEL_ID;
 
 /**
