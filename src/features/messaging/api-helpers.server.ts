@@ -7,6 +7,7 @@
 
 import { fromTable } from '@/lib/supabase/untyped';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { noteCatMention } from '@/services/mentions/note-mention';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import type { Database } from '@/types/database';
@@ -235,6 +236,19 @@ export async function postConversationMessage(
     input.metadata || null,
     input.senderActorId || null
   );
+
+  // Recording that @cat was tagged must not make the sender wait for an LLM,
+  // and must not fail their message if the Cat is unavailable — so the debt is
+  // recorded here and paid elsewhere. Deliberately awaited rather than
+  // fire-and-forget: the insert is one indexed statement, and losing it would
+  // mean a question that silently never gets an answer.
+  await noteCatMention(admin, {
+    conversationId,
+    messageId: id,
+    senderId: userId,
+    content: input.content,
+  });
+
   return { ok: true, id };
 }
 

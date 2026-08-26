@@ -265,6 +265,7 @@ echo "=== ship ops scripts + nightly Cat-eval timer ==="
     orangecat-data-invariants.service
     orangecat-data-invariants.timer
     "orangecat-cron@cat-account.timer"
+    "orangecat-cron@cat-mentions.timer"
     "orangecat-cron@cat-brief.timer"
     "orangecat-cron@cat-watches.timer"
     "orangecat-cron@reindex-embeddings.timer"
