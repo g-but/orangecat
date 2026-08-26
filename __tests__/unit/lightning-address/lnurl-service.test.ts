@@ -39,18 +39,22 @@ function adminReturning(
   opts: { history?: { profile_id: string } | null; byId?: Record<string, unknown> | null } = {}
 ) {
   const calls: Array<{ table: string; column: string; value: unknown }> = [];
+  const rpcCalls: Array<{ fn: string; args: unknown }> = [];
   const stub = {
     calls,
+    rpcCalls,
+    // History goes through an RPC, not a filter: PostgREST reads `+` in a query
+    // string as a space, so `.eq('old_username', 'butaeff+ocauth2')` searched
+    // for "butaeff ocauth2". An RPC argument travels in a JSON body.
+    rpc: async (fn: string, args: unknown) => {
+      rpcCalls.push({ fn, args });
+      return { data: opts.history?.profile_id ?? null, error: null };
+    },
     from: (table: string) => ({
       select: () => ({
         eq: (column: string, value: unknown) => {
           calls.push({ table, column, value });
-          const data =
-            table === 'profile_username_history'
-              ? (opts.history ?? null)
-              : column === 'id'
-                ? (opts.byId ?? null)
-                : profile;
+          const data = column === 'id' ? (opts.byId ?? null) : profile;
           return { maybeSingle: async () => ({ data, error: null }) };
         },
       }),
@@ -83,15 +87,36 @@ describe('a handle the profile no longer uses', () => {
     });
   });
 
-  it('is looked up case-insensitively, like a current handle', async () => {
+  // The RPC lowercases and trims server-side, so callers cannot drift from the
+  // stored form. The handle is passed through verbatim.
+  it('hands the raw handle to the RPC, which canonicalises it', async () => {
     const stub = adminReturning(null, {
       history: { profile_id: 'user-1' },
       byId: { id: 'user-1', username: 'user_a1b2c3d4e5f6', display_name: null },
     });
     mockGetAdmin.mockReturnValue(stub as never);
     await resolveLnurlRecipient('Georgy.Butaev');
-    const historyCall = stub.calls.find((c) => c.table === 'profile_username_history');
-    expect(historyCall?.value).toBe('georgy.butaev');
+    expect(stub.rpcCalls[0]).toEqual({
+      fn: 'resolve_username_history',
+      args: { handle: 'Georgy.Butaev' },
+    });
+  });
+
+  // THE regression. Two live profiles carry a '+' in their legacy handle. Sent
+  // as a PostgREST filter the character becomes a space server-side, so the
+  // owner was unfindable and a payment to that address had nowhere to go.
+  // Measured on production: eq.butaeff+ocauth2 -> [], eq.butaeff%2Bocauth2 -> [row].
+  it("finds an owner whose old handle contains '+'", async () => {
+    const stub = adminReturning(null, {
+      history: { profile_id: 'user-1' },
+      byId: { id: 'user-1', username: 'user_cbd30e0570d3', display_name: null },
+    });
+    mockGetAdmin.mockReturnValue(stub as never);
+    const recipient = await resolveLnurlRecipient('butaeff+ocauth2');
+    expect(recipient?.userId).toBe('user-1');
+    // Never a query-string filter — that is what mangled it.
+    expect(stub.calls.some((c) => c.table === 'profile_username_history')).toBe(false);
+    expect(stub.rpcCalls[0].args).toEqual({ handle: 'butaeff+ocauth2' });
   });
 
   it('does not resolve when the account behind it is gone', async () => {
