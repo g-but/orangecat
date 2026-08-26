@@ -18,7 +18,24 @@ import { DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
 // registry is now the one place ids live, guarded by the free-model catalog
 // probe (health-probes.ts), so drift is detected there instead of re-pinned
 // here.
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+/**
+ * Groq's general-purpose model.
+ *
+ * `llama-3.3-70b-versatile` was pinned here and STOPPED BEING SERVED. Groq
+ * answered 404 for it, every callPlatformJson caller returned null, and because
+ * the failure was logged at warn and swallowed by callers that "degrade
+ * gracefully", eight features degraded gracefully into doing nothing: the offer
+ * engine, both writing engines, prompt suggestions, platform feedback, image
+ * suggestions, the voice intent router, and the Cat's replies. Verified against
+ * the live API on 2026-08-26 — Groq served 14 models and that was not among
+ * them.
+ *
+ * Model ids rot. This is the fifth time in this fleet, and the comment below
+ * already said so about OpenRouter. The durable answer is not a better id, it
+ * is the failover underneath and `npm run check:ai-models`, which asks each
+ * provider whether it still serves what we pinned.
+ */
+const GROQ_MODEL = 'openai/gpt-oss-120b';
 const OPENROUTER_MODEL = DEFAULT_FREE_MODEL_ID;
 
 export interface PlatformJsonOpts {
@@ -41,26 +58,33 @@ interface Provider {
   isOpenRouter: boolean;
 }
 
-function resolveProvider(_longform: boolean): Provider | null {
+/**
+ * Providers to try, in order.
+ *
+ * Groq first — fast, and handles long-form JSON inside the free TPM budget.
+ * OpenRouter after it, and that ORDERING IS NOT THE POINT: what matters is that
+ * there is a second entry at all. This used to return the FIRST provider whose
+ * key existed and stop, so when Groq's pinned model stopped being served there
+ * was no path out — a dead id took every platform-LLM feature down with it and
+ * OpenRouter sat there configured and unused.
+ */
+function resolveProviders(): Provider[] {
+  const providers: Provider[] = [];
   const groqKey = process.env.GROQ_API_KEY;
   const openRouterKey = process.env.OPENROUTER_API_KEY;
 
-  // Prefer Groq — it's the verified-working provider on the box (fast, handles
-  // long-form JSON within the free TPM budget). OpenRouter is a fallback only:
-  // its free model IDs rot and 404 (both gpt-oss-120b:free and llama-4-maverick:free
-  // returned 404 in prod), so never route to it when Groq is available.
   if (groqKey) {
-    return {
+    providers.push({
       url: `${PROVIDER_BASE_URLS.groq}/chat/completions`,
       model: GROQ_MODEL,
       apiKey: groqKey,
       isOpenRouter: false,
-    };
+    });
   }
   if (openRouterKey) {
-    return openRouter(openRouterKey, OPENROUTER_MODEL);
+    providers.push(openRouter(openRouterKey, OPENROUTER_MODEL));
   }
-  return null;
+  return providers;
 }
 
 function openRouter(apiKey: string, model: string): Provider {
@@ -81,18 +105,10 @@ export async function callPlatformJson(
   user: string,
   opts: PlatformJsonOpts = {}
 ): Promise<string | null> {
-  const provider = resolveProvider(!!opts.longform);
-  if (!provider) {
+  const providers = resolveProviders();
+  if (providers.length === 0) {
     logger.warn('platform-llm: no platform AI key configured', {}, 'PlatformLLM');
     return null;
-  }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${provider.apiKey}`,
-  };
-  if (provider.isOpenRouter) {
-    headers['HTTP-Referer'] = process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.ch';
   }
 
   const messages = [
@@ -102,42 +118,80 @@ export async function callPlatformJson(
   const maxTokens = opts.maxTokens ?? (opts.longform ? 3000 : 1400);
   const temperature = opts.temperature ?? 0.6;
 
-  const call = (jsonMode: boolean) =>
-    fetch(provider.url, {
-      method: 'POST',
-      headers,
-      ...(opts.timeoutMs ? { signal: AbortSignal.timeout(opts.timeoutMs) } : {}),
-      body: JSON.stringify({
-        model: provider.model,
-        messages,
-        temperature,
-        max_tokens: maxTokens,
-        ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
-      }),
-    });
+  let lastStatus: number | null = null;
 
-  try {
-    // Some free models 400 on response_format — retry once without it and lean
-    // on parseJsonLoose (the system prompt already demands JSON-only output).
-    let response = await call(true);
-    if (!response.ok) {
+  for (const provider of providers) {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${provider.apiKey}`,
+    };
+    if (provider.isOpenRouter) {
+      headers['HTTP-Referer'] = process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.ch';
+    }
+
+    const call = (jsonMode: boolean) =>
+      fetch(provider.url, {
+        method: 'POST',
+        headers,
+        ...(opts.timeoutMs ? { signal: AbortSignal.timeout(opts.timeoutMs) } : {}),
+        body: JSON.stringify({
+          model: provider.model,
+          messages,
+          temperature,
+          max_tokens: maxTokens,
+          ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
+        }),
+      });
+
+    try {
+      // Some free models 400 on response_format — retry once without it and lean
+      // on parseJsonLoose (the system prompt already demands JSON-only output).
+      let response = await call(true);
+      if (!response.ok) {
+        response = await call(false);
+      }
+
+      if (response.ok) {
+        const json = (await response.json()) as {
+          choices?: { message?: { content?: string } }[];
+        };
+        return json.choices?.[0]?.message?.content ?? null;
+      }
+
+      lastStatus = response.status;
+      // 404 means the model id no longer exists, which is a CONFIGURATION fault
+      // rather than a hiccup: it will fail identically until someone changes the
+      // constant. warn was too quiet — it degraded eight features to silence for
+      // as long as nobody read the logs.
+      if (response.status === 404) {
+        logger.error(
+          'platform-llm: model no longer served — the pinned id has rotted',
+          { model: provider.model, provider: provider.isOpenRouter ? 'openrouter' : 'groq' },
+          'PlatformLLM'
+        );
+      } else {
+        logger.warn(
+          'platform-llm: model call failed',
+          { status: response.status, model: provider.model },
+          'PlatformLLM'
+        );
+      }
+    } catch (err) {
       logger.warn(
-        'platform-llm: json-mode call failed, retrying without response_format',
-        { status: response.status, model: provider.model },
+        'platform-llm: model call threw',
+        { err: String(err), model: provider.model },
         'PlatformLLM'
       );
-      response = await call(false);
     }
-    if (!response.ok) {
-      logger.warn('platform-llm: model call failed', { status: response.status }, 'PlatformLLM');
-      return null;
-    }
-    const json = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-    return json.choices?.[0]?.message?.content ?? null;
-  } catch (err) {
-    logger.warn('platform-llm: model call threw', { err: String(err) }, 'PlatformLLM');
-    return null;
+    // Fall through to the next provider.
   }
+
+  logger.error(
+    'platform-llm: every provider failed',
+    { providers: providers.length, lastStatus },
+    'PlatformLLM'
+  );
+  return null;
 }
 
 /**
