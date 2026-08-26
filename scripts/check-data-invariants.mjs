@@ -272,6 +272,46 @@ async function checkSilentlyDroppedCatTurns() {
  * auth.users is not exposed through PostgREST, so this goes through the
  * service_role-only count_orphaned_profiles() function.
  */
+/**
+ * How many profiles still publish their email local part as a public handle.
+ *
+ * `/profiles/<username>` is served with no auth and robots.txt has no
+ * /profiles rule, so such a handle is crawlable; with a handful of common
+ * domains it reconstructs the address. handle_new_user() minted them until
+ * 20260826130000.
+ *
+ * A RATCHET, not a zero-check. The 72 accounts that already have one are NOT
+ * renamed: a username is also a Lightning address
+ * (`<username>@orangecat.ch`) and a public profile URL, so renaming breaks
+ * saved payment addresses and inbound links for real people. A gate demanding
+ * zero would therefore be red every night about code that is fine — the exact
+ * habit that teaches everyone to ignore the gate. This fails only if the
+ * number RISES, which means a new write path started deriving handles from
+ * emails again.
+ */
+const EMAIL_DERIVED_USERNAME_BASELINE = 72; // measured on production 2026-08-26
+
+async function checkEmailDerivedUsernames() {
+  const count = Number(await rpc('count_email_derived_usernames'));
+
+  if (count > EMAIL_DERIVED_USERNAME_BASELINE) {
+    violation(
+      'profiles.username_from_email',
+      `${count} profiles publish their email local part as a public, crawlable handle — ` +
+        `up from the ${EMAIL_DERIVED_USERNAME_BASELINE} known on 2026-08-26, so a write path ` +
+        `is minting them again (handle_new_user, a script, or a manual fix)`,
+      []
+    );
+  } else if (count < EMAIL_DERIVED_USERNAME_BASELINE) {
+    notes.push(
+      `profiles: ${count} email-derived handles left (was ${EMAIL_DERIVED_USERNAME_BASELINE}) — ` +
+        `lower EMAIL_DERIVED_USERNAME_BASELINE so the ratchet holds the new floor`
+    );
+  } else {
+    notes.push(`profiles: ${count} email-derived handles, unchanged — no new ones minted`);
+  }
+}
+
 async function checkOrphanedProfiles() {
   const count = Number(await rpc('count_orphaned_profiles'));
 
@@ -403,6 +443,7 @@ async function main() {
     checkPaidWithoutTimestamp,
     checkSilentlyDroppedCatTurns,
     checkOrphanedProfiles,
+    checkEmailDerivedUsernames,
     checkOrphanedCatConversations,
     checkOrphanedActors,
   ];
