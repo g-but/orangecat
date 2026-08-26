@@ -1,0 +1,17 @@
+# SSOT: repo scripts/systemd/ — installed by deploy-selfhost.sh.
+# Instance of the generic orangecat-cron@.service template (curls
+# /api/cron/cat-account with CRON_SECRET).
+#
+# Asserts that the Cat has a profile. @cat is linked wherever it is written, so
+# a missing account makes every mention resolve to nobody — daily re-assertion
+# turns that from a support ticket into a self-healing invariant.
+[Unit]
+Description=OrangeCat Cat account invariant (daily)
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target
