@@ -8,6 +8,8 @@
  * profile. Anything that asks a question about usernames now asks it here.
  */
 
+import { CAT_USERNAME } from '@/config/cat-identity';
+
 /** Characters a username may contain, and how long it may be. */
 export const USERNAME_MIN_LENGTH = 3;
 export const USERNAME_MAX_LENGTH = 30;
@@ -31,7 +33,7 @@ export const USERNAME_RULE_MESSAGE =
  */
 export const RESERVED_USERNAMES: ReadonlyArray<{ name: string; why: string }> = [
   // The Cat's own handle, and the near-misses that would be mistaken for it.
-  { name: 'cat', why: "the Cat's handle — every @cat on the platform points here" },
+  { name: CAT_USERNAME, why: "the Cat's handle — every @cat on the platform points here" },
   { name: 'thecat', why: 'reads as the Cat in a mention' },
   { name: 'mycat', why: 'reads as the Cat in a mention ("My Cat" is the product name)' },
   { name: 'catbot', why: 'reads as the Cat in a mention' },
