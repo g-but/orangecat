@@ -64,13 +64,24 @@ export function computeWalletGoalProgress(
   }
 
   const currency = (input.goalCurrency || BTC).toUpperCase();
-  const balanceBtc = Number(input.balanceBtc ?? 0);
-  const safeBalance = Number.isFinite(balanceBtc) ? balanceBtc : 0;
+  // `Number(null)` is 0, not NaN — so null must be rejected before coercion, or
+  // "we did not fetch this" becomes "this wallet holds nothing".
+  const balanceBtc =
+    input.balanceBtc === null || input.balanceBtc === undefined
+      ? Number.NaN
+      : Number(input.balanceBtc);
 
-  // A BTC-denominated goal needs no conversion — and an empty wallet is zero in
-  // every currency, so it needs no rate either. Both are exact.
-  const balanceInGoalCurrency =
-    currency === BTC || safeBalance === 0 ? safeBalance : orNull(convertFromBtc(safeBalance, currency));
+  // An absent balance is UNKNOWN, not zero. `balance_btc` is not among the
+  // public wallet fields, so a visitor's payload simply does not carry it, and
+  // coercing that to 0 would report "0% funded" about a wallet we never looked
+  // at — the same mistake as printing a balance we never fetched.
+  const balanceInGoalCurrency = !Number.isFinite(balanceBtc)
+    ? null
+    : // A BTC-denominated goal needs no conversion, and an empty wallet is zero
+      // in every currency, so it needs no rate either. Both are exact.
+      currency === BTC || balanceBtc === 0
+      ? balanceBtc
+      : orNull(convertFromBtc(balanceBtc, currency));
 
   return {
     goalAmount,

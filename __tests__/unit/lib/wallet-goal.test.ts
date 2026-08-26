@@ -98,9 +98,24 @@ describe('computeWalletGoalProgress', () => {
     ).toBeNull();
   });
 
-  it('survives a non-numeric balance rather than rendering NaN%', () => {
+  it('treats an unreadable balance as unknown, not as zero', () => {
+    // `balance_btc` is not among PUBLIC_WALLET_FIELDS, so a visitor's payload
+    // does not carry it. Coercing that to 0 would report "0% funded" about a
+    // wallet nobody looked at.
+    for (const balanceBtc of [Number.NaN, undefined, null]) {
+      const goal = computeWalletGoalProgress(
+        { balanceBtc, goalAmount: 2500, goalCurrency: 'CHF' },
+        convert
+      );
+      expect(goal?.balanceInGoalCurrency).toBeNull();
+      expect(goal?.percent).toBeNull();
+      expect(goal?.goalAmount).toBe(2500);
+    }
+  });
+
+  it('still reports 0% for a wallet genuinely holding nothing', () => {
     const goal = computeWalletGoalProgress(
-      { balanceBtc: Number.NaN, goalAmount: 2500, goalCurrency: 'CHF' },
+      { balanceBtc: 0, goalAmount: 2500, goalCurrency: 'CHF' },
       convert
     );
     expect(goal?.percent).toBe(0);
