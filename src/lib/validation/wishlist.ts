@@ -64,9 +64,19 @@ export const wishlistItemSchema = z.object({
   currency: z.enum(CURRENCY_CODES).optional().default('BTC'),
   original_amount: z.number().positive().optional().nullable(),
 
-  // Wallet routing
-  use_dedicated_wallet: z.boolean().default(false),
-  dedicated_wallet_address: z.string().optional().nullable(),
+  // `use_dedicated_wallet` and `dedicated_wallet_address` were removed here on
+  // 2026-08-26. They described a feature that was never built: contributions to
+  // a wishlist item routing to their own address instead of the owner's wallet.
+  //
+  // Unreachable from every direction — no form field offers them, the wishlist
+  // API never maps them (so nothing was ever written), no payment code reads
+  // them, and their guidance copy therefore had no field to attach to either.
+  // The columns exist on wishlist_items and the table holds 0 rows.
+  //
+  // Removed rather than rendered, for the reason the guidance copy makes plain:
+  // it promises "contributions go to a dedicated address". Displaying that is a
+  // statement about where someone's money goes, and it would not have been true.
+  // The columns stay, so building the feature later needs no migration.
 
   // Options
   priority: z.number().int().min(0).max(100).default(0),
