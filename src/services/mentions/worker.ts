@@ -9,6 +9,9 @@
 
 import { ensureCatAccount } from '@/services/mentions/cat-account';
 import { replyToConversationMention } from '@/services/mentions/cat-reply';
+import { replyToPostMention } from '@/services/mentions/cat-post-reply';
+import { resolveMentions } from '@/services/mentions/resolve';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import {
   claimCatMentions,
   completeCatMention,
@@ -94,7 +97,37 @@ async function answer(
       catId,
     });
   }
-  // Wall posts are queued by the same table but answered by a later change;
-  // until then such a row would be retried forever, so it fails fast instead.
+
+  if (mention.parent_event_id) {
+    // The database trigger is a PREFILTER: it queues anything containing the
+    // substring "@cat", so `@catalogue` and `bob@catering.com` arrive here too.
+    // The resolver is the authority, and this is where its verdict is applied —
+    // detection has one implementation, not one per surface.
+    if (!(await postActuallyTagsTheCat(admin, mention.parent_event_id))) {
+      return true; // Nothing owed. Resolved, not failed.
+    }
+    return replyToPostMention(admin, { eventId: mention.parent_event_id, catId });
+  }
+
   return false;
+}
+
+/** Ask the real resolver whether the post's text mentions the Cat. */
+async function postActuallyTagsTheCat(
+  admin: SupabaseClient,
+  eventId: string
+): Promise<boolean> {
+  const { data } = await admin
+    .from(DATABASE_TABLES.TIMELINE_EVENTS)
+    .select('title, description')
+    .eq('id', eventId)
+    .maybeSingle();
+
+  if (!data) {
+    return false;
+  }
+  const row = data as { title: string | null; description: string | null };
+  const text = `${row.description ?? ''}\n${row.title ?? ''}`;
+  const { mentionsCat } = await resolveMentions(admin, text);
+  return mentionsCat;
 }

@@ -1,0 +1,104 @@
+/**
+ * Wall posts reach the queue through a database trigger, because posts are
+ * written straight from the browser to a Postgres function and there is no
+ * server seam to hook. That trigger is a PREFILTER: it queues anything
+ * containing the substring "@cat", so `@catalogue` arrives here too.
+ *
+ * The point of these tests is that the prefilter is not the rule. Detection has
+ * ONE implementation — the resolver — and the worker is where its verdict is
+ * applied. A second copy of "what counts as a mention", written in SQL, is
+ * exactly the kind of duplication that drifts silently.
+ */
+
+const replyToPostMention = jest.fn().mockResolvedValue(true);
+const resolveMentions = jest.fn();
+const claimCatMentions = jest.fn();
+const completeCatMention = jest.fn();
+const failCatMention = jest.fn();
+
+jest.mock('@/services/mentions/cat-account', () => ({
+  ensureCatAccount: jest.fn().mockResolvedValue({ id: 'cat-1', username: 'cat' }),
+}));
+jest.mock('@/services/mentions/cat-post-reply', () => ({
+  replyToPostMention: (...a: unknown[]) => replyToPostMention(...a),
+}));
+jest.mock('@/services/mentions/cat-reply', () => ({
+  replyToConversationMention: jest.fn().mockResolvedValue(true),
+}));
+jest.mock('@/services/mentions/resolve', () => ({
+  resolveMentions: (...a: unknown[]) => resolveMentions(...a),
+}));
+jest.mock('@/services/mentions/queue', () => ({
+  claimCatMentions: (...a: unknown[]) => claimCatMentions(...a),
+  completeCatMention: (...a: unknown[]) => completeCatMention(...a),
+  failCatMention: (...a: unknown[]) => failCatMention(...a),
+  MAX_ATTEMPTS: 3,
+}));
+
+import { runCatMentions } from '@/services/mentions/worker';
+
+const postMention = {
+  id: 'q1',
+  source_type: 'timeline_event',
+  source_id: 'e1',
+  requester_id: 'u1',
+  conversation_id: null,
+  parent_event_id: 'e1',
+  attempts: 1,
+};
+
+/** Admin stub returning one post's text. */
+const admin = (description: string) =>
+  ({
+    from: () => ({
+      select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: { title: null, description }, error: null }) }) }),
+    }),
+  }) as never;
+
+beforeEach(() => {
+  replyToPostMention.mockClear().mockResolvedValue(true);
+  resolveMentions.mockReset();
+  claimCatMentions.mockReset().mockResolvedValue([postMention]);
+  completeCatMention.mockReset();
+  failCatMention.mockReset();
+});
+
+describe('wall-post mentions', () => {
+  it('answers a post that really tags the Cat', async () => {
+    resolveMentions.mockResolvedValue({ mentions: [], mentionsCat: true });
+    const result = await runCatMentions(admin('@cat is this goal realistic?'));
+    expect(replyToPostMention).toHaveBeenCalledWith(expect.anything(), {
+      eventId: 'e1',
+      catId: 'cat-1',
+    });
+    expect(result.answered).toBe(1);
+  });
+
+  it('discards the prefilter’s over-selection without replying', async () => {
+    // The trigger queued this because it contains "@cat" as a substring. The
+    // resolver says otherwise, and the resolver is the authority.
+    resolveMentions.mockResolvedValue({ mentions: [], mentionsCat: false });
+    const result = await runCatMentions(admin('browsing the @catalogue today'));
+    expect(replyToPostMention).not.toHaveBeenCalled();
+    expect(result.answered).toBe(1);
+    expect(result.failed).toBe(0);
+  });
+
+  it('treats a discarded mention as resolved, not failed', async () => {
+    resolveMentions.mockResolvedValue({ mentions: [], mentionsCat: false });
+    await runCatMentions(admin('the @catalogue'));
+    // Marking it failed would retry it three times and then log an error about
+    // a post that never asked the Cat anything.
+    expect(completeCatMention).toHaveBeenCalled();
+    expect(failCatMention).not.toHaveBeenCalled();
+  });
+
+  it('does not consult the resolver for a private-message mention', async () => {
+    claimCatMentions.mockResolvedValue([
+      { ...postMention, conversation_id: 'c1', parent_event_id: null },
+    ]);
+    await runCatMentions(admin('irrelevant'));
+    // Those arrive through an API route that already resolved them.
+    expect(resolveMentions).not.toHaveBeenCalled();
+  });
+});
