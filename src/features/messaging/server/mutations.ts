@@ -1,7 +1,7 @@
 import { callRpc, fromTable } from '@/lib/supabase/untyped';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { writeMessage } from './write-message';
 import { logger } from '@/utils/logger';
-import type { Json } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import {
   createConvRecord,
@@ -9,8 +9,6 @@ import {
   getServerUser,
   type ConversationParticipantsInsert,
   type ConversationParticipantsUpdate,
-  type ConversationsUpdate,
-  type MessagesInsert,
   type ProfilesInsert,
 } from './shared';
 
@@ -85,66 +83,20 @@ export async function sendMessage(
       });
     }
 
-    // Insert the message directly using admin client to bypass RLS
-    const messageData: MessagesInsert = {
-      conversation_id: conversationId,
-      sender_id: user.id,
-      content: content,
-      message_type: type,
-      metadata: (metadata || {}) as Json,
-    };
+    // Authorization is done; the writing half lives in write-message.ts so a
+    // sender without a browser session (the Cat, answering from a worker) can
+    // reuse it without this function's user checks being relaxed for everyone.
+    const messageId = await writeMessage(admin, {
+      conversationId,
+      senderId: user.id,
+      content,
+      type,
+      metadata,
+      senderActorId,
+    });
 
-    // Add sender_actor_id if provided (column added by migration)
-    if (senderActorId) {
-      (messageData as MessagesInsert & { sender_actor_id?: string }).sender_actor_id =
-        senderActorId;
-    }
-
-    const { data: message, error: insertError } = await fromTable(admin, DATABASE_TABLES.MESSAGES)
-      .insert(messageData)
-      .select('id')
-      .single();
-
-    if (insertError || !message) {
-      logger.error('Error inserting message:', insertError);
-      throw Object.assign(new Error('Failed to send message'), { status: 500 });
-    }
-
-    // Update conversation metadata using admin client
-    const conversationUpdate: ConversationsUpdate = {
-      last_message_at: new Date().toISOString(),
-      last_message_preview: content.substring(0, 100),
-      last_message_sender_id: senderId,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { error: updateError } = await fromTable(admin, DATABASE_TABLES.CONVERSATIONS)
-      .update(conversationUpdate)
-      .eq('id', conversationId);
-
-    if (updateError) {
-      logger.warn('Failed to update conversation metadata:', updateError);
-      // Don't fail the message send for this
-    }
-
-    // Update participant's last_read_at for sender using admin client to avoid RLS recursion
-    const participantUpdate: ConversationParticipantsUpdate = {
-      last_read_at: new Date().toISOString(),
-    };
-
-    const updateQuery = fromTable(admin, DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
-      .update(participantUpdate)
-      .eq('conversation_id', conversationId)
-      .eq('user_id', senderId);
-    const { error: readError } = await updateQuery;
-
-    if (readError) {
-      logger.warn('Failed to update sender read time:', readError);
-      // Don't fail the message send for this
-    }
-
-    logger.info('Message sent successfully:', message.id);
-    return message.id;
+    logger.info('Message sent successfully:', messageId);
+    return messageId;
   } catch (error) {
     logger.error('Error sending message:', error);
     throw error;
