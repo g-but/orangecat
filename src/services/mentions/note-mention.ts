@@ -12,7 +12,7 @@ import { CAT_USERNAME } from '@/config/cat-identity';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { normalizeUsername } from '@/config/usernames';
 import { resolveMentions } from '@/services/mentions/resolve';
-import { enqueueCatMention } from '@/services/mentions/queue';
+import { enqueueMention } from '@/services/mentions/queue';
 import { logger } from '@/utils/logger';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -58,7 +58,7 @@ export async function noteCatMention(
       return false;
     }
 
-    return await enqueueCatMention(admin, {
+    return await enqueueMention(admin, {
       sourceType: 'message',
       sourceId: input.messageId,
       requesterId: input.senderId,

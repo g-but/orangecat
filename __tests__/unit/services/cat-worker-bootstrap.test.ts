@@ -14,15 +14,15 @@
  */
 
 const ensureCatAccount = jest.fn();
-const claimCatMentions = jest.fn();
+const claimMentions = jest.fn();
 
 jest.mock('@/services/mentions/cat-account', () => ({
   ensureCatAccount: (...a: unknown[]) => ensureCatAccount(...a),
 }));
 jest.mock('@/services/mentions/queue', () => ({
-  claimCatMentions: (...a: unknown[]) => claimCatMentions(...a),
-  completeCatMention: jest.fn(),
-  failCatMention: jest.fn(),
+  claimMentions: (...a: unknown[]) => claimMentions(...a),
+  completeMention: jest.fn(),
+  failMention: jest.fn(),
   MAX_ATTEMPTS: 3,
 }));
 jest.mock('@/services/mentions/cat-reply', () => ({
@@ -33,7 +33,7 @@ import { runCatMentions } from '@/services/mentions/worker';
 
 beforeEach(() => {
   ensureCatAccount.mockReset().mockResolvedValue({ id: 'cat-1', username: 'cat' });
-  claimCatMentions.mockReset().mockResolvedValue([]);
+  claimMentions.mockReset().mockResolvedValue([]);
 });
 
 describe('the mention worker bootstraps the Cat', () => {
@@ -50,7 +50,7 @@ describe('the mention worker bootstraps the Cat', () => {
       order.push('ensure');
       return { id: 'cat-1', username: 'cat' };
     });
-    claimCatMentions.mockImplementation(async () => {
+    claimMentions.mockImplementation(async () => {
       order.push('claim');
       return [];
     });
@@ -68,7 +68,7 @@ describe('the mention worker bootstraps the Cat', () => {
   });
 
   it('answers a claimed mention once the account exists', async () => {
-    claimCatMentions.mockResolvedValue([
+    claimMentions.mockResolvedValue([
       { id: 'q1', source_type: 'message', source_id: 'm1', requester_id: 'u1', conversation_id: 'c1', parent_event_id: null, attempts: 1 },
     ]);
     await expect(runCatMentions({} as never)).resolves.toMatchObject({ claimed: 1, answered: 1 });
@@ -76,7 +76,7 @@ describe('the mention worker bootstraps the Cat', () => {
 
   it('fails claimed mentions rather than speaking as nobody', async () => {
     ensureCatAccount.mockResolvedValue(null);
-    claimCatMentions.mockResolvedValue([
+    claimMentions.mockResolvedValue([
       { id: 'q1', source_type: 'message', source_id: 'm1', requester_id: 'u1', conversation_id: 'c1', parent_event_id: null, attempts: 1 },
     ]);
     await expect(runCatMentions({} as never)).resolves.toMatchObject({ failed: 1, answered: 0 });
