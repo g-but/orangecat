@@ -9,6 +9,12 @@
 Description=OrangeCat Cat account invariant (daily)
 
 [Timer]
+# OnActiveSec is what makes a freshly deployed Cat exist within the minute.
+# `Persistent=true` only replays a run MISSED while the machine was down; a
+# timer enabled for the first time simply waits for the next OnCalendar, which
+# for a daily timer is up to 24 hours away. That gap is not cosmetic — until the
+# account exists, @cat resolves to nobody and nothing can be queued.
+OnActiveSec=1min
 OnCalendar=daily
 Persistent=true
 RandomizedDelaySec=15m
