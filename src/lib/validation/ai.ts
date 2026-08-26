@@ -5,7 +5,7 @@ import {
   AI_ASSISTANT_STATUSES,
 } from '@/config/ai-assistants';
 import { STATUS } from '@/config/database-constants';
-import { lightningAddressSchema, optionalText, optionalUrl, webUrl } from './base';
+import { lightningAddressSchema, optionalText, optionalUrl } from './base';
 
 /** Maximum character length for AI chat messages and system prompts */
 export const AI_MESSAGE_MAX_CHARS = 10_000;
@@ -32,7 +32,18 @@ export const aiAssistantSchema = z.object({
     .max(AI_MESSAGE_MAX_CHARS, `System prompt must be at most ${AI_MESSAGE_MAX_CHARS} characters`),
   welcome_message: optionalText(500),
   personality_traits: z.array(z.string()).optional().default([]),
-  knowledge_base_urls: z.array(webUrl()).optional().default([]),
+  // `knowledge_base_urls` was removed here on 2026-08-26. It was accepted by
+  // this schema, mapped by the API and stored — and read by nothing. The chat's
+  // own SELECT (services/ai/sendMessage-internals.ts) never asked for it, no
+  // code fetches those URLs, and no form ever offered an input for them, so no
+  // creator could set it from the product at all. Production held 6 assistants,
+  // every one of them empty or null.
+  //
+  // Removed rather than rendered: showing "answers from these sources" would
+  // have been a claim the system does not honour, which is worse than the
+  // silence. The column is deliberately left in place — dropping it would be an
+  // irreversible migration to delete nothing, and it is where retrieval would
+  // store its sources if that feature is ever built.
 
   // Model Preferences
   model_preference: z.string().max(50).default('any'),

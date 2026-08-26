@@ -29,7 +29,7 @@ const buildAIAssistantUpdatePayload = createUpdatePayloadBuilder([
   { from: 'system_prompt' },
   { from: 'welcome_message', transform: entityTransforms.emptyStringToNull },
   commonFieldMappings.arrayField('personality_traits', []),
-  commonFieldMappings.arrayField('knowledge_base_urls', []),
+  // knowledge_base_urls intentionally not mapped — see lib/validation/ai.ts.
   // Model Preferences
   { from: 'model_preference', default: 'any' },
   { from: 'max_tokens_per_response', default: 1000 },
