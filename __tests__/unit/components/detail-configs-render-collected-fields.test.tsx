@@ -19,6 +19,7 @@ import { render, screen } from '@testing-library/react';
 import { loanDetailConfig } from '@/components/public/detail-configs/loan';
 import { eventDetailConfig } from '@/components/public/detail-configs/event';
 import { serviceDetailConfig } from '@/components/public/detail-configs/service';
+import { investmentDetailConfig } from '@/components/public/detail-configs/investment';
 
 describe('loan detail config', () => {
   const refinance = {
@@ -261,5 +262,38 @@ describe('loan term', () => {
       </div>
     );
     expect(screen.getByText('whenever the roof is done')).toBeInTheDocument();
+  });
+});
+
+describe('investment return cadence', () => {
+  const base = {
+    id: 'inv-1',
+    created_at: '2026-08-01T00:00:00Z',
+    currency: 'BTC',
+    target_amount: 1,
+    minimum_investment: 0.01,
+    expected_return_rate: 12,
+  };
+
+  it('shows how often the return is paid, not just the rate', () => {
+    render(
+      <div>{investmentDetailConfig.renderDetails?.({ ...base, return_frequency: 'quarterly' })}</div>
+    );
+    // The rate was already rendered; the cadence beside it is what was missing.
+    expect(screen.getByText('12.0%')).toBeInTheDocument();
+    expect(screen.getByText('Return Paid')).toBeInTheDocument();
+    expect(screen.getByText('Quarterly')).toBeInTheDocument();
+  });
+
+  it('falls back to the stored value if the options list ever drifts', () => {
+    render(
+      <div>{investmentDetailConfig.renderDetails?.({ ...base, return_frequency: 'fortnightly' })}</div>
+    );
+    expect(screen.getByText('fortnightly')).toBeInTheDocument();
+  });
+
+  it('renders no cadence row when the investment did not state one', () => {
+    render(<div>{investmentDetailConfig.renderDetails?.({ ...base, return_frequency: null })}</div>);
+    expect(screen.queryByText('Return Paid')).not.toBeInTheDocument();
   });
 });

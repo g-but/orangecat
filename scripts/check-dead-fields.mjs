@@ -57,6 +57,10 @@ const SRC = join(ROOT, 'src');
  *                     six came off by being fixed, not by being excused.
  *   32 (2026-08-25) — service delivery/area, wishlist item quantity + partial
  *                     funding, event recurrence + video, loan term.
+ *   26 (2026-08-26) — investment `return_frequency` rendered (a rate without its
+ *                     cadence is half a term, and the card already showed the
+ *                     rate); the wishlist dedicated-wallet pair DELETED, being
+ *                     unreachable from every direction.
  *   29 (2026-08-26) — the assistant pair, resolved in opposite directions:
  *                     free_messages_per_day now renders (it is enforced), and
  *                     knowledge_base_urls was DELETED from the schema (it is
@@ -107,21 +111,25 @@ const KNOWN_DEAD = new Set([
   'max_tokens_per_response',
   'api_provider',
   'compute_provider_type',
-  'use_dedicated_wallet', // routing switch; the resulting address is what matters
 
   // === Debt: reader-relevant content with no surface yet. ====================
   // Each line is a page that should show a thing it currently swallows. Removing
   // a line by rendering the field is always the preferred way to fix a failure
   // of this check.
-  'fulfillment_type', // how delivery or repayment actually happens
+  // NOT debt awaiting a surface — a form choice nothing branches on. Products
+  // offer Manual/Automatic/Digital Delivery and loans offer Manual/Automatic
+  // Deduction, and no code anywhere reads the value to behave differently; on
+  // products it merely restates `product_type` (identical in all 11 prod rows).
+  // Rendering it would promise a fulfilment mechanism that does not exist, so
+  // resolving it is a product decision — build it, or drop the option — not a
+  // rendering task. Left here deliberately, with the truth written down.
+  'fulfillment_type',
   'allocations', // funding splits
   'beneficiaries', // funding splits
   'distribution_rules', // funding splits
-  'return_frequency', // investment: how often a return is paid
   'budget_amount', // funding target
   'budget_period', // funding target window
   'goal_deadline', // funding target date
-  'dedicated_wallet_address', // wishlist: where funds actually go
   // Recurring events: needs one renderer that turns the whole set into a human
   // sentence ("every second Tuesday"), so these five come off together.
 ]);

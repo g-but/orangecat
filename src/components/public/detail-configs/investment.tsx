@@ -4,7 +4,11 @@ import FundingProgress from '@/components/public/FundingProgress';
 import type { EntityDetailConfig } from '@/components/public/PublicEntityDetailPage';
 import { ROUTES } from '@/config/routes';
 import { formatCurrency } from '@/services/currency';
-import { INVESTMENT_TYPE_LABELS, INVESTMENT_RISK_COLORS } from '@/config/investments';
+import {
+  INVESTMENT_TYPE_LABELS,
+  INVESTMENT_RISK_COLORS,
+  RETURN_FREQUENCY_LABELS,
+} from '@/config/investments';
 
 // investments carry a `currency` column (today all BTC, but CHF etc. are possible).
 // Format amounts in that currency rather than assuming BTC. formatCurrency(x,'BTC')
@@ -76,6 +80,18 @@ export const investmentDetailConfig: EntityDetailConfig = {
                 <span className="text-sm text-fg-secondary">Expected Return</span>
                 <span className="font-semibold">
                   {Number(entity.expected_return_rate).toFixed(1)}%
+                </span>
+              </div>
+            )}
+            {/* A rate without its cadence is only half a term: "12%" paid
+                quarterly and "12%" paid at exit are different offers, and this
+                card already renders the rate. The form has always collected the
+                frequency; nothing showed it. */}
+            {typeof entity.return_frequency === 'string' && entity.return_frequency && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-fg-secondary">Return Paid</span>
+                <span className="font-semibold">
+                  {RETURN_FREQUENCY_LABELS[entity.return_frequency] ?? entity.return_frequency}
                 </span>
               </div>
             )}

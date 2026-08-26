@@ -39,8 +39,6 @@ export type WishlistItemFieldType =
   | 'target_amount_btc'
   | 'external_url'
   | 'external_source'
-  | 'use_dedicated_wallet'
-  | 'dedicated_wallet_address'
   | 'priority'
   | 'allow_partial_funding'
   | 'quantity_wanted'
@@ -226,33 +224,6 @@ export const wishlistItemGuidanceContent: Record<
       'Helps with transparency',
     ],
     examples: ['amazon', 'etsy', 'local_store', 'custom'],
-  },
-  use_dedicated_wallet: {
-    icon: React.createElement(Wallet, { className: 'w-5 h-5 text-rose-600' }),
-    title: 'Dedicated Wallet',
-    description: 'Choose whether contributions go to a dedicated address or your main wallet.',
-    tips: [
-      'Dedicated wallet = separate tracking',
-      'Main wallet = simpler management',
-      'Use dedicated for large items',
-      'Main wallet is fine for most items',
-    ],
-    examples: ['Dedicated wallet for house down payment', 'Main wallet for small birthday gifts'],
-  },
-  dedicated_wallet_address: {
-    icon: React.createElement(Wallet, { className: 'w-5 h-5 text-rose-600' }),
-    title: 'Wallet Address',
-    description: 'If using a dedicated wallet, provide the Bitcoin address.',
-    tips: [
-      'Use a fresh address for this item',
-      'Double-check the address',
-      'Consider using a hardware wallet',
-      'Keep private keys secure',
-    ],
-    examples: [
-      'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-      'Lightning address for instant payments',
-    ],
   },
   priority: {
     icon: React.createElement(Target, { className: 'w-5 h-5 text-rose-600' }),

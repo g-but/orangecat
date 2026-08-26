@@ -50,3 +50,7 @@ export const INVESTMENT_TYPE_LABELS: Record<string, string> = Object.fromEntries
 export const INVESTMENT_RISK_COLORS: Record<string, string> = Object.fromEntries(
   RISK_LEVELS.map(r => [r.value, r.badgeColor])
 );
+
+export const RETURN_FREQUENCY_LABELS: Record<string, string> = Object.fromEntries(
+  RETURN_FREQUENCIES.map(f => [f.value, f.label])
+);
