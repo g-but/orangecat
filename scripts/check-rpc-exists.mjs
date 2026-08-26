@@ -19,7 +19,13 @@
  *                            how to pay them. Fixed in the same commit as this
  *                            gate by counting through the public wallets API's
  *                            own admin path instead.
- *   create_timeline_event  — see baseline below.
+ *   create_timeline_event  — NOT a fallback, as this comment first guessed:
+ *                            the only path for replies, reposts, project events
+ *                            and transaction events. Newest reply in production
+ *                            2025-12-14, newest repost 2025-12-07, zero project
+ *                            or transaction events ever, while top-level posts
+ *                            (a different, existing RPC) ran through last week.
+ *                            Written in 20260826020000.
  *   set_typing_indicator   — typing indicators never appear.
  *   update_presence        — presence never updates.
  *
@@ -64,10 +70,6 @@ const KNOWN_MISSING = new Set([
   // the user, the indicator simply never appears.
   'update_presence',
   'set_typing_indicator',
-  // Secondary timeline-event path. The primary create route calls
-  // create_post_with_visibility, which DOES exist, so this is reached only on
-  // the fallback branch — which means it has been failing unnoticed.
-  'create_timeline_event',
 ]);
 
 /** `supabase.rpc('name'` / `callRpc(client, 'name'` — the two shapes in this repo. */
