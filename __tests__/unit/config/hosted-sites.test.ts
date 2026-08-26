@@ -21,20 +21,20 @@ import {
   siteChromeFor,
 } from '@/config/site-content';
 import { getRouteSurface } from '@/config/routes';
-import { CATALOGUE, COMPANY, MANDATE_CURVES } from '@/config/substrata-intel';
-import { COVERAGE, coverageProgress } from '@/config/substrata-intel-coverage';
+import { CATALOGUE, COMPANY, MANDATE_CURVES } from '@/config/substrata';
+import { COVERAGE, coverageProgress } from '@/config/substrata-coverage';
 
-const site = siteBySlug('substrataintel');
+const site = siteBySlug('substrata');
 
 describe('hosted sites — host resolution', () => {
   it('resolves the free subdomain, with or without www and port', () => {
-    expect(siteForHost('substrataintel.orangecat.ch')?.slug).toBe('substrataintel');
-    expect(siteForHost('www.substrataintel.orangecat.ch')?.slug).toBe('substrataintel');
-    expect(siteForHost('SubstrataIntel.OrangeCat.ch:443')?.slug).toBe('substrataintel');
+    expect(siteForHost('substrata.orangecat.ch')?.slug).toBe('substrata');
+    expect(siteForHost('www.substrata.orangecat.ch')?.slug).toBe('substrata');
+    expect(siteForHost('Substrata.OrangeCat.ch:443')?.slug).toBe('substrata');
   });
 
   it('resolves the local development host, so the rewrite is testable without DNS', () => {
-    expect(siteForHost('substrataintel.localhost:3020')?.slug).toBe('substrataintel');
+    expect(siteForHost('substrata.localhost:3020')?.slug).toBe('substrata');
   });
 
   it('refuses everything else — a greedy match would swallow OrangeCat itself', () => {
@@ -42,9 +42,9 @@ describe('hosted sites — host resolution', () => {
       'orangecat.ch',
       'www.orangecat.ch',
       'localhost:3000',
-      'substrataintel.evil.example',
-      'notsubstrataintel.orangecat.ch',
-      'substrataintel.orangecat.ch.evil.example',
+      'substrata.evil.example',
+      'notsubstrata.orangecat.ch',
+      'substrata.orangecat.ch.evil.example',
       '',
       null,
       undefined,
@@ -64,24 +64,24 @@ describe('hosted sites — host resolution', () => {
 describe('hosted sites — links', () => {
   it('always emits the path form, which resolves on every host', () => {
     expect(site).not.toBeNull();
-    expect(siteHref(site!)).toBe('/sites/substrataintel');
-    expect(siteHref(site!, 'map')).toBe('/sites/substrataintel/map');
-    expect(siteHref(site!, '/map')).toBe('/sites/substrataintel/map');
-    expect(siteHref(site!, '/')).toBe('/sites/substrataintel');
+    expect(siteHref(site!)).toBe('/sites/substrata');
+    expect(siteHref(site!, 'map')).toBe('/sites/substrata/map');
+    expect(siteHref(site!, '/map')).toBe('/sites/substrata/map');
+    expect(siteHref(site!, '/')).toBe('/sites/substrata');
   });
 });
 
 describe('hosted sites — chrome isolation', () => {
   it('classifies a hosted site as its own surface, not app or public', () => {
-    expect(getRouteSurface('/sites/substrataintel')).toBe('site');
-    expect(getRouteSurface('/sites/substrataintel/map')).toBe('site');
+    expect(getRouteSurface('/sites/substrata')).toBe('site');
+    expect(getRouteSurface('/sites/substrata/map')).toBe('site');
   });
 
   it('leaves the rest of the app classified as it was', () => {
     expect(getRouteSurface('/dashboard')).toBe('app');
     expect(getRouteSurface('/about')).toBe('public');
     expect(getRouteSurface('/auth')).toBe('auth');
-    expect(getRouteSurface('/groups/substrataintel')).toBe('app');
+    expect(getRouteSurface('/groups/substrata')).toBe('app');
   });
 });
 
@@ -114,7 +114,7 @@ describe('hosted sites — every site renders', () => {
   });
 });
 
-describe('substrataintel.orangecat.ch — the site is the profile, not a copy of it', () => {
+describe('substrata.orangecat.ch — the site is the profile, not a copy of it', () => {
   const pages = sitePagesFor(site!);
   const text = JSON.stringify(pages);
 

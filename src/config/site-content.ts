@@ -9,7 +9,7 @@
  * instead of drifting into fifty bespoke stylesheets.
  *
  * Adding a site is therefore: an entry in `sites.ts`, and a function that
- * returns `SitePage[]`. Substrata Intel's lives in `site-substrata-intel.ts` and is built
+ * returns `SitePage[]`. Substrata's lives in `site-substrata.ts` and is built
  * entirely from the config the profile already needed — the mandate, the
  * desks, the catalogue, the coverage universe. Nothing on the website is
  * authored twice.
@@ -18,7 +18,7 @@
  */
 
 import type { HostedSite } from './sites';
-import { substrataIntelSiteChrome, substrataIntelSitePages } from './site-substrata-intel';
+import { substrataSiteChrome, substrataSitePages } from './site-substrata';
 
 // =====================================================================
 // SECTIONS
@@ -121,8 +121,8 @@ export interface SiteChrome {
  */
 export function sitePagesFor(site: HostedSite): SitePage[] {
   switch (site.slug) {
-    case 'substrataintel':
-      return substrataIntelSitePages();
+    case 'substrata':
+      return substrataSitePages();
     default:
       return [];
   }
@@ -130,8 +130,8 @@ export function sitePagesFor(site: HostedSite): SitePage[] {
 
 export function siteChromeFor(site: HostedSite): SiteChrome | null {
   switch (site.slug) {
-    case 'substrataintel':
-      return substrataIntelSiteChrome();
+    case 'substrata':
+      return substrataSiteChrome();
     default:
       return null;
   }

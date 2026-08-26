@@ -113,7 +113,7 @@ export function AppShell({ children }: AppShellProps) {
   const filteredSections = getFilteredSections();
 
   // Hosted site: no OrangeCat chrome whatsoever, and no message-sync manager
-  // either — a visitor to substrataintel.orangecat.ch has no OrangeCat session and
+  // either — a visitor to substrata.orangecat.ch has no OrangeCat session and
   // no reason for one. The site's own layout supplies everything.
   if (isSiteSurface) {
     return (

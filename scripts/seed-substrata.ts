@@ -15,7 +15,7 @@
  * Owner-gated so it can't fire by accident.
  *
  * Run against the LIVE self-hosted DB (supabase.orangecat.ch) from the box:
- *   ORANGECAT_OWNER_SEED=1 npx tsx scripts/seed-substrata-intel.ts
+ *   ORANGECAT_OWNER_SEED=1 npx tsx scripts/seed-substrata.ts
  *
  * Requires in the environment (already in .env.local on the box):
  *   NEXT_PUBLIC_SUPABASE_URL   — self-hosted Supabase URL
@@ -33,7 +33,7 @@ import {
   GROUP_PAYLOAD,
   PRODUCT_PAYLOADS,
   type MaterialProductPayload,
-} from '../src/config/substrata-intel';
+} from '../src/config/substrata';
 
 loadEnv({ path: '.env.local' });
 

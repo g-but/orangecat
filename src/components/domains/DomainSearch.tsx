@@ -85,7 +85,7 @@ export function DomainSearch() {
           type="text"
           value={query}
           onChange={event => setQuery(event.target.value)}
-          placeholder="substrataintel"
+          placeholder="yourname"
           autoComplete="off"
           className="min-h-11 flex-1 rounded-lg border border-subtle bg-surface-base px-4 py-2.5 text-fg-primary placeholder:text-fg-muted focus-visible:border-interactive focus-visible:outline-none"
         />

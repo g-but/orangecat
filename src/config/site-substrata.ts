@@ -1,8 +1,8 @@
 /**
- * Substrata Intel's website, generated from its OrangeCat profile.
+ * Substrata's website, generated from its OrangeCat profile.
  *
- * Every word and number below comes from `substrata-intel.ts` and
- * `substrata-intel-coverage.ts` — the same objects the group profile, the product
+ * Every word and number below comes from `substrata.ts` and
+ * `substrata-coverage.ts` — the same objects the group profile, the product
  * catalogue and the Cat read. There is no second copy of the mandate, no
  * duplicated price list, and no separately-maintained "about" text. Change the
  * profile and the website changes with it, which is the whole claim /domains
@@ -28,15 +28,15 @@ import {
   NODE_TYPES,
   PHASES,
   formatChf,
-} from './substrata-intel';
-import { COVERAGE, PRODUCER_ROLES, coverageProgress } from './substrata-intel-coverage';
+} from './substrata';
+import { COVERAGE, PRODUCER_ROLES, coverageProgress } from './substrata-coverage';
 import type { SiteChrome, SitePage, SiteSection } from './site-content';
 
 const ROLE_LABEL: Record<string, string> = Object.fromEntries(
   PRODUCER_ROLES.map(role => [role.id, role.label])
 );
 
-export function substrataIntelSiteChrome(): SiteChrome {
+export function substrataSiteChrome(): SiteChrome {
   return {
     name: COMPANY.name,
     tagline: COMPANY.tagline,
@@ -365,6 +365,6 @@ function disclosurePage(): SitePage {
 
 // =====================================================================
 
-export function substrataIntelSitePages(): SitePage[] {
+export function substrataSitePages(): SitePage[] {
   return [homePage(), mandatePage(), mapPage(), deskPage(), disclosurePage()];
 }

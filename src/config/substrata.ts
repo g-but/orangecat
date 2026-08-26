@@ -1,5 +1,5 @@
 /**
- * "Substrata Intel" — OrangeCat-side SSOT
+ * "Substrata" — OrangeCat-side SSOT
  *
  * An open-source research firm covering the chokepoints between here and a
  * technological singularity, with a trading desk on the materials it knows
@@ -17,8 +17,8 @@
  * This file is the single source of truth for the firm's identity, its mandate
  * (the tests that make "focused" a rule rather than a slogan), its phases, its
  * desks, its listed catalogue, and its compliance and disclosure stance. The
- * Phase 1 coverage universe lives next door in `substrata-intel-coverage.ts`. The
- * seed that registers the firm on-platform (scripts/seed-substrata-intel.ts) reads
+ * Phase 1 coverage universe lives next door in `substrata-coverage.ts`. The
+ * seed that registers the firm on-platform (scripts/seed-substrata.ts) reads
  * these two files and nothing else.
  *
  * On-platform shape: a `group` with label 'company' (public, so the research
@@ -42,9 +42,9 @@ export const FOUNDER_ACTOR_SLUG = 'mao';
 // =====================================================================
 
 export const COMPANY = {
-  name: 'Substrata Intel',
-  /** Also the actor slug and the public path: /groups/substrataintel */
-  slug: 'substrataintel',
+  name: 'Substrata',
+  /** Also the actor slug and the public path: /groups/substrata */
+  slug: 'substrata',
   tagline: 'The chokepoints between here and the singularity, written down in public.',
 } as const;
 
@@ -296,7 +296,7 @@ export const DESKS: readonly Desk[] = [
 // one of these markets prices that way. The unit is carried in the copy, since
 // `user_products` has no unit column.
 //
-// This list is also the Phase 1 work queue: `substrata-intel-coverage.ts` owes a
+// This list is also the Phase 1 work queue: `substrata-coverage.ts` owes a
 // producer map to every title here, and a test enforces the correspondence.
 // =====================================================================
 
@@ -523,7 +523,7 @@ export const LISTING_COPY = {
   headline: COMPANY.name,
   subhead: COMPANY.tagline,
   body: [
-    'Substrata Intel is an open-source research firm covering the physical ' +
+    'Substrata is an open-source research firm covering the physical ' +
       'chokepoints between here and a technological singularity — and a ' +
       'trading desk on the materials it knows best. The research is free. ' +
       'The map is the product.',

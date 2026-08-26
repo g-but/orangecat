@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
   // Hosted sites (src/config/sites.ts): a request arriving on a site's own
   // host is somebody else's website, so rewrite it onto /sites/<slug> and let
   // that standalone layout answer. Rewrite, not redirect — the visitor's URL
-  // bar must keep saying substrataintel.orangecat.ch, which is the entire point of
+  // bar must keep saying substrata.orangecat.ch, which is the entire point of
   // what /domains sells. Requests already on /sites/... pass through, so the
   // path form stays previewable from any host.
   const hostedSite = siteForHost(request.headers.get('host'));

@@ -15,11 +15,11 @@
  * in HOSTED_SITES plus a content builder — not a new codebase.
  *
  * Three ways a request reaches a site, all resolved by `siteForHost`:
- *   substrataintel.orangecat.ch     — the free subdomain every hosted site starts on
- *   substrataintel.example          — a custom domain, once the owner points DNS
- *   substrataintel.localhost:3020   — local development, so the rewrite is testable
+ *   substrata.orangecat.ch     — the free subdomain every hosted site starts on
+ *   substrata.example          — a custom domain, once the owner points DNS
+ *   substrata.localhost:3020   — local development, so the rewrite is testable
  *
- * The path form `/sites/substrataintel` always works too, on any host. That is what
+ * The path form `/sites/substrata` always works too, on any host. That is what
  * makes the site previewable before DNS exists, and it is the URL the
  * screenshots and the E2E tests use.
  *
@@ -51,11 +51,11 @@ export interface HostedSite {
 
 export const HOSTED_SITES: readonly HostedSite[] = [
   {
-    slug: 'substrataintel',
-    subdomain: 'substrataintel',
+    slug: 'substrata',
+    subdomain: 'substrata',
     customDomain: null,
-    title: 'Substrata Intel',
-    profile: { kind: 'group', slug: 'substrataintel' },
+    title: 'Substrata',
+    profile: { kind: 'group', slug: 'substrata' },
   },
 ];
 
