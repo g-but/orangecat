@@ -31,6 +31,8 @@ import {
   ComposerImageChip,
   useComposerImage,
 } from './ComposerImageAttachment';
+import MentionSuggestions from '@/components/mentions/MentionSuggestions';
+import { useContentEditableMentions } from '@/components/mentions/useContentEditableMentions';
 
 export interface TimelineComposerProps {
   targetOwnerId?: string;
@@ -127,6 +129,14 @@ const TimelineComposer = React.memo(function TimelineComposer({
       disabled: postComposer.isPosting,
     });
 
+  const { editorProps, menuProps } = useContentEditableMentions({
+    editorRef,
+    onInput: handleInput,
+    onKeyDown: handleKeyDown,
+    disabled: postComposer.isPosting,
+    idPrefix: 'post-mention',
+  });
+
   const handleToggleProject = useCallback(
     (id: string) => {
       postComposer.toggleProjectSelection(id);
@@ -168,29 +178,29 @@ const TimelineComposer = React.memo(function TimelineComposer({
         <div className="flex-1 min-w-0">
           {!postingToOwnTimeline && showBanner && <ContextIndicator targetName={targetName} />}
 
-          <div
-            ref={editorRef}
-            contentEditable
-            onInput={handleInput}
-            onPaste={handlePaste}
-            onKeyDown={handleKeyDown}
-            data-placeholder={placeholder || defaultPlaceholder}
-            role="textbox"
-            aria-multiline="true"
-            aria-label="Compose new post"
-            className={cn(
-              'w-full leading-6',
-              simpleMode ? 'min-h-[3.25rem] text-base' : 'min-h-[6rem] text-base',
-              'border-none bg-transparent p-0 focus:outline-none',
-              'leading-relaxed break-words',
-              'max-h-[60vh] overflow-y-auto',
-              'empty:before:content-[attr(data-placeholder)]',
-              'empty:before:text-fg-tertiary dark:empty:before:text-fg-secondary',
-              'empty:before:pointer-events-none',
-              postComposer.isPosting && 'opacity-50 cursor-not-allowed'
-            )}
-            suppressContentEditableWarning
-          />
+          <div className="relative">
+            <MentionSuggestions {...menuProps} />
+            <div
+              ref={editorRef}
+              contentEditable
+              onPaste={handlePaste}
+              {...editorProps}
+              data-placeholder={placeholder || defaultPlaceholder}
+              aria-label="Compose new post"
+              className={cn(
+                'w-full leading-6',
+                simpleMode ? 'min-h-[3.25rem] text-base' : 'min-h-[6rem] text-base',
+                'border-none bg-transparent p-0 focus:outline-none',
+                'leading-relaxed break-words',
+                'max-h-[60vh] overflow-y-auto',
+                'empty:before:content-[attr(data-placeholder)]',
+                'empty:before:text-fg-tertiary dark:empty:before:text-fg-secondary',
+                'empty:before:pointer-events-none',
+                postComposer.isPosting && 'opacity-50 cursor-not-allowed'
+              )}
+              suppressContentEditableWarning
+            />
+          </div>
 
           {showProjects && allowProjectSelection && (
             <ProjectSelectionPanel

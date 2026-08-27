@@ -13,6 +13,8 @@ import { sanitizeHtml } from '@/lib/validation';
 import { TextFormatToolbar, ComposerMessages, CharacterCounter } from './ComposerShared';
 import { PostComposerFullScreenHeader } from './PostComposerFullScreenHeader';
 import { PostComposerInlineControls } from './PostComposerInlineControls';
+import MentionSuggestions from '@/components/mentions/MentionSuggestions';
+import { useContentEditableMentions } from '@/components/mentions/useContentEditableMentions';
 import {
   getTimelineVisibilityOption,
   TIMELINE_CONTENT_LIMITS,
@@ -75,6 +77,14 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
       disabled: composer.isPosting,
       sanitizer: sanitizeHtml,
     });
+
+  const { editorProps, menuProps } = useContentEditableMentions({
+    editorRef,
+    onInput: handleInput,
+    onKeyDown: handleKeyDown,
+    disabled: composer.isPosting,
+    idPrefix: 'mobile-mention',
+  });
 
   useEffect(() => {
     if ((autoFocus || fullScreen || isOpen) && editorRef.current && !compact) {
@@ -157,12 +167,12 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
           )}
 
           <div className="relative">
+            <MentionSuggestions {...menuProps} />
             <div
               ref={editorRef}
               contentEditable
-              onInput={handleInput}
               onPaste={handlePaste}
-              onKeyDown={handleKeyDown}
+              {...editorProps}
               data-placeholder={fullScreen ? TIMELINE_COPY.composePlaceholder : placeholder}
               className={cn(
                 'w-full border-0 bg-transparent',
