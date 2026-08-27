@@ -33,6 +33,8 @@
  * Created: 2026-08-26
  */
 
+import { SITE_FEATURE_KEY } from './hosted-site';
+
 // =====================================================================
 // OWNERSHIP
 // =====================================================================
@@ -566,7 +568,13 @@ export const GROUP_PAYLOAD: CompanyGroupPayload = {
  * and `treasury` needs a `bitcoin_address` the group does not have. Both get
  * enabled by the commit that gives them something true to point at.
  */
-export const GROUP_FEATURE_KEYS: readonly string[] = [];
+export const GROUP_FEATURE_KEYS: readonly string[] = [
+  // Substrata publishes a website at substrata.orangecat.ch. This row IS the
+  // site — see src/config/hosted-site.ts. Its pages are bespoke and live in the
+  // repository, so the site renders whether or not the seed has run; enabling
+  // the feature is what makes the profile agree with what is already serving.
+  SITE_FEATURE_KEY,
+];
 
 // =====================================================================
 // LOOKUPS

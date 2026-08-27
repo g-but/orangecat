@@ -54,18 +54,38 @@ export const SITES_PATH_PREFIX = '/sites';
  *    already refuses these as handles for the same reason; a subdomain is a
  *    stronger claim than a handle, so it cannot be a weaker check.
  *
- * Keep in sync with `/etc/caddy/Caddyfile` — `scripts/ci/check-reserved-subdomains.sh`
- * fails the build if a live host on the box is missing here.
+ * The live half is generated from the box into `deployment/reserved-hosts.txt`
+ * and checked by `npm run check:reserved-hosts`, which is in `verify`. It is a
+ * generated-and-checked list rather than a remembered one because the first
+ * hand-written version of it was missing fourteen of the twenty-two hosts that
+ * were already serving traffic.
  */
 export const RESERVED_SUBDOMAINS: ReadonlyArray<{ label: string; why: string }> = [
-  // Live on the box today (one Caddy block each, on their own ports).
-  { label: 'www', why: 'the platform itself' },
-  { label: 'bridge', why: 'the agent bridge (port 4001)' },
-  { label: 'fleetcrown', why: 'FleetCrown (port 4002)' },
-  { label: 'evig', why: 'Evig (port 4004)' },
+  // Live on the box today — one Caddy block each. Kept in step with
+  // `deployment/reserved-hosts.txt` by `npm run check:reserved-hosts`, because a
+  // hand-maintained copy of this list had already drifted by fourteen entries.
+  { label: 'annushka', why: 'Annushka — a live app on this box' },
+  { label: 'aoz-wohnen', why: 'AOZ Wohnen — a live app on this box' },
+  { label: 'aoz', why: 'AOZ — a live app on this box' },
+  { label: 'botsmann', why: 'Botsmann — a live app on this box' },
+  { label: 'bridge', why: 'the agent bridge' },
+  { label: 'camille', why: 'Camille Boulangerie — a live app on this box' },
+  { label: 'datacat', why: 'DataCat — a live app on this box' },
+  { label: 'evig', why: 'Evig' },
+  { label: 'fleetcrown', why: 'FleetCrown' },
+  { label: 'kivvi', why: 'Kivvi — a live app on this box' },
+  { label: 'petvity', why: 'Petvity — a live app on this box' },
+  { label: 'printcraft', why: 'PrintCraft — a live app on this box' },
+  { label: 'reparaturbonus', why: 'Reparaturbonus ZH — a live app on this box' },
+  { label: 'revamp-info', why: 'Revamp Info — a live app on this box' },
   { label: 'revampit', why: 'redirects to evig' },
-  { label: 'supabase', why: 'the database and its auth endpoints' },
+  { label: 'sbb', why: 'SBB Lost & Found — a live app on this box' },
+  { label: 'sink', why: 'Sink — a live app on this box' },
   { label: 'solon', why: 'Solon governance' },
+  { label: 'supabase', why: 'the database and its auth endpoints' },
+  { label: 'surf-your-life', why: 'Surf Your Life — a live app on this box' },
+  { label: 'vitareba', why: 'Vitareba — a live app on this box' },
+  { label: 'www', why: 'the platform itself' },
 
   // Infrastructure names a future block will want, claimed before a customer can.
   { label: 'api', why: 'the public API surface' },

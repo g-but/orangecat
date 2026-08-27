@@ -43,6 +43,7 @@ import {
 } from '@/config/substrata-coverage';
 import { GROUP_LABELS } from '@/config/group-labels';
 import { GROUP_FEATURES } from '@/config/group-features';
+import { SITE_FEATURE_KEY } from '@/config/hosted-site';
 import { GOVERNANCE_PRESETS } from '@/config/governance-presets';
 import { isReservedUsername } from '@/config/usernames';
 
@@ -120,7 +121,17 @@ describe('Substrata — there is no trading desk, and nothing may imply one', ()
   });
 
   it('advertises no marketplace, because there is nothing to sell', () => {
-    expect(GROUP_FEATURE_KEYS).toEqual([]);
+    // Asserted as "no COMMERCE feature", not "no features". The list was empty
+    // when this was written and the emptiness stood in for the rule; it does not
+    // any more, because publishing a website is a feature and sells nothing.
+    // What must never appear here is a way to take money for research.
+    for (const commerce of ['marketplace', 'treasury', 'shared_wallet']) {
+      expect(GROUP_FEATURE_KEYS).not.toContain(commerce);
+    }
+  });
+
+  it('publishes a website, which is the feature row substrata.orangecat.ch reads', () => {
+    expect(GROUP_FEATURE_KEYS).toContain(SITE_FEATURE_KEY);
   });
 
   it('keeps a desk only as a future phase, never as a running one', () => {
