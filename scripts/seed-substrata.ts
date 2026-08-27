@@ -1,8 +1,7 @@
 /**
- * Seed "Substrate" — an open-source research firm covering the chokepoints
- * between here and a technological singularity, with a trading desk on the
- * materials it knows best — as an OrangeCat group profile with its own actor
- * and catalogue.
+ * Seed "Substrata" — an open-source research firm covering the chokepoints
+ * between here and a technological singularity — as an OrangeCat group
+ * profile with its own actor.
  *
  * OrangeCat is the SSOT for economic entities. A company is a `group` (label
  * 'company') that owns an `actors` row of actor_type 'group'; everything the
@@ -13,12 +12,18 @@
  * by slug, the actor by group_id, and membership by its unique key. Never
  * truncates. Safe to re-run. Owner-gated so it can't fire by accident.
  *
- * Run against the LIVE self-hosted DB (supabase.orangecat.ch) from the box:
+ * Runs from ANYWHERE that can reach supabase.orangecat.ch over HTTPS — it is
+ * PostgREST calls, not psql, so it needs no SSH and no tunnel. In practice
+ * that means a laptop with .env.local, or the box:
+ *
  *   ORANGECAT_OWNER_SEED=1 npx tsx scripts/seed-substrata.ts
  *
- * Requires in the environment (already in .env.local on the box):
+ * Requires in the environment (both already in .env.local):
  *   NEXT_PUBLIC_SUPABASE_URL   — self-hosted Supabase URL
  *   SUPABASE_SERVICE_ROLE_KEY  — service role (bypasses RLS for the seed)
+ *
+ * The service-role key bypasses RLS, so treat a machine that has it as
+ * privileged and do not paste it into a shell history you keep.
  *
  * Created: 2026-08-26
  */
