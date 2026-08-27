@@ -430,4 +430,53 @@ export class CivicAllocationService {
 
     return chain;
   }
+
+  /**
+   * The government bodies to offer while someone builds a split.
+   *
+   * When the directive names where its author lives, the answer is exact: the
+   * containment chain above that place, which is precisely the set of bodies
+   * that tax them. Offering that instead of a search box is the difference
+   * between "here are your three tiers" and "find your own municipality".
+   *
+   * Without a residency the honest fallback is the directory itself, ordered
+   * from the largest tier down. It is a worse list — it is not *their* list —
+   * but it is a list they can act on rather than an empty state.
+   */
+  async getSplitOptions(
+    residencyJurisdictionId: string | null,
+    limit = 25
+  ): Promise<Array<{ id: string; title: string; level: string }>> {
+    if (residencyJurisdictionId) {
+      const chain = await this.getChain(residencyJurisdictionId);
+      if (chain.length > 0) {
+        return chain.map(row => ({
+          id: row.id as string,
+          title: row.title as string,
+          level: row.level as string,
+        }));
+      }
+      // Falls through deliberately: a residency pointing at a row this reader
+      // cannot see (archived, or deleted since) should degrade to the directory
+      // rather than to nothing.
+    }
+
+    const { data, error } = await looseClient(this.supabase)
+      .from(JURISDICTIONS_TABLE)
+      .select('id, title, level')
+      .eq('status', 'active')
+      .order('title', { ascending: true })
+      .limit(limit);
+
+    if (error) {
+      logger.warn('Failed to list split options', { error: error.message });
+      return [];
+    }
+
+    return ((data ?? []) as Array<Record<string, unknown>>).map(row => ({
+      id: row.id as string,
+      title: row.title as string,
+      level: row.level as string,
+    }));
+  }
 }

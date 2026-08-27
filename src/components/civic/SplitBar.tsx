@@ -52,7 +52,15 @@ function toneFor(level: string | null | undefined): string {
 
 export function SplitBar({ segments, showRemainder = false }: SplitBarProps) {
   const total = segments.reduce((sum, segment) => sum + segment.share, 0);
-  const remainder = Math.max(0, 100 - total);
+  const unassigned = Math.max(0, 100 - total);
+  const over = Math.max(0, total - 100);
+
+  // Over-assignment has to be scaled explicitly. Flex children given widths
+  // that sum past 100% shrink to fit by default, which would render a 115%
+  // split as a full bar — the one reading that makes an unpublishable
+  // directive look finished. Scaling keeps the segments in true proportion to
+  // each other and lets the message below carry the fact that it is over.
+  const scale = total > 100 ? 100 / total : 1;
 
   return (
     <div className="space-y-3">
@@ -66,13 +74,13 @@ export function SplitBar({ segments, showRemainder = false }: SplitBarProps) {
             key={segment.id}
             className={`${toneFor(segment.level)} h-full`}
             // Widths are data, not design — they can only come from the row.
-            style={{ width: `${segment.share}%` }}
+            style={{ width: `${segment.share * scale}%` }}
           />
         ))}
-        {showRemainder && remainder > 0 && (
+        {showRemainder && unassigned > 0 && (
           <div
             className="h-full bg-transparent"
-            style={{ width: `${remainder}%` }}
+            style={{ width: `${unassigned}%` }}
             aria-hidden="true"
           />
         )}
@@ -98,10 +106,11 @@ export function SplitBar({ segments, showRemainder = false }: SplitBarProps) {
         ))}
       </ul>
 
-      {showRemainder && remainder > 0 && (
+      {showRemainder && (unassigned > 0 || over > 0) && (
         <p className="text-sm text-status-warning">
-          {formatShare(remainder)}% unassigned — a directive must total 100% before it can be
-          published.
+          {over > 0
+            ? `${formatShare(over)}% over — a directive must total 100% before it can be published.`
+            : `${formatShare(unassigned)}% unassigned — a directive must total 100% before it can be published.`}
         </p>
       )}
     </div>
