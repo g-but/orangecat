@@ -11,11 +11,12 @@ import { ensureCatAccount } from '@/services/mentions/cat-account';
 import { replyToConversationMention } from '@/services/mentions/cat-reply';
 import { replyToPostMention } from '@/services/mentions/cat-post-reply';
 import { resolveMentions } from '@/services/mentions/resolve';
+import { notifyMentionedPeople } from '@/services/mentions/notify-mentions';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import {
-  claimCatMentions,
-  completeCatMention,
-  failCatMention,
+  claimMentions,
+  completeMention,
+  failMention,
   type ClaimedMention,
 } from '@/services/mentions/queue';
 import { logger } from '@/utils/logger';
@@ -45,7 +46,7 @@ export async function runCatMentions(
   // no-op, which is always after the first run.
   const cat = await ensureCatAccount(admin);
 
-  const claimed = await claimCatMentions(admin, limit);
+  const claimed = await claimMentions(admin, limit);
   result.claimed = claimed.length;
   if (claimed.length === 0) {
     return result;
@@ -53,7 +54,7 @@ export async function runCatMentions(
 
   if (!cat) {
     for (const mention of claimed) {
-      await failCatMention(admin, mention, 'no Cat account');
+      await failMention(admin, mention, 'no Cat account');
     }
     result.failed = claimed.length;
     return result;
@@ -63,14 +64,14 @@ export async function runCatMentions(
     try {
       const answered = await answer(admin, mention, cat.id);
       if (answered) {
-        await completeCatMention(admin, mention.id);
+        await completeMention(admin, mention.id);
         result.answered += 1;
       } else {
-        await failCatMention(admin, mention, 'nothing to answer');
+        await failMention(admin, mention, 'nothing to answer');
         result.failed += 1;
       }
     } catch (error) {
-      await failCatMention(
+      await failMention(
         admin,
         mention,
         error instanceof Error ? error.message : String(error)
@@ -99,35 +100,58 @@ async function answer(
   }
 
   if (mention.parent_event_id) {
-    // The database trigger is a PREFILTER: it queues anything containing the
-    // substring "@cat", so `@catalogue` and `bob@catering.com` arrive here too.
-    // The resolver is the authority, and this is where its verdict is applied —
-    // detection has one implementation, not one per surface.
-    if (!(await postActuallyTagsTheCat(admin, mention.parent_event_id))) {
-      return true; // Nothing owed. Resolved, not failed.
-    }
-    return replyToPostMention(admin, { eventId: mention.parent_event_id, catId });
+    return processPostMentions(admin, mention, catId);
   }
 
   return false;
 }
 
-/** Ask the real resolver whether the post's text mentions the Cat. */
-async function postActuallyTagsTheCat(
+/**
+ * One resolve, two outcomes.
+ *
+ * The trigger is a PREFILTER — it queues any post containing '@', so
+ * `bob@example.com` and `@catalogue` arrive here too. The resolver is the
+ * authority and this is the only place its verdict is applied, which is what
+ * keeps detection from being written once per surface.
+ *
+ * Both jobs come from that single answer: reply if the Cat was named, and tell
+ * the people who were. Nothing named at all is a resolved row, not a failure —
+ * marking it failed would retry a post that asked for nothing three times and
+ * then log an error about it.
+ */
+async function processPostMentions(
   admin: SupabaseClient,
-  eventId: string
+  mention: ClaimedMention,
+  catId: string
 ): Promise<boolean> {
+  const eventId = mention.parent_event_id as string;
+
   const { data } = await admin
     .from(DATABASE_TABLES.TIMELINE_EVENTS)
-    .select('title, description')
+    .select('title, description, actor_id')
     .eq('id', eventId)
     .maybeSingle();
 
   if (!data) {
     return false;
   }
-  const row = data as { title: string | null; description: string | null };
+  const row = data as { title: string | null; description: string | null; actor_id: string };
   const text = `${row.description ?? ''}\n${row.title ?? ''}`;
-  const { mentionsCat } = await resolveMentions(admin, text);
-  return mentionsCat;
+
+  const { mentions, mentionsCat } = await resolveMentions(admin, text);
+  if (mentions.length === 0) {
+    return true;
+  }
+
+  await notifyMentionedPeople(admin, {
+    mentions,
+    authorId: row.actor_id,
+    eventId,
+    excerpt: row.description ?? row.title ?? '',
+  });
+
+  if (!mentionsCat) {
+    return true;
+  }
+  return replyToPostMention(admin, { eventId, catId });
 }

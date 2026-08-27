@@ -44,7 +44,23 @@ function env(key) {
   }
 }
 
-/** Pinned ids, read from source so this file cannot drift from the constant. */
+const GROQ = { keyName: 'GROQ_API_KEY', url: 'https://api.groq.com/openai/v1/models' };
+const OPENROUTER = { keyName: 'OPENROUTER_API_KEY', url: 'https://openrouter.ai/api/v1/models' };
+
+/**
+ * Pinned ids, read from source so this file cannot drift from the constant.
+ *
+ * It CAN still drift from the repo, and did. This function used to read exactly
+ * two ids — the platform-llm Groq pin and the OpenRouter free default — and
+ * reported "every pinned model is still served" while
+ * `src/services/ai/groq.ts` held a registry whose every entry was retired,
+ * including `DEFAULT_GROQ_MODEL` itself. A green check on a two-item list reads
+ * exactly like a green check on the whole repo.
+ *
+ * So the registry is read as a whole rather than by naming one constant: the
+ * keys of GROQ_MODELS are every Groq id this codebase can select, and a model
+ * added there is covered without touching this file.
+ */
 function pinnedModels() {
   const llm = readFileSync(join(ROOT, 'src/services/cat/platform-llm.ts'), 'utf8');
   const groq = llm.match(/const GROQ_MODEL = '([^']+)'/)?.[1];
@@ -52,10 +68,32 @@ function pinnedModels() {
   const models = readFileSync(join(ROOT, 'src/config/ai-models.ts'), 'utf8');
   const openRouter = models.match(/export const DEFAULT_FREE_MODEL_ID = '([^']+)'/)?.[1];
 
-  return [
-    { provider: 'groq', id: groq, keyName: 'GROQ_API_KEY', url: 'https://api.groq.com/openai/v1/models' },
-    { provider: 'openrouter', id: openRouter, keyName: 'OPENROUTER_API_KEY', url: 'https://openrouter.ai/api/v1/models' },
+  // Every id in the selectable Groq registry, not just the default. The block
+  // is bounded so a later `as const` object in the same file cannot leak in.
+  const groqSource = readFileSync(join(ROOT, 'src/services/ai/groq.ts'), 'utf8');
+  const registry = groqSource.match(/const GROQ_MODELS = \{([\s\S]*?)\n\} as const;/)?.[1] ?? '';
+  const registryIds = [...registry.matchAll(/^\s*'([^']+)':\s*\{/gm)].map((m) => m[1]);
+
+  const entries = [
+    { provider: 'groq', id: groq, ...GROQ },
+    { provider: 'openrouter', id: openRouter, ...OPENROUTER },
+    ...registryIds.map((id) => ({ provider: 'groq', id, ...GROQ })),
   ];
+
+  if (registryIds.length === 0) {
+    // Silence here would be indistinguishable from a clean registry, and this
+    // check exists precisely because a narrower version of it was silent.
+    entries.push({ provider: 'groq', id: undefined, ...GROQ });
+  }
+
+  // One id may be pinned in more than one place; ask the vendor once.
+  const seen = new Set();
+  return entries.filter((e) => {
+    const key = `${e.provider}:${e.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 async function servedIds(url, key) {

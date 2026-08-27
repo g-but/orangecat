@@ -12,9 +12,10 @@
 
 const replyToPostMention = jest.fn().mockResolvedValue(true);
 const resolveMentions = jest.fn();
-const claimCatMentions = jest.fn();
-const completeCatMention = jest.fn();
-const failCatMention = jest.fn();
+const notifyMentionedPeople = jest.fn().mockResolvedValue(0);
+const claimMentions = jest.fn();
+const completeMention = jest.fn();
+const failMention = jest.fn();
 
 jest.mock('@/services/mentions/cat-account', () => ({
   ensureCatAccount: jest.fn().mockResolvedValue({ id: 'cat-1', username: 'cat' }),
@@ -28,10 +29,13 @@ jest.mock('@/services/mentions/cat-reply', () => ({
 jest.mock('@/services/mentions/resolve', () => ({
   resolveMentions: (...a: unknown[]) => resolveMentions(...a),
 }));
+jest.mock('@/services/mentions/notify-mentions', () => ({
+  notifyMentionedPeople: (...a: unknown[]) => notifyMentionedPeople(...a),
+}));
 jest.mock('@/services/mentions/queue', () => ({
-  claimCatMentions: (...a: unknown[]) => claimCatMentions(...a),
-  completeCatMention: (...a: unknown[]) => completeCatMention(...a),
-  failCatMention: (...a: unknown[]) => failCatMention(...a),
+  claimMentions: (...a: unknown[]) => claimMentions(...a),
+  completeMention: (...a: unknown[]) => completeMention(...a),
+  failMention: (...a: unknown[]) => failMention(...a),
   MAX_ATTEMPTS: 3,
 }));
 
@@ -51,21 +55,30 @@ const postMention = {
 const admin = (description: string) =>
   ({
     from: () => ({
-      select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: { title: null, description }, error: null }) }) }),
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () =>
+            Promise.resolve({ data: { title: null, description, actor_id: 'u1' }, error: null }),
+        }),
+      }),
     }),
   }) as never;
 
 beforeEach(() => {
+  notifyMentionedPeople.mockClear().mockResolvedValue(0);
   replyToPostMention.mockClear().mockResolvedValue(true);
   resolveMentions.mockReset();
-  claimCatMentions.mockReset().mockResolvedValue([postMention]);
-  completeCatMention.mockReset();
-  failCatMention.mockReset();
+  claimMentions.mockReset().mockResolvedValue([postMention]);
+  completeMention.mockReset();
+  failMention.mockReset();
 });
 
 describe('wall-post mentions', () => {
   it('answers a post that really tags the Cat', async () => {
-    resolveMentions.mockResolvedValue({ mentions: [], mentionsCat: true });
+    resolveMentions.mockResolvedValue({
+      mentions: [{ id: 'cat-1', username: 'cat', isCat: true }],
+      mentionsCat: true,
+    });
     const result = await runCatMentions(admin('@cat is this goal realistic?'));
     expect(replyToPostMention).toHaveBeenCalledWith(expect.anything(), {
       eventId: 'e1',
@@ -89,16 +102,33 @@ describe('wall-post mentions', () => {
     await runCatMentions(admin('the @catalogue'));
     // Marking it failed would retry it three times and then log an error about
     // a post that never asked the Cat anything.
-    expect(completeCatMention).toHaveBeenCalled();
-    expect(failCatMention).not.toHaveBeenCalled();
+    expect(completeMention).toHaveBeenCalled();
+    expect(failMention).not.toHaveBeenCalled();
   });
 
   it('does not consult the resolver for a private-message mention', async () => {
-    claimCatMentions.mockResolvedValue([
+    claimMentions.mockResolvedValue([
       { ...postMention, conversation_id: 'c1', parent_event_id: null },
     ]);
     await runCatMentions(admin('irrelevant'));
     // Those arrive through an API route that already resolved them.
     expect(resolveMentions).not.toHaveBeenCalled();
+  });
+
+  it('notifies the people a post names, even when the Cat is not among them', async () => {
+    // This is the case that never worked: `@alice` in a post told alice nothing,
+    // because the type existed and nothing ever created one.
+    resolveMentions.mockResolvedValue({
+      mentions: [{ id: 'u-alice', username: 'alice', isCat: false }],
+      mentionsCat: false,
+    });
+    const result = await runCatMentions(admin('thoughts on this @alice?'));
+
+    expect(notifyMentionedPeople).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ eventId: 'e1', authorId: 'u1' })
+    );
+    expect(replyToPostMention).not.toHaveBeenCalled();
+    expect(result.answered).toBe(1);
   });
 });
