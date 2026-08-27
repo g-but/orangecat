@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { getRouteSurface, ROUTES } from '@/config/routes';
-import { SITES_PATH_PREFIX, siteSlugForHost } from '@/config/sites';
 
 // Edge middleware route classification reads from the SAME SSOT used by
 // AppShell / MobileBottomNav / Footer / Header (src/config/routes.ts).
@@ -36,49 +35,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Hosted sites (src/config/sites.ts): a request arriving on a site's own
-  // host is somebody else's website, so rewrite it onto /sites/<slug> and let
-  // that standalone layout answer. Rewrite, not redirect — the visitor's URL
-  // bar must keep saying substrata.orangecat.ch, which is the entire point of
-  // what /domains sells. Requests already on /sites/... pass through, so the
-  // path form stays previewable from any host.
-  //
-  // `siteSlugForHost` matches by SHAPE and never touches the database — this
-  // runs on every request to the entire app. Whether a site is actually
-  // published is decided by the page, which is allowed to query. An unclaimed
-  // slug therefore rewrites and then 404s, which is the safe direction.
-  const siteSlug = siteSlugForHost(request.headers.get('host'));
-  if (siteSlug && !pathname.startsWith(`${SITES_PATH_PREFIX}/`)) {
-    const target = request.nextUrl.clone();
-    target.pathname = `${SITES_PATH_PREFIX}/${siteSlug}${pathname === '/' ? '' : pathname}`;
-
-    // These go on the REQUEST headers, not just the response.
-    //
-    // A rewrite keeps the visitor's URL bar saying substrata.orangecat.ch,
-    // which means `usePathname()` in the app says "/" — so the layout cannot
-    // tell it is rendering somebody else's website by looking at the path. It
-    // has to be told. Setting these only on the response (which is what this
-    // did first) tells the browser and nothing else, and the result was
-    // OrangeCat's header, analytics and Organization schema all rendering on a
-    // customer's domain.
-    const forwarded = new Headers(request.headers);
-    forwarded.set('x-pathname', target.pathname);
-    forwarded.set('x-hosted-site', siteSlug);
-
-    const rewritten = NextResponse.rewrite(target, { request: { headers: forwarded } });
-    rewritten.headers.set('x-pathname', target.pathname);
-    rewritten.headers.set('x-hosted-site', siteSlug);
-    return rewritten;
-  }
-
-  // Same reasoning as the rewrite above: the layout reads `x-pathname` from the
-  // REQUEST, so it has to be set there and not only echoed to the browser.
-  const forwardedHeaders = new Headers(request.headers);
-  forwardedHeaders.set('x-pathname', pathname);
-
   const response = NextResponse.next({
     request: {
-      headers: forwardedHeaders,
+      headers: request.headers,
     },
   });
 

@@ -111,7 +111,7 @@ export type RouteContext = 'authenticated' | 'public' | 'universal' | 'auth' | '
 // the matching list below. Both layers exist so source-tree organisation
 // and runtime classification can never silently drift.
 
-export type RouteSurface = 'app' | 'public' | 'auth' | 'site';
+export type RouteSurface = 'app' | 'public' | 'auth';
 
 const APP_SURFACES = [
   '/dashboard',
@@ -152,14 +152,6 @@ const APP_SURFACES = [
 
 const AUTH_SURFACES = ['/auth'] as const;
 
-// A hosted site is somebody else's website that happens to run on our
-// infrastructure (see src/config/sites.ts). It carries none of OrangeCat's
-// chrome — no header, no sidebar, no footer, no marketing nav — because on
-// substrate.orangecat.ch the visitor is not on OrangeCat, they are on
-// Substrate. This is a fourth surface rather than a chrome override precisely
-// so that nothing can accidentally opt it back into the app shell.
-const SITE_SURFACES = ['/sites'] as const;
-
 /** O(n) prefix-match against a sorted list. Pathname like `/discover/123`
  *  matches `'/discover'`. Exact `/` matches only `'/'`.
  */
@@ -176,36 +168,7 @@ function matchesPrefix(pathname: string, routes: readonly string[]): boolean {
  * Single SSOT for shell-related route classification. Sidebar, mobile nav,
  * header variant, and footer must all derive from this.
  */
-/**
- * Is this request rendering a hosted site — somebody else's website?
- *
- * Takes a header lookup rather than a `Headers`, so it is callable from a
- * layout, a route handler and a test without any of them constructing a request.
- *
- * WHY A HEADER AND NOT THE PATH
- *
- * A hosted site is served by a REWRITE: the visitor stays on
- * substrata.orangecat.ch while `/sites/substrata` renders. So the path visible
- * to the browser — and to any client component calling `usePathname()` — is
- * "/", which classifies as the public marketing surface. Deciding from that
- * put OrangeCat's header, analytics, Organization schema and internal feedback
- * widget on a customer's own domain. Middleware sets `x-hosted-site` on the
- * request precisely so the server can answer this without guessing.
- *
- * `x-pathname` covers the other way in: `/sites/<slug>` requested directly,
- * which is the preview form and has no rewrite.
- */
-export function isHostedSiteRequest(getHeader: (name: string) => string | null): boolean {
-  if (getHeader('x-hosted-site')) {
-    return true;
-  }
-  return getRouteSurface(getHeader('x-pathname') ?? '/') === 'site';
-}
-
 export function getRouteSurface(pathname: string): RouteSurface {
-  if (matchesPrefix(pathname, SITE_SURFACES)) {
-    return 'site';
-  }
   if (matchesPrefix(pathname, AUTH_SURFACES)) {
     return 'auth';
   }

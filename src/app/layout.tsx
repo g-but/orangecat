@@ -42,8 +42,6 @@ const ibmPlexMono = localFont({
 });
 import './globals.css';
 import Script from 'next/script';
-import { headers } from 'next/headers';
-import { isHostedSiteRequest } from '@/config/routes';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
@@ -105,25 +103,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  /**
-   * Is this request rendering somebody else's website?
-   *
-   * Decided ONCE, here, on the server, because four separate things below are
-   * OrangeCat's and must not appear on a customer's domain: the app shell, our
-   * Organization schema, our analytics, and the FleetCrown feedback widget.
-   *
-   * It cannot be decided from the path in a client component. A hosted site is
-   * served by a REWRITE — the visitor's URL bar keeps saying
-   * substrata.orangecat.ch, so `usePathname()` returns "/" and every one of
-   * those four leaked onto the customer's site. Middleware therefore forwards
-   * `x-hosted-site` on the request headers, and the path form is covered by the
-   * same `getRouteSurface` SSOT the rest of the app uses.
-   */
-  const requestHeaders = await headers();
-  const isHostedSite = isHostedSiteRequest(name => requestHeaders.get(name));
-
-  const gaId = isHostedSite ? undefined : process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   // Cache-only, never a network wait: rendering a page must not depend on a
   // third party answering. Whatever we last knew gets handed to the browser so
   // the first paint already speaks the visitor's currency.
@@ -136,42 +117,39 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
     >
       <body className="antialiased">
-        {/* Structured data: Organization + WebSite. Never on a hosted site —
-            it would tell every crawler that the customer's domain IS OrangeCat. */}
-        {!isHostedSite && (
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                '@context': 'https://schema.org',
-                '@graph': [
-                  {
-                    '@type': 'Organization',
-                    name: APP_NAME,
-                    url: SITE_URL,
-                    logo: `${SITE_URL}/images/orange-cat-logo.svg`,
-                    description:
-                      'Fund, lend, invest, trade, and govern with any identity, settled in Bitcoin.',
-                    sameAs: [],
-                  },
-                  {
-                    '@type': 'WebSite',
-                    name: APP_NAME,
-                    url: SITE_URL,
-                    potentialAction: {
-                      '@type': 'SearchAction',
-                      target: {
-                        '@type': 'EntryPoint',
-                        urlTemplate: `${SITE_URL}/discover?q={search_term_string}`,
-                      },
-                      'query-input': 'required name=search_term_string',
+        {/* Structured data: Organization + WebSite */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'Organization',
+                  name: APP_NAME,
+                  url: SITE_URL,
+                  logo: `${SITE_URL}/images/orange-cat-logo.svg`,
+                  description:
+                    'Fund, lend, invest, trade, and govern with any identity, settled in Bitcoin.',
+                  sameAs: [],
+                },
+                {
+                  '@type': 'WebSite',
+                  name: APP_NAME,
+                  url: SITE_URL,
+                  potentialAction: {
+                    '@type': 'SearchAction',
+                    target: {
+                      '@type': 'EntryPoint',
+                      urlTemplate: `${SITE_URL}/discover?q={search_term_string}`,
                     },
+                    'query-input': 'required name=search_term_string',
                   },
-                ],
-              }),
-            }}
-          />
-        )}
+                },
+              ],
+            }),
+          }}
+        />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-fg-primary focus:text-fg-inverted focus:rounded-lg focus:outline-none"
@@ -191,7 +169,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     inner <Suspense> around the slow part, which is what the
                     Next.js docs recommend so the existence check still runs
                     before the response commits). Enforced by audit-routes. */}
-                <AppShell forceSurface={isHostedSite ? 'site' : undefined}>{children}</AppShell>
+                <AppShell>{children}</AppShell>
               </AuthProvider>
             </QueryProvider>
           </CurrencyRatesProvider>
@@ -205,7 +183,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             polls) can keep the browser from going idle, so lazyOnload left the
             FAB unmounted for minutes — a feedback button that isn't there when
             something breaks is the one time it's needed. */}
-        {!isHostedSite && process.env.FLEETCROWN_FEEDBACK_TOKEN && (
+        {process.env.FLEETCROWN_FEEDBACK_TOKEN && (
           <Script
             src="https://fleetcrown.orangecat.ch/widget.js"
             strategy="afterInteractive"

@@ -58,14 +58,6 @@ export const GROUP_FEATURES = {
     dependencies: [],
   },
 
-  site: {
-    id: 'site',
-    name: 'Website',
-    description: 'Publish this group as a website at <slug>.orangecat.ch',
-    icon: 'globe',
-    dependencies: [],
-  },
-
   shared_wallet: {
     id: 'shared_wallet',
     name: 'Shared Wallet',
