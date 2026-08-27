@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { parseMentionCandidates } from '@/domain/mentions/parse';
 
 type TokenType = 'text' | 'bold' | 'italic' | 'mention' | 'url' | 'mdlink';
 
@@ -11,22 +12,62 @@ interface Token {
   linkText?: string;
 }
 
+/**
+ * Split a run of plain text into text and mention tokens.
+ *
+ * This used to be one alternative inside the regex below — `@[a-zA-Z0-9_]{1,30}`
+ * — which was a THIRD definition of what a handle is, and it disagreed with the
+ * other two in ways that showed on screen:
+ *
+ *   - No `.`, `-` or `+`, so `@dacota-plaettli` linked to /profiles/dacota and
+ *     `@m.schaupensteiner` to /profiles/m. Both are real production accounts,
+ *     and the resolver notifies them correctly while the post rendered a link
+ *     to somebody else.
+ *   - No word boundary, so `bob@example.com` in a post rendered `@example` as a
+ *     profile link.
+ *
+ * Now there is one tokenizer. The renderer cannot ask the database who exists,
+ * so it links the LONGEST candidate — the same preference the resolver applies
+ * before checking existence — which also gives `ask @alice.` the right answer,
+ * linking `@alice` and leaving the full stop as text.
+ */
+function expandMentions(text: string): Token[] {
+  const tokens: Token[] = [];
+  let cursor = 0;
+
+  for (const mention of parseMentionCandidates(text)) {
+    const handle = mention.candidates[0];
+    if (mention.index > cursor) {
+      tokens.push({ type: 'text', value: text.slice(cursor, mention.index) });
+    }
+    tokens.push({ type: 'mention', value: `@${handle}`, username: handle });
+    cursor = mention.index + 1 + handle.length;
+  }
+
+  if (cursor < text.length) {
+    tokens.push({ type: 'text', value: text.slice(cursor) });
+  }
+  return tokens;
+}
+
 function tokenize(text: string): Token[] {
   if (!text) {
     return [];
   }
 
   const tokens: Token[] = [];
-  // mdlink must precede plain URL in alternation so [text](url) is matched first
+  // mdlink must precede plain URL in alternation so [text](url) is matched first.
+  // Mentions are NOT here: they are found by the shared parser, in the plain-text
+  // runs between these matches, so a handle inside a link target stays untouched.
   const combinedRegex =
-    /(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*|@[a-zA-Z0-9_]{1,30}|https?:\/\/[^\s<>[\]{}|\\^`"']+)/g;
+    /(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*|https?:\/\/[^\s<>[\]{}|\\^`"']+)/g;
 
   let lastIndex = 0;
   let match;
 
   while ((match = combinedRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      tokens.push({ type: 'text', value: text.slice(lastIndex, match.index) });
+      tokens.push(...expandMentions(text.slice(lastIndex, match.index)));
     }
 
     const m = match[0];
@@ -40,8 +81,6 @@ function tokenize(text: string): Token[] {
       tokens.push({ type: 'bold', value: m.slice(2, -2) });
     } else if (m.startsWith('*')) {
       tokens.push({ type: 'italic', value: m.slice(1, -1) });
-    } else if (m.startsWith('@')) {
-      tokens.push({ type: 'mention', value: m, username: m.slice(1) });
     } else if (m.startsWith('http')) {
       tokens.push({ type: 'url', value: m, url: m });
     }
@@ -50,7 +89,7 @@ function tokenize(text: string): Token[] {
   }
 
   if (lastIndex < text.length) {
-    tokens.push({ type: 'text', value: text.slice(lastIndex) });
+    tokens.push(...expandMentions(text.slice(lastIndex)));
   }
   return tokens;
 }
