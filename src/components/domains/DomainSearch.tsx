@@ -1,0 +1,137 @@
+'use client';
+
+/**
+ * Domain availability search for /domains.
+ *
+ * A thin client over /api/v1/domains — deliberately thin, because FleetCrown
+ * calls that same endpoint and any rule implemented here instead of there
+ * would apply to one of the two products and not the other. In particular the
+ * "a .ch not-found proves nothing" rule is server-side; this component only
+ * renders what it is told.
+ */
+
+import React, { useCallback, useState } from 'react';
+import { Loader2, Search } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import { DOMAIN_STATUS_COPY, type DomainStatus } from '@/config/domain-search';
+
+interface DomainResult {
+  domain: string;
+  status: DomainStatus;
+  reason: string;
+  rdapSupported: boolean;
+}
+
+const STATUS_CLASS: Record<DomainStatus, string> = {
+  unregistered: 'bg-status-positive-subtle text-status-positive',
+  registered: 'bg-surface-raised text-fg-tertiary',
+  unknown: 'bg-status-warning-subtle text-status-warning',
+};
+
+/** Free names first — they are the answer. Then unresolved, then taken. */
+const STATUS_ORDER: Record<DomainStatus, number> = { unregistered: 0, unknown: 1, registered: 2 };
+
+export function DomainSearch() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<DomainResult[] | null>(null);
+  const [disclaimer, setDisclaimer] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const search = useCallback(
+    async (event: React.FormEvent) => {
+      event.preventDefault();
+      const trimmed = query.trim();
+      if (trimmed.length < 2) {
+        setError('Type at least two characters.');
+        return;
+      }
+
+      setIsSearching(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/v1/domains?q=${encodeURIComponent(trimmed)}`);
+        const body = await response.json();
+        if (!response.ok) {
+          setError(body?.error?.message ?? 'Search failed. Try again in a moment.');
+          setResults(null);
+          return;
+        }
+        const payload = body.data ?? body;
+        setResults(
+          [...(payload.results ?? [])].sort(
+            (a: DomainResult, b: DomainResult) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]
+          )
+        );
+        setDisclaimer(payload.disclaimer ?? '');
+      } catch {
+        setError('Could not reach the registry lookup. Try again in a moment.');
+        setResults(null);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [query]
+  );
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <form onSubmit={search} className="flex flex-col gap-3 sm:flex-row">
+        <label htmlFor="domain-query" className="sr-only">
+          Name to check
+        </label>
+        <input
+          id="domain-query"
+          type="text"
+          value={query}
+          onChange={event => setQuery(event.target.value)}
+          placeholder="yourname"
+          autoComplete="off"
+          className="min-h-11 flex-1 rounded-lg border border-subtle bg-surface-base px-4 py-2.5 text-fg-primary placeholder:text-fg-muted focus-visible:border-interactive focus-visible:outline-none"
+        />
+        <Button type="submit" variant="accent" disabled={isSearching} className="min-h-11">
+          {isSearching ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Search className="mr-2 h-4 w-4" />
+          )}
+          {isSearching ? 'Checking registries' : 'Check availability'}
+        </Button>
+      </form>
+
+      {error && <p className="mt-3 text-sm text-status-negative">{error}</p>}
+
+      {results && results.length === 0 && (
+        <p className="mt-6 text-sm text-fg-secondary">
+          Nothing to check — that query has no usable domain label.
+        </p>
+      )}
+
+      {results && results.length > 0 && (
+        <div className="mt-6">
+          <ul className="divide-y divide-subtle overflow-hidden rounded-lg border border-subtle bg-surface-base">
+            {results.map(result => (
+              <li
+                key={result.domain}
+                className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+              >
+                <span className="font-mono text-sm text-fg-primary">{result.domain}</span>
+                <span className="flex items-center gap-3">
+                  <span className="text-xs text-fg-muted sm:max-w-md sm:text-right">
+                    {result.reason}
+                  </span>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_CLASS[result.status]}`}
+                  >
+                    {DOMAIN_STATUS_COPY[result.status].label}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          {disclaimer && <p className="mt-3 text-xs leading-relaxed text-fg-muted">{disclaimer}</p>}
+        </div>
+      )}
+    </div>
+  );
+}

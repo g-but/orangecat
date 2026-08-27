@@ -1,0 +1,23 @@
+{
+  // Type-check the operational scripts, which the app's tsconfig excludes.
+  //
+  // WHY THIS FILE EXISTS
+  //
+  // `tsconfig.json` excludes `scripts/**/*.ts` so Next's build does not compile
+  // them. The side effect was that `verify` never looked at them at all — and a
+  // seed script is the one place where a schema drift surfaces BY HAND, on the
+  // box, months after the migration that caused it. seed-substrata.ts is bound
+  // to the generated `Database` type precisely so that failure happens in CI;
+  // without this config that binding proved nothing.
+  //
+  // Deliberately NOT extended to `__tests__/**`: 119 pre-existing type errors
+  // live there, and fixing them is real work that does not belong to whichever
+  // change happens to notice. Scripts were already at zero, so this gate starts
+  // green and stays that way.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["scripts/**/*.ts", "src/**/*.ts", "src/**/*.tsx", "next-env.d.ts"],
+  "exclude": ["node_modules", ".next", "dist", "build", "coverage"]
+}

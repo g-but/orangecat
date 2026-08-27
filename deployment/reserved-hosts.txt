@@ -1,0 +1,34 @@
+# Subdomain labels currently served on bitbaum under *.orangecat.ch.
+#
+# Generated from the box, committed so CI can check it WITHOUT ssh:
+#   npm run sync:reserved-hosts
+#
+# Every label here must appear in RESERVED_SUBDOMAINS (src/config/sites.ts),
+# because host resolution for hosted sites is positional — any non-reserved
+# label on orangecat.ch is a candidate site slug. A label serving an app AND
+# claimable as a site is a collision waiting to happen, and on-demand TLS
+# would issue a second certificate for a name that already has one.
+#
+# check:reserved-hosts fails the build when this file and the code disagree.
+annushka
+aoz-wohnen
+aoz
+botsmann
+bridge
+camille
+datacat
+evig
+fleetcrown
+kivvi
+petvity
+printcraft
+reparaturbonus
+revamp-info
+revampit
+sbb
+sink
+solon
+supabase
+surf-your-life
+vitareba
+www
