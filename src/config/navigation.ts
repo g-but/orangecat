@@ -438,7 +438,7 @@ export const footerNavigation = {
     },
     {
       name: 'GitHub',
-      href: 'https://github.com/maonakamoto/orangecat',
+      href: 'https://github.com/catomean/orangecat',
       icon: GitHubIcon,
     },
   ],
@@ -447,7 +447,7 @@ export const footerNavigation = {
   // change. External URLs are marked with `external: true`.
   bottomBar: [
     { name: 'Documentation', href: ROUTES.DOCS },
-    { name: 'Source Code', href: 'https://github.com/maonakamoto/orangecat', external: true },
+    { name: 'Source Code', href: 'https://github.com/catomean/orangecat', external: true },
     { name: 'Roadmap', href: ROUTES.ROADMAP },
     { name: 'Support', href: ROUTES.SUPPORT },
   ] as { name: string; href: string; external?: boolean }[],

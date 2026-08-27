@@ -74,7 +74,7 @@ push branch → open PR → CI green → auto-merge.yml squash-merges it
 
 `.github/workflows/auto-merge.yml` calls the fleet's canonical sweep — the
 policy no longer lives in this repo. It is defined once in
-`maonakamoto/dotfiles`, `scripts/ci/auto-merge-sweep.sh`, and a fix made to a
+`catomean/dotfiles`, `scripts/ci/auto-merge-sweep.sh`, and a fix made to a
 local copy here would reach nobody. The sweep merges **one** PR per sweep, and
 only when: it is not a draft, carries no hold label, every check has finished
 green, GitHub calls it cleanly mergeable, and main's own CI is currently green. One car per sweep is deliberate — a PR's
@@ -102,7 +102,7 @@ exist because `GITHUB_TOKEN` is deliberately inert:
    shipped by the next sweep rather than stranded.
 2. **The `post-main` job** in `ci.yml`. GitHub also suppresses the `workflow_run`
    event for a run that was itself created with `GITHUB_TOKEN` — so the CI run
-   the re-arm just started chains to *nothing*. CD and Main Red Alert both hang
+   the re-arm just started chains to _nothing_. CD and Main Red Alert both hang
    off `workflow_run`, and both are therefore dead on the automated path unless
    the dispatched run hands off itself. It does: file/close the red-main issue,
    then dispatch CD, and fail if no CD run appears.
