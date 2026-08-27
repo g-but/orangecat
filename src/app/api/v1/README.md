@@ -104,6 +104,39 @@ surfacing").
 integration clients (FleetCrown). Requires `stakeholders.read` / `stakeholders.write`
 and ownership of the source project. Contract SSOT: `src/config/stakeholders.ts`.
 
+### Identity resolution
+
+| Endpoint                        | Method | Auth              | What it does                                          |
+| ------------------------------- | ------ | ----------------- | ----------------------------------------------------- |
+| `/api/v1/profiles`              | GET    | none (IP-limited) | Resolve up to 100 actor ids / handles in one call     |
+| `/api/v1/profiles/{idOrHandle}` | GET    | none (IP-limited) | Resolve one actor id, profile id, group id, or handle |
+
+Every other v1 surface hands back an `actor_id` — stakeholder edges, entity
+ownership, payment intents, timeline events. These two turn that UUID into
+somebody you can name, so the typed customer graph renders as people and teams
+rather than as a column of identifiers. Users and groups come back in **one
+shape**, because a stakeholder edge may point at either.
+
+Public and unauthenticated, like `/api/v1/search` and `/api/v1/demand`: the
+response contains exactly what an anonymous visitor already reads off
+`/profiles/<handle>`, honouring the owner's per-field hide list. Email, phone,
+payment addresses and location are deliberately **not** in it — email flows with
+consent through the OIDC `email` scope, payment data has `wallet.read`, and
+location has its own three-state control. Contract SSOT:
+`src/config/public-profile.ts`.
+
+Two details worth knowing: a handle the account has since **retired** still
+resolves (renames are non-breaking by design, and a resolver that only knew
+current handles would reintroduce the breakage `profile_username_history` exists
+to prevent), and `url` is **absolute** — a relative path would resolve against
+the calling client's own origin.
+
+`/api/v1/search?type=people` results carry a `handle` field, so a search hit
+feeds straight into `GET /api/v1/profiles?handles=…`.
+
+To keep a cached identity fresh, subscribe a webhook endpoint to
+`profile.updated`; the payload carries the same public-profile shape.
+
 ## Out of scope for v1 (until further notice)
 
 - `/api/wallets/*` — wallet linkage has app-specific semantics

@@ -13,6 +13,7 @@ import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { getTableName, getEntityMetadata } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { ENTITY_STATUS } from '@/config/database-constants';
+import { publicProfilePath } from '@/config/public-profile-path';
 import { embeddingsEnabled, embedText } from '@/services/ai/embeddings';
 import { logger } from '@/utils/logger';
 
@@ -33,9 +34,36 @@ export interface SearchResult {
   /** Cosine similarity 0–1 for semantic hits (absent for keyword hits). Lets the
    *  Cat distinguish a strong match from a loosely-related one. */
   similarity?: number;
+  /**
+   * The person's handle, on `people` results only — the join key that turns a
+   * search hit into an identity. Without it a caller could find somebody and
+   * still not tie them to a stakeholder edge, a payment, or a wall post; with
+   * it, one `GET /api/v1/profiles?handles=…` resolves a whole page of hits.
+   *
+   * A handle rather than an `actor_id` because both search paths can produce it
+   * without a schema change: the keyword path selects it, and the semantic path
+   * carries it inside the `url` that `match_content` already returns.
+   */
+  handle?: string;
 }
 
 const MAX_RESULTS_PER_TYPE = 5;
+
+/**
+ * The handle inside a public profile URL, or undefined for any other URL.
+ *
+ * `match_content` returns a display URL and no ids, so this is how the semantic
+ * path gets a join key without a migration. Kept in one place so the two search
+ * paths cannot disagree about what a people result's handle is.
+ */
+export function profileHandleFromUrl(url: string | null | undefined): string | undefined {
+  const match = /^\/profiles\/([^/?#]+)$/.exec(url ?? '');
+  if (!match) {
+    return undefined;
+  }
+  const handle = decodeURIComponent(match[1]).trim();
+  return handle || undefined;
+}
 
 /** Public detail-page base path for an entity type — SSOT is the registry, never a literal. */
 const pubPath = (type: Parameters<typeof getEntityMetadata>[0]): string =>
@@ -246,6 +274,7 @@ async function semanticSearch(
       description: r.text_preview?.slice(0, 200) || '',
       url: r.url || '#',
       similarity: Math.round(r.similarity * 100) / 100,
+      handle: profileHandleFromUrl(r.url),
     }));
 }
 
@@ -276,7 +305,8 @@ async function searchProfiles(
       type: 'people',
       title: row.name || row.username,
       description: row.bio?.slice(0, 200) || `@${row.username} on OrangeCat`,
-      url: `/profiles/${row.username}`,
+      url: publicProfilePath(row.username),
+      handle: row.username,
     });
   }
 }

@@ -10,6 +10,7 @@ import { logger } from '@/utils/logger';
 import { ProfileServerService } from '@/services/profile/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
+import { enqueueProfileUpdatedWebhook } from '@/services/webhooks/profileUpdatedWebhook';
 import type { User } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
@@ -115,6 +116,10 @@ export const PUT = withAuth(async (request: AuthenticatedRequest) => {
     }
 
     logger.info('Profile updated successfully', { userId: user.id });
+    // Fire-and-forget: a subscriber's cached copy of this identity is now
+    // stale, and nothing else tells them. Never blocks the save — the profile
+    // is already written, and enqueueWebhookEvent swallows its own errors.
+    void enqueueProfileUpdatedWebhook(user.id);
     return apiSuccess(profile);
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {

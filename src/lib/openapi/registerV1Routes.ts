@@ -24,6 +24,7 @@ import {
 import { getEntityMetadata } from '@/config/entity-registry';
 import { externalPublishSchema } from '@/config/external-publish';
 import { createStakeholderSchema } from '@/config/stakeholders';
+import { PUBLIC_PROFILE_MAX_BATCH, publicProfileSchema } from '@/config/public-profile';
 import {
   userProductSchema,
   userServiceSchema,
@@ -627,6 +628,92 @@ export function registerV1Routes(): void {
         description: 'Validation error — body did not match the schema.',
         content: { 'application/json': { schema: apiErrorSchema } },
       },
+      429: COMMON_ERROR_RESPONSES[429],
+      500: COMMON_ERROR_RESPONSES[500],
+    },
+  });
+
+  // ── Identity resolver ──────────────────────────────────────────────────────
+  // The counterpart to every field above that hands back an actor_id.
+  const profileSchemaDoc = publicProfileSchema.openapi('PublicProfile', {
+    description:
+      'A public identity — a person or a team — in one shape. `actor_id` is the join key that stakeholder edges, entity ownership, payments and timeline events all reference.',
+  });
+
+  openApiRegistry.registerPath({
+    method: 'get',
+    path: `${PUBLIC_API_BASE}/profiles`,
+    summary: 'Resolve identities in bulk',
+    description:
+      'Turns actor ids and/or handles into public profiles in one round trip — the call that renders a stakeholder graph or a page of timeline events with names instead of UUIDs. Public: it returns what an anonymous visitor already reads off the profile page. Unknown references are omitted rather than erroring, so one deleted account cannot blank out a whole graph.',
+    tags: ['Profiles'],
+    request: {
+      query: z.object({
+        actor_ids: z
+          .string()
+          .optional()
+          .openapi({
+            description: `Comma-separated actor UUIDs. Max ${PUBLIC_PROFILE_MAX_BATCH} references per request across both parameters.`,
+          }),
+        handles: z.string().optional().openapi({
+          description:
+            'Comma-separated usernames (people) or slugs (groups). Case-insensitive. A handle the account has since retired still resolves.',
+        }),
+      }),
+    },
+    responses: {
+      200: {
+        description: 'Resolved identities. Absent entries were not found.',
+        content: {
+          'application/json': {
+            schema: apiSuccessSchema(
+              z.object({
+                profiles: z.array(profileSchemaDoc),
+                requested: z.object({ actor_ids: z.number(), handles: z.number() }),
+              }),
+              'PublicProfileBatchSuccess'
+            ),
+          },
+        },
+      },
+      400: COMMON_ERROR_RESPONSES[400],
+      422: {
+        description: 'Too many references, or an actor_id that is not a UUID.',
+        content: { 'application/json': { schema: apiErrorSchema } },
+      },
+      429: COMMON_ERROR_RESPONSES[429],
+      500: COMMON_ERROR_RESPONSES[500],
+    },
+  });
+
+  openApiRegistry.registerPath({
+    method: 'get',
+    path: `${PUBLIC_API_BASE}/profiles/{idOrHandle}`,
+    summary: 'Resolve one identity',
+    description:
+      'Accepts whatever the client is holding: an actor id, a profile or group id, or a handle. Users and groups come back in the same shape, so a caller rendering a stakeholder edge never has to know which kind it pointed at.',
+    tags: ['Profiles'],
+    request: {
+      params: z.object({
+        idOrHandle: z.string().openapi({
+          description: 'Actor id, profile id, group id, or handle.',
+        }),
+      }),
+    },
+    responses: {
+      200: {
+        description: 'The resolved identity.',
+        content: {
+          'application/json': {
+            schema: apiSuccessSchema(
+              z.object({ profile: profileSchemaDoc }),
+              'PublicProfileSuccess'
+            ),
+          },
+        },
+      },
+      400: COMMON_ERROR_RESPONSES[400],
+      404: COMMON_ERROR_RESPONSES[404],
       429: COMMON_ERROR_RESPONSES[429],
       500: COMMON_ERROR_RESPONSES[500],
     },

@@ -91,6 +91,16 @@ export const PUBLIC_API_INTEGRATION_ENDPOINTS = [
     endpoint: `${PUBLIC_API_BASE}/stakeholders`,
   },
   {
+    name: 'profiles',
+    methods: ['GET'] as const,
+    endpoint: `${PUBLIC_API_BASE}/profiles`,
+  },
+  {
+    name: 'profiles.resolve',
+    methods: ['GET'] as const,
+    endpoint: `${PUBLIC_API_BASE}/profiles/{idOrHandle}`,
+  },
+  {
     name: 'search',
     methods: ['GET'] as const,
     endpoint: `${PUBLIC_API_BASE}/search`,
@@ -122,13 +132,27 @@ export const PUBLIC_API_SCOPE_TOKENS: readonly string[] = [
 export const PUBLIC_API_ECONOMIC_WEBHOOK_EVENTS = ['payment.settled'] as const;
 
 /**
+ * Identity events. `profile.updated` fires when an actor's public profile
+ * changes — the signal that keeps a client's cached copy from rotting.
+ *
+ * Without it, "FleetCrown references, never re-implements" quietly becomes a
+ * fork: the only way to keep a rendered name current is to re-resolve every
+ * actor on every page load, and the only way to avoid that is to cache with no
+ * invalidation. Handles are mutable by design now that a retired one keeps
+ * resolving, so a stale cache is the expected state, not the unlucky one.
+ */
+export const PUBLIC_API_IDENTITY_WEBHOOK_EVENTS = ['profile.updated'] as const;
+
+/**
  * Webhook event types that endpoints can subscribe to. Entity events mirror
  * how entityPostHandler emits: `<entity>.created` (future `<entity>.updated`
  * / `<entity>.deleted` append there); economic events carry settlement
- * signals. An endpoint with `event_types=null` receives every event for its
+ * signals; identity events carry public-profile changes. An endpoint with
+ * `event_types=null` receives every event for its
  * bound actor — the explicit allowlist only gates the firing fan-out.
  */
 export const PUBLIC_API_WEBHOOK_EVENTS: readonly string[] = [
   ...PUBLIC_API_ENTITY_TYPES.map(t => `${t}.created`),
   ...PUBLIC_API_ECONOMIC_WEBHOOK_EVENTS,
+  ...PUBLIC_API_IDENTITY_WEBHOOK_EVENTS,
 ];
