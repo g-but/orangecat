@@ -29,6 +29,16 @@ import {
   areaFor,
 } from './substrata';
 import {
+  ACTING_LIMITS,
+  ACTION_ROUTES,
+  INVESTMENT_THESIS,
+  PARTNERS,
+  PARTNER_INTRODUCTIONS_ENABLED,
+  READINESS,
+  READINESS_STATUS_LABEL,
+  readinessProgress,
+} from './substrata-acting';
+import {
   CHOKEPOINTS,
   COVERAGE,
   NODE_TYPE_LABEL,
@@ -365,6 +375,156 @@ function chokepointsPage(): SitePage {
 }
 
 // =====================================================================
+// THESIS
+// =====================================================================
+
+function thesisPage(): SitePage {
+  return {
+    path: 'thesis',
+    navLabel: 'Thesis',
+    title: 'Thesis',
+    intro: 'What we think follows from the map — stated so it can be scored, not admired.',
+    sections: [
+      {
+        kind: 'prose',
+        paragraphs: [
+          'A research house is supposed to have a view and be judged on it. Each claim ' +
+            'below carries a falsifier: the thing that, if observed, would show it to be ' +
+            'wrong. A thesis without one is a slogan, and a slogan cannot be scored.',
+          'This is a general view published to whoever reads it. It is not advice, it is ' +
+            'not addressed to anyone in particular, and it takes no account of your ' +
+            'circumstances — see Acting on it for what that does and does not permit.',
+        ],
+      },
+      ...INVESTMENT_THESIS.map(claim => ({
+        kind: 'definitions' as const,
+        heading: claim.claim,
+        blurb: claim.detail,
+        items: [{ term: 'What would prove this wrong', detail: claim.falsifier }],
+      })),
+    ],
+  };
+}
+
+// =====================================================================
+// ACTING ON IT
+// =====================================================================
+
+function actingPage(): SitePage {
+  const progress = readinessProgress();
+
+  return {
+    path: 'acting',
+    navLabel: 'Acting on it',
+    title: 'Acting on it',
+    intro: 'What you can do with this research, and what we are not allowed to do for you.',
+    sections: [
+      {
+        kind: 'definitions',
+        heading: 'Read this first',
+        blurb:
+          'People read research and want to act on it — that is why it is published. But ' +
+          'the line between publishing a view and advising a person is a legal one, and ' +
+          'this firm sits firmly on the publishing side of it.',
+        items: ACTING_LIMITS.map((limit, index) => ({
+          term: `Limit ${index + 1}`,
+          detail: limit,
+        })),
+      },
+      {
+        kind: 'prose',
+        heading: 'Why there is no referral list',
+        paragraphs: [
+          'The obvious thing to build here is a list of brokers and dealers we send ' +
+            'people to. The reason there is not one yet is that taking a fee for an ' +
+            'introduction is precisely what turns a publisher into a regulated ' +
+            'intermediary — an introducing broker, a tied agent, a finder — in ' +
+            'Switzerland, the EU and the United States alike. Being unpaid is not a ' +
+            'detail of that arrangement; it is the whole of what keeps it on this side ' +
+            'of the line.',
+          'So what follows is a description of how these markets actually work, and the ' +
+            'questions worth putting to whoever you choose. Nobody paid to be described, ' +
+            'because nobody is named. If that ever changes — a named partner, an ' +
+            'agreement, any consideration at all — it will be written on this page ' +
+            'before the arrangement starts.',
+        ],
+      },
+      PARTNER_INTRODUCTIONS_ENABLED && PARTNERS.length > 0
+        ? {
+            kind: 'table' as const,
+            heading: 'Firms we can introduce you to',
+            blurb: 'Each holds the licence named beside it. We are paid nothing by any of them.',
+            columns: ['Firm', 'Category', 'Regulated as', 'Where'],
+            monoColumns: [3],
+            rows: PARTNERS.map(partner => [
+              partner.name,
+              partner.category,
+              partner.regulatedAs,
+              partner.jurisdictions.join(' '),
+            ]),
+          }
+        : {
+            kind: 'prose' as const,
+            heading: 'Firms we can introduce you to',
+            paragraphs: [
+              'None, today. A name appears here only once there is an executed agreement ' +
+                'with that firm and confirmation that making the introduction does not ' +
+                'itself require a licence. Volunteering somebody’s name as an endorsement ' +
+                'they never agreed to would be the easier thing to do and the wrong one.',
+            ],
+          },
+      ...ACTION_ROUTES.map(route => ({
+        kind: 'definitions' as const,
+        heading: route.name,
+        blurb: route.gives,
+        items: [
+          { term: 'Who provides it', detail: route.providedBy },
+          { term: 'What it does not give you', detail: route.doesNotGive },
+          { term: 'Worth asking', detail: route.ask.join(' · ') },
+        ],
+      })),
+      {
+        kind: 'prose',
+        heading: 'What we can do if you get in touch',
+        paragraphs: [
+          'We can answer questions about the research: why a node is in the universe, ' +
+            'what a grade designation means, who else makes something, what we have and ' +
+            'have not verified. We are glad to be told a row is wrong, and that is the ' +
+            'most useful message anyone sends us.',
+          'We cannot tell you what to buy, how much, or when. Not because of caution but ' +
+            'because doing so would be a licensed activity we are not licensed for, and ' +
+            'a firm that quietly crosses that line has told you exactly how much its ' +
+            'other statements are worth.',
+        ],
+      },
+      {
+        kind: 'meter',
+        heading: 'Becoming the investor',
+        label: 'Requirements met to manage money rather than only publish',
+        value: progress.done,
+        of: progress.total,
+        caption:
+          `${progress.done} done, ${progress.inProgress} in progress. Managing third-party ` +
+          'money is licensed activity everywhere that matters, and the gap below is real ' +
+          'rather than paperwork. It is published for the same reason the coverage meter ' +
+          'is: a plan with statuses is a plan, and everything else is a feeling.',
+      },
+      {
+        kind: 'table',
+        heading: 'The ledger',
+        columns: ['Requirement', 'Status', 'Detail'],
+        statusColumn: 1,
+        rows: READINESS.map(item => [
+          item.requirement,
+          READINESS_STATUS_LABEL[item.status],
+          item.detail,
+        ]),
+      },
+    ],
+  };
+}
+
+// =====================================================================
 // DISCLOSURE
 // =====================================================================
 
@@ -413,5 +573,13 @@ function disclosurePage(): SitePage {
 // =====================================================================
 
 export function substrataSitePages(): SitePage[] {
-  return [homePage(), mandatePage(), mapPage(), chokepointsPage(), disclosurePage()];
+  return [
+    homePage(),
+    mandatePage(),
+    thesisPage(),
+    mapPage(),
+    chokepointsPage(),
+    actingPage(),
+    disclosurePage(),
+  ];
 }

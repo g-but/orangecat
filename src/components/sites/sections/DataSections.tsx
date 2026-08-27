@@ -16,6 +16,9 @@ const STATUS_DOT: Record<string, string> = {
   sourced: 'bg-status-positive',
   'unverified lead': 'bg-status-warning',
   taken: 'bg-fg-muted',
+  done: 'bg-status-positive',
+  'in progress': 'bg-status-warning',
+  'not started': 'bg-fg-muted',
 };
 
 export function IndexSection({
