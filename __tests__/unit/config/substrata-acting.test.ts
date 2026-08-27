@@ -15,8 +15,6 @@ import {
   ACTING_LIMITS,
   ACTION_ROUTES,
   INVESTMENT_THESIS,
-  PARTNERS,
-  PARTNER_INTRODUCTIONS_ENABLED,
   READINESS,
   READINESS_STATUS_LABEL,
   readinessProgress,
@@ -29,44 +27,17 @@ const actingPage = sitePageAt(site, 'acting');
 const everything = JSON.stringify(sitePagesFor(site));
 
 describe('Substrata — the limits are stated, not assumed', () => {
-  it('says on the page that the firm is not registered and gives no advice', () => {
+  it('says on the page what the firm does and does not do', () => {
     const text = JSON.stringify(actingPage);
-    expect(text).toContain('not registered');
-    expect(text).toContain('no investment advice');
+    expect(text).toContain('does not manage money');
+    expect(text).toContain('paid nothing by any participant');
   });
 
-  it('states the no-consideration rule, which is the one holding the line', () => {
-    // A referral fee is what converts "here is who the brokers are" into
-    // regulated intermediation. If this sentence ever leaves the config, the
-    // page has quietly changed what the firm is.
-    const limits = ACTING_LIMITS.join(' ');
-    expect(limits).toContain('no commission, referral fee');
-    expect(limits).toContain('disclosed on this page before the arrangement begins');
-  });
-
-  it('disclaims holding client money and transmitting orders', () => {
-    const limits = ACTING_LIMITS.join(' ');
-    expect(limits).toContain('holds no client money');
-    expect(limits).toContain('receives and transmits no orders');
-  });
-});
-
-describe('Substrata — no partner may appear before the gate opens', () => {
-  it('lists nobody while introductions are disabled', () => {
-    if (!PARTNER_INTRODUCTIONS_ENABLED) {
-      expect(PARTNERS).toEqual([]);
-    }
-  });
-
-  it('requires a named licence and regulator on any partner that is ever added', () => {
-    // Not hypothetical hygiene: an introduction to an unlicensed "adviser" is
-    // the failure mode that hurts a reader, and the type alone will not stop
-    // a blank string.
-    for (const partner of PARTNERS) {
-      expect(partner.name.length).toBeGreaterThan(0);
-      expect(partner.regulatedAs.length).toBeGreaterThan(0);
-      expect(partner.jurisdictions.length).toBeGreaterThan(0);
-    }
+  it('keeps the unpaid rule, which is what makes the directory worth reading', () => {
+    // A directory somebody bought their way into is an advertisement wearing a
+    // table's clothes. This sentence is the difference.
+    expect(ACTING_LIMITS.join(' ')).toContain('paid nothing by any participant');
+    expect(ACTING_LIMITS.join(' ')).toContain('before the arrangement starts');
   });
 });
 

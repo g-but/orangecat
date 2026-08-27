@@ -32,12 +32,18 @@ import {
   ACTING_LIMITS,
   ACTION_ROUTES,
   INVESTMENT_THESIS,
-  PARTNERS,
-  PARTNER_INTRODUCTIONS_ENABLED,
   READINESS,
   READINESS_STATUS_LABEL,
   readinessProgress,
 } from './substrata-acting';
+import {
+  CHAIN_LAYERS,
+  SCARCITY_DETAIL,
+  SCARCITY_LABEL,
+  bindingParticipants,
+  participantProgress,
+  participantsInLayer,
+} from './substrata-participants';
 import {
   CHOKEPOINTS,
   COVERAGE,
@@ -407,6 +413,118 @@ function thesisPage(): SitePage {
 }
 
 // =====================================================================
+// PARTICIPANTS
+// =====================================================================
+
+function participantsPage(): SitePage {
+  const progress = participantProgress();
+  const binding = bindingParticipants();
+
+  const layerTables: SiteSection[] = CHAIN_LAYERS.flatMap(layer => {
+    const rows = participantsInLayer(layer.id);
+    if (rows.length === 0) {
+      return [];
+    }
+    return [
+      {
+        kind: 'table' as const,
+        heading: layer.name,
+        anchor: layer.id,
+        blurb: layer.detail,
+        columns: ['Participant', 'Role in the chain', 'Where', 'Scarcity'],
+        monoColumns: [2],
+        statusColumn: 3,
+        rows: rows.map(item => [
+          item.name,
+          item.role,
+          item.jurisdictions.join(' '),
+          SCARCITY_LABEL[item.scarcity],
+        ]),
+      },
+    ];
+  });
+
+  return {
+    path: 'participants',
+    navLabel: 'Participants',
+    title: 'Participants',
+    intro: 'Everyone in the chain from ore to buyer, graded by how hard they are to replace.',
+    sections: [
+      {
+        kind: 'prose',
+        paragraphs: [
+          'A directory of everyone in a supply chain is a phone book. What makes this ' +
+            'research is the last column: for each participant, whether it is a chokepoint, ' +
+            'merely concentrated, or genuinely competitive.',
+          'Grading participants “competitive” is not filler. It is the thing that makes ' +
+            '“chokepoint” mean anything — a map on which every node is critical is a map ' +
+            'nobody has actually read. Several well-known names in this list are here ' +
+            'precisely because they are not constraints.',
+          'On the demand side the grade reads the other way round: when a handful of firms ' +
+            'account for most of the world’s orders, that concentration is a scarcity fact ' +
+            'about the chain too, pointing upstream instead of down.',
+        ],
+      },
+      {
+        kind: 'stats',
+        stats: [
+          {
+            label: 'Participants mapped',
+            value: String(progress.total),
+            note: `Across ${CHAIN_LAYERS.length} layers and ${progress.jurisdictions} jurisdictions.`,
+          },
+          {
+            label: 'Graded a chokepoint',
+            value: String(progress.chokepoints),
+            note: 'One or very few qualified suppliers, and no substitute that arrives in time.',
+          },
+          {
+            label: 'Graded competitive',
+            value: String(progress.competitive),
+            note: 'In the chain, and not a constraint on it. Saying so is the point.',
+          },
+        ],
+      },
+      {
+        kind: 'definitions',
+        heading: 'How the grades are assigned',
+        blurb:
+          'The mandate’s own screen — concentration, substitutability, lead time, demand ' +
+          'inelasticity — applied one participant at a time.',
+        items: (Object.keys(SCARCITY_DETAIL) as Array<keyof typeof SCARCITY_DETAIL>).map(grade => ({
+          term: SCARCITY_LABEL[grade],
+          detail: SCARCITY_DETAIL[grade],
+        })),
+      },
+      {
+        kind: 'cards',
+        heading: 'Where the chain actually binds',
+        blurb:
+          `${binding.length} of ${progress.total} participants are graded a hard constraint. ` +
+          'These are the ones worth knowing by name.',
+        columns: 2,
+        cards: binding.map(item => ({
+          title: item.name,
+          body: item.why,
+          meta: `${item.role}  ·  ${item.jurisdictions.join(' ')}`,
+        })),
+      },
+      {
+        kind: 'index',
+        heading: 'The chain, layer by layer',
+        blurb: 'Ordered upstream to downstream. The number is how many participants are mapped.',
+        entries: CHAIN_LAYERS.map(layer => ({
+          label: layer.name,
+          meta: String(participantsInLayer(layer.id).length),
+          anchor: layer.id,
+        })),
+      },
+      ...layerTables,
+    ],
+  };
+}
+
+// =====================================================================
 // ACTING ON IT
 // =====================================================================
 
@@ -431,48 +549,6 @@ function actingPage(): SitePage {
           detail: limit,
         })),
       },
-      {
-        kind: 'prose',
-        heading: 'Why there is no referral list',
-        paragraphs: [
-          'The obvious thing to build here is a list of brokers and dealers we send ' +
-            'people to. The reason there is not one yet is that taking a fee for an ' +
-            'introduction is precisely what turns a publisher into a regulated ' +
-            'intermediary — an introducing broker, a tied agent, a finder — in ' +
-            'Switzerland, the EU and the United States alike. Being unpaid is not a ' +
-            'detail of that arrangement; it is the whole of what keeps it on this side ' +
-            'of the line.',
-          'So what follows is a description of how these markets actually work, and the ' +
-            'questions worth putting to whoever you choose. Nobody paid to be described, ' +
-            'because nobody is named. If that ever changes — a named partner, an ' +
-            'agreement, any consideration at all — it will be written on this page ' +
-            'before the arrangement starts.',
-        ],
-      },
-      PARTNER_INTRODUCTIONS_ENABLED && PARTNERS.length > 0
-        ? {
-            kind: 'table' as const,
-            heading: 'Firms we can introduce you to',
-            blurb: 'Each holds the licence named beside it. We are paid nothing by any of them.',
-            columns: ['Firm', 'Category', 'Regulated as', 'Where'],
-            monoColumns: [3],
-            rows: PARTNERS.map(partner => [
-              partner.name,
-              partner.category,
-              partner.regulatedAs,
-              partner.jurisdictions.join(' '),
-            ]),
-          }
-        : {
-            kind: 'prose' as const,
-            heading: 'Firms we can introduce you to',
-            paragraphs: [
-              'None, today. A name appears here only once there is an executed agreement ' +
-                'with that firm and confirmation that making the introduction does not ' +
-                'itself require a licence. Volunteering somebody’s name as an endorsement ' +
-                'they never agreed to would be the easier thing to do and the wrong one.',
-            ],
-          },
       ...ACTION_ROUTES.map(route => ({
         kind: 'definitions' as const,
         heading: route.name,
@@ -510,15 +586,15 @@ function actingPage(): SitePage {
           'is: a plan with statuses is a plan, and everything else is a feeling.',
       },
       {
-        kind: 'table',
+        // Definitions, not a table. Three columns where one holds a paragraph
+        // is a table that scrolls sideways on a phone and is read by nobody;
+        // the status belongs next to the requirement, not in a column of its own.
+        kind: 'definitions',
         heading: 'The ledger',
-        columns: ['Requirement', 'Status', 'Detail'],
-        statusColumn: 1,
-        rows: READINESS.map(item => [
-          item.requirement,
-          READINESS_STATUS_LABEL[item.status],
-          item.detail,
-        ]),
+        items: READINESS.map(item => ({
+          term: `${item.requirement} — ${READINESS_STATUS_LABEL[item.status]}`,
+          detail: item.detail,
+        })),
       },
     ],
   };
@@ -579,6 +655,7 @@ export function substrataSitePages(): SitePage[] {
     thesisPage(),
     mapPage(),
     chokepointsPage(),
+    participantsPage(),
     actingPage(),
     disclosurePage(),
   ];

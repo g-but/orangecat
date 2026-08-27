@@ -37,8 +37,16 @@ export interface HostedSite {
   slug: string;
   /** Free subdomain: <subdomain>.orangecat.ch. */
   subdomain: string;
-  /** Custom domain once DNS is pointed here, else null. */
+  /** Custom domain once DNS is pointed here, else null. Canonical when set. */
   customDomain: string | null;
+  /**
+   * Extra hostnames this site also answers on. Wired ahead of ownership on
+   * purpose: a host only ever reaches this check if somebody has already
+   * pointed DNS at our box, so listing a domain we do not yet hold costs
+   * nothing and means the site works the hour it is bought, with no deploy.
+   * Never canonical — `siteCanonicalHost` ignores these.
+   */
+  aliasHosts?: readonly string[];
   /** Browser tab title / OG title for the whole site. */
   title: string;
   /** The OrangeCat profile this site renders. */
@@ -54,6 +62,10 @@ export const HOSTED_SITES: readonly HostedSite[] = [
     slug: 'substrata',
     subdomain: 'substrata',
     customDomain: null,
+    // substrata.ch is the intended home and appears free — .ch publishes no
+    // RDAP, so that has to be confirmed at a registrar rather than by us.
+    // substrataintel.com is the .com fallback, since substrata.com is taken.
+    aliasHosts: ['substrata.ch', 'substrataintel.com'],
     title: 'Substrata',
     profile: { kind: 'group', slug: 'substrata' },
   },
@@ -90,6 +102,9 @@ export function siteForHost(host: string | null | undefined): HostedSite | null 
       return site;
     }
     if (site.customDomain && bare === normaliseHost(site.customDomain)) {
+      return site;
+    }
+    if (site.aliasHosts?.some(alias => bare === normaliseHost(alias))) {
       return site;
     }
   }

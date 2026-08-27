@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { ROUTES } from '@/config/routes';
 import { siteCanonicalHost, siteHref, type HostedSite } from '@/config/sites';
 import type { SiteChrome as SiteChromeSpec, SitePage } from '@/config/site-content';
+import { SiteNav } from './SiteNav';
 
 interface Props {
   site: HostedSite;
@@ -27,8 +28,6 @@ interface Props {
 }
 
 export function SiteMasthead({ site, chrome, pages, currentPath }: Props) {
-  const navPages = pages.filter(page => page.navLabel);
-
   return (
     <header className="sticky top-0 z-30 border-b border-subtle bg-surface-page/85 backdrop-blur">
       <div className="mx-auto max-w-shell px-4 sm:px-6 lg:px-8">
@@ -42,29 +41,7 @@ export function SiteMasthead({ site, chrome, pages, currentPath }: Props) {
             </span>
           </Link>
 
-          <nav
-            aria-label="Sections"
-            className="scrollbar-hide -mx-1 flex flex-nowrap items-center gap-x-1 overflow-x-auto"
-          >
-            {navPages.map(page => {
-              const isCurrent = page.path === currentPath;
-              return (
-                <Link
-                  key={page.path || 'home'}
-                  href={siteHref(site, page.path)}
-                  aria-current={isCurrent ? 'page' : undefined}
-                  className={[
-                    'shrink-0 rounded px-2 py-1 font-mono text-xs uppercase tracking-caps transition-colors',
-                    isCurrent
-                      ? 'text-fg-primary underline decoration-accent-warm decoration-2 underline-offset-8'
-                      : 'text-fg-tertiary hover:text-fg-primary',
-                  ].join(' ')}
-                >
-                  {page.navLabel}
-                </Link>
-              );
-            })}
-          </nav>
+          <SiteNav site={site} pages={pages} currentPath={currentPath} />
         </div>
       </div>
     </header>

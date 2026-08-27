@@ -19,6 +19,11 @@ const STATUS_DOT: Record<string, string> = {
   done: 'bg-status-positive',
   'in progress': 'bg-status-warning',
   'not started': 'bg-fg-muted',
+  // Scarcity grades. Red reads as "constrained", green as "no constraint here" —
+  // the opposite of a risk dashboard, and correct for this page.
+  chokepoint: 'bg-status-negative',
+  concentrated: 'bg-status-warning',
+  competitive: 'bg-status-positive',
 };
 
 export function IndexSection({

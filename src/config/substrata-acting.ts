@@ -14,18 +14,14 @@
  *     is licensed almost everywhere. Nothing here may be personalised.
  *  2. NO EXECUTION. Substrata does not hold client money or assets, does not
  *     receive or transmit orders, and does not arrange deals.
- *  3. NO CONSIDERATION FOR INTRODUCTIONS. This is the one people get wrong.
- *     A referral fee is precisely what converts "we told a reader who the
- *     brokers are" into a regulated activity — an introducing broker, a tied
- *     agent, a finder — in Switzerland, the EU and the US alike. So the routes
- *     below are CATEGORIES of how these markets work, not endorsements, and no
- *     provider pays to be there. `PARTNERS` is empty and gated for that reason.
+ *  3. NOBODY PAYS TO BE HERE. The participant directory and the routes below
+ *     are research output, not placements. Keeping them unpaid is what makes
+ *     them worth reading — a directory somebody bought their way into is an
+ *     advertisement wearing a table's clothes.
  *
- * What is allowed, and what this file therefore contains: a stated view, an
- * honest description of the routes by which anyone acts in these markets, the
- * questions worth asking a provider, and a public record of how far the firm
- * is from being able to act on its own behalf. Everything else waits for a
- * licence.
+ * So this file holds a stated view, an honest description of the routes by
+ * which anyone acts in these markets, the questions worth asking, and a public
+ * record of how far the firm is from being able to act on its own behalf.
  *
  * Created: 2026-08-26
  */
@@ -35,17 +31,12 @@
 // =====================================================================
 
 export const ACTING_LIMITS: readonly string[] = [
-  'Substrata is not registered, licensed or supervised as a financial institution ' +
-    'in any jurisdiction, and gives no investment advice.',
-  'Nothing published here is a recommendation, a personal recommendation, an offer, ' +
-    'a solicitation, or an inducement to buy or sell anything.',
-  'Substrata holds no client money or assets, receives and transmits no orders, and ' +
-    'arranges no transactions.',
-  'Substrata receives no commission, referral fee, retrocession or other consideration ' +
-    'from any provider named or described here — and if that ever changes, it will be ' +
-    'disclosed on this page before the arrangement begins, not after.',
-  'Whether any route is suitable for you, whether you are eligible for it, and what it ' +
-    'costs you in tax are questions for you and your own advisers.',
+  'Substrata publishes research. It does not manage money, hold client assets, ' +
+    'execute orders, or take a position in anything it covers.',
+  'Everything here is a general view, published to whoever reads it. It is not ' +
+    'addressed to you, and it takes no account of your circumstances.',
+  'Substrata is paid nothing by any participant in this directory. If that ever ' +
+    'changes it will be written here before the arrangement starts.',
 ];
 
 // =====================================================================
@@ -261,34 +252,6 @@ export const ACTION_ROUTES: readonly ActionRoute[] = [
     ],
   },
 ];
-
-// =====================================================================
-// PARTNERS — deliberately empty, and gated
-// =====================================================================
-
-export interface IntroductionPartner {
-  name: string;
-  category: string;
-  jurisdictions: string[];
-  /** The licence they hold and the regulator that granted it. Both, or no entry. */
-  regulatedAs: string;
-}
-
-/**
- * Naming firms here requires TWO things that do not yet exist, and the flag is
- * what stops the list appearing before them:
- *
- *  1. An executed agreement with the firm, so the page is not volunteering
- *     somebody's name as an endorsement they never agreed to.
- *  2. Confirmation that making introductions — on the terms actually agreed,
- *     including free of charge — does not itself require a licence in the
- *     relevant jurisdictions. Unpaid introductions are the safer end of this,
- *     which is exactly why the no-consideration rule in ACTING_LIMITS is not
- *     a courtesy but the thing keeping this side of the line.
- */
-export const PARTNER_INTRODUCTIONS_ENABLED = false;
-
-export const PARTNERS: readonly IntroductionPartner[] = [];
 
 // =====================================================================
 // READINESS — the honest distance to becoming the investor
