@@ -112,7 +112,7 @@
     "type-check:scripts": "tsc --noEmit --skipLibCheck -p tsconfig.scripts.json"
   },
   "dependencies": {
-    "@asteasolutions/zod-to-openapi": "^7.3.4",
+    "@asteasolutions/zod-to-openapi": "^9.1.0",
     "@google/generative-ai": "^0.24.1",
     "@hono/node-server": "^2.1.1",
     "@hookform/resolvers": "^5.9.1",
