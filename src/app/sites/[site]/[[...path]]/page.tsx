@@ -1,20 +1,25 @@
 /**
  * The hosted-site renderer — one route for every page of every hosted site.
  *
- * A visitor on substrate.orangecat.ch never sees this path: middleware rewrote
- * their request here while their URL bar kept saying substrate.orangecat.ch.
+ * A visitor on substrata.orangecat.ch never sees this path: middleware rewrote
+ * their request here while their URL bar kept saying substrata.orangecat.ch.
  * The path form stays reachable on any host so a site can be previewed before
  * its DNS exists, which is also how the tests and screenshots reach it.
  *
  * A catch-all rather than one file per page, because the pages are data
  * (src/config/site-content.ts). Adding a page to a hosted site is adding an
- * entry to that site's builder — never a new route file.
+ * entry to that site's builder — never a new route file. Adding a WHOLE SITE is
+ * a row in the database and no code at all.
+ *
+ * This is also the layer that is allowed to ask whether a site exists. The
+ * middleware matched a shape; `siteBySlug` is what turns that into an answer,
+ * and it reads as an anonymous visitor so RLS decides "published", not this file.
  */
 
 import React from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { HOSTED_SITES, siteBySlug, siteCanonicalHost } from '@/config/sites';
+import { ALWAYS_PUBLISHED, HOSTED_SITE_FALLBACKS, siteCanonicalHost } from '@/config/hosted-site';
 import {
   pageRendersOwnHeader,
   siteChromeFor,
@@ -22,6 +27,7 @@ import {
   sitePageAt,
   sitePagesFor,
 } from '@/config/site-content';
+import { siteBySlug, type ResolvedSite } from '@/services/sites/registry';
 import { SiteFooter, SiteMasthead } from '@/components/sites/SiteChrome';
 import { SiteSections } from '@/components/sites/SiteSections';
 
@@ -29,31 +35,53 @@ interface RouteParams {
   params: Promise<{ site: string; path?: string[] }>;
 }
 
-/** Pre-render every page of every hosted site — they are static by nature. */
+/**
+ * Pre-render the sites whose content lives in the repository.
+ *
+ * Only those: a database-backed site cannot be enumerated at build time without
+ * making the build depend on a reachable database, and a customer who publishes
+ * at 14:00 should not wait for a deploy. Those render on first request and are
+ * held by `siteBySlug`'s cache, which is what `dynamicParams` allows.
+ */
 export function generateStaticParams(): Array<{ site: string; path?: string[] }> {
-  return HOSTED_SITES.flatMap(site =>
-    sitePagesFor(site).map(page => ({
-      site: site.slug,
-      path: page.path ? [page.path] : [],
-    }))
-  );
+  return ALWAYS_PUBLISHED.flatMap(slug => {
+    const site = HOSTED_SITE_FALLBACKS[slug];
+    return site
+      ? sitePagesFor(site, null).map(page => ({
+          site: slug,
+          path: page.path ? [page.path] : [],
+        }))
+      : [];
+  });
+}
+
+async function resolve(slug: string, path?: string[]) {
+  const resolved: ResolvedSite | null = await siteBySlug(slug);
+  if (!resolved) {
+    return null;
+  }
+  const pages = sitePagesFor(resolved.site, resolved.profile);
+  const currentPath = (path ?? []).join('/');
+  const page = sitePageAt(pages, currentPath);
+  const chrome = siteChromeFor(resolved.site, resolved.profile);
+  if (!page || !chrome) {
+    return null;
+  }
+  return { site: resolved.site, pages, page, chrome, currentPath };
 }
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
   const { site: slug, path } = await params;
-  const site = siteBySlug(slug);
-  if (!site) {
+  const resolved = await resolve(slug, path);
+  if (!resolved) {
     return {};
   }
-  const page = sitePageAt(site, (path ?? []).join('/'));
-  if (!page) {
-    return {};
-  }
+  const { site, page } = resolved;
   const title = page.path ? `${page.title} — ${site.title}` : site.title;
   return {
     // `absolute` breaks the root layout's "%s | OrangeCat" template. On
-    // substrate.orangecat.ch the browser tab has no business advertising the
-    // host — the visitor is on Substrate's site, not on ours.
+    // substrata.orangecat.ch the browser tab has no business advertising the
+    // host — the visitor is on Substrata's site, not on ours.
     title: { absolute: title },
     description: page.intro,
     openGraph: {
@@ -67,19 +95,13 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
 
 export default async function HostedSitePage({ params }: RouteParams) {
   const { site: slug, path } = await params;
-  const site = siteBySlug(slug);
-  if (!site) {
+  const resolved = await resolve(slug, path);
+
+  if (!resolved) {
     notFound();
   }
 
-  const chrome = siteChromeFor(site);
-  const pages = sitePagesFor(site);
-  const currentPath = (path ?? []).join('/');
-  const page = sitePageAt(site, currentPath);
-
-  if (!chrome || !page) {
-    notFound();
-  }
+  const { site, pages, page, chrome, currentPath } = resolved;
 
   return (
     <div className="flex min-h-screen flex-col bg-surface-page">

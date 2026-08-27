@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { getRouteSurface, ROUTES } from '@/config/routes';
-import { SITES_PATH_PREFIX, siteForHost } from '@/config/sites';
+import { SITES_PATH_PREFIX, siteSlugForHost } from '@/config/sites';
 
 // Edge middleware route classification reads from the SAME SSOT used by
 // AppShell / MobileBottomNav / Footer / Header (src/config/routes.ts).
@@ -42,13 +42,18 @@ export async function middleware(request: NextRequest) {
   // bar must keep saying substrata.orangecat.ch, which is the entire point of
   // what /domains sells. Requests already on /sites/... pass through, so the
   // path form stays previewable from any host.
-  const hostedSite = siteForHost(request.headers.get('host'));
-  if (hostedSite && !pathname.startsWith(`${SITES_PATH_PREFIX}/`)) {
+  //
+  // `siteSlugForHost` matches by SHAPE and never touches the database — this
+  // runs on every request to the entire app. Whether a site is actually
+  // published is decided by the page, which is allowed to query. An unclaimed
+  // slug therefore rewrites and then 404s, which is the safe direction.
+  const siteSlug = siteSlugForHost(request.headers.get('host'));
+  if (siteSlug && !pathname.startsWith(`${SITES_PATH_PREFIX}/`)) {
     const target = request.nextUrl.clone();
-    target.pathname = `${SITES_PATH_PREFIX}/${hostedSite.slug}${pathname === '/' ? '' : pathname}`;
+    target.pathname = `${SITES_PATH_PREFIX}/${siteSlug}${pathname === '/' ? '' : pathname}`;
     const rewritten = NextResponse.rewrite(target);
     rewritten.headers.set('x-pathname', target.pathname);
-    rewritten.headers.set('x-hosted-site', hostedSite.slug);
+    rewritten.headers.set('x-hosted-site', siteSlug);
     return rewritten;
   }
 

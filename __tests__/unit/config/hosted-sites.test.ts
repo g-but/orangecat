@@ -13,7 +13,18 @@
  *    authored beside it, or the "spins up a website" claim is a copy-paste.
  */
 
-import { HOSTED_SITES, siteBySlug, siteCanonicalHost, siteForHost, siteHref } from '@/config/sites';
+import {
+  RESERVED_SUBDOMAINS,
+  isReservedSubdomain,
+  siteHref,
+  siteSlugForHost,
+} from '@/config/sites';
+import {
+  ALWAYS_PUBLISHED,
+  HOSTED_SITE_FALLBACKS,
+  siteCanonicalHost,
+  toHostedSite,
+} from '@/config/hosted-site';
 import {
   pageRendersOwnHeader,
   sitePageAt,
@@ -24,50 +35,117 @@ import { getRouteSurface } from '@/config/routes';
 import { COMPANY, MANDATE_CURVES, MATERIALS } from '@/config/substrata';
 import { CHOKEPOINTS, COVERAGE, coverageProgress } from '@/config/substrata-coverage';
 
-const site = siteBySlug('substrata');
+const site = HOSTED_SITE_FALLBACKS.substrata;
 
 describe('hosted sites — host resolution', () => {
   it('resolves the free subdomain, with or without www and port', () => {
-    expect(siteForHost('substrata.orangecat.ch')?.slug).toBe('substrata');
-    expect(siteForHost('www.substrata.orangecat.ch')?.slug).toBe('substrata');
-    expect(siteForHost('Substrata.OrangeCat.ch:443')?.slug).toBe('substrata');
+    expect(siteSlugForHost('substrata.orangecat.ch')).toBe('substrata');
+    expect(siteSlugForHost('www.substrata.orangecat.ch')).toBe('substrata');
+    expect(siteSlugForHost('Substrata.OrangeCat.ch:443')).toBe('substrata');
   });
 
   it('resolves the local development host, so the rewrite is testable without DNS', () => {
-    expect(siteForHost('substrata.localhost:3020')?.slug).toBe('substrata');
+    expect(siteSlugForHost('substrata.localhost:3020')).toBe('substrata');
   });
 
+  /**
+   * Resolution is now positional rather than an allowlist — that is what makes a
+   * new customer zero deploys. The safety therefore has to come from SHAPE, and
+   * these are the shapes that must never resolve.
+   */
   it('refuses everything else — a greedy match would swallow OrangeCat itself', () => {
     for (const host of [
       'orangecat.ch',
       'www.orangecat.ch',
       'localhost:3000',
       'substrata.evil.example',
-      'notsubstrata.orangecat.ch',
       'substrata.orangecat.ch.evil.example',
+      'a.b.orangecat.ch',
+      '.orangecat.ch',
+      'sub_domain.orangecat.ch',
+      '-leading.orangecat.ch',
+      'trailing-.orangecat.ch',
       '',
       null,
       undefined,
     ]) {
-      expect(siteForHost(host)).toBeNull();
+      expect(siteSlugForHost(host)).toBeNull();
+    }
+  });
+
+  /**
+   * An unclaimed slug MUST resolve, because the page is what knows whether a
+   * site exists. If this ever returned null the whole no-deploy path would be
+   * gone and every customer would need a code change again.
+   */
+  it('resolves a slug no site has claimed, leaving existence to the page', () => {
+    expect(siteSlugForHost('a-brand-new-customer.orangecat.ch')).toBe('a-brand-new-customer');
+  });
+
+  /**
+   * The dangerous half of a positional match. `security.orangecat.ch` under our
+   * own certificate is a phish; `supabase.orangecat.ch` is the database. Neither
+   * may ever be handed to a group that happens to pick that slug.
+   */
+  it('refuses every reserved subdomain, infrastructure and impersonation alike', () => {
+    for (const { label } of RESERVED_SUBDOMAINS) {
+      expect(isReservedSubdomain(label)).toBe(true);
+      expect(siteSlugForHost(`${label}.orangecat.ch`)).toBeNull();
+      expect(siteSlugForHost(`${label.toUpperCase()}.orangecat.ch`)).toBeNull();
+    }
+  });
+
+  it('reserves the hosts that are actually live on the box', () => {
+    // Every one of these has its own Caddy block today. A site claiming one
+    // would be shadowed by it, or would shadow it.
+    for (const live of ['www', 'bridge', 'fleetcrown', 'evig', 'supabase']) {
+      expect(isReservedSubdomain(live)).toBe(true);
     }
   });
 
   it('advertises the custom domain once one is set, and the subdomain until then', () => {
-    for (const site of HOSTED_SITES) {
-      const expected = site.customDomain ?? `${site.subdomain}.orangecat.ch`;
-      expect(siteCanonicalHost(site)).toBe(expected);
+    const bare = toHostedSite({ slug: 'acme', name: 'Acme' }, {});
+    expect(siteCanonicalHost(bare)).toBe('acme.orangecat.ch');
+
+    const custom = toHostedSite({ slug: 'acme', name: 'Acme' }, { customDomain: 'acme.example' });
+    expect(siteCanonicalHost(custom)).toBe('acme.example');
+  });
+});
+
+describe('hosted sites — the config a site owner may set', () => {
+  /**
+   * `group_features.config` is jsonb, which is `any` wearing a hat. Whatever a
+   * client wrote there reaches this function, so a bad field must cost that
+   * field and never the customer's whole website.
+   */
+  it('falls back to the group name and drops malformed fields', () => {
+    const site = toHostedSite(
+      { slug: 'acme', name: 'Acme Corp' },
+      { title: '   ', customDomain: 'not a hostname', aliasHosts: ['ok.example', 'nodot', ''] }
+    );
+    expect(site.title).toBe('Acme Corp');
+    expect(site.customDomain).toBeNull();
+    expect(site.aliasHosts).toEqual(['ok.example']);
+  });
+
+  it('survives config that is not an object at all', () => {
+    for (const junk of [null, undefined, 42, 'string', []]) {
+      expect(toHostedSite({ slug: 'acme', name: 'Acme' }, junk).title).toBe('Acme');
     }
+  });
+
+  it('marks only repo-resident sites as bespoke, so everyone else renders from their profile', () => {
+    expect(toHostedSite({ slug: 'substrata', name: 'Substrata' }, {}).builder).toBe('substrata');
+    expect(toHostedSite({ slug: 'acme', name: 'Acme' }, {}).builder).toBeNull();
   });
 });
 
 describe('hosted sites — links', () => {
   it('always emits the path form, which resolves on every host', () => {
-    expect(site).not.toBeNull();
-    expect(siteHref(site!)).toBe('/sites/substrata');
-    expect(siteHref(site!, 'map')).toBe('/sites/substrata/map');
-    expect(siteHref(site!, '/map')).toBe('/sites/substrata/map');
-    expect(siteHref(site!, '/')).toBe('/sites/substrata');
+    expect(siteHref(site.slug)).toBe('/sites/substrata');
+    expect(siteHref(site.slug, 'map')).toBe('/sites/substrata/map');
+    expect(siteHref(site.slug, '/map')).toBe('/sites/substrata/map');
+    expect(siteHref(site.slug, '/')).toBe('/sites/substrata');
   });
 });
 
@@ -86,11 +164,11 @@ describe('hosted sites — chrome isolation', () => {
 });
 
 describe('hosted sites — every site renders', () => {
-  it.each(HOSTED_SITES.map(site => [site.slug, site] as const))(
+  it.each(ALWAYS_PUBLISHED.map(slug => [slug, HOSTED_SITE_FALLBACKS[slug]] as const))(
     '%s has chrome, a home page, and a nav where every entry resolves',
     (_slug, site) => {
-      const chrome = siteChromeFor(site);
-      const pages = sitePagesFor(site);
+      const chrome = siteChromeFor(site, null);
+      const pages = sitePagesFor(site, null);
 
       expect(chrome).not.toBeNull();
       expect(pages.length).toBeGreaterThan(0);
@@ -102,7 +180,7 @@ describe('hosted sites — every site renders', () => {
 
       for (const page of pages) {
         // The builders return fresh objects per call, so compare by value.
-        expect(sitePageAt(site, page.path)).toEqual(page);
+        expect(sitePageAt(sitePagesFor(site, null), page.path)).toEqual(page);
         expect(page.title.length).toBeGreaterThan(0);
         expect(page.sections.length).toBeGreaterThan(0);
       }
@@ -110,16 +188,16 @@ describe('hosted sites — every site renders', () => {
   );
 
   it('returns null for a path no page claims, so the route can 404', () => {
-    expect(sitePageAt(site!, 'not-a-page')).toBeNull();
+    expect(sitePageAt(sitePagesFor(site, null), 'not-a-page')).toBeNull();
   });
 });
 
 describe('substrata.orangecat.ch — the site is the profile, not a copy of it', () => {
-  const pages = sitePagesFor(site!);
+  const pages = sitePagesFor(site, null);
   const text = JSON.stringify(pages);
 
   it('takes its name and tagline from the profile config', () => {
-    const chrome = siteChromeFor(site!);
+    const chrome = siteChromeFor(site);
     expect(chrome?.name).toBe(COMPANY.name);
     expect(chrome?.tagline).toBe(COMPANY.tagline);
   });
@@ -145,7 +223,7 @@ describe('substrata.orangecat.ch — the site is the profile, not a copy of it',
   });
 
   it('reports coverage honestly — unsourced rows read as leads, not findings', () => {
-    const mapPage = sitePageAt(site!, 'map');
+    const mapPage = sitePageAt(sitePagesFor(site, null), 'map');
     const rows = JSON.stringify(mapPage);
     const { sourced, total } = coverageProgress();
 
@@ -163,7 +241,7 @@ describe('substrata.orangecat.ch — the site is the profile, not a copy of it',
   });
 
   it('gives the map a jump index whose every anchor lands on a real table', () => {
-    const mapPage = sitePageAt(site!, 'map')!;
+    const mapPage = sitePageAt(sitePagesFor(site, null), 'map')!;
     const index = mapPage.sections.find(section => section.kind === 'index');
     expect(index).toBeDefined();
 
@@ -180,22 +258,22 @@ describe('substrata.orangecat.ch — the site is the profile, not a copy of it',
   });
 
   it('opens the home page with a hero, and never doubles it with a title block', () => {
-    const home = sitePageAt(site!, '')!;
+    const home = sitePageAt(sitePagesFor(site, null), '')!;
     expect(home.sections[0].kind).toBe('hero');
     expect(pageRendersOwnHeader(home)).toBe(true);
 
     // Inner pages take the standard header instead.
-    expect(pageRendersOwnHeader(sitePageAt(site!, 'map')!)).toBe(false);
+    expect(pageRendersOwnHeader(sitePageAt(sitePagesFor(site, null), 'map')!)).toBe(false);
   });
 
   it('has no desk page, because there is no desk', () => {
-    expect(sitePageAt(site!, 'desk')).toBeNull();
-    const navLabels = sitePagesFor(site!).map(page => page.navLabel);
+    expect(sitePageAt(sitePagesFor(site, null), 'desk')).toBeNull();
+    const navLabels = sitePagesFor(site, null).map(page => page.navLabel);
     expect(navLabels).not.toContain('The desk');
   });
 
   it('carries the non-material chokepoints, so the site shows the whole universe', () => {
-    const page = sitePageAt(site!, 'chokepoints');
+    const page = sitePageAt(sitePagesFor(site, null), 'chokepoints');
     expect(page).not.toBeNull();
     const text = JSON.stringify(page);
     for (const point of CHOKEPOINTS) {
@@ -206,7 +284,7 @@ describe('substrata.orangecat.ch — the site is the profile, not a copy of it',
   it('says nowhere that the firm trades, quotes or takes a position', () => {
     // The whole site, not one page: if a price or an invitation to deal ever
     // reappears anywhere, this is what catches it before a reader does.
-    const everything = JSON.stringify(sitePagesFor(site!));
+    const everything = JSON.stringify(sitePagesFor(site, null));
     for (const phrase of ['RFQ', 'per kg', 'Indicative CHF', 'Settlement in Bitcoin']) {
       expect(`${phrase}: ${everything.includes(phrase)}`).toBe(`${phrase}: false`);
     }

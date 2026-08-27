@@ -8,17 +8,19 @@
  * hosted site inherits typography, spacing and dark mode from one renderer
  * instead of drifting into fifty bespoke stylesheets.
  *
- * Adding a site is therefore: an entry in `sites.ts`, and a function that
- * returns `SitePage[]`. Substrata's lives in `site-substrata.ts` and is built
- * entirely from the config the profile already needed — the mandate, the
- * desks, the catalogue, the coverage universe. Nothing on the website is
- * authored twice.
+ * Adding an ordinary site costs NO code: `site-profile.ts` renders any group
+ * from the profile it already has, and the database decides which groups are
+ * published. A builder is written only when a site's content is genuinely not
+ * profile-shaped — Substrata's lives in `site-substrata.ts` and is built
+ * entirely from the config the profile already needed, so nothing on that
+ * website is authored twice either.
  *
  * Created: 2026-08-26
  */
 
-import type { HostedSite } from './sites';
+import type { BespokeBuilder, HostedSite } from './hosted-site';
 import { substrataSiteChrome, substrataSitePages } from './site-substrata';
+import { profileSiteChrome, profileSitePages, type SiteProfile } from './site-profile';
 
 // =====================================================================
 // SECTIONS
@@ -114,27 +116,42 @@ export interface SiteChrome {
 // =====================================================================
 
 /**
- * With one hosted site this is a switch, and it should stay a switch until
- * there are three — at which point the shape of the third will show whether
- * the right abstraction is a registry of builders or something else. Guessing
- * now would be inventing a CMS for a customer base of one.
+ * Sites whose pages are hand-written rather than generated from the profile.
+ *
+ * This was a `switch` when there was one site and the comment here said it
+ * should stay one until there were three. What changed is not the count — it is
+ * that ordinary sites no longer appear here AT ALL. `profileSitePages` renders
+ * any group from its own profile, so this map holds only the exceptions, and an
+ * exception is exactly the thing that belongs in a lookup table rather than in
+ * control flow. Substrata is an exception because a research corpus of tables,
+ * meters and a coverage ledger is not profile-shaped.
+ *
+ * Keys are `BESPOKE_BUILDERS`, so a builder cannot be referenced without being
+ * declared, and cannot be declared without being implemented.
  */
-export function sitePagesFor(site: HostedSite): SitePage[] {
-  switch (site.slug) {
-    case 'substrata':
-      return substrataSitePages();
-    default:
-      return [];
+const BESPOKE_SITES: Record<BespokeBuilder, { pages: () => SitePage[]; chrome: () => SiteChrome }> =
+  {
+    substrata: { pages: substrataSitePages, chrome: substrataSiteChrome },
+  };
+
+/**
+ * The pages of a site.
+ *
+ * @param profile the group snapshot, for a site rendered from its profile.
+ *   Bespoke sites ignore it; profile sites return nothing without it.
+ */
+export function sitePagesFor(site: HostedSite, profile: SiteProfile | null): SitePage[] {
+  if (site.builder) {
+    return BESPOKE_SITES[site.builder].pages();
   }
+  return profile ? profileSitePages(profile) : [];
 }
 
-export function siteChromeFor(site: HostedSite): SiteChrome | null {
-  switch (site.slug) {
-    case 'substrata':
-      return substrataSiteChrome();
-    default:
-      return null;
+export function siteChromeFor(site: HostedSite, profile: SiteProfile | null): SiteChrome | null {
+  if (site.builder) {
+    return BESPOKE_SITES[site.builder].chrome();
   }
+  return profile ? profileSiteChrome(profile) : null;
 }
 
 /**
@@ -168,8 +185,8 @@ export function siteNavItems(pages: SitePage[]): SiteNavItem[] {
     .map(page => ({ path: page.path, label: page.navLabel }));
 }
 
-/** @returns the page at this path within the site, or null. */
-export function sitePageAt(site: HostedSite, path: string): SitePage | null {
+/** @returns the page at this path within these pages, or null. */
+export function sitePageAt(pages: SitePage[], path: string): SitePage | null {
   const normalised = path.replace(/^\/+|\/+$/g, '');
-  return sitePagesFor(site).find(page => page.path === normalised) ?? null;
+  return pages.find(page => page.path === normalised) ?? null;
 }

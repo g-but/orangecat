@@ -18,11 +18,11 @@ import {
   participantsInLayer,
 } from '@/config/substrata-participants';
 import { MANDATE_CURVES } from '@/config/substrata';
-import { siteBySlug } from '@/config/sites';
-import { sitePageAt } from '@/config/site-content';
+import { HOSTED_SITE_FALLBACKS } from '@/config/hosted-site';
+import { sitePageAt, sitePagesFor } from '@/config/site-content';
 
-const site = siteBySlug('substrata')!;
-const page = sitePageAt(site, 'participants');
+const site = HOSTED_SITE_FALLBACKS.substrata;
+const page = sitePageAt(sitePagesFor(site, null), 'participants');
 
 describe('the directory is well formed', () => {
   it('gives every participant a layer that exists and a curve behind it', () => {

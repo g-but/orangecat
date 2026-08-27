@@ -14,11 +14,11 @@
 
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { siteHref, type HostedSite } from '@/config/sites';
+import { siteHref } from '@/config/sites';
 import type { SiteNavItem } from '@/config/site-content';
 
 interface Props {
-  site: HostedSite;
+  slug: string;
   /**
    * Deliberately NOT `SitePage[]`. See `SiteNavItem` — everything passed to a
    * client component is serialised into the payload of every page it renders on.
@@ -27,7 +27,7 @@ interface Props {
   currentPath: string;
 }
 
-export function SiteNav({ site, items, currentPath }: Props) {
+export function SiteNav({ slug, items, currentPath }: Props) {
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export function SiteNav({ site, items, currentPath }: Props) {
         return (
           <Link
             key={item.path || 'home'}
-            href={siteHref(site, item.path)}
+            href={siteHref(slug, item.path)}
             aria-current={isCurrent ? 'page' : undefined}
             className={[
               'shrink-0 rounded px-2 py-1 font-mono text-xs uppercase tracking-caps transition-colors',

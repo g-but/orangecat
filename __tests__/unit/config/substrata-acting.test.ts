@@ -19,12 +19,12 @@ import {
   READINESS_STATUS_LABEL,
   readinessProgress,
 } from '@/config/substrata-acting';
-import { siteBySlug } from '@/config/sites';
+import { HOSTED_SITE_FALLBACKS } from '@/config/hosted-site';
 import { sitePageAt, sitePagesFor } from '@/config/site-content';
 
-const site = siteBySlug('substrata')!;
-const actingPage = sitePageAt(site, 'acting');
-const everything = JSON.stringify(sitePagesFor(site));
+const site = HOSTED_SITE_FALLBACKS.substrata;
+const actingPage = sitePageAt(sitePagesFor(site, null), 'acting');
+const everything = JSON.stringify(sitePagesFor(site, null));
 
 describe('Substrata — the limits are stated, not assumed', () => {
   it('says on the page what the firm does and does not do', () => {
@@ -86,7 +86,7 @@ describe('Substrata — the thesis is scoreable', () => {
   });
 
   it('publishes every claim and its falsifier on the site', () => {
-    const thesis = JSON.stringify(sitePageAt(site, 'thesis'));
+    const thesis = JSON.stringify(sitePageAt(sitePagesFor(site, null), 'thesis'));
     for (const claim of INVESTMENT_THESIS) {
       expect(thesis).toContain(claim.claim);
       expect(thesis).toContain(claim.falsifier);

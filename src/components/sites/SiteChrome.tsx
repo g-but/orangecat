@@ -16,7 +16,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/config/routes';
-import { siteCanonicalHost, siteHref, type HostedSite } from '@/config/sites';
+import { siteHref } from '@/config/sites';
+import { siteCanonicalHost, type HostedSite } from '@/config/hosted-site';
 import type { SiteChrome as SiteChromeSpec, SiteNavItem } from '@/config/site-content';
 import { SiteNav } from './SiteNav';
 
@@ -35,13 +36,13 @@ export function SiteMasthead({ site, chrome, navItems, currentPath }: Props) {
             sticky masthead eat a third of a phone screen, so on narrow
             viewports the nav scrolls sideways instead. */}
         <div className="flex items-center justify-between gap-6 py-4">
-          <Link href={siteHref(site)} className="shrink-0">
+          <Link href={siteHref(site.slug)} className="shrink-0">
             <span className="font-heading text-lg font-semibold tracking-display text-fg-primary">
               {chrome.name}
             </span>
           </Link>
 
-          <SiteNav site={site} items={navItems} currentPath={currentPath} />
+          <SiteNav slug={site.slug} items={navItems} currentPath={currentPath} />
         </div>
       </div>
     </header>
