@@ -40,6 +40,9 @@ export interface MentionCandidate {
  */
 const HANDLE_RUN = /[A-Za-z0-9_.+-]{1,40}/y;
 
+/** The same character class, for testing one character at a time. */
+const HANDLE_CHAR = /[A-Za-z0-9_.+-]/;
+
 /** Longest handle we will consider, matching USERNAME_MAX_LENGTH's ceiling. */
 const MAX_HANDLE_LENGTH = 40;
 
@@ -52,7 +55,56 @@ function startsMention(text: string, atIndex: number): boolean {
   if (atIndex === 0) {
     return true;
   }
-  return !/[A-Za-z0-9_.+-]/.test(text[atIndex - 1]);
+  return !HANDLE_CHAR.test(text[atIndex - 1]);
+}
+
+/** The handle being typed at the caret, for autocomplete. */
+export interface ActiveMention {
+  /** Character offset of the `@`, so the caller can replace from there. */
+  start: number;
+  /** What has been typed after the `@`. Empty on a bare `@`. */
+  query: string;
+}
+
+/**
+ * What handle, if any, is being typed at the caret right now.
+ *
+ * This is the autocomplete half of the same question `parseMentionCandidates`
+ * answers for finished text, and it lives here rather than in the composer for
+ * one reason: if a suggestion menu decided on its own what counts as a mention,
+ * it could offer a completion that the resolver would then refuse to link. The
+ * menu would be lying about what the product does. Both read the same character
+ * class and the same word-boundary rule, so what you can be offered and what
+ * will actually resolve are the same set by construction.
+ *
+ * @param textBeforeCaret everything up to the caret. Text AFTER the caret is
+ *   deliberately ignored: editing the middle of `@ali|ce` should complete on
+ *   what you have typed, not silently absorb the rest of the word.
+ * @returns null when the caret is not inside a mention — no `@`, a completed
+ *   mention (whitespace has ended it), or an email address's `@`.
+ */
+export function activeMention(textBeforeCaret: string): ActiveMention | null {
+  if (!textBeforeCaret) {
+    return null;
+  }
+
+  // Walk back over the handle run to find the `@` that opened it.
+  let i = textBeforeCaret.length;
+  while (i > 0 && HANDLE_CHAR.test(textBeforeCaret[i - 1])) {
+    i--;
+  }
+
+  const at = i - 1;
+  if (at < 0 || textBeforeCaret[at] !== '@' || !startsMention(textBeforeCaret, at)) {
+    return null;
+  }
+
+  const query = textBeforeCaret.slice(i);
+  if (query.length > MAX_HANDLE_LENGTH) {
+    return null;
+  }
+
+  return { start: at, query };
 }
 
 /**

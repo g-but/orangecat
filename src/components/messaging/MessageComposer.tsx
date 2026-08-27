@@ -7,6 +7,9 @@ import { cn } from '@/lib/utils';
 import type { Message } from '@/features/messaging/types';
 import { useMessageComposer } from './useMessageComposer';
 import { MessageActorSelector } from './MessageActorSelector';
+import MentionSuggestions from '@/components/mentions/MentionSuggestions';
+import { textareaSurface } from '@/components/mentions/caret';
+import { useMentionAutocomplete } from '@/hooks/useMentionAutocomplete';
 
 interface MessageComposerProps {
   conversationId: string;
@@ -37,6 +40,25 @@ export default function MessageComposer({
     handleTextareaChange,
   } = useMessageComposer({ conversationId, onMessageSent, onMessageFailed, onMessageConfirmed });
 
+  const mentions = useMentionAutocomplete({
+    surface: textareaSurface(textareaRef),
+    disabled: isSending,
+  });
+
+  // Order matters: the menu sees the key first, because Enter means "pick this
+  // person" while it is open and "send the message" the rest of the time.
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    if (mentions.handleKeyDown(event)) {
+      return;
+    }
+    handleKeyDown(event);
+  };
+
+  const onChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    handleTextareaChange(event);
+    mentions.refresh();
+  };
+
   return (
     <div
       className="border-t border-subtle bg-surface-page p-3 pb-safe sm:p-4 md:pb-4"
@@ -55,12 +77,29 @@ export default function MessageComposer({
       )}
 
       <form onSubmit={handleSubmit} className="flex items-end gap-2 sm:gap-3">
-        <div className="flex-1 min-w-0">
+        <div className="relative flex-1 min-w-0">
+          <MentionSuggestions
+            items={mentions.items}
+            activeIndex={mentions.activeIndex}
+            onPick={mentions.pick}
+            onHover={mentions.setActiveIndex}
+            placement="above"
+            idPrefix="dm-mention"
+          />
           <textarea
             ref={textareaRef}
             value={content}
-            onChange={handleTextareaChange}
-            onKeyDown={handleKeyDown}
+            onChange={onChange}
+            onKeyDown={onKeyDown}
+            onClick={mentions.refresh}
+            onBlur={mentions.close}
+            role="combobox"
+            aria-expanded={mentions.open}
+            aria-controls="dm-mention-listbox"
+            aria-autocomplete="list"
+            aria-activedescendant={
+              mentions.open ? `dm-mention-option-${mentions.activeIndex}` : undefined
+            }
             placeholder="Type a message..."
             className={cn(
               'w-full resize-none rounded-md border border-subtle py-2.5 pl-3 pr-3 text-sm sm:py-3 sm:pl-4 sm:pr-4 sm:text-base',
