@@ -37,6 +37,14 @@ import { logger } from '@/utils/logger';
  */
 const SITE_CACHE_TTL_SECONDS = 60;
 
+/**
+ * Cache tag both resolvers share, so publishing can drop them together.
+ *
+ * Exported because the publish endpoint invalidates it — a publish button that
+ * takes a minute to visibly work reads as a publish button that failed.
+ */
+export const HOSTED_SITES_TAG = 'hosted-sites';
+
 const SITE_SELECT =
   'config, groups!inner(slug, name, description, label, tags, is_public, bitcoin_address, lightning_address)';
 
@@ -128,7 +136,7 @@ async function loadSiteBySlug(slug: string): Promise<ResolvedSite | null> {
 
 export const siteBySlug = unstable_cache(loadSiteBySlug, ['hosted-site-by-slug'], {
   revalidate: SITE_CACHE_TTL_SECONDS,
-  tags: ['hosted-sites'],
+  tags: [HOSTED_SITES_TAG],
 });
 
 /**
@@ -182,5 +190,5 @@ async function loadSiteByHost(host: string): Promise<ResolvedSite | null> {
 
 export const siteByHost = unstable_cache(loadSiteByHost, ['hosted-site-by-host'], {
   revalidate: SITE_CACHE_TTL_SECONDS,
-  tags: ['hosted-sites'],
+  tags: [HOSTED_SITES_TAG],
 });

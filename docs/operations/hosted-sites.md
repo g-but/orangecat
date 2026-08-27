@@ -1,7 +1,7 @@
 ---
 created_date: 2026-08-27
 last_modified_date: 2026-08-27
-last_modified_summary: First version — how a group becomes a website, and the two one-time infrastructure steps behind it.
+last_modified_summary: First version — how a group becomes a website, the publish API, and the two one-time infrastructure steps behind it.
 ---
 
 # Hosted sites — turning a group into a website
@@ -12,7 +12,24 @@ This is how that works, and what it costs.
 
 ## Publishing a site
 
-**One row. No deploy, no ssh, no DNS.**
+**One call. No deploy, no ssh, no DNS.**
+
+```http
+PUT /api/groups/acme/site        → { published: true, url, previewPath }
+DELETE /api/groups/acme/site     → unpublish (keeps the configuration)
+GET /api/groups/acme/site        → status, address, and whether it is eligible
+```
+
+Admin/founder only. `PUT` is an upsert, so the same call publishes a new site
+and reconfigures a live one. This is what FleetCrown and the group settings UI
+call; neither knows anything about DNS or Caddy, because neither is involved.
+
+`GET` answers `url` even when unpublished, so the button can read _"Publish at
+acme.orangecat.ch"_ rather than a bare _"Publish"_, and returns `eligible` +
+`reason` so a group that can never be published (reserved slug, private group)
+says so before anyone clicks.
+
+Underneath, that call is one row:
 
 ```sql
 INSERT INTO group_features (group_id, feature_key, enabled, enabled_by)
