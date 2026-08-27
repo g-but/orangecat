@@ -31,7 +31,7 @@ import {
   sitePagesFor,
   siteChromeFor,
 } from '@/config/site-content';
-import { getRouteSurface } from '@/config/routes';
+import { getRouteSurface, isHostedSiteRequest } from '@/config/routes';
 import { COMPANY, MANDATE_CURVES, MATERIALS } from '@/config/substrata';
 import { CHOKEPOINTS, COVERAGE, coverageProgress } from '@/config/substrata-coverage';
 
@@ -137,6 +137,55 @@ describe('hosted sites — the config a site owner may set', () => {
   it('marks only repo-resident sites as bespoke, so everyone else renders from their profile', () => {
     expect(toHostedSite({ slug: 'substrata', name: 'Substrata' }, {}).builder).toBe('substrata');
     expect(toHostedSite({ slug: 'acme', name: 'Acme' }, {}).builder).toBeNull();
+  });
+});
+
+describe('hosted sites — the rewrite must not leak OrangeCat onto a customer domain', () => {
+  /**
+   * This is the case that shipped broken.
+   *
+   * A hosted site is served by a REWRITE, so the browser path stays "/" while
+   * `/sites/<slug>` renders. Everything that decided chrome from the visible
+   * path therefore classified a customer's website as OrangeCat's public
+   * marketing surface, and substrata.orangecat.ch came up with OrangeCat's
+   * header, "Sign In", our Google Analytics, our Organization schema and the
+   * internal FleetCrown feedback widget on it.
+   *
+   * The old tests all asked `getRouteSurface('/sites/substrata')` — the path
+   * form, which was never broken. None of them asked what happens when the path
+   * is "/" and only a header knows better.
+   */
+  function headersOf(map: Record<string, string>) {
+    return (name: string) => map[name] ?? null;
+  }
+
+  it('recognises a rewritten request, whose visible path is only "/"', () => {
+    expect(getRouteSurface('/')).toBe('public');
+    expect(isHostedSiteRequest(headersOf({ 'x-pathname': '/' }))).toBe(false);
+
+    // The rewrite sets this. Without it the request is indistinguishable from
+    // a visit to orangecat.ch itself.
+    expect(
+      isHostedSiteRequest(headersOf({ 'x-pathname': '/', 'x-hosted-site': 'substrata' }))
+    ).toBe(true);
+  });
+
+  it('recognises a deep page on a hosted site', () => {
+    expect(
+      isHostedSiteRequest(headersOf({ 'x-pathname': '/map', 'x-hosted-site': 'substrata' }))
+    ).toBe(true);
+  });
+
+  it('recognises the preview form, which has no rewrite and no header', () => {
+    expect(isHostedSiteRequest(headersOf({ 'x-pathname': '/sites/substrata' }))).toBe(true);
+    expect(isHostedSiteRequest(headersOf({ 'x-pathname': '/sites/substrata/map' }))).toBe(true);
+  });
+
+  it('leaves ordinary OrangeCat requests alone, header absent', () => {
+    for (const path of ['/', '/dashboard', '/about', '/groups/substrata', '/auth']) {
+      expect(isHostedSiteRequest(headersOf({ 'x-pathname': path }))).toBe(false);
+    }
+    expect(isHostedSiteRequest(headersOf({}))).toBe(false);
   });
 });
 

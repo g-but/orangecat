@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { getRouteChrome, getRouteSurface, isCatHubPath } from '@/config/routes';
+import { getRouteChrome, getRouteSurface, isCatHubPath, type RouteSurface } from '@/config/routes';
 import GlobalCatLauncher from '@/components/ai-chat/GlobalCatLauncher';
 import { STORAGE_KEYS } from '@/config/storage-keys';
 import { Header } from './Header';
@@ -16,6 +16,14 @@ import { MessageSyncManagerInitializer } from '@/components/MessageSyncManagerIn
 
 interface AppShellProps {
   children: ReactNode;
+  /**
+   * Override the surface derived from the browser path.
+   *
+   * Set by the root layout for hosted sites only, where a rewrite means the
+   * path a client component can see is not the path being rendered. Leave it
+   * undefined everywhere else.
+   */
+  forceSurface?: RouteSurface;
 }
 
 /**
@@ -32,12 +40,18 @@ interface AppShellProps {
  * Last Modified: 2025-12-17
  * Last Modified Summary: Fixed hydration race condition - wait for auth hydration before rendering sidebar
  */
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, forceSurface }: AppShellProps) {
   const pathname = usePathname();
   const { user, profile, hydrated, isLoading } = useAuth();
   // SSOT: every shell-related visibility decision derives from
   // getRouteSurface (src/config/routes.ts). Do not branch on pathname here.
-  const surface = getRouteSurface(pathname ?? '/');
+  //
+  // `forceSurface` exists for exactly one case, and it is not a style override:
+  // a hosted site is served by a REWRITE, so the browser path stays "/" and
+  // `usePathname()` cannot see `/sites/<slug>`. The server knows from the
+  // request headers and says so. Without it, OrangeCat's header and sidebar
+  // render on a customer's own domain.
+  const surface = forceSurface ?? getRouteSurface(pathname ?? '/');
   const isAppSurface = surface === 'app';
   // Auth pages render their own minimal chrome — global header + nav +
   // search are noise on a sign-in screen and dilute the focus from the
@@ -64,7 +78,7 @@ export function AppShell({ children }: AppShellProps) {
     getFilteredSections,
   } = useNavigation(sidebarSections);
 
-  const routeChrome = getRouteChrome(pathname ?? '/');
+  const routeChrome = getRouteChrome(forceSurface === 'site' ? '/sites' : (pathname ?? '/'));
   // Mirrors MobileBottomNav visibility — when the bottom nav renders, reserve
   // space below the main scroll area so its content isn't covered.
   const showsMobileBottomNav = isAppSurface && !routeChrome.hideMobileBottomNav;

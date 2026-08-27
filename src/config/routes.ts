@@ -176,6 +176,32 @@ function matchesPrefix(pathname: string, routes: readonly string[]): boolean {
  * Single SSOT for shell-related route classification. Sidebar, mobile nav,
  * header variant, and footer must all derive from this.
  */
+/**
+ * Is this request rendering a hosted site — somebody else's website?
+ *
+ * Takes a header lookup rather than a `Headers`, so it is callable from a
+ * layout, a route handler and a test without any of them constructing a request.
+ *
+ * WHY A HEADER AND NOT THE PATH
+ *
+ * A hosted site is served by a REWRITE: the visitor stays on
+ * substrata.orangecat.ch while `/sites/substrata` renders. So the path visible
+ * to the browser — and to any client component calling `usePathname()` — is
+ * "/", which classifies as the public marketing surface. Deciding from that
+ * put OrangeCat's header, analytics, Organization schema and internal feedback
+ * widget on a customer's own domain. Middleware sets `x-hosted-site` on the
+ * request precisely so the server can answer this without guessing.
+ *
+ * `x-pathname` covers the other way in: `/sites/<slug>` requested directly,
+ * which is the preview form and has no rewrite.
+ */
+export function isHostedSiteRequest(getHeader: (name: string) => string | null): boolean {
+  if (getHeader('x-hosted-site')) {
+    return true;
+  }
+  return getRouteSurface(getHeader('x-pathname') ?? '/') === 'site';
+}
+
 export function getRouteSurface(pathname: string): RouteSurface {
   if (matchesPrefix(pathname, SITE_SURFACES)) {
     return 'site';
