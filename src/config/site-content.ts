@@ -146,6 +146,28 @@ export function pageRendersOwnHeader(page: SitePage): boolean {
   return page.sections[0]?.kind === 'hero';
 }
 
+/**
+ * The nav's view of a page: a label and where it goes, nothing else.
+ *
+ * This type exists because `SiteNav` is a client component. Every prop crossing
+ * that boundary is serialised into the RSC payload of every page, so handing it
+ * `SitePage[]` shipped the WHOLE SITE — all 92 producer rows, all 102
+ * participants — into the HTML of all eight pages, 60 KB of it, to render eight
+ * links totalling 0.33 KB. A client component takes the narrowest shape that
+ * answers its question, and this is that shape.
+ */
+export interface SiteNavItem {
+  path: string;
+  label: string;
+}
+
+/** Nav entries for a site, in page order. Pages without a `navLabel` are omitted. */
+export function siteNavItems(pages: SitePage[]): SiteNavItem[] {
+  return pages
+    .filter((page): page is SitePage & { navLabel: string } => Boolean(page.navLabel))
+    .map(page => ({ path: page.path, label: page.navLabel }));
+}
+
 /** @returns the page at this path within the site, or null. */
 export function sitePageAt(site: HostedSite, path: string): SitePage | null {
   const normalised = path.replace(/^\/+|\/+$/g, '');

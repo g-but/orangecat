@@ -18,15 +18,31 @@
 import {
   checkDomain,
   checkDomains,
+  domainCacheSize,
   parseDomain,
   resetDomainCaches,
 } from '@/services/domains/availability';
 import { suggestDomains, toSeed } from '@/services/domains/suggest';
-import { CANDIDATE_TLDS, MAX_CANDIDATES } from '@/config/domain-search';
+import { CANDIDATE_TLDS, DOMAIN_RESULT_CACHE_MAX, MAX_CANDIDATES } from '@/config/domain-search';
 
 const RDAP_TLDS = new Set(['com', 'ai', 'dev', 'org', 'net', 'xyz']);
 
 const originalFetch = global.fetch;
+
+/**
+ * True when a URL's HOST is exactly IANA's bootstrap host.
+ *
+ * Not a substring test on the raw URL — that also matches
+ * `https://data.iana.org.evil.example/` and `https://evil.example/?x=data.iana.org`,
+ * so it is the wrong shape to teach in a test that other lookups get copied from.
+ */
+function isBootstrapUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname === 'data.iana.org';
+  } catch {
+    return false;
+  }
+}
 
 function mockFetch(impl: (url: string) => Promise<Partial<Response>> | Partial<Response>) {
   global.fetch = jest.fn(async (input: RequestInfo | URL) =>
@@ -133,7 +149,7 @@ describe('availability — the rule that stops a false “available”', () => {
 describe('availability — batches', () => {
   it('checks every candidate and preserves order', async () => {
     mockFetch(url =>
-      url.includes('data.iana.org')
+      isBootstrapUrl(url)
         ? { ok: true, status: 200, json: async () => ({ services: [[['com', 'ai'], ['x']]] }) }
         : { status: 404, ok: false }
     );
@@ -175,5 +191,44 @@ describe('suggestions', () => {
 
   it('returns nothing usable for a query with no letters or digits', () => {
     expect(suggestDomains({ query: '???' })).toEqual([]);
+  });
+});
+
+describe('availability — the result cache is bounded', () => {
+  /**
+   * The cache key is a domain the CALLER supplies. An unbounded map therefore
+   * lets an anonymous caller decide how much memory this process holds, and the
+   * process on the box runs for weeks. A TTL does not fix that on its own: an
+   * expired entry is only noticed when its own key is looked up again, which an
+   * enumerating caller never does.
+   */
+  it('never exceeds the cap, however many distinct names are asked for', async () => {
+    mockFetch(url =>
+      isBootstrapUrl(url)
+        ? { ok: true, status: 200, json: async () => ({ services: [[['com'], ['x']]] }) }
+        : { status: 404, ok: false }
+    );
+
+    const overflow = DOMAIN_RESULT_CACHE_MAX + 250;
+    const names = Array.from({ length: overflow }, (_, i) => `enumerated-${i}.com`);
+    await checkDomains(names);
+
+    expect(domainCacheSize()).toBeLessThanOrEqual(DOMAIN_RESULT_CACHE_MAX);
+  }, 30_000);
+
+  it('still answers from cache for a name asked twice in a row', async () => {
+    let lookups = 0;
+    mockFetch(url => {
+      if (isBootstrapUrl(url)) {
+        return { ok: true, status: 200, json: async () => ({ services: [[['com'], ['x']]] }) };
+      }
+      lookups += 1;
+      return { status: 404, ok: false };
+    });
+
+    await checkDomain('cached-name.com', new Set(['com']));
+    await checkDomain('cached-name.com', new Set(['com']));
+
+    expect(lookups).toBe(1);
   });
 });

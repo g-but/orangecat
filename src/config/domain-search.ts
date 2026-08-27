@@ -38,6 +38,17 @@ export const RDAP_BOOTSTRAP_TTL_MS = 60 * 60 * 1000;
 /** Per-domain result cache. Registrations do not change minute to minute. */
 export const DOMAIN_RESULT_TTL_MS = 10 * 60 * 1000;
 
+/**
+ * Hard cap on remembered lookups.
+ *
+ * The cache key is a domain the CALLER chose, so without a ceiling this map
+ * grows for as long as the process does — and on a self-hosted box that process
+ * runs for weeks. A TTL alone does not bound it: expired entries are only
+ * noticed when the same key is asked for again, which an enumerating caller
+ * never does.
+ */
+export const DOMAIN_RESULT_CACHE_MAX = 5000;
+
 /** One lookup's ceiling. A slow registry must not hold the whole search open. */
 export const RDAP_TIMEOUT_MS = 8000;
 

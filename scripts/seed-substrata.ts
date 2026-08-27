@@ -30,6 +30,7 @@
 
 import { config as loadEnv } from 'dotenv';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '../src/types/database';
 import {
   COMPANY,
   FOUNDER_ACTOR_SLUG,
@@ -54,9 +55,20 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   die('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in the environment.');
 }
 
-const admin: SupabaseClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+/**
+ * Typed against the generated schema, not `any`.
+ *
+ * A seed is the one place where a column rename fails on the box rather than in
+ * CI — it runs by hand, months after the migration that broke it. Binding the
+ * client to `Database` moves that failure to `npm run type-check`, and it is why
+ * the row literals below need no casts.
+ */
+const admin: SupabaseClient<Database> = createClient<Database>(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+type GroupInsert = Database['public']['Tables']['groups']['Insert'];
+type ActorInsert = Database['public']['Tables']['actors']['Insert'];
 
 interface FounderRow {
   id: string;
@@ -75,7 +87,7 @@ async function resolveFounder(): Promise<FounderRow> {
     die(`No actor with slug '${FOUNDER_ACTOR_SLUG}'. Create it or change FOUNDER_ACTOR_SLUG.`);
   }
   if (!data.user_id) die(`Actor '${FOUNDER_ACTOR_SLUG}' has no user_id; groups require one.`);
-  return { id: data.id as string, user_id: data.user_id as string };
+  return { id: data.id, user_id: data.user_id };
 }
 
 /** Upsert the company group by its (unique) slug. Returns its id. */
@@ -87,7 +99,7 @@ async function upsertGroup(founder: FounderRow): Promise<string> {
     .maybeSingle();
   if (probeErr) die(`Failed to look up group '${GROUP_PAYLOAD.slug}': ${probeErr.message}`);
 
-  const row = {
+  const row: GroupInsert = {
     name: GROUP_PAYLOAD.name,
     slug: GROUP_PAYLOAD.slug,
     description: GROUP_PAYLOAD.description,
@@ -103,13 +115,13 @@ async function upsertGroup(founder: FounderRow): Promise<string> {
     const { error } = await admin.from('groups').update(row).eq('id', existing.id);
     if (error) die(`Failed to update group: ${error.message}`);
     console.log(`↻ updated group "${GROUP_PAYLOAD.name}" (${existing.id})`);
-    return existing.id as string;
+    return existing.id;
   }
 
   const { data, error } = await admin.from('groups').insert(row).select('id').single();
   if (error) die(`Failed to insert group: ${error.message}`);
   console.log(`+ created group "${GROUP_PAYLOAD.name}" (${data.id})`);
-  return data.id as string;
+  return data.id;
 }
 
 /**
@@ -126,7 +138,7 @@ async function upsertGroupActor(groupId: string): Promise<string> {
     .maybeSingle();
   if (probeErr) die(`Failed to look up group actor: ${probeErr.message}`);
 
-  const row = {
+  const row: ActorInsert = {
     actor_type: 'group',
     group_id: groupId,
     user_id: null,
@@ -138,13 +150,13 @@ async function upsertGroupActor(groupId: string): Promise<string> {
     const { error } = await admin.from('actors').update(row).eq('id', existing.id);
     if (error) die(`Failed to update group actor: ${error.message}`);
     console.log(`↻ group actor '${COMPANY.slug}' (${existing.id})`);
-    return existing.id as string;
+    return existing.id;
   }
 
   const { data, error } = await admin.from('actors').insert(row).select('id').single();
   if (error) die(`Failed to insert group actor: ${error.message}`);
   console.log(`+ group actor '${COMPANY.slug}' (${data.id})`);
-  return data.id as string;
+  return data.id;
 }
 
 /** The founder seat. Unique on (group_id, user_id), so ignore-on-conflict. */
@@ -183,7 +195,7 @@ async function main(): Promise<void> {
   console.log(`founder actor '${FOUNDER_ACTOR_SLUG}' = ${founder.id}`);
 
   const groupId = await upsertGroup(founder);
-  const groupActorId = await upsertGroupActor(groupId);
+  await upsertGroupActor(groupId);
   await ensureFounderMembership(groupId, founder);
   await ensureFeatures(groupId, founder);
 

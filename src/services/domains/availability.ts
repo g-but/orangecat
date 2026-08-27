@@ -11,6 +11,7 @@
  */
 
 import {
+  DOMAIN_RESULT_CACHE_MAX,
   DOMAIN_RESULT_TTL_MS,
   RDAP_BOOTSTRAP_TTL_MS,
   RDAP_BOOTSTRAP_URL,
@@ -90,6 +91,40 @@ export function resetDomainCaches(): void {
 // ---------------------------------------------------------------------------
 
 const resultCache = new Map<string, { result: DomainResult; fetchedAt: number }>();
+
+/**
+ * Remember one lookup, without letting the caller decide how much we remember.
+ *
+ * Drops entries that are past their TTL, then — if the map is still at its
+ * ceiling — the oldest ones, which a Map yields first because it iterates in
+ * insertion order. Re-inserting an existing key deletes it first so a refreshed
+ * entry counts as recently written rather than keeping its original position.
+ */
+function rememberResult(domain: string, result: DomainResult, now: number): void {
+  resultCache.delete(domain);
+
+  if (resultCache.size >= DOMAIN_RESULT_CACHE_MAX) {
+    for (const [key, entry] of resultCache) {
+      if (now - entry.fetchedAt >= DOMAIN_RESULT_TTL_MS) {
+        resultCache.delete(key);
+      }
+    }
+    while (resultCache.size >= DOMAIN_RESULT_CACHE_MAX) {
+      const oldest = resultCache.keys().next();
+      if (oldest.done) {
+        break;
+      }
+      resultCache.delete(oldest.value);
+    }
+  }
+
+  resultCache.set(domain, { result, fetchedAt: now });
+}
+
+/** @returns how many lookups are currently remembered. Test seam. */
+export function domainCacheSize(): number {
+  return resultCache.size;
+}
 
 /** Split 'substrataintel.com' into its label and TLD. Null if it isn't a domain. */
 export function parseDomain(input: string): { name: string; tld: string } | null {
@@ -189,7 +224,7 @@ export async function checkDomain(
     logger.warn('RDAP lookup failed', { domain, error: String(error) }, 'DomainSearch');
   }
 
-  resultCache.set(domain, { result, fetchedAt: now });
+  rememberResult(domain, result, now);
   return result;
 }
 

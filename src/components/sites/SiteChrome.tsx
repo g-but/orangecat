@@ -17,17 +17,17 @@ import React from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/config/routes';
 import { siteCanonicalHost, siteHref, type HostedSite } from '@/config/sites';
-import type { SiteChrome as SiteChromeSpec, SitePage } from '@/config/site-content';
+import type { SiteChrome as SiteChromeSpec, SiteNavItem } from '@/config/site-content';
 import { SiteNav } from './SiteNav';
 
 interface Props {
   site: HostedSite;
   chrome: SiteChromeSpec;
-  pages: SitePage[];
+  navItems: SiteNavItem[];
   currentPath: string;
 }
 
-export function SiteMasthead({ site, chrome, pages, currentPath }: Props) {
+export function SiteMasthead({ site, chrome, navItems, currentPath }: Props) {
   return (
     <header className="sticky top-0 z-30 border-b border-subtle bg-surface-page/85 backdrop-blur">
       <div className="mx-auto max-w-shell px-4 sm:px-6 lg:px-8">
@@ -41,7 +41,7 @@ export function SiteMasthead({ site, chrome, pages, currentPath }: Props) {
             </span>
           </Link>
 
-          <SiteNav site={site} pages={pages} currentPath={currentPath} />
+          <SiteNav site={site} items={navItems} currentPath={currentPath} />
         </div>
       </div>
     </header>

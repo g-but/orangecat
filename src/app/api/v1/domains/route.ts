@@ -11,6 +11,11 @@
  */
 import { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/standardResponse';
+import {
+  applyRateLimitHeaders,
+  createRateLimitResponse,
+  rateLimitDomainSearch,
+} from '@/lib/rate-limit';
 import { CANDIDATE_TLDS, DOMAIN_SEARCH_DISCLAIMER } from '@/config/domain-search';
 import { checkDomains } from '@/services/domains/availability';
 import { suggestDomains } from '@/services/domains/suggest';
@@ -21,6 +26,14 @@ const CACHE = 'public, s-maxage=300, stale-while-revalidate=600';
 
 export async function GET(request: NextRequest) {
   try {
+    // Before any parsing, because the cost being rationed is the OUTBOUND fan-out
+    // to the registries — up to MAX_CANDIDATES lookups per inbound request, on
+    // behalf of an anonymous caller. See `rateLimitDomainSearch`.
+    const limit = await rateLimitDomainSearch(request);
+    if (!limit.success) {
+      return createRateLimitResponse(limit);
+    }
+
     const url = new URL(request.url);
     const q = (url.searchParams.get('q') ?? '').trim();
     if (q.length < 2) {
@@ -56,7 +69,7 @@ export async function GET(request: NextRequest) {
       disclaimer: DOMAIN_SEARCH_DISCLAIMER,
     });
     response.headers.set('Cache-Control', CACHE);
-    return response;
+    return applyRateLimitHeaders(response, limit);
   } catch (err) {
     logger.error('GET /api/v1/domains failed', { err }, 'DomainSearch');
     return apiError('Domain search failed', 'INTERNAL_ERROR', 500);

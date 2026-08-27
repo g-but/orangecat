@@ -15,15 +15,19 @@
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { siteHref, type HostedSite } from '@/config/sites';
-import type { SitePage } from '@/config/site-content';
+import type { SiteNavItem } from '@/config/site-content';
 
 interface Props {
   site: HostedSite;
-  pages: SitePage[];
+  /**
+   * Deliberately NOT `SitePage[]`. See `SiteNavItem` — everything passed to a
+   * client component is serialised into the payload of every page it renders on.
+   */
+  items: SiteNavItem[];
   currentPath: string;
 }
 
-export function SiteNav({ site, pages, currentPath }: Props) {
+export function SiteNav({ site, items, currentPath }: Props) {
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -39,26 +43,24 @@ export function SiteNav({ site, pages, currentPath }: Props) {
       aria-label="Sections"
       className="scrollbar-hide -mx-1 flex flex-nowrap items-center gap-x-1 overflow-x-auto"
     >
-      {pages
-        .filter(page => page.navLabel)
-        .map(page => {
-          const isCurrent = page.path === currentPath;
-          return (
-            <Link
-              key={page.path || 'home'}
-              href={siteHref(site, page.path)}
-              aria-current={isCurrent ? 'page' : undefined}
-              className={[
-                'shrink-0 rounded px-2 py-1 font-mono text-xs uppercase tracking-caps transition-colors',
-                isCurrent
-                  ? 'text-fg-primary underline decoration-accent-warm decoration-2 underline-offset-8'
-                  : 'text-fg-tertiary hover:text-fg-primary',
-              ].join(' ')}
-            >
-              {page.navLabel}
-            </Link>
-          );
-        })}
+      {items.map(item => {
+        const isCurrent = item.path === currentPath;
+        return (
+          <Link
+            key={item.path || 'home'}
+            href={siteHref(site, item.path)}
+            aria-current={isCurrent ? 'page' : undefined}
+            className={[
+              'shrink-0 rounded px-2 py-1 font-mono text-xs uppercase tracking-caps transition-colors',
+              isCurrent
+                ? 'text-fg-primary underline decoration-accent-warm decoration-2 underline-offset-8'
+                : 'text-fg-tertiary hover:text-fg-primary',
+            ].join(' ')}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }

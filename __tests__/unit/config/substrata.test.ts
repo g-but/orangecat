@@ -46,11 +46,10 @@ import { GROUP_FEATURES } from '@/config/group-features';
 import { GOVERNANCE_PRESETS } from '@/config/governance-presets';
 import { isReservedUsername } from '@/config/usernames';
 
-// Mirrors of the live CHECK constraints on public.user_products / public.groups.
-const PRODUCT_CURRENCIES = ['USD', 'EUR', 'CHF', 'BTC', 'GBP'];
-const PRODUCT_TYPES = ['physical', 'digital', 'service'];
-const FULFILLMENT_TYPES = ['manual', 'automatic', 'digital'];
-const PRODUCT_STATUSES = ['draft', 'active', 'paused', 'sold_out'];
+// Mirror of the live CHECK constraint on public.groups. The user_products
+// mirrors that used to sit here were dropped: Substrata sells nothing and the
+// seed writes no product rows, so they asserted against a table this config
+// never touches.
 const GROUP_VISIBILITIES = ['public', 'members_only', 'private'];
 
 describe('Substrata — group profile payload', () => {

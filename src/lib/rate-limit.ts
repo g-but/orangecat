@@ -102,6 +102,13 @@ const upstashTipRecipientLimiter = createUpstashLimiter('tip-recipient', 20, '5 
 // the general limiter. 8 per 5 min is plenty for a real person having a
 // conversation, and starves a script.
 const upstashAskCatLimiter = createUpstashLimiter('ask-cat', 8, '5 m');
+// Public, keyless domain search. One inbound request fans out to as many as
+// MAX_CANDIDATES (24) outbound RDAP lookups against third-party registries, and
+// varying the query defeats the result cache. The cost of abuse is therefore not
+// our CPU — it is this box's IP being throttled or blocked by the registries we
+// depend on. Same reasoning as ask-cat: an expensive downstream call on behalf
+// of an anonymous caller gets its own tight budget on top of the general limiter.
+const upstashDomainSearchLimiter = createUpstashLimiter('domain-search', 10, '5 m');
 
 // ==================== FALLBACK IN-MEMORY LIMITER ====================
 
@@ -162,8 +169,22 @@ const fallbackAskCatLimiter = new InMemoryRateLimiter({
   windowMs: 5 * 60 * 1000,
   maxRequests: 8,
 });
+const fallbackDomainSearchLimiter = new InMemoryRateLimiter({
+  windowMs: 5 * 60 * 1000,
+  maxRequests: 10,
+});
 
 // ==================== RATE LIMIT FUNCTIONS ====================
+
+/**
+ * The caller's IP, as seen through Caddy.
+ *
+ * One definition, because a per-IP limiter is only as correct as its notion of
+ * "IP" — and three limiters had already copied these two lines verbatim.
+ */
+function clientIp(request: RequestLike): string {
+  return request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
+}
 
 /**
  * Convert Upstash result to our standard format
@@ -187,8 +208,7 @@ function toRateLimitResult(upstashResult: {
  * 100 requests per 15 minutes per IP
  */
 export async function rateLimit(request: RequestLike): Promise<RateLimitResult> {
-  const ip =
-    request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
+  const ip = clientIp(request);
   const key = `api:${ip}`;
 
   if (upstashGeneralLimiter) {
@@ -237,8 +257,7 @@ export async function rateLimitTipRecipient(username: string): Promise<RateLimit
  * visitor. Apply IN ADDITION to the general per-IP `rateLimit`.
  */
 export async function rateLimitAskCat(request: RequestLike): Promise<RateLimitResult> {
-  const ip =
-    request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
+  const ip = clientIp(request);
   const key = `ask-cat:${ip}`;
 
   if (upstashAskCatLimiter) {
@@ -247,6 +266,24 @@ export async function rateLimitAskCat(request: RequestLike): Promise<RateLimitRe
   }
 
   return fallbackAskCatLimiter.check(key);
+}
+
+/**
+ * Rate limit the public domain-availability search per IP.
+ *
+ * 10 per 5 minutes. A person trying names types a handful of queries; a script
+ * enumerating the namespace through us — and through the registries behind us —
+ * does not. Apply IN ADDITION to the general per-IP `rateLimit`.
+ */
+export async function rateLimitDomainSearch(request: RequestLike): Promise<RateLimitResult> {
+  const key = `domain-search:${clientIp(request)}`;
+
+  if (upstashDomainSearchLimiter) {
+    const result = await upstashDomainSearchLimiter.limit(key);
+    return toRateLimitResult(result);
+  }
+
+  return fallbackDomainSearchLimiter.check(key);
 }
 
 /**

@@ -18,6 +18,7 @@ import { HOSTED_SITES, siteBySlug, siteCanonicalHost } from '@/config/sites';
 import {
   pageRendersOwnHeader,
   siteChromeFor,
+  siteNavItems,
   sitePageAt,
   sitePagesFor,
 } from '@/config/site-content';
@@ -82,7 +83,12 @@ export default async function HostedSitePage({ params }: RouteParams) {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface-page">
-      <SiteMasthead site={site} chrome={chrome} pages={pages} currentPath={currentPath} />
+      <SiteMasthead
+        site={site}
+        chrome={chrome}
+        navItems={siteNavItems(pages)}
+        currentPath={currentPath}
+      />
 
       <main className="flex-1">
         <div className="mx-auto max-w-shell px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
