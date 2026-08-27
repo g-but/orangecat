@@ -521,6 +521,10 @@ const STREAMING_ALLOW = new Map([
   // status codes, so the loading skeleton is worth more than the 404.
   ['(authenticated)/dashboard/documents/[id]', 'auth-gated; skeleton kept deliberately'],
   ['(authenticated)/dashboard/wishlists/items/[itemId]', 'auth-gated; skeleton kept deliberately'],
+  // Same case: the owner's editing view of a directive. The reader-facing
+  // /allocations/[id] has no boundary above it and still answers a real 404,
+  // which is the one a crawler or share-link validator ever sees.
+  ['(authenticated)/dashboard/allocations/[id]', 'auth-gated; skeleton kept deliberately'],
 ]);
 
 const streamingFailures = [];
