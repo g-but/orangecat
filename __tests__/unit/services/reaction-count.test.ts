@@ -47,7 +47,11 @@ describe('reaction counts', () => {
   it('reads the count out of the array PostgREST returns for RETURNS TABLE', async () => {
     rpc.mockResolvedValue({ data: [{ like_count: 7 }], error: null });
 
-    await expect(toggleLike('event-1', 'user-1')).resolves.toEqual({
+    // toMatchObject, not toEqual: the response also carries the OPPOSITE
+    // reaction's state now, because a like retracts a dislike. This test is
+    // about reading the count out of PostgREST's array shape, not about the
+    // full result envelope.
+    await expect(toggleLike('event-1', 'user-1')).resolves.toMatchObject({
       success: true,
       liked: true,
       likeCount: 7,
