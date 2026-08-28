@@ -3,6 +3,7 @@ import { verifyCaptchaToken } from '@/lib/captcha';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiBadRequest, apiInternalError } from '@/lib/api/standardResponse';
 import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
+import { clientIpOrUndefined } from '@/lib/client-ip';
 
 /**
  * POST /api/auth/verify-captcha
@@ -32,9 +33,10 @@ export async function POST(request: NextRequest) {
       return apiBadRequest('CAPTCHA token is required');
     }
 
-    // Get client IP for additional validation
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const remoteIp = forwardedFor?.split(',')[0]?.trim();
+    // Get client IP for additional validation — the hop Caddy wrote, not the
+    // caller-supplied first one, or the provider's IP heuristics are being fed
+    // whatever the caller chose.
+    const remoteIp = clientIpOrUndefined(request);
 
     const result = await verifyCaptchaToken(token, remoteIp);
 
