@@ -128,6 +128,34 @@ function refresh(): Promise<RateSnapshot | null> {
 }
 
 /**
+ * Start a refresh that does NOT belong to whatever render asked for it.
+ *
+ * `fetchUpstream` uses `cache: 'no-store'`, and Next tracks every fetch made
+ * during a render. A no-store fetch inside the render of a page that was
+ * statically prerendered raises, in production:
+ *
+ *   Error: Page changed from static to dynamic at runtime /discover,
+ *   reason: revalidate: 0 fetch https://api.coingecko.com/... /discover
+ *
+ * The refresh here is deliberately fire-and-forget — nothing awaits it and the
+ * caller has already returned a snapshot or null — but "not awaited" is not the
+ * same as "not attributed". Next sees the fetch start inside the render's async
+ * context and reclassifies the route, and the page that was meant to paint
+ * instantly instead fails its render.
+ *
+ * A macrotask boundary puts the fetch outside that context, so the refresh
+ * still happens, on the same schedule, without changing how the route renders.
+ * Deliberately not `after()` from next/server: this module is called from
+ * plain server code as well as from requests, and it must not require a
+ * request scope to exist.
+ */
+function scheduleRefresh(): void {
+  setTimeout(() => {
+    void refresh();
+  }, 0);
+}
+
+/**
  * The current rates without ever touching the network.
  *
  * This is what server rendering uses: a page must not wait on a third party to
@@ -136,15 +164,21 @@ function refresh(): Promise<RateSnapshot | null> {
  */
 export function getCachedRateSnapshot(): RateSnapshot | null {
   if (!snapshot) {
+    // A cold process — every deploy — had no way to warm itself from here: it
+    // returned null and scheduled nothing, so amounts stayed in BTC until some
+    // other caller happened to await getRateSnapshot(). Now that a refresh no
+    // longer contaminates the render that triggered it, the first reader can
+    // safely start one for the next.
+    scheduleRefresh();
     return null;
   }
   const age = ageOf(snapshot);
   if (age > MAX_AGE_MS) {
-    void refresh();
+    scheduleRefresh();
     return null;
   }
   if (age > FRESH_MS) {
-    void refresh();
+    scheduleRefresh();
   }
   return snapshot;
 }
