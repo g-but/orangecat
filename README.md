@@ -87,7 +87,7 @@ Functional composition replaces inheritance. Each middleware does one thing.
 ### Setup
 
 ```bash
-git clone https://github.com/maonakamoto/orangecat.git
+git clone https://github.com/catomean/orangecat.git
 cd orangecat
 npm install
 cp .env.example .env.local
