@@ -43,6 +43,14 @@ jest.mock('@/lib/supabase/admin', () => ({
   getAdminClient: () => ({
     from: () => {
       const builder: Record<string, unknown> = {};
+      // The sweep now runs TWO queries against payment_intents, and they use
+      // `eq` for opposite purposes: the stamp is `update().eq(id)` and RESOLVES,
+      // the incomplete-settlement check is `select().eq().is().lt()` and must
+      // keep CHAINING. One `eq` that always resolved made the second query blow
+      // up mid-chain and push 'paid' into `polled`, so this fixture tracks
+      // which shape it is in.
+      let isUpdate = false;
+      let isIncompleteCheck = false;
       for (const m of ['select', 'in', 'order']) {
         builder[m] = jest.fn(() => builder);
       }
@@ -50,9 +58,24 @@ jest.mock('@/lib/supabase/admin', () => ({
         orFilters.push(filter);
         return builder;
       });
-      builder.limit = jest.fn(() => Promise.resolve({ data: candidates, error: null }));
-      builder.update = jest.fn(() => builder);
+      builder.is = jest.fn(() => {
+        isIncompleteCheck = true;
+        return builder;
+      });
+      builder.lt = jest.fn(() => builder);
+      // Nothing half-settled in these fixtures: the incomplete check finds none,
+      // so the assertions below stay about reconciliation.
+      builder.limit = jest.fn(() =>
+        Promise.resolve({ data: isIncompleteCheck ? [] : candidates, error: null })
+      );
+      builder.update = jest.fn(() => {
+        isUpdate = true;
+        return builder;
+      });
       builder.eq = jest.fn((_col: string, id: string) => {
+        if (!isUpdate) {
+          return builder;
+        }
         polled.push(id);
         return Promise.resolve({ error: null });
       });
