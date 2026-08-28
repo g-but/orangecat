@@ -63,6 +63,7 @@ import {
   getEventComments,
   getCommentReplies,
 } from './processors/socialInteractions';
+import type { ToggleLikeResult, ToggleDislikeResult } from './processors/reactions';
 
 // Import utilities
 import { getDemoTimelineEvents } from './utils/demo';
@@ -273,20 +274,14 @@ class TimelineService {
   /**
    * Like or unlike an event
    */
-  async toggleLike(
-    eventId: string,
-    userId?: string
-  ): Promise<{ success: boolean; liked: boolean; likeCount: number; error?: string }> {
+  async toggleLike(eventId: string, userId?: string): Promise<ToggleLikeResult> {
     return toggleLikeEvent(eventId, userId);
   }
 
   /**
    * Toggle dislike on a timeline event (for scam detection and wisdom of crowds)
    */
-  async toggleDislike(
-    eventId: string,
-    userId?: string
-  ): Promise<{ success: boolean; disliked: boolean; dislikeCount: number; error?: string }> {
+  async toggleDislike(eventId: string, userId?: string): Promise<ToggleDislikeResult> {
     return toggleDislikeEvent(eventId, userId);
   }
 

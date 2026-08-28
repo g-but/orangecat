@@ -6,6 +6,8 @@ import { MoreHorizontal, Lock, Users, Pencil, Trash2 } from 'lucide-react';
 import { TimelineDisplayEvent } from '@/types/timeline';
 import { formatRelativeTime } from '@/utils/dates';
 import { TIMELINE_SURFACE } from '@/config/timeline';
+import { CAT_USERNAME } from '@/config/cat-identity';
+import { normalizeUsername } from '@/config/usernames';
 
 interface PostHeaderProps {
   event: TimelineDisplayEvent;
@@ -67,6 +69,10 @@ export function PostHeader({
     avatar: rawAuthor?.avatar,
   };
 
+  const isCatAuthored =
+    normalizeUsername(displayAuthor.username || '') === normalizeUsername(CAT_USERNAME) ||
+    event.metadata?.is_cat_reply === true;
+
   // TimelineDisplayEvent extends TimelineEvent which has eventTimestamp, createdAt, updatedAt
   // Use eventTimestamp as primary, fallback to createdAt for backward compatibility
   const timestamp = event.eventTimestamp || event.createdAt;
@@ -83,6 +89,21 @@ export function PostHeader({
       >
         {displayAuthor.name}
       </Link>
+
+      {/* Written by the platform's agent, said out loud.
+          `is_cat_reply` was already being written onto every Cat reply, with a
+          comment saying it existed "so the UI can render a Cat reply
+          distinctly" — and nothing read it. Two writers, no reader, so a Cat
+          answer was indistinguishable from a person's unless you recognised the
+          handle.
+          The author is the primary signal because it is the fact that matters
+          (this was written by the agent); the metadata flag is honoured too so
+          a reply stays marked even if it is ever re-attributed. */}
+      {isCatAuthored && (
+        <span className="flex-shrink-0 rounded-sm bg-accent-warm px-1.5 py-0.5 text-2xs font-medium uppercase tracking-caps text-on-accent">
+          AI
+        </span>
+      )}
 
       <Link
         href={`/profiles/${displayAuthor.username}`}
