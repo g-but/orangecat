@@ -149,8 +149,28 @@ export async function getCurrentUserId(): Promise<string | null> {
  * For callers that know they will need it later and can overlap the round-trip
  * with work that does not depend on it — fetching a feed, say. Returns nothing,
  * so it cannot be mistaken for the id itself.
+ *
+ * BROWSER ONLY, and the guard is load-bearing. This is called at the top of
+ * every timeline read, and timeline reads happen during server rendering too.
+ * Without the guard it started an unconditional `/auth/v1/user` request from
+ * the server using the BROWSER client — which has no request cookies, so it
+ * can only ever fail, and it does so while the route is rendering.
+ *
+ * That is not a wasted request, it is an outage: it wedged the server render
+ * of every feed page. /timeline, /community and /dashboard stayed on their
+ * route-level loading.tsx skeleton forever on a fresh page load, while
+ * navigating to the very same route from inside the app worked, because that
+ * path never server-renders. A near-white skeleton on a white page reads as a
+ * blank screen, so the symptom was "the timeline is empty", with nothing in
+ * the console and every check green.
+ *
+ * Deliberately silent on the server rather than throwing: this is an
+ * optimisation, and an optimisation must never be the reason a page fails.
  */
 export function warmCurrentUserId(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
   void getCurrentUserId();
 }
 
