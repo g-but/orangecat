@@ -63,6 +63,20 @@ function ageOf(s: RateSnapshot): number {
 }
 
 /**
+ * Are we executing in a browser rather than on the server?
+ *
+ * Deliberately NOT `typeof window`. jsdom — every component test in this repo —
+ * defines `window`, so that check would refuse to fetch during tests and report
+ * a passing suite for a module that never ran. Node identifies itself with a
+ * version record that bundlers do not synthesise when they shim `process.env`
+ * for the browser, which distinguishes the two environments that actually
+ * matter here.
+ */
+function runningInBrowser(): boolean {
+  return typeof process === 'undefined' || !process.versions?.node;
+}
+
+/**
  * A rate we would be willing to price money with.
  *
  * Guards against upstream handing back nonsense as much as against network
@@ -75,6 +89,27 @@ function isSaneRate(value: unknown): value is number {
 }
 
 async function fetchUpstream(): Promise<RateSnapshot | null> {
+  // This module is server-only by contract, and the contract was being broken.
+  // Measured in production 2026-08-28: `api.coingecko.com` was present in a
+  // client chunk on disk, and the browser fetched it directly on page load —
+  // 534ms in the critical path, one upstream call per visitor instead of one
+  // per minute for the platform, and every visitor's IP handed to a third
+  // party. It arrives through a transitive import that carries no directive
+  // (dashboard page → services/bookings → rates.server → here), which is why
+  // the `'use client'` check never saw it.
+  //
+  // The import graph is being fixed separately and slowly; this is the part
+  // that must not wait. Browsers have /api/rates, which is same-origin and
+  // shared, so refusing here costs them nothing.
+  if (runningInBrowser()) {
+    logger.warn(
+      'Refusing to fetch rates from a browser — use /api/rates',
+      { reason: 'rateSource.server reached the client bundle' },
+      'Currency'
+    );
+    return null;
+  }
+
   try {
     const response = await fetch(SOURCE_URL, {
       headers: { Accept: 'application/json' },
