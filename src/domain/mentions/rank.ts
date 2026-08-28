@@ -20,6 +20,7 @@
 
 import { CAT_USERNAME } from '@/config/cat-identity';
 import { normalizeUsername } from '@/config/usernames';
+import { parseMentionCandidates } from '@/domain/mentions/parse';
 
 /** A profile as the people endpoint returns it, narrowed to what a menu needs. */
 export interface MentionCandidateProfile {
@@ -67,6 +68,27 @@ const isCatHandle = (username: string): boolean =>
  */
 export function catMatchesQuery(query: string): boolean {
   return normalizeUsername(CAT_USERNAME).startsWith(normalizeUsername(query));
+}
+
+/**
+ * Does this text tag the Cat?
+ *
+ * Uses `parseMentionCandidates`, so it agrees with the resolver that decides
+ * whether the Cat actually answers. Anything else here would be a fourth
+ * opinion about what an `@handle` is, and the last time this codebase had three
+ * the renderer linked one person while the resolver notified another.
+ *
+ * `@catalogue` is not the Cat: the parser yields candidates longest-first, and
+ * only an exact match after normalization counts.
+ */
+export function activeMentionsCat(text: string): boolean {
+  const wanted = normalizeUsername(CAT_USERNAME);
+  for (const mention of parseMentionCandidates(text)) {
+    if (mention.candidates.some(candidate => normalizeUsername(candidate) === wanted)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function toSuggestion(profile: MentionCandidateProfile): MentionSuggestion | null {
