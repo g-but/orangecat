@@ -65,6 +65,48 @@ async function claimPaidTransition(paymentIntentId: string): Promise<boolean> {
 }
 
 /**
+ * Record that the settlement path finished.
+ *
+ * `claimPaidTransition` flips the intent to paid FIRST — that conditional update
+ * is the lock that makes settlement run exactly once — so between it and the
+ * work below there is a window where a crash loses the order, the inventory
+ * decrement, the notifications and the webhooks FOREVER: the row is paid, so
+ * every later observer skips it as already settled, refresh short-circuits on
+ * terminal statuses, and the reconcile cron only sweeps non-terminal ones.
+ *
+ * This marker makes that window visible. NULL on a paid intent means the
+ * side-effects did not complete, which the reconcile sweep reports.
+ *
+ * What it does NOT claim: several effects are deliberately fire-and-forget
+ * (`void ...`), so this says the settlement path RAN TO COMPLETION, not that
+ * every async fan-out landed. Distinguishing those needs per-effect receipts,
+ * which is a different piece of work.
+ *
+ * Never throws. The payment is already settled; failing the caller here would
+ * 500 a buyer whose money has moved, and the terminal-status short-circuit
+ * means the retry would not re-run anything anyway.
+ */
+async function markSideEffectsComplete(
+  paymentIntentId: string,
+  admin: SupabaseClient
+): Promise<void> {
+  const { error } = await admin
+    .from(DATABASE_TABLES.PAYMENT_INTENTS)
+    .update({ side_effects_at: new Date().toISOString() })
+    .eq('id', paymentIntentId);
+
+  if (error) {
+    // The sweep will now report this intent as incomplete when it is not. A
+    // false positive that names a real settled payment is a far better failure
+    // than a silent one that names nothing.
+    logger.error('Failed to mark settlement side-effects complete', {
+      paymentIntentId,
+      error,
+    });
+  }
+}
+
+/**
  * Settle a payment verified OUTSIDE the polling loop — e.g. an L402 preimage
  * proof. Callers must hold cryptographic (or rail-confirmed) evidence of
  * settlement; this is NOT a way to mark a payment paid on a caller's say-so.
@@ -119,6 +161,7 @@ export async function handlePaymentConfirmed(paymentIntent: PaymentIntent): Prom
     void enqueuePaymentSettledWebhook(paymentIntent).catch(err =>
       logger.warn('payment.settled webhook enqueue failed (tip)', { err }, 'paymentFlowService')
     );
+    await markSideEffectsComplete(piId, admin);
     return;
   }
 
@@ -207,4 +250,6 @@ export async function handlePaymentConfirmed(paymentIntent: PaymentIntent): Prom
     sourceEntityId: entityId,
     actionUrl: `/dashboard`,
   });
+
+  await markSideEffectsComplete(piId, admin);
 }
