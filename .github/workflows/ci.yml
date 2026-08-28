@@ -41,6 +41,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Every external `uses:` names a canonical owner, not a redirect
+        # Twice in two days an owner rename stopped every merge and deploy in
+        # this repo: `maonakamoto` → `catomean` (2026-08-26), then the move to
+        # the `bitbaum` org (2026-08-28). REST and git follow a rename redirect,
+        # so every normal way of checking says the reference is fine; the
+        # Actions resolver does not follow it and dies before any step exists,
+        # with no readable log. PRs stay green and clean the whole time — the
+        # red run is on main, under a workflow nobody opens.
+        #
+        # Deliberately NOT part of `npm run verify`: verify is the local/CI SSOT
+        # bundle and must stay offline and deterministic. This one needs the API
+        # to answer what a repo is really called, so it lives here and no-ops
+        # without a token.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/ci/check-workflow-refs.mjs
+
       - name: Verify (docs + type-check + routes + lint + unit — same as local)
         # SSOT for "green": the pre-build gate is defined ONCE as the `verify`
         # npm script and called verbatim here, so `npm run verify` locally and CI
