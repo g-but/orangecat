@@ -12,12 +12,23 @@
  * onto one request rather than racing to make several.
  */
 
-import { getCurrentUserId, __resetCurrentUserIdCache } from '@/services/timeline/processors/social-shared';
+import {
+  getCurrentUserId,
+  __resetCurrentUserIdCache,
+} from '@/services/supabase/auth/session';
+// The timeline re-exports it rather than defining its own; both names must be
+// the same function, or the cache would only cover half the callers.
+import { getCurrentUserId as timelineGetCurrentUserId } from '@/services/timeline/processors/social-shared';
 
 const getUser = jest.fn();
 jest.mock('@/lib/supabase/browser', () => ({
   __esModule: true,
-  default: { auth: { getUser: (...a: unknown[]) => getUser(...a) } },
+  default: {
+    auth: {
+      getUser: (...a: unknown[]) => getUser(...a),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    },
+  },
 }));
 
 describe('getCurrentUserId', () => {
@@ -46,16 +57,41 @@ describe('getCurrentUserId', () => {
     expect(getUser).toHaveBeenCalledTimes(1);
   });
 
-  it('does not cache a failure as "signed out"', async () => {
+  it('does not cache a thrown failure as "signed out"', async () => {
     __resetCurrentUserIdCache();
     getUser.mockRejectedValueOnce(new Error('network blip'));
 
     expect(await getCurrentUserId()).toBeNull();
 
-    // A blip must not outlive itself and render the whole timeline as
-    // signed-out for the rest of the page.
+    // A blip must not outlive itself and render the whole app as signed-out
+    // for the rest of the page.
     getUser.mockResolvedValue({ data: { user: { id: 'u1' } } });
     expect(await getCurrentUserId()).toBe('u1');
+  });
+
+  it('does not cache a REPORTED failure as "signed out" either', async () => {
+    // The auth layer catches its own errors and reports them in `error` rather
+    // than throwing, so "could not ask" arrives looking almost exactly like
+    // "nobody is signed in". Only the error field tells them apart.
+    __resetCurrentUserIdCache();
+    getUser.mockResolvedValueOnce({
+      data: { user: null },
+      error: { message: 'fetch failed' },
+    });
+
+    expect(await getCurrentUserId()).toBeNull();
+
+    getUser.mockResolvedValue({ data: { user: { id: 'u1' } } });
+    expect(await getCurrentUserId()).toBe('u1');
+  });
+
+  it('is the SAME function the timeline uses, so one cache covers both', async () => {
+    expect(timelineGetCurrentUserId).toBe(getCurrentUserId);
+
+    await getCurrentUserId();
+    await timelineGetCurrentUserId();
+
+    expect(getUser).toHaveBeenCalledTimes(1);
   });
 
   it('caches a genuine signed-out answer', async () => {
