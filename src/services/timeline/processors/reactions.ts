@@ -16,6 +16,30 @@ interface ReactionConfig {
   countKey: string;
 }
 
+/**
+ * Read the new count out of an RPC response.
+ *
+ * All four of these functions are `RETURNS TABLE(<name>_count integer)`, and
+ * PostgREST renders a set-returning function as an ARRAY of rows — `[{
+ * like_count: 1 }]`. This used to index the array as if it were the row, so the
+ * lookup was always undefined and the `|| 0` turned every successful reaction
+ * into a count of zero.
+ *
+ * The effect was subtle enough to survive the whole time the RPCs were also
+ * raising 42703: liking something persisted correctly and then rendered as if
+ * nobody had, because the button state comes from `active` (a literal) while
+ * the number comes from here. Accepts either shape, so it cannot break again if
+ * one of these is ever rewritten to return a scalar.
+ */
+function readCount(data: unknown, countKey: string): number {
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row || typeof row !== 'object') {
+    return 0;
+  }
+  const value = (row as Record<string, unknown>)[countKey];
+  return typeof value === 'number' ? value : 0;
+}
+
 async function toggleReaction(
   eventId: string,
   targetUserId: string,
@@ -44,7 +68,7 @@ async function toggleReaction(
       return {
         success: true,
         active: false,
-        count: (data as Record<string, number>)?.[countKey] || 0,
+        count: readCount(data, countKey),
       };
     } catch (dbError) {
       logger.warn(`RPC ${removeRpc} not available, using fallback`, dbError, 'Timeline');
@@ -77,7 +101,7 @@ async function toggleReaction(
       return {
         success: true,
         active: true,
-        count: (data as Record<string, number>)?.[countKey] || 0,
+        count: readCount(data, countKey),
       };
     } catch (dbError) {
       logger.warn(`RPC ${addRpc} not available, using fallback`, dbError, 'Timeline');
