@@ -59,6 +59,7 @@ jest.mock('@/domain/payments', () => ({
 
 jest.mock('@/lib/rate-limit', () => ({
   rateLimitWriteAsync: jest.fn().mockResolvedValue({ success: true }),
+  rateLimitPaymentRecipient: jest.fn().mockResolvedValue({ success: true }),
   rateLimitIntegrationKeyWrite: jest.fn().mockResolvedValue({ success: true }),
   rateLimitIntegrationKeyRead: jest.fn().mockResolvedValue({ success: true }),
   retryAfterSeconds: jest.fn().mockReturnValue(30),

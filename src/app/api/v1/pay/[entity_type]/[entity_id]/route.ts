@@ -10,7 +10,7 @@ import { createL402Challenge, verifyL402Payment } from '@/domain/payments/l402';
 import { parseL402Authorization } from '@/domain/payments/l402-codec';
 import { publicSupportCreateSchema } from '@/lib/validation/finance';
 import { createPublicClient } from '@/lib/supabase/public';
-import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
+import { rateLimitPaymentRecipient, rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { clientIpKey } from '@/lib/client-ip';
 
@@ -83,6 +83,18 @@ export async function GET(
     return apiRateLimited(
       'Too many payment requests. Try again shortly.',
       retryAfterSeconds(limit)
+    );
+  }
+
+  // Per-IP is not enough here. Every challenge mints a REAL invoice through the
+  // recipient's own LNURL/NWC relay, so an attacker rotating IPs can still get
+  // a seller rate-limited or banned by their wallet provider. This bounds the
+  // damage to one recipient however many addresses it arrives from.
+  const recipientLimit = await rateLimitPaymentRecipient(entity_type, entity_id);
+  if (!recipientLimit.success) {
+    return apiRateLimited(
+      'This page is receiving too many payment requests right now. Try again shortly.',
+      retryAfterSeconds(recipientLimit)
     );
   }
 

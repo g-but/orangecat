@@ -248,6 +248,34 @@ export async function rateLimitTipRecipient(username: string): Promise<RateLimit
 }
 
 /**
+ * Rate limit invoice generation PER RECIPIENT for an entity-addressed payment.
+ *
+ * The per-IP limiter answers "is one caller hammering us". This answers the
+ * question that actually protects a seller: "is one RECIPIENT's wallet being
+ * hammered", however many IPs it arrives from. Both `GET /api/v1/pay/...` and
+ * `POST /api/v1/payments/public` mint a REAL Lightning invoice through the
+ * recipient's own LNURL/NWC relay on every request, so unbounded calls are how
+ * an attacker gets a seller rate-limited or banned by their wallet provider and
+ * litters their queue with orphan intents. bitbaum/orangecat#563 finding 1.
+ *
+ * Shares the tip limiter's budget and window deliberately — it is the same
+ * victim's wallet being protected either way.
+ *
+ * Residual, stated rather than hidden: a profile reachable BOTH by username
+ * (tips/lnurlp) and by entity id (here) has two buckets, so a determined
+ * attacker splitting across both paths gets twice the budget. Collapsing them
+ * would mean a username→entity lookup on the rate-limit path, i.e. a database
+ * round trip before we have decided whether to serve the request at all. Twice
+ * a bounded number is still bounded; unbounded was the bug.
+ */
+export async function rateLimitPaymentRecipient(
+  entityType: string,
+  entityId: string
+): Promise<RateLimitResult> {
+  return rateLimitTipRecipient(`${entityType}:${entityId}`);
+}
+
+/**
  * Rate limit public Ask-Cat / feedback submissions per IP.
  * 8 per 5 minutes — each one is a platform LLM call from a possibly anonymous
  * visitor. Apply IN ADDITION to the general per-IP `rateLimit`.
