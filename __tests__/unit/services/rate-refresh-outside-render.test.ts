@@ -18,6 +18,7 @@
 
 import {
   getCachedRateSnapshot,
+  getRateSnapshot,
   __setSnapshotForTests,
 } from '@/services/currency/rateSource.server';
 
@@ -81,5 +82,27 @@ describe('getCachedRateSnapshot refresh timing', () => {
     expect(getCachedRateSnapshot()?.rates.CHF).toBe(52199);
     jest.runOnlyPendingTimers();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  // Production 2026-08-28: this module reached a client chunk through a
+  // transitive import and the browser called CoinGecko directly on page load —
+  // 534ms in the critical path and every visitor's IP handed to a third party.
+  // The import graph is being repaired separately; this refuses regardless.
+  it('never calls out when it finds itself running in a browser', async () => {
+    // Start from nothing cached, or a snapshot left by an earlier test would
+    // be served before the fetch is ever attempted and prove nothing.
+    __setSnapshotForTests(null);
+
+    // A browser bundle has no Node version record, even where `process.env`
+    // has been shimmed. jsdom's `window` is NOT the discriminator — it is
+    // present in this very test.
+    const versions = process.versions;
+    Object.defineProperty(process, 'versions', { value: {}, configurable: true });
+    try {
+      await expect(getRateSnapshot()).resolves.toBeNull();
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(process, 'versions', { value: versions, configurable: true });
+    }
   });
 });
