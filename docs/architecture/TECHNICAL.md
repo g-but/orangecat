@@ -216,7 +216,7 @@ create table funding_pages (
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/catomean/orangecat.git
+   git clone https://github.com/bitbaum/orangecat.git
    cd orangecat
    ```
 

@@ -74,7 +74,7 @@ push branch → open PR → CI green → auto-merge.yml squash-merges it
 
 `.github/workflows/auto-merge.yml` calls the fleet's canonical sweep — the
 policy no longer lives in this repo. It is defined once in
-`catomean/dotfiles`, `scripts/ci/auto-merge-sweep.sh`, and a fix made to a
+`bitbaum/dotfiles`, `scripts/ci/auto-merge-sweep.sh`, and a fix made to a
 local copy here would reach nobody. The sweep merges **one** PR per sweep, and
 only when: it is not a draft, carries no hold label, every check has finished
 green, GitHub calls it cleanly mergeable, and main's own CI is currently green. One car per sweep is deliberate — a PR's
