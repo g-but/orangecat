@@ -30,16 +30,38 @@ jest.mock('@/services/timeline/processors/reaction-state', () => ({
 }));
 jest.mock('@/lib/supabase/untyped', () => ({ callRpc: jest.fn() }));
 
-/** Rows keyed by the set of parents asked for, so we can serve level by level. */
-function tableReturning(rowsByLevel: Array<Array<Record<string, unknown>>>) {
-  let level = 0;
+/**
+ * A fake table that actually honours the parent filter.
+ *
+ * An argument-blind mock returns the same rows whatever is asked for, which
+ * makes "one query per level" and "one query per node" indistinguishable — the
+ * first version of this file had one, and a mutation replacing `.in(parents)`
+ * with `.eq(parents[0])` stayed green. The filter has to be real for the count
+ * assertions below to mean anything.
+ */
+function tableOf(rows: Array<Record<string, unknown>>) {
   from.mockImplementation(() => {
+    let parents: string[] = [];
     const chain: Record<string, unknown> = {};
     for (const m of ['select', 'eq', 'order']) {
-      chain[m] = () => chain;
+      chain[m] = (col?: string, val?: unknown) => {
+        if (col === 'parent_event_id') {
+          parents = [String(val)];
+        }
+        return chain;
+      };
     }
-    chain.in = () => chain;
-    chain.limit = () => Promise.resolve({ data: rowsByLevel[level++] ?? [], error: null });
+    chain.in = (col: string, vals: string[]) => {
+      if (col === 'parent_event_id') {
+        parents = vals;
+      }
+      return chain;
+    };
+    chain.limit = () =>
+      Promise.resolve({
+        data: rows.filter(r => parents.includes(String(r.parent_event_id))),
+        error: null,
+      });
     return chain;
   });
 }
@@ -54,14 +76,11 @@ describe('getReplies query cost', () => {
   });
 
   it('asks once per DEPTH, not once per reply', async () => {
-    // Three replies to the root, none nested: one level of content, then empty.
-    tableReturning([
-      [
-        { id: 'r1', parent_event_id: 'root' },
-        { id: 'r2', parent_event_id: 'root' },
-        { id: 'r3', parent_event_id: 'root' },
-      ],
-      [],
+    // Three replies to the root, none nested.
+    tableOf([
+      { id: 'r1', parent_event_id: 'root' },
+      { id: 'r2', parent_event_id: 'root' },
+      { id: 'r3', parent_event_id: 'root' },
     ]);
 
     const result = await getReplies('root');
@@ -69,16 +88,36 @@ describe('getReplies query cost', () => {
     expect(result.success).toBe(true);
     expect(result.replies).toHaveLength(3);
     // Two queries: the level with replies, and the one that came back empty.
-    // The recursive version made four for this shape, and would make one more
-    // for every additional reply.
+    // The recursive version made four for this shape, and one more for every
+    // additional reply.
     expect(from).toHaveBeenCalledTimes(2);
   });
 
+  it('asks for every sibling in ONE query, not one per sibling', async () => {
+    // Two branches, each with a child. A per-node fetch would either take four
+    // queries or — asking only about the first parent — silently lose r2's
+    // child, so this pins both the count and the completeness.
+    tableOf([
+      { id: 'r1', parent_event_id: 'root' },
+      { id: 'r2', parent_event_id: 'root' },
+      { id: 'r1a', parent_event_id: 'r1' },
+      { id: 'r2a', parent_event_id: 'r2' },
+    ]);
+
+    const result = await getReplies('root');
+
+    // depth 0 (root), depth 1 (r1+r2 together), depth 2 (empty) = 3.
+    expect(from).toHaveBeenCalledTimes(3);
+    expect(result.replies?.map(r => r.id)).toEqual(['r1', 'r2']);
+    expect(result.replies?.[0].replies?.[0].id).toBe('r1a');
+    expect(result.replies?.[1].replies?.[0].id).toBe('r2a');
+  });
+
   it('enriches the whole tree exactly once', async () => {
-    tableReturning([
-      [{ id: 'r1', parent_event_id: 'root' }, { id: 'r2', parent_event_id: 'root' }],
-      [{ id: 'r3', parent_event_id: 'r1' }],
-      [],
+    tableOf([
+      { id: 'r1', parent_event_id: 'root' },
+      { id: 'r2', parent_event_id: 'root' },
+      { id: 'r3', parent_event_id: 'r1' },
     ]);
 
     await getReplies('root');
@@ -89,10 +128,9 @@ describe('getReplies query cost', () => {
   });
 
   it('still nests replies under the right parent', async () => {
-    tableReturning([
-      [{ id: 'r1', parent_event_id: 'root' }],
-      [{ id: 'r2', parent_event_id: 'r1' }],
-      [],
+    tableOf([
+      { id: 'r1', parent_event_id: 'root' },
+      { id: 'r2', parent_event_id: 'r1' },
     ]);
 
     const result = await getReplies('root');
