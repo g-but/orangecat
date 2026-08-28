@@ -290,7 +290,11 @@ jobs:
           fetch-depth: 0
 
       - name: Secret scan (gitleaks)
-        # Free for public repos; no license needed. Fails the job on any finding.
+        # Runs the MIT-licensed gitleaks CLI directly. gitleaks-ACTION is free
+        # for personal accounts only: when these repos moved into the `bitbaum`
+        # organisation it began refusing to run ("License key is required") and
+        # this job went red on every PR — blocking the merge queue while
+        # scanning nothing at all. The CLI has no such restriction.
         #
         # Skipped on workflow_dispatch, and only there. On push and pull_request
         # the action scans the incoming commits; a dispatched run has no such
@@ -307,9 +311,7 @@ jobs:
         # triggers nothing), so without this every automated merge left main red
         # and CD, which chains off green CI, never deployed.
         if: github.event_name != 'workflow_dispatch'
-        uses: gitleaks/gitleaks-action@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/ci/secret-scan.sh
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
