@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils';
 import { ROUTES } from '@/config/routes';
 import { TimelineDisplayEvent } from '@/types/timeline';
 import { usePostThread } from './usePostThread';
+import { useAwaitCatReply } from '@/hooks/useAwaitCatReply';
+import CatIsAnswering from '@/components/timeline/CatIsAnswering';
 
 /**
  * Thread View Page - X-style conversation thread
@@ -38,6 +40,23 @@ export default function PostPage() {
     handleNestedReplyCreated,
     handleReplyDeleted,
   } = usePostThread(postId);
+
+  // Tagging the Cat should behave like tagging @grok: you ask in the thread and
+  // the answer turns up in the thread. It already replied in the right place —
+  // it just never arrived, because the thread refetches once when your reply is
+  // created and the Cat takes 10–17s to think. So the reply sat in the database
+  // until someone reloaded.
+  const { awaitingParentId, watchIfTagged } = useAwaitCatReply({
+    onArrived: handleNestedReplyCreated,
+  });
+
+  const handleReplyPosted = useCallback(
+    (created?: TimelineDisplayEvent) => {
+      handleReplyCreated();
+      watchIfTagged(created);
+    },
+    [handleReplyCreated, watchIfTagged]
+  );
 
   const pageHeader = (
     <header className="sticky top-0 z-10 bg-surface-base backdrop-blur-sm border-b border-default">
@@ -171,7 +190,7 @@ export default function PostPage() {
               placeholder={`Reply to @${mainPost.actor.username || mainPost.actor.name}`}
               buttonText="Reply"
               showBanner={false}
-              onPostCreated={handleReplyCreated}
+              onPostCreated={handleReplyPosted}
               parentEventId={mainPost.id}
               parentPostText={mainPost.description || mainPost.title}
               parentAuthorName={mainPost.actor.username || mainPost.actor.name}
@@ -189,7 +208,12 @@ export default function PostPage() {
           </div>
         )}
 
-        {replies.length === 0 && (
+        {/* Shown from the moment a reply tags the Cat until its answer lands,
+            so the 10–17s it spends thinking reads as a wait rather than as
+            nothing having happened. */}
+        {awaitingParentId && <CatIsAnswering />}
+
+        {replies.length === 0 && !awaitingParentId && (
           <div className="py-12 text-center">
             <p className="text-fg-secondary">No replies yet</p>
             {user && <p className="text-sm text-fg-tertiary mt-1">Be the first to reply!</p>}

@@ -39,7 +39,7 @@ export interface TimelineComposerProps {
   targetOwnerType?: 'profile' | 'project';
   targetOwnerName?: string;
   allowProjectSelection?: boolean;
-  onPostCreated?: () => void;
+  onPostCreated?: (event?: import('@/types/timeline').TimelineDisplayEvent) => void;
   onOptimisticUpdate?: (event: import('@/types/timeline').TimelineDisplayEvent) => void;
   onCancel?: () => void;
   placeholder?: string;
@@ -90,8 +90,11 @@ const TimelineComposer = React.memo(function TimelineComposer({
     subjectType: targetOwnerType,
     subjectId: targetOwnerId,
     allowProjectSelection,
-    onSuccess: () => {
-      onPostCreated?.();
+    onSuccess: created => {
+      // Hand the created post on. A caller that only needs "something was
+      // posted" ignores it; the thread view needs the row itself, to know
+      // whether it tagged the Cat and what the Cat's answer will hang from.
+      onPostCreated?.(created);
       setShowProjects(false);
     },
     onOptimisticUpdate,
