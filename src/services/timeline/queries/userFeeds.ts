@@ -23,6 +23,7 @@ import type {
 } from '@/types/timeline';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from './constants';
 import { getCurrentUserId, transformEnrichedEventToDisplay } from './helpers';
+import { warmCurrentUserId } from '@/services/supabase/auth/session';
 import { getDateRangeFilter, buildDefaultFilters } from '@/services/timeline/formatters/filters';
 import { enrichEventsForDisplay } from '@/services/timeline/processors/enrichment';
 import { attachReactionState } from '@/services/timeline/processors/reaction-state';
@@ -39,6 +40,14 @@ export async function getUserFeed(
     const page = pagination?.page || 1;
     const limit = Math.min(pagination?.limit || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = (page - 1) * limit;
+
+    // Enrichment needs to know who is reading, to mark which posts this user
+    // already reacted to. That lookup is a round-trip and it depends on nothing
+    // here, yet it used to start only after the feed came back — and then the
+    // reaction queries waited on it in turn. Measured on a cold timeline load:
+    // feed 2429-3061ms, THEN /auth/v1/user 3105-3351, THEN reactions 3367-3595.
+    // Starting it now overlaps it with the feed instead of stacking behind it.
+    warmCurrentUserId();
 
     // Build filter conditions
 
@@ -62,19 +71,11 @@ export async function getUserFeed(
       query = query.in('visibility', filters.visibility);
     }
 
-    const { data: events, error } = await query;
-
-    if (error) {
-      logger.error('Failed to fetch timeline feed', error, 'Timeline');
-      throw error;
-    }
-
-    // Transform to display events
-    const displayEvents = await enrichEventsForDisplay(events || []);
-
-    // Total count: use the RPC with count option (it resolves user→actor internally)
-
-    const { count } = await callRpc(
+    // How many posts exist in total (for pagination) is a separate question
+    // from what the first page contains, and neither answer needs the other.
+    // Asking now rather than after enrichment overlaps the two round-trips.
+    // The RPC resolves user→actor internally.
+    const countQuery = callRpc(
       supabase,
       'get_user_timeline_feed',
       {
@@ -84,6 +85,24 @@ export async function getUserFeed(
       },
       { count: 'exact', head: true }
     );
+
+    const { data: events, error } = await query;
+
+    if (error) {
+      // The count is already in flight; let it settle so it cannot reject
+      // unhandled after we leave.
+      void countQuery.then(
+        () => undefined,
+        () => undefined
+      );
+      logger.error('Failed to fetch timeline feed', error, 'Timeline');
+      throw error;
+    }
+
+    // Transform to display events
+    const displayEvents = await enrichEventsForDisplay(events || []);
+
+    const { count } = await countQuery;
 
     const totalEvents = count || displayEvents.length;
 
