@@ -74,42 +74,62 @@ export async function getReplies(
   limit: number = 50
 ): Promise<{ success: boolean; replies?: TimelineDisplayEvent[]; error?: string }> {
   try {
-    const buildTree = async (parentId: string, depth: number): Promise<TimelineDisplayEvent[]> => {
-      // Limit depth to avoid accidental cycles
-      if (depth > 3) {
-        return [];
-      }
+    // Fetch the tree a LEVEL at a time, then enrich the whole thing once.
+    //
+    // This used to recurse per node: one query and one enrichEventsForDisplay
+    // per reply. Enrichment is itself several round-trips — profiles, projects,
+    // the reader's id, and the three reaction tables — so a thread cost roughly
+    // six requests per reply, and opening a three-reply thread fired eight
+    // `/auth/v1/user` calls alone. Level-order asks once per depth regardless of
+    // width, and enriches once regardless of both.
+    const MAX_DEPTH = 3;
+    const levels: Array<Record<string, unknown>>[] = [];
+    let frontier = [eventId];
 
+    for (let depth = 0; depth <= MAX_DEPTH && frontier.length > 0; depth++) {
       const { data: childEvents, error } = await supabase
         .from(TIMELINE_TABLES.EVENTS)
         .select('*')
-        .eq('parent_event_id', parentId)
+        .in('parent_event_id', frontier)
         .eq('is_deleted', false)
         .order('created_at', { ascending: true })
-        .limit(depth === 0 ? limit : 50);
+        .limit(depth === 0 ? limit : 200);
 
       if (error) {
         logger.error('Error fetching replies', error, 'Timeline');
-        return [];
+        break;
       }
 
-      const enrichedChildren = await enrichEventsForDisplay(childEvents || []);
+      const rows = (childEvents || []) as Array<Record<string, unknown>>;
+      if (rows.length === 0) {
+        break;
+      }
+      levels.push(rows);
+      frontier = rows.map(row => String(row.id));
+    }
 
-      // Recursively fetch children for each reply, in parallel — a sequential
-      // loop here made thread latency grow linearly with reply count
-      return Promise.all(
-        enrichedChildren.map(async reply => {
-          const nestedReplies = await buildTree(reply.id, depth + 1);
-          return {
-            ...reply,
-            replies: nestedReplies,
-            replyCount: nestedReplies.length,
-          };
-        })
-      );
+    const enriched = await enrichEventsForDisplay(levels.flat());
+
+    // Assemble parent → children from the flat list. Every node is visited
+    // once, and a reply whose parent did not come back (deleted mid-read)
+    // simply does not attach, rather than orphaning the whole branch.
+    const byParent = new Map<string, TimelineDisplayEvent[]>();
+    for (const reply of enriched) {
+      const parentId = reply.parentEventId ?? '';
+      byParent.set(parentId, [...(byParent.get(parentId) ?? []), reply]);
+    }
+
+    const attach = (parentId: string, depth: number): TimelineDisplayEvent[] => {
+      if (depth > MAX_DEPTH) {
+        return [];
+      }
+      return (byParent.get(parentId) ?? []).map(reply => {
+        const nested = attach(reply.id, depth + 1);
+        return { ...reply, replies: nested, replyCount: nested.length };
+      });
     };
 
-    const replies = await buildTree(eventId, 0);
+    const replies = attach(eventId, 0);
     return { success: true, replies };
   } catch (error) {
     logger.error('Error fetching replies', error, 'Timeline');
