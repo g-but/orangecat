@@ -7,7 +7,7 @@ import {
 import { initiatePublicSupport } from '@/domain/payments';
 import { publicSupportCreateSchema } from '@/lib/validation/finance';
 import { createPublicClient } from '@/lib/supabase/public';
-import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
+import { rateLimitPaymentRecipient, rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { clientIpKey } from '@/lib/client-ip';
 
@@ -28,6 +28,21 @@ export async function POST(request: Request) {
     const parsed = publicSupportCreateSchema.safeParse(await request.json());
     if (!parsed.success) {
       return apiBadRequest('Invalid support request', parsed.error.errors);
+    }
+
+    // After parsing, because the recipient is in the body — and BEFORE
+    // initiatePublicSupport, which is the call that mints a real invoice
+    // through the recipient's wallet. Per-IP alone leaves a seller exposed to
+    // an attacker who rotates addresses.
+    const recipientLimit = await rateLimitPaymentRecipient(
+      parsed.data.entity_type,
+      parsed.data.entity_id
+    );
+    if (!recipientLimit.success) {
+      return apiRateLimited(
+        'This page is receiving too many payment requests right now. Please try again shortly.',
+        retryAfterSeconds(recipientLimit)
+      );
     }
 
     const result = await initiatePublicSupport(createPublicClient(), parsed.data);

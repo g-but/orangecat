@@ -64,10 +64,12 @@ jest.mock('@/domain/payments/l402', () => ({
 jest.mock('@/lib/supabase/public', () => ({ createPublicClient: () => ({ _kind: 'public' }) }));
 jest.mock('@/lib/rate-limit', () => ({
   rateLimitWriteAsync: jest.fn().mockResolvedValue({ success: true }),
+  rateLimitPaymentRecipient: jest.fn().mockResolvedValue({ success: true }),
   retryAfterSeconds: () => 1,
 }));
 
 import { GET } from '@/app/api/v1/pay/[entity_type]/[entity_id]/route';
+import { rateLimitPaymentRecipient } from '@/lib/rate-limit';
 
 const ENTITY_ID = '11111111-2222-3333-4444-555555555555';
 const params = Promise.resolve({ entity_type: 'product', entity_id: ENTITY_ID });
@@ -223,5 +225,28 @@ describe('GET /api/v1/pay/{type}/{id}', () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.error.message).toContain('has not connected a Bitcoin wallet');
+  });
+});
+
+/**
+ * Finding 1 of bitbaum/orangecat#563: every challenge mints a REAL invoice
+ * through the recipient's own LNURL/NWC relay. A per-IP limit does not protect
+ * the seller from an attacker who rotates addresses — the victim's wallet
+ * provider is what gets hammered, and it is the victim who gets banned.
+ */
+describe('per-recipient invoice-spam limit', () => {
+  beforeEach(() => {
+    (rateLimitPaymentRecipient as jest.Mock).mockResolvedValue({ success: true });
+  });
+
+  it('keys the limit on the recipient, not only the caller', async () => {
+    await GET(makeRequest('https://x.test/api/v1/pay/product/' + ENTITY_ID), { params });
+    expect(rateLimitPaymentRecipient).toHaveBeenCalledWith('product', ENTITY_ID);
+  });
+
+  it('refuses with 429 when that recipient is already being hammered', async () => {
+    (rateLimitPaymentRecipient as jest.Mock).mockResolvedValue({ success: false });
+    const res = await GET(makeRequest('https://x.test/api/v1/pay/product/' + ENTITY_ID), { params });
+    expect(res.status).toBe(429);
   });
 });
