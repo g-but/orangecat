@@ -8,8 +8,11 @@ Status: Proposed
 > spine of the pitch: a prospect received a profile and claimed it. That puts a
 > Bitcoin wallet in the critical path of selling a bakery a website, and most
 > bakers have no idea what any of it is. Corrected below — **the proposal is the
-> primary artifact, the website is the product, and OrangeCat (economy) and
-> Solon (governance) are opt-in add-ons.** Also corrected: the claim flow the
+> primary artifact, the website is the product and the magic moment, OrangeCat
+> (economy) is an opt-in add-on offered only after a yes, and Solon (governance)
+> is not offered at all yet.** The pitch must also not read as a website used as
+> bait for a crypto onboarding — see "What the pitch must not imply", which makes
+> that structural rather than a promise. Also corrected: the claim flow the
 > original described as future work already ships.
 
 ## Context
@@ -38,9 +41,10 @@ Four things about the existing code decide most of this:
    180-day expiry exist. What is missing is only the door in front of it.
 4. `integration_keys` / `webhook_endpoints` already carry FleetCrown's calls.
 
-And one fact about the stack: OrangeCat is the **economy** pillar, Solon the
-**governance** pillar, FleetCrown the **engineering** one. A prospect is being
-sold a website. The pillars are what they may *later* want.
+And one fact about the stack: OrangeCat is the **economy** pillar, FleetCrown the
+**engineering** one, and Solon the **governance** one — early, and not ready to
+be sold to anyone. A prospect is being sold a website. The pillars are what they
+may *later* want, at most.
 
 ## Problem Statement
 
@@ -61,7 +65,7 @@ a group, or anything that can receive funds.
 
 ## Decision
 
-Four layers, split on the boundary that already exists.
+Three layers, split on the boundary that already exists.
 
 **1. `sitekit` — a shared package, extracted from Substrata.** The section-shape
 schema, the renderers, and a `siteFromUrl()` extractor. Not in this repo.
@@ -96,15 +100,22 @@ in the funnel. Two changes here:
   endpoint serves FleetCrown's pipeline and a human typing a sentence to Cat —
   deliberately, so the pipeline gets no privileged path a person cannot use.
 
-**4. Solon — the governance add-on (opt-in, and narrower still).** Irrelevant to
-a bakery; real for a Verein, a co-op, an association — anything with members who
-vote. Offer it only where the entity has that shape. It is an upsell to an upsell
-and must never appear in a first contact.
+**Not a fourth layer: Solon.** Governance is the direction this eventually
+heads — a Verein or co-op that runs its own votes is a real end state. But the
+product is at an early stage and is not ready to be sold to a stranger, so it
+gets **no place in this pipeline at all** for now: not a layer, not an add-on,
+not a sentence in a proposal. Build toward it; offer nothing.
 
 ## The proposal
 
 The artifact a stranger opens. It has to survive being read by someone who has
 never heard of the studio, in under a minute.
+
+**The website is the magic moment** — the second someone sees their own business
+looking good. Everything else in the proposal exists to get them there faster or
+to explain what they just saw. So the site comes first, above the fold, before
+any account of who we are. Nobody is moved by an introduction; they are moved by
+their own shop, rendered well.
 
 - **The live site, at a real URL.** Not a screenshot, not a PDF. `noindex`,
   carrying the `DemoBanner` that says it is an unsolicited mockup by the studio.
@@ -134,6 +145,32 @@ domain. Nothing about Bitcoin has been mentioned yet. Only then, as a separate
 sentence: *you can also have a public profile that accepts payments.* If that
 lands, the claim link from layer 3 is the door, and it is the same flow that
 already ships.
+
+## What the pitch must not imply
+
+**It must not look like the website is bait for a crypto onboarding.** This is a
+trust constraint, not a tone preference. A stranger who suspects the real ask is
+somewhere further down stops evaluating the site on its merits — and the site is
+the only thing here with self-evident value. The suspicion does not cost us the
+upsell; it costs us the sale.
+
+Three rules follow, and the third is the one that actually settles it:
+
+- **No Bitcoin, wallet, crypto or token vocabulary anywhere in first contact.**
+  Not in the proposal, not in the site, not in the email. It is not a secret —
+  it is simply not what is being offered yet.
+- **The proposal is not an account signup.** No registration wall, no OrangeCat
+  chrome, nothing to join in order to read an offer or decline it.
+- **The website must be deliverable in full with zero OrangeCat dependency.**
+  They can take the code, host it wherever they like, and never speak to us
+  again. Keeping that true is what makes "this is not a funnel" demonstrable
+  instead of asserted — and it is the reason `sitekit` ships no coupling to this
+  repo. If handover ever starts requiring an account, the claim is false and
+  people will be right to suspect it.
+
+Bitcoin onboarding remains a genuinely good outcome. It is earned by having
+already done something valuable for someone, which is also the only condition
+under which the pitch for it is any good.
 
 ## Rationale
 
@@ -222,6 +259,12 @@ path any more and can wait for step 4. Step 5 is the one to resist starting
 early: a pipeline built before a single sale encodes guesses that a real
 conversation will contradict.
 
+**Solon appears nowhere in this list, deliberately.** Nothing above should be
+shaped by it, and no step should be made harder to accommodate a governance
+layer that is not ready. When it is, it will be a new conversation with
+businesses we already have a relationship with — which costs nothing to keep
+possible and nothing to defer.
+
 ## Alternatives Considered
 
 **Make the OrangeCat profile mandatory** — the original decision here. Rejected:
@@ -229,9 +272,11 @@ it requires a stranger to understand a Bitcoin-native economic layer before they
 can accept a website, and it makes an unsolicited pitch look like an account
 signup, which is what unsolicited pitches usually are.
 
-**Lead with Solon for member-run organisations.** Rejected for first contact: it
-is the most abstract product in the stack. It is a genuine second conversation
-with a Verein that already said yes.
+**Offer Solon to member-run organisations.** Rejected for now, at any point in
+the funnel — not only first contact. It is the most abstract product in the
+stack and it is not finished. Selling an unready governance layer to a Verein
+that trusted us over a website would cost more than it earns. Revisit when the
+product is ready to stand on its own.
 
 **All of it in FleetCrown.** Rejected: it puts a second definition of a fundable
 entity next to a CRM, and moves the pre-claim funding invariant from a structural
