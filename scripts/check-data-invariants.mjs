@@ -425,6 +425,37 @@ async function checkBrokenFunctions() {
   }
 }
 
+/**
+ * You can read the Cat's answer on your own private post.
+ *
+ * The Cat replies with the parent's visibility, which is correct, but the reply
+ * is authored by the CAT — and the rule for a private event is
+ * `actor_id = auth.uid()`. So on 2026-08-28 the answer to a private question
+ * was visible to exactly one account, and it was not the asker's. Measured on
+ * post 5c3ad8ef: three replies existed, the author could see two, and the
+ * missing one was the answer they had asked for.
+ *
+ * Gated here because the failure is SILENT. Nothing errors — the Cat answers,
+ * the row exists, and the thread simply renders without it, which reads as the
+ * Cat having ignored you. Whoever rewrites this policy next gets no warning if
+ * the clause goes.
+ */
+async function checkCatAnswersAreReadable() {
+  const allowed = await rpc('timeline_policy_allows_own_thread');
+
+  if (allowed !== true) {
+    violation(
+      'timeline.own_thread_readable',
+      `the timeline SELECT policy no longer lets you read replies on your own private posts, so ` +
+        `the Cat answers private questions where the person who asked cannot see them — the reply ` +
+        `is written, and the thread renders as though it never came`,
+      []
+    );
+  } else {
+    notes.push('timeline: you can read replies on your own private posts');
+  }
+}
+
 async function checkOrphanedProfiles() {
   const count = Number(await rpc('count_orphaned_profiles'));
 
@@ -558,6 +589,7 @@ async function main() {
     checkOrphanedProfiles,
     checkEmailDerivedUsernames,
     checkCatHandle,
+    checkCatAnswersAreReadable,
     checkBrokenFunctions,
     checkOrphanedCatConversations,
     checkOrphanedActors,
