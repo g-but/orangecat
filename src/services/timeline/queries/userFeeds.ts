@@ -23,7 +23,6 @@ import type {
 } from '@/types/timeline';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from './constants';
 import { getCurrentUserId, transformEnrichedEventToDisplay } from './helpers';
-import { warmCurrentUserId } from '@/services/supabase/auth/session';
 import { getDateRangeFilter, buildDefaultFilters } from '@/services/timeline/formatters/filters';
 import { enrichEventsForDisplay } from '@/services/timeline/processors/enrichment';
 import { attachReactionState } from '@/services/timeline/processors/reaction-state';
@@ -40,14 +39,6 @@ export async function getUserFeed(
     const page = pagination?.page || 1;
     const limit = Math.min(pagination?.limit || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = (page - 1) * limit;
-
-    // Enrichment needs to know who is reading, to mark which posts this user
-    // already reacted to. That lookup is a round-trip and it depends on nothing
-    // here, yet it used to start only after the feed came back — and then the
-    // reaction queries waited on it in turn. Measured on a cold timeline load:
-    // feed 2429-3061ms, THEN /auth/v1/user 3105-3351, THEN reactions 3367-3595.
-    // Starting it now overlaps it with the feed instead of stacking behind it.
-    warmCurrentUserId();
 
     // Build filter conditions
 
