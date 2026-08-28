@@ -45,6 +45,7 @@ export default function TimelineView({
     handleEventUpdate,
     handleLoadMore,
     handlePostCreated,
+    handleOptimisticEvent,
   } = useTimelineView({ feedType, ownerId, onPostCreated, onOptimisticEvent });
 
   if (hydrated && !authLoading && !user && (feedType === 'journey' || feedType === 'community')) {
@@ -166,6 +167,10 @@ export default function TimelineView({
         <TimelineComponent
           feed={mergedFeed}
           onEventUpdate={handleEventUpdate}
+          // A quote repost made from a card lands in the same optimistic list
+          // the composer already uses, so it appears where it was made instead
+          // of only after a reload.
+          onEventCreated={handleOptimisticEvent}
           onLoadMore={handleLoadMore}
           showFilters={showFilters}
           compact={compact}

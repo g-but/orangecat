@@ -16,6 +16,13 @@ import { TIMELINE_SURFACE } from '@/config/timeline';
 interface TimelineComponentProps {
   feed: TimelineFeedResponse;
   onEventUpdate?: (eventId: string, updates: Partial<TimelineDisplayEvent>) => void;
+  /**
+   * A post created FROM a card — currently a quote repost. Without it the new
+   * post is created and then dropped: usePostRepost only hands the result over
+   * `if (result.event && onAddEvent)`, and nobody was passing one, so a repost
+   * existed in the database and nowhere on screen until a reload.
+   */
+  onEventCreated?: (event: TimelineDisplayEvent) => void;
   onLoadMore?: () => void;
   isLoadingMore?: boolean;
   showFilters?: boolean;
@@ -26,6 +33,7 @@ interface TimelineComponentProps {
 export const TimelineComponent: React.FC<TimelineComponentProps> = ({
   feed,
   onEventUpdate,
+  onEventCreated,
   onLoadMore,
   isLoadingMore = false,
   showFilters: _showFilters = true,
@@ -215,6 +223,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
             key={event.id}
             event={event}
             onUpdate={updates => handleEventUpdate(event.id, updates)}
+            onAddEvent={onEventCreated}
             onDelete={() => handlePostDelete(event.id)}
             compact={compact}
             showMetrics={true}

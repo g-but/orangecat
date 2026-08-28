@@ -15,6 +15,8 @@ interface UsePostCardActionsParams {
   user: User | null | undefined;
   profile: Profile | null | undefined;
   onUpdate: (updates: Partial<TimelineDisplayEvent>) => void;
+  /** Where a post created from this card goes — see usePostRepost. */
+  onAddEvent?: (event: TimelineDisplayEvent) => void;
   onDelete?: () => void;
   onReplyCreated?: (reply: TimelineDisplayEvent) => void;
   isSelectionMode?: boolean;
@@ -26,6 +28,7 @@ export function usePostCardActions({
   user,
   profile,
   onUpdate,
+  onAddEvent,
   onDelete,
   onReplyCreated,
   isSelectionMode = false,
@@ -49,7 +52,10 @@ export function usePostCardActions({
     handleRepostClose,
     handleSimpleRepost,
     handleQuoteRepost,
-  } = usePostInteractions({ event, onUpdate });
+    // Without onAddEvent, usePostRepost's success path skips handing the new
+    // post back (`if (result.event && onAddEvent)`), so a quote repost was
+    // created and then existed nowhere on screen until a reload.
+  } = usePostInteractions({ event, onUpdate, onAddEvent });
 
   const canEdit = user?.id === event.actor.id;
 
