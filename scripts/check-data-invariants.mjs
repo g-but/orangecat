@@ -383,6 +383,48 @@ async function checkCatHandle() {
   notes.push(`cat: @${CAT_HANDLE} resolves to the Cat`);
 }
 
+/**
+ * Functions that reference a column, table or type that does not exist.
+ *
+ * Nineteen of them on 2026-08-28, silently, for months: likes, dislikes,
+ * replies, deleting a post and quote replies were all dead in production, along
+ * with four AI-withdrawal functions and both nearby searches. Every one looked
+ * healthy — defined, routable, called by the app — because plpgsql only plans a
+ * statement when it runs, so a write to a missing column raises 42703 at call
+ * time and never before.
+ *
+ * Nothing else in the stack sees this. Unit tests mock the database;
+ * check-rpc-exists proves a function is DEFINED, which all of these were;
+ * migration replay proves the SQL applies, and creating a function never
+ * validates its body.
+ *
+ * A ratchet rather than a demand for zero: eleven remain after the timeline
+ * ones were repaired, and each of those needs a decision rather than a
+ * mechanical edit (does `ai_creator_withdrawals` want a `completed_at` column,
+ * or should the write go?). Demanding zero tomorrow would make this red about
+ * work that is queued, which is how a gate teaches people to ignore it.
+ * `SELECT * FROM list_broken_plpgsql_functions()` names them.
+ */
+const BROKEN_FUNCTION_BASELINE = 11;
+
+async function checkBrokenFunctions() {
+  const count = Number(await rpc('count_broken_plpgsql_functions'));
+
+  if (count > BROKEN_FUNCTION_BASELINE) {
+    violation(
+      'functions.reference_missing_objects',
+      `${count} plpgsql function(s) reference something that does not exist, up from ` +
+        `${BROKEN_FUNCTION_BASELINE}. A new one will fail only when a user triggers it, with ` +
+        `42703 and no other symptom — run list_broken_plpgsql_functions() to see which`,
+      []
+    );
+  } else {
+    notes.push(
+      `functions: ${count} reference a missing object (baseline ${BROKEN_FUNCTION_BASELINE}, never rises)`
+    );
+  }
+}
+
 async function checkOrphanedProfiles() {
   const count = Number(await rpc('count_orphaned_profiles'));
 
@@ -516,6 +558,7 @@ async function main() {
     checkOrphanedProfiles,
     checkEmailDerivedUsernames,
     checkCatHandle,
+    checkBrokenFunctions,
     checkOrphanedCatConversations,
     checkOrphanedActors,
   ];
