@@ -6,16 +6,22 @@ import { logger } from '@/utils/logger';
 import { toast } from 'sonner';
 import { PostCard } from './PostCard';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Trash2, CheckSquare, Loader2, Newspaper } from 'lucide-react';
+import { CheckSquare, Loader2, Newspaper } from 'lucide-react';
 import { usePostSelection } from '@/hooks/usePostSelection';
 import EmptyState from '@/components/ui/EmptyState';
 import { BulkActionsToolbar } from './BulkActionsToolbar';
-import { TIMELINE_SURFACE } from '@/config/timeline';
+import { BulkDeleteConfirmDialog } from './BulkDeleteConfirmDialog';
 
 interface TimelineComponentProps {
   feed: TimelineFeedResponse;
   onEventUpdate?: (eventId: string, updates: Partial<TimelineDisplayEvent>) => void;
+  /**
+   * A post created FROM a card — currently a quote repost. Without it the new
+   * post is created and then dropped: usePostRepost only hands the result over
+   * `if (result.event && onAddEvent)`, and nobody was passing one, so a repost
+   * existed in the database and nowhere on screen until a reload.
+   */
+  onEventCreated?: (event: TimelineDisplayEvent) => void;
   onLoadMore?: () => void;
   isLoadingMore?: boolean;
   showFilters?: boolean;
@@ -26,6 +32,7 @@ interface TimelineComponentProps {
 export const TimelineComponent: React.FC<TimelineComponentProps> = ({
   feed,
   onEventUpdate,
+  onEventCreated,
   onLoadMore,
   isLoadingMore = false,
   showFilters: _showFilters = true,
@@ -215,6 +222,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
             key={event.id}
             event={event}
             onUpdate={updates => handleEventUpdate(event.id, updates)}
+            onAddEvent={onEventCreated}
             onDelete={() => handlePostDelete(event.id)}
             compact={compact}
             showMetrics={true}
@@ -246,44 +254,13 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
         </div>
       )}
 
-      {/* Bulk Delete Confirmation Modal */}
       {showBulkDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-page/80 backdrop-blur-sm">
-          <Card className="mx-4 w-full max-w-md rounded-md border-subtle bg-surface-page">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-md border border-status-negative/20 bg-status-negative/10">
-                  <Trash2 className="w-6 h-6 text-status-negative" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold">
-                    Delete {selectedCount} {selectedCount === 1 ? 'post' : 'posts'}?
-                  </h2>
-                  <p className="text-sm text-fg-secondary">This action cannot be undone</p>
-                </div>
-              </div>
-
-              <p className="text-fg-primary mb-6">
-                Are you sure you want to delete {selectedCount === 1 ? 'this post' : 'these posts'}?
-                {selectedCount > 1 && ' They will be'} permanently removed from your timeline.
-              </p>
-
-              <div className="flex gap-2 justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowBulkDeleteConfirm(false)}
-                  disabled={isProcessing}
-                  className={TIMELINE_SURFACE.chip}
-                >
-                  Cancel
-                </Button>
-                <Button variant="danger" onClick={handleBulkDeleteConfirm} disabled={isProcessing}>
-                  {isProcessing ? 'Deleting...' : 'Delete'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <BulkDeleteConfirmDialog
+          count={selectedCount}
+          isProcessing={isProcessing}
+          onCancel={() => setShowBulkDeleteConfirm(false)}
+          onConfirm={handleBulkDeleteConfirm}
+        />
       )}
     </div>
   );

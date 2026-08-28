@@ -23,6 +23,8 @@ import { TIMELINE_SURFACE } from '@/config/timeline';
 interface PostCardProps {
   event: TimelineDisplayEvent;
   onUpdate: (updates: Partial<TimelineDisplayEvent>) => void;
+  /** A post created from this card (a quote repost), for the list to show. */
+  onAddEvent?: (event: TimelineDisplayEvent) => void;
   onDelete?: () => void;
   compact?: boolean;
   showMetrics?: boolean;
@@ -37,6 +39,7 @@ interface PostCardProps {
 export function PostCard({
   event,
   onUpdate,
+  onAddEvent,
   onDelete,
   compact = false,
   showMetrics: _showMetrics = true,
@@ -82,6 +85,7 @@ export function PostCard({
     user,
     profile,
     onUpdate,
+    onAddEvent,
     onDelete,
     onReplyCreated,
     isSelectionMode,
