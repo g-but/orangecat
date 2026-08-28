@@ -36,6 +36,7 @@ export default function PostPage() {
     handlePostUpdate,
     handleReplyCreated,
     handleNestedReplyCreated,
+    handleReplyDeleted,
   } = usePostThread(postId);
 
   const pageHeader = (
@@ -63,12 +64,13 @@ export default function PostPage() {
             event={reply}
             onUpdate={updates => handlePostUpdate(reply.id, updates)}
             onReplyCreated={newReply => handleNestedReplyCreated(reply.id, newReply)}
+            onDelete={() => handleReplyDeleted(reply.id)}
           />
           {reply.replies && reply.replies.length > 0 && renderReplies(reply.replies, depth + 1)}
         </div>
       ));
     },
-    [handleNestedReplyCreated, handlePostUpdate]
+    [handleNestedReplyCreated, handlePostUpdate, handleReplyDeleted]
   );
 
   if (isLoading) {
@@ -128,6 +130,12 @@ export default function PostPage() {
           <PostCard
             event={mainPost}
             onUpdate={updates => handlePostUpdate(mainPost.id, updates)}
+            // Without this the card's onDelete is undefined, so deleting the
+            // post you are looking at left it on screen — deleted in the
+            // database, still rendered, until you reloaded and got "This post
+            // doesn't exist". `replace` rather than `push` because Back must
+            // not return to a page that no longer has anything to show.
+            onDelete={() => router.replace(ROUTES.TIMELINE)}
             showMetrics={true}
           />
 

@@ -18,6 +18,10 @@ import { logger } from '@/utils/logger';
 import { TIMELINE_TABLES } from '@/config/database-tables';
 import type { TimelineDisplayEvent, TimelineEventType, TimelineActorType } from '@/types/timeline';
 import { transformEnrichedEventToDisplay } from './helpers';
+import {
+  attachReactionState,
+  EMPTY_REACTION_STATE,
+} from '@/services/timeline/processors/reaction-state';
 import { enrichEventsForDisplay } from '@/services/timeline/processors/enrichment';
 import { getTimeAgo, isEventRecent } from '@/services/timeline/formatters';
 
@@ -159,8 +163,11 @@ export async function searchPosts(
       return { success: false, error: 'Search failed. Please try again.' };
     }
 
-    // Transform to display events
-    const displayEvents = (events || []).map(transformEnrichedEventToDisplay);
+    // Transform to display events. The view carries no reaction columns, so
+    // search results would otherwise show every post as unreacted-to.
+    const displayEvents = await attachReactionState(
+      (events || []).map(transformEnrichedEventToDisplay)
+    );
 
     return {
       success: true,
@@ -229,10 +236,10 @@ export async function getThreadPosts(threadId: string): Promise<{
       },
       timeAgo: getTimeAgo(event.event_timestamp),
       isRecent: isEventRecent(event.event_timestamp),
-      likesCount: 0,
-      commentsCount: 0,
-      sharesCount: 0,
-      userLiked: false,
+      // Filled in below from timeline_event_stats. These were hardcoded zeros
+      // under a comment saying the UI enriched them later; nothing did, so
+      // every thread post rendered as if nobody had ever reacted to it.
+      ...EMPTY_REACTION_STATE,
       userShared: false,
       userCommented: false,
       parentPostId: event.parent_event_id,
@@ -241,6 +248,11 @@ export async function getThreadPosts(threadId: string): Promise<{
       isQuoteReply: event.is_quote_reply || false,
       quotedContent: (event.metadata as { quoted_content?: string })?.quoted_content,
     })) as unknown as TimelineDisplayEvent[];
+
+    // Built from an RPC rather than through enrichEventsForDisplay, so this
+    // path asks for reaction state itself — through the same helper, so the
+    // two cannot disagree about where a count comes from.
+    await attachReactionState(displayEvents);
 
     return {
       success: true,
