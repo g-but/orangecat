@@ -62,19 +62,11 @@ export async function getUserFeed(
       query = query.in('visibility', filters.visibility);
     }
 
-    const { data: events, error } = await query;
-
-    if (error) {
-      logger.error('Failed to fetch timeline feed', error, 'Timeline');
-      throw error;
-    }
-
-    // Transform to display events
-    const displayEvents = await enrichEventsForDisplay(events || []);
-
-    // Total count: use the RPC with count option (it resolves user→actor internally)
-
-    const { count } = await callRpc(
+    // How many posts exist in total (for pagination) is a separate question
+    // from what the first page contains, and neither answer needs the other.
+    // Asking now rather than after enrichment overlaps the two round-trips.
+    // The RPC resolves user→actor internally.
+    const countQuery = callRpc(
       supabase,
       'get_user_timeline_feed',
       {
@@ -84,6 +76,24 @@ export async function getUserFeed(
       },
       { count: 'exact', head: true }
     );
+
+    const { data: events, error } = await query;
+
+    if (error) {
+      // The count is already in flight; let it settle so it cannot reject
+      // unhandled after we leave.
+      void countQuery.then(
+        () => undefined,
+        () => undefined
+      );
+      logger.error('Failed to fetch timeline feed', error, 'Timeline');
+      throw error;
+    }
+
+    // Transform to display events
+    const displayEvents = await enrichEventsForDisplay(events || []);
+
+    const { count } = await countQuery;
 
     const totalEvents = count || displayEvents.length;
 
