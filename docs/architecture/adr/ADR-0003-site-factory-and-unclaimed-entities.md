@@ -12,8 +12,10 @@ Status: Proposed
 > (economy) is an opt-in add-on offered only after a yes, and Solon (governance)
 > is not offered at all yet.** The pitch must also not read as a website used as
 > bait for a crypto onboarding — see "What the pitch must not imply", which makes
-> that structural rather than a promise. Also corrected: the claim flow the
-> original described as future work already ships.
+> that structural rather than a promise. Adds the **self-serve door** (paste your
+> own URL and watch it build), which is safer than outbound because the subject
+> initiated it. Also corrected: the claim flow the original described as future
+> work already ships.
 
 ## Context
 
@@ -106,6 +108,33 @@ product is at an early stage and is not ready to be sold to a stranger, so it
 gets **no place in this pipeline at all** for now: not a layer, not an add-on,
 not a sentence in a proposal. Build toward it; offer nothing.
 
+## Two doors
+
+The same machine, entered two ways, and they have **different consent postures**.
+
+**1. Outbound — we reach out.** We pick the business, build the site unasked, and
+send a link with a package and a price. Everything in "What the pitch must not
+imply" and the pseudonymisation rules below exists for this door: it is the one
+where a stranger is represented without having asked.
+
+**2. Self-serve — they paste their own URL** and watch their site get rebuilt.
+This door is strictly safer, and it should be the one we push. The subject
+initiated it, so consent is not a question: no unsolicited artifact, no takedown
+negotiation, no claim row, no `DemoBanner` explaining why we made something about
+them. It is also the better business — inbound intent beats cold outreach, and it
+scales without us choosing targets one at a time.
+
+Its own risk is the mirror image: **anyone can paste anyone's URL.** So self-serve
+output is **ephemeral and unpublished by default** — a temporary preview under
+`noindex`, no permanent subdomain, no claim row, expiring on its own. Pasting a
+competitor's URL then produces nothing shareable and nothing that damages them.
+Publishing requires the same yes as the outbound door.
+
+Generation costs model tokens and hits someone else's server, so the public door
+is rate limited per IP with [`limitkit`](https://github.com/catomean/limitkit),
+which FleetCrown already runs as its proving consumer. A free lead magnet with an
+uncapped spend is not a lead magnet.
+
 ## The proposal
 
 The artifact a stranger opens. It has to survive being read by someone who has
@@ -171,6 +200,42 @@ Three rules follow, and the third is the one that actually settles it:
 Bitcoin onboarding remains a genuinely good outcome. It is earned by having
 already done something valuable for someone, which is also the only condition
 under which the pitch for it is any good.
+
+## The build is the show
+
+Generation is not instant, and hiding it behind a spinner wastes the best part.
+**Stream it**: the page being fetched, the sections recognised, the site
+assembling. Watching your own shop turn into a good website in front of you *is*
+the wow moment — a reveal after thirty silent seconds is a worse version of the
+same thirty seconds.
+
+It is also the honest place to show what was found and what was not, which is
+where the empty-fields paragraph earns its credibility instead of reading as an
+excuse.
+
+## Built to the standard we hold the fleet to
+
+"Good design and best practices" is not a promise the generator can make; it has
+to be a property of what it emits, checkable by the machinery that already
+polices this fleet:
+
+- **The generated repo ships the golden CI** from `dotfiles/templates/ci/` and a
+  real `verify` — lint, typecheck, test. It passes `verify-floor-audit.sh` on the
+  same terms as any repo we own. A site we hand over is a repo we would accept.
+- **Token architecture, not token values.** It inherits the *shape* of
+  `@fleet/design-tokens` — the knobs block, the primitive/semantic tiers, Tailwind
+  referencing CSS vars and never literals — so a retheme is one file. It must
+  **not** import the fleet's values: those make things look like OrangeCat, and a
+  bakery has to look like itself. Uniform system, divergent aesthetics.
+- **Before/after is two audit runs, not two adjectives.**
+  `dotfiles/scripts/ci/ui-defect-audit.mjs` renders live sites and finds AA
+  contrast failures and misaligned stacks. Run it on their current site and on
+  ours. The improvement becomes a measurement the prospect can check, and the new
+  site's score is held there by CI rather than by whoever reviewed it.
+
+This is the part that makes volume safe. Doing a hundred of these only works if
+quality is enforced by the same gates as everything else we ship — otherwise the
+hundredth site is the first one nobody looked at.
 
 ## Rationale
 
@@ -240,6 +305,13 @@ honest.
   costs nothing.
 - Conversion is now measurable in two independent steps — site accepted, and
   profile claimed. Collapsing them would have hidden which one is failing.
+- The self-serve door is an **unauthenticated endpoint that fetches arbitrary
+  URLs and spends model tokens**. It needs the rate limit, a spend cap, and a
+  refusal path for URLs that should not be fetched, from its first day rather
+  than after the first bill.
+- Generated repos become fleet repos for auditing purposes: they show up in
+  `verify-floor-audit.sh` and the shared-inventory ratchet. That is intended —
+  it is what keeps site number one hundred as good as site number one.
 
 ## Implementation order
 
@@ -250,12 +322,16 @@ honest.
    accept/decline. This is the artifact that decides whether any of it sells.
 3. Walk **one** real prospect through the whole chain by hand, with no pipeline
    and no OrangeCat offer at all. Sell a website.
-4. Only then offer the profile to a business that already said yes.
-5. Only then give FleetCrown a prospect table, and only the states step 3 proved
+4. Open the **self-serve door** — paste a URL, watch it build, ephemeral and rate
+   limited. It is the safest way to exercise the generator at volume, because
+   every subject asked for it, and it is the only step that produces inbound
+   demand instead of consuming our attention per target.
+5. Only then offer the profile to a business that already said yes.
+6. Only then give FleetCrown a prospect table, and only the states step 3 proved
    exist.
 
 Steps 1 and 2 are independent. The ingest endpoint here is not on the critical
-path any more and can wait for step 4. Step 5 is the one to resist starting
+path any more and can wait for step 5. Step 6 is the one to resist starting
 early: a pipeline built before a single sale encodes guesses that a real
 conversation will contradict.
 
