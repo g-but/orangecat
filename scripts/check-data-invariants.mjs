@@ -303,6 +303,12 @@ async function checkSilentlyDroppedCatTurns() {
 // three that used to: the handle_new_user trigger, ensureProfile(), and two
 // profile form pre-fills. Each is covered by a test, so a regression here means
 // a FOURTH one was added.
+//
+// System accounts (RFC 2606 `.invalid` addresses) are excluded from the count
+// as of 20260828070000. They matched the predicate perfectly while leaking
+// nothing — an undeliverable address has no mailbox, so no owner, so no
+// personal information in its local part — and the retirement that predicate
+// authorised took `@cat` off the platform for two days. See checkCatHandle.
 const EMAIL_DERIVED_USERNAME_BASELINE = 0;
 
 async function checkEmailDerivedUsernames() {
@@ -320,6 +326,61 @@ async function checkEmailDerivedUsernames() {
   } else {
     notes.push('profiles: no handle is an email local part');
   }
+}
+
+/**
+ * `@cat` must point at the Cat.
+ *
+ * This exists because on 2026-08-26 it stopped, and nothing anywhere noticed
+ * for two days. The email-derived-handle retirement renamed the Cat from `cat`
+ * to `user_0234d5e38e66` — correctly, by its own predicate, since the Cat's
+ * handle IS derived from `cat@orangecat.invalid`. Every `@cat` on the platform
+ * then resolved to nobody: no reply in any message, none under any post. The
+ * profile still existed, /profiles/cat still 301'd through the history table,
+ * CI was green and health was 200. The only observable symptom was silence,
+ * from a feature whose whole job is to answer.
+ *
+ * So this checks the product claim rather than a schema fact: not "the Cat
+ * account exists" — it did throughout — but "the name the platform tells people
+ * to type reaches it". Those came apart, which is the entire lesson.
+ *
+ * Reads by handle deliberately. The resolver looks mentions up by username, so
+ * this asks the question in the same terms the resolver does, and a lookup by
+ * id would pass while `@cat` stayed broken.
+ */
+async function checkCatHandle() {
+  // Kept in step with src/config/cat-identity.ts by
+  // __tests__/unit/services/cat-handle-invariant.test.ts, which fails if the
+  // handle there ever changes without this literal changing with it.
+  const CAT_HANDLE = 'cat';
+  const rows = await rest(`profiles?select=id,email&username=eq.${CAT_HANDLE}`);
+
+  if (rows.length === 0) {
+    violation(
+      'cat.handle_resolves',
+      `no profile answers to @${CAT_HANDLE}, so every @${CAT_HANDLE} in a message or under a ` +
+        `post resolves to nobody and the Cat replies to nothing. The account itself may be ` +
+        `perfectly healthy — check whether something renamed it (the handle-retirement script ` +
+        `did exactly this once), then let the worker re-assert it via ensureCatAccount`,
+      []
+    );
+    return;
+  }
+
+  // A handle held by the WRONG account is impersonation of the platform's own
+  // agent, and that is worth naming separately from "missing".
+  const holder = rows[0];
+  if (!String(holder.email ?? '').endsWith('.invalid')) {
+    violation(
+      'cat.handle_resolves',
+      `@${CAT_HANDLE} is held by an account with a deliverable email address, which means it is ` +
+        `not the platform's agent — somebody is receiving every mention meant for the Cat`,
+      [holder.id]
+    );
+    return;
+  }
+
+  notes.push(`cat: @${CAT_HANDLE} resolves to the Cat`);
 }
 
 async function checkOrphanedProfiles() {
@@ -454,6 +515,7 @@ async function main() {
     checkSilentlyDroppedCatTurns,
     checkOrphanedProfiles,
     checkEmailDerivedUsernames,
+    checkCatHandle,
     checkOrphanedCatConversations,
     checkOrphanedActors,
   ];
