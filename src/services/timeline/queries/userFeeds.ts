@@ -25,6 +25,7 @@ import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from './constants';
 import { getCurrentUserId, transformEnrichedEventToDisplay } from './helpers';
 import { getDateRangeFilter, buildDefaultFilters } from '@/services/timeline/formatters/filters';
 import { enrichEventsForDisplay } from '@/services/timeline/processors/enrichment';
+import { attachReactionState } from '@/services/timeline/processors/reaction-state';
 
 /**
  * Get user's personalized timeline feed
@@ -224,8 +225,12 @@ export async function getFollowedUsersFeed(
       throw error;
     }
 
-    // Transform enriched VIEW data to display events
-    const displayEvents = (events || []).map(transformEnrichedEventToDisplay);
+    // Transform enriched VIEW data to display events. The view carries no
+    // reaction columns, so without this every post in the followed feed
+    // renders as though nobody had ever liked it.
+    const displayEvents = await attachReactionState(
+      (events || []).map(transformEnrichedEventToDisplay)
+    );
 
     return {
       events: displayEvents,
@@ -332,20 +337,13 @@ export async function getEnrichedUserFeed(
     // (3 queries total) instead of up to 3 lookups per event — see
     // processors/enrichment.ts. Batch output preserves input order, so the
     // social counters can be zipped back in by index.
-    const enrichedEvents = await enrichEventsForDisplay(events || []);
-    const displayEvents = enrichedEvents.map((displayEvent, index) => {
-      const event = (events || [])[index] as Record<string, unknown>;
-      return {
-        ...displayEvent,
-        // Social interaction data
-        likesCount: event.like_count || 0,
-        sharesCount: event.share_count || 0,
-        commentsCount: event.comment_count || 0,
-        userLiked: event.user_liked || false,
-        userShared: event.user_shared || false,
-        userCommented: event.user_commented || false,
-      } as TimelineDisplayEvent;
-    });
+    // Reaction counts arrive with the events from enrichEventsForDisplay. This
+    // used to overwrite them here with `event.like_count` / `event.user_liked`
+    // — columns `timeline_events` has never had — so every enriched counter was
+    // replaced by `undefined || 0` on its way to the screen.
+    const displayEvents = (await enrichEventsForDisplay(
+      events || []
+    )) as TimelineDisplayEvent[];
 
     return {
       events: displayEvents,
