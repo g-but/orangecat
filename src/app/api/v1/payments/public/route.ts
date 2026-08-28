@@ -9,10 +9,10 @@ import { publicSupportCreateSchema } from '@/lib/validation/finance';
 import { createPublicClient } from '@/lib/supabase/public';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
+import { clientIpKey } from '@/lib/client-ip';
 
 function requestKey(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-  return `public-support:${forwarded || request.headers.get('x-real-ip') || 'anonymous'}`;
+  return `public-support:${clientIpKey(request)}`;
 }
 
 export async function POST(request: Request) {

@@ -12,6 +12,7 @@ import { publicSupportCreateSchema } from '@/lib/validation/finance';
 import { createPublicClient } from '@/lib/supabase/public';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
+import { clientIpKey } from '@/lib/client-ip';
 
 /**
  * GET /api/v1/pay/{entity_type}/{entity_id}?amount_btc=X — HTTP 402 inline payment.
@@ -31,8 +32,7 @@ import { logger } from '@/utils/logger';
  */
 
 function requestKey(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-  return `l402:${forwarded || request.headers.get('x-real-ip') || 'anonymous'}`;
+  return `l402:${clientIpKey(request)}`;
 }
 
 export async function GET(

@@ -11,11 +11,11 @@ import {
 import { publicPaymentActionSchema } from '@/lib/validation/finance';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
+import { clientIpKey } from '@/lib/client-ip';
 
 // Same per-IP keying as ../route.ts — anonymous callers, so IP is the only handle.
 function requestKey(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-  return `public-payment-action:${forwarded || request.headers.get('x-real-ip') || 'anonymous'}`;
+  return `public-payment-action:${clientIpKey(request)}`;
 }
 
 function readToken(request: Request): string | null {

@@ -17,6 +17,7 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { logger } from '@/utils/logger';
+import { clientIpKey } from '@/lib/client-ip';
 
 // ==================== TYPES ====================
 
@@ -176,14 +177,9 @@ const fallbackDomainSearchLimiter = new InMemoryRateLimiter({
 
 // ==================== RATE LIMIT FUNCTIONS ====================
 
-/**
- * The caller's IP, as seen through Caddy.
- *
- * One definition, because a per-IP limiter is only as correct as its notion of
- * "IP" — and three limiters had already copied these two lines verbatim.
- */
+/** The caller's IP — defined once in ./client-ip, re-exported for callers. */
 function clientIp(request: RequestLike): string {
-  return request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
+  return clientIpKey(request);
 }
 
 /**
@@ -507,3 +503,5 @@ export function applyRateLimitHeaders<T extends Response>(response: T, result: R
   }
   return response;
 }
+
+export { clientIpKey };
