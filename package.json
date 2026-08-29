@@ -122,7 +122,7 @@
     "@marsidev/react-turnstile": "^1.6.0",
     "@mdx-js/loader": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
-    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@next/mdx": "^16.1.6",
     "@noble/hashes": "^2.3.0",
     "@noble/secp256k1": "^2.3.0",
