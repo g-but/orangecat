@@ -150,6 +150,41 @@ function stemWord(word: string): string {
   return s;
 }
 
+/**
+ * Does `haystack` contain `needle` as WHOLE WORDS?
+ *
+ * The containment branch used raw `String.includes` in both directions, and
+ * MIN_FORGET_FRAGMENT_CHARS lets a four-character fact through. So "work" was
+ * contained in "network", "framework", "coworking" and "homework": asking Cat
+ * to forget "work" deleted every one of those memories, and Cat then reported
+ * them as removed — accurately, which is exactly what made it hard to notice.
+ *
+ * Boundaries are checked by CHARACTER CLASS rather than a `\b` regex, because
+ * `\b` is ASCII-only in JavaScript: it treats "café" as ending after "caf",
+ * so "café" would match inside "cafés" while plain words behaved correctly.
+ * `\p{L}` and `\p{N}` cover the accented alphabet the tokenizer above already
+ * speaks. bitbaum/orangecat#563 finding 9.
+ */
+const WORD_CHAR = /[\p{L}\p{N}]/u;
+export function containsWholeWords(haystack: string, needle: string): boolean {
+  if (!needle || !haystack) {
+    return false;
+  }
+  for (let from = 0; from <= haystack.length - needle.length; ) {
+    const at = haystack.indexOf(needle, from);
+    if (at === -1) {
+      return false;
+    }
+    const before = at === 0 ? '' : haystack[at - 1]!;
+    const after = haystack[at + needle.length] ?? '';
+    if (!WORD_CHAR.test(before) && !WORD_CHAR.test(after)) {
+      return true;
+    }
+    from = at + 1;
+  }
+  return false;
+}
+
 /** Significant stemmed words of a phrase (short glue words dropped). */
 function significantStems(text: string): Set<string> {
   return new Set(
@@ -257,10 +292,17 @@ export async function forgetMemoriesMatching(
     for (let i = 0; i < corpus.length; i++) {
       const m = corpus[i];
       const c = m.content.toLowerCase();
-      // Containment either way ("photography" ⊂ "Has photography skills…"),
-      // or enough shared stems (see requiredStemHits — two-word facts need
-      // TWO hits, so a single shared "skills" can't delete a stranger).
-      if (c.includes(norm) || norm.includes(c) || stemOverlapMatches(factStems, memoryStems[i])) {
+      // Containment either way, on WORD boundaries ("photography" ⊂ "Has
+      // photography skills…"), or enough shared stems (see requiredStemHits —
+      // two-word facts need TWO hits, so one shared "skills" cannot delete a
+      // stranger).
+      // Whole words only: raw containment let a 4-char fact delete every memory
+      // that merely SPELLED it ("work" ⊂ network/framework/coworking).
+      if (
+        containsWholeWords(c, norm) ||
+        containsWholeWords(norm, c) ||
+        stemOverlapMatches(factStems, memoryStems[i])
+      ) {
         doomed.set(m.id, m.content);
         matched = true;
       }
