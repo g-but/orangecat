@@ -237,7 +237,7 @@ export default function ProfileLayout({
             <h1 className="mb-1 break-words text-xl font-bold text-fg-primary sm:mb-2 sm:text-2xl md:text-3xl">
               {profile.name || profile.username || 'User'}
             </h1>
-            <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 sm:mb-4">
+            <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 sm:mb-4">
               <p className="break-all text-sm font-medium text-fg-secondary sm:text-base md:text-lg">
                 @{profile.username}
               </p>
