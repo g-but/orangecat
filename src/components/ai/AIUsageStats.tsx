@@ -32,7 +32,12 @@ interface AIUsageStatsProps {
 export function AIUsageStats({ usage, periodSelector, className }: AIUsageStatsProps) {
   const { formatAmountBtc } = useDisplayCurrency();
 
-  const formatNumber = (num: number) => {
+  // Abbreviated for a stat tile, where the exact figure matters less than its
+  // magnitude. Named for what it does, so it cannot shadow the shared
+  // `formatNumber` it falls back to — which is exactly what happened when this
+  // was called `formatNumber` too: the fallback branch called itself, and any
+  // count under 1,000 recursed until the stack gave out.
+  const abbreviateCount = (num: number) => {
     if (num >= 1_000_000) {
       return `${(num / 1_000_000).toFixed(1)}M`;
     }
@@ -64,14 +69,14 @@ export function AIUsageStats({ usage, periodSelector, className }: AIUsageStatsP
   const stats = [
     {
       label: 'Requests',
-      value: formatNumber(usage.totalRequests),
+      value: abbreviateCount(usage.totalRequests),
       icon: MessageSquare,
       color: 'text-fg-primary',
       bgColor: 'bg-surface-raised',
     },
     {
       label: 'Tokens',
-      value: formatNumber(usage.totalTokens),
+      value: abbreviateCount(usage.totalTokens),
       icon: BarChart2,
       color: 'text-fg-primary',
       bgColor: 'bg-surface-raised',
