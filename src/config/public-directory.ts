@@ -57,6 +57,19 @@ const EXACT_FIXTURE_USERNAME_SET = new Set<string>(EXACT_FIXTURE_USERNAMES);
 const FIXTURE_DISPLAY_NAME = /^(e2e reset user|user)$/i;
 const FIXTURE_GROUP_TITLE = /^(audit\s+wf|ephemeral\s+verify|workflow\s+audit)/i;
 
+/**
+ * The named prefixes above are an allow-list of shapes we happened to have seen,
+ * and audits keep inventing new ones: "Audit Group 1783191071580" survived the
+ * list above and sat in a live account's context switcher.
+ *
+ * So also match the *generating* signature rather than the wording — an
+ * audit-ish first word followed by the millisecond epoch the fixture appends to
+ * keep names unique. Keying on the timestamp is what keeps a real group safe: a
+ * governance product will one day have an "Audit Committee", and it will not be
+ * called "Audit Committee 1783191071580".
+ */
+const FIXTURE_GROUP_STAMPED = /^(audit|ephemeral|workflow|e2e|wf\d)\b.*\b\d{10,}$/i;
+
 export function isFixtureUsername(username: string | null | undefined): boolean {
   const u = (username ?? '').trim();
   if (u.length === 0) {
@@ -90,5 +103,6 @@ export function isFixtureProfile(profile: {
 }
 
 export function isFixtureGroupTitle(title: string | null | undefined): boolean {
-  return FIXTURE_GROUP_TITLE.test((title ?? '').trim());
+  const t = (title ?? '').trim();
+  return FIXTURE_GROUP_TITLE.test(t) || FIXTURE_GROUP_STAMPED.test(t);
 }
