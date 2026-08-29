@@ -168,29 +168,58 @@ export function formatAmount(event: TimelineEvent): string | undefined {
 }
 
 /**
- * Get time ago string
+ * How old a post is, in the compact form a feed wants.
+ *
+ * `30s`, `5m`, `23h`, `6d`, then an absolute date — the convention every
+ * timeline product converged on, because in a feed the age is a glance, not a
+ * sentence. The post header was rendering "about 23 hours ago" (date-fns with
+ * `addSuffix`), which is three times the width for the same fact and reads as
+ * prose sitting inside a metadata line.
+ *
+ * No " ago" suffix: the position after the author's handle already says it is
+ * an age, and every character here competes with the post itself. Callers pair
+ * this with a `title`/`dateTime` carrying the exact timestamp, so precision is
+ * one hover away and nothing is actually lost.
+ *
+ * Dates inside the current year omit it (`Aug 1`); older ones keep it
+ * (`Aug 1, 2025`), so a year-old post can never be mistaken for a recent one.
  */
 export function getTimeAgo(timestamp: string): string {
-  const now = new Date();
   const eventTime = new Date(timestamp);
-  const diffMs = now.getTime() - eventTime.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
+  if (Number.isNaN(eventTime.getTime())) {
+    return '';
+  }
 
-  if (diffMins < 1) {
-    return 'Just now';
+  const now = new Date();
+  const diffSecs = Math.floor((now.getTime() - eventTime.getTime()) / 1000);
+
+  // A clock skew or a just-written optimistic post can land microseconds in the
+  // future; "now" is honest there, "-1m" is not.
+  if (diffSecs < 60) {
+    return diffSecs < 5 ? 'now' : `${Math.max(diffSecs, 0)}s`;
   }
+
+  const diffMins = Math.floor(diffSecs / 60);
   if (diffMins < 60) {
-    return `${diffMins}m ago`;
+    return `${diffMins}m`;
   }
+
+  const diffHours = Math.floor(diffMins / 60);
   if (diffHours < 24) {
-    return `${diffHours}h ago`;
+    return `${diffHours}h`;
   }
+
+  const diffDays = Math.floor(diffHours / 24);
   if (diffDays < 7) {
-    return `${diffDays}d ago`;
+    return `${diffDays}d`;
   }
-  return eventTime.toLocaleDateString();
+
+  const sameYear = eventTime.getFullYear() === now.getFullYear();
+  return eventTime.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  });
 }
 
 /**
