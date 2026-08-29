@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { MoreHorizontal, Lock, Users, Pencil, Trash2 } from 'lucide-react';
 import { TimelineDisplayEvent } from '@/types/timeline';
 import { formatRelativeTime } from '@/utils/dates';
+// The timeline has its own compact age format; the generic one reads as prose
+// ("about 23 hours ago") inside a metadata line.
+import { getTimeAgo } from '@/services/timeline/formatters';
 import { TIMELINE_SURFACE } from '@/config/timeline';
 import { CAT_USERNAME } from '@/config/cat-identity';
 import { normalizeUsername } from '@/config/usernames';
@@ -121,7 +124,7 @@ export function PostHeader({
         className="text-fg-secondary text-sm hover:underline"
         title={timestamp ? new Date(timestamp).toLocaleString() : undefined}
       >
-        {timestamp ? formatRelativeTime(timestamp) : ''}
+        {timestamp ? getTimeAgo(timestamp) : ''}
       </time>
 
       {/* Visibility Indicator */}
