@@ -16,6 +16,7 @@ import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 import { looksLikeSelfDisclosure, selectForgetFacts, type MemoryAiService } from './memory';
+import { ECON_EXTRACTION_SYSTEM } from './economic-profile-prompt';
 
 export interface EconomicSkill {
   name: string;
@@ -435,20 +436,6 @@ export function normalizeEconomicPatch(
   return hasAny ? patch : null;
 }
 
-const ECON_EXTRACTION_SYSTEM = `You extract a person's LATENT ECONOMIC VALUE from one chat exchange — only what they actually stated or clearly implied, never invented.
-
-Pull, where present:
-- skills: things they can do (names). Treat self-deprecation ("it's nothing", "just a hobby", "anyone can do that") as a real skill worth capturing.
-- assets: things they OWN that could be rented or sold.
-- goals: what they want; each {text, kind} where kind is earn | fund | learn | connect | build.
-- constraints: PRIVATE limits like "only evenings", "no upfront capital" — never shown publicly.
-- asked_for: what people come to them for.
-- not_available_for: PUBLIC scope limits they'd want a prospective client/collaborator to see up front — e.g. "not taking full-time roles", "advisory only, no hands-on coding", "nothing under 3 months". Distinct from constraints: only capture this when they're describing what kind of engagement they will or won't take, not private life constraints.
-- motivation: why they're here — earn | community | meaning | learn | unsure.
-- stage: exploring | has-offers | scaling.
-
-Rules: ground everything in THIS exchange; omit anything not stated; never infer demand, prices, or stats. Output ONLY a JSON object with those keys (arrays empty if none), nothing else. Example:
-{"skills":["translation"],"assets":[],"goals":[{"text":"earn on the side","kind":"earn"}],"constraints":[],"asked_for":["writing clear emails"],"not_available_for":[],"motivation":"earn","stage":null}`;
 
 /**
  * Passive, deterministic economic extraction — runs after each self-disclosing turn
