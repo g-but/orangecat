@@ -5,7 +5,12 @@ import {
   normalizeEconomicPatch,
   removeFromEconomicProfile,
 } from '../economic-profile';
-import { forgetMemoriesMatching, rememberFacts, editMemoryMatching } from '../memory';
+import {
+  forgetMemoriesMatching,
+  rememberFacts,
+  editMemoryMatching,
+  selectForgetFacts,
+} from '../memory';
 import type { ActionHandler } from './types';
 import { usernameSchema } from '@/lib/validation';
 import { ProfileServerService } from '@/services/profile/server';
@@ -61,7 +66,11 @@ export const contextHandlers: Record<string, ActionHandler> = {
       removeFromEconomicProfile(supabase, userId, facts),
     ]);
     const removedCount = mem.deleted.length + profile.removed.length;
-    const stillUnknown = facts.filter(
+    // Compare like with like: the stores report NORMALISED facts, so filtering
+    // the caller's raw strings meant a padded " photography " could never
+    // appear in the "no stored match" list, however plainly it missed.
+    const selection = selectForgetFacts(facts);
+    const stillUnknown = selection.wanted.filter(
       f => mem.notFound.includes(f) && profile.notFound.includes(f)
     );
 
@@ -83,10 +92,12 @@ export const contextHandlers: Record<string, ActionHandler> = {
     }
 
     if (removedCount === 0) {
+      const skipped = [...selection.overCap, ...selection.tooShort];
       return {
         success: false,
         error:
-          'No stored memory or profile entry matched — nothing was removed. The full list is at Settings → AI → What Cat remembers.',
+          'No stored memory or profile entry matched — nothing was removed. The full list is at Settings → AI → What Cat remembers.' +
+          (skipped.length > 0 ? ` Not looked for at all: ${skipped.join(', ')}.` : ''),
       };
     }
     // List exactly WHAT was removed, not just counts — the user must be able
@@ -107,6 +118,14 @@ export const contextHandlers: Record<string, ActionHandler> = {
           `🧹 Removed ${listed}${overflow}.` +
           (stillUnknown.length > 0
             ? ` No stored match found for: ${stillUnknown.join(', ')} — check Settings → AI → What Cat remembers.`
+            : '') +
+          // Anything we never looked for is said out loud. Silently dropping a
+          // fact the user named reads exactly like having removed it.
+          (selection.overCap.length > 0
+            ? ` Only the first ${selection.wanted.length} were processed — not yet attempted: ${selection.overCap.join(', ')}. Ask again for those.`
+            : '') +
+          (selection.tooShort.length > 0
+            ? ` Too short to match safely (they would hit unrelated memories): ${selection.tooShort.join(', ')}.`
             : ''),
         deletedMemories: mem.deleted,
         removedProfileEntries: profile.removed,
