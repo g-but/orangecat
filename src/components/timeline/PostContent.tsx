@@ -107,8 +107,23 @@ export function PostContent({ event }: PostContentProps) {
         </Link>
       )}
 
-      {/* Event Description/Content */}
-      {!articleSlug && displayContent && (!isRepost || isQuoteRepost) && (
+      {/*
+        A reposted post is shown as the post it is.
+
+        A simple repost used to suppress its own content here and render the
+        original inside a bordered panel below instead — a panel that repeated
+        the original author's avatar and handle, which the post header directly
+        above was ALREADY showing (PostCard swaps the reposter for the original
+        author on a simple repost). So one repost drew the same person twice,
+        two lines apart, with the actual text boxed off underneath. That is
+        what "reposts look ugly" was.
+
+        `getDisplayContent` already returns the original's text for a simple
+        repost, so it renders here like any other post. The nested panel is
+        kept for QUOTE reposts, where there genuinely are two posts and two
+        authors to tell apart.
+      */}
+      {!articleSlug && displayContent && (
         <div className="text-fg-primary text-[15px] leading-relaxed whitespace-pre-line break-words">
           {renderMarkdownToReact(displayContent)}
         </div>
@@ -206,40 +221,6 @@ export function PostContent({ event }: PostContentProps) {
       )}
 
       {/* Simple Repost: show original post inside a quoted card for consistency */}
-      {isRepost && !isQuoteRepost && event.metadata?.original_event_id && (
-        <div className={`mt-2 overflow-hidden ${TIMELINE_SURFACE.panel}`}>
-          <div className="p-3 sm:p-4 space-y-2">
-            <div className="flex items-start gap-3">
-              <Link href={`/profiles/${originalAuthor.username}`} className="flex-shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element -- avatar_url is a free-form user URL (any host); next/image would throw for hosts outside images.remotePatterns */}
-                <img
-                  src={originalAuthor.avatar}
-                  alt={originalAuthor.name}
-                  className="w-9 h-9 rounded-full"
-                />
-              </Link>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1 flex-wrap">
-                  <Link
-                    href={`/profiles/${originalAuthor.username}`}
-                    className="font-semibold text-fg-primary hover:underline"
-                  >
-                    {originalAuthor.name}
-                  </Link>
-                  {originalAuthor.username && (
-                    <span className="text-fg-secondary text-sm">@{originalAuthor.username}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-            {originalDescription && (
-              <div className="text-fg-primary text-sm leading-relaxed whitespace-pre-line break-words">
-                {renderMarkdownToReact(originalDescription)}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Attached image — plain <img>: Openverse hosts aren't in next/image remotePatterns */}
       {postImage && !isRepost && (
