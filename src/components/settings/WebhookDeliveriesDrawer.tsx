@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { API_ROUTES } from '@/config/api-routes';
 import { logger } from '@/utils/logger';
+import { formatDateTime } from '@/utils/locale';
 
 interface DeliveryRow {
   id: string;
@@ -48,7 +49,7 @@ function formatTimestamp(value: string | null): string {
   if (!value) {
     return '—';
   }
-  return new Date(value).toLocaleString();
+  return formatDateTime(value);
 }
 
 function StatusBadge({ status }: { status: DeliveryRow['status'] }) {

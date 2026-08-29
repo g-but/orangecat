@@ -18,6 +18,7 @@ import IntegrationKeyMintForm from '@/components/settings/IntegrationKeyMintForm
 import IntegrationKeyRow from '@/components/settings/IntegrationKeyRow';
 import PlaintextRevealCard from '@/components/settings/PlaintextRevealCard';
 import { API_ROUTES } from '@/config/api-routes';
+import { formatDateTime } from '@/utils/locale';
 
 export interface IntegrationKey {
   id: string;
@@ -50,7 +51,7 @@ function formatTimestamp(value: string | null): string {
   if (!value) {
     return '—';
   }
-  return new Date(value).toLocaleString();
+  return formatDateTime(value);
 }
 
 export default function IntegrationKeysCard({ actors, defaultActorId }: Props) {

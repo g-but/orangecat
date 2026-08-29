@@ -24,6 +24,7 @@ import { API_ROUTES } from '@/config/api-routes';
 import type { CurrencyCode } from '@/config/currencies';
 import { logger } from '@/utils/logger';
 import type { ExchangeRates, RateCache } from './types';
+import { APP_LOCALE } from '@/utils/locale';
 
 // ==================== RATE CACHE ====================
 
@@ -218,7 +219,7 @@ class CurrencyConverterService {
       return '0 BTC';
     }
     if (showDecimals) {
-      return `${amountBTC.toLocaleString(undefined, { maximumFractionDigits: 8 })} BTC`;
+      return `${amountBTC.toLocaleString(APP_LOCALE, { maximumFractionDigits: 8 })} BTC`;
     }
     return `${amountBTC.toFixed(2)} BTC`;
   }

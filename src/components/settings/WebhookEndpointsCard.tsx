@@ -24,6 +24,7 @@ import WebhookEndpointMintForm from '@/components/settings/WebhookEndpointMintFo
 import WebhookEndpointRow, { type WebhookEndpoint } from '@/components/settings/WebhookEndpointRow';
 import PlaintextRevealCard from '@/components/settings/PlaintextRevealCard';
 import { API_ROUTES } from '@/config/api-routes';
+import { formatDateTime } from '@/utils/locale';
 
 interface MintResponse {
   data: { endpoint: WebhookEndpoint; secret: string };
@@ -43,7 +44,7 @@ function formatTimestamp(value: string | null): string {
   if (!value) {
     return '—';
   }
-  return new Date(value).toLocaleString();
+  return formatDateTime(value);
 }
 
 export default function WebhookEndpointsCard({ actors, defaultActorId }: Props) {

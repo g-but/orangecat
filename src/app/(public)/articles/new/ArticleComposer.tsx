@@ -21,6 +21,7 @@ import DraftsPanel from './DraftsPanel';
 import ArticlePreview from './ArticlePreview';
 import ComposerEditor from './ComposerEditor';
 import PublishBar from './PublishBar';
+import { formatNumber } from '@/utils/locale';
 
 /** Existing article passed when the composer is opened in edit mode. */
 export interface ArticleInitial {
@@ -211,7 +212,7 @@ export default function ArticleComposer({
           </button>
           {wordCount > 0 && (
             <span className="ml-auto text-xs text-fg-tertiary">
-              {wordCount.toLocaleString()} {wordCount === 1 ? 'word' : 'words'} · {readingTime} min
+              {formatNumber(wordCount)} {wordCount === 1 ? 'word' : 'words'} · {readingTime} min
               read
             </span>
           )}
