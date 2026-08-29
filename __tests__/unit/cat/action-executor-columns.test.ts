@@ -1349,11 +1349,15 @@ describe('Cat action-executor — correct DB column names', () => {
       expect(update!.location_country).toBe('CH');
     });
 
-    it('filters out unsafe fields — username must never appear in update payload', async () => {
+    it('filters out unsafe fields — email and id must never appear in update payload', async () => {
+      // username used to be asserted here too, as a field that must always be
+      // dropped. That stopped being true once profile_username_history made a
+      // rename safe: the handle is now updatable, validated apart from the
+      // free-text fields, and covered in cat/rename-handle.test.ts. email and id
+      // are still never writable from a chat action.
       const supabase = buildMockSupabase();
       await run(supabase, 'update_profile', {
         bio: 'Safe bio',
-        username: 'hacked_username', // must be silently dropped
         email: 'hacker@evil.com', // must be silently dropped
         id: 'injected-id', // must be silently dropped
       });
@@ -1361,7 +1365,6 @@ describe('Cat action-executor — correct DB column names', () => {
       const update = getEntityUpdate(supabase, DATABASE_TABLES.PROFILES);
       expect(update!.bio).toBe('Safe bio');
       // Unsafe fields must NOT appear in the DB update
-      expect((update as Record<string, unknown>).username).toBeUndefined();
       expect((update as Record<string, unknown>).email).toBeUndefined();
       expect((update as Record<string, unknown>).id).toBeUndefined();
     });
@@ -1385,8 +1388,8 @@ describe('Cat action-executor — correct DB column names', () => {
       const supabase = buildMockSupabase();
       const result = await run(supabase, 'update_profile', {
         // Only unsafe fields — nothing valid to update
-        username: 'blocked',
         email: 'blocked@example.com',
+        id: 'injected-id',
       });
 
       expect(result.status).toBe('failed');

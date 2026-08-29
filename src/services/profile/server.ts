@@ -14,6 +14,7 @@ import { getTableName } from '@/config/entity-registry';
 import { getOrCreateUserActor } from '@/services/actors/getOrCreateUserActor';
 import { STATUS } from '@/config/database-constants';
 import { neutralUsernameFor } from '@/lib/profile/neutral-username';
+import { resolveHistoricalUsername } from '@/domain/lightning-address/username-history';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
@@ -55,6 +56,18 @@ export class ProfileServerService {
 
   /**
    * Check if username is available
+   *
+   * Checks the handles nobody uses any more as well as the live ones. A
+   * retired handle still resolves — /profiles/<old> 301s to its owner's
+   * current handle and <old>@orangecat.ch still finds them through
+   * profile_username_history — and the live profiles table is consulted
+   * FIRST, so reissuing one to somebody else would silently hand them the
+   * previous owner's inbound links and Lightning payments.
+   *
+   * The database refuses that write regardless (profiles_username_rename_guard,
+   * 20260829090000) — that is where the rule is enforced, because it has to
+   * hold for every writer. This check exists so the person typing the handle
+   * finds out from the form that it is taken, instead of from a failed save.
    */
   static async checkUsernameAvailability(
     supabase: AnySupabaseClient,
@@ -62,10 +75,17 @@ export class ProfileServerService {
     excludeUserId?: string
   ): Promise<boolean> {
     try {
+      const trimmed = username.trim();
+
+      const retiredBy = await resolveHistoricalUsername(supabase, trimmed);
+      if (retiredBy && retiredBy !== excludeUserId) {
+        return false;
+      }
+
       let query = supabase
         .from(DATABASE_TABLES.PROFILES)
         .select('id')
-        .eq('username', username.trim());
+        .eq('username', trimmed);
 
       if (excludeUserId) {
         query = query.neq('id', excludeUserId);

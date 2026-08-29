@@ -103,6 +103,13 @@ export function generateActionDescription(
     case 'create_organization':
       return `Create organization "${parameters.name}"`;
     case 'update_profile': {
+      // A handle change is named on its own, and names what happens to the old
+      // one: "update profile: username" would hide the only part of this write
+      // that changes a public URL and a payment address.
+      if (typeof parameters.username === 'string' && parameters.username) {
+        const handle = parameters.username.replace(/^@/, '');
+        return `Change your handle to @${handle} (your old handle keeps working)`;
+      }
       const fields = ['name', 'bio', 'background', 'website', 'location_city', 'location_country']
         .filter(f => parameters[f] !== undefined)
         .join(', ');

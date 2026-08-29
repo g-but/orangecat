@@ -51,7 +51,7 @@ export const profileGuidanceContent: Record<NonNullable<ProfileFieldType>, Field
     tips: [
       '3-30 characters, letters, numbers, underscores, and hyphens only',
       'Must be unique across all users',
-      'Cannot be changed easily later - choose wisely',
+      'Can be changed later — your old handle keeps redirecting here',
       'This becomes your @handle (e.g., @yourname)',
       'Required field - you need this to use the platform',
     ],
