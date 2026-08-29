@@ -186,7 +186,7 @@ export default function UserProfileDropdown({
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-sm bg-surface-base ring-1 ring-black ring-opacity-5 dark:ring-border dark:ring-opacity-100 z-50">
+          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-sm bg-surface-base ring-1 ring-black/5 dark:ring-border z-50">
             <div className="py-1" role="menu" aria-orientation="vertical">
               {menuItems.map(item => {
                 const Icon = item.icon;

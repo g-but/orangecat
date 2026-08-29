@@ -228,8 +228,12 @@ export default function ProfileLayout({
           onFollowToggle={handleFollowToggle}
         />
 
-        <div className="mt-12 sm:mt-16 md:mt-20">
-          <div className="oc-surface mb-4 p-4 sm:mb-6 sm:p-6">
+        <div className="mt-3 sm:mt-4">
+          {/* Top padding clears the avatar's overhang (half its height) plus a
+              gap, so the avatar overlaps this card the way it overlaps the
+              banner — one continuous header rather than two boxes with a
+              portrait stranded in the white space between them. */}
+          <div className="oc-surface mb-4 p-4 pt-12 sm:mb-6 sm:p-6 sm:pt-14 md:pt-16 lg:pt-20">
             <h1 className="mb-1 break-words text-xl font-bold text-fg-primary sm:mb-2 sm:text-2xl md:text-3xl">
               {profile.name || profile.username || 'User'}
             </h1>
