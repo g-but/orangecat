@@ -126,6 +126,48 @@ const MAX_FORGET_FACTS = 10;
 const MIN_FORGET_FRAGMENT_CHARS = 4;
 
 /**
+ * Which of the requested facts a forget call will actually look for — and which
+ * it will not, named rather than dropped.
+ *
+ * Three places used to decide this independently and disagree:
+ * forgetMemoriesMatching trimmed, required 4 characters and capped at 10;
+ * removeFromEconomicProfile trimmed, required 4 characters and had NO cap; and
+ * the handler compared the caller's RAW strings against the trimmed ones the
+ * stores reported. The consequences were all the same shape — the user is not
+ * told something was skipped:
+ *
+ *   * ask to forget 12 things and facts 11 and 12 vanished from the memory
+ *     store with no mention, while the profile store still processed them;
+ *   * pass " photography " with padding and it could never appear in the
+ *     "no stored match" list, because that list was built by matching raw
+ *     against trimmed;
+ *   * pass "cat" and it silently did nothing at all.
+ *
+ * One selector, used by both stores and the handler, so all three agree by
+ * construction and the leftovers have names. bitbaum/orangecat#563 findings
+ * 10 and 11.
+ */
+export interface ForgetFactSelection {
+  /** Normalised facts the stores will actually search for. */
+  wanted: string[];
+  /** Trimmed to nothing, or too short to match anything but noise. */
+  tooShort: string[];
+  /** Beyond the per-call cap: real requests, simply not attempted. */
+  overCap: string[];
+}
+
+export function selectForgetFacts(facts: string[]): ForgetFactSelection {
+  const trimmed = facts.map(f => f.trim());
+  const tooShort = trimmed.filter(f => f.length < MIN_FORGET_FRAGMENT_CHARS);
+  const usable = trimmed.filter(f => f.length >= MIN_FORGET_FRAGMENT_CHARS);
+  return {
+    wanted: usable.slice(0, MAX_FORGET_FACTS),
+    tooShort,
+    overCap: usable.slice(MAX_FORGET_FACTS),
+  };
+}
+
+/**
  * Light suffix-stripping stemmer so inflected forms match: "photography" and
  * "photographer" both stem to "photograph", "ceramics" → "ceramic",
  * "speaking"/"speaks" → "speak", "weekends" → "weekend". Deliberately
@@ -256,10 +298,7 @@ export async function forgetMemoriesMatching(
   userId: string,
   facts: string[]
 ): Promise<ForgetResult> {
-  const wanted = facts
-    .map(f => f.trim())
-    .filter(f => f.length >= MIN_FORGET_FRAGMENT_CHARS)
-    .slice(0, MAX_FORGET_FACTS);
+  const { wanted } = selectForgetFacts(facts);
   const result: ForgetResult = { deleted: [], notFound: [], failed: [] };
   if (wanted.length === 0) {
     return result;
@@ -856,11 +895,7 @@ async function pruneIfNeeded(supabase: AnySupabaseClient, userId: string): Promi
     .limit(count - MAX_MEMORIES_PER_USER);
   const ids = (oldest as Array<{ id: string }> | null)?.map(r => r.id) ?? [];
   if (ids.length > 0) {
-    await supabase
-      .from(DATABASE_TABLES.CAT_MEMORIES)
-      .delete()
-      .eq('user_id', userId)
-      .in('id', ids);
+    await supabase.from(DATABASE_TABLES.CAT_MEMORIES).delete().eq('user_id', userId).in('id', ids);
   }
 }
 

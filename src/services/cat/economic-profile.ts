@@ -15,7 +15,7 @@
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
-import { looksLikeSelfDisclosure, type MemoryAiService } from './memory';
+import { looksLikeSelfDisclosure, selectForgetFacts, type MemoryAiService } from './memory';
 
 export interface EconomicSkill {
   name: string;
@@ -310,7 +310,10 @@ export async function removeFromEconomicProfile(
   userId: string,
   terms: string[]
 ): Promise<ProfileRemovalResult> {
-  const wanted = terms.map(t => t.trim()).filter(t => t.length >= 4);
+  // Same selector as the memory store. These used to disagree — this one had no
+  // cap — so a 12-fact request cleared 12 profile entries and 10 memories, and
+  // said nothing about the difference.
+  const { wanted } = selectForgetFacts(terms);
   const result: ProfileRemovalResult = { removed: [], notFound: [], failed: [] };
   if (wanted.length === 0) {
     return result;
