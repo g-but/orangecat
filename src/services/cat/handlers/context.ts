@@ -7,6 +7,8 @@ import {
 } from '../economic-profile';
 import { forgetMemoriesMatching, rememberFacts, editMemoryMatching } from '../memory';
 import type { ActionHandler } from './types';
+import { usernameSchema } from '@/lib/validation';
+import { ProfileServerService } from '@/services/profile/server';
 
 export const contextHandlers: Record<string, ActionHandler> = {
   // Persist latent economic value the user discloses (skills/assets/goals/etc.)
@@ -209,8 +211,17 @@ export const contextHandlers: Record<string, ActionHandler> = {
   },
 
   update_profile: async (supabase, userId, _actorId, params) => {
-    // Update the user's public profile. Only safe text fields — no username (affects URLs),
-    // no email, no financial addresses. Profile.id = auth.users.id = userId.
+    // Update the user's public profile. No email, no financial addresses.
+    // Profile.id = auth.users.id = userId.
+    //
+    // The handle IS updatable. It used to be excluded here because a rename
+    // broke public URLs — true until profile_username_history (20260826160000)
+    // made the old handle keep resolving, and left uncorrected afterwards. That
+    // stale exclusion is what made the Cat tell a user on 2026-08-29 that
+    // handles "cannot be changed once set", which was simply wrong.
+    //
+    // It is validated apart from the free-text fields because it is not free
+    // text: it is a public URL and a Lightning address.
     const SAFE_FIELDS = [
       'name',
       'bio',
@@ -221,10 +232,41 @@ export const contextHandlers: Record<string, ActionHandler> = {
     ] as const;
     type SafeField = (typeof SAFE_FIELDS)[number];
 
-    const updates: Partial<Record<SafeField, string>> = {};
+    const updates: Partial<Record<SafeField | 'username', string>> = {};
     for (const field of SAFE_FIELDS) {
       if (params[field] !== undefined && params[field] !== null) {
         updates[field] = params[field] as string;
+      }
+    }
+
+    let oldUsername: string | null = null;
+    if (typeof params.username === 'string' && params.username.trim()) {
+      // The same schema registration and the profile editor use, so a handle
+      // the Cat accepts is exactly one the form would have accepted — length,
+      // shape and reserved names decided in one place. The leading @ is
+      // stripped because that is how people write a handle.
+      const parsed = usernameSchema.safeParse(params.username.trim().replace(/^@/, ''));
+      if (!parsed.success) {
+        return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid handle' };
+      }
+
+      const { data: before } = await supabase
+        .from(DATABASE_TABLES.PROFILES)
+        .select('username')
+        .eq('id', userId)
+        .single();
+      oldUsername = (before as { username: string | null } | null)?.username ?? null;
+
+      if (!oldUsername || oldUsername.toLowerCase() !== parsed.data.toLowerCase()) {
+        const free = await ProfileServerService.checkUsernameAvailability(
+          supabase,
+          parsed.data,
+          userId
+        );
+        if (!free) {
+          return { success: false, error: `@${parsed.data} is already taken.` };
+        }
+        updates.username = parsed.data;
       }
     }
 
@@ -232,7 +274,7 @@ export const contextHandlers: Record<string, ActionHandler> = {
       return {
         success: false,
         error:
-          'No profile fields to update — provide at least one of: name, bio, background, website, location_city, location_country',
+          'No profile fields to update — provide at least one of: username, name, bio, background, website, location_city, location_country',
       };
     }
 
@@ -240,11 +282,30 @@ export const contextHandlers: Record<string, ActionHandler> = {
       .from(DATABASE_TABLES.PROFILES)
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', userId)
-      .select('name, bio, background, website, location_city, location_country')
+      .select('username, name, bio, background, website, location_city, location_country')
       .single();
 
     if (error) {
+      // profiles_username_rename_guard raises unique_violation for a handle
+      // another account retired. It is the authority, not the check above: that
+      // check can go stale between reading and writing, the trigger cannot.
+      if (error.code === '23505' && updates.username) {
+        return { success: false, error: `@${updates.username} is already taken.` };
+      }
       return { success: false, error: error.message };
+    }
+
+    // Say what happens to the old handle. It is the fact that makes the rename
+    // safe, and a rename announced without it reads exactly like the breakage
+    // the user was (wrongly) warned about.
+    if (updates.username && oldUsername) {
+      return {
+        success: true,
+        data: {
+          ...data,
+          displayMessage: `🪪 You are now @${updates.username}. Links to @${oldUsername} still work — the old profile URL redirects here, and ${oldUsername}@orangecat.ch still reaches you.`,
+        },
+      };
     }
 
     const updatedFields = Object.keys(updates).join(', ');

@@ -1655,12 +1655,18 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     id: 'update_profile',
     name: 'Update Profile',
     description:
-      "Update the user's public profile — name, bio, background, location, or website. Only these fields: to make someone findable for a TOPIC, use publish_interest instead, which adds a searchable interest rather than rewriting their bio.",
+      "Update the user's public profile — handle, name, bio, background, location, or website. Changing the @handle IS supported: the old one keeps redirecting and still receives payments. To make someone findable for a TOPIC use publish_interest instead, which adds a searchable interest rather than rewriting their bio.",
     category: 'context',
     icon: Settings,
     riskLevel: 'medium',
     requiresConfirmation: false,
     parameters: [
+      {
+        name: 'username',
+        type: 'string',
+        required: false,
+        description: 'New @handle (without the @). The old handle keeps resolving.',
+      },
       { name: 'name', type: 'string', required: false, description: 'Display name' },
       {
         name: 'bio',
@@ -1689,6 +1695,7 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
       },
     ],
     examples: [
+      'Change my handle to @catomean',
       "Update my bio to say I'm a freelance photographer",
       'Set my location to Zurich, Switzerland',
       'My website is example.com, add it to my profile',

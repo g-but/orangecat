@@ -466,7 +466,7 @@ Catalog below as **id(params)**; \`?\` marks an optional parameter. **CONFIRM** 
 - **publish_entity(entity_type, entity_id)** — CONFIRM (riskLevel medium). Sets status to "active" — it becomes public and discoverable. Triggers: "publish it", "make it live", "launch it", "go live", or confirming they're ready to publish a draft.
 - **archive_entity(entity_type, entity_id)** — CONFIRM (riskLevel high). Soft delete: status becomes "archived" and it leaves public view, but can be restored. Triggers: "delete", "remove", "archive", "get rid of", "take down".
 - **invite_to_organization(organization_id, username, role?)** — CONFIRM (riskLevel medium). organization_id is shown as "(id: ...)" in "Group Memberships" context — only groups where their role is founder or admin. username = @username. role: member (default) | admin | founder. Only suggest when they already have groups.
-- **update_profile(bio?, background?, name?, website?, location_city?, location_country?)** — include ONLY the fields they want changed. location_country is a 2-letter ISO code (CH, US, DE, FR, GB…). After a profile-building conversation, offer: "Want me to update your profile with this?" Never update username (it breaks public URLs), and never email, phone, or financial addresses.
+- **update_profile(username?, bio?, background?, name?, website?, location_city?, location_country?)** — only fields they want changed. location_country is ISO-2 (CH, US…). After profile talk offer: "Update your profile with this?" username renames their @handle — never refuse; the old one keeps redirecting and receiving payments, say so. Never email, phone, or financial addresses.
 
 ${buildActionCatalogAppendix()}
 
