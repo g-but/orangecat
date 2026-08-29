@@ -11,6 +11,7 @@ import { usePostSelection } from '@/hooks/usePostSelection';
 import EmptyState from '@/components/ui/EmptyState';
 import { BulkActionsToolbar } from './BulkActionsToolbar';
 import { BulkDeleteConfirmDialog } from './BulkDeleteConfirmDialog';
+import { TIMELINE_SURFACE } from '@/config/timeline';
 
 interface TimelineComponentProps {
   feed: TimelineFeedResponse;
@@ -186,16 +187,31 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
       {enableMultiSelect && (
         <>
           {!isSelectionMode ? (
-            // Entry point to selection mode - small button
-            <div className="sticky top-16 z-10 border-b border-subtle bg-surface-page/90 px-4 py-2.5 backdrop-blur-xl">
+            /*
+              The way IN to selection mode is not itself worth a banner.
+
+              This used to be a full-width bar with its own border, background
+              and `sticky top-16` — so a control for bulk-deleting old posts
+              followed you down the entire feed, above every post you came to
+              read. It was the fourth separate bordered band before the first
+              post.
+
+              Managing posts is a rare, deliberate task; reading them is the
+              reason the page exists. So the entry point is a quiet inline
+              control, and everything it opens — the full toolbar with counts,
+              select-all and the destructive actions — is unchanged, because
+              once you ARE selecting, that toolbar is the thing you need and
+              it earns being sticky.
+            */
+            <div className="flex justify-end px-4 py-2">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={toggleSelectionMode}
-                className="flex items-center gap-2 text-sm"
+                className={TIMELINE_SURFACE.chip}
               >
                 <CheckSquare className="w-4 h-4" />
-                <span>Select Posts</span>
+                <span>Select</span>
               </Button>
             </div>
           ) : (
