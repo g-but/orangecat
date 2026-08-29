@@ -13,13 +13,22 @@
 import { fromTable } from '@/lib/supabase/untyped';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { getEmailClient } from '@/lib/email/client';
+import { getEmailClient, isEmailConfigured } from '@/lib/email/client';
 import { EMAIL_COLORS } from '@/lib/email/templates/layout';
 import { SITE_URL } from '@/config/brand';
 import { logger } from '@/utils/logger';
 
 const LOG_SOURCE = 'NotificationDispatcher';
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'notifications@orangecat.ch';
+
+// isEmailConfigured() exists specifically so callers can short-circuit before
+// attempting a send — this dispatcher wasn't using it, so every dispatched
+// notification hit getEmailClient()'s throw and logged a fresh error. Found
+// 2026-08-29: 56 identical "RESEND_API_KEY is not set" errors in 24h, one per
+// notification, drowning any real email failure in the same log. The
+// condition is static (no key deployed), not per-notification, so it only
+// needs saying once.
+let _unconfiguredWarned = false;
 
 // =====================================================================
 // CONFIG: Which notification types trigger emails
@@ -152,6 +161,19 @@ export class NotificationDispatcher {
    * Resolves the user's email address and sends via Resend.
    */
   private static async sendEmailNotification(params: DispatchParams): Promise<void> {
+    if (!isEmailConfigured()) {
+      if (!_unconfiguredWarned) {
+        _unconfiguredWarned = true;
+        logger.warn(
+          'RESEND_API_KEY is not set — email notifications are disabled. ' +
+            'This warns once per process, not once per notification.',
+          {},
+          LOG_SOURCE
+        );
+      }
+      return;
+    }
+
     const admin = createAdminClient();
 
     // Resolve email: profile contact_email -> auth user email
