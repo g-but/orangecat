@@ -221,7 +221,7 @@
     "jscpd": "5.0.16",
     "lint-staged": "^17.3.0",
     "node-fetch": "^3.3.2",
-    "pg": "^8.21.0",
+    "pg": "^8.23.0",
     "playwright": "^1.62.1",
     "prettier": "^3.6.2",
     "shadcn": "^3.4.2",
