@@ -257,13 +257,20 @@ Explain this to the user in plain language: which provider is healthy, degraded,
         deleted: mem.deleted,
         removedProfileEntries: profile.removed,
         notFound: facts.filter(f => mem.notFound.includes(f) && profile.notFound.includes(f)),
+        // A store we could not reach is not a store with nothing in it. Without
+        // this the model was handed the same shape for both and told the user
+        // "no matching memory was found" while the memory was still there.
+        failedToRemove: [...mem.failed, ...profile.failed],
       };
       content =
         JSON.stringify(outcome) +
         '\n\nReport ONLY what "deleted" and "removedProfileEntries" confirm was removed, ' +
         'quoting the deleted items. For anything in "notFound", say plainly that no matching ' +
         'stored memory or profile entry was found and that the full list is at ' +
-        'Settings → AI → What Cat remembers. Never claim other changes.';
+        'Settings → AI → What Cat remembers. ' +
+        'For anything in "failedToRemove", say the removal did NOT happen and could not be ' +
+        'completed right now, and that they should try again — never describe it as absent ' +
+        'or as removed. Never claim other changes.';
       const removedCount = outcome.deleted.length + outcome.removedProfileEntries.length;
       if (removedCount > 0) {
         onToolCall?.({
