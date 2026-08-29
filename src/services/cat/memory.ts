@@ -402,7 +402,13 @@ async function recordForgottenFacts(
         .limit(count - MAX_FORGOTTEN_PER_USER);
       const ids = (oldest as Array<{ id: string }> | null)?.map(r => r.id) ?? [];
       if (ids.length > 0) {
-        await supabase.from(DATABASE_TABLES.CAT_FORGOTTEN_FACTS).delete().in('id', ids);
+        // Scoped by user_id as well as id, for the same reason pruneIfNeeded is
+        // — this inherited the pattern, and the gap with it.
+        await supabase
+          .from(DATABASE_TABLES.CAT_FORGOTTEN_FACTS)
+          .delete()
+          .eq('user_id', userId)
+          .in('id', ids);
       }
     }
   } catch (err) {
@@ -820,7 +826,20 @@ export async function extractAndStoreMemories(
   }
 }
 
-/** Keep the corpus bounded: delete the oldest memories beyond the per-user cap. */
+/**
+ * Keep the corpus bounded: delete the oldest memories beyond the per-user cap.
+ *
+ * The delete is scoped by user_id as well as by id. That is redundant today —
+ * the ids come from a query already filtered to this user, run through an
+ * RLS-scoped client — and it is exactly the redundancy worth having: this is an
+ * unconditional DELETE of rows the user never asked to remove, and the only
+ * thing standing between it and someone else's memories is that both of those
+ * conditions keep holding. Hand it a service-role client one day, as three
+ * other paths in this service already use, and RLS stops being the backstop.
+ *
+ * Every other delete in this file is written that way, including the
+ * suppression-lifting one twenty lines above. bitbaum/orangecat#563 finding 13.
+ */
 async function pruneIfNeeded(supabase: AnySupabaseClient, userId: string): Promise<void> {
   const { count } = await supabase
     .from(DATABASE_TABLES.CAT_MEMORIES)
@@ -837,7 +856,11 @@ async function pruneIfNeeded(supabase: AnySupabaseClient, userId: string): Promi
     .limit(count - MAX_MEMORIES_PER_USER);
   const ids = (oldest as Array<{ id: string }> | null)?.map(r => r.id) ?? [];
   if (ids.length > 0) {
-    await supabase.from(DATABASE_TABLES.CAT_MEMORIES).delete().in('id', ids);
+    await supabase
+      .from(DATABASE_TABLES.CAT_MEMORIES)
+      .delete()
+      .eq('user_id', userId)
+      .in('id', ids);
   }
 }
 
