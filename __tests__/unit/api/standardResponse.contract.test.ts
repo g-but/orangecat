@@ -37,6 +37,7 @@ jest.mock('@/utils/logger', () => ({
 }));
 
 import {
+  apiPaymentRequired,
   apiSuccess,
   apiError,
   apiBadRequest,
@@ -220,5 +221,30 @@ describe('apiRateLimited — Retry-After header', () => {
     const response = apiRateLimited('Too fast');
     const headers = (response as unknown as { headers: Headers }).headers;
     expect(headers.get('Retry-After')).toBeNull();
+  });
+});
+
+/**
+ * A 402 carries a bearer credential, so it must never be cached.
+ *
+ * The body embeds `token` (`<intentId>.<statusToken>`) and WWW-Authenticate
+ * repeats it — that token is what a payer later exchanges for a receipt. So
+ * anything caching this response caches a credential for someone else's
+ * payment. Every other payment response sets no-store; this one did not.
+ * bitbaum/orangecat#563 suggestion 15.
+ */
+describe('apiPaymentRequired — never cached', () => {
+  const headersOf = (r: unknown) => (r as { headers: Headers }).headers;
+
+  it('sets no-store', () => {
+    expect(
+      headersOf(apiPaymentRequired('Pay up', { token: 'pi-1.tok' })).get('Cache-Control')
+    ).toBe('no-store, must-revalidate');
+  });
+
+  it('sets it on the challenge form, where the header repeats the token', () => {
+    const res = apiPaymentRequired('Pay up', { token: 'pi-1.tok' }, 'L402 token="pi-1.tok"');
+    expect(headersOf(res).get('Cache-Control')).toBe('no-store, must-revalidate');
+    expect(headersOf(res).get('WWW-Authenticate')).toContain('L402');
   });
 });

@@ -249,7 +249,7 @@ export async function runPaymentReconcileSweep(): Promise<ReconcileSweepResult> 
       // The SAME path the payer's browser runs. Settlement side-effects are
       // exactly-once (claimPaidTransition), so overlapping with a live poll
       // is safe by construction.
-      const result = await reconcilePaymentIntent(admin, intent);
+      const result = await reconcilePaymentIntent(intent);
       if (result.status === STATUS.PAYMENT_INTENTS.PAID) {
         settled += 1;
         logger.info(

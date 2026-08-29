@@ -28,7 +28,6 @@ import { logger } from '@/utils/logger';
  * Returns null if seller has no wallet connected.
  */
 export async function resolveSellerWallet(
-  supabase: SupabaseClient,
   entityType: EntityType,
   entityId: string
 ): Promise<ResolvedWallet | null> {
@@ -122,11 +121,10 @@ export interface SellerReceiveInfo {
  * buyers will actually pay to. Returns null when no wallet is connected.
  */
 export async function resolveSellerReceiveInfo(
-  supabase: SupabaseClient,
   entityType: EntityType,
   entityId: string
 ): Promise<SellerReceiveInfo | null> {
-  const resolved = await resolveSellerWallet(supabase, entityType, entityId);
+  const resolved = await resolveSellerWallet(entityType, entityId);
   if (!resolved) {
     return null;
   }

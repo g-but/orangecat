@@ -110,7 +110,7 @@ describe('resolveSellerWallet — entity-linked wallet precedence', () => {
     };
     getAdminClientMock.mockReturnValue(makeAdmin(fx));
 
-    const resolved = await resolveSellerWallet({} as never, ENTITY.entity_type, ENTITY.entity_id);
+    const resolved = await resolveSellerWallet(ENTITY.entity_type, ENTITY.entity_id);
 
     expect(resolved).toEqual({
       method: 'onchain',
@@ -132,7 +132,7 @@ describe('resolveSellerWallet — entity-linked wallet precedence', () => {
     };
     getAdminClientMock.mockReturnValue(makeAdmin(fx));
 
-    const resolved = await resolveSellerWallet({} as never, ENTITY.entity_type, ENTITY.entity_id);
+    const resolved = await resolveSellerWallet(ENTITY.entity_type, ENTITY.entity_id);
 
     expect(resolved).toEqual({
       method: 'lightning_address',
@@ -145,7 +145,7 @@ describe('resolveSellerWallet — entity-linked wallet precedence', () => {
     const fx = baseFixtures(); // entityWallets empty
     getAdminClientMock.mockReturnValue(makeAdmin(fx));
 
-    const resolved = await resolveSellerWallet({} as never, ENTITY.entity_type, ENTITY.entity_id);
+    const resolved = await resolveSellerWallet(ENTITY.entity_type, ENTITY.entity_id);
 
     expect(resolved).toEqual({
       method: 'onchain',
@@ -160,7 +160,7 @@ describe('resolveSellerWallet — entity-linked wallet precedence', () => {
     fx.walletsById = {}; // linked wallet not active → single() returns null
     getAdminClientMock.mockReturnValue(makeAdmin(fx));
 
-    const resolved = await resolveSellerWallet({} as never, ENTITY.entity_type, ENTITY.entity_id);
+    const resolved = await resolveSellerWallet(ENTITY.entity_type, ENTITY.entity_id);
 
     expect(resolved).toEqual({
       method: 'onchain',

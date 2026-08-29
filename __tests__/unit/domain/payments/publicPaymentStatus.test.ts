@@ -138,17 +138,13 @@ describe('a claim is only accepted where no rail can answer', () => {
       paid_at: null,
       requires_recipient_confirmation: true,
     });
-    expect(fake.updates.map(u => u.patch.status)).toEqual([
-      STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
-    ]);
+    expect(fake.updates.map(u => u.patch.status)).toEqual([STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED]);
   });
 
   it('refuses a claim when the Lightning address can be verified automatically', async () => {
     const fake = world(intent({ lnurl_verify_url: 'https://ln.example/verify/1' }));
 
-    await expect(acknowledgePublicPayment(PI_ID, TOKEN)).rejects.toThrow(
-      'confirmed automatically'
-    );
+    await expect(acknowledgePublicPayment(PI_ID, TOKEN)).rejects.toThrow('confirmed automatically');
     expect(fake.updates).toEqual([]);
     expect(dispatchMock).not.toHaveBeenCalled();
   });
@@ -156,18 +152,14 @@ describe('a claim is only accepted where no rail can answer', () => {
   it('refuses a claim on an on-chain payment — the mempool answers, not the payer', async () => {
     const fake = world(intent({ payment_method: 'onchain', onchain_address: 'bc1qexample' }));
 
-    await expect(acknowledgePublicPayment(PI_ID, TOKEN)).rejects.toThrow(
-      'confirmed automatically'
-    );
+    await expect(acknowledgePublicPayment(PI_ID, TOKEN)).rejects.toThrow('confirmed automatically');
     expect(fake.updates).toEqual([]);
   });
 
   it('refuses a claim on an NWC payment', async () => {
     const fake = world(intent({ payment_method: 'nwc', payment_hash: 'hash-1' }));
 
-    await expect(acknowledgePublicPayment(PI_ID, TOKEN)).rejects.toThrow(
-      'confirmed automatically'
-    );
+    await expect(acknowledgePublicPayment(PI_ID, TOKEN)).rejects.toThrow('confirmed automatically');
     expect(fake.updates).toEqual([]);
   });
 });
@@ -226,9 +218,7 @@ describe('expiry bounds when a payment can be MADE, not when it can be REPORTED'
 
     expect(result.status).toBe(STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED);
     expect(dispatchMock).toHaveBeenCalledTimes(1);
-    expect(fake.updates.map(u => u.patch.status)).toEqual([
-      STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED,
-    ]);
+    expect(fake.updates.map(u => u.patch.status)).toEqual([STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED]);
   });
 
   it('refuses a claim once the claim window has also closed, and records the expiry', async () => {
@@ -253,5 +243,61 @@ describe('expiry bounds when a payment can be MADE, not when it can be REPORTED'
 
     await expect(acknowledgePublicPayment(PI_ID, TOKEN)).rejects.toThrow('has expired');
     expect(fake.updates).toEqual([]);
+  });
+});
+
+/**
+ * A claim costs the recipient attention, so it is budgeted per recipient.
+ *
+ * The route in front of this only knows the caller's IP, and the abuse shape
+ * is many addresses aimed at ONE seller's confirmation queue — free intents
+ * fanned into plausible "someone paid you" cards, whose payoff is
+ * ship-the-goods-for-no-money. bitbaum/orangecat#563 finding 3.
+ */
+describe('claims are budgeted per recipient', () => {
+  const allow = jest.fn(async () => true);
+  const refuse = jest.fn(async () => false);
+
+  beforeEach(() => {
+    allow.mockClear();
+    refuse.mockClear();
+  });
+
+  it('asks about the recipient entity, not the caller', async () => {
+    world(intent());
+    await acknowledgePublicPayment(PI_ID, TOKEN, allow);
+    expect(allow).toHaveBeenCalledWith('product', 'prod-1');
+  });
+
+  it('refuses the claim once that recipient has been flooded', async () => {
+    world(intent());
+    await expect(acknowledgePublicPayment(PI_ID, TOKEN, refuse)).rejects.toThrow(
+      /Too many payment claims/
+    );
+  });
+
+  it('sends no card and moves no intent when the claim is refused', async () => {
+    const fake = world(intent());
+
+    await expect(acknowledgePublicPayment(PI_ID, TOKEN, refuse)).rejects.toThrow();
+
+    // The whole point: nothing reaches the seller, and the intent stays put.
+    expect(dispatchMock).not.toHaveBeenCalled();
+    expect(fake.updates).toEqual([]);
+  });
+
+  it('does not spend the budget on an idempotent re-claim', async () => {
+    // Already buyer_confirmed: this returns early, costs the attacker nothing,
+    // and so must not consume a genuine payer's allowance either.
+    world(intent({ status: STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED }));
+
+    await acknowledgePublicPayment(PI_ID, TOKEN, allow);
+    expect(allow).not.toHaveBeenCalled();
+  });
+
+  it('is unbudgeted when no guard is supplied — the caller owns the policy', async () => {
+    const fake = world(intent());
+    await acknowledgePublicPayment(PI_ID, TOKEN);
+    expect(fake.updates.map(u => u.patch.status)).toEqual([STATUS.PAYMENT_INTENTS.BUYER_CONFIRMED]);
   });
 });

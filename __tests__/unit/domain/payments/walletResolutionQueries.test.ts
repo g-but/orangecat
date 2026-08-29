@@ -245,7 +245,7 @@ describe('resolveSellerWallet — a wallet tied to one specific entity', () => {
 
     // Falls through to the owner's profile default rather than paying a wallet
     // that is no longer in use.
-    expect(await resolveSellerWallet({} as never, 'product', 'prod-1')).toMatchObject({
+    expect(await resolveSellerWallet('product', 'prod-1')).toMatchObject({
       wallet_id: 'w-default',
     });
   });
@@ -263,7 +263,7 @@ describe('resolveSellerWallet — a wallet tied to one specific entity', () => {
       ]
     );
 
-    expect(await resolveSellerWallet({} as never, 'product', 'prod-1')).toMatchObject({
+    expect(await resolveSellerWallet('product', 'prod-1')).toMatchObject({
       wallet_id: 'w-chosen',
     });
   });
@@ -277,7 +277,7 @@ describe('resolveSellerWallet — a wallet tied to one specific entity', () => {
       ]
     );
 
-    expect(await resolveSellerWallet({} as never, 'product', 'prod-1')).toMatchObject({
+    expect(await resolveSellerWallet('product', 'prod-1')).toMatchObject({
       wallet_id: 'w-default',
     });
   });
@@ -308,7 +308,7 @@ describe('resolveSellerWallet — group entities', () => {
     });
     getAdminClientMock.mockReturnValue(client);
 
-    expect(await resolveSellerWallet({} as never, 'group', GROUP)).toEqual({
+    expect(await resolveSellerWallet('group', GROUP)).toEqual({
       method: 'lightning_address',
       wallet_id: 'gw-ours',
       lightning_address: 'ours@ln',
@@ -325,7 +325,7 @@ describe('resolveSellerWallet — group entities', () => {
     });
     getAdminClientMock.mockReturnValue(client);
 
-    expect(await resolveSellerWallet({} as never, 'group', GROUP)).toEqual({
+    expect(await resolveSellerWallet('group', GROUP)).toEqual({
       method: 'onchain',
       wallet_id: 'gw-live',
       onchain_address: 'bc1qlive',
@@ -346,11 +346,13 @@ describe('resolveSellerWallet — group entities', () => {
       [DATABASE_TABLES.WALLETS]: [
         wallet({ id: 'w-founder', profile_id: 'founder-1', lightning_address: 'founder@ln' }),
       ],
-      [DATABASE_TABLES.GROUP_WALLETS]: [groupWallet({ id: 'gw-ours', lightning_address: 'ours@ln' })],
+      [DATABASE_TABLES.GROUP_WALLETS]: [
+        groupWallet({ id: 'gw-ours', lightning_address: 'ours@ln' }),
+      ],
     });
     getAdminClientMock.mockReturnValue(fake.client);
 
-    expect(await resolveSellerWallet({} as never, 'product', 'prod-1')).toEqual({
+    expect(await resolveSellerWallet('product', 'prod-1')).toEqual({
       method: 'lightning_address',
       wallet_id: 'gw-ours',
       lightning_address: 'ours@ln',
@@ -370,7 +372,7 @@ describe('resolveSellerWallet — group entities', () => {
     });
     getAdminClientMock.mockReturnValue(client);
 
-    expect(await resolveSellerWallet({} as never, 'group', GROUP)).toMatchObject({
+    expect(await resolveSellerWallet('group', GROUP)).toMatchObject({
       wallet_id: 'gw-old',
     });
   });
@@ -382,6 +384,6 @@ describe('resolveSellerWallet — group entities', () => {
     });
     getAdminClientMock.mockReturnValue(client);
 
-    expect(await resolveSellerWallet({} as never, 'group', GROUP)).toBeNull();
+    expect(await resolveSellerWallet('group', GROUP)).toBeNull();
   });
 });

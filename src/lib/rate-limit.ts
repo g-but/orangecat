@@ -101,6 +101,7 @@ const upstashTipRecipientLimiter = createUpstashLimiter('tip-recipient', 20, '5 
 // Generous on purpose: a paying client polls, and refusing a real payer is
 // worse than the outbound traffic this bounds.
 const upstashL402VerifyLimiter = createUpstashLimiter('l402-verify', 60, '1 m');
+const upstashPaymentClaimLimiter = createUpstashLimiter('payment-claim', 10, '1 h');
 // Public Ask-Cat / feedback endpoint: each submission costs a platform LLM
 // call, and the caller may be anonymous — so a tight per-IP budget on top of
 // the general limiter. 8 per 5 min is plenty for a real person having a
@@ -172,6 +173,10 @@ const fallbackTipRecipientLimiter = new InMemoryRateLimiter({
 const fallbackL402VerifyLimiter = new InMemoryRateLimiter({
   windowMs: 60 * 1000,
   maxRequests: 60,
+});
+const fallbackPaymentClaimLimiter = new InMemoryRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  maxRequests: 10,
 });
 const fallbackAskCatLimiter = new InMemoryRateLimiter({
   windowMs: 5 * 60 * 1000,
@@ -280,6 +285,37 @@ export async function rateLimitPaymentRecipient(
   entityId: string
 ): Promise<RateLimitResult> {
   return rateLimitTipRecipient(`${entityType}:${entityId}`);
+}
+
+/**
+ * Rate limit "I paid you" claims per RECIPIENT.
+ *
+ * An acknowledge is testimony, not settlement: it flips an intent to
+ * buyer_confirmed and fires a "someone says they paid you" card into the
+ * recipient's confirmation queue. One card is a prompt to check a wallet; a
+ * hundred is a denial-of-attention attack, and the social-engineering primitive
+ * is ship-the-goods-for-no-money.
+ *
+ * The route's per-IP budget cannot bound this — the claims that matter come
+ * from many addresses at one seller. Creating the intents is already bounded
+ * per recipient (rateLimitPaymentRecipient), so this is the second half of the
+ * same fence: bound the claims as well as the invoices.
+ *
+ * 10 per hour per recipient. A genuine payer claims once, and retries are
+ * idempotent no-ops that never reach here. bitbaum/orangecat#563 finding 3.
+ */
+export async function rateLimitPaymentClaim(
+  entityType: string,
+  entityId: string
+): Promise<RateLimitResult> {
+  const key = `payment-claim:${entityType}:${entityId}`;
+
+  if (upstashPaymentClaimLimiter) {
+    const result = await upstashPaymentClaimLimiter.limit(key);
+    return toRateLimitResult(result);
+  }
+
+  return fallbackPaymentClaimLimiter.check(key);
 }
 
 /**
