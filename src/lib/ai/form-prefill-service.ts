@@ -15,6 +15,7 @@ import {
   type AiAssistIntent,
 } from '@/config/ai-form-assist';
 import { logger } from '@/utils/logger';
+import { withApiRetry } from '@/utils/retry';
 import { extractFieldDescriptions, formatFieldsForPrompt } from './schema-to-prompt';
 import { getSystemPrompt, getUserPrompt, parseAIResponse } from './prompts/form-prefill';
 import { sanitizeAiFields } from './sanitize-ai-fields';
@@ -184,26 +185,44 @@ export async function generateFormPrefill({
       headers['X-Title'] = 'OrangeCat Form Prefill';
     }
 
-    const response = await fetch(baseUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model: useGroq ? model : model.replace('openrouter/', ''),
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: config?.temperature ?? 0.3,
-        // Headroom for genuinely written descriptions (and bilingual ones) —
-        // 1000 truncated the JSON mid-string on multi-field forms.
-        max_tokens: config?.maxTokens ?? 2000,
-        ...(useGroq ? {} : { response_format: { type: 'json_object' } }),
-      }),
+    const requestBody = JSON.stringify({
+      model: useGroq ? model : model.replace('openrouter/', ''),
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: config?.temperature ?? 0.3,
+      // Headroom for genuinely written descriptions (and bilingual ones) —
+      // 1000 truncated the JSON mid-string on multi-field forms.
+      max_tokens: config?.maxTokens ?? 2000,
+      ...(useGroq ? {} : { response_format: { type: 'json_object' } }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.error('AI API error', { errorText }, 'AI');
+    // The upstream provider (Groq/OpenRouter) occasionally answers with a
+    // transient 429/5xx that clears on its own — visitors were seeing that
+    // as a hard failure and had to manually re-click "Fill with AI" to get
+    // the same request to succeed. Retry it here instead, same as every
+    // other outbound call in the codebase (see withApiRetry usages).
+    let response: Response;
+    try {
+      response = await withApiRetry(
+        async () => {
+          const res = await fetch(baseUrl, { method: 'POST', headers, body: requestBody });
+          if (!res.ok) {
+            const errorText = await res.text();
+            const error = new Error(`AI provider responded ${res.status}`) as Error & {
+              status: number;
+            };
+            error.status = res.status;
+            logger.warn('AI API error, may retry', { status: res.status, errorText }, 'AI');
+            throw error;
+          }
+          return res;
+        },
+        { maxAttempts: 3, baseDelay: 400, maxDelay: 2000 }
+      );
+    } catch (fetchError) {
+      logger.error('AI API error after retries', fetchError, 'AI');
       return {
         success: false,
         data: {},

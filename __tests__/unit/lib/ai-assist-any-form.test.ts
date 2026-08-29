@@ -165,6 +165,65 @@ describe('generateFormPrefill — service floor follows the intent, like the rou
   });
 });
 
+describe('generateFormPrefill — retries a transient provider failure', () => {
+  const target = resolveAiAssistTarget('service');
+  const originalFetch = global.fetch;
+  const originalGroqKey = process.env.GROQ_API_KEY;
+
+  beforeEach(() => {
+    process.env.GROQ_API_KEY = 'test-key';
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    if (originalGroqKey === undefined) {
+      delete process.env.GROQ_API_KEY;
+    } else {
+      process.env.GROQ_API_KEY = originalGroqKey;
+    }
+  });
+
+  it('recovers from a single 503 without surfacing an error to the caller', async () => {
+    const okBody = {
+      choices: [
+        {
+          message: { content: JSON.stringify({ data: { title: 'Retried fine' }, confidence: {} }) },
+        },
+      ],
+    };
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 503, text: async () => 'upstream hiccup' })
+      .mockResolvedValueOnce({ ok: true, json: async () => okBody });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const result = await generateFormPrefill({
+      target: target!,
+      description: 'A cleaning service for offices in Zurich',
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result.success).toBe(true);
+    expect(result.data.title).toBe('Retried fine');
+  });
+
+  it('gives up after repeated failures with the same user-facing message', async () => {
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValue({ ok: false, status: 503, text: async () => 'still down' });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const result = await generateFormPrefill({
+      target: target!,
+      description: 'A cleaning service for offices in Zurich',
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('AI service temporarily unavailable. Please try again.');
+  });
+});
+
 describe('getExampleDescriptions — standalone forms get starters too', () => {
   it('returns the declared examples for task and proposal', () => {
     expect(getExampleDescriptions('task')).toEqual(AI_ASSIST_FORMS.task.examples);
