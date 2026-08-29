@@ -98,6 +98,9 @@ const upstashWriteLimiter = createUpstashLimiter('write', 30, '1 m');
 // (even rotating IPs) can't flood a victim's NWC relay. Generous enough to
 // absorb a legitimately viral post's concurrent tippers.
 const upstashTipRecipientLimiter = createUpstashLimiter('tip-recipient', 20, '5 m');
+// Generous on purpose: a paying client polls, and refusing a real payer is
+// worse than the outbound traffic this bounds.
+const upstashL402VerifyLimiter = createUpstashLimiter('l402-verify', 60, '1 m');
 // Public Ask-Cat / feedback endpoint: each submission costs a platform LLM
 // call, and the caller may be anonymous — so a tight per-IP budget on top of
 // the general limiter. 8 per 5 min is plenty for a real person having a
@@ -165,6 +168,10 @@ const fallbackWriteLimiter = new InMemoryRateLimiter({ windowMs: 60 * 1000, maxR
 const fallbackTipRecipientLimiter = new InMemoryRateLimiter({
   windowMs: 5 * 60 * 1000,
   maxRequests: 20,
+});
+const fallbackL402VerifyLimiter = new InMemoryRateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 60,
 });
 const fallbackAskCatLimiter = new InMemoryRateLimiter({
   windowMs: 5 * 60 * 1000,
@@ -273,6 +280,40 @@ export async function rateLimitPaymentRecipient(
   entityId: string
 ): Promise<RateLimitResult> {
   return rateLimitTipRecipient(`${entityType}:${entityId}`);
+}
+
+/**
+ * Rate limit L402 verification PER TOKEN.
+ *
+ * The verify branch is deliberately unlimited: a payer who has paid must be
+ * able to retry until we see it, and sharing the challenge budget would let
+ * invoice-minting starve settlement confirmation. But "unlimited" is doing more
+ * than that. Each verify on a non-terminal intent drives an OUTBOUND call — the
+ * recipient's NWC or LNURL relay, or mempool — so one valid token buys unbounded
+ * traffic against someone else's infrastructure, and the per-IP limiter cannot
+ * see it because a token is the thing being replayed, not an address.
+ *
+ * Keyed on the intent, not the caller: 60 checks per minute is far more than an
+ * honest client polling a payment needs, and far less than a loop. The budget
+ * covers terminal intents too, even though those short-circuit in
+ * refreshPaymentStatus before any rail call — a cheap check is still a check,
+ * and one bound is easier to reason about than two.
+ * bitbaum/orangecat#563 finding 7.
+ */
+export async function rateLimitL402Verify(paymentIntentId: string): Promise<RateLimitResult> {
+  // Keyed on the INTENT, not the preimage. The intent is what the outbound call
+  // is about, and it cannot be varied without a valid status token for a
+  // different payment — whereas a preimage is caller-supplied, so keying on it
+  // would let the same bucket-rotation trick the per-IP limiter already fell to.
+  // The id is not a secret (it is in the status route's own URL), so no hash.
+  const key = `l402-verify:${paymentIntentId}`;
+
+  if (upstashL402VerifyLimiter) {
+    const result = await upstashL402VerifyLimiter.limit(key);
+    return toRateLimitResult(result);
+  }
+
+  return fallbackL402VerifyLimiter.check(key);
 }
 
 /**

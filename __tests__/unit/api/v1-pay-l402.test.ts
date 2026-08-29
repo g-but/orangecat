@@ -65,11 +65,16 @@ jest.mock('@/lib/supabase/public', () => ({ createPublicClient: () => ({ _kind: 
 jest.mock('@/lib/rate-limit', () => ({
   rateLimitWriteAsync: jest.fn().mockResolvedValue({ success: true }),
   rateLimitPaymentRecipient: jest.fn().mockResolvedValue({ success: true }),
+  rateLimitL402Verify: jest.fn().mockResolvedValue({ success: true }),
   retryAfterSeconds: () => 1,
 }));
 
 import { GET } from '@/app/api/v1/pay/[entity_type]/[entity_id]/route';
-import { rateLimitPaymentRecipient } from '@/lib/rate-limit';
+import {
+  rateLimitL402Verify,
+  rateLimitPaymentRecipient,
+  rateLimitWriteAsync,
+} from '@/lib/rate-limit';
 
 const ENTITY_ID = '11111111-2222-3333-4444-555555555555';
 const params = Promise.resolve({ entity_type: 'product', entity_id: ENTITY_ID });
@@ -246,7 +251,64 @@ describe('per-recipient invoice-spam limit', () => {
 
   it('refuses with 429 when that recipient is already being hammered', async () => {
     (rateLimitPaymentRecipient as jest.Mock).mockResolvedValue({ success: false });
-    const res = await GET(makeRequest('https://x.test/api/v1/pay/product/' + ENTITY_ID), { params });
+    const res = await GET(makeRequest('https://x.test/api/v1/pay/product/' + ENTITY_ID), {
+      params,
+    });
     expect(res.status).toBe(429);
+  });
+});
+
+/**
+ * The verify branch deliberately sits OUTSIDE the per-IP challenge budget: a
+ * payer who has genuinely paid must be able to retry until settlement is seen,
+ * and making them share the challenge budget would lock them out of their own
+ * purchase.
+ *
+ * But unbounded is not the same as unbudgeted. Every check on a non-terminal
+ * intent drives an outbound call to the recipient's LNURL/NWC relay or to
+ * mempool, so a single valid token bought unlimited traffic aimed at someone
+ * else's infrastructure — and the per-IP limiter could not see it, by design.
+ *
+ * bitbaum/orangecat#563 finding 7.
+ */
+describe('L402 verify-retry limit', () => {
+  const AUTH = { authorization: `L402 ${ENTITY_ID}.tok_abc:${'a'.repeat(64)}` };
+
+  beforeEach(() => {
+    (rateLimitL402Verify as jest.Mock).mockResolvedValue({ success: true });
+    (rateLimitWriteAsync as jest.Mock).mockResolvedValue({ success: true });
+    mockVerify.mockResolvedValue({ ok: false, status: 'pending' });
+  });
+
+  it('keys the budget on the payment intent, which a caller cannot rotate', async () => {
+    await GET(makeRequest('https://x.test/api/v1/pay/product/' + ENTITY_ID, AUTH), { params });
+    expect(rateLimitL402Verify).toHaveBeenCalledWith(ENTITY_ID);
+  });
+
+  it('refuses with 429 once one token has hammered the relay', async () => {
+    (rateLimitL402Verify as jest.Mock).mockResolvedValue({ success: false });
+    const res = await GET(makeRequest('https://x.test/api/v1/pay/product/' + ENTITY_ID, AUTH), {
+      params,
+    });
+    expect(res.status).toBe(429);
+    // Refused BEFORE the outbound check — the whole point is not making it.
+    expect(mockVerify).not.toHaveBeenCalled();
+  });
+
+  it('still does not spend the challenge budget on a verify', async () => {
+    await GET(makeRequest('https://x.test/api/v1/pay/product/' + ENTITY_ID, AUTH), { params });
+    expect(rateLimitWriteAsync).not.toHaveBeenCalled();
+    expect(rateLimitPaymentRecipient).not.toHaveBeenCalled();
+  });
+
+  it('leaves the challenge branch on the per-IP budget, not the verify one', async () => {
+    mockCreateChallenge.mockResolvedValue({
+      header: 'L402 token="i.t", invoice="lnbc1"',
+      payment_intent_id: 'i',
+      status_token: 't',
+    });
+    await GET(makeRequest('https://x.test/api/v1/pay/product/' + ENTITY_ID), { params });
+    expect(rateLimitL402Verify).not.toHaveBeenCalled();
+    expect(rateLimitWriteAsync).toHaveBeenCalled();
   });
 });
