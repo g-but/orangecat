@@ -106,3 +106,30 @@ export function isFixtureGroupTitle(title: string | null | undefined): boolean {
   const t = (title ?? '').trim();
   return FIXTURE_GROUP_TITLE.test(t) || FIXTURE_GROUP_STAMPED.test(t);
 }
+
+/**
+ * True when a profile's public handle still republishes its owner's email
+ * local part — the leak fixed at the write path in
+ * supabase/migrations/20260826130000_stop_deriving_usernames_from_email.sql
+ * and backfilled by scripts/rename-email-derived-usernames.sql, but not every
+ * affected row has been through that backfill yet (it's a deliberate,
+ * checked-by-hand operation, not something a schema migration runs
+ * automatically — see that script's own header for why).
+ *
+ * Same predicate as the SQL side's `count_email_derived_usernames()`,
+ * including the `.invalid` exception (RFC 2606 — an undeliverable address has
+ * no mailbox, so no owner, so no personal information in its local part; see
+ * 20260828070000_system_accounts_keep_their_handles.sql for the incident that
+ * taught us to carry the exception here too).
+ */
+export function isEmailDerivedHandle(profile: {
+  username?: string | null;
+  email?: string | null;
+}): boolean {
+  const email = (profile.email ?? '').trim().toLowerCase();
+  if (!email || email.endsWith('.invalid')) {
+    return false;
+  }
+  const localPart = email.split('@')[0];
+  return !!localPart && (profile.username ?? '').trim().toLowerCase() === localPart;
+}

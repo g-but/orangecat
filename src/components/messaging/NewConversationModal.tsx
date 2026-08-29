@@ -249,7 +249,11 @@ export default function NewConversationModal({
                     <div className="font-medium text-fg-primary truncate">
                       {p.name || p.username || 'User'}
                     </div>
-                    {p.username && (
+                    {/* Only when the handle adds information beyond the title above —
+                        a profile with no name already shows its handle there, so
+                        repeating "@handle" underneath is pure noise, worse on
+                        narrow screens where both lines truncate. */}
+                    {p.username && p.name && p.name !== p.username && (
                       <div className="text-sm text-fg-secondary truncate">@{p.username}</div>
                     )}
                   </div>
