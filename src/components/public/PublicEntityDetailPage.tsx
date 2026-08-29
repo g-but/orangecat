@@ -151,7 +151,7 @@ export default async function PublicEntityDetailPage({
   let priceAmountBtc: number | undefined;
   const hasPaymentSurface = config.showPaymentSection !== false || meta.canReceiveSupport;
   if (hasPaymentSurface) {
-    sellerReceive = await resolveSellerReceiveInfo(supabase, config.entityType, id);
+    sellerReceive = await resolveSellerReceiveInfo(config.entityType, id);
     // Address-reuse disclosure — only worth resolving when an address will
     // actually be shown (NWC reveals no static address to link).
     if (sellerReceive?.address) {

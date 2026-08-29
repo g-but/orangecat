@@ -88,7 +88,7 @@ export async function getSharedWalletUsage(
   entityId: string
 ): Promise<SharedWalletUsage | null> {
   try {
-    const resolved = await resolveSellerWallet(supabase, entityType, entityId);
+    const resolved = await resolveSellerWallet(entityType, entityId);
     if (!resolved) {
       return null;
     }

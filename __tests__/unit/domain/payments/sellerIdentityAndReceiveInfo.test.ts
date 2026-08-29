@@ -70,7 +70,7 @@ describe('resolveSellerReceiveInfo — what the owner is shown', () => {
     const { client } = world({ wallets: [wallet({ lightning_address: 'me@orangecat.ch' })] });
     getAdminClientMock.mockReturnValue(client);
 
-    expect(await resolveSellerReceiveInfo({} as never, 'product', ENTITY_ID)).toEqual({
+    expect(await resolveSellerReceiveInfo('product', ENTITY_ID)).toEqual({
       method: 'lightning_address',
       address: 'me@orangecat.ch',
     });
@@ -80,7 +80,7 @@ describe('resolveSellerReceiveInfo — what the owner is shown', () => {
     const { client } = world({ wallets: [wallet({ address_or_xpub: 'bc1qexample' })] });
     getAdminClientMock.mockReturnValue(client);
 
-    expect(await resolveSellerReceiveInfo({} as never, 'product', ENTITY_ID)).toEqual({
+    expect(await resolveSellerReceiveInfo('product', ENTITY_ID)).toEqual({
       method: 'onchain',
       address: 'bc1qexample',
     });
@@ -92,7 +92,7 @@ describe('resolveSellerReceiveInfo — what the owner is shown', () => {
     const { client } = world({ wallets: [wallet({ nwc_connection_uri: secret })] });
     getAdminClientMock.mockReturnValue(client);
 
-    const info = await resolveSellerReceiveInfo({} as never, 'product', ENTITY_ID);
+    const info = await resolveSellerReceiveInfo('product', ENTITY_ID);
 
     expect(info).toEqual({ method: 'nwc', address: null });
     expect(JSON.stringify(info)).not.toContain('hunter2');
@@ -106,7 +106,7 @@ describe('resolveSellerReceiveInfo — what the owner is shown', () => {
     const { client } = world({ wallets: [wallet({ wallet_type: 'xpub', address_or_xpub: zpub })] });
     getAdminClientMock.mockReturnValue(client);
 
-    const info = await resolveSellerReceiveInfo({} as never, 'product', ENTITY_ID);
+    const info = await resolveSellerReceiveInfo('product', ENTITY_ID);
 
     expect(info).toEqual({ method: 'onchain', address: null });
   });
@@ -115,7 +115,7 @@ describe('resolveSellerReceiveInfo — what the owner is shown', () => {
     const { client } = world({ wallets: [] });
     getAdminClientMock.mockReturnValue(client);
 
-    expect(await resolveSellerReceiveInfo({} as never, 'product', ENTITY_ID)).toBeNull();
+    expect(await resolveSellerReceiveInfo('product', ENTITY_ID)).toBeNull();
   });
 });
 

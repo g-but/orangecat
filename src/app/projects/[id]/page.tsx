@@ -207,7 +207,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
     supporters_count: fundingStats?.contributorCount ?? 0,
     profiles: profile ?? undefined,
   };
-  const sellerReceive = await resolveSellerReceiveInfo(supabase, 'project', id);
+  const sellerReceive = await resolveSellerReceiveInfo('project', id);
 
   // A draft project is invisible to everyone but its owner (the projects_public_read
   // RLS policy), and nothing on the page used to say so — projects were the one

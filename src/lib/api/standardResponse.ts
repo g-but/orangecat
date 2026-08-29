@@ -195,6 +195,11 @@ export function apiPaymentRequired(
     },
     { status: 402 }
   );
+  // The 402 body and the WWW-Authenticate header both carry the payment
+  // token — a bearer credential for this intent. Every other payment response
+  // sets no-store; this one did not, so a shared cache or an intermediary was
+  // free to keep the credential and hand it to the next caller.
+  response.headers.set('Cache-Control', CACHE_PRESETS.NONE);
   if (wwwAuthenticate) {
     response.headers.set('WWW-Authenticate', wwwAuthenticate);
   }

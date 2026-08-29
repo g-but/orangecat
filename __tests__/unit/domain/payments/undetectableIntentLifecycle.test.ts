@@ -69,7 +69,8 @@ beforeEach(() => {
 describe('undetectable intent around expiry', () => {
   it('stays OPEN after invoice expiry while the claim window runs — the payer can still say "I paid"', async () => {
     const expiredAnHourAgo = new Date(Date.now() - 3_600_000).toISOString();
-    const res = await reconcilePaymentIntent(makeSupabase(), bareLightningIntent(expiredAnHourAgo));
+    makeSupabase();
+    const res = await reconcilePaymentIntent(bareLightningIntent(expiredAnHourAgo));
 
     expect(res.status).toBe(STATUS.PAYMENT_INTENTS.INVOICE_READY);
     expect(updates).toHaveLength(0);
@@ -77,7 +78,8 @@ describe('undetectable intent around expiry', () => {
 
   it('terminalizes honestly once the invoice is dead AND the claim window has closed', async () => {
     const longDead = new Date(Date.now() - BUYER_CLAIM_GRACE_MS - 3_600_000).toISOString();
-    const res = await reconcilePaymentIntent(makeSupabase(), bareLightningIntent(longDead));
+    makeSupabase();
+    const res = await reconcilePaymentIntent(bareLightningIntent(longDead));
 
     expect(res.status).toBe(STATUS.PAYMENT_INTENTS.EXPIRED);
     expect(updates.some(u => u.status === STATUS.PAYMENT_INTENTS.EXPIRED)).toBe(true);
@@ -85,10 +87,8 @@ describe('undetectable intent around expiry', () => {
 
   it('never asks any rail about an undetectable intent — there is nothing to ask', async () => {
     const statusService = jest.requireMock('@/domain/payments/paymentStatusService');
-    await reconcilePaymentIntent(
-      makeSupabase(),
-      bareLightningIntent(new Date(Date.now() + 600_000).toISOString())
-    );
+    makeSupabase();
+    await reconcilePaymentIntent(bareLightningIntent(new Date(Date.now() + 600_000).toISOString()));
 
     expect(statusService.checkNWCPaymentStatus).not.toHaveBeenCalled();
     expect(statusService.checkLnurlVerifyPaymentStatus).not.toHaveBeenCalled();
