@@ -62,6 +62,24 @@ export const contextHandlers: Record<string, ActionHandler> = {
     const stillUnknown = facts.filter(
       f => mem.notFound.includes(f) && profile.notFound.includes(f)
     );
+
+    // A store that could not be reached is NOT a store with nothing in it.
+    // Checked before the no-match branch, because that branch's wording — "no
+    // stored memory matched, nothing was removed" — is a factual claim about
+    // the user's data that we are in no position to make when the query or the
+    // delete failed. Telling someone a memory is gone while it is still there
+    // is the worst outcome this feature has.
+    const failed = [...mem.failed, ...profile.failed];
+    if (failed.length > 0) {
+      return {
+        success: false,
+        error:
+          'Could not reach your memories just now, so nothing was removed — ' +
+          'please try again in a moment. Nothing has been deleted, and you can ' +
+          'check what is stored at Settings → AI → What Cat remembers.',
+      };
+    }
+
     if (removedCount === 0) {
       return {
         success: false,

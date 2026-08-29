@@ -268,6 +268,15 @@ export interface ProfileRemovalResult {
   removed: string[];
   /** Terms that matched nothing in the profile. */
   notFound: string[];
+  /**
+   * Terms we could not answer for, because the write did not land.
+   *
+   * Same distinction as ForgetResult.failed: "your profile has no such entry"
+   * and "we could not save the removal" used to be one value, so a failed
+   * upsert reported notFound and the entry stayed in the profile while the user
+   * was told it was gone. bitbaum/orangecat#563 finding 8.
+   */
+  failed: string[];
 }
 
 function entryText(it: unknown): string {
@@ -302,7 +311,7 @@ export async function removeFromEconomicProfile(
   terms: string[]
 ): Promise<ProfileRemovalResult> {
   const wanted = terms.map(t => t.trim()).filter(t => t.length >= 4);
-  const result: ProfileRemovalResult = { removed: [], notFound: [] };
+  const result: ProfileRemovalResult = { removed: [], notFound: [], failed: [] };
   if (wanted.length === 0) {
     return result;
   }
@@ -361,12 +370,14 @@ export async function removeFromEconomicProfile(
       { onConflict: 'user_id' }
     );
     if (error) {
+      // The entries matched; saving the profile without them is what failed, so
+      // they are still there. Reporting notFound would invert the truth.
       logger.warn('removeFromEconomicProfile upsert failed', { error }, 'EconomicProfile');
-      return { removed: [], notFound: wanted };
+      return { removed: [], notFound: result.notFound, failed: [...matchedTerms] };
     }
   } catch (err) {
     logger.warn('removeFromEconomicProfile failed', { err: String(err) }, 'EconomicProfile');
-    return { removed: [], notFound: wanted };
+    return { removed: [], notFound: result.notFound, failed: [...matchedTerms] };
   }
   return result;
 }

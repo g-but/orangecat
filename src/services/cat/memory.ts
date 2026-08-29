@@ -98,6 +98,17 @@ export interface ForgetResult {
   deleted: string[];
   /** Requested facts for which no stored memory matched. */
   notFound: string[];
+  /**
+   * Facts we could not answer for, because the database did not respond.
+   *
+   * Distinct from `notFound`, and the distinction is the whole point: "we
+   * looked and you have no such memory" and "we could not look" used to be the
+   * same value. A failed delete reported `notFound`, so Cat told the user
+   * nothing matched — while the memory they had just disowned was still there.
+   * Telling someone their data is gone when it is not is the worst thing this
+   * feature can do. bitbaum/orangecat#563 finding 8.
+   */
+  failed: string[];
 }
 
 /**
@@ -214,7 +225,7 @@ export async function forgetMemoriesMatching(
     .map(f => f.trim())
     .filter(f => f.length >= MIN_FORGET_FRAGMENT_CHARS)
     .slice(0, MAX_FORGET_FACTS);
-  const result: ForgetResult = { deleted: [], notFound: [] };
+  const result: ForgetResult = { deleted: [], notFound: [], failed: [] };
   if (wanted.length === 0) {
     return result;
   }
@@ -224,8 +235,10 @@ export async function forgetMemoriesMatching(
     .select('id, content')
     .eq('user_id', userId);
   if (loadError) {
+    // Could not read the corpus, so we cannot say anything about what matched.
+    // Reporting notFound here would tell the user their memories are absent.
     logger.warn('forgetMemoriesMatching load failed', { error: loadError }, 'CatMemory');
-    return { deleted: [], notFound: wanted };
+    return { deleted: [], notFound: [], failed: wanted };
   }
   const corpus = (rows ?? []) as Array<{ id: string; content: string }>;
 
@@ -283,8 +296,10 @@ export async function forgetMemoriesMatching(
       .eq('user_id', userId)
       .in('id', [...doomed.keys()]);
     if (error) {
+      // We DID match these — the delete is what failed, so the memories are
+      // still there. Saying notFound would be the opposite of the truth.
       logger.warn('forgetMemoriesMatching delete failed', { error }, 'CatMemory');
-      return { deleted: [], notFound: wanted };
+      return { deleted: [], notFound: result.notFound, failed: [...doomed.values()] };
     }
     result.deleted.push(...doomed.values());
     // Remember WHAT was forgotten (suppression list) so passive extraction
