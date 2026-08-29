@@ -4,6 +4,7 @@ import { MessageSquare, Coins, TrendingUp, Clock, BarChart2, Info } from 'lucide
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { formatNumber } from '@/utils/locale';
 
 interface UsageData {
   totalRequests: number;
@@ -38,7 +39,7 @@ export function AIUsageStats({ usage, periodSelector, className }: AIUsageStatsP
     if (num >= 1_000) {
       return `${(num / 1_000).toFixed(1)}K`;
     }
-    return num.toLocaleString();
+    return formatNumber(num);
   };
 
   const formatRelativeCompact = (dateString?: string) => {

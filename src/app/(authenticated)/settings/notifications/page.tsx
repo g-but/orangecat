@@ -28,6 +28,7 @@ import Loading from '@/components/Loading';
 import Button from '@/components/ui/Button';
 import { logger } from '@/utils/logger';
 import type { DigestFrequency, NotificationPreferences } from '@/types/notification-preferences';
+import { formatClockTime } from '@/utils/locale';
 
 const CATEGORIES: Array<{
   key: keyof Pick<
@@ -138,7 +139,7 @@ export default function NotificationSettingsPage() {
         }
         const json = (await res.json()) as { data: NotificationPreferences };
         setPrefs(json.data);
-        setSavedAt(new Date().toLocaleTimeString());
+        setSavedAt(formatClockTime(new Date()));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to save');
         setPrefs(prev); // revert so the UI never lies about what's saved

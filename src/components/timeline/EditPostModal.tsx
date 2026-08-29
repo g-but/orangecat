@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { cn } from '@/lib/utils';
 import { TIMELINE_CONTENT_LIMITS, TIMELINE_COPY, TIMELINE_SURFACE } from '@/config/timeline';
+import { formatNumber } from '@/utils/locale';
 
 interface EditPostModalProps {
   isOpen: boolean;
@@ -189,7 +190,7 @@ export function EditPostModal({
                   isOverLimit ? 'text-status-negative font-medium' : 'text-fg-tertiary'
                 )}
               >
-                {charCount.toLocaleString()} / {maxChars.toLocaleString()}
+                {formatNumber(charCount)} / {formatNumber(maxChars)}
               </div>
 
               <Button

@@ -8,6 +8,7 @@ import { UserPlus, FileText, Vote, CalendarPlus, Activity } from 'lucide-react';
 import { API_ROUTES } from '@/config/api-routes';
 import { logger } from '@/utils/logger';
 import type { ActivityType } from '@/services/groups/types';
+import { formatDate } from '@/utils/dates';
 
 interface ActivityUser {
   id: string;
@@ -68,7 +69,7 @@ function timeAgo(dateStr: string): string {
   if (days < 30) {
     return `${days}d ago`;
   }
-  return new Date(dateStr).toLocaleDateString();
+  return formatDate(dateStr);
 }
 
 function displayName(user: ActivityUser | null): string {

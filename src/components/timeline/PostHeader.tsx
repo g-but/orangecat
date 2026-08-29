@@ -11,6 +11,7 @@ import { getTimeAgo } from '@/services/timeline/formatters';
 import { TIMELINE_SURFACE } from '@/config/timeline';
 import { CAT_USERNAME } from '@/config/cat-identity';
 import { normalizeUsername } from '@/config/usernames';
+import { formatDateTime } from '@/utils/locale';
 
 interface PostHeaderProps {
   event: TimelineDisplayEvent;
@@ -122,7 +123,7 @@ export function PostHeader({
       <time
         dateTime={timestamp}
         className="text-fg-secondary text-sm hover:underline"
-        title={timestamp ? new Date(timestamp).toLocaleString() : undefined}
+        title={timestamp ? formatDateTime(timestamp) : undefined}
       >
         {timestamp ? getTimeAgo(timestamp) : ''}
       </time>

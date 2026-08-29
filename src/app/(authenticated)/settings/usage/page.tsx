@@ -18,6 +18,7 @@ import { useCatQuota } from '@/components/ai-chat/ModernChatPanel/hooks/useCatQu
 import { ROUTES } from '@/config/routes';
 import { CAT_PLANS, PLAN_ID_BY_QUOTA_TIER, type CatPlanId } from '@/config/cat-plans';
 import { formatCountdown, useCreditBalance } from './useCreditBalance';
+import { APP_LOCALE } from '@/utils/locale';
 
 export default function UsageSettingsPage() {
   const { quota, isLoading: quotaLoading } = useCatQuota();
@@ -116,7 +117,7 @@ export default function UsageSettingsPage() {
                     <>
                       {' '}
                       · Supporter until{' '}
-                      {new Date(quota.expiresAt).toLocaleDateString(undefined, {
+                      {new Date(quota.expiresAt).toLocaleDateString(APP_LOCALE, {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',
