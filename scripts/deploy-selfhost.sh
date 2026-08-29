@@ -150,7 +150,19 @@ for _ in $(seq 1 20); do
   [ "$code" = "200" ] && { ok=200; break; }
   read -t 1 _ </dev/zero 2>/dev/null || true
 done
-pkill -f 'app-next/server.js' 2>/dev/null || true
+# `pkill -f 'app-next/server.js'` does NOT reliably match the running
+# process: Next's standalone server rewrites its own process title to
+# "next-server (v...)" during startup, and that rewrite changes
+# /proc/PID/cmdline itself, not just what `ps` displays — confirmed
+# 2026-08-29 by reading /proc/PID/cmdline directly on a leaked instance.
+# Once boot succeeds (usually well before this line runs, since the
+# health-check loop above can take up to 20s), pkill -f has nothing left to
+# match, and the boot-test process leaks forever, squatting on $BOOT. That
+# then silently wedges every FUTURE deploy: the next boot-test binds a
+# different port collision or hits the stale process's stale health
+# response instead of the new build. Kill by what's actually listening on
+# the port instead — immune to whatever the process calls itself.
+fuser -k "$BOOT/tcp" 2>/dev/null || true
 [ "$ok" != "200" ] && { echo "BOOT-TEST FAILED ($ok)"; tail -25 "$LOG"; exit 1; }
 echo "boot-test: OK"
 
