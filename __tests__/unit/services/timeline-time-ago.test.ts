@@ -52,6 +52,14 @@ describe('getTimeAgo', () => {
     expect(out).toMatch(/\d/);
   });
 
+  it('writes the date in English, whatever the browser locale is', () => {
+    // The app ships <html lang="en"> and no translations. Taking the browser's
+    // locale rendered "22. Juli" next to a "1d" in the same metadata line for
+    // anyone on a non-English system.
+    const out = getTimeAgo(at(30 * DAY));
+    expect(out).toMatch(/^[A-Z][a-z]{2} \d{1,2}$/);
+  });
+
   it('keeps the year on older posts so they cannot read as recent', () => {
     const twoYearsAgo = new Date();
     twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);

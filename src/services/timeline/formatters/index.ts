@@ -214,8 +214,14 @@ export function getTimeAgo(timestamp: string): string {
     return `${diffDays}d`;
   }
 
+  // Pinned to en-US, matching <html lang="en">. Passing `undefined` here takes
+  // the BROWSER's locale, which rendered "22. Juli" inside an otherwise
+  // entirely English interface for anyone with a non-English system — a post
+  // dated in one language next to a "1d" in another. The app ships no
+  // translations; when it does, this should follow the app's locale, not the
+  // browser's, for exactly the same reason.
   const sameYear = eventTime.getFullYear() === now.getFullYear();
-  return eventTime.toLocaleDateString(undefined, {
+  return eventTime.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     ...(sameYear ? {} : { year: 'numeric' }),
