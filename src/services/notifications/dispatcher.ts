@@ -165,8 +165,9 @@ export class NotificationDispatcher {
       if (!_unconfiguredWarned) {
         _unconfiguredWarned = true;
         logger.warn(
-          'RESEND_API_KEY is not set — email notifications are disabled. ' +
-            'This warns once per process, not once per notification.',
+          'Dropping email notifications: RESEND_API_KEY (Resend) is unset. ' +
+            'Every notification email since process start has been silently discarded. ' +
+            'This warns once per process, not once per notification — treat one line as an ongoing outage, not a benign default.',
           {},
           LOG_SOURCE
         );
