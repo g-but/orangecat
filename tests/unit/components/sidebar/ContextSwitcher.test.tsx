@@ -17,11 +17,13 @@ import { ContextSwitcher } from '@/components/sidebar/ContextSwitcher';
 import { useNavigationContext } from '@/hooks/useNavigationContext';
 import type { Profile } from '@/types/database';
 
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: jest.fn() }),
+import type { Mock } from 'vitest';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
-jest.mock('next/image', () => ({
+vi.mock('next/image', () => ({
   __esModule: true,
   default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => (
     // eslint-disable-next-line @next/next/no-img-element
@@ -29,15 +31,15 @@ jest.mock('next/image', () => ({
   ),
 }));
 
-jest.mock('@/components/nostr/NWCStatusBadge', () => ({
+vi.mock('@/components/nostr/NWCStatusBadge', () => ({
   NWCStatusBadge: () => null,
 }));
 
-jest.mock('@/hooks/useNavigationContext', () => ({
-  useNavigationContext: jest.fn(),
+vi.mock('@/hooks/useNavigationContext', () => ({
+  useNavigationContext: vi.fn(),
 }));
 
-const mockUseNavigationContext = useNavigationContext as jest.Mock;
+const mockUseNavigationContext = useNavigationContext as Mock;
 
 const profile = {
   id: 'user-1',
@@ -51,8 +53,8 @@ beforeEach(() => {
     context: { type: 'individual' },
     userGroups: [],
     loadingGroups: false,
-    switchToIndividual: jest.fn(),
-    switchToGroup: jest.fn(),
+    switchToIndividual: vi.fn(),
+    switchToGroup: vi.fn(),
     isGroupContext: false,
   });
 });
@@ -66,7 +68,7 @@ describe('ContextSwitcher avatar is clickable', () => {
   });
 
   it('tells the sidebar to expand when the collapsed avatar is clicked', () => {
-    const onExpand = jest.fn();
+    const onExpand = vi.fn();
     render(<ContextSwitcher profile={profile} isExpanded={false} onExpand={onExpand} />);
 
     fireEvent.click(screen.getByAltText('Mao Nakamoto').closest('button')!);

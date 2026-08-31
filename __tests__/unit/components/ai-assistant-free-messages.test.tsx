@@ -17,7 +17,7 @@
 
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@/hooks/useDisplayCurrency', () => ({
+vi.mock('@/hooks/useDisplayCurrency', () => ({
   useDisplayCurrency: () => ({
     formatAmountBtc: (n: number) => `${n} BTC`,
     formatAmount: (n: number) => `${n}`,
@@ -35,7 +35,11 @@ const paid = {
 
 describe('ai assistant free-message allowance', () => {
   it('shows the allowance when the assistant actually charges', () => {
-    render(<div>{aiAssistantDetailConfig.renderHeaderExtra?.({ ...paid, free_messages_per_day: 5 })}</div>);
+    render(
+      <div>
+        {aiAssistantDetailConfig.renderHeaderExtra?.({ ...paid, free_messages_per_day: 5 })}
+      </div>
+    );
     expect(screen.getByText('First 5 free each day')).toBeInTheDocument();
   });
 
@@ -69,7 +73,11 @@ describe('ai assistant free-message allowance', () => {
   });
 
   it('hides it when the allowance is zero', () => {
-    render(<div>{aiAssistantDetailConfig.renderHeaderExtra?.({ ...paid, free_messages_per_day: 0 })}</div>);
+    render(
+      <div>
+        {aiAssistantDetailConfig.renderHeaderExtra?.({ ...paid, free_messages_per_day: 0 })}
+      </div>
+    );
     expect(screen.queryByText(/free each day/)).not.toBeInTheDocument();
     expect(screen.getByText(/0\.00001 BTC/)).toBeInTheDocument();
   });

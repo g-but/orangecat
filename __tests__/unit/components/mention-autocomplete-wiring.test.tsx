@@ -28,9 +28,11 @@ const PEOPLE = [
 
 /** Stand in for /api/profiles, answering the way the real endpoint does. */
 function mockProfiles(rows: (search: string) => unknown[]) {
-  global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+  global.fetch = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
-    const search = decodeURIComponent(new URL(url, 'http://localhost').searchParams.get('search') ?? '');
+    const search = decodeURIComponent(
+      new URL(url, 'http://localhost').searchParams.get('search') ?? ''
+    );
     return {
       ok: true,
       json: async () => ({ success: true, data: rows(search) }),
@@ -74,7 +76,7 @@ beforeEach(() => {
   );
 });
 
-afterEach(() => jest.restoreAllMocks());
+afterEach(() => vi.restoreAllMocks());
 
 describe('typing @ in a composer', () => {
   it('offers the Cat first, on the very first @ typed', async () => {

@@ -15,9 +15,9 @@ import { renderHook, act } from '@testing-library/react';
 import { usePostLikeDislike } from '@/hooks/usePostLikeDislike';
 import type { TimelineDisplayEvent } from '@/types/timeline';
 
-const toggleLike = jest.fn();
-const toggleDislike = jest.fn();
-jest.mock('@/services/timeline', () => ({
+const toggleLike = vi.fn();
+const toggleDislike = vi.fn();
+vi.mock('@/services/timeline', () => ({
   timelineService: {
     toggleLike: (...a: unknown[]) => toggleLike(...a),
     toggleDislike: (...a: unknown[]) => toggleDislike(...a),
@@ -36,10 +36,10 @@ function eventWith(overrides: Partial<TimelineDisplayEvent>): TimelineDisplayEve
 }
 
 describe('liking and disliking are exclusive', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => vi.clearAllMocks());
 
   it('clears the like when you dislike a post you had liked', async () => {
-    const onUpdate = jest.fn();
+    const onUpdate = vi.fn();
     toggleDislike.mockResolvedValue({
       success: true,
       disliked: true,
@@ -66,12 +66,17 @@ describe('liking and disliking are exclusive', () => {
     );
     // Server pass: both totals come from the response.
     expect(onUpdate).toHaveBeenLastCalledWith(
-      expect.objectContaining({ userDisliked: true, dislikesCount: 1, userLiked: false, likesCount: 0 })
+      expect.objectContaining({
+        userDisliked: true,
+        dislikesCount: 1,
+        userLiked: false,
+        likesCount: 0,
+      })
     );
   });
 
   it('clears the dislike when you like a post you had disliked', async () => {
-    const onUpdate = jest.fn();
+    const onUpdate = vi.fn();
     toggleLike.mockResolvedValue({
       success: true,
       liked: true,
@@ -98,7 +103,7 @@ describe('liking and disliking are exclusive', () => {
   });
 
   it('leaves the opposite alone when simply un-liking', async () => {
-    const onUpdate = jest.fn();
+    const onUpdate = vi.fn();
     toggleLike.mockResolvedValue({ success: true, liked: false, likeCount: 0, dislikeCount: 0 });
 
     const { result } = renderHook(() =>
@@ -116,7 +121,7 @@ describe('liking and disliking are exclusive', () => {
   });
 
   it('restores both sides when the server refuses', async () => {
-    const onUpdate = jest.fn();
+    const onUpdate = vi.fn();
     toggleDislike.mockResolvedValue({ success: false, disliked: false, dislikeCount: 0 });
 
     const { result } = renderHook(() =>

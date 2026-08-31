@@ -18,10 +18,10 @@
 
 import { toggleLike } from '@/services/timeline/processors/reactions';
 
-const rpc = jest.fn();
-const from = jest.fn();
+const rpc = vi.fn();
+const from = vi.fn();
 
-jest.mock('@/services/timeline/processors/social-shared', () => ({
+vi.mock('@/services/timeline/processors/social-shared', () => ({
   db: {
     rpc: (...args: unknown[]) => rpc(...args),
     from: (...args: unknown[]) => from(...args),
@@ -40,7 +40,7 @@ function noExistingReaction() {
 
 describe('reaction counts', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     noExistingReaction();
   });
 

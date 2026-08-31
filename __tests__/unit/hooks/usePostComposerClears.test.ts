@@ -19,23 +19,23 @@
 import { renderHook, act } from '@testing-library/react';
 import { usePostComposer } from '@/hooks/usePostComposerNew';
 
-const submitPost = jest.fn();
-const clearDraft = jest.fn();
+const submitPost = vi.fn();
+const clearDraft = vi.fn();
 
-jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }));
-jest.mock('@/hooks/usePostDraft', () => ({
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }));
+vi.mock('@/hooks/usePostDraft', () => ({
   usePostDraft: () => ({ clearDraft: (...a: unknown[]) => clearDraft(...a) }),
 }));
-jest.mock('@/services/timeline/utils/post-composer', () => ({
+vi.mock('@/services/timeline/utils/post-composer', () => ({
   submitPost: (...a: unknown[]) => submitPost(...a),
   formatPostError: (e: Error) => e.message,
-  queueOfflinePost: jest.fn(),
+  queueOfflinePost: vi.fn(),
   fetchUserProjects: async () => [],
 }));
 
 describe('the composer after a successful post', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     submitPost.mockResolvedValue({ success: true, event: { id: 'e1' } });
   });
 
@@ -55,7 +55,7 @@ describe('the composer after a successful post', () => {
   });
 
   it('still calls the caller onSuccess', async () => {
-    const onSuccess = jest.fn();
+    const onSuccess = vi.fn();
     const { result } = renderHook(() => usePostComposer({ onSuccess }));
 
     act(() => result.current.setContent('hello'));

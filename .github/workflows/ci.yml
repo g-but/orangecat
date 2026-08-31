@@ -76,7 +76,7 @@ jobs:
         #                    → 404 class of bug. Static, fast.
         #   - lint         : eslint — catches the undefined-identifier class (e.g.
         #                    the `IntegrationNote` bug that once landed on main).
-        #   - test:unit    : Jest unit suite (--watchAll=false).
+        #   - test:unit    : Vitest unit suite.
         # (Playwright/E2E stays a separate post-build gate below — it needs a
         # running server + secrets, so it isn't part of the static verify bundle.)
         run: npm run verify

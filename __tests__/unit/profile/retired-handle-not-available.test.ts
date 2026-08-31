@@ -17,14 +17,16 @@
 import { ProfileServerService } from '@/services/profile/server';
 import { resolveHistoricalUsername } from '@/domain/lightning-address/username-history';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+import type { Mock } from 'vitest';
+
+vi.mock('@/utils/logger', () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
-jest.mock('@/domain/lightning-address/username-history', () => ({
-  resolveHistoricalUsername: jest.fn(),
+vi.mock('@/domain/lightning-address/username-history', () => ({
+  resolveHistoricalUsername: vi.fn(),
 }));
 
-const resolveHistoricalUsernameMock = resolveHistoricalUsername as jest.Mock;
+const resolveHistoricalUsernameMock = resolveHistoricalUsername as Mock;
 
 const OWNER = 'cec88bc9-0000-0000-0000-000000000001';
 const SOMEONE_ELSE = 'cec88bc9-0000-0000-0000-000000000002';
@@ -43,7 +45,7 @@ function makeSupabase() {
 }
 
 describe('checkUsernameAvailability', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => vi.clearAllMocks());
 
   it('refuses a handle another account retired', async () => {
     resolveHistoricalUsernameMock.mockResolvedValue(SOMEONE_ELSE);

@@ -11,16 +11,18 @@ import { z } from 'zod';
 import { executeEntityFormSubmit } from '@/components/create/EntityForm/hooks/entityFormSubmitAction';
 import type { EntityConfig } from '@/components/create/types';
 
-jest.mock('sonner', () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
+import type { Mock } from 'vitest';
+
+vi.mock('sonner', () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
 }));
-jest.mock('@/lib/analytics', () => ({
-  entityEvents: { created: jest.fn() },
+vi.mock('@/lib/analytics', () => ({
+  entityEvents: { created: vi.fn() },
 }));
-jest.mock('@/utils/logger', () => ({
-  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
 }));
-jest.mock('@/config/api-routes', () => ({
+vi.mock('@/config/api-routes', () => ({
   API_ROUTES: { ENTITY_WALLETS: '/api/entity-wallets' },
 }));
 
@@ -51,11 +53,11 @@ function makeParams(overrides: Record<string, unknown> = {}) {
     user: { id: 'user-1' },
     onSuccess: undefined as ((data: TestData & { id: string }) => void) | undefined,
     onError: undefined,
-    clearDraft: jest.fn(),
-    setSubmitting: jest.fn(),
-    setErrors: jest.fn(),
-    onEntityCreated: jest.fn(),
-    router: { push: jest.fn() },
+    clearDraft: vi.fn(),
+    setSubmitting: vi.fn(),
+    setErrors: vi.fn(),
+    onEntityCreated: vi.fn(),
+    router: { push: vi.fn() },
     existingWalletLinkIdRef: { current: undefined as string | undefined },
     wizardMode: undefined,
     actorId: undefined as string | null | undefined,
@@ -64,7 +66,7 @@ function makeParams(overrides: Record<string, unknown> = {}) {
 }
 
 function mockFetchOk(data: Record<string, unknown>) {
-  return jest.fn().mockResolvedValue({
+  return vi.fn().mockResolvedValue({
     ok: true,
     json: () => Promise.resolve({ success: true, data }),
     clone() {
@@ -75,7 +77,7 @@ function mockFetchOk(data: Record<string, unknown>) {
 
 describe('executeEntityFormSubmit', () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('create mode POSTs to config.apiEndpoint', async () => {
@@ -88,7 +90,7 @@ describe('executeEntityFormSubmit', () => {
       '/api/causes',
       expect.objectContaining({ method: 'POST' })
     );
-    const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+    const body = JSON.parse((global.fetch as Mock).mock.calls[0][1].body);
     expect(body).toEqual({ title: 'My cause' });
     expect(params.clearDraft).toHaveBeenCalled();
     expect(params.onEntityCreated).toHaveBeenCalledWith({ id: 'new-1', title: 'My cause' });
@@ -100,13 +102,13 @@ describe('executeEntityFormSubmit', () => {
 
     await executeEntityFormSubmit(params);
 
-    const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+    const body = JSON.parse((global.fetch as Mock).mock.calls[0][1].body);
     expect(body.actor_id).toBe('actor-9');
   });
 
   it('edit mode PUTs to `${apiEndpoint}/${entityId}` and never sends actor_id', async () => {
     global.fetch = mockFetchOk({ id: 'e-42', title: 'My cause' }) as unknown as typeof fetch;
-    const onSuccess = jest.fn();
+    const onSuccess = vi.fn();
     const params = makeParams({
       mode: 'edit' as const,
       entityId: 'e-42',
@@ -120,7 +122,7 @@ describe('executeEntityFormSubmit', () => {
       '/api/causes/e-42',
       expect.objectContaining({ method: 'PUT' })
     );
-    const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+    const body = JSON.parse((global.fetch as Mock).mock.calls[0][1].body);
     expect(body.actor_id).toBeUndefined();
     // Edit must NOT clear the create-draft or fire the created analytics event
     expect(params.clearDraft).not.toHaveBeenCalled();
@@ -141,7 +143,7 @@ describe('executeEntityFormSubmit', () => {
   });
 
   it('does not fetch when validation fails; surfaces field errors', async () => {
-    global.fetch = jest.fn() as unknown as typeof fetch;
+    global.fetch = vi.fn() as unknown as typeof fetch;
     const params = makeParams({ formStateData: { title: '' } as TestData });
 
     await executeEntityFormSubmit(params);
@@ -153,7 +155,7 @@ describe('executeEntityFormSubmit', () => {
   });
 
   it('surfaces API errors as a general error without redirecting', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
+    global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       json: () => Promise.resolve({ error: 'You can only update your own causes' }),
       clone() {

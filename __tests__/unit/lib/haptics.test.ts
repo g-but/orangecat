@@ -12,7 +12,7 @@ function mockMatchMedia(reduced: boolean) {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     configurable: true,
-    value: jest.fn().mockReturnValue({ matches: reduced }),
+    value: vi.fn().mockReturnValue({ matches: reduced }),
   });
 }
 
@@ -26,8 +26,12 @@ afterEach(() => {
 
 describe('haptic', () => {
   it('vibrates for a completed payment', () => {
-    const vibrate = jest.fn();
-    Object.defineProperty(navigator, 'vibrate', { writable: true, configurable: true, value: vibrate });
+    const vibrate = vi.fn();
+    Object.defineProperty(navigator, 'vibrate', {
+      writable: true,
+      configurable: true,
+      value: vibrate,
+    });
     mockMatchMedia(false);
 
     haptic('success');
@@ -37,8 +41,12 @@ describe('haptic', () => {
   });
 
   it('stays silent when the user prefers reduced motion', () => {
-    const vibrate = jest.fn();
-    Object.defineProperty(navigator, 'vibrate', { writable: true, configurable: true, value: vibrate });
+    const vibrate = vi.fn();
+    Object.defineProperty(navigator, 'vibrate', {
+      writable: true,
+      configurable: true,
+      value: vibrate,
+    });
     mockMatchMedia(true);
 
     haptic('success');

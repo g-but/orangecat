@@ -15,9 +15,9 @@
  */
 
 // Provide a real-ish NextResponse.json so the helpers produce parseable objects.
-// The global __mocks__/next-server.js mock returns jest.fn() (→ undefined), which
+// The global __mocks__/next-server.js mock returns vi.fn() (→ undefined), which
 // prevents calling .json() on the result. Override it here with an implementation.
-jest.mock('next/server', () => ({
+vi.mock('next/server', () => ({
   NextResponse: {
     json: (data: unknown, init?: ResponseInit & { headers?: HeadersInit }) => {
       const headerMap = new Headers(init?.headers);
@@ -27,13 +27,13 @@ jest.mock('next/server', () => ({
         json: async () => data,
       };
     },
-    redirect: jest.fn(),
-    next: jest.fn(),
+    redirect: vi.fn(),
+    next: vi.fn(),
   },
 }));
 
-jest.mock('@/utils/logger', () => ({
-  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
 import {

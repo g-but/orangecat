@@ -19,41 +19,43 @@
 import { findIncompleteSettlements } from '@/services/payments/reconcile';
 import { STATUS } from '@/config/database-constants';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
 }));
 
 import { logger } from '@/utils/logger';
+
+import type { Mock } from 'vitest';
 
 /** Records the filters applied, so the predicate itself can be asserted. */
 function makeAdmin(result: { data: unknown; error: unknown }) {
   const calls: Record<string, unknown> = {};
   const chain = {
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn((col: string, val: unknown) => {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn((col: string, val: unknown) => {
       calls[`eq:${col}`] = val;
       return chain;
     }),
-    is: jest.fn((col: string, val: unknown) => {
+    is: vi.fn((col: string, val: unknown) => {
       calls[`is:${col}`] = val;
       return chain;
     }),
-    lt: jest.fn((col: string, val: unknown) => {
+    lt: vi.fn((col: string, val: unknown) => {
       calls[`lt:${col}`] = val;
       return chain;
     }),
-    order: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockResolvedValue(result),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue(result),
   };
   return {
-    admin: { from: jest.fn(() => chain) } as never,
+    admin: { from: vi.fn(() => chain) } as never,
     calls,
     chain,
   };
 }
 
 describe('findIncompleteSettlements', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => vi.clearAllMocks());
 
   it('asks for paid intents with no side-effects marker', async () => {
     const { admin, calls } = makeAdmin({ data: [], error: null });
@@ -86,7 +88,7 @@ describe('findIncompleteSettlements', () => {
     expect(result.ids).toEqual(['pi-1', 'pi-2']);
     // error, not warn: a buyer paid and their order never moved.
     expect(logger.error).toHaveBeenCalledTimes(1);
-    const [, payload] = (logger.error as jest.Mock).mock.calls[0];
+    const [, payload] = (logger.error as Mock).mock.calls[0];
     expect(payload.paymentIntentIds).toEqual(['pi-1', 'pi-2']);
   });
 
@@ -109,6 +111,6 @@ describe('findIncompleteSettlements', () => {
     await findIncompleteSettlements(admin);
 
     expect(chain).not.toHaveProperty('update');
-    expect((chain.select as jest.Mock).mock.calls[0][0]).toBe('id');
+    expect((chain.select as Mock).mock.calls[0][0]).toBe('id');
   });
 });

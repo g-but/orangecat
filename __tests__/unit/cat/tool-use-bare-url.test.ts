@@ -15,11 +15,13 @@ import { executeToolCall } from '@/services/cat/tool-executor';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import type { RawToolCall, ToolAugmentedMessage } from '@/services/cat/tool-use-types';
 
-jest.mock('@/services/cat/tool-executor', () => ({
-  executeToolCall: jest.fn(),
+import type { MockedFunction } from 'vitest';
+
+vi.mock('@/services/cat/tool-executor', () => ({
+  executeToolCall: vi.fn(),
 }));
 
-const mockExecuteToolCall = executeToolCall as jest.MockedFunction<typeof executeToolCall>;
+const mockExecuteToolCall = executeToolCall as MockedFunction<typeof executeToolCall>;
 
 const supabase = {} as AnySupabaseClient;
 const USER_ID = 'user-1';
@@ -68,8 +70,8 @@ describe('maybeEnrichWithSearchResults — bare-URL message', () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    global.fetch = jest.fn(async () => stopResponse()) as unknown as typeof fetch;
+    vi.clearAllMocks();
+    global.fetch = vi.fn(async () => stopResponse()) as unknown as typeof fetch;
   });
 
   afterEach(() => {
@@ -153,7 +155,7 @@ describe('maybeEnrichWithSearchResults — bare-URL message', () => {
   });
 
   it('returns messages unchanged when the routing provider errors on a non-URL message', async () => {
-    global.fetch = jest.fn(async () => {
+    global.fetch = vi.fn(async () => {
       throw new Error('network down');
     }) as unknown as typeof fetch;
 

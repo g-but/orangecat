@@ -12,16 +12,13 @@
  * onto one request rather than racing to make several.
  */
 
-import {
-  getCurrentUserId,
-  __resetCurrentUserIdCache,
-} from '@/services/supabase/auth/session';
+import { getCurrentUserId, __resetCurrentUserIdCache } from '@/services/supabase/auth/session';
 // The timeline re-exports it rather than defining its own; both names must be
 // the same function, or the cache would only cover half the callers.
 import { getCurrentUserId as timelineGetCurrentUserId } from '@/services/timeline/processors/social-shared';
 
-const getUser = jest.fn();
-jest.mock('@/lib/supabase/browser', () => ({
+const getUser = vi.fn();
+vi.mock('@/lib/supabase/browser', () => ({
   __esModule: true,
   default: {
     auth: {
@@ -33,7 +30,7 @@ jest.mock('@/lib/supabase/browser', () => ({
 
 describe('getCurrentUserId', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     __resetCurrentUserIdCache();
     getUser.mockResolvedValue({ data: { user: { id: 'u1' } } });
   });

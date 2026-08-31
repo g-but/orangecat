@@ -177,7 +177,7 @@ function makeBuilder() {
   };
 }
 
-jest.mock('@/lib/supabase/admin', () => ({
+vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
     from: () => makeBuilder(),
   }),

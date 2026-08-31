@@ -22,14 +22,16 @@
 import { contextHandlers } from '@/services/cat/handlers/context';
 import { ProfileServerService } from '@/services/profile/server';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+import type { Mock } from 'vitest';
+
+vi.mock('@/utils/logger', () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
-jest.mock('@/services/profile/server', () => ({
-  ProfileServerService: { checkUsernameAvailability: jest.fn() },
+vi.mock('@/services/profile/server', () => ({
+  ProfileServerService: { checkUsernameAvailability: vi.fn() },
 }));
 
-const availabilityMock = ProfileServerService.checkUsernameAvailability as jest.Mock;
+const availabilityMock = ProfileServerService.checkUsernameAvailability as Mock;
 
 const USER = 'cec88bc9-0000-0000-0000-000000000001';
 
@@ -66,7 +68,7 @@ const run = (supabase: never, params: Record<string, unknown>) =>
 
 describe('update_profile — changing the @handle', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     availabilityMock.mockResolvedValue(true);
   });
 

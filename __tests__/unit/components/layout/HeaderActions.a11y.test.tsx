@@ -10,9 +10,9 @@ import '@testing-library/jest-dom';
 import { NotificationsButton } from '@/components/layout/HeaderActions';
 
 let mockUnreadCount = 0;
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
-jest.mock('@/stores/messaging', () => ({ useUnreadCount: () => 0 }));
-jest.mock('@/hooks/useUnreadNotifications', () => ({
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('@/stores/messaging', () => ({ useUnreadCount: () => 0 }));
+vi.mock('@/hooks/useUnreadNotifications', () => ({
   useUnreadNotifications: () => ({ count: mockUnreadCount }),
 }));
 

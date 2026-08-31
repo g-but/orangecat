@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildFullContextString — full-output snapshot renders every section identically (byte-for-byte) 1`] = `
+exports[`buildFullContextString — full-output snapshot > renders every section identically (byte-for-byte) 1`] = `
 "# User Context for Personalized Advice
 
 ## Current Session

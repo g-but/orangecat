@@ -6,6 +6,8 @@ import {
 } from '@/hooks/useNavigationStorage';
 import type { NavSection } from '@/hooks/useNavigation';
 
+import type { Mock } from 'vitest';
+
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 const STORAGE_KEYS = {
@@ -45,16 +47,16 @@ const basicSections: NavSection[] = [
 // We provide a real in-memory backing store per test.
 function setupLocalStorageMock() {
   const store: Record<string, string> = {};
-  jest
-    .spyOn(window.localStorage, 'getItem')
-    .mockImplementation(key => (key in store ? store[key] : null));
-  jest.spyOn(window.localStorage, 'setItem').mockImplementation((key, val) => {
+  vi.spyOn(window.localStorage, 'getItem').mockImplementation(key =>
+    key in store ? store[key] : null
+  );
+  vi.spyOn(window.localStorage, 'setItem').mockImplementation((key, val) => {
     store[key] = val;
   });
-  jest.spyOn(window.localStorage, 'removeItem').mockImplementation(key => {
+  vi.spyOn(window.localStorage, 'removeItem').mockImplementation(key => {
     delete store[key];
   });
-  jest.spyOn(window.localStorage, 'clear').mockImplementation(() => {
+  vi.spyOn(window.localStorage, 'clear').mockImplementation(() => {
     Object.keys(store).forEach(k => delete store[k]);
   });
   return store;
@@ -129,7 +131,7 @@ describe('clearNavigationStorage', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('removes all three storage keys', () => {
@@ -152,17 +154,17 @@ describe('clearNavigationStorage', () => {
 // ─── useNavigationStorage ───────────────────────────────────────────────────
 
 describe('useNavigationStorage', () => {
-  let onStateLoaded: jest.Mock;
-  let onLoadFailed: jest.Mock;
+  let onStateLoaded: Mock;
+  let onLoadFailed: Mock;
 
   beforeEach(() => {
-    onStateLoaded = jest.fn();
-    onLoadFailed = jest.fn();
+    onStateLoaded = vi.fn();
+    onLoadFailed = vi.fn();
     setupLocalStorageMock();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('does not call onStateLoaded when hydrated is false', () => {
@@ -233,7 +235,7 @@ describe('useNavigationStorage', () => {
   });
 
   it('calls onLoadFailed when localStorage throws', () => {
-    jest.spyOn(window.localStorage, 'getItem').mockImplementation(() => {
+    vi.spyOn(window.localStorage, 'getItem').mockImplementation(() => {
       throw new Error('storage error');
     });
 
@@ -248,17 +250,17 @@ describe('useNavigationStorage', () => {
   // (stable ref pattern) remains necessary.
   it('re-fires the effect when a new callback reference is passed', () => {
     const { rerender } = renderHook(
-      ({ cb }: { cb: jest.Mock }) =>
+      ({ cb }: { cb: Mock }) =>
         useNavigationStorage(true, basicSections, {
           onStateLoaded: cb,
-          onLoadFailed: jest.fn(),
+          onLoadFailed: vi.fn(),
         }),
       { initialProps: { cb: onStateLoaded } }
     );
 
     expect(onStateLoaded).toHaveBeenCalledTimes(1);
 
-    const newCb = jest.fn();
+    const newCb = vi.fn();
     act(() => {
       rerender({ cb: newCb });
     });

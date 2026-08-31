@@ -10,8 +10,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { HeaderNavigation, type NavigationItem } from '@/components/layout/HeaderNavigation';
 
-jest.mock('next/link', () => {
-  return function MockLink({
+vi.mock('next/link', () => ({
+  default: function MockLink({
     children,
     href,
     ...props
@@ -21,8 +21,8 @@ jest.mock('next/link', () => {
         {children}
       </a>
     );
-  };
-});
+  },
+}));
 
 const items: NavigationItem[] = [
   {

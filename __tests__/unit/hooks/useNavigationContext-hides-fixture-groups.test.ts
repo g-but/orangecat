@@ -13,10 +13,10 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { useNavigationContext } from '@/hooks/useNavigationContext';
 
 const mockStableAuth = { user: { id: 'user-1' } };
-jest.mock('@/hooks/useAuth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => mockStableAuth,
 }));
-jest.mock('next/navigation', () => ({
+vi.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
 }));
 
@@ -28,7 +28,7 @@ const GROUPS = [
 ];
 
 beforeEach(() => {
-  global.fetch = jest.fn(() =>
+  global.fetch = vi.fn(() =>
     Promise.resolve({
       ok: true,
       json: async () => ({ success: true, data: { groups: GROUPS } }),

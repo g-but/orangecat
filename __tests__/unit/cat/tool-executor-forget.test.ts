@@ -7,17 +7,17 @@
  * pins the both-stores contract on the path that missed it.
  */
 
-jest.mock('@/utils/logger', () => ({
-  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
-const mockForgetMemories = jest.fn();
-jest.mock('@/services/cat/memory', () => ({
+const mockForgetMemories = vi.fn();
+vi.mock('@/services/cat/memory', () => ({
   forgetMemoriesMatching: (...args: unknown[]) => mockForgetMemories(...args),
 }));
 
-const mockRemoveProfile = jest.fn();
-jest.mock('@/services/cat/economic-profile', () => ({
+const mockRemoveProfile = vi.fn();
+vi.mock('@/services/cat/economic-profile', () => ({
   removeFromEconomicProfile: (...args: unknown[]) => mockRemoveProfile(...args),
 }));
 

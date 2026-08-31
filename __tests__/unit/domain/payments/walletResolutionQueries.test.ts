@@ -24,19 +24,21 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { getEntityMetadata } from '@/config/entity-registry';
 import { createFakeSupabase, type Row } from '../../../../test-utils/fakeSupabase';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
-jest.mock('@/lib/supabase/admin', () => ({ getAdminClient: jest.fn() }));
+vi.mock('@/lib/supabase/admin', () => ({ getAdminClient: vi.fn() }));
 // Identity decrypt: these tests assert which wallet wins, not the crypto.
-jest.mock('@/domain/payments/encryptionService', () => ({
-  decrypt: jest.fn((s: string) => s),
+vi.mock('@/domain/payments/encryptionService', () => ({
+  decrypt: vi.fn((s: string) => s),
 }));
 
 import { getAdminClient } from '@/lib/supabase/admin';
 import { decrypt } from '@/domain/payments/encryptionService';
-const getAdminClientMock = getAdminClient as jest.Mock;
-const decryptMock = decrypt as jest.Mock;
+import type { Mock } from 'vitest';
+
+const getAdminClientMock = getAdminClient as Mock;
+const decryptMock = decrypt as Mock;
 
 const OWNER = 'user-1';
 const STRANGER = 'user-2';
@@ -57,7 +59,7 @@ function wallet(over: Row): Row {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   decryptMock.mockImplementation((s: string) => s);
 });
 

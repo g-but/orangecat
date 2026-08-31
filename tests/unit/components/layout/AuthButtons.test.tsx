@@ -13,12 +13,14 @@ import '@testing-library/jest-dom';
 import AuthButtons from '@/components/layout/AuthButtons';
 import { useAuth } from '@/hooks/useAuth';
 
-jest.mock('@/hooks/useAuth', () => ({
-  useAuth: jest.fn(),
+import type { Mock } from 'vitest';
+
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: vi.fn(),
 }));
 
-jest.mock('next/link', () => {
-  return function MockLink({
+vi.mock('next/link', () => ({
+  default: function MockLink({
     children,
     href,
     className,
@@ -32,20 +34,20 @@ jest.mock('next/link', () => {
         {children}
       </a>
     );
-  };
-});
+  },
+}));
 
-jest.mock('@/components/ui/UserProfileDropdown', () => {
-  return function MockUserProfileDropdown({ variant }: { variant?: string }) {
+vi.mock('@/components/ui/UserProfileDropdown', () => ({
+  default: function MockUserProfileDropdown({ variant }: { variant?: string }) {
     return (
       <div data-testid="user-profile-dropdown" data-variant={variant}>
         User Profile Dropdown
       </div>
     );
-  };
-});
+  },
+}));
 
-const mockUseAuth = useAuth as jest.Mock;
+const mockUseAuth = useAuth as Mock;
 
 function setAuth(state: {
   hydrated: boolean;
