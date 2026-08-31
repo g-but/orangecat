@@ -79,7 +79,7 @@ export const PUT = withAuth(async (request: AuthenticatedRequest, context: Route
     // Validate request
     const validationResult = updateGroupSchema.safeParse(body);
     if (!validationResult.success) {
-      return apiBadRequest('Invalid request', validationResult.error.errors);
+      return apiBadRequest('Invalid request', validationResult.error.issues);
     }
 
     // Get group first to check permissions (use the authenticated server client)

@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   try {
     const parsed = publicSupportCreateSchema.safeParse(await request.json());
     if (!parsed.success) {
-      return apiBadRequest('Invalid support request', parsed.error.errors);
+      return apiBadRequest('Invalid support request', parsed.error.issues);
     }
 
     // After parsing, because the recipient is in the body — and BEFORE

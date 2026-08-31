@@ -106,7 +106,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest, context: Rout
     // Validate request
     const validationResult = supportProjectSchema.safeParse(body);
     if (!validationResult.success) {
-      return apiBadRequest('Invalid request', validationResult.error.errors);
+      return apiBadRequest('Invalid request', validationResult.error.issues);
     }
 
     // Create support

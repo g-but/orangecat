@@ -51,7 +51,7 @@ export const PATCH = withAuth(async (request: AuthenticatedRequest, context: Rou
     const rawBody = await request.json();
     const parseResult = walletUpdateSchema.safeParse(rawBody);
     if (!parseResult.success) {
-      return apiBadRequest('Invalid input', parseResult.error.errors);
+      return apiBadRequest('Invalid input', parseResult.error.issues);
     }
 
     const result = await fetchWalletAndVerifyOwner(supabase, id, user.id, 'update');

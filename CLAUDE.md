@@ -11,8 +11,8 @@ FleetCrown (rebranded from Cockpit) is a live customer project (see "FleetCrown"
 
 | Layer      | Technology                                                                          |
 | ---------- | ----------------------------------------------------------------------------------- |
-| Framework  | Next.js 16, React 19, TypeScript 5.8                                                |
-| Styling    | Tailwind CSS 3.3                                                                    |
+| Framework  | Next.js 16, React 19, TypeScript 5.x                                                |
+| Styling    | Tailwind CSS 4                                                                      |
 | Database   | Self-hosted Supabase (PostgreSQL + Auth + RLS) — `supabase.orangecat.ch` on Hetzner |
 | Bitcoin    | Lightning Network, BTCPay, NWC                                                      |
 | Deployment | Self-hosted on Hetzner (`bitbaum`, behind Caddy)                                    |
@@ -45,7 +45,8 @@ Multi-commit migration in progress:
 - ✅ Warm-accent Button variant; landing + auth + about + header CTAs all use `variant="accent"` (ff9f2ce5, 2cdb0907)
 - ⏳ Drop chromatic brand palette (tiffany, orange) from new code; migrate existing classes to semantic tier (`bg-card → bg-surface-base`, `text-foreground → text-fg-primary`)
 - ⏳ Display typography (Space Grotesk for headings, IBM Plex Mono for code) replacing Inter-only
-- ⏳ Tailwind v4 + OKLCH color space
+- ✅ Tailwind v4 (package on 4.x — this line previously claimed 3.3 long after main had moved, which misled agents; keep this table honest)
+- ⏳ OKLCH color space for the token tier
 
 End state: monochromatic surfaces + one warm accent (`#ff5c00`) for top-of-funnel conversion + Bitcoin Orange for Bitcoin-specific UI + status colors only for actual status. Everything else stays achromatic.
 

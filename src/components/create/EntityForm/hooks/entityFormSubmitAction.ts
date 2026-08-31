@@ -56,7 +56,7 @@ export async function executeEntityFormSubmit<T extends Record<string, unknown>>
       wizardMode.onNext();
     } catch (error) {
       if (error instanceof ZodError) {
-        const visibleErrors = error.errors.filter(err =>
+        const visibleErrors = error.issues.filter(err =>
           wizardMode.visibleFields.includes(err.path[0] as string)
         );
         if (visibleErrors.length > 0) {
@@ -180,7 +180,7 @@ export async function executeEntityFormSubmit<T extends Record<string, unknown>>
   } catch (error) {
     if (error instanceof ZodError) {
       const fieldErrors: Record<string, string> = {};
-      error.errors.forEach(err => {
+      error.issues.forEach(err => {
         const path = err.path[0] as string;
         fieldErrors[path] = err.message;
       });

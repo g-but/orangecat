@@ -126,7 +126,7 @@ export async function handleL402Challenge(
   if (!parsed.success) {
     return apiBadRequest(
       'Invalid payment request — pass ?amount_btc= between 0.000001 and 1.',
-      parsed.error.errors
+      parsed.error.issues
     );
   }
 

@@ -26,7 +26,7 @@ import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/constants/pagination';
 
 const createBookingSchema = z.object({
   bookable_type: z.enum(['service', 'asset']),
-  bookable_id: z.string().uuid(),
+  bookable_id: z.string().guid(),
   starts_at: z.string().datetime(),
   ends_at: z.string().datetime(),
   timezone: z.string().max(64).optional(),

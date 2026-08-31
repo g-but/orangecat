@@ -129,7 +129,7 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
   const schemaWithActor: ZodSchema =
     schema instanceof ZodObject
       ? (schema as ZodObject<z.ZodRawShape>).extend({
-          actor_id: z.string().uuid().optional(),
+          actor_id: z.string().guid().optional(),
         })
       : schema;
 

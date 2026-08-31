@@ -30,9 +30,12 @@ export const usernameSchema = z
   .min(USERNAME_MIN_LENGTH, `Username must be at least ${USERNAME_MIN_LENGTH} characters`)
   .max(USERNAME_MAX_LENGTH, `Username must be at most ${USERNAME_MAX_LENGTH} characters`)
   .regex(USERNAME_PATTERN, USERNAME_RULE_MESSAGE)
-  .refine(value => reservedReason(value) === null, value => ({
-    message: `"${value}" is reserved — ${reservedReason(value) ?? 'not available'}`,
-  }));
+  .refine(value => reservedReason(value) === null, {
+    error: issue => {
+      const value = String(issue.input ?? '');
+      return `"${value}" is reserved — ${reservedReason(value) ?? 'not available'}`;
+    },
+  });
 
 /**
  * Lightning Address Validation
@@ -258,9 +261,11 @@ export const profileSchema = z.object({
         const result = validatePhoneNumber(val);
         return result.valid;
       },
-      val => {
-        const result = validatePhoneNumber(val || '');
-        return { message: result.error || 'Invalid phone number format' };
+      {
+        error: issue => {
+          const result = validatePhoneNumber(String(issue.input ?? ''));
+          return result.error || 'Invalid phone number format';
+        },
       }
     ),
   // Wallet fields (kept for backward compatibility, but wallets are now managed separately)

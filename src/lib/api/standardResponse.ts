@@ -307,7 +307,7 @@ export function apiServiceUnavailable(
 // =====================================================================
 
 type SupabaseError = { code?: string; message?: string; hint?: string };
-type ZodLikeError = { errors?: Array<{ path?: string[]; message?: string }> };
+type ZodLikeError = { issues?: Array<{ path?: Array<string | number>; message?: string }> };
 type ApiLikeError = {
   name?: string;
   code?: string;
@@ -358,9 +358,9 @@ export function handleSupabaseError(error: unknown): NextResponse<ApiErrorRespon
  */
 export function handleValidationError(error: unknown): NextResponse<ApiErrorResponse> {
   const err = error as ZodLikeError;
-  if (err.errors && Array.isArray(err.errors)) {
+  if (err.issues && Array.isArray(err.issues)) {
     return apiValidationError('Validation failed', {
-      fields: err.errors.map(e => ({
+      fields: err.issues.map(e => ({
         field: e.path?.join('.'),
         message: e.message,
       })),
