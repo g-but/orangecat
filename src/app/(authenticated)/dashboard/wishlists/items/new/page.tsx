@@ -57,7 +57,7 @@ function AddWishlistItemForm() {
       target_amount_btc: Number(targetAmountBtc),
     });
     if (!parsed.success) {
-      toast.error(parsed.error.errors[0]?.message || 'Please check the form');
+      toast.error(parsed.error.issues[0]?.message || 'Please check the form');
       return;
     }
 

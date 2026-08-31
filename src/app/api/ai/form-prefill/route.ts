@@ -35,7 +35,7 @@ const requestSchema = z
     /** Legacy name for formType — kept so in-flight clients keep working */
     entityType: z.string().min(1).optional(),
     description: z.string().min(1, 'Description is required'),
-    existingData: z.record(z.unknown()).optional(),
+    existingData: z.record(z.string(), z.unknown()).optional(),
     /**
      * `fill` protects what the user already typed; `refine` lets the AI rewrite
      * it. A refine request that arrives as `fill` can never change anything.

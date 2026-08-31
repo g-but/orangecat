@@ -54,7 +54,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const parsed = publicPaymentActionSchema.safeParse(await request.json());
   if (!parsed.success) {
-    return apiBadRequest('Invalid payment action', parsed.error.errors);
+    return apiBadRequest('Invalid payment action', parsed.error.issues);
   }
 
   try {

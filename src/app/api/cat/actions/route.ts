@@ -31,9 +31,9 @@ import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/constants/pagination';
 // Validation schema
 const executeActionSchema = z.object({
   actionId: z.string().min(1),
-  parameters: z.record(z.unknown()),
-  conversationId: z.string().uuid().optional(),
-  messageId: z.string().uuid().optional(),
+  parameters: z.record(z.string(), z.unknown()),
+  conversationId: z.string().guid().optional(),
+  messageId: z.string().guid().optional(),
 });
 
 /**
@@ -83,7 +83,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const parseResult = executeActionSchema.safeParse(body);
 
     if (!parseResult.success) {
-      return apiBadRequest('Invalid request', parseResult.error.errors);
+      return apiBadRequest('Invalid request', parseResult.error.issues);
     }
 
     // Get user's actor ID

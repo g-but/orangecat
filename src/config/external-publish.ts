@@ -85,13 +85,13 @@ export const externalPublishSchema = z.object({
   event_type: z.enum(EXTERNAL_PUBLISHABLE_EVENT_TYPES),
   subject_type: z.enum(EXTERNAL_PUBLISHABLE_SUBJECT_TYPES).default('project'),
   /** The OrangeCat entity this update is about (must be owned by the caller). */
-  subject_id: z.string().uuid(),
+  subject_id: z.string().guid(),
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
   /** Deep-link back to the source surface (e.g. the FleetCrown changelog entry). */
   url: webUrl().optional(),
   /** Structured payload preserved verbatim under timeline_events.content. */
-  content: z.record(z.unknown()).optional(),
+  content: z.record(z.string(), z.unknown()).optional(),
   tags: z.array(z.string().max(40)).max(20).optional(),
   /** When the event happened at the source (defaults to now on the OC side). */
   event_timestamp: z.string().datetime().optional(),

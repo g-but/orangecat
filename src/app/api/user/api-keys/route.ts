@@ -37,7 +37,7 @@ const reorderSchema = z.object({
   // Each entry is a key id (uuid) or the literal 'platform' sentinel for the
   // free OrangeCat default's position in the chain.
   order: z
-    .array(z.union([z.string().uuid(), z.literal(PLATFORM_CHAIN_ID)]))
+    .array(z.union([z.string().guid(), z.literal(PLATFORM_CHAIN_ID)]))
     .min(1)
     .max(50),
 });

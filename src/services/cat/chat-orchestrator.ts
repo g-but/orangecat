@@ -48,7 +48,7 @@ export const catChatBodySchema = z.object({
   model: z.string().optional(),
   stream: z.boolean().optional(),
   /** Target conversation. Omitted → the user's default conversation. */
-  conversationId: z.string().uuid().optional(),
+  conversationId: z.string().guid().optional(),
   /**
    * Runtime session hints from the client. Optional and untrusted — the server
    * validates each field. Drive Cat's locale, price quoting, and recent-page

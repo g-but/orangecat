@@ -17,7 +17,7 @@ import { saveMessages } from '@/services/cat/conversation-history';
 import { AI_MESSAGE_MAX_CHARS } from '@/lib/validation/ai';
 
 const completeSchema = z.object({
-  conversationId: z.string().uuid(),
+  conversationId: z.string().guid(),
   message: z.string().min(1).max(AI_MESSAGE_MAX_CHARS),
   reply: z.string().min(1).max(100_000),
   /** `local:<runtime>:<model>` id the client actually used. */

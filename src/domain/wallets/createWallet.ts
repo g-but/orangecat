@@ -42,7 +42,7 @@ export async function createWallet(
 ): Promise<CreateWalletResult> {
   const parseResult = walletCreateSchema.safeParse(rawBody);
   if (!parseResult.success) {
-    return { response: apiBadRequest('Invalid input', parseResult.error.errors) };
+    return { response: apiBadRequest('Invalid input', parseResult.error.issues) };
   }
   const body: WalletCreateInput = parseResult.data;
 

@@ -33,8 +33,8 @@ const sendMessageSchema = z.object({
   messageType: z
     .enum([MESSAGE_TYPES.TEXT, MESSAGE_TYPES.IMAGE, MESSAGE_TYPES.FILE, MESSAGE_TYPES.SYSTEM])
     .default(MESSAGE_TYPES.TEXT),
-  metadata: z.record(z.unknown()).optional(),
-  senderActorId: z.string().uuid().optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  senderActorId: z.string().guid().optional(),
 });
 
 /** GET - Fetch messages for a conversation with cursor-based pagination */
