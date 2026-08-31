@@ -151,8 +151,23 @@ export function PostContent({ event }: PostContentProps) {
         </div>
       )}
 
-      {/* Subject/Target Links */}
-      {(event.subject || event.target) && event.metadata?.is_user_post !== true && (
+      {/*
+        Subject/Target Links.
+
+        `event.subject` on a repost is not content — `usePostRepost` sets
+        `subjectType: 'profile', subjectId: userId` on EVERY repost, simple or
+        quote, purely to satisfy createEvent's required fields. It always
+        resolves to the REPOSTER's own profile, which the header directly
+        above already names and links. Rendered here it read as a second,
+        unlabeled "Cato" — found live in production by reposting a post and
+        reading the actual DOM, not by inspecting the diff. Same defect
+        family as the duplicate-author panel fixed above, one field over.
+
+        `event.target` is never set by either repost path, so excluding
+        `isRepost` here costs nothing for target links; it only ever
+        suppresses the self-referential subject.
+      */}
+      {!isRepost && (event.subject || event.target) && event.metadata?.is_user_post !== true && (
         <div className="flex gap-2">
           {event.subject && event.subject.url && (
             <Link
