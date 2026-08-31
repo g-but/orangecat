@@ -18,7 +18,7 @@ import { Check } from 'lucide-react';
 import { usePostCardActions } from './usePostCardActions';
 import ReplyAiButton from './ReplyAiButton';
 import PostAiEditMenu from './PostAiEditMenu';
-import { TIMELINE_SURFACE } from '@/config/timeline';
+import { TIMELINE_SURFACE, TIMELINE_AVATAR_SIZE } from '@/config/timeline';
 
 interface PostCardProps {
   event: TimelineDisplayEvent;
@@ -153,7 +153,7 @@ export function PostCard({
                 isSimpleRepost ? event.metadata?.original_actor_avatar : event.actor?.avatar
               }
               name={isSimpleRepost ? event.metadata?.original_actor_name : event.actor?.name}
-              size={40}
+              size={TIMELINE_AVATAR_SIZE}
             />
           </div>
 

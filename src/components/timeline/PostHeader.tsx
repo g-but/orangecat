@@ -117,7 +117,17 @@ export function PostHeader({
         @{displayAuthor.username}
       </Link>
 
-      <span className="text-fg-secondary">·</span>
+      {/*
+        `text-sm` is load-bearing, not decoration. With no size class this span
+        inherits the 16px base while every other item on the line — the name,
+        the handle, the timestamp — is 14px. The result is a separator dot
+        rendered LARGER than the things it separates, on every post in the
+        feed. Measured in production: 16px/400 among 14px siblings, the only
+        16px text anywhere in the timeline.
+      */}
+      <span className="text-fg-secondary text-sm" aria-hidden="true">
+        ·
+      </span>
 
       {/* Timestamp */}
       <time
