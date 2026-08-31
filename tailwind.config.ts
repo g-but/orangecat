@@ -28,6 +28,12 @@ const config: Config = {
         '2xs': ['0.625rem', { lineHeight: '1rem' }], // 10px - Badges, micro labels
         xs: ['0.75rem', { lineHeight: '1rem', letterSpacing: '0' }], // 12px - Labels, captions
         sm: ['0.875rem', { lineHeight: '1.25rem', letterSpacing: '0' }], // 14px - Secondary text
+        // 15px - the reading size for post bodies. Deliberately between sm and
+        // base: 16px is a touch wide in a 672px column and 14px is small to
+        // read at length. It was written as the arbitrary `text-[15px]`, which
+        // is a value nothing else can reference and no theme change can reach —
+        // the same problem as a hardcoded hex. Named, it is a decision.
+        post: ['0.9375rem', { lineHeight: '1.5rem', letterSpacing: '0' }],
         base: ['1rem', { lineHeight: '1.5rem', letterSpacing: '0' }], // 16px - Body text (iOS standard)
         lg: ['1.125rem', { lineHeight: '1.75rem', letterSpacing: '0' }], // 18px - Large body
         xl: ['1.25rem', { lineHeight: '1.75rem', letterSpacing: '0' }], // 20px - Subtitles

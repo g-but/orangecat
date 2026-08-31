@@ -13,6 +13,7 @@ import {
   TIMELINE_COPY,
   TIMELINE_SURFACE,
   TIMELINE_VISIBILITY_OPTIONS,
+  TIMELINE_AVATAR_SIZE,
 } from '@/config/timeline';
 import {
   TextFormatToolbar,
@@ -207,7 +208,13 @@ const TimelineComposer = React.memo(function TimelineComposer({
             userId={user?.id || null}
             avatarUrl={profile?.avatar_url || user?.user_metadata?.avatar_url || null}
             name={profile?.name || user?.user_metadata?.name || user?.email || 'User'}
-            size={44}
+            /*
+              The avatar sets the feed's text column, so this number must be
+              the SAME one the posts below use — it was 44 here and 40 there,
+              which started the composer's text 4px right of every post body.
+              Shared constant now, so they cannot drift apart again.
+            */
+            size={TIMELINE_AVATAR_SIZE}
             className="flex-shrink-0"
             isCurrentUser={true}
           />

@@ -124,7 +124,7 @@ export function PostContent({ event }: PostContentProps) {
         authors to tell apart.
       */}
       {!articleSlug && displayContent && (
-        <div className="text-fg-primary text-[15px] leading-relaxed whitespace-pre-line break-words">
+        <div className="text-fg-primary text-post whitespace-pre-line break-words">
           {renderMarkdownToReact(displayContent)}
         </div>
       )}
