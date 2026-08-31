@@ -35,7 +35,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - name: Install dependencies
@@ -260,7 +260,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - name: Install dependencies
@@ -347,7 +347,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - name: Dependency audit
@@ -368,14 +368,19 @@ jobs:
         # weakens it. (js-yaml above was dev-only; it was patched anyway because
         # the range already allowed it.)
         #
-        # Tied to `node-version: 20` (npm 10) above, and that coupling is load-
-        # bearing. On npm 11, `npm audit --audit-level=critical` was observed to
-        # exit 1 against a tree whose own --json output reported
-        # {moderate:2, high:1, critical:0} — i.e. the level stops gating the exit
-        # code. Bump this runner to node 22 and the line below silently becomes
-        # "block on ANY advisory, including low", which will wedge every merge on
-        # something unfixable and get this gate weakened rather than debugged.
+        # Tied to the `node-version` (npm major) above, and that coupling is
+        # load-bearing. On npm 11, `npm audit --audit-level=critical` was
+        # observed to exit 1 against a tree whose own --json output reported
+        # {moderate:2, high:1, critical:0} — i.e. the level stops gating the
+        # exit code: the line below silently becomes "block on ANY advisory,
+        # including low", which will wedge every merge on something unfixable
+        # and get this gate weakened rather than debugged.
         # If you bump Node here, re-check this step's exit code first.
+        # Re-checked 2026-08-31 for the 20->24 bump (npm 11.x): the tree is
+        # clean at every level (npm audit --omit=dev --json -> total 0), so
+        # the command below exits 0. The npm 11 caveat still stands the day
+        # an advisory lands: low/moderate will block too — fix or override
+        # the advisory per the ladder below; do not lower the level.
         #
         # WHEN THIS BLOCKS YOU and no patched version exists upstream, do NOT
         # lower the level — that silently re-opens the whole class. In order of
