@@ -21,14 +21,16 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { getEntityMetadata } from '@/config/entity-registry';
 import { createFakeSupabase, type Row } from '../../../../test-utils/fakeSupabase';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
-jest.mock('@/lib/supabase/admin', () => ({ getAdminClient: jest.fn() }));
-jest.mock('@/domain/payments/encryptionService', () => ({ decrypt: (s: string) => s }));
+vi.mock('@/lib/supabase/admin', () => ({ getAdminClient: vi.fn() }));
+vi.mock('@/domain/payments/encryptionService', () => ({ decrypt: (s: string) => s }));
 
 import { getAdminClient } from '@/lib/supabase/admin';
-const getAdminClientMock = getAdminClient as jest.Mock;
+import type { Mock } from 'vitest';
+
+const getAdminClientMock = getAdminClient as Mock;
 
 const PRODUCT = getEntityMetadata('product');
 const ENTITY_ID = 'prod-1';
@@ -63,7 +65,7 @@ function wallet(over: Row): Row {
   };
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => vi.clearAllMocks());
 
 describe('resolveSellerReceiveInfo — what the owner is shown', () => {
   it('shows the Lightning address that would receive the payment', async () => {

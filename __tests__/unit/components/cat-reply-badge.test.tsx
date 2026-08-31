@@ -17,17 +17,14 @@ import { render, screen } from '@testing-library/react';
 import { PostHeader } from '@/components/timeline/PostHeader';
 import type { TimelineDisplayEvent } from '@/types/timeline';
 
-jest.mock('next/link', () => ({
+vi.mock('next/link', () => ({
   __esModule: true,
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
 }));
 
-function postBy(
-  username: string,
-  extra: Partial<TimelineDisplayEvent> = {}
-): TimelineDisplayEvent {
+function postBy(username: string, extra: Partial<TimelineDisplayEvent> = {}): TimelineDisplayEvent {
   return {
     id: 'e1',
     actor: { id: 'a1', name: username === 'cat' ? 'Cat' : 'A Person', username, type: 'user' },

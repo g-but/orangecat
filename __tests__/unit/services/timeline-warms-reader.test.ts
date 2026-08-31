@@ -17,38 +17,44 @@
  * table below: every read the facade exposes, not the one I happened to open.
  */
 
-const order: string[] = [];
+// vi.hoisted: the vi.mock factories below are hoisted above module-level
+// consts, so anything they close over must be hoisted with them.
+const { order, warmCurrentUserId, queries } = vi.hoisted(() => {
+  const order: string[] = [];
 
-const warmCurrentUserId = jest.fn(() => {
-  order.push('warm');
-});
-
-jest.mock('@/services/supabase/auth/session', () => ({
-  warmCurrentUserId: () => warmCurrentUserId(),
-  getCurrentUserId: jest.fn(async () => 'u1'),
-}));
-
-const record = (name: string) =>
-  jest.fn(async () => {
-    order.push(name);
-    return { success: true, events: [], posts: [], replies: [], pagination: {}, total: 0 };
+  const warmCurrentUserId = vi.fn(() => {
+    order.push('warm');
   });
 
-const queries = {
-  getUserFeed: record('getUserFeed'),
-  getProjectFeed: record('getProjectFeed'),
-  getProfileFeed: record('getProfileFeed'),
-  getFollowedUsersFeed: record('getFollowedUsersFeed'),
-  getCommunityFeed: record('getCommunityFeed'),
-  getEnrichedUserFeed: record('getEnrichedUserFeed'),
-  getEnrichedFollowingFeed: record('getEnrichedFollowingFeed'),
-  getEventById: record('getEventById'),
-  getReplies: record('getReplies'),
-  searchPosts: record('searchPosts'),
-  getThreadPosts: record('getThreadPosts'),
-};
+  const record = (name: string) =>
+    vi.fn(async () => {
+      order.push(name);
+      return { success: true, events: [], posts: [], replies: [], pagination: {}, total: 0 };
+    });
 
-jest.mock('@/services/timeline/queries', () => queries);
+  const queries = {
+    getUserFeed: record('getUserFeed'),
+    getProjectFeed: record('getProjectFeed'),
+    getProfileFeed: record('getProfileFeed'),
+    getFollowedUsersFeed: record('getFollowedUsersFeed'),
+    getCommunityFeed: record('getCommunityFeed'),
+    getEnrichedUserFeed: record('getEnrichedUserFeed'),
+    getEnrichedFollowingFeed: record('getEnrichedFollowingFeed'),
+    getEventById: record('getEventById'),
+    getReplies: record('getReplies'),
+    searchPosts: record('searchPosts'),
+    getThreadPosts: record('getThreadPosts'),
+  };
+
+  return { order, warmCurrentUserId, queries };
+});
+
+vi.mock('@/services/supabase/auth/session', () => ({
+  warmCurrentUserId: () => warmCurrentUserId(),
+  getCurrentUserId: vi.fn(async () => 'u1'),
+}));
+
+vi.mock('@/services/timeline/queries', () => queries);
 
 import { timelineService } from '@/services/timeline';
 
@@ -82,9 +88,13 @@ describe('timeline reads warm the reader id first', () => {
   it('covers every read the facade exposes', () => {
     // If a new read is added to the service without warming, this catches it
     // even when nobody thinks to add a case above.
-    const exposed = Object.getOwnPropertyNames(
-      Object.getPrototypeOf(timelineService)
-    ).filter(m => /^(get|search)/.test(m) && m !== 'getEventCounts' && m !== 'getEventComments' && m !== 'getCommentReplies');
+    const exposed = Object.getOwnPropertyNames(Object.getPrototypeOf(timelineService)).filter(
+      m =>
+        /^(get|search)/.test(m) &&
+        m !== 'getEventCounts' &&
+        m !== 'getEventComments' &&
+        m !== 'getCommentReplies'
+    );
     const covered = new Set(READS.map(([name]) => name as string));
 
     expect([...exposed].filter(m => !covered.has(m))).toEqual([]);

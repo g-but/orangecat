@@ -1,17 +1,15 @@
 /**
- * JEST SETUP - COMPREHENSIVE TEST ENVIRONMENT
+ * VITEST SETUP - COMPREHENSIVE TEST ENVIRONMENT
  *
- * This file configures the Jest testing environment with all necessary
- * mocks, polyfills, and global configurations for OrangeCat testing.
- *
- * Created: 2025-01-08
- * Last Modified: 2025-01-08
- * Last Modified Summary: Comprehensive test environment setup
+ * Configures the Vitest environment with the mocks, polyfills, and global
+ * configuration OrangeCat tests rely on. Ported from jest.setup.ts when the
+ * runner moved from jest 30 + ts-jest (CJS) to Vitest (ESM-native).
  */
 
 /* eslint-disable no-console */
 
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
+import { vi, beforeEach, afterAll } from 'vitest';
 import { TextEncoder as NodeTextEncoder, TextDecoder as NodeTextDecoder } from 'node:util';
 
 // jsdom ships no TextEncoder/TextDecoder; server-side modules (e.g. the Solon
@@ -31,29 +29,29 @@ process.env.NEXT_PUBLIC_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://l
 process.env.NEXT_PUBLIC_SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'OrangeCat';
 process.env = Object.assign({ NODE_ENV: 'test' }, process.env);
 
-// JSDOM already provides localStorage / sessionStorage but not with jest.fn()
+// JSDOM already provides localStorage / sessionStorage but not with vi.fn()
 // Create spy-able versions so tests can safely mock implementations.
 function createStorageMock() {
   const storage: Record<string, string> = {};
   return {
-    getItem: jest.fn((key: string) => (key in storage ? storage[key] : null)),
-    setItem: jest.fn((key: string, value: string) => {
+    getItem: vi.fn((key: string) => (key in storage ? storage[key] : null)),
+    setItem: vi.fn((key: string, value: string) => {
       storage[key] = value;
     }),
-    removeItem: jest.fn((key: string) => {
+    removeItem: vi.fn((key: string) => {
       delete storage[key];
     }),
-    clear: jest.fn(() => {
+    clear: vi.fn(() => {
       Object.keys(storage).forEach(k => delete storage[k]);
     }),
-    key: jest.fn((index: number) => Object.keys(storage)[index] ?? null),
+    key: vi.fn((index: number) => Object.keys(storage)[index] ?? null),
     get length() {
       return Object.keys(storage).length;
     },
   };
 }
 
-// Suites may opt into the node environment (@jest-environment node) for pure
+// Suites may opt into the node environment (@vitest-environment node) for pure
 // server-side code — every browser-global touch below must be conditional.
 const IS_JSDOM = typeof window !== 'undefined';
 
@@ -73,24 +71,18 @@ if (IS_JSDOM) {
 
 // Prevent React act warnings from polluting test output in older tests.
 // (These are warning-level logs; suppress them globally.)
-jest.spyOn(console, 'error').mockImplementation((...args) => {
+vi.spyOn(console, 'error').mockImplementation((...args) => {
   if (typeof args[0] === 'string' && args[0].includes('not wrapped in act')) {
     return;
   }
   return (console.error as any).original?.(...args);
 });
 
-// Ensure every test gets a fresh module graph so imports executed in one test
-// don\'t affect another (important for Supabase client tests that depend on
-// createBrowserClient being called on import).
-// afterEach(() => {
-//   jest.resetModules()
-// })
-
-// Reset the module cache before every test so modules that run side-effects on import
-// (e.g. Supabase client which calls createBrowserClient and logger) execute fresh.
+// Reset the module cache before every test so modules that run side-effects on
+// import (e.g. Supabase client which calls createBrowserClient and logger)
+// execute fresh.
 beforeEach(() => {
-  jest.resetModules();
+  vi.resetModules();
 });
 
 // =====================================================================
@@ -117,7 +109,7 @@ Object.defineProperty(process.env, 'SUPABASE_SERVICE_ROLE_KEY', {
 // =====================================================================
 
 // Mock fetch globally
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 // localStorage / sessionStorage are already replaced above with spy-able,
 // store-backed mocks (createStorageMock) — these are just handles to them.
@@ -138,9 +130,9 @@ if (IS_JSDOM) {
     pathname: '/',
     search: '',
     hash: '',
-    assign: jest.fn(),
-    replace: jest.fn(),
-    reload: jest.fn(),
+    assign: vi.fn(),
+    replace: vi.fn(),
+    reload: vi.fn(),
   } as any;
 }
 
@@ -148,38 +140,89 @@ if (IS_JSDOM) {
 const originalConsole = { ...console };
 global.console = {
   ...console,
-  log: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  info: jest.fn(),
-  debug: jest.fn(),
+  log: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
 };
 
 // =====================================================================
-// 🎯 SUPABASE MOCKS
+// 🎨 LUCIDE ICONS MOCK
 // =====================================================================
 
-// Supabase client mocks live closer to consumers — global mock removed (file no longer exists)
+// Every icon renders as a real `<svg>` carrying its own name, so tests can
+// still assert that the right icon appeared — a blanket `() => null` would
+// quietly make icon-presence assertions pass on nothing. This used to be a
+// hand-written allowlist of ~90 icon names, which meant every icon NOT on the
+// list resolved to `undefined` and blew up as "Element type is invalid" — an
+// error that reads like a broken component and has twice been debugged as one.
+// It lives here as a vi.mock factory (not a resolve.alias to a CJS file):
+// the mock is a Proxy so ANY icon name resolves, and CJS interop of an aliased
+// Proxy module would surface no named exports (a Proxy has no own keys).
+vi.mock('lucide-react', async () => {
+  const React = await import('react');
+
+  const iconComponent = (name: string) => {
+    const Icon = React.forwardRef<SVGSVGElement, Record<string, any>>((props, ref) =>
+      React.createElement('svg', {
+        ref,
+        'data-testid': props['data-testid'] ?? `icon-${name}`,
+        'data-icon': name,
+        'aria-hidden': props['aria-hidden'],
+        className: props.className,
+      })
+    );
+    Icon.displayName = name;
+    return Icon;
+  };
+
+  const cache = new Map<string, unknown>();
+
+  return new Proxy(
+    {},
+    {
+      // Vitest verifies an export exists with an `in` check before reading it.
+      has(_target, prop) {
+        return typeof prop === 'string';
+      },
+      get(_target, prop) {
+        if (prop === '__esModule') {
+          return true;
+        }
+        if (typeof prop !== 'string' || prop === 'default' || prop === 'then') {
+          return undefined;
+        }
+        // `createLucideIcon` and friends are factories, not icons; anything
+        // else accessed off this module in a component is an icon.
+        if (!cache.has(prop)) {
+          cache.set(prop, iconComponent(prop));
+        }
+        return cache.get(prop);
+      },
+    }
+  );
+});
 
 // =====================================================================
 // 🔐 AUTH STORE MOCKS
 // =====================================================================
 
-jest.mock('@/stores/auth', () => ({
-  useAuthStore: jest.fn(() => ({
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: vi.fn(() => ({
     user: null,
     session: null,
     profile: null,
     isLoading: false,
     error: null,
-    signIn: jest.fn(),
-    signUp: jest.fn(),
-    signOut: jest.fn(),
-    updateProfile: jest.fn(),
-    clearError: jest.fn(),
-    setUser: jest.fn(),
-    setSession: jest.fn(),
-    setProfile: jest.fn(),
+    signIn: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+    updateProfile: vi.fn(),
+    clearError: vi.fn(),
+    setUser: vi.fn(),
+    setSession: vi.fn(),
+    setProfile: vi.fn(),
   })),
 }));
 
@@ -188,23 +231,23 @@ jest.mock('@/stores/auth', () => ({
 // =====================================================================
 
 // Mock Sonner toast
-jest.mock('sonner', () => ({
+vi.mock('sonner', () => ({
   toast: {
-    success: jest.fn(),
-    error: jest.fn(),
-    info: jest.fn(),
-    warning: jest.fn(),
-    loading: jest.fn(),
-    dismiss: jest.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+    loading: vi.fn(),
+    dismiss: vi.fn(),
   },
 }));
 
 // Lucide icons are mocked in __mocks__/lucide-react.js (wired through
-// moduleNameMapper). This used to be a hand-written allowlist of ~90 icon
-// names, which meant every icon NOT on the list resolved to `undefined` and
-// blew up as "Element type is invalid" — an error that reads like a broken
-// component and has twice been debugged as one. A component should never need
-// a test-config edit just to use a different icon.
+// resolve.alias in vitest.config.ts). This used to be a hand-written allowlist
+// of ~90 icon names, which meant every icon NOT on the list resolved to
+// `undefined` and blew up as "Element type is invalid" — an error that reads
+// like a broken component and has twice been debugged as one. A component
+// should never need a test-config edit just to use a different icon.
 
 // =====================================================================
 // 🧪 TEST UTILITIES
@@ -214,7 +257,7 @@ jest.mock('sonner', () => ({
 global.testUtils = {
   // Reset all mocks
   resetMocks: () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorageMock.getItem.mockClear();
     localStorageMock.setItem.mockClear();
     localStorageMock.removeItem.mockClear();
@@ -227,7 +270,7 @@ global.testUtils = {
 
   // Mock successful API responses
   mockSuccessResponse: (data: any) => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => data,
@@ -237,7 +280,7 @@ global.testUtils = {
 
   // Mock error API responses
   mockErrorResponse: (status: number, message: string) => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
       status,
       json: async () => ({ error: message }),
@@ -247,7 +290,7 @@ global.testUtils = {
 
   // Mock network error
   mockNetworkError: (message: string = 'Network error') => {
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error(message));
+    (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error(message));
   },
 };
 
@@ -258,7 +301,7 @@ global.testUtils = {
 // Before each test
 beforeEach(() => {
   // Reset all mocks
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 
   // Empty the storage backing stores, then reset call history, so every test
   // starts with clean storage and clean spies.
@@ -280,16 +323,16 @@ beforeEach(() => {
 
   // Reset fetch mock
   if (global.fetch && (global.fetch as any).mockClear) {
-    (global.fetch as jest.Mock).mockClear();
+    (global.fetch as any).mockClear();
   }
 
   // Reset console mocks
   if ((console.log as any).mockClear) {
-    (console.log as jest.Mock).mockClear();
-    (console.warn as jest.Mock).mockClear();
-    (console.error as jest.Mock).mockClear();
-    (console.info as jest.Mock).mockClear();
-    (console.debug as jest.Mock).mockClear();
+    (console.log as any).mockClear();
+    (console.warn as any).mockClear();
+    (console.error as any).mockClear();
+    (console.info as any).mockClear();
+    (console.debug as any).mockClear();
   }
 });
 
@@ -316,7 +359,7 @@ declare global {
 // 🗄️ SUPABASE-JS GLOBAL MOCK (createClient)
 // =====================================================================
 
-jest.mock('@supabase/supabase-js', () => {
+vi.mock('@supabase/supabase-js', () => {
   // Simple in-memory store per table for rudimentary insert/select/update/delete
   const inMemoryDB: Record<string, any[]> = {};
 
@@ -459,32 +502,32 @@ jest.mock('@supabase/supabase-js', () => {
   const mockClient = {
     from,
     auth: {
-      signInWithPassword: jest.fn(({ email }) =>
+      signInWithPassword: vi.fn(({ email }) =>
         Promise.resolve({ data: { user: { id: 'test-user', email } }, error: null })
       ),
-      getUser: jest.fn(() =>
+      getUser: vi.fn(() =>
         Promise.resolve({
           data: { user: { id: 'test-user', email: 'test@example.com' } },
           error: null,
         })
       ),
-      getSession: jest.fn(() =>
+      getSession: vi.fn(() =>
         Promise.resolve({ data: { session: { access_token: 'token' } }, error: null })
       ),
     },
-    rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
+    rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
   };
 
   return {
     __esModule: true,
-    createClient: jest.fn(() => mockClient),
+    createClient: vi.fn(() => mockClient),
   };
 });
 
-// Ensure Storage.prototype functions are jest.fn for spying in tests
+// Ensure Storage.prototype functions are vi.fn for spying in tests
 if (typeof Storage !== 'undefined') {
-  Object.defineProperty(Storage.prototype, 'setItem', { value: jest.fn(), writable: true });
-  Object.defineProperty(Storage.prototype, 'getItem', { value: jest.fn(), writable: true });
+  Object.defineProperty(Storage.prototype, 'setItem', { value: vi.fn(), writable: true });
+  Object.defineProperty(Storage.prototype, 'getItem', { value: vi.fn(), writable: true });
 }
 
 // =====================================================================
@@ -492,7 +535,7 @@ if (typeof Storage !== 'undefined') {
 // =====================================================================
 
 // Additional mapper mock for Profile tests
-jest.mock('@/services/profile/mapper', () => ({
+vi.mock('@/services/profile/mapper', () => ({
   ProfileMapper: {
     mapDatabaseToProfile: (data: any) => data,
     mapProfileToDatabase: (data: any) => data,
@@ -503,20 +546,14 @@ jest.mock('@/services/profile/mapper', () => ({
 // 🧪 PROFILE READER MOCKS
 // =====================================================================
 
-jest.mock('@/services/profile/reader', () => {
+vi.mock('@/services/profile/reader', () => {
   return {
     ProfileReader: {
-      getProfile: jest.fn(() => Promise.resolve(null)),
-      getProfiles: jest.fn(() => Promise.resolve([])),
-      searchProfiles: jest.fn(() => Promise.resolve([])),
-      getAllProfiles: jest.fn(() => Promise.resolve([])),
-      incrementProfileViews: jest.fn(),
+      getProfile: vi.fn(() => Promise.resolve(null)),
+      getProfiles: vi.fn(() => Promise.resolve([])),
+      searchProfiles: vi.fn(() => Promise.resolve([])),
+      getAllProfiles: vi.fn(() => Promise.resolve([])),
+      incrementProfileViews: vi.fn(),
     },
   };
 });
-
-// =====================================================================
-// 🧪 TABS MOCKS
-// =====================================================================
-
-jest.mock('@/components/ui/tabs', () => () => 'div');

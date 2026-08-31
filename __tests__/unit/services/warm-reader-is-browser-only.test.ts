@@ -1,5 +1,5 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  *
  * Warming the reader's id must do NOTHING on the server.
  *
@@ -21,9 +21,9 @@
  * server path stayed broken — which is exactly how the bug shipped.
  */
 
-const getUser = jest.fn();
+const getUser = vi.fn();
 
-jest.mock('@/lib/supabase/browser', () => ({
+vi.mock('@/lib/supabase/browser', () => ({
   __esModule: true,
   default: {
     auth: {

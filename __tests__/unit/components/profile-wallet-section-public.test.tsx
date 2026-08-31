@@ -22,7 +22,7 @@
 
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@/hooks/useDisplayCurrency', () => ({
+vi.mock('@/hooks/useDisplayCurrency', () => ({
   useDisplayCurrency: () => ({
     formatAmountBtc: (n: number) => `₿${n}`,
     formatPrice: (n: number, c: string) => `${c} ${n}`,
@@ -30,11 +30,11 @@ jest.mock('@/hooks/useDisplayCurrency', () => ({
   }),
 }));
 
-jest.mock('@/hooks/useCurrencyConversion', () => ({
+vi.mock('@/hooks/useCurrencyConversion', () => ({
   useCurrencyConversion: () => ({ convertFromBTC: () => 0, convertToBTC: () => 0 }),
 }));
 
-jest.mock('qrcode.react', () => ({ QRCodeSVG: () => null }));
+vi.mock('qrcode.react', () => ({ QRCodeSVG: () => null }));
 
 import ProfileWalletSection from '@/components/profile/ProfileWalletSection';
 
@@ -54,9 +54,7 @@ const publicWallet = {
 } as never;
 
 function renderSection(wallets: never[]) {
-  return render(
-    <ProfileWalletSection wallets={wallets} loading={false} isOwnProfile={false} />
-  );
+  return render(<ProfileWalletSection wallets={wallets} loading={false} isOwnProfile={false} />);
 }
 
 describe('ProfileWalletSection with a visitor-shaped payload', () => {

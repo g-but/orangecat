@@ -15,7 +15,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ChatInput } from '@/components/ai-chat/ModernChatPanel/components/ChatInput';
 
-jest.mock('@/components/ui/DictationButton', () => ({
+vi.mock('@/components/ui/DictationButton', () => ({
   DictationButton: ({ onTranscript }: { onTranscript: (t: string) => void }) => (
     <button
       type="button"

@@ -22,14 +22,16 @@ import {
   __setSnapshotForTests,
 } from '@/services/currency/rateSource.server';
 
+import type { Mock } from 'vitest';
+
 const MINUTE = 60_000;
 
 describe('getCachedRateSnapshot refresh timing', () => {
-  let fetchMock: jest.Mock;
+  let fetchMock: Mock;
 
   beforeEach(() => {
-    jest.useFakeTimers();
-    fetchMock = jest.fn().mockResolvedValue({
+    vi.useFakeTimers();
+    fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ bitcoin: { chf: 52199, usd: 58000, eur: 55000, gbp: 47000 } }),
     });
@@ -39,7 +41,7 @@ describe('getCachedRateSnapshot refresh timing', () => {
 
   afterEach(() => {
     __setSnapshotForTests(null);
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('starts no fetch synchronously when the snapshot is stale', () => {
@@ -52,7 +54,7 @@ describe('getCachedRateSnapshot refresh timing', () => {
     expect(snap?.rates.CHF).toBe(52199);
     expect(fetchMock).not.toHaveBeenCalled();
 
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -62,7 +64,7 @@ describe('getCachedRateSnapshot refresh timing', () => {
     expect(getCachedRateSnapshot()).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
 
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -72,7 +74,7 @@ describe('getCachedRateSnapshot refresh timing', () => {
     expect(getCachedRateSnapshot()).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
 
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -80,7 +82,7 @@ describe('getCachedRateSnapshot refresh timing', () => {
     __setSnapshotForTests({ rates: { CHF: 52199 }, fetchedAt: Date.now() });
 
     expect(getCachedRateSnapshot()?.rates.CHF).toBe(52199);
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

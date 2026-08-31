@@ -15,8 +15,8 @@
 
 import { fetchReactionState } from '@/services/timeline/processors/reaction-state';
 
-const from = jest.fn();
-jest.mock('@/services/timeline/processors/social-shared', () => ({
+const from = vi.fn();
+vi.mock('@/services/timeline/processors/social-shared', () => ({
   db: { from: (...args: unknown[]) => from(...args) },
   getCurrentUserId: async () => 'me',
 }));
@@ -37,7 +37,7 @@ function withTables(tables: Record<string, unknown[]>) {
 }
 
 describe('fetchReactionState', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => vi.clearAllMocks());
 
   it('reads counts from the stats table, not from timeline_events', async () => {
     withTables({

@@ -22,27 +22,29 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import type { PaymentIntent } from '@/domain/payments/types';
 import { createFakeSupabase, type Row } from '../../../../test-utils/fakeSupabase';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
-jest.mock('@/lib/email/send-seller-notification', () => ({
-  sendSellerPaymentNotification: jest.fn().mockResolvedValue(undefined),
+vi.mock('@/lib/email/send-seller-notification', () => ({
+  sendSellerPaymentNotification: vi.fn().mockResolvedValue(undefined),
 }));
-jest.mock('@/services/notifications/dispatcher', () => ({
-  NotificationDispatcher: { dispatch: jest.fn().mockResolvedValue(undefined) },
+vi.mock('@/services/notifications/dispatcher', () => ({
+  NotificationDispatcher: { dispatch: vi.fn().mockResolvedValue(undefined) },
 }));
-jest.mock('@/domain/payments/paymentStatusService', () => ({
-  checkNWCPaymentStatus: jest.fn(),
-  checkOnchainPaymentStatus: jest.fn(),
-  checkLnurlVerifyPaymentStatus: jest.fn(),
+vi.mock('@/domain/payments/paymentStatusService', () => ({
+  checkNWCPaymentStatus: vi.fn(),
+  checkOnchainPaymentStatus: vi.fn(),
+  checkLnurlVerifyPaymentStatus: vi.fn(),
 }));
-jest.mock('@/lib/supabase/admin', () => ({ getAdminClient: jest.fn() }));
+vi.mock('@/lib/supabase/admin', () => ({ getAdminClient: vi.fn() }));
 
 import { getAdminClient } from '@/lib/supabase/admin';
-const getAdminClientMock = getAdminClient as jest.Mock;
-const nwcMock = checkNWCPaymentStatus as jest.Mock;
-const onchainMock = checkOnchainPaymentStatus as jest.Mock;
-const lnurlMock = checkLnurlVerifyPaymentStatus as jest.Mock;
+import type { Mock } from 'vitest';
+
+const getAdminClientMock = getAdminClient as Mock;
+const nwcMock = checkNWCPaymentStatus as Mock;
+const onchainMock = checkOnchainPaymentStatus as Mock;
+const lnurlMock = checkLnurlVerifyPaymentStatus as Mock;
 
 const ALIVE = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 const DEAD = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -82,7 +84,7 @@ function world(pi: PaymentIntent) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   nwcMock.mockResolvedValue(false);
   lnurlMock.mockResolvedValue(false);
   onchainMock.mockResolvedValue('none');

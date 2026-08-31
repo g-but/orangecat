@@ -6,12 +6,12 @@
  * resolution failure degrades to null instead of breaking the page.
  */
 
-jest.mock('@/utils/logger', () => ({
-  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
-const mockResolve = jest.fn();
-jest.mock('@/domain/payments', () => ({
+const mockResolve = vi.fn();
+vi.mock('@/domain/payments', () => ({
   resolveSellerWallet: (...args: unknown[]) => mockResolve(...args),
 }));
 
@@ -22,7 +22,7 @@ let addressTwins: Array<{ id: string }> = [];
 let linkRows: Array<{ entity_type: string; entity_id: string }> = [];
 let visibleByTable: Record<string, string[]> = {};
 
-jest.mock('@/lib/supabase/admin', () => ({
+vi.mock('@/lib/supabase/admin', () => ({
   getAdminClient: () => ({
     from: (table: string) => {
       if (table === 'wallets') {

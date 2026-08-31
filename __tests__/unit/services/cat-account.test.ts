@@ -34,9 +34,9 @@ function adminWith({
   profileAfterCreate?: Row;
   updateError?: { message: string };
 }) {
-  const createUser = jest.fn().mockResolvedValue({ error: createError ?? null });
-  const update = jest.fn(() => ({
-    eq: jest.fn().mockResolvedValue({ error: updateError ?? null }),
+  const createUser = vi.fn().mockResolvedValue({ error: createError ?? null });
+  const update = vi.fn(() => ({
+    eq: vi.fn().mockResolvedValue({ error: updateError ?? null }),
   }));
   let lookups = 0;
   const lookupColumns: string[] = [];

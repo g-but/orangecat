@@ -15,10 +15,10 @@ let mockCurrency = 'CHF';
 let mockIsLoading = false;
 const CHF_PER_BTC = 86000;
 
-jest.mock('@/hooks/useUserCurrency', () => ({
+vi.mock('@/hooks/useUserCurrency', () => ({
   useUserCurrency: () => mockCurrency,
 }));
-jest.mock('@/hooks/useCurrencyConversion', () => ({
+vi.mock('@/hooks/useCurrencyConversion', () => ({
   useCurrencyConversion: () => ({
     isLoading: mockIsLoading,
     convertFromBTC: (btc: number, currency: string) => (currency === 'CHF' ? btc * CHF_PER_BTC : 0),

@@ -26,7 +26,7 @@ import { render, screen } from '@testing-library/react';
 import { PostContent } from '@/components/timeline/PostContent';
 import type { TimelineDisplayEvent } from '@/types/timeline';
 
-jest.mock('@/utils/markdown', () => ({
+vi.mock('@/utils/markdown', () => ({
   renderMarkdownToReact: (text: string) => text,
 }));
 

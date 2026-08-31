@@ -21,15 +21,15 @@
 import { renderHook, act } from '@testing-library/react';
 import { useRequireAuth } from '@/hooks/useAuthRedirects';
 
-const replace = jest.fn();
-const push = jest.fn();
-jest.mock('next/navigation', () => ({
+const replace = vi.fn();
+const push = vi.fn();
+vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace, push }),
   usePathname: () => '/timeline',
 }));
 
 let storeState: Record<string, unknown> = {};
-jest.mock('@/stores/auth', () => ({
+vi.mock('@/stores/auth', () => ({
   useAuthStore: () => storeState,
 }));
 
@@ -47,11 +47,11 @@ function wedged(overrides: Record<string, unknown> = {}) {
 
 describe('useRequireAuth hydration ceiling', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
   });
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('lets a signed-in user through once the ceiling fires', () => {
@@ -63,7 +63,7 @@ describe('useRequireAuth hydration ceiling', () => {
     expect(result.current.isAuthenticated).toBe(false);
 
     act(() => {
-      jest.advanceTimersByTime(4100);
+      vi.advanceTimersByTime(4100);
     });
 
     // After it: the page must be able to render rather than sit on a spinner.
@@ -78,7 +78,7 @@ describe('useRequireAuth hydration ceiling', () => {
     const { result } = renderHook(() => useRequireAuth());
 
     act(() => {
-      jest.advanceTimersByTime(4100);
+      vi.advanceTimersByTime(4100);
     });
 
     // The ceiling widens the exit; it must never invent a session.

@@ -45,7 +45,7 @@ function isBootstrapUrl(url: string): boolean {
 }
 
 function mockFetch(impl: (url: string) => Promise<Partial<Response>> | Partial<Response>) {
-  global.fetch = jest.fn(async (input: RequestInfo | URL) =>
+  global.fetch = vi.fn(async (input: RequestInfo | URL) =>
     impl(String(input))
   ) as unknown as typeof fetch;
 }
@@ -56,7 +56,7 @@ beforeEach(() => {
 
 afterEach(() => {
   global.fetch = originalFetch;
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 describe('parseDomain', () => {
@@ -127,7 +127,7 @@ describe('availability — the rule that stops a false “available”', () => {
   });
 
   it('rejects a malformed query without calling any registry', async () => {
-    const fetchSpy = jest.fn();
+    const fetchSpy = vi.fn();
     global.fetch = fetchSpy as unknown as typeof fetch;
 
     const result = await checkDomain('not a domain', RDAP_TLDS);
@@ -136,7 +136,7 @@ describe('availability — the rule that stops a false “available”', () => {
   });
 
   it('caches a result so a repeated lookup does not hit the registry twice', async () => {
-    const fetchSpy = jest.fn(async () => ({ status: 404, ok: false }) as Partial<Response>);
+    const fetchSpy = vi.fn(async () => ({ status: 404, ok: false }) as Partial<Response>);
     global.fetch = fetchSpy as unknown as typeof fetch;
 
     await checkDomain('substrataintel.com', RDAP_TLDS);

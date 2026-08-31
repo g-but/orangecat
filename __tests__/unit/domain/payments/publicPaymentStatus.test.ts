@@ -26,25 +26,27 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 import { NotificationDispatcher } from '@/services/notifications/dispatcher';
 import { createFakeSupabase, type Row } from '../../../../test-utils/fakeSupabase';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
-jest.mock('@/lib/email/send-seller-notification', () => ({
-  sendSellerPaymentNotification: jest.fn().mockResolvedValue(undefined),
+vi.mock('@/lib/email/send-seller-notification', () => ({
+  sendSellerPaymentNotification: vi.fn().mockResolvedValue(undefined),
 }));
-jest.mock('@/services/notifications/dispatcher', () => ({
-  NotificationDispatcher: { dispatch: jest.fn().mockResolvedValue(undefined) },
+vi.mock('@/services/notifications/dispatcher', () => ({
+  NotificationDispatcher: { dispatch: vi.fn().mockResolvedValue(undefined) },
 }));
-jest.mock('@/domain/payments/paymentStatusService', () => ({
-  checkNWCPaymentStatus: jest.fn().mockResolvedValue(false),
-  checkOnchainPaymentStatus: jest.fn().mockResolvedValue('none'),
-  checkLnurlVerifyPaymentStatus: jest.fn().mockResolvedValue(false),
+vi.mock('@/domain/payments/paymentStatusService', () => ({
+  checkNWCPaymentStatus: vi.fn().mockResolvedValue(false),
+  checkOnchainPaymentStatus: vi.fn().mockResolvedValue('none'),
+  checkLnurlVerifyPaymentStatus: vi.fn().mockResolvedValue(false),
 }));
-jest.mock('@/lib/supabase/admin', () => ({ getAdminClient: jest.fn() }));
+vi.mock('@/lib/supabase/admin', () => ({ getAdminClient: vi.fn() }));
 
 import { getAdminClient } from '@/lib/supabase/admin';
-const getAdminClientMock = getAdminClient as jest.Mock;
-const dispatchMock = NotificationDispatcher.dispatch as jest.Mock;
+import type { Mock } from 'vitest';
+
+const getAdminClientMock = getAdminClient as Mock;
+const dispatchMock = NotificationDispatcher.dispatch as Mock;
 
 const PI_ID = 'pi-1';
 const TOKEN = 'token-abc';
@@ -85,7 +87,7 @@ function world(row: Row) {
   return fake;
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => vi.clearAllMocks());
 
 describe('the token is the authorisation', () => {
   it('reveals nothing to a wrong token', async () => {
@@ -255,8 +257,8 @@ describe('expiry bounds when a payment can be MADE, not when it can be REPORTED'
  * ship-the-goods-for-no-money. bitbaum/orangecat#563 finding 3.
  */
 describe('claims are budgeted per recipient', () => {
-  const allow = jest.fn(async () => true);
-  const refuse = jest.fn(async () => false);
+  const allow = vi.fn(async () => true);
+  const refuse = vi.fn(async () => false);
 
   beforeEach(() => {
     allow.mockClear();

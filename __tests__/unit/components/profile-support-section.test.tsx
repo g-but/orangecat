@@ -9,20 +9,22 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { ProfileSupportSection } from '@/components/profile/ProfileSupportSection';
 import { fetchTipReceiveInfo } from '@/services/tips/tip-client';
 
-jest.mock('@/services/tips/tip-client', () => ({
-  fetchTipReceiveInfo: jest.fn(),
+import type { Mock } from 'vitest';
+
+vi.mock('@/services/tips/tip-client', () => ({
+  fetchTipReceiveInfo: vi.fn(),
 }));
-jest.mock('@/components/tips/TipButton', () => ({
+vi.mock('@/components/tips/TipButton', () => ({
   __esModule: true,
   default: ({ username }: { username: string }) => <button>tip:{username}</button>,
 }));
-jest.mock('@/components/receive/SharePayLink', () => ({
+vi.mock('@/components/receive/SharePayLink', () => ({
   SharePayLink: ({ username }: { username: string }) => <div>share:{username}</div>,
 }));
 
-const receiveInfoMock = fetchTipReceiveInfo as jest.Mock;
+const receiveInfoMock = fetchTipReceiveInfo as Mock;
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => vi.clearAllMocks());
 
 describe('ProfileSupportSection', () => {
   it('asks the payment system, not the profile row', async () => {

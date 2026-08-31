@@ -16,7 +16,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import TimelineComposer from '@/components/timeline/TimelineComposer';
 
-jest.mock('@/hooks/useAuth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
     user: { id: 'u1', email: 'a@b.c', user_metadata: {} },
     profile: { username: 'mao', name: 'Mao', avatar_url: null },
@@ -25,46 +25,46 @@ jest.mock('@/hooks/useAuth', () => ({
 
 const composerState = {
   content: '',
-  setContent: jest.fn(),
+  setContent: vi.fn(),
   isPosting: false,
-  handlePost: jest.fn(),
+  handlePost: vi.fn(),
   visibility: 'public' as const,
-  setVisibility: jest.fn(),
+  setVisibility: vi.fn(),
   image: null,
-  setImage: jest.fn(),
+  setImage: vi.fn(),
   error: null,
   postSuccess: false,
   userProjects: [],
   selectedProjects: [],
-  toggleProjectSelection: jest.fn(),
+  toggleProjectSelection: vi.fn(),
 };
 
-jest.mock('@/hooks/usePostComposerNew', () => ({
+vi.mock('@/hooks/usePostComposerNew', () => ({
   usePostComposer: () => composerState,
 }));
 
-jest.mock('@/hooks/useContentEditableEditor', () => ({
+vi.mock('@/hooks/useContentEditableEditor', () => ({
   useContentEditableEditor: () => ({
     editorRef: { current: null },
-    handleInput: jest.fn(),
-    handlePaste: jest.fn(),
-    handleKeyDown: jest.fn(),
-    handleFormat: jest.fn(),
+    handleInput: vi.fn(),
+    handlePaste: vi.fn(),
+    handleKeyDown: vi.fn(),
+    handleFormat: vi.fn(),
   }),
 }));
 
-jest.mock('@/components/mentions/useContentEditableMentions', () => ({
+vi.mock('@/components/mentions/useContentEditableMentions', () => ({
   useContentEditableMentions: () => ({ editorProps: {}, menuProps: { suggestions: [] } }),
 }));
 
-jest.mock('@/components/mentions/MentionSuggestions', () => ({
+vi.mock('@/components/mentions/MentionSuggestions', () => ({
   __esModule: true,
   default: () => null,
 }));
 
 // The AI drafter stands in for "a toolbar button": focusing it must not
 // unmount the toolbar it lives in.
-jest.mock('@/components/timeline/PostAiButton', () => ({
+vi.mock('@/components/timeline/PostAiButton', () => ({
   __esModule: true,
   default: () => (
     <button type="button" aria-label="Write with AI">
@@ -72,8 +72,8 @@ jest.mock('@/components/timeline/PostAiButton', () => ({
     </button>
   ),
 }));
-jest.mock('@/components/timeline/ReplyAiButton', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/timeline/PostAiEditMenu', () => ({ __esModule: true, default: () => null }));
+vi.mock('@/components/timeline/ReplyAiButton', () => ({ __esModule: true, default: () => null }));
+vi.mock('@/components/timeline/PostAiEditMenu', () => ({ __esModule: true, default: () => null }));
 
 const AI_BUTTON = /write with ai/i;
 

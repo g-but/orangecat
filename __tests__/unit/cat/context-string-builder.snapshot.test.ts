@@ -166,10 +166,10 @@ const FULL_CTX = {
 
 describe('buildFullContextString — full-output snapshot', () => {
   beforeAll(() => {
-    jest.useFakeTimers({ now: new Date('2026-06-29T12:00:00Z'), doNotFake: ['nextTick'] });
+    vi.useFakeTimers({ now: new Date('2026-06-29T12:00:00Z'), doNotFake: ['nextTick'] });
   });
   afterAll(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('renders every section identically (byte-for-byte)', () => {

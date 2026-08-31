@@ -191,7 +191,7 @@ describe('generateFormPrefill — retries a transient provider failure', () => {
         },
       ],
     };
-    const fetchMock = jest
+    const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({ ok: false, status: 503, text: async () => 'upstream hiccup' })
       .mockResolvedValueOnce({ ok: true, json: async () => okBody });
@@ -208,7 +208,7 @@ describe('generateFormPrefill — retries a transient provider failure', () => {
   });
 
   it('gives up after repeated failures with the same user-facing message', async () => {
-    const fetchMock = jest
+    const fetchMock = vi
       .fn()
       .mockResolvedValue({ ok: false, status: 503, text: async () => 'still down' });
     global.fetch = fetchMock as unknown as typeof fetch;

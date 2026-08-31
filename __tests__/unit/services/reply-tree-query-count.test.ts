@@ -14,21 +14,21 @@
 
 import { getReplies } from '@/services/timeline/queries/eventQueries';
 
-const from = jest.fn();
-const enrich = jest.fn();
+const from = vi.fn();
+const enrich = vi.fn();
 
-jest.mock('@/lib/supabase/browser', () => ({
+vi.mock('@/lib/supabase/browser', () => ({
   __esModule: true,
   default: { from: (...a: unknown[]) => from(...a) },
 }));
-jest.mock('@/services/timeline/processors/enrichment', () => ({
+vi.mock('@/services/timeline/processors/enrichment', () => ({
   enrichEventsForDisplay: (...a: unknown[]) => enrich(...a),
 }));
-jest.mock('@/services/timeline/processors/reaction-state', () => ({
-  attachReactionState: async <T,>(x: T) => x,
+vi.mock('@/services/timeline/processors/reaction-state', () => ({
+  attachReactionState: async <T>(x: T) => x,
   EMPTY_REACTION_STATE: {},
 }));
-jest.mock('@/lib/supabase/untyped', () => ({ callRpc: jest.fn() }));
+vi.mock('@/lib/supabase/untyped', () => ({ callRpc: vi.fn() }));
 
 /**
  * A fake table that actually honours the parent filter.
@@ -68,7 +68,7 @@ function tableOf(rows: Array<Record<string, unknown>>) {
 
 describe('getReplies query cost', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Enrichment echoes its input, mapped to the display shape the tree needs.
     enrich.mockImplementation(async (rows: Array<Record<string, unknown>>) =>
       rows.map(r => ({ id: r.id, parentEventId: r.parent_event_id }))

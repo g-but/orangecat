@@ -18,20 +18,20 @@ import {
   settleAssistantCharge,
 } from '@/services/ai/assistant-charge';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
-const appendCreditEntry = jest.fn();
-const getCreditBalance = jest.fn();
-jest.mock('@/services/cat/credits', () => ({
+const appendCreditEntry = vi.fn();
+const getCreditBalance = vi.fn();
+vi.mock('@/services/cat/credits', () => ({
   appendCreditEntry: (...a: unknown[]) => appendCreditEntry(...a),
   getCreditBalance: (...a: unknown[]) => getCreditBalance(...a),
 }));
 
 // bumpAssistantRevenue reads then updates a counter row; a chainable stub is enough.
 const revenueRow = { total_revenue: 0 };
-jest.mock('@/lib/supabase/untyped', () => ({
+vi.mock('@/lib/supabase/untyped', () => ({
   fromTable: () => ({
     select: () => ({ eq: () => ({ single: async () => ({ data: revenueRow }) }) }),
     update: () => ({ eq: async () => ({ data: null, error: null }) }),
@@ -41,7 +41,7 @@ jest.mock('@/lib/supabase/untyped', () => ({
 const admin = {} as never;
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   revenueRow.total_revenue = 0;
 });
 

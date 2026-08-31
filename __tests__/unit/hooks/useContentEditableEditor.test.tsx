@@ -18,11 +18,11 @@
 import { renderHook, act } from '@testing-library/react';
 import { useContentEditableEditor } from '@/hooks/useContentEditableEditor';
 
-jest.mock('@/utils/markdownEditor', () => ({
+vi.mock('@/utils/markdownEditor', () => ({
   markdownToHtml: (md: string) => md,
   htmlToMarkdown: (html: string) => html,
   getSelectionRange: () => ({ start: 0, end: 0 }),
-  setSelectionRange: jest.fn(),
+  setSelectionRange: vi.fn(),
 }));
 
 /**
@@ -38,7 +38,7 @@ function mount(initial: string) {
 
   const view = renderHook(
     ({ content }: { content: string }) =>
-      useContentEditableEditor({ content, onContentChange: jest.fn() }),
+      useContentEditableEditor({ content, onContentChange: vi.fn() }),
     { initialProps: { content: initial } }
   );
 

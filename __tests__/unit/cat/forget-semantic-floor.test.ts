@@ -14,21 +14,23 @@
 import { forgetMemoriesMatching } from '@/services/cat/memory';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+import type { Mock } from 'vitest';
+
+vi.mock('@/utils/logger', () => ({
+  logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
-const mockEmbedText = jest.fn();
-jest.mock('@/services/ai/embeddings', () => ({
+const mockEmbedText = vi.fn();
+vi.mock('@/services/ai/embeddings', () => ({
   embeddingsEnabled: () => true,
   embedText: (...args: unknown[]) => mockEmbedText(...args),
-  embedTexts: jest.fn().mockResolvedValue([]),
+  embedTexts: vi.fn().mockResolvedValue([]),
 }));
 
 /** Corpus deliberately shares NO word with the phrase, forcing the RPC path. */
 const STORED = { id: 's1', content: 'Knows French' };
 
-function makeClient(rpc: jest.Mock) {
+function makeClient(rpc: Mock) {
   return {
     from: () => ({
       select: () => ({ eq: async () => ({ data: [STORED], error: null }) }),
@@ -42,12 +44,12 @@ function makeClient(rpc: jest.Mock) {
 
 describe('forget semantic fallback', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockEmbedText.mockResolvedValue([0.1, 0.2, 0.3]);
   });
 
   it('passes the measured 0.45 floor to match_cat_memories', async () => {
-    const rpc = jest.fn().mockResolvedValue({ data: [], error: null });
+    const rpc = vi.fn().mockResolvedValue({ data: [], error: null });
     await forgetMemoriesMatching(makeClient(rpc), 'u1', ['speaking a second language']);
 
     expect(rpc).toHaveBeenCalledWith(
@@ -57,7 +59,7 @@ describe('forget semantic fallback', () => {
   });
 
   it('deletes what the semantic match returns when no word matched', async () => {
-    const rpc = jest.fn().mockResolvedValue({ data: [STORED], error: null });
+    const rpc = vi.fn().mockResolvedValue({ data: [STORED], error: null });
     const result = await forgetMemoriesMatching(makeClient(rpc), 'u1', [
       'speaking a second language',
     ]);
@@ -67,7 +69,7 @@ describe('forget semantic fallback', () => {
   });
 
   it('is a FALLBACK — a word match never reaches the RPC', async () => {
-    const rpc = jest.fn().mockResolvedValue({ data: [], error: null });
+    const rpc = vi.fn().mockResolvedValue({ data: [], error: null });
     await forgetMemoriesMatching(makeClient(rpc), 'u1', ['French']);
 
     expect(rpc).not.toHaveBeenCalled();
@@ -76,7 +78,7 @@ describe('forget semantic fallback', () => {
   it('reports no-match rather than failing when the RPC errors', async () => {
     // A dead embedding path must degrade to "nothing matched", never to a
     // half-truth about what was removed.
-    const rpc = jest.fn().mockRejectedValue(new Error('vector index offline'));
+    const rpc = vi.fn().mockRejectedValue(new Error('vector index offline'));
     const result = await forgetMemoriesMatching(makeClient(rpc), 'u1', [
       'speaking a second language',
     ]);

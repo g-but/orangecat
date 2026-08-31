@@ -25,7 +25,7 @@ const RATE_LIMITED = {
 
 /** Groq up, OpenRouter out of daily quota — the exact production state. */
 function mockFetch() {
-  return jest.fn(async (url: unknown) => {
+  return vi.fn(async (url: unknown) => {
     const u = String(url);
     if (u.includes('/models')) {
       return { ok: true, status: 200, json: async () => ({ data: [] }) };

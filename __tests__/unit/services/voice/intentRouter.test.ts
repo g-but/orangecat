@@ -9,11 +9,11 @@
 
 import { routeVoiceIntent, MIN_ROUTE_CONFIDENCE } from '@/services/voice/intent-router';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
-const fetchMock = jest.fn();
+const fetchMock = vi.fn();
 global.fetch = fetchMock as unknown as typeof fetch;
 
 /** Shapes a model reply the way the provider returns it. */
@@ -27,7 +27,7 @@ function modelReplies(payload: unknown) {
 const SENTENCE = 'sell my old road bike for 200 francs, a Cannondale in decent condition';
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   process.env.GROQ_API_KEY = 'test-key';
 });
 

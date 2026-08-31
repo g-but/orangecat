@@ -20,12 +20,12 @@ import { Home } from 'lucide-react';
 import { SidebarNavigation } from '@/components/sidebar/SidebarNavigation';
 import type { NavSection } from '@/hooks/useNavigation';
 
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: jest.fn() }),
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
   usePathname: () => '/projects',
 }));
 
-jest.mock('@/stores/messaging', () => ({
+vi.mock('@/stores/messaging', () => ({
   useUnreadCount: () => 0,
 }));
 
@@ -49,7 +49,7 @@ const SECTIONS: NavSection[] = [
 // /projects is active — it lives inside the collapsible "Fund" section
 const isItemActive = (href: string) => href === '/projects';
 
-function renderNav(collapsed: string[], toggleSection = jest.fn()) {
+function renderNav(collapsed: string[], toggleSection = vi.fn()) {
   const view = render(
     <SidebarNavigation
       sections={SECTIONS}

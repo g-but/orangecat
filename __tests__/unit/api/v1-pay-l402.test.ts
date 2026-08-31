@@ -12,13 +12,13 @@ import {
   buildL402ChallengeHeader,
 } from '@/domain/payments/l402-codec';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
 // Route tests: mock the response layer (NextResponse unavailable in jest) and
 // the domain flows; exercise branch selection + status codes.
-jest.mock('@/lib/api/standardResponse', () => ({
+vi.mock('@/lib/api/standardResponse', () => ({
   apiSuccess: (data: unknown, _opts?: unknown) => ({
     status: 200,
     json: async () => ({ success: true, data }),
@@ -55,17 +55,17 @@ jest.mock('@/lib/api/standardResponse', () => ({
   },
 }));
 
-const mockCreateChallenge = jest.fn();
-const mockVerify = jest.fn();
-jest.mock('@/domain/payments/l402', () => ({
+const mockCreateChallenge = vi.fn();
+const mockVerify = vi.fn();
+vi.mock('@/domain/payments/l402', () => ({
   createL402Challenge: (...args: unknown[]) => mockCreateChallenge(...args),
   verifyL402Payment: (...args: unknown[]) => mockVerify(...args),
 }));
-jest.mock('@/lib/supabase/public', () => ({ createPublicClient: () => ({ _kind: 'public' }) }));
-jest.mock('@/lib/rate-limit', () => ({
-  rateLimitWriteAsync: jest.fn().mockResolvedValue({ success: true }),
-  rateLimitPaymentRecipient: jest.fn().mockResolvedValue({ success: true }),
-  rateLimitL402Verify: jest.fn().mockResolvedValue({ success: true }),
+vi.mock('@/lib/supabase/public', () => ({ createPublicClient: () => ({ _kind: 'public' }) }));
+vi.mock('@/lib/rate-limit', () => ({
+  rateLimitWriteAsync: vi.fn().mockResolvedValue({ success: true }),
+  rateLimitPaymentRecipient: vi.fn().mockResolvedValue({ success: true }),
+  rateLimitL402Verify: vi.fn().mockResolvedValue({ success: true }),
   retryAfterSeconds: () => 1,
 }));
 
@@ -75,6 +75,8 @@ import {
   rateLimitPaymentRecipient,
   rateLimitWriteAsync,
 } from '@/lib/rate-limit';
+
+import type { Mock } from 'vitest';
 
 const ENTITY_ID = '11111111-2222-3333-4444-555555555555';
 const params = Promise.resolve({ entity_type: 'product', entity_id: ENTITY_ID });
@@ -241,7 +243,7 @@ describe('GET /api/v1/pay/{type}/{id}', () => {
  */
 describe('per-recipient invoice-spam limit', () => {
   beforeEach(() => {
-    (rateLimitPaymentRecipient as jest.Mock).mockResolvedValue({ success: true });
+    (rateLimitPaymentRecipient as Mock).mockResolvedValue({ success: true });
   });
 
   it('keys the limit on the recipient, not only the caller', async () => {
@@ -250,7 +252,7 @@ describe('per-recipient invoice-spam limit', () => {
   });
 
   it('refuses with 429 when that recipient is already being hammered', async () => {
-    (rateLimitPaymentRecipient as jest.Mock).mockResolvedValue({ success: false });
+    (rateLimitPaymentRecipient as Mock).mockResolvedValue({ success: false });
     const res = await GET(makeRequest('https://x.test/api/v1/pay/product/' + ENTITY_ID), {
       params,
     });
@@ -275,8 +277,8 @@ describe('L402 verify-retry limit', () => {
   const AUTH = { authorization: `L402 ${ENTITY_ID}.tok_abc:${'a'.repeat(64)}` };
 
   beforeEach(() => {
-    (rateLimitL402Verify as jest.Mock).mockResolvedValue({ success: true });
-    (rateLimitWriteAsync as jest.Mock).mockResolvedValue({ success: true });
+    (rateLimitL402Verify as Mock).mockResolvedValue({ success: true });
+    (rateLimitWriteAsync as Mock).mockResolvedValue({ success: true });
     mockVerify.mockResolvedValue({ ok: false, status: 'pending' });
   });
 
@@ -286,7 +288,7 @@ describe('L402 verify-retry limit', () => {
   });
 
   it('refuses with 429 once one token has hammered the relay', async () => {
-    (rateLimitL402Verify as jest.Mock).mockResolvedValue({ success: false });
+    (rateLimitL402Verify as Mock).mockResolvedValue({ success: false });
     const res = await GET(makeRequest('https://x.test/api/v1/pay/product/' + ENTITY_ID, AUTH), {
       params,
     });

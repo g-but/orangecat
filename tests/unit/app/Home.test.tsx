@@ -6,22 +6,22 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@/components/home/sections/HeroSectionStatic', () => {
-  return function MockHeroSection() {
+vi.mock('@/components/home/sections/HeroSectionStatic', () => ({
+  default: function MockHeroSection() {
     return (
       <section data-testid="hero-section">
         <h1>Turn who you are into income.</h1>
         <a href="/auth">Meet your Cat</a>
       </section>
     );
-  };
-});
+  },
+}));
 
-jest.mock('@/components/home/sections/FirstMoveSection', () => {
-  return function MockFirstMoveSection() {
+vi.mock('@/components/home/sections/FirstMoveSection', () => ({
+  default: function MockFirstMoveSection() {
     return <div data-testid="first-move-section" />;
-  };
-});
+  },
+}));
 
 import HomePublic from '@/components/home/HomePublic';
 

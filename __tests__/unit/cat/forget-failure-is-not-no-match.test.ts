@@ -16,14 +16,14 @@
 
 import { forgetMemoriesMatching } from '@/services/cat/memory';
 
-jest.mock('@/utils/logger', () => ({
-  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+vi.mock('@/utils/logger', () => ({
+  logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
-jest.mock('@/services/ai/embeddings', () => ({
+vi.mock('@/services/ai/embeddings', () => ({
   embeddingsEnabled: () => false,
-  embedText: jest.fn(),
-  embedTexts: jest.fn(),
+  embedText: vi.fn(),
+  embedTexts: vi.fn(),
 }));
 
 const FACTS = ['photography skills'];
@@ -39,9 +39,7 @@ function makeClient(opts: { loadError?: unknown; deleteError?: unknown } = {}) {
       select: () => ({
         eq: () =>
           Promise.resolve(
-            opts.loadError
-              ? { data: null, error: opts.loadError }
-              : { data: [STORED], error: null }
+            opts.loadError ? { data: null, error: opts.loadError } : { data: [STORED], error: null }
           ),
       }),
       delete: () => ({
@@ -57,7 +55,7 @@ function makeClient(opts: { loadError?: unknown; deleteError?: unknown } = {}) {
 }
 
 describe('forgetMemoriesMatching — failure is its own channel', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => vi.clearAllMocks());
 
   it('deletes and reports it, when the store works', async () => {
     const result = await forgetMemoriesMatching(makeClient(), 'u1', FACTS);

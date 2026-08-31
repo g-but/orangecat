@@ -18,8 +18,8 @@ import { renderHook, act } from '@testing-library/react';
 import { useAwaitCatReply } from '@/hooks/useAwaitCatReply';
 import type { TimelineDisplayEvent } from '@/types/timeline';
 
-const getReplies = jest.fn();
-jest.mock('@/services/timeline', () => ({
+const getReplies = vi.fn();
+vi.mock('@/services/timeline', () => ({
   timelineService: { getReplies: (...a: unknown[]) => getReplies(...a) },
 }));
 
@@ -28,14 +28,14 @@ const reply = (description: string): TimelineDisplayEvent =>
 
 describe('useAwaitCatReply', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
     getReplies.mockResolvedValue({ replies: [] });
   });
-  afterEach(() => jest.useRealTimers());
+  afterEach(() => vi.useRealTimers());
 
   it('waits after a reply that tags the Cat', () => {
-    const { result } = renderHook(() => useAwaitCatReply({ onArrived: jest.fn() }));
+    const { result } = renderHook(() => useAwaitCatReply({ onArrived: vi.fn() }));
 
     act(() => result.current.watchIfTagged(reply('@cat what is this?')));
 
@@ -43,7 +43,7 @@ describe('useAwaitCatReply', () => {
   });
 
   it('does not wait for a reply that never mentioned the Cat', () => {
-    const { result } = renderHook(() => useAwaitCatReply({ onArrived: jest.fn() }));
+    const { result } = renderHook(() => useAwaitCatReply({ onArrived: vi.fn() }));
 
     act(() => result.current.watchIfTagged(reply('just talking to people here')));
 
@@ -51,7 +51,7 @@ describe('useAwaitCatReply', () => {
   });
 
   it('is not fooled by a handle that merely starts with cat', () => {
-    const { result } = renderHook(() => useAwaitCatReply({ onArrived: jest.fn() }));
+    const { result } = renderHook(() => useAwaitCatReply({ onArrived: vi.fn() }));
 
     act(() => result.current.watchIfTagged(reply('@catalogue is a different account')));
 
@@ -59,7 +59,7 @@ describe('useAwaitCatReply', () => {
   });
 
   it('hands over the answer and stops waiting once it arrives', async () => {
-    const onArrived = jest.fn();
+    const onArrived = vi.fn();
     const catReply = { id: 'c1', metadata: { is_cat_reply: true } };
     getReplies.mockResolvedValue({ replies: [catReply] });
 
@@ -77,7 +77,7 @@ describe('useAwaitCatReply', () => {
   });
 
   it('ignores replies from anyone else while waiting', async () => {
-    const onArrived = jest.fn();
+    const onArrived = vi.fn();
     // Somebody else answering first must not end the wait — the Cat's answer is
     // what was asked for.
     getReplies.mockResolvedValue({ replies: [{ id: 'human', metadata: {} }] });
@@ -96,7 +96,7 @@ describe('useAwaitCatReply', () => {
   });
 
   it('gives up rather than waiting forever', async () => {
-    const { result } = renderHook(() => useAwaitCatReply({ onArrived: jest.fn() }));
+    const { result } = renderHook(() => useAwaitCatReply({ onArrived: vi.fn() }));
 
     await act(async () => {
       result.current.watchIfTagged(reply('@cat explain'));
@@ -107,7 +107,7 @@ describe('useAwaitCatReply', () => {
     // reply — so silence past the window means something upstream is wrong, and
     // a spinner that never resolves is worse than none.
     await act(async () => {
-      jest.advanceTimersByTime(65_000);
+      vi.advanceTimersByTime(65_000);
       await Promise.resolve();
     });
 
