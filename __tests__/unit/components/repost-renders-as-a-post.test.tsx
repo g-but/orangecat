@@ -12,6 +12,14 @@
  * body, so it renders flat. A QUOTE repost genuinely has two of each, so it
  * keeps the nested panel. Collapsing both cases the same way would be the
  * opposite bug.
+ *
+ * Found live in production, one field over from the first bug: `usePostRepost`
+ * sets `subjectType: 'profile', subjectId: userId` on EVERY repost — simple
+ * or quote — purely to satisfy `createEvent`'s required fields. It always
+ * resolves to the REPOSTER's own profile, so `event.subject` on a repost is
+ * plumbing, never content. Rendered anyway, it showed as a second, unlabeled
+ * name directly under the post body — the same header repeated a third time,
+ * in a place with no visual explanation for why it was there.
  */
 
 import { render, screen } from '@testing-library/react';
@@ -27,6 +35,10 @@ const base = {
   actor: { id: 'a1', name: 'Reposter', username: 'reposter', type: 'user' },
   description: '',
   metadata: {},
+  // The shape usePostRepost actually produces: subjectType/subjectId set to
+  // the reposter's own profile to satisfy createEvent, resolved by
+  // enrichment into a subject that points right back at the byline.
+  subject: { id: 'a1', name: 'Reposter', url: '/profiles/reposter', type: 'profile' },
 } as unknown as TimelineDisplayEvent;
 
 function simpleRepost(): TimelineDisplayEvent {
@@ -58,6 +70,15 @@ function quoteRepost(): TimelineDisplayEvent {
   } as unknown as TimelineDisplayEvent;
 }
 
+function ordinaryPost(): TimelineDisplayEvent {
+  return {
+    ...base,
+    description: 'Shipped a new feature today.',
+    metadata: {},
+    subject: { id: 'proj-1', name: 'FleetCrown', url: '/projects/fleetcrown', type: 'project' },
+  } as unknown as TimelineDisplayEvent;
+}
+
 describe('a simple repost', () => {
   it('shows the original text as the post body', () => {
     render(<PostContent event={simpleRepost()} />);
@@ -72,6 +93,24 @@ describe('a simple repost', () => {
     // repost. PostContent must not draw them a second time.
     expect(screen.queryByText('Original Author')).not.toBeInTheDocument();
     expect(screen.queryByText('@original')).not.toBeInTheDocument();
+  });
+
+  it('does not render the reposter as a second, unlabeled subject link', () => {
+    render(<PostContent event={simpleRepost()} />);
+
+    // `event.subject` on this fixture resolves to the reposter's own profile
+    // — plumbing, not content. It must not appear as a link under the body.
+    expect(screen.queryByRole('link', { name: 'Reposter' })).not.toBeInTheDocument();
+  });
+});
+
+describe('an ordinary (non-repost) post', () => {
+  it('still shows a genuine subject link', () => {
+    render(<PostContent event={ordinaryPost()} />);
+
+    // The suppression is specific to reposts. A real post's subject — e.g.
+    // "posted about FleetCrown" — must keep rendering.
+    expect(screen.getByRole('link', { name: 'FleetCrown' })).toBeInTheDocument();
   });
 });
 
@@ -88,5 +127,14 @@ describe('a quote repost', () => {
     // Two posts, two authors: here the panel earns its place.
     expect(screen.getByText('Original Author')).toBeInTheDocument();
     expect(screen.getByText('The original words.')).toBeInTheDocument();
+  });
+
+  it('does not ALSO render the reposter as an unlabeled subject link', () => {
+    render(<PostContent event={quoteRepost()} />);
+
+    // usePostRepost sets the same self-referential subject on quote reposts
+    // as on simple ones. The quoter's name is already the byline; it must
+    // not also appear as a bare link below the quoted panel.
+    expect(screen.queryByRole('link', { name: 'Reposter' })).not.toBeInTheDocument();
   });
 });
