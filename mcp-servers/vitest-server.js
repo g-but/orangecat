@@ -11,19 +11,7 @@ const {
 } = require('@modelcontextprotocol/sdk/types.js');
 const { spawn } = require('child_process');
 const path = require('path');
-
-const ALLOWED = new Set([
-  'npm',
-  'npx',
-  'node',
-  'next',
-  'vitest',
-  'playwright',
-  'eslint',
-  'prettier',
-  'rg',
-  'echo',
-]);
+const fs = require('fs');
 
 function resolveCwd(cwd) {
   const root = process.cwd();
@@ -35,43 +23,33 @@ function resolveCwd(cwd) {
   return full;
 }
 
-function runCommand(cmd, args, opt = {}) {
+function binPath(bin) {
+  const local = path.join(process.cwd(), 'node_modules', '.bin', bin);
+  return fs.existsSync(local) ? local : bin;
+}
+
+function run(cmd, args, opt = {}) {
   return new Promise(resolve => {
-    const start = Date.now();
     const child = spawn(cmd, args, { cwd: opt.cwd, env: process.env, shell: false });
     let stdout = '';
     let stderr = '';
-    let finished = false;
-    const killTimer = setTimeout(() => {
-      if (!finished) {
-        finished = true;
-        child.kill('SIGKILL');
-        resolve({ code: -1, stdout, stderr: stderr + `\nTimed out after ${opt.timeout}ms` });
-      }
-    }, opt.timeout || 60000);
     child.stdout.on('data', d => {
       stdout += d.toString();
     });
     child.stderr.on('data', d => {
       stderr += d.toString();
     });
-    child.on('close', code => {
-      if (finished) {
-        return;
-      }
-      finished = true;
-      clearTimeout(killTimer);
-      resolve({ code, stdout, stderr, ms: Date.now() - start });
-    });
+    child.on('close', code => resolve({ code, stdout, stderr }));
   });
 }
 
-class ShellServer {
+class JestServer {
   constructor() {
     this.server = new Server(
-      { name: 'shell-server', version: '1.0.0' },
+      { name: 'vitest-server', version: '1.0.0' },
       { capabilities: { tools: {} } }
     );
+    this.vitest = binPath('vitest');
     this.setup();
   }
 
@@ -79,16 +57,29 @@ class ShellServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
       tools: [
         {
-          name: 'run',
-          description: 'Run an allowed command with arguments',
+          name: 'vitest_run',
+          description: 'Run Vitest with an optional filename filter',
           inputSchema: {
             type: 'object',
-            required: ['cmd'],
             properties: {
-              cmd: { type: 'string' },
-              args: { type: 'array', items: { type: ['string', 'number', 'boolean'] } },
               cwd: { type: 'string' },
-              timeout: { type: 'number', default: 60000 },
+              testPathPattern: { type: 'string' },
+              coverage: { type: 'boolean', default: false },
+              updateSnapshots: { type: 'boolean', default: false },
+              silent: { type: 'boolean', default: false },
+            },
+          },
+        },
+        {
+          name: 'vitest_file',
+          description: 'Run a specific test file',
+          inputSchema: {
+            type: 'object',
+            required: ['file'],
+            properties: {
+              cwd: { type: 'string' },
+              file: { type: 'string' },
+              updateSnapshots: { type: 'boolean', default: false },
             },
           },
         },
@@ -99,21 +90,38 @@ class ShellServer {
       const name = req.params.name;
       const a = req.params.arguments || {};
       try {
+        const cwd = resolveCwd(a.cwd || '.');
         switch (name) {
-          case 'run': {
-            const program = String(a.cmd);
-            if (!ALLOWED.has(program)) {
-              throw new Error(`Command not allowed: ${program}`);
+          case 'vitest_run': {
+            const args = ['run'];
+            if (a.coverage) {
+              args.push('--coverage');
             }
-            const cwd = resolveCwd(a.cwd || '.');
-            const args = Array.isArray(a.args) ? a.args.map(String) : [];
-            const res = await runCommand(program, args, { cwd, timeout: a.timeout || 60000 });
+            if (a.silent) {
+              args.push('--silent');
+            }
+            if (a.updateSnapshots) {
+              args.push('--update');
+            }
+            if (a.testPathPattern) {
+              args.push(a.testPathPattern);
+            }
+            const r = await run(this.vitest, args, { cwd });
             return {
               content: [
-                {
-                  type: 'json',
-                  json: { code: res.code, stdout: res.stdout, stderr: res.stderr, ms: res.ms },
-                },
+                { type: 'json', json: { code: r.code, stdout: r.stdout, stderr: r.stderr } },
+              ],
+            };
+          }
+          case 'vitest_file': {
+            const args = ['run', a.file];
+            if (a.updateSnapshots) {
+              args.push('--update');
+            }
+            const r = await run(this.vitest, args, { cwd });
+            return {
+              content: [
+                { type: 'json', json: { code: r.code, stdout: r.stdout, stderr: r.stderr } },
               ],
             };
           }
@@ -132,8 +140,8 @@ class ShellServer {
   async run() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    console.error('Shell MCP Server running on stdio');
+    console.error('Jest MCP Server running on stdio');
   }
 }
 
-new ShellServer().run();
+new JestServer().run();
