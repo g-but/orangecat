@@ -20,7 +20,7 @@ import {
 } from '@/services/cat/conversation-history';
 import { recallMemories } from '@/services/cat/memory';
 import { fetchFullContextForCat, buildFullContextString } from '@/services/ai/document-context';
-import { buildAssistantRules } from 'ai-kit/grounding';
+import { buildAssistantRules } from '@bitbaum/ai-kit/grounding';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 
 export interface CatChatPrepareOpts {
@@ -121,7 +121,7 @@ export async function prepareCatChat(
   // Rule 5 explicitly protects general economic knowledge — Cat must still be
   // able to explain Lightning or Twint. The restriction is on inventing facts
   // about THIS user's people and entities, which is the failure that actually
-  // costs trust. See ai-kit/grounding (the packaged harness).
+  // costs trust. See @bitbaum/ai-kit/grounding (the packaged harness).
   const groundingRules = contextString
     ? `\n\n${buildAssistantRules({ subjectNoun: 'profile, entities, contacts and transactions' })}`
     : '';

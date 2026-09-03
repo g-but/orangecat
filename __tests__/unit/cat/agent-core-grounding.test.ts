@@ -3,7 +3,7 @@
  *
  * This file used to have a second job: asserting the src/services/agent-core
  * mirror was byte-identical to FleetCrown's canonical copy. That mirror is
- * deleted — both apps import `ai-kit/grounding` now, so there are no longer
+ * deleted — both apps import `@bitbaum/ai-kit/grounding` now, so there are no longer
  * two copies of "what counts as grounded" to diverge. (The mirror check also
  * self-skipped in CI, which clones one repo at a time; it only ever ran on a
  * laptop with both checkouts side by side. A gate that runs where nobody is
@@ -14,7 +14,7 @@
  * leaving general economic knowledge alone. A check that flags "Lightning"
  * gets switched off within a week, and then protects nothing.
  */
-import { verifyAnswer, buildAssistantRules, NO_BASIS } from 'ai-kit/grounding';
+import { verifyAnswer, buildAssistantRules, NO_BASIS } from '@bitbaum/ai-kit/grounding';
 
 describe('Cat grounding rules', () => {
   it('forbids inferring an affiliation and claiming research', () => {

@@ -116,6 +116,7 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
+    "@bitbaum/ai-kit": "^0.6.2",
     "@hono/node-server": "^2.1.1",
     "@hookform/resolvers": "^5.9.1",
     "@marsidev/react-turnstile": "^1.6.0",
@@ -145,7 +146,6 @@
     "@types/mdx": "^2.0.13",
     "@upstash/ratelimit": "^2.0.7",
     "@upstash/redis": "^1.38.2",
-    "ai-kit": "github:bitbaum/ai-kit#v0.6.2",
     "autoprefixer": "^10.5.4",
     "bech32": "^2.0.0",
     "bip32": "^5.0.0",
