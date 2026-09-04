@@ -199,7 +199,23 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            // microphone=(self) — NOT the empty `microphone=()` this used to
+            // send. An empty allowlist denies the feature to every origin
+            // INCLUDING this one, so the browser never even shows a permission
+            // prompt: getUserMedia rejects immediately with NotAllowedError.
+            //
+            // Measured on orangecat.ch before this change:
+            //   document.featurePolicy.allowsFeature('microphone') -> false
+            //   navigator.permissions.query({name:'microphone'})   -> "denied"
+            //
+            // That silently disabled speak-to-report in the embedded FleetCrown
+            // feedback widget, and no visitor could fix it — there was nothing
+            // to allow. `(self)` permits only this origin, so the browser asks
+            // the person, which is the decision that should be theirs.
+            //
+            // camera and geolocation stay fully denied: nothing here uses them,
+            // and an unused capability should not be reachable.
+            value: 'camera=(), microphone=(self), geolocation=()',
           },
           // HSTS: tell browsers to always use HTTPS (production only)
           ...(!isDevelopment
