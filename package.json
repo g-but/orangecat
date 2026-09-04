@@ -227,6 +227,7 @@
     "supabase": "^2.115.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11",
+    "wait-on": "^9.1.0",
     "ws": "^8.21.3"
   },
   "optionalDependencies": {
