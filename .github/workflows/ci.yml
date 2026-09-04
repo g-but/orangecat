@@ -363,16 +363,14 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      # setup-pnpm's default store nests inside its own bin dir, which breaks
-      # any prepare-building dep (portable-type TS2742) — pin it outside.
-      - name: Pin pnpm store location
-        run: pnpm config set store-dir ~/.pnpm-store --global
-
+      # No cache here on purpose: this job never installs, so the pnpm store
+      # is never created — setup-node's post-step then FAILS the job trying to
+      # save a cache path that does not exist (`pnpm audit` needs only the
+      # lockfile, not node_modules).
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: 'pnpm'
 
       - name: Dependency audit
         # ESCALATED 2026-08-25. The staged rollout this replaces blocked only on
