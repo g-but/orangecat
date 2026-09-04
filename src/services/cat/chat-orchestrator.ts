@@ -370,7 +370,7 @@ export async function orchestrateCatChat(
             // own invention back as history next turn.
             //
             // Scoped to entity-attribution: Cat must stay free to name Lightning,
-            // Twint or PayPal in general advice. See ai-kit/grounding verify.
+            // Twint or PayPal in general advice. See @bitbaum/ai-kit/grounding verify.
             const groundingCheck = await enforceGrounding({
               content: fullContent,
               message,
