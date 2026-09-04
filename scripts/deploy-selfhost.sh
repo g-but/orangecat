@@ -45,9 +45,9 @@ if [ "${1:-}" != "--no-build" ]; then
   # costs a full build+rsync cycle to discover. (next build type-checks too, but
   # only after compiling.) type-check is non-incremental → deterministic.
   echo "=== type-check (fail fast) ==="
-  npm run type-check
+  pnpm run type-check
   echo "=== build (SELF_HOST=1) ==="
-  SELF_HOST=1 npm run build
+  SELF_HOST=1 pnpm run build
 fi
 
 ST="$REPO_ROOT/.next/standalone"
