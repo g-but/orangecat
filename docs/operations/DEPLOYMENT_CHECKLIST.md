@@ -12,8 +12,10 @@ Status: Ready for use
   - `SUPABASE_SERVICE_ROLE_KEY`
 
 - Rate Limiting (production)
-  - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (canonical limiter)
-  - `REDIS_URL`, `REDIS_TOKEN` (legacy until all routes migrate; point to Upstash values)
+  - No env vars: the canonical limiter (`src/lib/rate-limit.ts` over `limitkit`)
+    counts in-process, which is correct for the single self-hosted instance
+    (ADR-0002). A second instance would need a shared `Store` implementation,
+    not env vars.
 
 - AI / Voice
   - `OPENROUTER_API_KEY` (optional platform key; users can BYOK)
