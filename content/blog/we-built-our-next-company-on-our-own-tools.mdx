@@ -1,0 +1,85 @@
+---
+title: "We Built Our Next Company on Our Own Tools, and Three Things Broke Immediately"
+excerpt: "The only honest test of a platform is being its own customer. We started a new company through OrangeCat and FleetCrown instead of around them — and the defect log started filling up before the first article was finished."
+date: "2026-09-05"
+tags: ["Dogfooding", "OrangeCat", "FleetCrown", "Engineering", "Product", "Verification"]
+featured: false
+author: "Mao Nakamoto"
+published: true
+---
+
+# We Built Our Next Company on Our Own Tools, and Three Things Broke Immediately
+
+OrangeCat has 162 profiles and has produced zero real replies.
+
+That number is not a capability problem. Everything works — profiles, projects, the timeline, the AI agent, the handoff to FleetCrown for building. It is an adoption problem, and there is exactly one honest way to close an adoption gap, which is to become the adopter.
+
+So we started a new company this week and made a rule: it gets built *through* our own tools, not around them. Profile on OrangeCat. Repo through FleetCrown. Every rough edge logged instead of quietly worked around.
+
+Three things broke before the first article was even finished.
+
+## The rule that makes dogfooding work
+
+Dogfooding has a well-known failure mode: the dogfood becomes the work. You set out to build a product on your platform, spend the week fixing the platform, and end with neither.
+
+So we set the rule up front. **If a tool blocks for more than an hour, route around it and log the defect.** Do not fix it in flight. The log is the deliverable; the fixes come later, batched, from someone with the whole picture rather than someone mid-task and annoyed.
+
+That distinction matters more than it sounds. Friction is only visible to whoever hits it. A second-hand bug report loses exactly the detail that turns out to matter — what you were trying to do, what you expected, and what you got instead.
+
+## What broke
+
+### 1. Every diagram on our essay site was an empty box
+
+This is the one that stings.
+
+We published a long technical essay to FleetCrown's Thoughts with two diagrams in it. Neither drew. Not "drew badly" — drew *nothing*, leaving a blank padded rectangle where the picture should be.
+
+Then we checked the other essays. **Twenty-three diagrams across ten published pieces. All blank.** They had been that way long enough that nobody could say when it started, because nothing ever reported an error.
+
+The cause was two bugs stacked:
+
+The diagram library needs colours. Our component reads them from the site's design tokens so the diagrams match the theme instead of hardcoding values that would drift. But the browser returns a colour *in the format it was written in* — and modern colour formats are newer than the diagram library's colour parser. It rejected the value and threw.
+
+That alone would have been visible, except for the second bug. The component *had* a fallback: if rendering fails, show the diagram source as plain text so the reader at least gets something. But the crash happened during **setup**, one step before rendering — and the fallback was attached to rendering.
+
+> The component had a safety net. It just wasn't under the part that fell.
+
+The designed failure was legible text. The actual failure was whitespace. Fixed the same day, verified by looking at the page rather than by watching the build go green.
+
+### 2. Our AI can draft an article but cannot publish one
+
+OrangeCat's agent has fifty actions. It can post to the timeline, send a message, create a project, follow someone, book a service, remember a fact.
+
+It cannot write an article.
+
+The odd part is that the *engine* exists — there is a working article-drafting service behind the API, and the human editor already calls it. The agent simply has no action wired to it. Two capabilities that both work, with nothing joining them.
+
+That is the cheapest kind of finding: not "build this feature," but "connect these two things you already built." It is also completely invisible from inside the code. You only notice by trying to ask for the thing.
+
+### 3. A guess about our own product that was wrong
+
+Before starting, we assumed OrangeCat articles had no share button and we would need to add one.
+
+They have had one the whole time. Articles and blog posts both.
+
+Worth writing down because it cuts the other way from the first two findings. Dogfooding does not only reveal what is broken — it corrects your mental model of what already works. We were about to build something that existed.
+
+## The pattern underneath
+
+All three findings are the same shape: **something that works, adjacent to something that works, with a gap where nobody looked.**
+
+The diagram fallback existed but was attached to the wrong call. The drafting engine existed but had no action pointing at it. The share button existed but was not in anyone's head.
+
+You do not find gaps like these by reading code, because the code looks correct on both sides. You find them by trying to get something real done and noticing the moment you stop.
+
+## Why we are doing this in public
+
+The point of OrangeCat is that individuals can spin out real ventures without a company behind them. If that is true, it should be true for us first — and if it is not yet true, the list of reasons is the actual roadmap.
+
+So the defect log is not a side effect of building the new company. **It is the product of this exercise**, and the company is the excuse to generate it.
+
+Next time we do this, we run the same walk again and diff the log. The number of entries should only ever go down.
+
+---
+
+*The new company is Diplodoctor. What it is, and why a naming search across a hundred and thirty domains changed what we thought we were building, is a separate story.*
