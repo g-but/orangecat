@@ -6,39 +6,22 @@
  */
 
 import type { AIPrefillResponse } from '@/components/create/types';
-import { PROVIDER_BASE_URLS } from '@/config/ai-provider-runtime';
-import { DEFAULT_FREE_MODEL_ID } from '@/config/ai-models';
-import { DEFAULT_GROQ_MODEL } from '@/services/ai/groq';
+import { callPlatformJson, hasPlatformProviders } from '@/services/cat/platform-llm';
 import {
   AI_ASSIST_MIN_INPUT_LENGTH,
   USER_OVERRIDABLE_FIELDS,
   type AiAssistIntent,
 } from '@/config/ai-form-assist';
 import { logger } from '@/utils/logger';
-import { withApiRetry } from '@/utils/retry';
 import { extractFieldDescriptions, formatFieldsForPrompt } from './schema-to-prompt';
 import { getSystemPrompt, getUserPrompt, parseAIResponse } from './prompts/form-prefill';
 import { sanitizeAiFields } from './sanitize-ai-fields';
 import type { AiAssistTarget } from './assist-target';
 
-// Default models for form prefill (fast, good at JSON generation).
-//
-// The Groq id is IMPORTED, not written here. This file used to carry its own
-// literal `llama-3.3-70b-versatile` while `services/ai/groq.ts` already owned
-// that decision two lines' worth of import away — so when Groq retired the
-// llama-3.x family there were two places to fix and only one got found. The
-// OpenRouter id beside it was already sourced from the registry, which is what
-// made the asymmetry easy to miss in review.
-const DEFAULT_OPENROUTER_MODEL = DEFAULT_FREE_MODEL_ID;
-
 /**
  * Configuration for the form prefill service
  */
 interface FormPrefillConfig {
-  /** AI model to use */
-  model?: string;
-  /** API key for the provider (optional, uses env if not provided) */
-  apiKey?: string;
   /** Maximum tokens for AI response */
   maxTokens?: number;
   /** Temperature for generation (lower = more deterministic) */
@@ -54,7 +37,7 @@ export interface FormPrefillRequest {
   existingData?: Record<string, unknown>;
   /** Fill an empty form, or revise the values already in it. Default `fill`. */
   intent?: AiAssistIntent;
-  /** Provider/model overrides */
+  /** Generation overrides */
   config?: FormPrefillConfig;
 }
 
@@ -153,14 +136,7 @@ export async function generateFormPrefill({
       intent
     );
 
-    // Determine provider: Groq first, OpenRouter fallback
-    const groqKey = process.env.GROQ_API_KEY;
-    const openRouterKey = config?.apiKey || process.env.OPENROUTER_API_KEY;
-
-    const useGroq = !!groqKey;
-    const apiKey = useGroq ? groqKey : openRouterKey;
-
-    if (!apiKey) {
+    if (!hasPlatformProviders()) {
       return {
         success: false,
         data: {},
@@ -170,79 +146,31 @@ export async function generateFormPrefill({
       };
     }
 
-    const model = config?.model || (useGroq ? DEFAULT_GROQ_MODEL : DEFAULT_OPENROUTER_MODEL);
-    const baseUrl = useGroq
-      ? `${PROVIDER_BASE_URLS.groq}/chat/completions`
-      : `${PROVIDER_BASE_URLS.openrouter}/chat/completions`;
-
-    // Make API request
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    };
-    if (!useGroq) {
-      headers['HTTP-Referer'] = process.env.NEXT_PUBLIC_APP_URL || 'https://orangecat.ch';
-      headers['X-Title'] = 'OrangeCat Form Prefill';
-    }
-
-    const requestBody = JSON.stringify({
-      model: useGroq ? model : model.replace('openrouter/', ''),
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
+    // Transport goes through the shared platform chain (Groq, then OpenRouter),
+    // NOT a hand-rolled fetch. This file used to pick ONE provider by key
+    // presence and stop — so when Groq retired the llama-3.x family, "Fill with
+    // AI" failed for every user while a configured OpenRouter key sat unused
+    // (reproduced in production 2026-08-25). platform-llm was repaired for
+    // exactly that failure mode on 2026-08-26; this call makes prefill ride the
+    // same chain instead of re-living the outage on the next model retirement
+    // or Groq daily-cap 429.
+    const aiContent = await callPlatformJson(systemPrompt, userPrompt, {
       temperature: config?.temperature ?? 0.3,
       // Headroom for genuinely written descriptions (and bilingual ones) —
       // 1000 truncated the JSON mid-string on multi-field forms.
-      max_tokens: config?.maxTokens ?? 2000,
-      ...(useGroq ? {} : { response_format: { type: 'json_object' } }),
+      maxTokens: config?.maxTokens ?? 2000,
+      // A person is waiting behind the Fill button; the free pool has no
+      // latency guarantee, so cap each provider attempt rather than hang.
+      timeoutMs: 30_000,
     });
 
-    // The upstream provider (Groq/OpenRouter) occasionally answers with a
-    // transient 429/5xx that clears on its own — visitors were seeing that
-    // as a hard failure and had to manually re-click "Fill with AI" to get
-    // the same request to succeed. Retry it here instead, same as every
-    // other outbound call in the codebase (see withApiRetry usages).
-    let response: Response;
-    try {
-      response = await withApiRetry(
-        async () => {
-          const res = await fetch(baseUrl, { method: 'POST', headers, body: requestBody });
-          if (!res.ok) {
-            const errorText = await res.text();
-            const error = new Error(`AI provider responded ${res.status}`) as Error & {
-              status: number;
-            };
-            error.status = res.status;
-            logger.warn('AI API error, may retry', { status: res.status, errorText }, 'AI');
-            throw error;
-          }
-          return res;
-        },
-        { maxAttempts: 3, baseDelay: 400, maxDelay: 2000 }
-      );
-    } catch (fetchError) {
-      logger.error('AI API error after retries', fetchError, 'AI');
-      return {
-        success: false,
-        data: {},
-        confidence: {},
-        code: 'provider_unavailable',
-        error: 'AI service temporarily unavailable. Please try again.',
-      };
-    }
-
-    const result = await response.json();
-
-    // Extract the AI response content
-    const aiContent = result.choices?.[0]?.message?.content;
     if (!aiContent) {
       return {
         success: false,
         data: {},
         confidence: {},
         code: 'provider_unavailable',
-        error: 'No response from AI. Please try again.',
+        error: 'AI service temporarily unavailable. Please try again.',
       };
     }
 
