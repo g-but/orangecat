@@ -114,9 +114,26 @@ async function fetchUpstream(): Promise<RateSnapshot | null> {
     const response = await fetch(SOURCE_URL, {
       headers: { Accept: 'application/json' },
       signal: AbortSignal.timeout(TIMEOUT_MS),
-      // We do our own caching with an explicit freshness policy; letting the
-      // fetch layer cache too would make "how old is this rate" unanswerable.
-      cache: 'no-store',
+      // NOT `cache: 'no-store'`. Next instruments the global fetch and
+      // attributes every call to whatever render is on the async stack; a
+      // no-store fetch seen during the render of a statically prerendered page
+      // reclassifies the route and fails that render:
+      //
+      //   Error: Page changed from static to dynamic at runtime /discover,
+      //   reason: revalidate: 0 fetch https://api.coingecko.com/... /discover
+      //
+      // The page then paints with no rate at all, which is how "amounts stay
+      // in BTC" reached production on a page that had a perfectly good
+      // snapshot available.
+      //
+      // A cacheable fetch is not reclassified, so declaring our freshness
+      // window here instead of refusing to cache keeps /discover static. The
+      // window is FRESH_MS — the same constant this module already treats as
+      // "fresh enough to serve" — so the two caches agree rather than
+      // answering "how old is this rate" differently. Within that window a
+      // served response can be up to FRESH_MS older than `fetchedAt` implies,
+      // which is precisely the staleness the module already accepts.
+      next: { revalidate: FRESH_MS / 1000 },
     });
 
     if (!response.ok) {
@@ -178,8 +195,18 @@ function refresh(): Promise<RateSnapshot | null> {
  * context and reclassifies the route, and the page that was meant to paint
  * instantly instead fails its render.
  *
- * A macrotask boundary puts the fetch outside that context, so the refresh
- * still happens, on the same schedule, without changing how the route renders.
+ * CORRECTION (2026-09-05). This function used to claim that the `setTimeout`
+ * below "puts the fetch outside that context". It does not, and never did:
+ * AsyncLocalStorage propagates through timers by design — that is the whole
+ * point of async_hooks — so the callback runs with the render's store still
+ * attached. The reclassification error kept firing in production after that
+ * change shipped; it was still firing on 2026-09-05.
+ *
+ * What actually fixes it is in `fetchUpstream`: the request is declared
+ * cacheable, so Next has no dynamic fetch to reclassify no matter which async
+ * context starts it. The timeout is kept only for what it genuinely does —
+ * keep the upstream call off the caller's critical path.
+ *
  * Deliberately not `after()` from next/server: this module is called from
  * plain server code as well as from requests, and it must not require a
  * request scope to exist.
