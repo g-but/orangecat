@@ -165,34 +165,48 @@ describe('generateFormPrefill — service floor follows the intent, like the rou
   });
 });
 
-describe('generateFormPrefill — retries a transient provider failure', () => {
+describe('generateFormPrefill — survives one provider failing (the 2026-08-25 outage)', () => {
+  // "Fill with AI" used to pick ONE provider by key presence and stop, so a
+  // Groq model retirement (or daily-cap 429) killed the feature while a live
+  // OpenRouter key sat configured and unused. It now rides the shared
+  // platform-llm chain: every configured provider gets a turn.
   const target = resolveAiAssistTarget('service');
   const originalFetch = global.fetch;
-  const originalGroqKey = process.env.GROQ_API_KEY;
+  const savedEnv: Record<string, string | undefined> = {};
 
   beforeEach(() => {
-    process.env.GROQ_API_KEY = 'test-key';
+    for (const key of ['GROQ_API_KEY', 'OPENROUTER_API_KEY']) {
+      savedEnv[key] = process.env[key];
+      process.env[key] = 'test-key';
+    }
   });
 
   afterEach(() => {
     global.fetch = originalFetch;
-    if (originalGroqKey === undefined) {
-      delete process.env.GROQ_API_KEY;
-    } else {
-      process.env.GROQ_API_KEY = originalGroqKey;
+    for (const [key, value] of Object.entries(savedEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
     }
   });
 
-  it('recovers from a single 503 without surfacing an error to the caller', async () => {
+  it('falls over to the next provider when the first is down', async () => {
     const okBody = {
       choices: [
         {
-          message: { content: JSON.stringify({ data: { title: 'Retried fine' }, confidence: {} }) },
+          message: {
+            content: JSON.stringify({ data: { title: 'Fallback fine' }, confidence: {} }),
+          },
         },
       ],
     };
+    // Groq answers 503 twice (json mode, then the no-response_format retry);
+    // OpenRouter answers on its first attempt.
     const fetchMock = vi
       .fn()
+      .mockResolvedValueOnce({ ok: false, status: 503, text: async () => 'upstream hiccup' })
       .mockResolvedValueOnce({ ok: false, status: 503, text: async () => 'upstream hiccup' })
       .mockResolvedValueOnce({ ok: true, json: async () => okBody });
     global.fetch = fetchMock as unknown as typeof fetch;
@@ -202,12 +216,12 @@ describe('generateFormPrefill — retries a transient provider failure', () => {
       description: 'A cleaning service for offices in Zurich',
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(result.success).toBe(true);
-    expect(result.data.title).toBe('Retried fine');
+    expect(result.data.title).toBe('Fallback fine');
   });
 
-  it('gives up after repeated failures with the same user-facing message', async () => {
+  it('gives up only after EVERY provider failed, with the same user-facing message', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue({ ok: false, status: 503, text: async () => 'still down' });
@@ -218,8 +232,10 @@ describe('generateFormPrefill — retries a transient provider failure', () => {
       description: 'A cleaning service for offices in Zurich',
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    // Two providers x (json mode + no-response_format retry) = 4 attempts.
+    expect(fetchMock).toHaveBeenCalledTimes(4);
     expect(result.success).toBe(false);
+    expect(result.code).toBe('provider_unavailable');
     expect(result.error).toBe('AI service temporarily unavailable. Please try again.');
   });
 });

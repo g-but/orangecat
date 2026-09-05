@@ -87,6 +87,18 @@ function resolveProviders(): Provider[] {
   return providers;
 }
 
+/**
+ * Whether any platform AI provider is configured at all.
+ *
+ * Callers that owe the user a specific "not configured" explanation (form
+ * prefill's `provider_not_configured` code, with its settings link) need to
+ * tell this apart from "configured but down" — callPlatformJson collapses both
+ * into null.
+ */
+export function hasPlatformProviders(): boolean {
+  return resolveProviders().length > 0;
+}
+
 function openRouter(apiKey: string, model: string): Provider {
   return {
     url: `${PROVIDER_BASE_URLS.openrouter}/chat/completions`,
