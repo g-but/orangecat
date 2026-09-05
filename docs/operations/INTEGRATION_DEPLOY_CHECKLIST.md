@@ -24,8 +24,7 @@ step has the exact command, a verification, and a rollback if it fails.
 [ ] 5. Repack the SDK tarball into the customer's vendor/ folder
 [ ] 6. (Optional) pnpm publish --access public on @orangecat/sdk
 [ ] 7. Set CRON_SECRET in OrangeCat prod env (/opt/orangecat/app/.env)
-[ ] 8. Set UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN
-       in OrangeCat prod env (/opt/orangecat/app/.env)
+[ ] 8. Rate limiting: nothing to set (in-process via limitkit — see Step 8)
 [ ] 9. Set WEBHOOK_SECRET_KEY in OrangeCat prod env (/opt/orangecat/app/.env)
        (master key encrypting webhook_endpoints.secret_encrypted at rest)
 
@@ -206,25 +205,14 @@ soft (the app logs the 401 every minute but no data is harmed).
 
 ---
 
-## Step 8 — Set Upstash Redis env vars
+## Step 8 — Rate limiting: no env vars needed
 
-Without these, per-key rate limits silently degrade to an in-memory
-single-instance bucket (only effective within one app process).
-Production multi-instance traffic will not be properly throttled.
-
-In `/opt/orangecat/app/.env` on the box (Production):
-
-| Var                        | Value                       |
-| -------------------------- | --------------------------- |
-| `UPSTASH_REDIS_REST_URL`   | From the Upstash dashboard. |
-| `UPSTASH_REDIS_REST_TOKEN` | From the Upstash dashboard. |
-
-**Verify**: in the Upstash dashboard, the analytics chart starts
-showing per-second activity once the first authenticated /api/v1
-request hits production.
-
-**Rollback**: remove the env vars; rate limiting falls back to
-in-memory. Not data-harmful, just less correct under load.
+Historical step; the Upstash Redis path was removed 2026-09-05 when the
+canonical limiter moved onto `limitkit`. Counts are in-process (bounded
+MemoryStore), which is correct for the single self-hosted instance
+(ADR-0002). If a second app instance ever exists, implement limitkit's
+two-method `Store` over shared infrastructure — do not reintroduce env-var
+switched backends.
 
 ---
 

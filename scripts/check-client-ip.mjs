@@ -23,9 +23,10 @@
  * how you get a seller rate-limited by their wallet provider.
  *
  * Six instances is far past the point where fixing them one more time is the
- * answer. `clientIpKey()` in src/lib/rate-limit.ts is the single definition;
- * this gate keeps it single. See bitbaum/orangecat#563 finding 2, and
- * `limitkit@0.2.0`, which carried the identical bug for the same reason.
+ * answer. `clientIpKey()` in src/lib/client-ip.ts is the single definition —
+ * since 2026-09-05 it delegates the parsing to `limitkit`'s `clientIp()`
+ * (which once carried the identical bug for the same reason, fixed in 0.2.0) —
+ * and this gate keeps it single. See bitbaum/orangecat#563 finding 2.
  */
 
 import { readFileSync } from 'node:fs';
@@ -38,13 +39,10 @@ const OWNER = 'src/lib/client-ip.ts';
 // spelling, it was six people each reaching for the header directly.
 const PATTERN = /['"`]x-forwarded-for['"`]/i;
 
-const files = execSync(
-  "git ls-files 'src/**/*.ts' 'src/**/*.tsx'",
-  { encoding: 'utf8' },
-)
+const files = execSync("git ls-files 'src/**/*.ts' 'src/**/*.tsx'", { encoding: 'utf8' })
   .split('\n')
   .filter(Boolean)
-  .filter((f) => f !== OWNER);
+  .filter(f => f !== OWNER);
 
 const offenders = [];
 for (const file of files) {
