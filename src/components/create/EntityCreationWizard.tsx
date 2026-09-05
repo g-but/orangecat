@@ -119,31 +119,38 @@ export function EntityCreationWizard<T extends Record<string, unknown>>({
       />
 
       <div className="max-w-4xl mx-auto">
-        <AnimatePresence mode="wait" custom={currentStep}>
-          <motion.div
-            key={currentStep}
-            custom={currentStep}
-            variants={WIZARD_STEP_VARIANTS}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{
-              x: { type: 'spring', stiffness: 300, damping: 30 },
-              opacity: { duration: 0.2 },
-            }}
-          >
-            <Card className="mb-6">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  {isTemplateStep && <Sparkles className="h-6 w-6 text-fg-primary" />}
-                  <div>
-                    <CardTitle>{currentStepConfig.title}</CardTitle>
-                    <CardDescription>{currentStepConfig.description}</CardDescription>
+        {/*
+          Keep EntityForm mounted across content steps. key={currentStep} on the
+          animated wrapper remounted the form on every Next and wiped entered
+          fields (live dogfood 2026-09-06: Create Project submitted empty / no-op).
+          Template step stays animated; content steps share one form instance and
+          only swap visibleFields via wizardMode.
+        */}
+        {isTemplateStep ? (
+          <AnimatePresence mode="wait" custom={currentStep}>
+            <motion.div
+              key="template"
+              custom={currentStep}
+              variants={WIZARD_STEP_VARIANTS}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: 'spring', stiffness: 300, damping: 30 },
+                opacity: { duration: 0.2 },
+              }}
+            >
+              <Card className="mb-6">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="h-6 w-6 text-fg-primary" />
+                    <div>
+                      <CardTitle>{currentStepConfig.title}</CardTitle>
+                      <CardDescription>{currentStepConfig.description}</CardDescription>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {isTemplateStep ? (
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-4">
                     <WizardTemplatePicker
                       templates={(config.templates || []) as EntityTemplate<T>[]}
@@ -153,27 +160,37 @@ export function EntityCreationWizard<T extends Record<string, unknown>>({
                       entityLabel={config.pageTitle?.replace(/^Create\s+/i, '')}
                     />
                   </div>
-                ) : (
-                  <EntityForm
-                    config={config}
-                    initialValues={formInitialValues}
-                    onSuccess={onSuccess}
-                    actorId={actorId}
-                    wizardMode={{
-                      currentStep,
-                      totalSteps: wizardSteps.length,
-                      visibleFields: currentStepConfig.fields,
-                      onNext: !isLastStep ? handleNext : undefined,
-                      onPrevious: currentStep > 0 ? handlePrevious : undefined,
-                      onSkip: currentStepConfig.optional ? handleSkip : undefined,
-                      isLastStep,
-                    }}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        </AnimatePresence>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </AnimatePresence>
+        ) : (
+          <Card className="mb-6">
+            <CardHeader>
+              <div>
+                <CardTitle>{currentStepConfig.title}</CardTitle>
+                <CardDescription>{currentStepConfig.description}</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <EntityForm
+                config={config}
+                initialValues={formInitialValues}
+                onSuccess={onSuccess}
+                actorId={actorId}
+                wizardMode={{
+                  currentStep,
+                  totalSteps: wizardSteps.length,
+                  visibleFields: currentStepConfig.fields,
+                  onNext: !isLastStep ? handleNext : undefined,
+                  onPrevious: currentStep > 0 ? handlePrevious : undefined,
+                  onSkip: currentStepConfig.optional ? handleSkip : undefined,
+                  isLastStep,
+                }}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {isTemplateStep && (
           <div className="flex justify-between items-center">
