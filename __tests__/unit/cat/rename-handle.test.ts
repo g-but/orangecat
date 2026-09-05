@@ -73,7 +73,7 @@ describe('update_profile — changing the @handle', () => {
   });
 
   it('renames the account and tells them the old handle still works', async () => {
-    const { supabase, writes } = makeSupabase('mao');
+    const { supabase, writes } = makeSupabase('oldhandle');
 
     const result = await run(supabase, { username: 'catomean' });
 
@@ -84,12 +84,12 @@ describe('update_profile — changing the @handle', () => {
     // rename and still leave the user believing they had broken something.
     const message = String((result.data as { displayMessage: string }).displayMessage);
     expect(message).toContain('@catomean');
-    expect(message).toContain('hello@orangecat.ch');
+    expect(message).toContain('oldhandle@orangecat.ch');
     expect(message.toLowerCase()).toContain('redirect');
   });
 
   it('accepts a handle typed with the @ the user sees everywhere', async () => {
-    const { supabase, writes } = makeSupabase('mao');
+    const { supabase, writes } = makeSupabase('oldhandle');
 
     const result = await run(supabase, { username: '@catomean' });
 
@@ -98,7 +98,7 @@ describe('update_profile — changing the @handle', () => {
   });
 
   it('refuses a reserved handle through the same schema the signup form uses', async () => {
-    const { supabase, writes } = makeSupabase('mao');
+    const { supabase, writes } = makeSupabase('oldhandle');
 
     const result = await run(supabase, { username: 'cat' });
 
@@ -108,7 +108,7 @@ describe('update_profile — changing the @handle', () => {
 
   it('refuses a handle that is taken', async () => {
     availabilityMock.mockResolvedValue(false);
-    const { supabase, writes } = makeSupabase('mao');
+    const { supabase, writes } = makeSupabase('oldhandle');
 
     const result = await run(supabase, { username: 'catomean' });
 
@@ -122,7 +122,7 @@ describe('update_profile — changing the @handle', () => {
     // another account retired. It is the authority, not the availability check:
     // that check can go stale between reading and writing, the trigger cannot —
     // and the user should read the same sentence either way.
-    const { supabase } = makeSupabase('mao', { code: '23505', message: 'unique_violation' });
+    const { supabase } = makeSupabase('oldhandle', { code: '23505', message: 'unique_violation' });
 
     const result = await run(supabase, { username: 'catomean' });
 
@@ -144,7 +144,7 @@ describe('update_profile — changing the @handle', () => {
   });
 
   it('still updates ordinary fields without touching the handle', async () => {
-    const { supabase, writes } = makeSupabase('mao');
+    const { supabase, writes } = makeSupabase('oldhandle');
 
     const result = await run(supabase, { bio: 'freelance photographer' });
 
