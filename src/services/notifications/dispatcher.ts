@@ -13,17 +13,16 @@
 import { fromTable } from '@/lib/supabase/untyped';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import { getEmailClient, isEmailConfigured } from '@/lib/email/client';
+import { isEmailConfigured, sendEmail } from '@/lib/email/client';
 import { EMAIL_COLORS } from '@/lib/email/templates/layout';
 import { SITE_URL } from '@/config/brand';
 import { logger } from '@/utils/logger';
 
 const LOG_SOURCE = 'NotificationDispatcher';
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'notifications@orangecat.ch';
 
 // isEmailConfigured() exists specifically so callers can short-circuit before
 // attempting a send — this dispatcher wasn't using it, so every dispatched
-// notification hit getEmailClient()'s throw and logged a fresh error. Found
+// notification produced a fresh unconfigured-transport error. Found
 // 2026-08-29: 56 identical "RESEND_API_KEY is not set" errors in 24h, one per
 // notification, drowning any real email failure in the same log. The
 // condition is static (no key deployed), not per-notification, so it only
@@ -257,13 +256,11 @@ export class NotificationDispatcher {
 </body>
 </html>`;
 
-    await getEmailClient().emails.send({
-      from: FROM_EMAIL,
-      to: email,
-      subject,
-      html,
-      text,
-    });
+    const result = await sendEmail({ to: email, subject, html, text });
+    if (!result.sent) {
+      // Caller catches and logs 'Failed to send email notification'.
+      throw new Error(result.error);
+    }
 
     logger.info(
       'Email notification sent',
