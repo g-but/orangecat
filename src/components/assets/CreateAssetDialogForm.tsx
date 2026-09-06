@@ -30,6 +30,7 @@ import { AssetTemplates } from '@/components/create/templates';
 import { currencySelectOptions, PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import { ASSET_TYPES } from '@/config/assets';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 const quickAssetSchema = assetSchema.pick({
   title: true,
@@ -89,7 +90,7 @@ export function CreateAssetDialog({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create asset');
+        throw new Error(apiErrorMessage(errorData, 'Failed to create asset'));
       }
 
       toast.success('Asset created');

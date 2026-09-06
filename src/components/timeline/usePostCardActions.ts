@@ -9,6 +9,7 @@ import { logger } from '@/utils/logger';
 import { timelineService } from '@/services/timeline';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { submitReplyAction } from './postCardReplyAction';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 interface UsePostCardActionsParams {
   event: TimelineDisplayEvent;
@@ -84,7 +85,7 @@ export function usePostCardActions({
           });
           logger.info('Post updated successfully', { eventId: event.id }, 'PostCard');
         } else {
-          throw new Error(result.error || 'Failed to update post');
+          throw new Error(apiErrorMessage(result, 'Failed to update post'));
         }
       } catch (error) {
         logger.error('Failed to update post', error, 'PostCard');

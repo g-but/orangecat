@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { fetchFollowingIds } from '@/services/social/followList';
 import type { ScalableProfile } from '@/services/profile/types';
 import type { ProfileFormData } from '@/types/database';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 interface UseProfileActionsParams {
   profile: ScalableProfile;
@@ -83,7 +84,7 @@ export function useProfileActions({ profile, isOwnProfile, onSave }: UseProfileA
         setIsFollowing(true);
         toast.info('You already follow this person');
       } else {
-        throw new Error(data.error || 'Failed to update follow status');
+        throw new Error(apiErrorMessage(data, 'Failed to update follow status'));
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to update follow status');
@@ -101,7 +102,7 @@ export function useProfileActions({ profile, isOwnProfile, onSave }: UseProfileA
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save profile');
+        throw new Error(apiErrorMessage(errorData, 'Failed to save profile'));
       }
       toast.success('Profile updated successfully');
       router.refresh();

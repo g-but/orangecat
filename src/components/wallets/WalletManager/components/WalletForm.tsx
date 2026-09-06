@@ -22,6 +22,7 @@ import {
   type WalletInputKind,
 } from '@/types/wallet';
 import type { WalletFormProps } from '../types';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 /** Friendly label + hint for whatever the user pasted. */
 const DETECTED: Record<Exclude<WalletInputKind, 'unknown'>, string> = {
@@ -121,7 +122,7 @@ export function WalletForm({
     if (formData.address_or_xpub?.trim()) {
       const validation = validateAddressOrXpub(formData.address_or_xpub);
       if (!validation.valid) {
-        setError(validation.error || 'Invalid address or xpub');
+        setError(apiErrorMessage(validation, 'Invalid address or xpub'));
         return;
       }
     }
