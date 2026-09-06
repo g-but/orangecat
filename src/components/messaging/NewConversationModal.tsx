@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { X, Search, MessageSquare, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 type ProfileLite = {
   id: string;
@@ -97,8 +98,15 @@ export default function NewConversationModal({
         const conversationId = data.data?.conversationId || data.conversationId;
 
         if (!res.ok || !conversationId) {
-          const errorMessage =
-            data.error || data.details || data.hint || 'Failed to create conversation';
+          // This chain was a hand-rolled apiErrorMessage that got the first
+          // link wrong: `data.error` is the envelope's `{ code, message }`
+          // object, so it won the `||` and the thrown Error read
+          // "[object Object]". The remaining links are this endpoint's extra
+          // postgrest detail, kept as a fallback behind the shared reader.
+          const errorMessage = apiErrorMessage(
+            data,
+            data.details || data.hint || 'Failed to create conversation'
+          );
           logger.error('Failed to create conversation:', {
             status: res.status,
             error: data.error,

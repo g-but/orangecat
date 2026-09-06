@@ -38,10 +38,21 @@ const restrictedSyntaxSelectors = [
     // server sent "Already following this user" and the toast read
     // "[object Object]". apiErrorMessage() reads the standard envelope, a bare
     // { message }, and a plain string, so it is correct at every call site.
+    // Scoped to a STRING fallback on purpose. `if (result.error || !result.data)`
+    // is a truthiness guard and completely correct; an earlier, broader version
+    // of this selector flagged those too, and a gate that fires on correct code
+    // gets disabled rather than obeyed. Only `X.error || <string>` is the bug:
+    // it defaults an object to a message.
     selector:
-      "LogicalExpression[operator='||'] > MemberExpression.left[property.name='error']",
+      "LogicalExpression[operator='||'][right.value=/./] > MemberExpression.left[property.name='error']",
     message:
       "`X.error || 'fallback'` — the standard API envelope makes `error` an OBJECT, so this yields \"[object Object]\" and the fallback never fires. Use apiErrorMessage(X, 'fallback') from '@/lib/api/errorMessage'.",
+  },
+  {
+    selector:
+      "LogicalExpression[operator='||'][right.type='TemplateLiteral'] > MemberExpression.left[property.name='error']",
+    message:
+      "`X.error || `fallback`` — the standard API envelope makes `error` an OBJECT, so this yields \"[object Object]\" and the fallback never fires. Use apiErrorMessage(X, `fallback`) from '@/lib/api/errorMessage'.",
   },
   {
     selector: 'Literal[value=/dark:(?:bg|text|border|ring)-\\[#[0-9a-fA-F]+\\]/]',
