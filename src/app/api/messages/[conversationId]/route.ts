@@ -34,14 +34,8 @@ const sendMessageSchema = z.object({
     .enum([MESSAGE_TYPES.TEXT, MESSAGE_TYPES.IMAGE, MESSAGE_TYPES.FILE, MESSAGE_TYPES.SYSTEM])
     .default(MESSAGE_TYPES.TEXT),
   metadata: z.record(z.string(), z.unknown()).optional(),
-  /**
-   * The sender's own id for this message, echoed back on the stored row so the
-   * client can retire its optimistic bubble instead of rendering a duplicate.
-   *
-   * A named field rather than letting the client post `metadata.client_id`
-   * directly: the server decides the key, so a caller cannot overwrite the rest
-   * of metadata on the way past. Bounded because it is written to a jsonb column.
-   */
+  /** Echoed back on the stored row so the client retires its optimistic bubble
+   *  rather than rendering a duplicate — see features/messaging/lib/threadkit-adapter. */
   clientId: z.string().min(1).max(128).optional(),
   senderActorId: z.string().guid().optional(),
 });

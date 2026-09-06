@@ -35,3 +35,9 @@ minimumReleaseAgeExclude:
   - '@bitbaum/ai-kit@0.6.2'
   - '@bitbaum/mail-kit'
   - 'limitkit'
+  # Ours, and recent enough to still be inside the window. Its absence failed
+  # BOTH CI jobs at `pnpm install --frozen-lockfile`, before a line of code ran
+  # — which surfaces as a bare "exit code 1" with no annotation, so it reads
+  # like a broken build rather than a refused dependency. vitareba needed the
+  # same entry when it adopted this package.
+  - 'threadkit'
