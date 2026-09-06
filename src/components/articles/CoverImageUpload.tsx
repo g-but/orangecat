@@ -22,7 +22,13 @@ export default function CoverImageUpload({
   onChange: (url: string) => void;
   userId: string;
   disabled?: boolean;
-  /** When provided, shows a "Suggest with AI" button that opens the image picker. */
+  /**
+   * When provided, shows a button opening the image picker — which offers
+   * Search, Generate AND Upload. The label must name generation: the button
+   * said "Suggest with AI", a writer read that as stock-photo search, and went
+   * off-site to make a cover image that this picker would have generated two
+   * clicks away. A capability nobody can find is not a capability.
+   */
   onSuggest?: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -156,7 +162,7 @@ export default function CoverImageUpload({
             disabled={disabled}
             className="inline-flex items-center gap-1 text-xs font-medium text-accent-warm hover:text-accent-warm-hover disabled:opacity-50"
           >
-            <Sparkles className="h-3.5 w-3.5" /> Suggest with AI
+            <Sparkles className="h-3.5 w-3.5" /> Generate or find with AI
           </button>
         )}
         <button

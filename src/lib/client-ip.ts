@@ -1,36 +1,23 @@
 /**
- * Who is calling — the one definition, and the one place that reads
- * `x-forwarded-for`.
+ * Who is calling — the one place that may ask, delegating the actual header
+ * parsing to limitkit's `clientIp`.
  *
- * WHICH HOP, AND WHY NOT THE FIRST
- *
- * `X-Forwarded-For` is a list, and Caddy APPENDS to it. A request that arrived
- * through Caddy carries `<whatever the caller sent>, <what Caddy actually
- * saw>`, so the only entry the caller cannot forge is the LAST one.
- *
- * Six places here read that header and every one read it wrong: `rate-limit.ts`
- * used it whole, so any value at all was a fresh key; three payment routes each
- * copied `split(',')[0]`, the caller's own value; the entity audit log recorded
- * that value, making the trail writable by its subject; and the captcha route
- * forwarded it to the provider as `remoteip`.
- *
- * The limiter consequence is the sharp one. Vary the header per request and
- * every request lands in a fresh bucket, so no bucket ever fills — not a
- * weakened limiter but no limiter, on a route that reads as protected. On
- * `GET /api/v1/pay/...` and `POST /api/v1/payments/public` each such request
- * mints a real Lightning invoice through the recipient's own wallet, which is
- * how an attacker gets a seller throttled or banned by their wallet provider.
+ * `X-Forwarded-For` is a list, and Caddy APPENDS to it: only the LAST entry
+ * is the hop Caddy itself wrote, so only the last entry is evidence. Six
+ * places here once read the header directly and every one read it wrong —
+ * see bitbaum/orangecat#563 finding 2 — which is why `check:client-ip`
+ * forbids any other file from touching the raw header, and why the parsing
+ * now lives in `limitkit` (which ships the identical correction) rather than
+ * being maintained a thirteenth time.
  *
  * Verified rather than assumed, 2026-08-28: orangecat.ch resolves straight to
  * the box, no CDN in front (`via: 1.1 Caddy`), one Caddy 2.11.4 with no
- * `trusted_proxies` configured — exactly one appended hop.
- *
- * Its own module, not a corner of `rate-limit.ts`, so the audit log and the
- * captcha route can ask who is calling without importing an Upstash client.
- *
- * See bitbaum/orangecat#563 finding 2. `limitkit@0.2.0` ships the same
- * correction as `clientIp()`; adopting it here is ADR-0002's remaining work.
+ * `trusted_proxies` configured — exactly one appended hop, i.e. limitkit's
+ * default `trustedProxies: 1`. If a CDN is ever put in front of Caddy, this
+ * is the one line to change (`trustedProxies: 2`).
  */
+
+import { clientIp } from 'limitkit';
 
 type HeadersLike = { get(name: string): string | null };
 type RequestLike = { headers: HeadersLike };
@@ -41,17 +28,12 @@ type RequestLike = { headers: HeadersLike };
  * The fallback throttles unattributable traffic collectively rather than
  * letting it past, and is never empty — an empty key would read as a real
  * identity in `l402:${key}` while collapsing every caller into one bucket.
+ * limitkit spells the fallback "unknown"; this app's bucket name predates it
+ * and is pinned by tests, so it is mapped here rather than renamed.
  */
 export function clientIpKey(request: RequestLike): string {
-  const hops = (request.headers.get('x-forwarded-for') ?? '')
-    .split(',')
-    .map((hop) => hop.trim())
-    .filter(Boolean);
-
-  // One trusted proxy (Caddy), so the rightmost hop is the one it wrote.
-  if (hops.length > 0) return hops[hops.length - 1]!;
-
-  return request.headers.get('x-real-ip')?.trim() || 'anonymous';
+  const ip = clientIp(request.headers);
+  return ip === 'unknown' ? 'anonymous' : ip;
 }
 
 /**

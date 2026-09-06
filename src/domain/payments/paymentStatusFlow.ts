@@ -81,9 +81,10 @@ export async function checkPublicPaymentStatus(
  * Asked, once, whether this recipient may receive another claim.
  *
  * Injected rather than imported: rate limiting is infrastructure, and pulling
- * it in here would drag the Upstash client into the payments domain — wrong
- * layer, and it breaks every domain test that has no business knowing about
- * Redis. The HTTP layer owns the policy; the domain owns WHEN it is asked.
+ * it in here would drag the limiter (limitkit and its store) into the payments
+ * domain — wrong layer, and it breaks every domain test that has no business
+ * knowing about it. The HTTP layer owns the policy; the domain owns WHEN it is
+ * asked.
  */
 export type ClaimGuard = (entityType: string, entityId: string) => Promise<boolean>;
 
