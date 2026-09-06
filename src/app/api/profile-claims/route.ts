@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { webUrl } from '@/lib/validation/base';
+import { usernameSchema, webUrl } from '@/lib/validation/base';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   apiCreated,
@@ -34,13 +34,12 @@ const createClaimSchema = z.object({
   bannerUrl: webUrl({ max: 2000 }).optional(),
   website: webUrl({ max: 2000 }).optional(),
   socialLinks: z.array(socialLinkSchema).max(10).optional(),
-  suggestedUsername: z
-    .string()
-    .trim()
-    .min(3)
-    .max(30)
-    .regex(/^[a-zA-Z0-9_-]+$/, 'Usernames can only contain letters, numbers, - and _')
-    .optional(),
+  // The shared schema, not a hand-rolled regex: a suggested username becomes a
+  // real handle at claim time, and a handle is a Lightning address
+  // (<username>@orangecat.ch). A local pattern here made this the one door into
+  // `profiles.username` that skipped RESERVED_USERNAMES — `payments`,
+  // `support`, `security` were all suggestible.
+  suggestedUsername: usernameSchema.optional(),
 });
 
 export const POST = withAuth(async (req: AuthenticatedRequest) => {

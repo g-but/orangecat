@@ -15,6 +15,7 @@
  */
 
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { reservedReason } from '@/config/usernames';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { looseClient } from '@/lib/supabase/untyped';
 import { logger } from '@/utils/logger';
@@ -171,10 +172,23 @@ async function findAvailableUsername(
 
   for (let attempt = 0; attempt < MAX_USERNAME_SUFFIX_ATTEMPTS; attempt++) {
     const candidate = attempt === 0 ? base : `${base}-${attempt + 1}`;
+
+    // A draft written before the route validated against the shared schema can
+    // still carry a reserved name, and the `-2` suffixes are built here rather
+    // than validated anywhere. Ask the SSOT for every candidate.
+    if (reservedReason(candidate) !== null) {
+      continue;
+    }
+
+    // `username_lower` is a STORED generated column and carries the UNIQUE
+    // index. Probing `username` with `.eq` is case-SENSITIVE while uniqueness
+    // is not, so a candidate differing only in case read as free and then
+    // failed the insert — after the claim had already been flipped to
+    // `claimed`, landing in the rollback path.
     const { data: taken } = await supabase
       .from(DATABASE_TABLES.PROFILES)
       .select('id')
-      .eq('username', candidate)
+      .eq('username_lower', candidate.toLowerCase())
       .neq('id', userId)
       .maybeSingle();
     if (!taken) {
@@ -215,7 +229,11 @@ export async function claimProfileClaim(params: {
     return { ok: false, code: 'revoked', message: 'This claim link was revoked.' };
   }
   if (row.status === 'claimed') {
-    return { ok: false, code: 'already_claimed', message: 'This profile has already been claimed.' };
+    return {
+      ok: false,
+      code: 'already_claimed',
+      message: 'This profile has already been claimed.',
+    };
   }
   if (isExpired(row)) {
     return { ok: false, code: 'expired', message: 'This claim link has expired.' };
@@ -235,7 +253,11 @@ export async function claimProfileClaim(params: {
   }
   if (!won) {
     // Someone else won the race between our read and this update.
-    return { ok: false, code: 'already_claimed', message: 'This profile has already been claimed.' };
+    return {
+      ok: false,
+      code: 'already_claimed',
+      message: 'This profile has already been claimed.',
+    };
   }
 
   const draft = won.draft as ProfileClaimDraft;
@@ -268,7 +290,11 @@ export async function claimProfileClaim(params: {
       .from(DATABASE_TABLES.PROFILE_CLAIMS)
       .update({ status: 'pending', claimed_by: null, claimed_at: null })
       .eq('id', claimId);
-    logger.error('Failed to apply claimed draft to profile', { error: profileError, claimId, userId });
+    logger.error('Failed to apply claimed draft to profile', {
+      error: profileError,
+      claimId,
+      userId,
+    });
     return { ok: false, dbError: profileError };
   }
 
