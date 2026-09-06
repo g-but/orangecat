@@ -24,13 +24,13 @@ function orangeCatPage(path: string): string {
 
 /** Canonical public identities used by support and sibling-product surfaces. */
 export const ECOSYSTEM = {
-  owner: 'Mao Nakamoto',
+  owner: 'Cato',
   orangeCat: {
     title: 'OrangeCat',
     projectId:
       process.env.NEXT_PUBLIC_ORANGECAT_PROJECT_ID ?? 'cb093f00-8745-4579-98df-050ebfb37181',
     siteUrl: orangeCatOrigin.toString(),
-    profileUrl: orangeCatPage(publicProfilePath('mao-nakamoto')),
+    profileUrl: orangeCatPage(publicProfilePath('catomean')),
   },
   fleetCrown: {
     title: 'FleetCrown',
