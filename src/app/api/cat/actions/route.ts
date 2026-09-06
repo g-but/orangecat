@@ -27,6 +27,7 @@ import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getUserActorId } from '@/domain/actors';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/constants/pagination';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 // Validation schema
 const executeActionSchema = z.object({
@@ -101,7 +102,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       // Denial reasons come from the permission service and are derived from
       // the user's own settings ("exceeds your per-action cap of X BTC", "daily
       // limit reached") — surfacing them is what makes caps actionable.
-      return apiForbidden(result.error || 'Action not permitted');
+      return apiForbidden(apiErrorMessage(result, 'Action not permitted'));
     } else {
       return apiBadRequest('Action could not be executed');
     }

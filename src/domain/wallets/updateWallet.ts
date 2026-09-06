@@ -14,6 +14,7 @@ import { DATABASE_TABLES, WALLET_CLIENT_COLUMNS } from '@/config/database-tables
 import type { z } from 'zod';
 import type { walletUpdateSchema } from '@/lib/validation/finance';
 import type { NextResponse } from 'next/server';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 type WalletUpdateInput = z.infer<typeof walletUpdateSchema>;
 
@@ -116,7 +117,7 @@ export function buildWalletUpdates(
       if (!validation.valid) {
         return {
           updates: null,
-          error: apiBadRequest(validation.error || 'Invalid address or xpub'),
+          error: apiBadRequest(apiErrorMessage(validation, 'Invalid address or xpub')),
         };
       }
       updates.address_or_xpub = address;

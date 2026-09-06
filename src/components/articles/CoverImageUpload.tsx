@@ -5,6 +5,7 @@ import { ImagePlus, Link2, Loader2, Sparkles, X } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
 import { IMAGE_UPLOAD_ACCEPT, uploadUserImage } from '@/services/images/upload';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 /**
  * Article cover picker: drag-and-drop or click to upload (primary), with a
@@ -47,7 +48,7 @@ export default function CoverImageUpload({
     if (result.success && result.url) {
       onChange(result.url);
     } else {
-      setError(result.error || 'Upload failed. Please try again.');
+      setError(apiErrorMessage(result, 'Upload failed. Please try again.'));
     }
     setUploading(false);
   }

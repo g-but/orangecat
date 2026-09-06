@@ -103,6 +103,10 @@ export const API_ROUTES = {
     FOLLOW: '/api/social/follow',
     UNFOLLOW: '/api/social/unfollow',
     FOLLOWING: (id: string) => `/api/social/following/${id}`,
+    // "Do I follow X" — one indexed lookup. Deliberately NOT answered by
+    // paging FOLLOWING: that list is capped at DEFAULT_PAGE_SIZE, so the
+    // answer silently goes wrong past 20 follows.
+    FOLLOW_STATUS: (id: string) => `/api/social/follow-status/${id}`,
     FOLLOWERS: (id: string) => `/api/social/followers/${id}`,
   },
   TASKS: {

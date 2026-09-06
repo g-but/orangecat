@@ -22,6 +22,7 @@ import {
   apiRateLimited,
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 const addKeySchema = z.object({
   // WIRED_PROVIDER_IDS is the SSOT for providers the chat pipeline can
@@ -100,7 +101,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     });
 
     if (!addResult.success) {
-      return apiBadRequest(addResult.error || 'Failed to add API key');
+      return apiBadRequest(apiErrorMessage(addResult, 'Failed to add API key'));
     }
 
     return apiCreated(addResult.key);

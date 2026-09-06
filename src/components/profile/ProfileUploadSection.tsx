@@ -9,6 +9,7 @@ import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import { ProfileStorageService } from '@/services/profile/storage';
 import { cn } from '@/lib/utils';
 import { GRADIENTS } from '@/config/gradients';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 interface ProfileUploadSectionProps {
   userId: string;
@@ -74,7 +75,7 @@ export function ProfileUploadSection({
 
         toast.success(`${type === 'avatar' ? 'Avatar' : 'Banner'} uploaded successfully!`);
       } else {
-        throw new Error(result.error || 'Upload failed');
+        throw new Error(apiErrorMessage(result, 'Upload failed'));
       }
     } catch (error) {
       uploadState({ uploading: false, progress: 0 });

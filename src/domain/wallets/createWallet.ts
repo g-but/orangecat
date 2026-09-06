@@ -28,6 +28,7 @@ import { getTableName } from '@/config/entity-registry';
 import { walletCreateSchema } from '@/lib/validation/finance';
 import { encrypt } from '@/domain/payments/encryptionService';
 import type { z } from 'zod';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 type WalletCreateInput = z.infer<typeof walletCreateSchema>;
 
@@ -66,7 +67,7 @@ export async function createWallet(
     if (!addressValidation.valid) {
       return {
         response: apiError(
-          addressValidation.error || 'Invalid address/xpub',
+          apiErrorMessage(addressValidation, 'Invalid address/xpub'),
           'INVALID_ADDRESS',
           400,
           {

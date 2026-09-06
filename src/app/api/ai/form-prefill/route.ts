@@ -24,6 +24,7 @@ import { resolveAiAssistTarget } from '@/lib/ai/assist-target';
 import { logger } from '@/utils/logger';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { AI_ASSIST_MIN_INPUT_LENGTH } from '@/config/ai-form-assist';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 /**
  * Request validation schema
@@ -127,7 +128,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       // The code, not the prose, is what the client renders from — apiError
       // puts it on error.code, where unwrapApiResponse picks it up.
       return apiError(
-        result.error || 'Failed to generate form data',
+        apiErrorMessage(result, 'Failed to generate form data'),
         result.code ?? 'unknown',
         400
       );

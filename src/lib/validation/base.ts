@@ -15,6 +15,7 @@ import {
   USERNAME_RULE_MESSAGE,
   reservedReason,
 } from '@/config/usernames';
+import { apiErrorMessage } from '@/lib/api/errorMessage';
 
 /**
  * The one username schema. Registration and profile-edit both use it, so a name
@@ -264,7 +265,7 @@ export const profileSchema = z.object({
       {
         error: issue => {
           const result = validatePhoneNumber(String(issue.input ?? ''));
-          return result.error || 'Invalid phone number format';
+          return apiErrorMessage(result, 'Invalid phone number format');
         },
       }
     ),
