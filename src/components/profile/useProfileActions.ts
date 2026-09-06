@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { API_ROUTES } from '@/config/api-routes';
 import { useAuth } from '@/hooks/useAuth';
-import { fetchFollowingIds } from '@/services/social/followList';
+import { fetchFollowStatus } from '@/services/social/followList';
 import type { ScalableProfile } from '@/services/profile/types';
 import type { ProfileFormData } from '@/types/database';
 import { apiErrorMessage } from '@/lib/api/errorMessage';
@@ -31,9 +31,9 @@ export function useProfileActions({ profile, isOwnProfile, onSave }: UseProfileA
     }
     let cancelled = false;
     const checkFollowStatus = async () => {
-      const followingIds = await fetchFollowingIds(user.id);
+      const following = await fetchFollowStatus(profile.id);
       if (!cancelled) {
-        setIsFollowing(followingIds.includes(profile.id));
+        setIsFollowing(following);
       }
     };
     checkFollowStatus();

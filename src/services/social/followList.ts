@@ -92,10 +92,34 @@ export async function fetchFollowList(
   }
 }
 
-/** Ids of the people `userId` follows — the set the Follow button reads. */
-export async function fetchFollowingIds(userId: string): Promise<string[]> {
-  const rows = await fetchFollowList('following', userId);
-  return rows
-    .map(row => row.following_id ?? row.profile?.id)
-    .filter((id): id is string => Boolean(id));
+/**
+ * Does the signed-in user follow `targetId`?
+ *
+ * One indexed lookup, NOT a search of the following list: that list is capped
+ * at DEFAULT_PAGE_SIZE, so searching it answers correctly only for the first
+ * 20 people you follow and then silently reports "not following" for the rest
+ * — which is the same 409 the Follow button was just fixed for.
+ *
+ * Returns false when the answer cannot be obtained, which shows "Follow". That
+ * is the recoverable direction: the button still works, and a 409 from the
+ * POST reconciles the state (see useProfileActions).
+ */
+export async function fetchFollowStatus(targetId: string): Promise<boolean> {
+  try {
+    const response = await fetch(API_ROUTES.SOCIAL.FOLLOW_STATUS(targetId), {
+      credentials: 'same-origin',
+    });
+    if (!response.ok) {
+      // 401 is normal for a signed-out visitor, and not worth logging.
+      if (response.status !== 401) {
+        logger.error('Follow status request failed', { targetId, status: response.status });
+      }
+      return false;
+    }
+    const body = (await response.json()) as { success?: boolean; data?: { following?: unknown } };
+    return body.success === true && body.data?.following === true;
+  } catch (error) {
+    logger.error('Failed to fetch follow status', { targetId, error });
+    return false;
+  }
 }

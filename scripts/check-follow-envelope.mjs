@@ -34,14 +34,17 @@ const ALLOWED = new Set([
   'src/lib/api/followListRoute.ts',
   'src/app/api/social/following/[id]/route.ts',
   'src/app/api/social/followers/[id]/route.ts',
+  'src/app/api/social/follow-status/[id]/route.ts',
 ]);
 
 /** How a caller reaches those endpoints: via the registry, or by raw path. */
 const PATTERNS = [
   'API_ROUTES.SOCIAL.FOLLOWING',
   'API_ROUTES.SOCIAL.FOLLOWERS',
+  'API_ROUTES.SOCIAL.FOLLOW_STATUS',
   'api/social/following',
   'api/social/followers',
+  'api/social/follow-status',
 ];
 
 function trackedSourceFiles() {
