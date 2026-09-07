@@ -127,10 +127,14 @@ describe('resolveUserWallet — the wallet set it is allowed to choose from', ()
       ],
     });
 
+    // NWC still wins. It now also carries the OTHER wallet's lightning address
+    // as a receive fallback: they pay the same owner, and a send-only NWC that
+    // cannot mint invoices must not take receiving down with it.
     expect(await resolveUserWallet(client, OWNER)).toEqual({
       method: 'nwc',
       wallet_id: 'w-nwc',
       nwc_uri: 'nostr+walletconnect://relay',
+      lightning_address: 'me@ln',
     });
   });
 
