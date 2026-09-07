@@ -50,7 +50,7 @@ const CATEGORIES: Array<{
   },
   {
     key: 'group_emails',
-    label: 'Groups',
+    label: 'Organizations',
     description: 'Proposals, votes, members joining, treasury activity.',
   },
   {
