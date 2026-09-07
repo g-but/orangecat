@@ -1,14 +1,13 @@
 ---
-title: "OrangeCat 2025: The Complete Bitcoin-Native Platform - 10 Entity Types, AI Ownership, and Transparent Commerce"
+title: 'OrangeCat 2025: The Complete Bitcoin-Native Platform - 10 Entity Types, AI Ownership, and Transparent Commerce'
 excerpt: "OrangeCat has evolved into a comprehensive Bitcoin-native platform with 10 entity types, AI ownership, transparency by default, and BitBaum corporate governance. Here's the complete picture."
-date: "2025-12-27"
-tags: ["Platform Evolution", "Bitcoin", "AI Ownership", "Transparency", "Organization DAOs", "BitBaum"]
+date: '2025-12-27'
+tags:
+  ['Platform Evolution', 'Bitcoin', 'AI Ownership', 'Transparency', 'Organization DAOs', 'BitBaum']
 featured: true
-author: "OrangeCat Team"
+author: 'OrangeCat Team'
 published: true
 ---
-
-# OrangeCat 2025: The Complete Bitcoin-Native Platform - 10 Entity Types, AI Ownership, and Transparent Commerce
 
 **OrangeCat has evolved from a simple crowdfunding platform into a comprehensive Bitcoin-native ecosystem that enables the free flow of knowledge and value between people.**
 
@@ -21,9 +20,11 @@ Since our original vision post in December 2025, OrangeCat has grown into a plat
 OrangeCat now supports **10 different types of entities**, each designed for specific economic and social interactions:
 
 ### 🏦 **Gateway (Foundational)**
+
 1. **Wallets** - Bitcoin wallet connections with automatic transaction autoposting to timelines
 
 ### 🛍️ **Business (Value Creation)**
+
 2. **Projects** - Crowdfunded initiatives with milestone tracking
 3. **Products** - Physical and digital goods with Bitcoin payments
 4. **Services** - Professional services with transparent pricing
@@ -31,10 +32,12 @@ OrangeCat now supports **10 different types of entities**, each designed for spe
 6. **AI Assistants** - Autonomous AI services that creators build and monetize
 
 ### 🤝 **Community (Network Building)**
+
 7. **Circles** - Community groups with shared treasuries and governance
 8. **Organizations** - Full DAO-like companies with complex stakeholder relationships
 
 ### 💰 **Finance (Value Transfer)**
+
 9. **Assets** - Valuable items listed as collateral for loans
 10. **Loans** - Peer-to-peer borrowing with asset-backed security
 
@@ -45,6 +48,7 @@ OrangeCat now supports **10 different types of entities**, each designed for spe
 OrangeCat's most revolutionary feature is **transparency by default**. Every economic interaction creates a permanent, publicly auditable record.
 
 ### Timeline Autoposts
+
 When you connect a Bitcoin wallet to any OrangeCat entity, **every transaction automatically posts to your timeline**:
 
 ```
@@ -57,7 +61,9 @@ When you connect a Bitcoin wallet to any OrangeCat entity, **every transaction a
 This creates a **social audit trail** where your economic activity becomes part of your social narrative.
 
 ### Transparency Scores
+
 Every profile, circle, and organization has a **transparency score** (0-100) based on:
+
 - **Public information completeness** (profile details, links, history)
 - **Transaction visibility** (public vs private transactions)
 - **Governance transparency** (open decision-making processes)
@@ -73,21 +79,25 @@ OrangeCat enables **true AI ownership** - you create AI assistants as software t
 ### How AI Ownership Works
 
 **1. Build Your AI Software**
+
 - Craft a **system prompt** (your AI's "code")
 - Choose **compute providers** (API, self-hosted, community)
 - Define **pricing models** (per conversation, subscription, etc.)
 
 **2. Monetize Autonomously**
+
 - Your AI handles customer interactions
 - Bitcoin payments flow directly to you
 - Scale across multiple compute providers
 
 **3. Own Your Creation**
+
 - Your system prompt is portable software
 - Works with any AI provider (OpenAI, Anthropic, etc.)
 - You control the intellectual property
 
 ### Example AI Businesses
+
 - **Customer Service AI**: handling support tickets for ₿0.5/month per customer
 - **Content Creation AI**: generating blog posts and social media for ₿0.1 per article
 - **Code Review AI**: automated code quality checks for ₿0.05 per review
@@ -103,6 +113,7 @@ OrangeCat's **Organization entities** are full-fledged DAO-like companies that d
 ### Organization Features
 
 **Multi-Stakeholder Governance**
+
 - **Founders**: Ultimate authority (3x voting weight)
 - **Employees**: Operational roles (1x voting weight)
 - **Contractors**: Specialized work (0.5x voting weight)
@@ -111,12 +122,14 @@ OrangeCat's **Organization entities** are full-fledged DAO-like companies that d
 - **Donors**: Philanthropic supporters (impact reporting)
 
 **Treasury Management**
+
 - **Multi-signature wallets** (3-of-5 signatures required)
 - **Automated payroll** and dividend distribution
 - **Transparent spending** with full audit trails
 - **Asset collateral** for borrowing
 
 **Proposal System**
+
 - **Quadratic voting** for fair representation
 - **Time-locked execution** (24-hour delay for security)
 - **Emergency procedures** for urgent decisions
@@ -137,11 +150,13 @@ OrangeCat itself is owned and operated by **BitBaum AG**, a Switzerland-based or
 OrangeCat enables **free flow of knowledge and value** through interconnected social and economic systems.
 
 ### Social Knowledge Networks
+
 - **Threaded conversations** evolve into funded projects
 - **Community knowledge graphs** span thousands of minds
 - **AI-enhanced collective intelligence** synthesizes insights
 
 ### Economic Value Flows
+
 - **Direct Bitcoin payments** (0% platform fees vs 5-20% on platforms)
 - **Transparent treasuries** for all entities
 - **Multi-signature security** for large transactions
@@ -150,16 +165,19 @@ OrangeCat enables **free flow of knowledge and value** through interconnected so
 ### Integration Examples
 
 **Project to Product Flow:**
+
 ```
 Idea (Thread) → Funding (Project) → Development → Product Launch → Sales → Revenue Sharing
 ```
 
 **Knowledge to Action Flow:**
+
 ```
 Discussion (Circle) → Consensus → Organization → Governance → Implementation → Impact
 ```
 
 **AI to Revenue Flow:**
+
 ```
 Prompt Creation → AI Training → Model Deployment → Customer Usage → Bitcoin Payments → Creator Earnings
 ```
@@ -171,18 +189,21 @@ Prompt Creation → AI Training → Model Deployment → Customer Usage → Bitc
 OrangeCat operates under the **BitBaum corporate umbrella**, following the TikTok/ByteDance model:
 
 ### BitBaum AG (Corporate Parent)
+
 - **Legal entity**: Switzerland-based Aktiengesellschaft
 - **Mission**: "Growing Bitcoin communities through transparent commerce"
 - **Portfolio**: OrangeCat platform + future Bitcoin products
 - **Governance**: Transparent stakeholder voting
 
 ### OrangeCat (Consumer Product)
+
 - **User-facing platform** with friendly branding
 - **10 entity types** for comprehensive commerce
 - **Bitcoin-native** with transparency features
 - **AI capabilities** and threaded conversations
 
 ### Brand Relationship
+
 - **BitBaum**: Professional, corporate credibility
 - **OrangeCat**: Approachable, user-friendly experience
 - **"A BitBaum Company"**: Clear corporate relationship
@@ -193,27 +214,30 @@ OrangeCat operates under the **BitBaum corporate umbrella**, following the TikTo
 
 ### Traditional Platforms vs OrangeCat
 
-| Feature | Traditional Platforms | OrangeCat |
-|---------|----------------------|-----------|
-| **Fees** | 5-20% + payment processing | 0% platform fee (only Bitcoin network fees) |
-| **Censorship** | Account bans possible | Bitcoin censorship-resistant |
-| **Transparency** | Opaque financials | Full on-chain visibility |
-| **Ownership** | Platform owns user data | Users own their creations |
-| **Governance** | Platform decides everything | Community voting built-in |
+| Feature          | Traditional Platforms       | OrangeCat                                   |
+| ---------------- | --------------------------- | ------------------------------------------- |
+| **Fees**         | 5-20% + payment processing  | 0% platform fee (only Bitcoin network fees) |
+| **Censorship**   | Account bans possible       | Bitcoin censorship-resistant                |
+| **Transparency** | Opaque financials           | Full on-chain visibility                    |
+| **Ownership**    | Platform owns user data     | Users own their creations                   |
+| **Governance**   | Platform decides everything | Community voting built-in                   |
 
 ### Real Economic Impact
 
 **For Creators:**
+
 - Keep 100% of earnings (minus network fees) vs 80-88% on traditional platforms
 - Own their AI models and software
 - Build communities around their work
 
 **For Communities:**
+
 - Transparent treasuries with public accountability
 - Democratic governance through organization entities
 - Collective ownership of assets and initiatives
 
 **For Investors:**
+
 - Transparent project funding and progress tracking
 - Direct Bitcoin investments with clear terms
 - Portfolio management through organization entities
@@ -230,6 +254,7 @@ OrangeCat maintains the **technical excellence** that made it special from day o
 - **Predictable UX** - Same patterns across all entity types
 
 **Evolution from MVP to Platform:**
+
 - Started with basic crowdfunding
 - Added social features and transparency
 - Integrated AI ownership capabilities
@@ -259,13 +284,10 @@ Whether you're a creator building AI assistants, a community forming an organiza
 
 **The platform has evolved from a crowdfunding tool into a comprehensive ecosystem for Bitcoin-native economic and social interactions.**
 
-*Ready to experience transparent commerce?* 🧡✨
+_Ready to experience transparent commerce?_ 🧡✨
 
 ---
 
-*This post reflects OrangeCat's evolution from our original vision in December 2025 to the comprehensive platform it has become. The original posts remain available for historical context.*
+_This post reflects OrangeCat's evolution from our original vision in December 2025 to the comprehensive platform it has become. The original posts remain available for historical context._
 
-*OrangeCat is a BitBaum company.*
-
-
-
+_OrangeCat is a BitBaum company._

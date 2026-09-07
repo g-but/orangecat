@@ -62,6 +62,21 @@ echo "=== assemble standalone (static + public) ==="
 [ -d "$REPO_ROOT/.next/static" ] && cp -r "$REPO_ROOT/.next/static" "$ST/.next/static"
 [ -d "$REPO_ROOT/public" ] && cp -r "$REPO_ROOT/public" "$ST/public"
 
+# ── shiki top-level link ──────────────────────────────────────────────────────
+# Next auto-externalizes shiki, and bip-kit's ArticleBody loads it with plain
+# Node resolution from the server chunk at runtime. Output tracing copies the
+# .pnpm store entries into standalone/node_modules/.pnpm but never emits the
+# top-level node_modules/shiki symlink, so on the box (no outer node_modules to
+# leak from) the import finds nothing and long-form code blocks silently render
+# as the un-highlighted mono fallback while dev shows them highlighted.
+# Same trap and same fix as FleetCrown #513: what the tracer can't see, the
+# assemble step must supply. Version-agnostic; no-op when already present.
+SHIKI_STORE_ENTRY="$(ls "$ST/node_modules/.pnpm" 2>/dev/null | grep -E '^shiki@' | head -1 || true)"
+if [ -n "$SHIKI_STORE_ENTRY" ] && [ ! -e "$ST/node_modules/shiki" ]; then
+  ln -s ".pnpm/$SHIKI_STORE_ENTRY/node_modules/shiki" "$ST/node_modules/shiki"
+  echo "→ deploy: linked standalone node_modules/shiki -> .pnpm/$SHIKI_STORE_ENTRY"
+fi
+
 echo "=== rsync → $OC_BOX:$OC_APP_BASE/app-next ==="
 for attempt in 1 2 3; do
   rsync -a --delete --no-perms --no-owner --no-group --omit-dir-times \

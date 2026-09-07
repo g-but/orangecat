@@ -7,8 +7,11 @@ import { ARTICLE_COPY } from '@/config/articles';
 import { ROUTES } from '@/config/routes';
 import { JsonLdScript } from '@/lib/seo/structured-data';
 import { APP_NAME, SITE_URL } from '@/config/brand';
-import ArticleMarkdown from './ArticleMarkdown';
-import ReadingProgress from './ReadingProgress';
+import { Toc, ReadingProgress } from 'bip-kit/react';
+import 'bip-kit/styles.css';
+import '@/lib/longform/longform.css';
+import { parseLongform } from '@/lib/longform/parse';
+import LongformBody from '@/lib/longform/LongformBody';
 import ShareButton from './ShareButton';
 import TipButton from '@/components/tips/TipButton';
 import ArticleOwnerActions from './ArticleOwnerActions';
@@ -82,6 +85,12 @@ export default async function ArticlePage({ params }: PageProps) {
   if (!article) {
     notFound();
   }
+
+  // ONE long-form pipeline: bip-kit typed blocks + reference renderer — the
+  // same parse and renderer the studio blog uses. Typed blocks are the
+  // security model for this user-authored markdown: no HTML passthrough
+  // exists, so there is nothing to sanitize away.
+  const { blocks, toc } = parseLongform(article.body);
 
   const isOwner = await isCurrentUserArticleAuthor(article.authorActorId);
 
@@ -173,8 +182,16 @@ export default async function ArticlePage({ params }: PageProps) {
             </div>
           </header>
 
-          <div className="[&>*:first-child]:mt-0">
-            <ArticleMarkdown body={article.body} />
+          {/* On xl the sticky, scroll-spying TOC gets a rail to the right of
+              the article column; it hides itself under 3 headings, so short
+              pieces render a clean single column. */}
+          <div className="xl:relative">
+            <div className="[&>.bp-article>*:first-child]:mt-0">
+              <LongformBody blocks={blocks} />
+            </div>
+            <aside className="hidden xl:absolute xl:left-full xl:top-0 xl:ml-12 xl:block xl:h-full xl:w-[240px]">
+              <Toc items={toc} />
+            </aside>
           </div>
 
           {/* Footer: author card + share + write-your-own CTA */}

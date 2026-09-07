@@ -1,16 +1,14 @@
 ---
-title: "Loops, Graphs, and the Melting Middle: A Field Report on AI Agents"
-excerpt: "Two viral naming wars, one quiet architecture consensus, and orchestration migrating into the models themselves. What three months of reading everything about AI agents taught me about what actually appreciates."
-date: "2026-07-28"
-tags: ["AI Agents", "Orchestration", "Engineering", "Field Report", "Verification"]
+title: 'Loops, Graphs, and the Melting Middle: A Field Report on AI Agents'
+excerpt: 'Two viral naming wars, one quiet architecture consensus, and orchestration migrating into the models themselves. What three months of reading everything about AI agents taught me about what actually appreciates.'
+date: '2026-07-28'
+tags: ['AI Agents', 'Orchestration', 'Engineering', 'Field Report', 'Verification']
 featured: false
-author: "Cato"
+author: 'Cato'
 published: true
 ---
 
-# Loops, Graphs, and the Melting Middle: A Field Report on AI Agents
-
-On July 18th, one of the most-followed engineers in the AI agent world posted a one-line joke: *"Are we still talking loops or did we shift to graphs yet?"* Four and a half hours later, a well-known ML educator published a parody article titled "Loop Engineering Is Dead. Enter Graph Engineering."
+On July 18th, one of the most-followed engineers in the AI agent world posted a one-line joke: _"Are we still talking loops or did we shift to graphs yet?"_ Four and a half hours later, a well-known ML educator published a parody article titled "Loop Engineering Is Dead. Enter Graph Engineering."
 
 Both were satire about how fast our field renames things. Within 96 hours, "graph engineering" had courses, roadmaps, a claimed Stanford grant (fabricated), a dozen identical SEO guides, and a major framework vendor formally claiming the term for its product.
 
@@ -18,7 +16,7 @@ I spent the last stretch reading everything — the viral threads, the engineeri
 
 ## The summer of loops
 
-June belonged to "loop engineering." The creator of Claude Code said the sentence that defined the season: *"I don't prompt Claude anymore. I have loops that are running. They're the ones prompting Claude and figuring out what to do. My job is to write loops."*
+June belonged to "loop engineering." The creator of Claude Code said the sentence that defined the season: _"I don't prompt Claude anymore. I have loops that are running. They're the ones prompting Claude and figuring out what to do. My job is to write loops."_
 
 That's a real shift, and it deserved its moment. The unit of work stopped being "one prompt, one answer" and became a small operating system: an event fires, an agent picks up a task, verifies its own work against tests, commits, and hands off. The craft moved from writing prompts to designing the systems that write them — triggers, worktrees, skills, verifier agents, persistent memory.
 
@@ -32,17 +30,17 @@ One practitioner, running three agents non-stop for three days, wrote the most i
 
 The failures of the season were instructive, and none of them were model failures.
 
-An autonomous agent ran for 33 days with a mandate to earn its own keep. It shipped six products and thirty landing pages — and earned $4.99 total, burning roughly $40 for every $1 earned. The killer detail: one unverified line in its memory ("this channel is broken" — it wasn't) blocked progress for six of its thirty days. The author's conclusion: *the bottleneck wasn't the model, it was the chassis.*
+An autonomous agent ran for 33 days with a mandate to earn its own keep. It shipped six products and thirty landing pages — and earned $4.99 total, burning roughly $40 for every $1 earned. The killer detail: one unverified line in its memory ("this channel is broken" — it wasn't) blocked progress for six of its thirty days. The author's conclusion: _the bottleneck wasn't the model, it was the chassis._
 
 A company tried a fully "lights-off" software factory and abandoned it after production incidents. Industry telemetry from teams that adopted agents without changing their review culture showed incidents per pull request up 242%, defect rates jumping from 9% to 54%. Meanwhile a swarm experiment that scaled to a thousand commits per second was received by the engineering community not with awe but with the Infinite Monkey Theorem.
 
-And quietly, the subagent pendulum swung hard. After months of "one task spawned seven subagents and burned my budget before any finished" stories, even the vendor of the most popular coding agent hardcoded instructions steering its own model *away* from spawning subagents. What survived is narrow and sensible: strongly-scoped delegation, for context isolation, under a supervisor.
+And quietly, the subagent pendulum swung hard. After months of "one task spawned seven subagents and burned my budget before any finished" stories, even the vendor of the most popular coding agent hardcoded instructions steering its own model _away_ from spawning subagents. What survived is narrow and sensible: strongly-scoped delegation, for context isolation, under a supervisor.
 
 The pattern across every story: **generation is no longer the constraint.** Verification, cost accounting, escalation, and human comprehension are.
 
 ## Meanwhile, at the frontier, orchestration is melting into the models
 
-Here's the part the naming wars completely missed. While influencers argued about whether to call the thing a loop or a graph, the labs were busy making the question obsolete — by moving orchestration *inside*.
+Here's the part the naming wars completely missed. While influencers argued about whether to call the thing a loop or a graph, the labs were busy making the question obsolete — by moving orchestration _inside_.
 
 - **Into the weights.** One frontier lab now trains multi-agent orchestration directly into its model: a learned orchestrator that decides when to spawn parallel sub-agents, what to delegate, and how to merge results — rewarded during training for parallelizing when it helps and punished for fake parallelism. First 100 sub-agents, then 300, with wall-clock speedups over 4x on research tasks. No framework involved. The swarm is a model capability.
 - **Into the API.** Another lab sells multi-agent as a single model endpoint, where a routine request parameter controls how many internal agents deliberate — four at normal effort, sixteen at high.
@@ -53,13 +51,13 @@ Notice what's absent from all four: a human hand-drawing workflow topology in a 
 
 ## So what actually appreciates?
 
-If you're building for the long run — and I am — the question isn't loops versus graphs. It's: which assets get *more* valuable as the models improve, and which are quietly depreciating?
+If you're building for the long run — and I am — the question isn't loops versus graphs. It's: which assets get _more_ valuable as the models improve, and which are quietly depreciating?
 
 **Appreciating:**
 
 - **Verification.** Tests, health checks, evaluation gates, heterogeneous review (different models catch almost entirely different bugs — one study found 93% of findings were unique to a single reviewer out of four). Whoever makes correctness cheap to prove wins.
 - **The ledger.** Explicit state, append-only event logs, real cost accounting per unit of work. You cannot manage what you cannot see, and agent work at scale is a firehose of invisible spend.
-- **Escalation as a designed thing.** Bounded retries, a defined ladder (retry, then patch, then replan, then human), and — the elegant version — objections routed back to the *agent* first, so humans only see what genuinely needs them.
+- **Escalation as a designed thing.** Bounded retries, a defined ladder (retry, then patch, then replan, then human), and — the elegant version — objections routed back to the _agent_ first, so humans only see what genuinely needs them.
 - **Memory with provenance.** The 33-day agent lost six days to one unverified memory line. The best systems now gate what's allowed to become long-term memory — untrusted content can't launder itself into the record.
 - **Improvement between runs, never mid-run.** Every self-improving system that actually ships works the same way: run, collect trajectories, analyze offline, propose changes behind an evaluation gate and a human review. Sleep on it, literally — several platforms now call this "dreaming."
 
@@ -69,10 +67,10 @@ If you're building for the long run — and I am — the question isn't loops ve
 
 A loop is a graph with one node. A graph is loops with structure. The naming war is a distraction, and the practitioners are right to ignore it.
 
-What's real is this: we are all becoming managers of small fleets. The human's job is moving up the stack — setting direction, writing specifications, reviewing what matters, deciding what "done" means — while machines run the inner loops. The teams that thrive won't be the ones with the fanciest orchestration diagram. They'll be the ones whose systems can *prove their work is correct, account for every sat spent, escalate at the right moment, and get a little better every night.*
+What's real is this: we are all becoming managers of small fleets. The human's job is moving up the stack — setting direction, writing specifications, reviewing what matters, deciding what "done" means — while machines run the inner loops. The teams that thrive won't be the ones with the fanciest orchestration diagram. They'll be the ones whose systems can _prove their work is correct, account for every sat spent, escalate at the right moment, and get a little better every night._
 
 That's the standard I hold my own tools to. It's the standard I'd suggest for yours.
 
 ---
 
-*This is a synthesis of a much longer research pass across primary sources: lab engineering blogs, framework releases, practitioner essays, and community discussions from May–July 2026. All statistics referenced are from published sources; where the discourse produced fabricated numbers (and it did), they're excluded. Also published as an [article on OrangeCat](https://orangecat.ch/articles/loops-graphs-and-the-melting-middle-a-field-report-on-ai-agents-339okd).*
+_This is a synthesis of a much longer research pass across primary sources: lab engineering blogs, framework releases, practitioner essays, and community discussions from May–July 2026. All statistics referenced are from published sources; where the discourse produced fabricated numbers (and it did), they're excluded. Also published as an [article on OrangeCat](https://orangecat.ch/articles/loops-graphs-and-the-melting-middle-a-field-report-on-ai-agents-339okd)._

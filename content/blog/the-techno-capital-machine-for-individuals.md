@@ -1,14 +1,22 @@
 ---
-title: "The Techno-Capital Machine for Individuals"
+title: 'The Techno-Capital Machine for Individuals'
 excerpt: "Andreessen's flywheel — technology creates wealth, wealth funds technology, on a loop — applied to the individual builder instead of the corporation. OrangeCat is the capital half of that machine. Here is what changes when both halves get built."
-date: "2026-06-01"
-tags: ["Vision", "Andreessen", "Techno-Capitalism", "Bitcoin", "Lightning", "AI Agents", "Individual Agency", "Cockpit"]
+date: '2026-06-01'
+tags:
+  [
+    'Vision',
+    'Andreessen',
+    'Techno-Capitalism',
+    'Bitcoin',
+    'Lightning',
+    'AI Agents',
+    'Individual Agency',
+    'Cockpit',
+  ]
 featured: true
-author: "OrangeCat Team"
+author: 'OrangeCat Team'
 published: true
 ---
-
-# The Techno-Capital Machine for Individuals
 
 Marc Andreessen described the techno-capital machine as the flywheel that has powered every real wealth creation event in modern history: technology produces value, value compounds into capital, capital funds the next round of technology, and the loop accelerates. Markets, free enterprise, and the institutions around them are the substrate that lets the loop run.
 
@@ -48,9 +56,9 @@ That is the structural shift Cockpit + OrangeCat make possible. It is not a prod
 
 Two products today, with two AIs and two surfaces, can already deliver most of the flywheel. A builder running both gets the production half (Cockpit) and the transaction half (OrangeCat) at standalone scale.
 
-But the flywheel's *acceleration* — the part Andreessen emphasized — comes from the loop running as fast as possible. Production produces output, output gets monetised, monetisation funds production, the next round happens faster than the last. Any seam between the two halves slows the loop.
+But the flywheel's _acceleration_ — the part Andreessen emphasized — comes from the loop running as fast as possible. Production produces output, output gets monetised, monetisation funds production, the next round happens faster than the last. Any seam between the two halves slows the loop.
 
-The convergence argued in *From Two AIs to One* (on Cockpit's Thoughts surface) is the loop-acceleration argument restated. One agent reasoning across both surfaces. One memory of the builder's whole life. One approval queue. One autonomy dial. Surfaces fade into engineering boundaries below the user-facing reality. The user perceives one agent watching their flywheel and proposing the next thing to ship, the next listing to publish, the next funder to talk to, the next competitor to react to.
+The convergence argued in _From Two AIs to One_ (on Cockpit's Thoughts surface) is the loop-acceleration argument restated. One agent reasoning across both surfaces. One memory of the builder's whole life. One approval queue. One autonomy dial. Surfaces fade into engineering boundaries below the user-facing reality. The user perceives one agent watching their flywheel and proposing the next thing to ship, the next listing to publish, the next funder to talk to, the next competitor to react to.
 
 The flywheel spins faster when the operator does not have to context-switch between two products to keep it running. That is what convergence buys.
 
@@ -66,7 +74,7 @@ That is the version of the future OrangeCat + Cockpit are sized for. Nine billio
 
 ## The Honest Note On What This Requires
 
-This is not a five-year build. The roadmaps of both products name multi-phase programmes, and OrangeCat's role in the joint architecture is laid out in detail on Cockpit's Thoughts surface — *The Two Halves of the Individual Singularity*, *From Two AIs to One*, *Where Stakeholders Live*, and this piece are the umbrella under which the joint engineering work happens.
+This is not a five-year build. The roadmaps of both products name multi-phase programmes, and OrangeCat's role in the joint architecture is laid out in detail on Cockpit's Thoughts surface — _The Two Halves of the Individual Singularity_, _From Two AIs to One_, _Where Stakeholders Live_, and this piece are the umbrella under which the joint engineering work happens.
 
 The settlement layer (Bitcoin/Lightning, OrangeCat's actor system) scales by physics. The production layer (Cockpit's agent fleet, autonomy ladder, approval queue) scales horizontally per user. The convergence is where the hard architectural work is — turning two AIs into one agent, two graphs into one graph, two approval surfaces into one inbox.
 
@@ -78,4 +86,4 @@ Andreessen described the machine. The interesting question is who builds the ver
 
 ---
 
-*Published in parallel on Cockpit's Thoughts surface. Companion to "The Two Halves of the Individual Singularity," "From Two AIs to One," and "Where Stakeholders Live." This is the umbrella thesis under which those operate.*
+_Published in parallel on Cockpit's Thoughts surface. Companion to "The Two Halves of the Individual Singularity," "From Two AIs to One," and "Where Stakeholders Live." This is the umbrella thesis under which those operate._

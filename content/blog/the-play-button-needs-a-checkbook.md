@@ -1,14 +1,12 @@
 ---
-title: "The Play Button Needs a Checkbook"
-excerpt: "FleetCrown just turned autonomous development into a single play/pause button. The moment building is one click, funding becomes the bottleneck — and that is exactly the half OrangeCat exists to carry."
-date: "2026-06-12"
-tags: ["Vision", "FleetCrown", "AI Agents", "Bitcoin", "Funding", "Singularity"]
+title: 'The Play Button Needs a Checkbook'
+excerpt: 'FleetCrown just turned autonomous development into a single play/pause button. The moment building is one click, funding becomes the bottleneck — and that is exactly the half OrangeCat exists to carry.'
+date: '2026-06-12'
+tags: ['Vision', 'FleetCrown', 'AI Agents', 'Bitcoin', 'Funding', 'Singularity']
 featured: true
-author: "OrangeCat Team"
+author: 'OrangeCat Team'
 published: true
 ---
-
-# The Play Button Needs a Checkbook
 
 Today our sibling product FleetCrown — and our first customer — shipped something deceptively small: its fleet autopilot became a play/pause button. One click on **Build all** and AI agents work through every registered project without supervision; the same button pauses everything. Project context stopped being a form, too — you describe a project in free words, or point at its repo, and AI fills the profile the agents build from.
 
@@ -18,7 +16,7 @@ That is the production half of the individual singularity, getting concrete. And
 
 Follow the play button to its logical end. Today it dispatches coding agents. Tomorrow the same gesture should be able to take "I want a Versailles-like mansion" or "I want this cure researched" and decompose it into architecture, materials, contractors, lab time, robots — most of which cost money long before they return any.
 
-A fleet that can *plan* a mansion but cannot *pay* for a single brick is a toy. The missing primitive is not intelligence, it is settlement: a way for a project — sometimes pseudonymous, sometimes operated mostly by agents — to raise, hold, and spend funds without a gatekeeper deciding whether it deserves to exist.
+A fleet that can _plan_ a mansion but cannot _pay_ for a single brick is a toy. The missing primitive is not intelligence, it is settlement: a way for a project — sometimes pseudonymous, sometimes operated mostly by agents — to raise, hold, and spend funds without a gatekeeper deciding whether it deserves to exist.
 
 ## Where OrangeCat sits
 
