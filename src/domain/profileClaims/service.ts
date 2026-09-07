@@ -27,12 +27,9 @@ import { looseClient } from '@/lib/supabase/untyped';
 import { logger } from '@/utils/logger';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { buildProfileFill, type ExistingProfileFields } from './fill';
-import type {
-  ProfileClaimDraft,
-  ProfileClaimPreview,
-  ProfileClaimResult,
-  ProfileClaimRow,
-} from './types';
+import { normalizeClaimDraft, type ClaimDraft } from './draft';
+import { materializeClaimEntities, readLedger, type MaterializedLedger } from './materialize';
+import type { ProfileClaimPreview, ProfileClaimResult, ProfileClaimRow } from './types';
 
 const MAX_USERNAME_SUFFIX_ATTEMPTS = 6;
 
@@ -52,7 +49,7 @@ function isExpired(row: Pick<ProfileClaimRow, 'expires_at'>): boolean {
 
 export async function createProfileClaim(input: {
   createdBy: string;
-  draft: ProfileClaimDraft;
+  draft: ClaimDraft;
   suggestedUsername?: string;
 }): Promise<ProfileClaimResult<{ id: string; token: string }>> {
   const { data, error } = await looseClient(getAdminClient())
@@ -123,6 +120,16 @@ export async function getProfileClaimPreview(
   }
 
   const typed = row as ProfileClaimRow;
+
+  // Rows written before the draft grew an `entities[]` array carry the old flat
+  // person shape. Normalising on read means a link already sent to a real
+  // person keeps working instead of rendering an empty card.
+  const draft = normalizeClaimDraft(typed.draft);
+  if (!draft) {
+    logger.error('Profile claim has an unreadable draft', { status: typed.status });
+    return { ok: false, code: 'not_found', message: 'This claim link doesn’t exist.' };
+  }
+
   let claimedUsername: string | null = null;
   if (typed.status === 'claimed' && typed.claimed_by) {
     const { data: profile } = await looseClient(getAdminClient())
@@ -153,7 +160,7 @@ export async function getProfileClaimPreview(
     ok: true,
     data: {
       token: typed.token,
-      draft: typed.draft,
+      draft,
       suggestedUsername: typed.suggested_username,
       status: typed.status,
       isExpired: typed.status === 'pending' && isExpired(typed),
@@ -297,7 +304,13 @@ export async function claimProfileClaim(params: {
   claimToken: string;
   userId: string;
   userSupabase: AnySupabaseClient;
-}): Promise<ProfileClaimResult<{ username: string | null }>> {
+}): Promise<
+  ProfileClaimResult<{
+    username: string | null;
+    created: Array<{ kind: string; id: string; slug?: string }>;
+    incomplete: boolean;
+  }>
+> {
   const { claimToken, userId, userSupabase } = params;
 
   const { data: existing, error: fetchError } = await looseClient(getAdminClient())
@@ -336,7 +349,7 @@ export async function claimProfileClaim(params: {
     .update({ status: 'claimed', claimed_by: userId, claimed_at: nowIso })
     .eq('token', claimToken)
     .eq('status', 'pending')
-    .select('draft, suggested_username')
+    .select('draft, suggested_username, materialized')
     .maybeSingle();
 
   if (casError) {
@@ -351,57 +364,106 @@ export async function claimProfileClaim(params: {
     };
   }
 
-  const draft = won.draft as ProfileClaimDraft;
+  const draft = normalizeClaimDraft(won.draft);
+  if (!draft) {
+    // An unreadable draft would silently claim nothing. Put the claim back so
+    // the link is not burned by a bug in our own parsing.
+    await looseClient(getAdminClient())
+      .from(DATABASE_TABLES.PROFILE_CLAIMS)
+      .update({ status: 'pending', claimed_by: null, claimed_at: null })
+      .eq('token', claimToken);
+    logger.error('Refusing to claim an unreadable draft', { userId });
+    return { ok: false, code: 'not_found', message: 'This claim link doesn’t exist.' };
+  }
+
   let username: string | null = null;
   if (won.suggested_username) {
     username = await findAvailableUsername(userSupabase, won.suggested_username as string, userId);
   }
 
-  // Fill only what is EMPTY (ADR-0004 D6).
-  //
-  // This used to write `name` and `bio` unconditionally, so a friend who
-  // already had an account lost their own name and bio the moment they opened
-  // a link someone made for them. A claim is a gift, not an overwrite: it may
-  // add to a profile, never replace what its owner already wrote.
+  // Fill only what is EMPTY (ADR-0004 D6). A claim is a gift, not an
+  // overwrite: it may add to a profile, never replace what its owner wrote.
   const { data: current } = await userSupabase
     .from(DATABASE_TABLES.PROFILES)
     .select('name, bio, avatar_url, banner_url, website, social_links, username')
     .eq('id', userId)
     .maybeSingle();
 
-  const profileUpdate = buildProfileFill(draft, current as ExistingProfileFields, username);
+  const profileUpdate = buildProfileFill(draft.profile, current as ExistingProfileFields, username);
+
+  let finalUsername = (current?.username as string | undefined) ?? null;
 
   // An established user claiming a gift may have nothing blank left to fill.
-  // That is a success, not an empty UPDATE — which PostgREST rejects.
-  if (Object.keys(profileUpdate).length === 0) {
-    const { data: unchanged } = await userSupabase
+  // That is a success, not an empty UPDATE — which PostgREST rejects. The
+  // entities below are materialised either way: the bar is the point, and
+  // whether the recipient already had a bio has nothing to do with it.
+  if (Object.keys(profileUpdate).length > 0) {
+    const { data: updatedProfile, error: profileError } = await userSupabase
       .from(DATABASE_TABLES.PROFILES)
-      .select('username')
+      .update(profileUpdate)
       .eq('id', userId)
-      .maybeSingle();
-    return { ok: true, data: { username: (unchanged?.username as string | undefined) ?? null } };
+      .select('username')
+      .single();
+
+    if (profileError || !updatedProfile) {
+      // Nothing has been created yet at this point, so putting the claim back
+      // is safe and leaves the link usable.
+      await looseClient(getAdminClient())
+        .from(DATABASE_TABLES.PROFILE_CLAIMS)
+        .update({ status: 'pending', claimed_by: null, claimed_at: null })
+        .eq('token', claimToken);
+      logger.error('Failed to apply claimed draft to profile', {
+        error: profileError,
+        userId,
+      });
+      return { ok: false, dbError: profileError };
+    }
+    finalUsername = (updatedProfile.username as string | undefined) ?? null;
   }
 
-  const { data: updatedProfile, error: profileError } = await userSupabase
-    .from(DATABASE_TABLES.PROFILES)
-    .update(profileUpdate)
-    .eq('id', userId)
-    .select('username')
-    .single();
+  // Materialise what the claim carries (ADR-0004 D2/D3).
+  //
+  // From here on the claim STAYS claimed even on failure. Rows may already
+  // exist and be visible to the recipient; rolling back would delete a bar
+  // someone just watched appear. Progress is written to `materialized` after
+  // every creation so a retry resumes instead of duplicating.
+  const entities = draft.entities ?? [];
+  let materialized: MaterializedLedger = readLedger(
+    (won as { materialized?: unknown }).materialized
+  );
+  let failures: Array<{ index: number; reason: string }> = [];
 
-  if (profileError || !updatedProfile) {
-    // Best-effort rollback so a failed profile write doesn't leave the claim
-    // permanently stuck in "claimed" with nothing to show for it.
-    await looseClient(getAdminClient())
-      .from(DATABASE_TABLES.PROFILE_CLAIMS)
-      .update({ status: 'pending', claimed_by: null, claimed_at: null })
-      .eq('token', claimToken);
-    logger.error('Failed to apply claimed draft to profile', {
-      error: profileError,
+  if (entities.length > 0) {
+    const persist = async (ledger: MaterializedLedger): Promise<void> => {
+      const { error: ledgerError } = await looseClient(getAdminClient())
+        .from(DATABASE_TABLES.PROFILE_CLAIMS)
+        .update({ materialized: ledger })
+        .eq('token', claimToken);
+      if (ledgerError) {
+        logger.error('Failed to record materialisation progress', { error: ledgerError });
+      }
+    };
+
+    const result = await materializeClaimEntities({
+      entities,
       userId,
+      client: userSupabase,
+      existing: materialized,
+      onProgress: persist,
     });
-    return { ok: false, dbError: profileError };
+    materialized = result.ledger;
+    failures = result.failures;
+    await persist(materialized);
   }
 
-  return { ok: true, data: { username: (updatedProfile.username as string | undefined) ?? null } };
+  return {
+    ok: true,
+    data: {
+      username: finalUsername,
+      created: materialized.entities.map(e => ({ kind: e.kind, id: e.id, slug: e.slug })),
+      // A partial result is reported, never hidden: the recipient is told what
+      // did not appear rather than left to notice the absence themselves.
+      incomplete: failures.length > 0,
+    },
+  };
 }
