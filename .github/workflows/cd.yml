@@ -119,9 +119,31 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: standalone-${{ github.event.workflow_run.head_sha }}
-          path: .next/standalone
+          path: artifact
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Unpack standalone artifact
+        # CI ships a tarball, not a directory, so the pnpm symlink farm survives
+        # the round-trip. The assertion below is the point of the whole change: a
+        # standalone tree built under pnpm ALWAYS contains symlinks, and a tree
+        # that lost them boots into `Cannot find module '@swc/helpers/_/…'`.
+        # Zero symlinks is therefore not a warning, it is the bug — fail here,
+        # where the cause is one line away, rather than in a boot test on the box.
+        # Explicitly NOT falling through to a rebuild: a silent rebuild would ship
+        # a green deploy and leave the artifact path broken forever.
+        if: steps.guard.outputs.ok == 'true' && hashFiles('artifact/standalone.tar.gz') != ''
+        run: |
+          mkdir -p .next/standalone
+          tar -xzf artifact/standalone.tar.gz -C .next/standalone
+          links=$(find .next/standalone/node_modules -type l 2>/dev/null | wc -l)
+          echo "symlinks preserved: $links"
+          [ "$links" -gt 0 ] || {
+            echo "ERROR: the unpacked standalone tree has NO symlinks."
+            echo "Next's pnpm output resolves peer deps through them; without"
+            echo "them the app cannot require @swc/helpers and will not boot."
+            exit 1
+          }
 
       - name: Build standalone if no artifact (fallback / manual dispatch)
         if: steps.guard.outputs.ok == 'true'

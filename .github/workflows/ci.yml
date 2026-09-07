@@ -141,13 +141,24 @@ jobs:
           [ -d public ] && cp -r public .next/standalone/public || true
           [ -d content ] && cp -r content .next/standalone/content || true
 
+      - name: Package standalone (tar — upload-artifact dereferences symlinks)
+        # Next's standalone output under pnpm is a SYMLINK FARM: node_modules/next
+        # is a link into node_modules/.pnpm/next@…/node_modules/next, and next's
+        # peers (@swc/helpers) are linked in as its SIBLINGS there. upload-artifact
+        # follows symlinks and uploads their targets as real files — which lifts
+        # `next` out of the directory where its peers resolve. The store entry for
+        # @swc/helpers still ships; nothing can reach it. Boot dies on
+        # `Cannot find module '@swc/helpers/_/_interop_require_default'`.
+        # tar records links as links, so the tree arrives byte-identical.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: tar -czf standalone.tar.gz -C .next/standalone .
+
       - name: Upload standalone artifact (main → shipped by CD)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: standalone-${{ github.sha }}
-          path: .next/standalone
-          include-hidden-files: true # .next/* is hidden; excluded by default
+          path: standalone.tar.gz
           retention-days: 3
 
       - name: Start server (standalone — the shipped entrypoint)

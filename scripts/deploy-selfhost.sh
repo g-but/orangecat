@@ -178,7 +178,27 @@ done
 # response instead of the new build. Kill by what's actually listening on
 # the port instead — immune to whatever the process calls itself.
 fuser -k "$BOOT/tcp" 2>/dev/null || true
-[ "$ok" != "200" ] && { echo "BOOT-TEST FAILED ($ok)"; tail -25 "$LOG"; exit 1; }
+# Name the cause BEFORE the tail.
+#
+# Node prints a boot failure as one line that says what is wrong —
+# `Error: Cannot find module '@swc/helpers/_/_interop_require_default'` — followed
+# by a require stack and a trace that run well past twenty lines. `tail -25`
+# therefore kept the twenty lines that identify nothing and cut the single line
+# that identifies everything. On 2026-09-07 that turned a two-minute diagnosis
+# into forty: the CI log showed only `BOOT-TEST FAILED (000)` and a require
+# stack, and the module name had to be recovered by ssh'ing to the box and
+# requiring the file by hand.
+#
+# grep first, tail second, and grep with `|| true` so a failure that does not
+# match still prints the tail rather than exiting here on grep's exit status.
+[ "$ok" != "200" ] && {
+  echo "BOOT-TEST FAILED ($ok)"
+  echo "--- cause (first error line) ---"
+  grep -m1 -E "Error:|Cannot find module|MODULE_NOT_FOUND|ERR_" "$LOG" || echo "(no error line matched — see tail)"
+  echo "--- last 40 lines ---"
+  tail -40 "$LOG"
+  exit 1
+}
 echo "boot-test: OK"
 
 # atomic swap: live → app-old, staging → live (keep app-old for rollback)
