@@ -33,7 +33,13 @@ import type { ClaimEntityDraft } from '@/domain/profileClaims/draft';
 const client = {} as never;
 
 const bar: ClaimEntityDraft = { kind: 'group', name: 'Löwenbar', label: 'company' };
-const taproom: ClaimEntityDraft = { kind: 'project', title: 'New taproom' };
+const taproom: ClaimEntityDraft = {
+  kind: 'project',
+  title: 'New taproom',
+  // Required by the draft schema, because projectSchema requires it — a
+  // fixture the schema would reject is a fixture that proves nothing.
+  description: 'A second room at the back.',
+};
 
 beforeEach(() => {
   createGroup.mockReset();

@@ -126,9 +126,14 @@ export async function materializeClaimEntities(params: {
           userId,
           {
             title: entity.title,
+            // Required by projectSchema; the draft schema enforces it too, so
+            // this is a narrowing rather than a default.
             description: entity.description,
-            goal_amount: entity.goalAmount,
-            currency: entity.currency,
+            goal_amount: entity.goalAmount ?? null,
+            currency: entity.currency ?? null,
+            // Required by `projectSchema` (it has a `.default([])`, but the
+            // inferred INPUT type still demands the key).
+            tags: [],
           },
           client
         );

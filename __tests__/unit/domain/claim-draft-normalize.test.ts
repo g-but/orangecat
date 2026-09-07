@@ -88,11 +88,48 @@ describe('normalizeClaimDraft', () => {
   });
 });
 
+/**
+ * The draft has to be at least as strict as the thing it will become.
+ *
+ * `projectSchema` REQUIRES a description, caps the goal at a positive integer,
+ * and only accepts a known currency. A draft that allowed less would validate
+ * here and then fail at materialisation — after the recipient had already
+ * accepted, which is the worst possible moment to discover the project cannot
+ * be created.
+ */
+describe('a project draft matches what a project actually requires', () => {
+  const base = { kind: 'person', profile: { name: 'Karl' } };
+
+  const parse = (project: Record<string, unknown>) =>
+    normalizeClaimDraft({ ...base, entities: [{ kind: 'project', ...project }] });
+
+  it('requires a description', () => {
+    expect(parse({ title: 'Taproom' })).toBeNull();
+    expect(parse({ title: 'Taproom', description: '  ' })).toBeNull();
+    expect(parse({ title: 'Taproom', description: 'Out back.' })).not.toBeNull();
+  });
+
+  it('rejects a non-integer or negative goal', () => {
+    const ok = { title: 'Taproom', description: 'Out back.' };
+    expect(parse({ ...ok, goalAmount: 1.5 })).toBeNull();
+    expect(parse({ ...ok, goalAmount: -1 })).toBeNull();
+    expect(parse({ ...ok, goalAmount: 5 })).not.toBeNull();
+  });
+
+  it('rejects a currency the platform does not know', () => {
+    const ok = { title: 'Taproom', description: 'Out back.' };
+    expect(parse({ ...ok, currency: 'XYZ' })).toBeNull();
+    expect(parse({ ...ok, currency: 'CHF' })).not.toBeNull();
+  });
+});
+
 describe('describeClaimEntity', () => {
   it('names a group by name and a project by title', () => {
     expect(describeClaimEntity({ kind: 'group', name: 'Löwenbar', label: 'company' })).toBe(
       'Löwenbar'
     );
-    expect(describeClaimEntity({ kind: 'project', title: 'New taproom' })).toBe('New taproom');
+    expect(
+      describeClaimEntity({ kind: 'project', title: 'New taproom', description: 'Out back.' })
+    ).toBe('New taproom');
   });
 });

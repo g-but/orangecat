@@ -21,7 +21,8 @@
  */
 
 import { z } from 'zod';
-import { GROUP_LABELS } from '@/config/group-labels';
+import { GROUP_LABELS, type GroupLabel } from '@/config/group-labels';
+import { CURRENCY_CODES } from '@/config/currencies';
 
 const socialLinkSchema = z.object({
   platform: z.string(),
@@ -38,7 +39,11 @@ export const claimPersonSchema = z.object({
   socialLinks: z.array(socialLinkSchema).optional(),
 });
 
-const groupLabels = Object.keys(GROUP_LABELS) as [string, ...string[]];
+// Typed as the LABEL UNION, not `[string, ...]` — the same idiom
+// src/services/groups/validation uses. Widening it to `string` here made
+// `entity.label` unassignable to `CreateGroupInput.label` downstream, which
+// is exactly the sort of thing a draft schema is supposed to prevent.
+const groupLabels = Object.keys(GROUP_LABELS) as [GroupLabel, ...GroupLabel[]];
 
 /**
  * A "bar" is structurally a `groups` row with `label='company'`, so the group
@@ -52,12 +57,19 @@ export const claimGroupEntitySchema = z.object({
   tags: z.array(z.string()).max(10).optional(),
 });
 
+/**
+ * Mirrors `projectSchema` (src/lib/validation/projects.ts) where it must:
+ * `description` is REQUIRED there, `goal_amount` is a positive INTEGER, and
+ * `currency` is one of CURRENCY_CODES. A draft that allowed less would pass
+ * here and then fail at materialisation — after the claim was already
+ * accepted, which is the worst moment to discover a project cannot be created.
+ */
 export const claimProjectEntitySchema = z.object({
   kind: z.literal('project'),
   title: z.string().trim().min(1).max(100),
-  description: z.string().max(1000).optional(),
-  goalAmount: z.number().positive().optional(),
-  currency: z.string().optional(),
+  description: z.string().trim().min(1).max(2000),
+  goalAmount: z.number().int().positive().optional(),
+  currency: z.enum(CURRENCY_CODES).optional(),
 });
 
 export const claimEntitySchema = z.discriminatedUnion('kind', [
