@@ -24,14 +24,17 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
   const { isAuthenticated, hydrated } = useAuth();
   const router = useRouter();
   const [isClaiming, setIsClaiming] = useState(false);
+  const [isDeclining, setIsDeclining] = useState(false);
+  const [hasDeclined, setHasDeclined] = useState(preview.status === 'declined');
 
   const { draft, isExpired } = preview;
-  const claimId = preview.id;
+  // The credential, not the row id — this is what the public routes address.
+  const claimToken = preview.token;
 
   const handleClaim = async () => {
     setIsClaiming(true);
     try {
-      const res = await fetch(API_ROUTES.PROFILE_CLAIMS.CLAIM(claimId), { method: 'POST' });
+      const res = await fetch(API_ROUTES.PROFILE_CLAIMS.CLAIM(claimToken), { method: 'POST' });
       const body = await res.json();
       if (!res.ok || !body.success) {
         toast.error(body?.error?.message || 'Could not claim this profile. Please try again.');
@@ -47,8 +50,29 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
     }
   };
 
-  const registerHref = `${ROUTES.AUTH_REGISTER}&from=${encodeURIComponent(ROUTES.CLAIM(claimId))}`;
-  const loginHref = `${ROUTES.AUTH_LOGIN}&from=${encodeURIComponent(ROUTES.CLAIM(claimId))}`;
+  // Declining needs no account. Making "no" cost a signup would make refusing
+  // more expensive than accepting, which is not consent.
+  const handleDecline = async () => {
+    setIsDeclining(true);
+    try {
+      const res = await fetch(API_ROUTES.PROFILE_CLAIMS.DECLINE(claimToken), { method: 'POST' });
+      const body = await res.json();
+      if (!res.ok || !body.success) {
+        toast.error(body?.error?.message || 'Could not decline this. Please try again.');
+        setIsDeclining(false);
+        return;
+      }
+      setHasDeclined(true);
+      toast.success('Declined. Nothing was created, and nobody can use this link now.');
+    } catch {
+      toast.error('Could not decline this. Check your connection and try again.');
+    } finally {
+      setIsDeclining(false);
+    }
+  };
+
+  const registerHref = `${ROUTES.AUTH_REGISTER}&from=${encodeURIComponent(ROUTES.CLAIM(claimToken))}`;
+  const loginHref = `${ROUTES.AUTH_LOGIN}&from=${encodeURIComponent(ROUTES.CLAIM(claimToken))}`;
 
   return (
     <div className="min-h-[calc(100svh-4rem)] bg-surface-page">
@@ -105,7 +129,11 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
               it to take it over — edit anything, add your own payment methods, and make it yours.
             </div>
 
-            {isExpired ? (
+            {hasDeclined ? (
+              <div className="mt-6 rounded-lg border border-border-subtle bg-surface-page p-4 text-sm text-fg-secondary">
+                You declined this. Nothing was created, and the link can’t be used any more.
+              </div>
+            ) : isExpired ? (
               <div className="mt-6 rounded-lg border border-status-warning/40 bg-status-warning-subtle p-4 text-sm text-fg-primary">
                 This claim link has expired. Ask whoever sent it to you for a fresh one.
               </div>
@@ -133,6 +161,20 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
                   </a>
                 </p>
               </div>
+            )}
+
+            {!hasDeclined && !isExpired && (
+              <p className="mt-4 text-center text-xs text-fg-muted">
+                Not you, or don’t want this?{' '}
+                <button
+                  type="button"
+                  onClick={handleDecline}
+                  disabled={isDeclining}
+                  className="font-medium text-fg-secondary underline underline-offset-2 disabled:opacity-60"
+                >
+                  {isDeclining ? 'Declining…' : 'Decline this'}
+                </button>
+              </p>
             )}
           </CardContent>
         </Card>

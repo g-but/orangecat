@@ -1,12 +1,16 @@
 /**
- * GET    /api/profile-claims/[id] — public claim preview (no auth: this is
- *   what a recipient with no account yet sees before they sign up).
  * DELETE /api/profile-claims/[id] — revoke a still-pending claim (creator only).
+ *
+ * This route is addressed by the row `id`, which is the CREATOR's handle on
+ * their own claim. The public half — preview, claim, decline — lives under
+ * `/api/profile-claims/token/[token]` and is addressed by the credential
+ * instead. The two were the same value until ADR-0004 D4 split them; keeping
+ * both halves on one segment after the split would mean a URL that is
+ * sometimes an identifier and sometimes a password.
  *
  * Thin HTTP layer — business rules live in @/domain/profileClaims/service.
  */
 
-import { NextRequest } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   apiSuccess,
@@ -15,10 +19,10 @@ import {
   apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
-import { rateLimitWriteAsync, retryAfterSeconds, rateLimit } from '@/lib/rate-limit';
+import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
-import { getProfileClaimPreview, revokeProfileClaim } from '@/domain/profileClaims/service';
+import { revokeProfileClaim } from '@/domain/profileClaims/service';
 import type { ProfileClaimResult } from '@/domain/profileClaims/types';
 
 function toErrorResponse<T>(result: Extract<ProfileClaimResult<T>, { ok: false }>) {
@@ -29,33 +33,6 @@ function toErrorResponse<T>(result: Extract<ProfileClaimResult<T>, { ok: false }
     return apiNotFound(result.message);
   }
   return apiValidationError(result.message);
-}
-
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  const idValidation = getValidationError(validateUUID(id, 'claim id'));
-  if (idValidation) {
-    return idValidation;
-  }
-
-  try {
-    const rl = await rateLimit(req);
-    if (!rl.success) {
-      return apiRateLimited('Too many requests. Please slow down.', retryAfterSeconds(rl));
-    }
-
-    const result = await getProfileClaimPreview(id);
-    if (!result.ok) {
-      return toErrorResponse(result);
-    }
-    return apiSuccess(result.data);
-  } catch (error) {
-    logger.error('profile-claim preview failed', { error, id }, 'ProfileClaims');
-    return handleApiError(error);
-  }
 }
 
 export const DELETE = withAuth(
