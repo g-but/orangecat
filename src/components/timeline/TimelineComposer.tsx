@@ -206,8 +206,8 @@ const TimelineComposer = React.memo(function TimelineComposer({
           <AvatarLink
             username={profile?.username || null}
             userId={user?.id || null}
-            avatarUrl={profile?.avatar_url || user?.user_metadata?.avatar_url || null}
-            name={profile?.name || user?.user_metadata?.name || user?.email || 'User'}
+            avatarUrl={profile?.avatar_url || null}
+            name={profile?.name || profile?.username || 'User'}
             /*
               The avatar sets the feed's text column, so this number must be
               the SAME one the posts below use — it was 44 here and 40 there,
