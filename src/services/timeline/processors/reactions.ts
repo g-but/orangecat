@@ -126,6 +126,14 @@ async function toggleReaction(
         logger.error(`Fallback ${removeRpc} failed`, delErr, 'Timeline');
         return failed(delErr.message);
       }
+      // Same blind spot as the add path below: RLS lets this client delete the
+      // membership row but not correct timeline_event_stats, so the public
+      // count stays high until an RPC toggle recomputes it.
+      logger.error(
+        'Reaction removed without updating timeline_event_stats — the public count stays stale until an RPC toggle recomputes it',
+        { eventId, table, removeRpc },
+        'Timeline'
+      );
       return {
         success: true,
         active: false,
@@ -161,6 +169,21 @@ async function toggleReaction(
       }
       // The fallback INSERT does not retract the opposite reaction the way the
       // RPC does, so the opposite count is read rather than assumed.
+      //
+      // It also cannot maintain timeline_event_stats, which is where every
+      // OTHER reader gets its counts: that table's only policy is SELECT, so a
+      // write from this (user-scoped) client is rejected by RLS. Only the
+      // SECURITY DEFINER RPCs can touch it. So the number returned below is
+      // real for this caller and invisible to everyone else — the row is
+      // written and the post still renders 0 until someone toggles it again
+      // through the RPC. That is how 9 of 10 likes in production ended up
+      // uncounted. Log it, because a count nobody else can see is a bug that
+      // otherwise reports itself as success.
+      logger.error(
+        'Reaction written without updating timeline_event_stats — the count will read 0 for other readers until an RPC toggle recomputes it',
+        { eventId, table, addRpc },
+        'Timeline'
+      );
       return {
         success: true,
         active: true,
