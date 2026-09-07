@@ -129,13 +129,21 @@ What materialisation writes, for a person plus one company:
 ```
 profiles     — fill only empty fields (D6); allocate username, reserved-checked
 groups       — name, slug (slugify + randomSuffix), label='company', created_by = claimer
-actors       — actor_type='group', group_id
-group_members— user_id = claimer, role = 'founder'   ← NOT 'admin'; see Defect #7
+actors       — written by the trigger, not by the materialiser   ← see Defect #10
+group_members— written by the trigger, role = 'founder'          ← see Defect #7
 ```
 
-`role='founder'` is not a detail: both DELETE policies on `groups` require it,
-and the existing `create_organization` handler writes `'admin'`, which is why
-three production groups can never be deleted.
+The last two lines used to be the materialiser's job. As of
+`20260907100000_a_group_is_born_with_an_identity_and_an_owner.sql` they are an
+`AFTER INSERT` trigger on `groups`, so the materialiser inserts the group and
+both follow atomically. That removes them from the resume ledger entirely: they
+cannot be half-written, so there is nothing to resume.
+
+`role='founder'` is not a detail — both DELETE policies on `groups` require it,
+and a group that gets any other role can be deleted by nobody. (An earlier draft
+of this ADR attributed the three undeletable production groups to
+`create_organization` writing `'admin'`. That was wrong; see the correction in
+Defect #7.)
 
 ### D4 — Split the credential from the row id. Now, while it is free.
 
@@ -503,13 +511,28 @@ Add to `scripts/check-data-invariants.mjs` (the nightly prod-truth gate):
    (`email_address`, `subject`), so every delivery-log write fails silently
    inside a try/catch and email frequency caps never accumulate. Relevant
    because this feature adds a notification type.
-7. **Cat creates groups that nobody can ever delete.** `create_organization`
-   (`src/services/cat/handlers/organization.ts:83`) inserts `group_members` with
-   `role: 'admin'`, but both DELETE policies on `groups` require
-   `get_user_group_role(...) = 'founder'`. Measured in production: **3 of 9
-   groups have no founder**, and are permanently undeletable by any user. The
-   materialiser must write `role: 'founder'` for the claimer, and the existing
-   three rows need a backfill.
+7. **Three groups nobody can ever delete.** Both DELETE policies on `groups`
+   require `get_user_group_role(...) = 'founder'`. Measured in production:
+   **3 of 9 groups have no members at all** — "Bitcoin Education Foundation",
+   "Network State Community", "Bitcoin Developers Circle" — so no user can
+   delete them.
+
+   **Corrected 2026-09-07.** This entry first blamed Cat's
+   `create_organization` inserting `role: 'admin'`. That is wrong: production
+   contains **zero** memberships with `role='admin'` — all six are `'founder'`.
+   The real cause is `createGroup`
+   (`src/services/groups/mutations/groups.ts`), which inserts the founder
+   membership as a _second statement_ after the group row and treats failure as
+   `logger.warn` while still returning `{ success: true }`. A failed insert
+   therefore yields a group with a `created_by` and no members. The `'admin'`
+   literal was real and is fixed in the same change, but it had never fired —
+   the counts coinciding at 3 made an untested mechanism look confirmed.
+
+   Fix (shipped): both the founder membership and the group's `actors` row move
+   into an `AFTER INSERT` trigger on `groups`, so they are written in the same
+   transaction as the group and no caller can forget or swallow them. Backfill
+   included. See defect #10 — they are one fix.
+
 8. **"Acting as a group" is a promise the executor does not keep.** The system
    prompt states _"Acting as: group X → any entity you propose to create belongs
    to that group"_ (`system-prompt.ts:151`), and the context renders that line —
@@ -542,10 +565,10 @@ Add to `scripts/check-data-invariants.mjs` (the nightly prod-truth gate):
 
 ## Implementation order
 
-0. **Defects #3, #4, #7 and #10, and one nav entry.** Almost no schema (two
-   backfills), ships in a day, closes a handle-squatting hole, gives six groups
-   an owner identity, and turns a dead feature into a reachable one. Do this
-   first regardless of the rest. (#3 and #4 shipped 2026-09-06, PR #903.)
+0. ~~**Defects #3, #4, #7 and #10, and one nav entry.**~~ **DONE.** Closed a
+   handle-squatting hole, gave every group an owner and an identity, and turned
+   a dead feature into a reachable one. (#3 and #4 shipped 2026-09-06, PR #903;
+   #7, #10 and the nav entry 2026-09-07.)
 1. **The migration** (D3, D4, funnel columns, `declined`).
 2. **Materialiser + resume + decline route** — the server half of D2/D3/D6.
 3. **The claim page rebuilt** — preview of the real thing, sender strip,
