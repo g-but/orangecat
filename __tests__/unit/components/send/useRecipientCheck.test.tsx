@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Resolving the recipient before money moves.
  *

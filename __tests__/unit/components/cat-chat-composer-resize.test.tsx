@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The Cat chat composer's textarea grows to fit typed content, resized
  * imperatively from the DOM `onChange` handler. That only fires on user

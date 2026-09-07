@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The segmented control existed three times by copy-paste before this. What the
  * shared version must keep true is the part the copies were getting subtly

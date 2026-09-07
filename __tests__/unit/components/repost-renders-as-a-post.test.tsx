@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A repost is shown as the post it is; a quote repost shows two posts.
  *

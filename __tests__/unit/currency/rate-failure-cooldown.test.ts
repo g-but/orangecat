@@ -1,3 +1,5 @@
+// @vitest-environment jsdom — rates.ts gates the fetch on `typeof window`,
+// so the browser path this pins only exists under a DOM.
 /**
  * One unreachable /api/rates must cost one request, not one per price.
  *

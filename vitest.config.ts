@@ -21,7 +21,12 @@ export default defineConfig({
     ],
   },
   test: {
-    environment: 'jsdom',
+    // node by default. The suite spent 2285s constructing jsdom environments
+    // against 166s of actual test execution — 240 of 291 files never touch a
+    // DOM. Files that do declare it with `// @vitest-environment jsdom`.
+    // NOT environmentMatchGlobs: Vitest 4 ignores it SILENTLY (no warning),
+    // which ran every component test under node and failed 20 of them.
+    environment: 'node',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     testTimeout: 30000,

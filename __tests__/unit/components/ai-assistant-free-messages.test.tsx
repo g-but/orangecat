@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * `free_messages_per_day` is a real pricing term — `checkFreeMessageUsage`
  * counts the day's messages and `computeCreatorChargeBtc` returns 0 while the

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Haptics are feedback, not a feature — so the guards that matter are the ones
  * that stop them from being a nuisance: never buzz someone who asked not to be

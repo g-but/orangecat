@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Stored-XSS regression gate (2026-08-24).
  *

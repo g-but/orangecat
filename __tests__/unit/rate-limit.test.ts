@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * rate-limit — the VALUES are app semantics, so they are asserted here.
  *
