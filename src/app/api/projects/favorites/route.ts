@@ -47,7 +47,9 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
     }
 
     if (!favorites || favorites.length === 0) {
-      return apiSuccess({ data: [], count: 0 }, { cache: 'SHORT' });
+      // The array goes in `data` directly — see the note on the success return
+      // below for why this must not be `{ data: [...] }`.
+      return apiSuccess([], { total: 0, cache: 'SHORT' });
     }
 
     // Get full project data for favorited projects
@@ -126,10 +128,20 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
       count: projectsWithFavorite.length,
     });
 
-    return apiSuccess(
-      { data: projectsWithFavorite, count: projectsWithFavorite.length },
-      { cache: 'SHORT' }
-    );
+    // The array is the payload, and the count goes in `metadata.total`.
+    //
+    // This used to be `apiSuccess({ data, count })`, which nested the rows two
+    // levels deep — `body.data.data`. Every entity-list feed reads
+    // `data.data` for its rows and `data.metadata.total` for its count
+    // (useEntityList.ts), and useEntityDashboard passes no transformResponse,
+    // so the Favorites tab set `items` to the WRAPPER OBJECT and `total` to 0.
+    // Same shape, and same class of failure, as the follow-list envelope that
+    // broke the Follow button (#902): a route inventing its own nesting that
+    // the shared consumer does not know about.
+    return apiSuccess(projectsWithFavorite, {
+      total: projectsWithFavorite.length,
+      cache: 'SHORT',
+    });
   } catch (error) {
     logger.error('Unexpected error fetching favorites', { error });
     return apiInternalError('Internal server error');
