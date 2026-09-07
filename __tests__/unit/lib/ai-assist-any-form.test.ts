@@ -202,13 +202,25 @@ describe('generateFormPrefill — survives one provider failing (the 2026-08-25 
         },
       ],
     };
-    // Groq answers 503 twice (json mode, then the no-response_format retry);
-    // OpenRouter answers on its first attempt.
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({ ok: false, status: 503, text: async () => 'upstream hiccup' })
-      .mockResolvedValueOnce({ ok: false, status: 503, text: async () => 'upstream hiccup' })
-      .mockResolvedValueOnce({ ok: true, json: async () => okBody });
+    // Groq is down; OpenRouter answers.
+    //
+    // The json-mode retry now covers the WHOLE chain rather than one provider,
+    // so the shape is (groq, openrouter) with response_format, then (groq,
+    // openrouter) without — OpenRouter answers on the second pass's second
+    // link. The old per-provider retry made it 3 calls; this is 4.
+    //
+    // The count is not the property worth pinning — "a vendor being down does
+    // not take the feature down" is. Asserting the exact number pinned an
+    // implementation detail of the retry, which is why this line moved rather
+    // than the behaviour.
+    const fetchMock = vi.fn(async (url: string) =>
+      String(url).includes('groq')
+        ? new Response('upstream hiccup', { status: 503 })
+        : new Response(JSON.stringify(okBody), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          })
+    );
     global.fetch = fetchMock as unknown as typeof fetch;
 
     const result = await generateFormPrefill({
@@ -216,15 +228,15 @@ describe('generateFormPrefill — survives one provider failing (the 2026-08-25 
       description: 'A cleaning service for offices in Zurich',
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    const asked = fetchMock.mock.calls.map(([url]) => String(url));
+    expect(asked.some(u => u.includes('groq'))).toBe(true);
+    expect(asked.some(u => u.includes('openrouter'))).toBe(true);
     expect(result.success).toBe(true);
     expect(result.data.title).toBe('Fallback fine');
   });
 
   it('gives up only after EVERY provider failed, with the same user-facing message', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({ ok: false, status: 503, text: async () => 'still down' });
+    const fetchMock = vi.fn().mockResolvedValue(new Response('still down', { status: 503 }));
     global.fetch = fetchMock as unknown as typeof fetch;
 
     const result = await generateFormPrefill({
