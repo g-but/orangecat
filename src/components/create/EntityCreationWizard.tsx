@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ActorSelector } from './ActorSelector';
+import { canCreateForSomeoneElse, OWNER_ME, type CreateOwner } from './owner';
 import { EntityForm } from './EntityForm';
 import { WizardTemplatePicker } from './templates/WizardTemplatePicker';
 import { WizardProgressBar } from './WizardProgressBar';
@@ -68,9 +69,20 @@ export function EntityCreationWizard<T extends Record<string, unknown>>({
     handleCancel,
   } = useEntityCreationWizard({ config, initialData, onSuccess, onCancel });
 
-  // null = personal actor (default); UUID = group actor the user has rights to.
-  // Server (entityPostHandler → resolveCreationActor) validates the choice.
-  const [actorId, setActorId] = useState<string | null>(null);
+  // Who will own the thing being created (ADR-0004 D8). `me` is the default;
+  // a group actor is validated server-side by resolveCreationActor; "someone
+  // else" is not an actor at all and redirects the submit into a claim.
+  const [owner, setOwner] = useState<CreateOwner>(OWNER_ME);
+  const allowSomeoneElse = canCreateForSomeoneElse(config.type);
+
+  const ownerSelector = (
+    <ActorSelector
+      value={owner}
+      onChange={setOwner}
+      allowSomeoneElse={allowSomeoneElse}
+      className="ml-auto"
+    />
+  );
 
   if (showTemplateSelection && isTemplateOnlyMode) {
     return (
@@ -83,13 +95,21 @@ export function EntityCreationWizard<T extends Record<string, unknown>>({
   }
 
   if (!config.wizardConfig?.enabled || wizardSteps.length === 0) {
+    // The owner selector used to live only in the wizard branch below, so it
+    // appeared on 1 of 13 entity types — and groups, which is what a bar is,
+    // were in this branch. It renders here too now.
     return (
-      <EntityForm
-        config={config}
-        initialValues={formInitialValues || initialData}
-        onSuccess={onSuccess}
-        actorId={actorId}
-      />
+      <div>
+        <div className="mx-auto mb-3 flex max-w-4xl flex-wrap items-center gap-3">
+          {ownerSelector}
+        </div>
+        <EntityForm
+          config={config}
+          initialValues={formInitialValues || initialData}
+          onSuccess={onSuccess}
+          owner={owner}
+        />
+      </div>
     );
   }
 
@@ -105,7 +125,7 @@ export function EntityCreationWizard<T extends Record<string, unknown>>({
             Cancel
           </button>
           <h1 className="text-xl sm:text-2xl font-bold text-fg-primary">{config.pageTitle}</h1>
-          <ActorSelector value={actorId} onChange={setActorId} className="ml-auto" />
+          {ownerSelector}
         </div>
         <p className="text-sm text-fg-secondary ml-12">{config.pageDescription}</p>
       </div>
@@ -177,7 +197,7 @@ export function EntityCreationWizard<T extends Record<string, unknown>>({
                 config={config}
                 initialValues={formInitialValues}
                 onSuccess={onSuccess}
-                actorId={actorId}
+                owner={owner}
                 wizardMode={{
                   currentStep,
                   totalSteps: wizardSteps.length,
