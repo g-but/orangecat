@@ -254,7 +254,7 @@ export default async function PublicEntityDetailPage({
                 </Card>
               )}
 
-              {config.renderDetails?.(entity, !!sellerReceive, isOwner)}
+              {config.renderDetails?.(entity, !!sellerReceive, isOwner, !!user)}
             </div>
 
             <div className="space-y-6">

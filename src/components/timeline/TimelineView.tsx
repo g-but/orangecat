@@ -153,7 +153,10 @@ export default function TimelineView({
                     typeof window !== 'undefined'
                       ? window.location.pathname + window.location.search
                       : '/profiles/me';
-                  window.location.href = `/auth?redirect=${encodeURIComponent(redirect)}`;
+                  // `from` is the param /auth reads (useAuthForm.ts). This said `redirect`,
+                  // which nothing reads, so signing in from here always landed on
+                  // /dashboard instead of coming back.
+                  window.location.href = `/auth?from=${encodeURIComponent(redirect)}`;
                 }}
                 className={TIMELINE_SURFACE.buttonPrimary}
               >
