@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Liking and disliking are mutually exclusive, and the UI has to say so.
  *

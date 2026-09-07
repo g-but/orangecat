@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * AIAssistChip — the tap target for every AI suggestion.
  *

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * AuthButtons Component Tests — behavior, not class strings.
  *

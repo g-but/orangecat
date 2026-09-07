@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * CI and workflow audits mint disposable groups ("Audit WF009 1783192620260")
  * and enrol the account they run as. `config/public-directory` already knows

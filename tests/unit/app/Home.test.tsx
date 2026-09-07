@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Home page composition: hero plus the three first moves.
  * Long-form marketing sections live on /how-it-works, not here.

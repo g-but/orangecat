@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Accessibility behavior for the header navigation dropdown (disclosure pattern).
  *

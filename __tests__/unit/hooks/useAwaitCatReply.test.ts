@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Tagging the Cat should behave like tagging @grok: you ask in the thread and
  * the answer turns up in the thread.

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Unit tests for useEntityCreateEdit — the shared hook behind every
  * entity create page that implements the SSOT edit convention

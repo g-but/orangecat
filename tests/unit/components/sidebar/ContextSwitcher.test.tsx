@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * ContextSwitcher — the sidebar avatar must be a control, not a dead pixel.
  *

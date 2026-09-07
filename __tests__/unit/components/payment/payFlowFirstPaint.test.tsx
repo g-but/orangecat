@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A pay link must open on the amount field, not on a spinner.
  *

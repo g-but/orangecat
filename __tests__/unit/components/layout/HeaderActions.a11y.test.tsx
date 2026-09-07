@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * NotificationsButton — disclosure semantics for the bell that opens the
  * notification center dialog. Screen-reader users must know the button opens a
