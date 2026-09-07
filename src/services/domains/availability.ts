@@ -4,8 +4,14 @@
  * The contract this module keeps: it never reports `unregistered` unless the
  * TLD appears in IANA's RDAP bootstrap AND the registry answered 404. Any
  * other outcome — TLD with no RDAP service, timeout, transport failure,
- * unexpected status — is `unknown`. See `src/config/domain-search.ts` for the
- * false positive (orangecat.ch) that this rule exists to prevent.
+ * blocked redirect, unexpected status — is `unknown`. See
+ * `src/config/domain-search.ts` for the false positive (orangecat.ch) that this
+ * rule exists to prevent.
+ *
+ * Every request goes out through `guardedFetch`, which checks each redirect hop
+ * against the same SSRF policy this codebase already applies to webhook URLs.
+ * The name being looked up arrives in a public query string, and RDAP_QUERY_BASE
+ * is a REDIRECTOR — so the hosts actually contacted are chosen by a third party.
  *
  * Created: 2026-08-26
  */
@@ -21,6 +27,7 @@ import {
   type DomainStatus,
 } from '@/config/domain-search';
 import { logger } from '@/utils/logger';
+import { BlockedRequestError, guardedFetch } from './guardedFetch';
 
 export interface DomainResult {
   /** Full domain, lowercased: 'substrataintel.com'. */
@@ -53,7 +60,7 @@ export async function loadRdapTlds(now: number = Date.now()): Promise<Set<string
     return bootstrapCache.tlds;
   }
   try {
-    const response = await fetch(RDAP_BOOTSTRAP_URL, {
+    const response = await guardedFetch(RDAP_BOOTSTRAP_URL, {
       signal: AbortSignal.timeout(RDAP_TIMEOUT_MS),
       headers: { accept: 'application/json' },
     });
@@ -187,10 +194,13 @@ export async function checkDomain(
 
   let result: DomainResult;
   try {
-    const response = await fetch(`${RDAP_QUERY_BASE}/${encodeURIComponent(domain)}`, {
+    // `domain` matched a strict label/TLD regex above, so the path segment
+    // cannot carry a scheme or a host, and the base is a module constant. The
+    // hosts reached AFTER that are the redirector's choice — guardedFetch
+    // checks each one before following it.
+    const response = await guardedFetch(`${RDAP_QUERY_BASE}/${encodeURIComponent(domain)}`, {
       signal: AbortSignal.timeout(RDAP_TIMEOUT_MS),
       headers: { accept: 'application/rdap+json, application/json' },
-      redirect: 'follow',
     });
 
     if (response.status === 404) {
@@ -220,7 +230,14 @@ export async function checkDomain(
       );
     }
   } catch (error) {
-    result = unknown(name, tld, 'The registry did not answer in time.', true);
+    result = unknown(
+      name,
+      tld,
+      error instanceof BlockedRequestError
+        ? 'The registry redirected somewhere this server will not follow.'
+        : 'The registry did not answer in time.',
+      true
+    );
     logger.warn('RDAP lookup failed', { domain, error: String(error) }, 'DomainSearch');
   }
 

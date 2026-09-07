@@ -22,8 +22,23 @@ import {
   parseDomain,
   resetDomainCaches,
 } from '@/services/domains/availability';
+import {
+  BlockedRequestError,
+  MAX_REDIRECT_HOPS,
+  guardedFetch,
+} from '@/services/domains/guardedFetch';
 import { suggestDomains, toSeed } from '@/services/domains/suggest';
 import { CANDIDATE_TLDS, DOMAIN_RESULT_CACHE_MAX, MAX_CANDIDATES } from '@/config/domain-search';
+
+/**
+ * The real guard resolves DNS. These tests assert lookup LOGIC, so the guard is
+ * waved through here and its own behaviour is covered in ssrfGuard.test.ts;
+ * `guardedFetch`'s hop-checking is tested below with an explicit guard, which
+ * this mock does not touch.
+ */
+vi.mock('@/lib/security/ssrfGuard', () => ({
+  checkPublicUrl: async () => ({ ok: true }),
+}));
 
 const RDAP_TLDS = new Set(['com', 'ai', 'dev', 'org', 'net', 'xyz']);
 
@@ -230,5 +245,108 @@ describe('availability — the result cache is bounded', () => {
     await checkDomain('cached-name.com', new Set(['com']));
 
     expect(lookups).toBe(1);
+  });
+});
+
+describe('guardedFetch — every redirect hop is checked, not just the first', () => {
+  it('refuses a URL the guard rejects, without calling fetch at all', async () => {
+    const fetchSpy = vi.fn();
+    global.fetch = fetchSpy as unknown as typeof fetch;
+
+    await expect(
+      guardedFetch('https://rdap.org/domain/x.com', {}, async () => ({
+        ok: false,
+        reason: 'hostname resolves to a private or reserved address',
+      }))
+    ).rejects.toBeInstanceOf(BlockedRequestError);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('follows a redirect only after checking where it points', async () => {
+    // The redirector's entire job is to bounce the request to whichever registry
+    // runs that TLD, so the second host is chosen by a third party. That is the
+    // hop `redirect: 'follow'` used to take unchecked.
+    const seen: string[] = [];
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (new URL(url).hostname === 'rdap.org') {
+        return {
+          status: 302,
+          ok: false,
+          headers: { get: () => 'https://rdap.verisign.com/com/v1/domain/x.com' },
+        } as unknown as Response;
+      }
+      return { status: 404, ok: false, headers: { get: () => null } } as unknown as Response;
+    }) as unknown as typeof fetch;
+
+    const guard = async (url: string) => {
+      seen.push(new URL(url).hostname);
+      return { ok: true } as const;
+    };
+
+    const response = await guardedFetch('https://rdap.org/domain/x.com', {}, guard);
+    expect(response.status).toBe(404);
+    expect(seen).toEqual(['rdap.org', 'rdap.verisign.com']);
+  });
+
+  it('blocks a redirect that points at the cloud metadata endpoint', async () => {
+    global.fetch = vi.fn(async () => ({
+      status: 302,
+      ok: false,
+      headers: { get: () => 'http://169.254.169.254/latest/meta-data/' },
+    })) as unknown as typeof fetch;
+
+    const guard = async (url: string) =>
+      new URL(url).hostname === '169.254.169.254'
+        ? ({ ok: false, reason: 'IP address is private or reserved' } as const)
+        : ({ ok: true } as const);
+
+    await expect(guardedFetch('https://rdap.org/domain/x.com', {}, guard)).rejects.toBeInstanceOf(
+      BlockedRequestError
+    );
+  });
+
+  it('resolves a relative Location against the hop that issued it', async () => {
+    const seen: string[] = [];
+    global.fetch = vi.fn(async (input: RequestInfo | URL) =>
+      String(input).endsWith('/moved')
+        ? ({ status: 302, ok: false, headers: { get: () => '/moved' } } as unknown as Response)
+        : ({ status: 200, ok: true, headers: { get: () => null } } as unknown as Response)
+    ) as unknown as typeof fetch;
+
+    const guard = async (url: string) => {
+      seen.push(url);
+      return { ok: true } as const;
+    };
+
+    await guardedFetch('https://rdap.example/domain/x.com', {}, guard);
+    expect(seen).toEqual(['https://rdap.example/domain/x.com']);
+  });
+
+  it('gives up rather than looping forever on a redirect cycle', async () => {
+    global.fetch = vi.fn(async () => ({
+      status: 302,
+      ok: false,
+      headers: { get: () => 'https://rdap.example/loop' },
+    })) as unknown as typeof fetch;
+
+    await expect(
+      guardedFetch('https://rdap.example/loop', {}, async () => ({ ok: true }) as const)
+    ).rejects.toThrow(new RegExp(`more than ${MAX_REDIRECT_HOPS} redirects`));
+  });
+
+  it('hands back a 3xx with no Location rather than inventing a hop', async () => {
+    global.fetch = vi.fn(async () => ({
+      status: 304,
+      ok: false,
+      headers: { get: () => null },
+    })) as unknown as typeof fetch;
+
+    const response = await guardedFetch(
+      'https://rdap.example/x',
+      {},
+      async () => ({ ok: true }) as const
+    );
+    expect(response.status).toBe(304);
   });
 });
