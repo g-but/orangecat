@@ -7,6 +7,7 @@
  *   edit   → PUT  `${config.apiEndpoint}/${id}`   (never reassigns actor_id)
  */
 
+import type { CreateOwner } from '@/components/create/owner';
 import { z } from 'zod';
 import { executeEntityFormSubmit } from '@/components/create/EntityForm/hooks/entityFormSubmitAction';
 import type { EntityConfig } from '@/components/create/types';
@@ -23,7 +24,10 @@ vi.mock('@/utils/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
 }));
 vi.mock('@/config/api-routes', () => ({
-  API_ROUTES: { ENTITY_WALLETS: '/api/entity-wallets' },
+  API_ROUTES: {
+    ENTITY_WALLETS: '/api/entity-wallets',
+    PROFILE_CLAIMS: { BASE: '/api/profile-claims' },
+  },
 }));
 
 type TestData = { title: string; description?: string };
@@ -60,7 +64,7 @@ function makeParams(overrides: Record<string, unknown> = {}) {
     router: { push: vi.fn() },
     existingWalletLinkIdRef: { current: undefined as string | undefined },
     wizardMode: undefined,
-    actorId: undefined as string | null | undefined,
+    owner: undefined as CreateOwner | undefined,
     ...overrides,
   };
 }
@@ -98,7 +102,7 @@ describe('executeEntityFormSubmit', () => {
 
   it('create mode merges actor_id when acting as a group', async () => {
     global.fetch = mockFetchOk({ id: 'new-1' }) as unknown as typeof fetch;
-    const params = makeParams({ actorId: 'actor-9' });
+    const params = makeParams({ owner: { kind: 'group', actorId: 'actor-9' } });
 
     await executeEntityFormSubmit(params);
 
@@ -112,7 +116,7 @@ describe('executeEntityFormSubmit', () => {
     const params = makeParams({
       mode: 'edit' as const,
       entityId: 'e-42',
-      actorId: 'actor-9', // must be ignored in edit mode
+      owner: { kind: 'group', actorId: 'actor-9' }, // must be ignored in edit mode
       onSuccess,
     });
 
@@ -171,5 +175,82 @@ describe('executeEntityFormSubmit', () => {
     });
     expect(params.router.push).not.toHaveBeenCalled();
     expect(params.setSubmitting).toHaveBeenLastCalledWith(false);
+  });
+
+  /**
+   * ADR-0004 D8. Choosing "someone else" must not create anything: the same
+   * validated values become a CLAIM, and the entity materialises when the
+   * recipient accepts. The bug this guards against is the expensive one —
+   * silently creating the bar under the CREATOR's account while telling them
+   * it was set up for their friend.
+   */
+  describe('owner = someone else', () => {
+    it('posts a claim instead of the entity, and creates nothing', async () => {
+      global.fetch = mockFetchOk({
+        id: 'claim-1',
+        claimUrl: '/claim/tok',
+      }) as unknown as typeof fetch;
+      const params = makeParams({
+        config: makeConfig({ type: 'group', apiEndpoint: '/api/groups' }),
+        formStateData: { title: 'Loewenbar' },
+        owner: { kind: 'someone-else', name: 'Karl' },
+      });
+
+      await executeEntityFormSubmit(params);
+
+      const [url, init] = (global.fetch as Mock).mock.calls[0];
+      expect(url).toBe('/api/profile-claims');
+      // The entity endpoint must never be touched on this path.
+      expect((global.fetch as Mock).mock.calls).toHaveLength(1);
+
+      const body = JSON.parse(init.body);
+      expect(body.name).toBe('Karl');
+      expect(body.entities).toEqual([{ kind: 'group', name: 'Loewenbar', label: 'circle' }]);
+      expect(params.onEntityCreated).not.toHaveBeenCalled();
+    });
+
+    it('lands on the claims dashboard — the output is a link, not a page', async () => {
+      global.fetch = mockFetchOk({ id: 'claim-1' }) as unknown as typeof fetch;
+      const params = makeParams({
+        config: makeConfig({ type: 'group', apiEndpoint: '/api/groups' }),
+        formStateData: { title: 'Loewenbar' },
+        owner: { kind: 'someone-else', name: 'Karl' },
+      });
+
+      await executeEntityFormSubmit(params);
+
+      expect(params.router.push).toHaveBeenCalledWith(
+        expect.stringContaining('/dashboard/profile-claims')
+      );
+    });
+
+    it('refuses to submit without a name', async () => {
+      global.fetch = vi.fn() as unknown as typeof fetch;
+      const params = makeParams({
+        config: makeConfig({ type: 'group', apiEndpoint: '/api/groups' }),
+        formStateData: { title: 'Loewenbar' },
+        owner: { kind: 'someone-else', name: '   ' },
+      });
+
+      await executeEntityFormSubmit(params);
+
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(params.setErrors).toHaveBeenCalledWith(
+        expect.objectContaining({ _form: expect.stringContaining('name') })
+      );
+    });
+
+    it('refuses an entity type a claim cannot carry, rather than failing late', async () => {
+      global.fetch = vi.fn() as unknown as typeof fetch;
+      const params = makeParams({
+        config: makeConfig({ type: 'cause', apiEndpoint: '/api/causes' }),
+        owner: { kind: 'someone-else', name: 'Karl' },
+      });
+
+      await executeEntityFormSubmit(params);
+
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(params.setErrors).toHaveBeenCalled();
+    });
   });
 });
