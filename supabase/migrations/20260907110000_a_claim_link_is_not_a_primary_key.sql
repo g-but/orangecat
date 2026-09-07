@@ -39,6 +39,11 @@ ALTER TABLE public.profile_claims
 ALTER TABLE public.profile_claims
   ADD CONSTRAINT profile_claims_token_key UNIQUE (token);
 
+-- migration-safety: contract-ok the dropped CHECK is immediately replaced by a
+-- strictly WIDER one — old ⊂ new. The previous release only ever writes
+-- 'pending', 'claimed' and 'revoked', all still permitted, so a code-only
+-- auto-rollback keeps working against this schema. Nothing the old release
+-- depends on is removed; the constraint is widened, never narrowed.
 ALTER TABLE public.profile_claims
   DROP CONSTRAINT profile_claims_status_check;
 
