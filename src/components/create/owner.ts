@@ -21,11 +21,21 @@
  * bar drafted for Karl has exactly the fields a bar has.
  */
 
+import { GROUP_LABELS, type GroupLabel } from '@/config/group-labels';
 import type { EntityType } from '@/config/entity-registry';
+import { CURRENCY_CODES } from '@/config/currencies';
 import type { ClaimEntityDraft } from '@/domain/profileClaims/draft';
 
 /** `EntityConfig.type` is an EntityType OR the legacy literal 'organization'. */
 type ConfigEntityType = EntityType | 'organization';
+
+function isGroupLabel(value: string | undefined): value is GroupLabel {
+  return value !== undefined && Object.prototype.hasOwnProperty.call(GROUP_LABELS, value);
+}
+
+function isCurrencyCode(value: string | undefined): value is (typeof CURRENCY_CODES)[number] {
+  return value !== undefined && (CURRENCY_CODES as readonly string[]).includes(value);
+}
 
 export type CreateOwner =
   | { kind: 'me' }
@@ -67,32 +77,38 @@ export function toClaimEntity(
     if (!name) {
       return null;
     }
+    const rawLabel = str('label');
     return {
       kind: 'group',
       name,
       // A bar is a `groups` row with label='company'; the form's own label
       // select is the SSOT for which one, so it is passed through rather than
       // re-derived here.
-      label: (str('label') ?? 'circle') as ClaimEntityDraft extends { label: infer L }
-        ? L & string
-        : string,
+      label: isGroupLabel(rawLabel) ? rawLabel : 'circle',
       description: str('description'),
       tags: Array.isArray(values.tags) ? (values.tags as string[]) : undefined,
-    } as ClaimEntityDraft;
+    };
   }
 
   if (entityType === 'project') {
     const title = str('title') ?? str('name');
-    if (!title) {
+    const description = str('description');
+    // `projectSchema` REQUIRES a description, so a project drafted without one
+    // could never materialise. Refusing here means the CREATOR finds out at
+    // submit time, instead of the RECIPIENT finding out after they accept.
+    if (!title || !description) {
       return null;
     }
     const goal = values.goal_amount;
+    const currency = str('currency');
     return {
       kind: 'project',
       title,
-      description: str('description'),
-      goalAmount: typeof goal === 'number' && goal > 0 ? goal : undefined,
-      currency: str('currency'),
+      description,
+      // Positive INTEGER, matching projectSchema — anything else would validate
+      // as a draft and fail at materialisation.
+      goalAmount: typeof goal === 'number' && Number.isInteger(goal) && goal > 0 ? goal : undefined,
+      currency: isCurrencyCode(currency) ? currency : undefined,
     };
   }
 

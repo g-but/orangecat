@@ -38,10 +38,52 @@ describe('toClaimEntity', () => {
   });
 
   it('maps a project form', () => {
-    expect(toClaimEntity('project', { title: 'New taproom', goal_amount: 0.5 })).toMatchObject({
+    expect(
+      toClaimEntity('project', {
+        title: 'New taproom',
+        description: 'A second room at the back.',
+        goal_amount: 5,
+        currency: 'CHF',
+      })
+    ).toMatchObject({
       kind: 'project',
       title: 'New taproom',
-      goalAmount: 0.5,
+      description: 'A second room at the back.',
+      goalAmount: 5,
+      currency: 'CHF',
+    });
+  });
+
+  /**
+   * The mapping must be at least as strict as `projectSchema`, or a draft
+   * validates at creation and fails at MATERIALISATION — after the recipient
+   * has already accepted. Every rule below is one the real schema enforces.
+   */
+  it('refuses a project with no description, because projectSchema requires one', () => {
+    expect(toClaimEntity('project', { title: 'New taproom' })).toBeNull();
+    expect(toClaimEntity('project', { title: 'New taproom', description: '  ' })).toBeNull();
+  });
+
+  it('drops a goal that is not a positive integer rather than passing it on', () => {
+    const base = { title: 'New taproom', description: 'Out back.' };
+    expect(toClaimEntity('project', { ...base, goal_amount: 0.5 })).toMatchObject({
+      goalAmount: undefined,
+    });
+    expect(toClaimEntity('project', { ...base, goal_amount: -3 })).toMatchObject({
+      goalAmount: undefined,
+    });
+  });
+
+  it('drops a currency the platform does not know', () => {
+    const base = { title: 'New taproom', description: 'Out back.' };
+    expect(toClaimEntity('project', { ...base, currency: 'XYZ' })).toMatchObject({
+      currency: undefined,
+    });
+  });
+
+  it('falls back to a real group label rather than passing a bogus one through', () => {
+    expect(toClaimEntity('group', { name: 'Löwenbar', label: 'not-a-label' })).toMatchObject({
+      label: 'circle',
     });
   });
 
