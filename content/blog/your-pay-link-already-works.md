@@ -1,14 +1,12 @@
 ---
-title: "Your Pay Link Already Works"
+title: 'Your Pay Link Already Works'
 excerpt: "Everyone on OrangeCat has a payment page at orangecat.ch/pay/your-username — no setup, no middleman, no fee. What it actually does, and why it's built differently from an invoice or a payment processor."
-date: "2026-08-13"
-tags: ["Bitcoin", "Payments", "Platform Updates", "Sovereignty"]
+date: '2026-08-13'
+tags: ['Bitcoin', 'Payments', 'Platform Updates', 'Sovereignty']
 featured: false
-author: "Cato"
+author: 'Cato'
 published: true
 ---
-
-# Your Pay Link Already Works
 
 Here is something most OrangeCat users don't know they own: a payment page. If you have an account, `orangecat.ch/pay/<your-username>` already exists, already renders, and already accepts Bitcoin. There was no setup step. There is no "activate payments" button. It shipped with your username.
 
@@ -21,13 +19,13 @@ Send someone your link. When they open it, the page mints a fresh Lightning invo
 Two details carry most of the weight:
 
 - **The payer needs a wallet, not an account.** Nobody signs up to pay you. There's no login wall, no email capture, no "create a free account to continue." A person with a Lightning wallet and thirty seconds can pay you.
-- **The link is alias-backed, not invoice-backed.** A raw Lightning invoice expires in about an hour — paste one into a chat and it's dead before it's opened. Your pay link never expires, because it isn't an invoice. It's an address that *creates* an invoice at the moment your payer arrives. That's what makes it safe to pin in a bio, print on a flyer, or leave sitting in a thread overnight.
+- **The link is alias-backed, not invoice-backed.** A raw Lightning invoice expires in about an hour — paste one into a chat and it's dead before it's opened. Your pay link never expires, because it isn't an invoice. It's an address that _creates_ an invoice at the moment your payer arrives. That's what makes it safe to pin in a bio, print on a flyer, or leave sitting in a thread overnight.
 
 ## The contrast, stated plainly
 
 Think about what receiving money over the internet normally requires.
 
-A payment processor takes custody: money lands in *their* balance, becomes yours after a settlement delay, minus roughly three percent, and stays subject to their right to freeze the account — a right exercised against enough legitimate businesses that "payout hold" support threads are a genre. Before any of that, you passed an onboarding review where someone else decided whether your work is a category they serve.
+A payment processor takes custody: money lands in _their_ balance, becomes yours after a settlement delay, minus roughly three percent, and stays subject to their right to freeze the account — a right exercised against enough legitimate businesses that "payout hold" support threads are a genre. Before any of that, you passed an onboarding review where someone else decided whether your work is a category they serve.
 
 Invoicing SaaS is the same shape with a subscription on top: monthly fee, per-invoice fee, and your client routed through a checkout owned by neither of you.
 
@@ -35,7 +33,7 @@ None of this is because the companies are evil. It's because custody is how thei
 
 ## What non-custodial actually means here
 
-Your OrangeCat pay link takes the opposite position: **the money never passes through us.** The invoice your payer settles pays out to *your* wallet, over the Bitcoin network. OrangeCat takes 0% — not "0% introductory," but structurally zero, because there is no point in the flow where we hold funds and could take a cut. The page is a coordination surface, not a custodian.
+Your OrangeCat pay link takes the opposite position: **the money never passes through us.** The invoice your payer settles pays out to _your_ wallet, over the Bitcoin network. OrangeCat takes 0% — not "0% introductory," but structurally zero, because there is no point in the flow where we hold funds and could take a cut. The page is a coordination surface, not a custodian.
 
 Follow the consequences:
 
@@ -59,4 +57,4 @@ If you already have an account, your link is live right now: `orangecat.ch/pay/<
 
 ---
 
-*Payments on OrangeCat settle over Bitcoin and Lightning, directly to your wallet. The [pay page](https://orangecat.ch/pay) covers how to get yours; [how it works](https://orangecat.ch/how-it-works) covers the rest of the platform.*
+_Payments on OrangeCat settle over Bitcoin and Lightning, directly to your wallet. The [pay page](https://orangecat.ch/pay) covers how to get yours; [how it works](https://orangecat.ch/how-it-works) covers the rest of the platform._

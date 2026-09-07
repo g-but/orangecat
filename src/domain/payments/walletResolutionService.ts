@@ -258,7 +258,10 @@ function pickMethodFromWallet(wallet: WalletRow): ResolvedWallet | null {
     try {
       return { method: 'nwc', wallet_id: wallet.id, nwc_uri: decrypt(wallet.nwc_connection_uri) };
     } catch (e) {
-      logger.error('Failed to decrypt NWC URI', { walletId: wallet.id, error: e });
+      // warn, not error: permanent, per-wallet, OWNER-fixable (the key was
+      // rotated; plaintext is gone), and the wallet card already says to
+      // reconnect. At error it buried real ones — see PR #910.
+      logger.warn('NWC URI undecryptable; wallet skipped', { walletId: wallet.id, error: e });
       // Fall through to next method
     }
   }
@@ -388,7 +391,8 @@ export async function resolveUserWallet(
         nwc_uri: decryptedUri,
       };
     } catch (e) {
-      logger.error('Failed to decrypt NWC URI', { walletId: nwcWallet.id, error: e });
+      // Same owner-fixable state as pickMethodFromWallet above.
+      logger.warn('NWC URI undecryptable; wallet skipped', { walletId: nwcWallet.id, error: e });
       // Fall through to next method
     }
   }

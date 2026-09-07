@@ -1,14 +1,21 @@
 ---
-title: "From Roam to Hive Mind: How OrangeCat Turns Personal Knowledge into Collective Intelligence"
-excerpt: "Roam Research and Obsidian revolutionized personal knowledge management with bi-directional linking. OrangeCat takes this further—creating social knowledge networks where ideas evolve into funded projects through collective consciousness."
-date: "2025-12-11"
-tags: ["Networked Thoughts", "Knowledge Management", "Collective Intelligence", "Threading", "Roam Research", "Obsidian", "Hive Mind"]
+title: 'From Roam to Hive Mind: How OrangeCat Turns Personal Knowledge into Collective Intelligence'
+excerpt: 'Roam Research and Obsidian revolutionized personal knowledge management with bi-directional linking. OrangeCat takes this further—creating social knowledge networks where ideas evolve into funded projects through collective consciousness.'
+date: '2025-12-11'
+tags:
+  [
+    'Networked Thoughts',
+    'Knowledge Management',
+    'Collective Intelligence',
+    'Threading',
+    'Roam Research',
+    'Obsidian',
+    'Hive Mind',
+  ]
 featured: true
-author: "OrangeCat Team"
+author: 'OrangeCat Team'
 published: true
 ---
-
-# From Roam to Hive Mind: How OrangeCat Turns Personal Knowledge into Collective Intelligence
 
 Imagine if Roam Research and Obsidian weren't just personal note-taking apps, but became **living, breathing communities** where your ideas could connect with others, evolve through conversation, and even get funded to become real projects.
 
@@ -51,16 +58,19 @@ This is knowledge management, but **social and real-time**.
 ## From Personal PKM to Collective Intelligence
 
 ### Phase 1: Individual Knowledge (Roam/Obsidian)
+
 - Personal note-taking with bi-directional links
 - Individual insight generation
 - Private knowledge graphs
 
 ### Phase 2: Social Knowledge (OrangeCat's Timeline)
+
 - Public posts with threaded conversations
 - Community insight generation
 - Shared knowledge graphs
 
 ### Phase 3: Collective Intelligence (OrangeCat's Future)
+
 - AI-powered thread analysis and summarization
 - Community consensus detection
 - Knowledge graphs that span thousands of minds
@@ -83,6 +93,7 @@ Knowledge isn't just accumulated—it's **activated**.
 The engineering behind this is fascinating. Instead of static markdown links, OrangeCat uses:
 
 ### Database-Level Threading
+
 ```sql
 -- Thread relationships stored at the database level
 ALTER TABLE timeline_events
@@ -92,19 +103,16 @@ ALTER TABLE timeline_events
 ```
 
 ### Real-Time Thread Visualization
+
 - Visual thread lines showing conversation depth
 - Thread navigation showing the full conversation flow
 - Real-time updates as new replies come in
 
 ### API-Driven Thread Management
+
 ```typescript
 // Create living connections through social interaction
-await timelineService.createQuoteReply(
-  parentPostId,
-  userId,
-  content,
-  quotedContent
-);
+await timelineService.createQuoteReply(parentPostId, userId, content, quotedContent);
 ```
 
 ## The Hive Mind Emerges
@@ -112,12 +120,14 @@ await timelineService.createQuoteReply(
 The most exciting part? **Collective intelligence patterns** that emerge from threaded conversations:
 
 ### Thread-Based Insights
+
 - **Consensus Detection**: When a community converges on an idea
 - **Divergence Tracking**: When discussions branch into multiple solutions
 - **Influence Mapping**: Which threads have the most impact on community thinking
 - **Knowledge Synthesis**: AI systems that can summarize thread insights
 
 ### Community Knowledge Graphs
+
 Imagine a knowledge graph not just of your personal notes, but of **your community's collective intelligence**—spanning thousands of interconnected ideas, funded projects, and real-world impact.
 
 ## Why This Matters Now
@@ -144,29 +154,8 @@ OrangeCat isn't just another social platform. It's the next evolution of knowled
 
 **The knowledge revolution started with personal note-taking. It continues with social knowledge networks.**
 
-*Ready to connect your thoughts with a community that can fund them?* 🧵✨
+_Ready to connect your thoughts with a community that can fund them?_ 🧵✨
 
 ---
 
-*This post explores OrangeCat's vision for collective intelligence through threaded conversations, inspired by the knowledge management innovations of Roam Research and Obsidian.*
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+_This post explores OrangeCat's vision for collective intelligence through threaded conversations, inspired by the knowledge management innovations of Roam Research and Obsidian._

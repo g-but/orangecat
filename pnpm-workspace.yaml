@@ -41,3 +41,5 @@ minimumReleaseAgeExclude:
   # like a broken build rather than a refused dependency. vitareba needed the
   # same entry when it adopted this package.
   - 'threadkit'
+  # Ours (bitbaum/bip-kit); v0.2.1 published 2026-09-06 — inside the window.
+  - 'bip-kit'
