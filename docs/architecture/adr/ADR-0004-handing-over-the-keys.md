@@ -1,6 +1,9 @@
 # ADR-0004: Handing Over the Keys — Claims That Carry What a Person Owns
 
 Date: 2026-09-05
+Amended: 2026-09-07 — D8 and defects #10-#11, after asking what the _regular_
+create flow (not Cat) would have to do. The answer changed the shape of the
+work: the on-behalf-of control already exists and is already server-authorized.
 Status: Proposed
 Extends: [ADR-0003](ADR-0003-site-factory-and-unclaimed-entities.md)
 
@@ -186,6 +189,91 @@ gracefully instead of pretending it owns the channel.
 sends nothing, and the `invite_url` it returns —
 `/groups/join/<token>` — **404s**, that route does not exist.)
 
+### D8 — The create form is the primary door, and its control already exists.
+
+D1-D7 were written Cat-first. That was the wrong emphasis. Cat is one input
+method; the create form is where people already are, and **creating something
+you do not own is already a shipped, server-authorized capability there.**
+
+`src/components/create/ActorSelector.tsx` renders a dropdown whose own header
+reads _"Create this on behalf of"_. The value flows: `EntityCreationWizard.tsx:108`
+holds it in state -> `EntityForm` -> `entityFormSubmitAction.ts:87` merges
+`actor_id` into the create body -> `entityPostHandler.ts:129` **extends the Zod
+object** so the field is not stripped -> `resolveCreationActor()` re-reads the
+actor with an admin client and requires founder/admin/moderator membership,
+throwing `ActorNotPermittedError` -> 403. It never trusts the client. This is
+good code, and it is the rail to build on.
+
+It is invisible twice over, which is why it reads as missing:
+
+- **It renders on 1 of 13 entity types.** `ActorSelector` appears in exactly one
+  line of the codebase, inside the `config.wizardConfig?.enabled` branch of
+  `EntityCreationWizard`. Of 16 entity configs, only `project-config.ts` sets
+  `enabled: true`. The template-only and plain-form branches both drop the
+  control while still passing `actorId` — permanently `null`, since nothing can
+  set it. **Groups, the thing a bar actually is, are in that dead branch.**
+- **It lists 3 of 9 production groups.** The dropdown is populated from `actors`
+  rows, and nothing in the application ever inserts one for a group: no trigger,
+  no backfill, no code path. `createGroup` writes `groups`, `group_members` and
+  `group_features`, and no actor. Measured 2026-09-07: **9 groups, 3 group
+  actors** — and the three are the three oldest, all from December 2025. Every
+  group created since 2026-01-05 cannot own anything and cannot be selected.
+
+So the work is not "build a way to create for someone else". It is **finish the
+control that exists, then add one option to it.** Concretely:
+
+1. **Lift `ActorSelector` out of the wizard branch** into the create header, so
+   all 13 entity types show it. Zero server work — the API already accepts and
+   authorizes `actor_id` on every route built on `createEntityPostHandler`.
+2. **Backfill the missing group actors and create one in `createGroup`** (defect
+   #10). Without this, "create as my company" is a control with an empty menu.
+3. **Add a third option: _Someone else..._** — and note what it cannot be.
+
+**The third option is not an actor, and must not become one.** Karl has no
+`auth.users` row, so he has no profile, so he can have no actor — and minting an
+actor for him is precisely the alternative this ADR rejects below, because ~24
+tables join `actors` and `actors.user_id` has no FK, which would demote the
+money guarantee from structural to conventional. `resolveCreationActor` must
+therefore **not** grow a person branch.
+
+Instead the choice changes the **submit target**, not the owner:
+
+```
+Owner = me            -> POST /api/<entity>                     (today)
+Owner = my group      -> POST /api/<entity> { actor_id }        (today, once lifted)
+Owner = someone else  -> POST /api/profile-claims { draft: { kind:'person',
+                           profile:{name}, entities:[<this form's values>] } }
+```
+
+The seam is one branch in `entityFormSubmitAction.ts`, which already computes
+`url` and `requestBody` in adjacent statements. Nothing about the form, its
+fields, its validation, its templates or its AI fill changes — the same
+`validatedData` becomes a claim payload instead of an insert payload. That is
+the whole point of routing this through the create form rather than a parallel
+"invite" flow: **the form is the same form, so a bar drafted for Karl has
+exactly the fields a bar has.**
+
+**What must change in the UI, because the outcome differs:**
+
+- **The control renders for everyone.** `ActorSelector` currently returns `null`
+  when `groupActors.length === 0`, so a user with no groups sees nothing. Once
+  "someone else" exists, that early return goes, and ownership becomes an
+  explicit visible choice rather than an invisible default.
+- **The submit button changes with the selection** — `Create project` becomes
+  `Create & send to Karl`. A button that says "Create" and produces a link
+  instead of a page is the single most likely thing to make a creator think it
+  failed.
+- **The success screen changes** (`EntityCreationSuccess.tsx`). Owner=me lands
+  on the entity. Owner=someone-else has no entity to land on: it shows the link,
+  the prewritten message, and the sentence that prevents the support ticket —
+  _"Löwenbar isn't live yet. It appears when Karl accepts."_
+- **Templates and AI fill stay untouched.** They operate on form values, and the
+  form values are unchanged.
+
+This also disposes of the objection that D1-D7 make this an AI feature. They do
+not. A creator who never opens Cat gets the whole capability from the create
+form; Cat's advantage is only that it skips the form.
+
 ## Schema
 
 One migration:
@@ -220,9 +308,11 @@ Three doors, one server action underneath:
 
 1. **Cat** (primary). _"my friend Karl is opening a bar in Zürich called
    Löwenbar"_ → a confirmation card.
-2. **The create form**, which grows one control: _Who is this for?_ → `Me` /
-   `Someone else`. Choosing someone else reveals name + optional contact. One
-   control, not a parallel flow.
+2. **The create form** (the primary door — see D8). The existing
+   _"Create this on behalf of"_ selector grows a third option, `Someone else`,
+   which reveals name + optional contact. One control, not a parallel flow, and
+   not new machinery: the selector, the `actor_id` wire and its server-side
+   authorization all ship today.
 3. **`/dashboard/profile-claims`**, finally linked in navigation — in the
    `coordinate` section of `src/config/navigation.ts`, beside **People**, as
    **"Set up for someone"**.
@@ -434,19 +524,37 @@ Add to `scripts/check-data-invariants.mjs` (the nightly prod-truth gate):
    registry's declared parameters. One reply could therefore mint several
    records about several third parties. The standing per-creator cap in
    _Consent_ is the backstop; this is the hole it backs up.
+10. **Groups are created without an actor, so they can own nothing.** No
+    trigger, backfill or code path inserts an `actors` row for a group;
+    `createGroup` (`src/services/groups/mutations/groups.ts`) writes `groups`,
+    `group_members` and `group_features` only. Measured 2026-09-07: **9 groups,
+    3 group actors**, and all three date from December 2025 — every group made
+    since 2026-01-05 is affected. Consequences: the group cannot be selected in
+    _"Create this on behalf of"_, cannot own an entity, and cannot receive
+    funds. Fix: create the actor inside `createGroup` in the same transaction,
+    plus a backfill migration for the six. This is a prerequisite for D8, not a
+    side quest.
+11. **`/api/groups` is off the shared create rail.** It uses `withAuth` rather
+    than `createEntityPostHandler`, so it never sees `actor_id` and never calls
+    `resolveCreationActor`; `created_by` and the founder membership are
+    hardcoded to the caller. Any on-behalf-of semantics for groups needs work
+    there specifically — which matters because a bar _is_ a group.
 
 ## Implementation order
 
-0. **Defects #3, #4 and #7, and one nav entry.** Almost no schema (one
-   backfill), ships in a day, closes a handle-squatting hole, and turns a dead
-   feature into a reachable one. Do this first regardless of the rest.
+0. **Defects #3, #4, #7 and #10, and one nav entry.** Almost no schema (two
+   backfills), ships in a day, closes a handle-squatting hole, gives six groups
+   an owner identity, and turns a dead feature into a reachable one. Do this
+   first regardless of the rest. (#3 and #4 shipped 2026-09-06, PR #903.)
 1. **The migration** (D3, D4, funnel columns, `declined`).
 2. **Materialiser + resume + decline route** — the server half of D2/D3/D6.
 3. **The claim page rebuilt** — preview of the real thing, sender strip,
    decline-without-login, post-claim landing on the bar.
-4. **Creator side** — owner selector on the create form, statuses, prewritten
-   message, optional email send (pattern:
-   `src/lib/email/send-seller-notification.ts`).
+4. **Creator side (D8)** — lift `ActorSelector` out of the wizard branch so all
+   13 entity types show it; add the `Someone else` option and the
+   submit-target branch in `entityFormSubmitAction.ts`; owner-dependent button
+   label and success screen; statuses, prewritten message, optional email send
+   (pattern: `src/lib/email/send-seller-notification.ts`).
 5. **Cat's verb**, inside the prompt ratchet.
 6. **Invariants + funnel query.**
 
