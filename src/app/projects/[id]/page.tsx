@@ -2,6 +2,8 @@ import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
 import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
+import { UnclaimedBand } from '@/components/claim/UnclaimedBand';
+import { getUnclaimedOwner } from '@/domain/profileClaims/unclaimed';
 import { ROUTES } from '@/config/routes';
 import { PublicEntityOwnerBar } from '@/components/public/PublicEntityOwnerBar';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
@@ -46,6 +48,12 @@ type ProjectMeta = {
 type ProjectFull = {
   id: string;
   user_id: string;
+  /**
+   * The owning actor. `user_id` is the creating account; `actor_id` is who the
+   * project BELONGS to, and for a project set up on someone else's behalf the
+   * two differ — the actor is an unclaimed placeholder (ADR-0005).
+   */
+  actor_id: string | null;
   title: string;
   description: string | null;
   goal_amount: number | null;
@@ -172,6 +180,11 @@ export default async function PublicProjectPage({ params }: PageProps) {
     notFound();
   }
 
+  // ADR-0005: the project may be owned by a placeholder — a person who has not
+  // accepted it yet. That owner has no profile, so the lookup below finds
+  // nothing; the band says whose it is instead of the page rendering ownerless.
+  const unclaimedOwner = await getUnclaimedOwner(supabase, project.actor_id);
+
   // Fetch profile separately (more reliable than JOIN)
   let profile: (ProfileSnippet & { id: string }) | null = null;
   if (project.user_id) {
@@ -268,6 +281,12 @@ export default async function PublicProjectPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdString(structuredData) }}
       />
+      {unclaimedOwner && (
+        <UnclaimedBand
+          ownerName={unclaimedOwner.name}
+          stewardUsername={unclaimedOwner.stewardUsername}
+        />
+      )}
       {isOwner && (
         <PublicEntityOwnerBar
           isOwnerPreview={isOwnerPreview}

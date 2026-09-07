@@ -178,57 +178,88 @@ describe('executeEntityFormSubmit', () => {
   });
 
   /**
-   * ADR-0004 D8. Choosing "someone else" must not create anything: the same
-   * validated values become a CLAIM, and the entity materialises when the
-   * recipient accepts. The bug this guards against is the expensive one —
-   * silently creating the bar under the CREATOR's account while telling them
-   * it was set up for their friend.
+   * ADR-0005. Choosing "someone else" is TWO requests on the SAME rail: first
+   * the person (a claim plus a placeholder actor — an identity that owns rows
+   * and cannot receive money), then the entity itself with `actor_id` set to
+   * that placeholder, so it is hers from the first row.
+   *
+   * The bug this guards against is the expensive one: creating the studio
+   * under the CREATOR's account while telling them it was set up for their
+   * friend. That is why the assertion is on which actor_id reaches the entity
+   * endpoint, not merely on the claim being posted.
    */
   describe('owner = someone else', () => {
-    it('posts a claim instead of the entity, and creates nothing', async () => {
-      global.fetch = mockFetchOk({
-        id: 'claim-1',
-        claimUrl: '/claim/tok',
-      }) as unknown as typeof fetch;
+    function mockFetchSequence(responses: Array<Record<string, unknown>>) {
+      const fn = vi.fn();
+      for (const data of responses) {
+        fn.mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ success: true, data }),
+          clone() {
+            return this;
+          },
+        });
+      }
+      return fn;
+    }
+
+    it('creates the person first, then the entity owned by the placeholder', async () => {
+      global.fetch = mockFetchSequence([
+        { id: 'claim-1', actorId: 'actor-placeholder', slug: 'maria' },
+        { id: 'proj-1', title: 'Art studio' },
+      ]) as unknown as typeof fetch;
+
       const params = makeParams({
-        config: makeConfig({ type: 'group', apiEndpoint: '/api/groups' }),
-        formStateData: { title: 'Loewenbar' },
-        owner: { kind: 'someone-else', name: 'Karl' },
+        config: makeConfig({ type: 'project', apiEndpoint: '/api/projects' }),
+        formStateData: { title: 'Art studio' },
+        owner: { kind: 'someone-else', name: 'Maria' },
       });
 
       await executeEntityFormSubmit(params);
 
-      const [url, init] = (global.fetch as Mock).mock.calls[0];
-      expect(url).toBe('/api/profile-claims');
-      // The entity endpoint must never be touched on this path.
-      expect((global.fetch as Mock).mock.calls).toHaveLength(1);
+      const calls = (global.fetch as Mock).mock.calls;
+      expect(calls).toHaveLength(2);
 
-      const body = JSON.parse(init.body);
-      expect(body.name).toBe('Karl');
-      expect(body.entities).toEqual([{ kind: 'group', name: 'Loewenbar', label: 'circle' }]);
-      expect(params.onEntityCreated).not.toHaveBeenCalled();
+      // 1. the person
+      expect(calls[0][0]).toBe('/api/profile-claims');
+      expect(JSON.parse(calls[0][1].body)).toEqual({ name: 'Maria' });
+
+      // 2. the entity, on the ordinary rail, owned by the placeholder
+      expect(calls[1][0]).toBe('/api/projects');
+      const entityBody = JSON.parse(calls[1][1].body);
+      expect(entityBody.actor_id).toBe('actor-placeholder');
+      expect(entityBody.title).toBe('Art studio');
     });
 
-    it('lands on the claims dashboard — the output is a link, not a page', async () => {
-      global.fetch = mockFetchOk({ id: 'claim-1' }) as unknown as typeof fetch;
+    it('never creates the entity if the person could not be created', async () => {
+      // Otherwise the studio would exist owned by the CREATOR — exactly the
+      // outcome the whole feature is meant to avoid.
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ success: false, error: { message: 'nope' } }),
+        clone() {
+          return this;
+        },
+      }) as unknown as typeof fetch;
+
       const params = makeParams({
-        config: makeConfig({ type: 'group', apiEndpoint: '/api/groups' }),
-        formStateData: { title: 'Loewenbar' },
-        owner: { kind: 'someone-else', name: 'Karl' },
+        config: makeConfig({ type: 'project', apiEndpoint: '/api/projects' }),
+        formStateData: { title: 'Art studio' },
+        owner: { kind: 'someone-else', name: 'Maria' },
       });
 
       await executeEntityFormSubmit(params);
 
-      expect(params.router.push).toHaveBeenCalledWith(
-        expect.stringContaining('/dashboard/profile-claims')
-      );
+      expect((global.fetch as Mock).mock.calls).toHaveLength(1);
+      expect(params.setErrors).toHaveBeenCalled();
+      expect(params.onEntityCreated).not.toHaveBeenCalled();
     });
 
     it('refuses to submit without a name', async () => {
       global.fetch = vi.fn() as unknown as typeof fetch;
       const params = makeParams({
-        config: makeConfig({ type: 'group', apiEndpoint: '/api/groups' }),
-        formStateData: { title: 'Loewenbar' },
+        config: makeConfig({ type: 'project', apiEndpoint: '/api/projects' }),
+        formStateData: { title: 'Art studio' },
         owner: { kind: 'someone-else', name: '   ' },
       });
 
@@ -240,17 +271,16 @@ describe('executeEntityFormSubmit', () => {
       );
     });
 
-    it('refuses an entity type a claim cannot carry, rather than failing late', async () => {
-      global.fetch = vi.fn() as unknown as typeof fetch;
-      const params = makeParams({
-        config: makeConfig({ type: 'cause', apiEndpoint: '/api/causes' }),
-        owner: { kind: 'someone-else', name: 'Karl' },
-      });
+    it('leaves ownership alone for the ordinary case', async () => {
+      // owner = me must send NO actor_id at all: the server resolves the
+      // caller's own actor, and sending one would be a second source of truth.
+      global.fetch = mockFetchOk({ id: 'p-1' }) as unknown as typeof fetch;
+      const params = makeParams({ owner: { kind: 'me' } });
 
       await executeEntityFormSubmit(params);
 
-      expect(global.fetch).not.toHaveBeenCalled();
-      expect(params.setErrors).toHaveBeenCalled();
+      const body = JSON.parse((global.fetch as Mock).mock.calls[0][1].body);
+      expect(body.actor_id).toBeUndefined();
     });
   });
 });

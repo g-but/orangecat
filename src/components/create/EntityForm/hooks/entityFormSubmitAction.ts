@@ -2,9 +2,8 @@ import { ZodError } from 'zod';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
-import { ROUTES } from '@/config/routes';
 import { apiErrorMessage } from '@/lib/api/errorMessage';
-import { toClaimEntity, type CreateOwner } from '../../owner';
+import type { CreateOwner } from '../../owner';
 import { entityEvents } from '@/lib/analytics';
 import type { EntityConfig } from '../../types';
 
@@ -84,11 +83,13 @@ export async function executeEntityFormSubmit<T extends Record<string, unknown>>
     const dataToValidate = { ...config.defaultValues, ...formStateData };
     const validatedData = config.validationSchema.parse(dataToValidate);
 
-    // Owner = someone who is not on the platform yet. Nothing is created now:
-    // the same validated values become a CLAIM, and the entity materialises
-    // when they accept it (ADR-0004 D2). One branch, because the form, its
-    // fields and its validation are identical either way — which is the whole
-    // reason this lives in the create form instead of a parallel invite flow.
+    // Owner = someone who is not on the platform yet (ADR-0005). First the
+    // PERSON: a claim plus a placeholder actor — an identity that can own rows
+    // and cannot receive money. Then the thing itself goes down the ordinary
+    // rail below with `actor_id` = that placeholder, so it is hers from the
+    // first row, and every field, validation and template is the same one a
+    // creator uses for themselves.
+    let placeholderActorId: string | undefined;
     if (mode === 'create' && owner?.kind === 'someone-else') {
       const recipientName = owner.name.trim();
       if (!recipientName) {
@@ -96,47 +97,31 @@ export async function executeEntityFormSubmit<T extends Record<string, unknown>>
         setSubmitting(false);
         return;
       }
-
-      const entity = toClaimEntity(config.type, validatedData as Record<string, unknown>);
-      if (!entity) {
-        // Only reachable if the option was offered for an entity type a claim
-        // cannot carry — a bug, and one the creator must not pay for silently.
-        setErrors({ _form: 'This kind of thing can’t be set up for someone else yet.' });
-        setSubmitting(false);
-        return;
-      }
-
       const claimResponse = await fetch(API_ROUTES.PROFILE_CLAIMS.BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name: recipientName, entities: [entity] }),
+        body: JSON.stringify({ name: recipientName }),
       });
       const claimBody = await claimResponse.json().catch(() => null);
-
-      if (!claimResponse.ok || !claimBody?.success) {
+      if (!claimResponse.ok || !claimBody?.success || !claimBody.data?.actorId) {
         setErrors({
           _form: apiErrorMessage(claimBody, `Could not set this up for ${recipientName}.`),
         });
         setSubmitting(false);
         return;
       }
-
-      clearDraft();
-      // The output of this path is a LINK, not a page — so it lands on the
-      // dashboard that shows the link and its status, not on an entity that
-      // does not exist yet.
-      router.push(`${ROUTES.DASHBOARD.PROFILE_CLAIMS}?created=${claimBody.data.id}`);
-      return;
+      placeholderActorId = claimBody.data.actorId as string;
     }
 
     const url =
       mode === 'edit' && entityId ? `${config.apiEndpoint}/${entityId}` : config.apiEndpoint;
 
     // Merge actor_id only on create; edit mode never reassigns ownership.
+    const actorIdForCreate = owner?.kind === 'group' ? owner.actorId : placeholderActorId;
     const requestBody =
-      mode === 'create' && owner?.kind === 'group'
-        ? { ...(validatedData as Record<string, unknown>), actor_id: owner.actorId }
+      mode === 'create' && actorIdForCreate
+        ? { ...(validatedData as Record<string, unknown>), actor_id: actorIdForCreate }
         : validatedData;
 
     const response = await fetch(url, {

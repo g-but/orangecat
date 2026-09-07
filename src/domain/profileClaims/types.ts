@@ -1,6 +1,6 @@
 import type { ClaimDraft } from './draft';
 
-export type { ClaimDraft, ClaimEntityDraft } from './draft';
+export type { ClaimDraft } from './draft';
 
 /**
  * The PERSON half of a claim: the subset of `public.profiles` a claim writes
@@ -49,6 +49,8 @@ export interface ProfileClaimRow {
   first_viewed_at: string | null;
   view_count: number;
   declined_at: string | null;
+  /** The unclaimed placeholder actor this claim hands over (ADR-0005). */
+  actor_id: string | null;
 }
 
 /**
@@ -59,6 +61,8 @@ export interface ProfileClaimRow {
 export interface ProfileClaimPreview {
   token: string;
   draft: ClaimDraft;
+  /** The placeholder's public address (`/profiles/<slug>`) while unclaimed; null for legacy claims. */
+  actorSlug: string | null;
   suggestedUsername: string | null;
   status: ProfileClaimStatus;
   isExpired: boolean;
