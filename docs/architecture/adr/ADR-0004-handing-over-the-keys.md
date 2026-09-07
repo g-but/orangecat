@@ -237,6 +237,11 @@ control that exists, then add one option to it.** Concretely:
    #10). Without this, "create as my company" is a control with an empty menu.
 3. **Add a third option: _Someone else..._** — and note what it cannot be.
 
+As shipped (#911), the option appears only for `group` and `project`: those are
+the two kinds `ClaimDraft.entities[]` can carry, and offering it on an entity
+type the claim cannot hold would walk a creator through the whole form and fail
+at the end. Widening it means widening the draft union first, in that order.
+
 **The third option is not an actor, and must not become one.** Karl has no
 `auth.users` row, so he has no profile, so he can have no actor — and minting an
 actor for him is precisely the alternative this ADR rejects below, because ~24
@@ -569,15 +574,23 @@ Add to `scripts/check-data-invariants.mjs` (the nightly prod-truth gate):
    handle-squatting hole, gave every group an owner and an identity, and turned
    a dead feature into a reachable one. (#3 and #4 shipped 2026-09-06, PR #903;
    #7, #10 and the nav entry 2026-09-07.)
-1. **The migration** (D3, D4, funnel columns, `declined`).
-2. **Materialiser + resume + decline route** — the server half of D2/D3/D6.
+1. ~~**The migration** (D3, D4, funnel columns, `declined`).~~ **DONE**, PR #908 —
+   token split, `materialized`, funnel columns, the `declined` state, and D6's
+   fill-only-empty. Verified applied in production.
+2. ~~**Materialiser + resume + decline route** — the server half of D2/D3/D6.~~
+   **DONE**, PRs #908 (decline) and #909 (D1 `entities[]`, materialiser,
+   resume ledger). Group and project are the two entity kinds a claim can
+   carry; anything else is refused at the boundary rather than silently
+   dropped.
 3. **The claim page rebuilt** — preview of the real thing, sender strip,
    decline-without-login, post-claim landing on the bar.
-4. **Creator side (D8)** — lift `ActorSelector` out of the wizard branch so all
-   13 entity types show it; add the `Someone else` option and the
-   submit-target branch in `entityFormSubmitAction.ts`; owner-dependent button
-   label and success screen; statuses, prewritten message, optional email send
-   (pattern: `src/lib/email/send-seller-notification.ts`).
+4. **Creator side (D8)** — ~~lift `ActorSelector` out of the wizard branch so
+   all 13 entity types show it; add the `Someone else` option and the
+   submit-target branch in `entityFormSubmitAction.ts`~~ **DONE**, PR #911.
+   STILL OPEN: the prewritten message, the delivery channels, and the optional
+   email send (pattern: `src/lib/email/send-seller-notification.ts`). The
+   claim currently lands on the claims dashboard, which shows the link — the
+   "one tap to WhatsApp" half of D7 is not built.
 5. **Cat's verb**, inside the prompt ratchet.
 6. **Invariants + funnel query.**
 
