@@ -15,10 +15,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!result.ok) {
     return { title: 'Claim link not found' };
   }
-  const { draft } = result.data;
+  const { profile } = result.data.draft;
   return {
-    title: `Claim ${draft.name}’s profile`,
-    description: `${draft.name} has a profile waiting on ${APP_NAME}. Claim it to make it yours.`,
+    title: `Claim ${profile.name}’s profile`,
+    description: `${profile.name} has a profile waiting on ${APP_NAME}. Claim it to make it yours.`,
     robots: { index: false, follow: false },
   };
 }

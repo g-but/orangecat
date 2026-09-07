@@ -28,6 +28,9 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
   const [hasDeclined, setHasDeclined] = useState(preview.status === 'declined');
 
   const { draft, isExpired } = preview;
+  const person = draft.profile;
+  // What this person will own the moment they accept — the bar, the project.
+  const entities = draft.entities ?? [];
   // The credential, not the row id — this is what the public routes address.
   const claimToken = preview.token;
 
@@ -41,7 +44,19 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
         setIsClaiming(false);
         return;
       }
-      toast.success(`Welcome, ${draft.name} — your profile is live.`);
+      const created = (body.data?.created ?? []) as Array<{ kind: string }>;
+      const incomplete = Boolean(body.data?.incomplete);
+      if (incomplete) {
+        // Partial materialisation is reported, never hidden — the recipient is
+        // told what didn't appear rather than left to notice the absence.
+        toast.warning('Some of it could not be created. Open the link again to finish.');
+      } else if (created.length > 0) {
+        toast.success(
+          `Welcome, ${person.name} — your profile and ${created.length === 1 ? 'your ' + created[0].kind : created.length + ' things'} are live.`
+        );
+      } else {
+        toast.success(`Welcome, ${person.name} — your profile is live.`);
+      }
       const username = body.data?.username as string | null;
       router.push(username ? publicProfilePath(username) : ROUTES.PROFILES.ME);
     } catch {
@@ -84,22 +99,22 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
         <Card variant="elevated" className="mt-6 overflow-hidden">
           <div className="relative h-24 bg-surface-raised">
             <div className="absolute -bottom-8 left-6 h-16 w-16 overflow-hidden rounded-full border-4 border-surface-base bg-surface-raised shadow-sm">
-              {draft.avatarUrl ? (
+              {person.avatarUrl ? (
                 // Draft avatars come from an arbitrary URL a member pastes in when
                 // creating the claim — next/image requires an allowlisted remote
                 // host, which an arbitrary press photo won't be. Plain <img> for
                 // this one, untrusted-source case.
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={draft.avatarUrl}
-                  alt={draft.name}
+                  src={person.avatarUrl}
+                  alt={person.name}
                   className="h-full w-full object-cover"
                   loading="lazy"
                   referrerPolicy="no-referrer"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center font-heading text-2xl text-fg-secondary">
-                  {initialOf(draft.name)}
+                  {initialOf(person.name)}
                 </div>
               )}
             </div>
@@ -107,13 +122,13 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
 
           <CardContent className="pt-12">
             <h1 className="font-heading text-2xl font-semibold tracking-display text-fg-primary">
-              {draft.name}
+              {person.name}
             </h1>
-            {draft.bio && <p className="mt-2 text-sm leading-6 text-fg-secondary">{draft.bio}</p>}
+            {person.bio && <p className="mt-2 text-sm leading-6 text-fg-secondary">{person.bio}</p>}
 
-            {!!draft.socialLinks?.length && (
+            {!!person.socialLinks?.length && (
               <div className="mt-4 flex flex-wrap gap-2">
-                {draft.socialLinks.map(link => (
+                {person.socialLinks.map(link => (
                   <span
                     key={`${link.platform}-${link.value}`}
                     className="rounded-full border border-border-subtle bg-surface-page px-3 py-1 text-xs text-fg-secondary"
@@ -124,9 +139,39 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
               </div>
             )}
 
+            {entities.length > 0 && (
+              <div className="mt-6">
+                <p className="text-xs font-medium uppercase tracking-caps text-fg-muted">
+                  Comes with
+                </p>
+                <ul className="mt-2 space-y-2">
+                  {entities.map((entity, index) => (
+                    <li
+                      key={`${entity.kind}-${index}`}
+                      className="flex items-baseline justify-between gap-3 rounded-lg border border-border-subtle bg-surface-page px-4 py-3"
+                    >
+                      <span className="text-sm font-medium text-fg-primary">
+                        {entity.kind === 'group' ? entity.name : entity.title}
+                      </span>
+                      <span className="shrink-0 text-xs text-fg-muted">
+                        {entity.kind === 'group' ? entity.label : 'project'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-xs text-fg-muted">
+                  {/* The single most important sentence on this page: nothing
+                      exists yet, and accepting is what creates it — owned by
+                      the person accepting, never transferred from anyone. */}
+                  {entities.length === 1 ? 'This doesn’t exist yet' : 'These don’t exist yet'} —
+                  they get created, owned by you, when you accept.
+                </p>
+              </div>
+            )}
+
             <div className="mt-6 rounded-lg border border-border-subtle bg-surface-page p-4 text-sm text-fg-secondary">
-              Someone put this profile together for {draft.name.split(' ')[0]} on {APP_NAME}. Claim
-              it to take it over — edit anything, add your own payment methods, and make it yours.
+              Someone put this together for {person.name.split(' ')[0]} on {APP_NAME}. Claim it to
+              take it over — edit anything, add your own payment methods, and make it yours.
             </div>
 
             {hasDeclined ? (
@@ -147,7 +192,7 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
                 onClick={handleClaim}
                 isLoading={isClaiming}
               >
-                Claim this profile
+                {entities.length > 0 ? 'Claim this' : 'Claim this profile'}
               </Button>
             ) : (
               <div className="mt-6 space-y-2">

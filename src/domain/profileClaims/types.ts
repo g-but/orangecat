@@ -1,7 +1,11 @@
+import type { ClaimDraft } from './draft';
+
+export type { ClaimDraft, ClaimEntityDraft } from './draft';
+
 /**
- * A pre-drafted profile a member fills in on someone else's behalf. Mirrors
- * the subset of `public.profiles` the claim writes on completion — see
- * supabase/migrations/20260818130000_profile_claims.sql.
+ * The PERSON half of a claim: the subset of `public.profiles` a claim writes
+ * on completion. A whole draft is a person plus the entities they will own —
+ * see `ClaimDraft` in ./draft.
  */
 export interface ProfileClaimDraft {
   name: string;
@@ -30,7 +34,8 @@ export interface ProfileClaimRow {
   token: string;
   created_by: string | null;
   suggested_username: string | null;
-  draft: ProfileClaimDraft;
+  /** Always read through `normalizeClaimDraft` — rows may predate the shape. */
+  draft: unknown;
   status: ProfileClaimStatus;
   claimed_by: string | null;
   claimed_at: string | null;
@@ -53,7 +58,7 @@ export interface ProfileClaimRow {
  */
 export interface ProfileClaimPreview {
   token: string;
-  draft: ProfileClaimDraft;
+  draft: ClaimDraft;
   suggestedUsername: string | null;
   status: ProfileClaimStatus;
   isExpired: boolean;

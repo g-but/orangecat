@@ -19,6 +19,11 @@ import {
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { createProfileClaim, listProfileClaimsCreatedBy } from '@/domain/profileClaims/service';
+import {
+  claimEntitySchema,
+  normalizeClaimDraft,
+  MAX_CLAIM_ENTITIES,
+} from '@/domain/profileClaims/draft';
 import { ROUTES } from '@/config/routes';
 
 const socialLinkSchema = z.object({
@@ -40,6 +45,11 @@ const createClaimSchema = z.object({
   // `profiles.username` that skipped RESERVED_USERNAMES — `payments`,
   // `support`, `security` were all suggestible.
   suggestedUsername: usernameSchema.optional(),
+  // What this person will OWN once they accept (ADR-0004 D1) — a bar, a
+  // project. Capped, because materialisation runs on the recipient's behalf
+  // the moment they click accept, and an uncapped list would let one link mint
+  // arbitrarily many fundable rows for someone who clicked once.
+  entities: z.array(claimEntitySchema).max(MAX_CLAIM_ENTITIES).optional(),
 });
 
 export const POST = withAuth(async (req: AuthenticatedRequest) => {
@@ -57,12 +67,16 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         fields: parsed.error.issues.map(i => ({ field: i.path.join('.'), message: i.message })),
       });
     }
-    const { name, bio, avatarUrl, bannerUrl, website, socialLinks, suggestedUsername } =
+    const { name, bio, avatarUrl, bannerUrl, website, socialLinks, suggestedUsername, entities } =
       parsed.data;
 
     const result = await createProfileClaim({
       createdBy: user.id,
-      draft: { name, bio, avatarUrl, bannerUrl, website, socialLinks },
+      draft: {
+        kind: 'person',
+        profile: { name, bio, avatarUrl, bannerUrl, website, socialLinks },
+        ...(entities?.length ? { entities } : {}),
+      },
       suggestedUsername,
     });
 
@@ -90,21 +104,29 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
     }
 
     return apiSuccess({
-      claims: result.data.map(claim => ({
-        id: claim.id,
-        name: claim.draft.name,
-        status: claim.status,
-        suggestedUsername: claim.suggested_username,
-        claimUrl: ROUTES.CLAIM(claim.token),
-        createdAt: claim.created_at,
-        claimedAt: claim.claimed_at,
-        expiresAt: claim.expires_at,
-        // The funnel a creator actually needs: sent? opened? refused?
-        deliveredAt: claim.delivered_at,
-        firstViewedAt: claim.first_viewed_at,
-        viewCount: claim.view_count,
-        declinedAt: claim.declined_at,
-      })),
+      claims: result.data.map(claim => {
+        // Rows predating the entities[] shape carry a flat person draft.
+        const draft = normalizeClaimDraft(claim.draft);
+        return {
+          id: claim.id,
+          name: draft?.profile.name ?? 'Unnamed',
+          entities: (draft?.entities ?? []).map(e => ({
+            kind: e.kind,
+            name: e.kind === 'group' ? e.name : e.title,
+          })),
+          status: claim.status,
+          suggestedUsername: claim.suggested_username,
+          claimUrl: ROUTES.CLAIM(claim.token),
+          createdAt: claim.created_at,
+          claimedAt: claim.claimed_at,
+          expiresAt: claim.expires_at,
+          // The funnel a creator actually needs: sent? opened? refused?
+          deliveredAt: claim.delivered_at,
+          firstViewedAt: claim.first_viewed_at,
+          viewCount: claim.view_count,
+          declinedAt: claim.declined_at,
+        };
+      }),
     });
   } catch (error) {
     logger.error('profile-claims list failed', error, 'ProfileClaims');
