@@ -258,22 +258,10 @@ function pickMethodFromWallet(wallet: WalletRow): ResolvedWallet | null {
     try {
       return { method: 'nwc', wallet_id: wallet.id, nwc_uri: decrypt(wallet.nwc_connection_uri) };
     } catch (e) {
-      // warn, not error. A URI this key cannot open is a permanent, per-wallet,
-      // OWNER-FIXABLE state, not an application fault: the key was rotated (or
-      // the row was written by a machine with a different key) and the
-      // plaintext is gone for good. The wallet card already tells the owner to
-      // paste the connection string again (receiveStatus.ts -> WalletCard), so
-      // this line is a breadcrumb, not an incident.
-      //
-      // It fires on EVERY payment resolution for that wallet and can never
-      // self-resolve, so at error level one dead test wallet emitted 21 of the
-      // 25 error-level log lines this app produced in three days — enough to
-      // bury a real one.
-      logger.warn('NWC URI could not be decrypted; wallet skipped for payments', {
-        walletId: wallet.id,
-        remedy: 'owner must reconnect the wallet — the stored URI predates the current key',
-        error: e,
-      });
+      // warn, not error: permanent, per-wallet, OWNER-fixable (the key was
+      // rotated; plaintext is gone), and the wallet card already says to
+      // reconnect. At error it buried real ones — see PR #910.
+      logger.warn('NWC URI undecryptable; wallet skipped', { walletId: wallet.id, error: e });
       // Fall through to next method
     }
   }
@@ -403,12 +391,8 @@ export async function resolveUserWallet(
         nwc_uri: decryptedUri,
       };
     } catch (e) {
-      // Same permanent, owner-fixable state as pickMethodFromWallet above.
-      logger.warn('NWC URI could not be decrypted; wallet skipped for payments', {
-        walletId: nwcWallet.id,
-        remedy: 'owner must reconnect the wallet — the stored URI predates the current key',
-        error: e,
-      });
+      // Same owner-fixable state as pickMethodFromWallet above.
+      logger.warn('NWC URI undecryptable; wallet skipped', { walletId: nwcWallet.id, error: e });
       // Fall through to next method
     }
   }
