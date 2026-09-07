@@ -88,12 +88,13 @@ describe('claim and decline walk the catalog, not a hand-written list', () => {
 
 describe('the transfer functions are not callable from a browser session', () => {
   it('revokes from anon and authenticated, grants only to service_role', () => {
+    // Plain substring, not a constructed RegExp. Building one from these
+    // signatures meant escaping their parentheses by hand, which CodeQL
+    // correctly flagged as incomplete sanitization (it escaped `()` but not
+    // backslashes). Nothing here needs a pattern — the text is exact.
     for (const fn of ['claim_placeholder_actor(uuid, uuid)', 'decline_placeholder_actor(uuid)']) {
-      const esc = fn.replace(/[()]/g, '\\$&');
-      expect(sql).toMatch(
-        new RegExp(`REVOKE ALL ON FUNCTION public\\.${esc} FROM PUBLIC, anon, authenticated`)
-      );
-      expect(sql).toMatch(new RegExp(`GRANT EXECUTE ON FUNCTION public\\.${esc} TO service_role`));
+      expect(sql).toContain(`REVOKE ALL ON FUNCTION public.${fn} FROM PUBLIC, anon, authenticated`);
+      expect(sql).toContain(`GRANT EXECUTE ON FUNCTION public.${fn} TO service_role`);
     }
   });
 
