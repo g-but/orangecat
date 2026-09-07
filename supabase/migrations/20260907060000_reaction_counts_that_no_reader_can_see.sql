@@ -27,11 +27,22 @@
 -- double-count or race with them. The invariant is instead checked below, so a
 -- future drift shows up as a failed deploy rather than as a silent zero.
 
-INSERT INTO public.timeline_event_stats AS s (event_id, like_count, dislike_count, updated_at)
+-- Comments and shares drift the same way and were worse: production held 17
+-- comments and 7 shares while timeline_event_stats reported 0 of each, across
+-- every event. So a post with real replies under it advertised none.
+--
+-- `is_deleted` is respected for comments because the read policy is
+-- "viewable if not deleted or own" — counting deleted rows would advertise
+-- replies a visitor cannot see. timeline_shares keys on `original_event_id`,
+-- not `event_id`.
+INSERT INTO public.timeline_event_stats AS s
+  (event_id, like_count, dislike_count, comment_count, share_count, updated_at)
 SELECT
   e.id,
   COALESCE(l.c, 0),
   COALESCE(d.c, 0),
+  COALESCE(c.c, 0),
+  COALESCE(sh.c, 0),
   now()
 FROM public.timeline_events e
 LEFT JOIN (
@@ -40,16 +51,32 @@ LEFT JOIN (
 LEFT JOIN (
   SELECT event_id, count(*)::int AS c FROM public.timeline_dislikes GROUP BY event_id
 ) d ON d.event_id = e.id
--- Only touch events that actually have a reaction, or whose existing row is
--- already wrong. Writing a zero row for all 1445 events would be noise.
+LEFT JOIN (
+  SELECT event_id, count(*)::int AS c
+  FROM public.timeline_comments
+  WHERE is_deleted IS NOT TRUE
+  GROUP BY event_id
+) c ON c.event_id = e.id
+LEFT JOIN (
+  SELECT original_event_id AS event_id, count(*)::int AS c
+  FROM public.timeline_shares GROUP BY original_event_id
+) sh ON sh.event_id = e.id
+-- Only touch events that actually have an interaction. Writing a zero row for
+-- all 1445 events would be noise.
 WHERE COALESCE(l.c, 0) > 0
    OR COALESCE(d.c, 0) > 0
+   OR COALESCE(c.c, 0) > 0
+   OR COALESCE(sh.c, 0) > 0
 ON CONFLICT (event_id) DO UPDATE
 SET like_count    = EXCLUDED.like_count,
     dislike_count = EXCLUDED.dislike_count,
+    comment_count = EXCLUDED.comment_count,
+    share_count   = EXCLUDED.share_count,
     updated_at    = now()
-WHERE s.like_count IS DISTINCT FROM EXCLUDED.like_count
-   OR s.dislike_count IS DISTINCT FROM EXCLUDED.dislike_count;
+WHERE s.like_count    IS DISTINCT FROM EXCLUDED.like_count
+   OR s.dislike_count IS DISTINCT FROM EXCLUDED.dislike_count
+   OR s.comment_count IS DISTINCT FROM EXCLUDED.comment_count
+   OR s.share_count   IS DISTINCT FROM EXCLUDED.share_count;
 
 -- The invariant, asserted. If a future change lets the counts drift again,
 -- the deploy fails here instead of quietly showing people a zero.
@@ -63,11 +90,23 @@ BEGIN
   LEFT JOIN (
     SELECT event_id, count(*)::int AS c FROM public.timeline_likes GROUP BY event_id
   ) l ON l.event_id = e.id
-  WHERE COALESCE(l.c, 0) > 0
-    AND COALESCE(s.like_count, -1) IS DISTINCT FROM COALESCE(l.c, 0);
+  LEFT JOIN (
+    SELECT event_id, count(*)::int AS c
+    FROM public.timeline_comments WHERE is_deleted IS NOT TRUE GROUP BY event_id
+  ) c ON c.event_id = e.id
+  LEFT JOIN (
+    SELECT original_event_id AS event_id, count(*)::int AS c
+    FROM public.timeline_shares GROUP BY original_event_id
+  ) sh ON sh.event_id = e.id
+  WHERE (COALESCE(l.c, 0) > 0 OR COALESCE(c.c, 0) > 0 OR COALESCE(sh.c, 0) > 0)
+    AND (
+         COALESCE(s.like_count, -1)    IS DISTINCT FROM COALESCE(l.c, 0)
+      OR COALESCE(s.comment_count, -1) IS DISTINCT FROM COALESCE(c.c, 0)
+      OR COALESCE(s.share_count, -1)   IS DISTINCT FROM COALESCE(sh.c, 0)
+    );
 
   IF bad > 0 THEN
     RAISE EXCEPTION
-      'timeline_event_stats.like_count disagrees with timeline_likes for % event(s)', bad;
+      'timeline_event_stats disagrees with the interaction tables for % event(s)', bad;
   END IF;
 END $$;
