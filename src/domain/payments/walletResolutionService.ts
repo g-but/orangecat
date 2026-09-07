@@ -14,7 +14,7 @@ import { getAdminClient } from '@/lib/supabase/admin';
 import { decrypt } from './encryptionService';
 import { deriveOnchainAddress } from './addressDerivation';
 import { detectWalletType } from '@/types/wallet';
-import type { ResolvedWallet } from './types';
+import { nwcResolved, type ResolvedWallet } from './types';
 import { logger } from '@/utils/logger';
 
 /**
@@ -256,11 +256,9 @@ function onchainResolution(walletId: string, value?: string | null): ResolvedWal
 function pickMethodFromWallet(wallet: WalletRow): ResolvedWallet | null {
   if (wallet.nwc_connection_uri) {
     try {
-      return { method: 'nwc', wallet_id: wallet.id, nwc_uri: decrypt(wallet.nwc_connection_uri) };
+      return nwcResolved(wallet.id, decrypt(wallet.nwc_connection_uri), wallet.lightning_address);
     } catch (e) {
-      // warn, not error: permanent, per-wallet, OWNER-fixable (the key was
-      // rotated; plaintext is gone), and the wallet card already says to
-      // reconnect. At error it buried real ones — see PR #910.
+      // warn, not error: permanent + owner-fixable; see PR #910.
       logger.warn('NWC URI undecryptable; wallet skipped', { walletId: wallet.id, error: e });
       // Fall through to next method
     }
@@ -385,11 +383,10 @@ export async function resolveUserWallet(
   if (nwcWallet) {
     try {
       const decryptedUri = decrypt(nwcWallet.nwc_connection_uri!);
-      return {
-        method: 'nwc',
-        wallet_id: nwcWallet.id,
-        nwc_uri: decryptedUri,
-      };
+      // Any wallet's address will do — they all pay the same owner.
+      const fallback =
+        nwcWallet.lightning_address ?? wallets.find(w => w.lightning_address)?.lightning_address;
+      return nwcResolved(nwcWallet.id, decryptedUri, fallback);
     } catch (e) {
       // Same owner-fixable state as pickMethodFromWallet above.
       logger.warn('NWC URI undecryptable; wallet skipped', { walletId: nwcWallet.id, error: e });

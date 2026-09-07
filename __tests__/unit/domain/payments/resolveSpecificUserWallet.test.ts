@@ -59,7 +59,15 @@ describe('resolveSpecificUserWallet', () => {
       address_or_xpub: null,
     });
     const res = await resolveSpecificUserWallet(client, USER, WALLET);
-    expect(res).toEqual({ method: 'nwc', wallet_id: WALLET, nwc_uri: 'decrypted:enc' });
+    // NWC still wins — and now carries the wallet's lightning address as a
+    // RECEIVE fallback, because a send-only connection cannot mint invoices
+    // and must not take receiving down with it. See ResolvedWallet.
+    expect(res).toEqual({
+      method: 'nwc',
+      wallet_id: WALLET,
+      nwc_uri: 'decrypted:enc',
+      lightning_address: 'a@b.c',
+    });
   });
 
   it('falls back to the Lightning address, then on-chain', async () => {
