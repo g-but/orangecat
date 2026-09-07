@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The confirmation screen is the one place a money app cannot bluff. It may
  * state only what it actually knows — an amount we were never told must be

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The composer must be empty once the post exists.
  *

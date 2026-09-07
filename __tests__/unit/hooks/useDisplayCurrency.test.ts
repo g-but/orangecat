@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * useDisplayCurrency — the SSOT money-display path used across the UI.
  *

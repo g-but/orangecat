@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * AmountField — the field where a wrong number costs real money.
  *

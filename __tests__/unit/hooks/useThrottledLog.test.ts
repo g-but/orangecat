@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Tests for useThrottledLog (internal helper in useAuth.ts).
  *

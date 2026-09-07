@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The composer must empty itself after a post — including when it still has
  * focus.

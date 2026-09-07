@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The composer's tools appear when you compose, and survive being clicked.
  *

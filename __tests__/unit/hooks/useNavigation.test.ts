@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Tests for useNavigation — specifically the stable-ref fix that prevents
  * the "Maximum update depth exceeded" infinite loop regression.

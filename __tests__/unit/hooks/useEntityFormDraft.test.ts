@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Draft autosave/restore must never act on the user's behalf.
  *

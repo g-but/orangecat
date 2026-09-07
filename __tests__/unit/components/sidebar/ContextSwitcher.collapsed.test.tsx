@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * ContextSwitcher — collapsed-sidebar avatar must be interactive.
  *

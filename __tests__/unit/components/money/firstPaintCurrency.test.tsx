@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The first paint must already speak the visitor's currency.
  *

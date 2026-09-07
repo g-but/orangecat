@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Typing and presence write directly to their tables under RLS.
  *

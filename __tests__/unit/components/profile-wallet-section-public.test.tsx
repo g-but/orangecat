@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * What a VISITOR receives is not what the owner receives, and this section was
  * written against the owner's shape.

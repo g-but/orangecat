@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { createHmac } from 'node:crypto';
 import {
   signFleetCrownBuildIntent,
@@ -12,7 +13,8 @@ describe('OrangeCat → FleetCrown build handoff', () => {
   const originalSecret = process.env.FLEETCROWN_BUILD_INTENT_SECRET;
 
   beforeEach(() => {
-    process.env.FLEETCROWN_BUILD_INTENT_SECRET = 'test-secret-that-is-at-least-thirty-two-characters';
+    process.env.FLEETCROWN_BUILD_INTENT_SECRET =
+      'test-secret-that-is-at-least-thirty-two-characters';
   });
 
   afterAll(() => {
@@ -37,10 +39,7 @@ describe('OrangeCat → FleetCrown build handoff', () => {
     });
 
     const [header, body, signature] = token.split('.');
-    const expected = createHmac(
-      'sha256',
-      process.env.FLEETCROWN_BUILD_INTENT_SECRET as string
-    )
+    const expected = createHmac('sha256', process.env.FLEETCROWN_BUILD_INTENT_SECRET as string)
       .update(`${header}.${body}`)
       .digest('base64url');
     const payload = JSON.parse(

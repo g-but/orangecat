@@ -17,11 +17,27 @@ const fetchMock = vi.fn();
 global.fetch = fetchMock as unknown as typeof fetch;
 
 /** Shapes a model reply the way the provider returns it. */
+/**
+ * A real `Response`, built fresh per call.
+ *
+ * This was a `{ ok, json }` literal. It quietly encoded an assumption about HOW
+ * the client reads a body, and broke the moment it read the text first — which
+ * it must, to keep the vendor's body in the error and tell a spent daily budget
+ * from a busy minute. And a factory rather than a value, because one Response
+ * body can be read only once: a shared instance makes the second link fail with
+ * "Body has already been read".
+ */
 function modelReplies(payload: unknown) {
-  fetchMock.mockResolvedValue({
-    ok: true,
-    json: async () => ({ choices: [{ message: { content: JSON.stringify(payload) } }] }),
-  });
+  fetchMock.mockImplementation(
+    async () =>
+      new Response(
+        JSON.stringify({ choices: [{ message: { content: JSON.stringify(payload) } }] }),
+        {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }
+      )
+  );
 }
 
 const SENTENCE = 'sell my old road bike for 200 francs, a Cannondale in decent condition';

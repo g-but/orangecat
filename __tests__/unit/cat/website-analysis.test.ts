@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Website analysis — the safe fetcher behind the Cat's analyze_website tool.
  * Guards the SSRF rails (private-IP rejection, per-hop redirect re-validation,

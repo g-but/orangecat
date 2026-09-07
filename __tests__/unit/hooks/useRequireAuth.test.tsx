@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The hydration ceiling has to reach every gate, including `isAuthenticated`.
  *

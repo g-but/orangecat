@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The profile pay card must ask the payment system whether money can arrive —
  * never infer it from `profiles.bitcoin_address` / `profiles.lightning_address`.

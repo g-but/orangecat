@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Button Component Tests — behavior, not class strings.
  *

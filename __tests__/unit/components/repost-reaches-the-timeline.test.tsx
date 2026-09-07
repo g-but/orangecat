@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A quote repost has to reach the list it was made from.
  *

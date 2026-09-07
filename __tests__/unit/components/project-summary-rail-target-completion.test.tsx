@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A project is the platform's milestone-accountability entity: people fund it on
  * the promise of work getting done by a date. The create form has collected

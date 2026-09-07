@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The `@` menu, driven through a real textarea.
  *

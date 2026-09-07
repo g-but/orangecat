@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A reply written by the agent has to say so.
  *

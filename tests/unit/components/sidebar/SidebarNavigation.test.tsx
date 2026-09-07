@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SidebarNavigation — section headers must be controls, and a toggle must toggle.
  *
