@@ -439,7 +439,9 @@ export const ROUTES = {
   },
 
   /** Public, no-account-needed landing for a pre-drafted profile. */
-  CLAIM: (claimId: string) => `/claim/${encodeURIComponent(claimId)}`,
+  // Takes the claim TOKEN, not the row id: the id addresses a claim for its
+  // creator, the token is the credential that travels in the link.
+  CLAIM: (claimToken: string) => `/claim/${encodeURIComponent(claimToken)}`,
 
   // Timeline routes
   TIMELINE: '/timeline',

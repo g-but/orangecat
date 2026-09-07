@@ -3,10 +3,16 @@
  *
  * `public.profile_claims` has no anon/authenticated RLS policies — every
  * function here reads and writes it through the service-role admin client.
- * The row's own id is the claim's only credential (like a password-reset
- * link); see the migration for why a permissive "pending rows are viewable"
- * policy would leak every draft platform-wide instead of just the one the
- * caller holds the id for.
+ * See the migration for why a permissive "pending rows are viewable" policy
+ * would leak every draft platform-wide instead of just the one the caller
+ * holds the credential for.
+ *
+ * TWO ADDRESSES, ON PURPOSE (ADR-0004 D4). `token` is the credential: it is
+ * what `/claim/<token>` carries, and it addresses every PUBLIC operation —
+ * preview, claim, decline. `id` is the row's identity and addresses the
+ * CREATOR's operations — list, revoke. They used to be the same column, which
+ * meant a claim could never be named anywhere public, because its public name
+ * was its password.
  *
  * Applying a claimed draft to the recipient's own `profiles` row uses the
  * *caller's* request-scoped client instead — that update stays inside
@@ -20,6 +26,7 @@ import { getAdminClient } from '@/lib/supabase/admin';
 import { looseClient } from '@/lib/supabase/untyped';
 import { logger } from '@/utils/logger';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
+import { buildProfileFill, type ExistingProfileFields } from './fill';
 import type {
   ProfileClaimDraft,
   ProfileClaimPreview,
@@ -47,7 +54,7 @@ export async function createProfileClaim(input: {
   createdBy: string;
   draft: ProfileClaimDraft;
   suggestedUsername?: string;
-}): Promise<ProfileClaimResult<{ id: string }>> {
+}): Promise<ProfileClaimResult<{ id: string; token: string }>> {
   const { data, error } = await looseClient(getAdminClient())
     .from(DATABASE_TABLES.PROFILE_CLAIMS)
     .insert({
@@ -55,14 +62,16 @@ export async function createProfileClaim(input: {
       draft: input.draft,
       suggested_username: input.suggestedUsername?.trim().toLowerCase() || null,
     })
-    .select('id')
+    .select('id, token')
     .single();
 
   if (error || !data) {
     logger.error('Failed to create profile claim', { error, createdBy: input.createdBy });
     return { ok: false, dbError: error };
   }
-  return { ok: true, data: { id: data.id as string } };
+  // `id` addresses the row for its creator; `token` is the credential that
+  // goes in the link. Callers building a URL must use the token.
+  return { ok: true, data: { id: data.id as string, token: data.token as string } };
 }
 
 export async function listProfileClaimsCreatedBy(
@@ -81,18 +90,32 @@ export async function listProfileClaimsCreatedBy(
   return { ok: true, data: (data ?? []) as ProfileClaimRow[] };
 }
 
-/** Public preview for the claim landing page — no auth required to view. */
+/**
+ * Public preview for the claim landing page — no auth required to view.
+ *
+ * Addressed by TOKEN, never by id: the landing page is a public URL, and the
+ * thing in that URL must be the credential rather than the row's identity.
+ */
 export async function getProfileClaimPreview(
-  id: string
+  token: string,
+  options?: {
+    /**
+     * Record this read in the funnel. Off by default and opted into exactly
+     * once per page load: Next calls `generateMetadata` and the page body
+     * separately, so counting inside the fetch itself made every visit look
+     * like two.
+     */
+    countView?: boolean;
+  }
 ): Promise<ProfileClaimResult<ProfileClaimPreview>> {
   const { data: row, error } = await looseClient(getAdminClient())
     .from(DATABASE_TABLES.PROFILE_CLAIMS)
     .select('*')
-    .eq('id', id)
+    .eq('token', token)
     .maybeSingle();
 
   if (error) {
-    logger.error('Failed to load profile claim', { error, id });
+    logger.error('Failed to load profile claim', { error });
     return { ok: false, dbError: error };
   }
   if (!row) {
@@ -110,10 +133,26 @@ export async function getProfileClaimPreview(
     claimedUsername = (profile?.username as string | undefined) ?? null;
   }
 
+  // "Sent but never opened" and "opened and ignored" are the two ends of the
+  // funnel a creator actually needs to tell apart before nudging. Recorded
+  // best-effort: a failure here must never stop a recipient seeing the page.
+  if (options?.countView && typed.status === 'pending') {
+    const { error: viewError } = await looseClient(getAdminClient())
+      .from(DATABASE_TABLES.PROFILE_CLAIMS)
+      .update({
+        first_viewed_at: typed.first_viewed_at ?? new Date().toISOString(),
+        view_count: (typed.view_count ?? 0) + 1,
+      })
+      .eq('token', token);
+    if (viewError) {
+      logger.warn('Failed to record claim view', { error: viewError });
+    }
+  }
+
   return {
     ok: true,
     data: {
-      id: typed.id,
+      token: typed.token,
       draft: typed.draft,
       suggestedUsername: typed.suggested_username,
       status: typed.status,
@@ -151,6 +190,54 @@ export async function revokeProfileClaim(
     .from(DATABASE_TABLES.PROFILE_CLAIMS)
     .update({ status: 'revoked' })
     .eq('id', id);
+  if (error) {
+    return { ok: false, dbError: error };
+  }
+  return { ok: true, data: null };
+}
+
+/**
+ * The recipient says no.
+ *
+ * Deliberately needs no account and no login. Requiring someone to register in
+ * order to refuse something they never asked for would make "no" more
+ * expensive than "yes", which is not consent. Holding the token is the whole
+ * authorisation — the same credential that would have let them accept.
+ *
+ * Distinct from `revoked`, which is the creator withdrawing the link.
+ */
+export async function declineProfileClaim(token: string): Promise<ProfileClaimResult<null>> {
+  const { data: row, error: fetchError } = await looseClient(getAdminClient())
+    .from(DATABASE_TABLES.PROFILE_CLAIMS)
+    .select('status')
+    .eq('token', token)
+    .maybeSingle();
+
+  if (fetchError) {
+    return { ok: false, dbError: fetchError };
+  }
+  if (!row) {
+    return { ok: false, code: 'not_found', message: 'This claim link doesn’t exist.' };
+  }
+  if (row.status === 'claimed') {
+    return {
+      ok: false,
+      code: 'already_claimed',
+      message: 'This has already been claimed.',
+    };
+  }
+  // Declining twice is a no-op, not an error: someone tapping "no thanks"
+  // again should not be told they did something wrong.
+  if (row.status === 'declined') {
+    return { ok: true, data: null };
+  }
+
+  const { error } = await looseClient(getAdminClient())
+    .from(DATABASE_TABLES.PROFILE_CLAIMS)
+    .update({ status: 'declined', declined_at: new Date().toISOString() })
+    .eq('token', token)
+    .eq('status', 'pending');
+
   if (error) {
     return { ok: false, dbError: error };
   }
@@ -207,16 +294,16 @@ async function findAvailableUsername(
  * update runs through it so it stays inside normal "own row" RLS.
  */
 export async function claimProfileClaim(params: {
-  claimId: string;
+  claimToken: string;
   userId: string;
   userSupabase: AnySupabaseClient;
 }): Promise<ProfileClaimResult<{ username: string | null }>> {
-  const { claimId, userId, userSupabase } = params;
+  const { claimToken, userId, userSupabase } = params;
 
   const { data: existing, error: fetchError } = await looseClient(getAdminClient())
     .from(DATABASE_TABLES.PROFILE_CLAIMS)
     .select('*')
-    .eq('id', claimId)
+    .eq('token', claimToken)
     .maybeSingle();
   if (fetchError) {
     return { ok: false, dbError: fetchError };
@@ -227,6 +314,10 @@ export async function claimProfileClaim(params: {
   const row = existing as ProfileClaimRow;
   if (row.status === 'revoked') {
     return { ok: false, code: 'revoked', message: 'This claim link was revoked.' };
+  }
+  if (row.status === 'declined') {
+    // The recipient already said no. Re-claiming would quietly undo a refusal.
+    return { ok: false, code: 'declined', message: 'This was declined.' };
   }
   if (row.status === 'claimed') {
     return {
@@ -243,7 +334,7 @@ export async function claimProfileClaim(params: {
   const { data: won, error: casError } = await looseClient(getAdminClient())
     .from(DATABASE_TABLES.PROFILE_CLAIMS)
     .update({ status: 'claimed', claimed_by: userId, claimed_at: nowIso })
-    .eq('id', claimId)
+    .eq('token', claimToken)
     .eq('status', 'pending')
     .select('draft, suggested_username')
     .maybeSingle();
@@ -266,15 +357,30 @@ export async function claimProfileClaim(params: {
     username = await findAvailableUsername(userSupabase, won.suggested_username as string, userId);
   }
 
-  const profileUpdate: Record<string, unknown> = {
-    name: draft.name,
-    bio: draft.bio ?? null,
-    ...(draft.avatarUrl && { avatar_url: draft.avatarUrl }),
-    ...(draft.bannerUrl && { banner_url: draft.bannerUrl }),
-    ...(draft.website && { website: draft.website }),
-    ...(draft.socialLinks?.length && { social_links: { links: draft.socialLinks } }),
-    ...(username && { username }),
-  };
+  // Fill only what is EMPTY (ADR-0004 D6).
+  //
+  // This used to write `name` and `bio` unconditionally, so a friend who
+  // already had an account lost their own name and bio the moment they opened
+  // a link someone made for them. A claim is a gift, not an overwrite: it may
+  // add to a profile, never replace what its owner already wrote.
+  const { data: current } = await userSupabase
+    .from(DATABASE_TABLES.PROFILES)
+    .select('name, bio, avatar_url, banner_url, website, social_links, username')
+    .eq('id', userId)
+    .maybeSingle();
+
+  const profileUpdate = buildProfileFill(draft, current as ExistingProfileFields, username);
+
+  // An established user claiming a gift may have nothing blank left to fill.
+  // That is a success, not an empty UPDATE — which PostgREST rejects.
+  if (Object.keys(profileUpdate).length === 0) {
+    const { data: unchanged } = await userSupabase
+      .from(DATABASE_TABLES.PROFILES)
+      .select('username')
+      .eq('id', userId)
+      .maybeSingle();
+    return { ok: true, data: { username: (unchanged?.username as string | undefined) ?? null } };
+  }
 
   const { data: updatedProfile, error: profileError } = await userSupabase
     .from(DATABASE_TABLES.PROFILES)
@@ -289,10 +395,9 @@ export async function claimProfileClaim(params: {
     await looseClient(getAdminClient())
       .from(DATABASE_TABLES.PROFILE_CLAIMS)
       .update({ status: 'pending', claimed_by: null, claimed_at: null })
-      .eq('id', claimId);
+      .eq('token', claimToken);
     logger.error('Failed to apply claimed draft to profile', {
       error: profileError,
-      claimId,
       userId,
     });
     return { ok: false, dbError: profileError };

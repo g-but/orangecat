@@ -6,12 +6,12 @@ import { APP_NAME } from '@/config/brand';
 import { publicProfilePath } from '@/config/public-profile-path';
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ token: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params;
-  const result = await getProfileClaimPreview(id);
+  const { token } = await params;
+  const result = await getProfileClaimPreview(token);
   if (!result.ok) {
     return { title: 'Claim link not found' };
   }
@@ -24,8 +24,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ClaimPage({ params }: PageProps) {
-  const { id } = await params;
-  const result = await getProfileClaimPreview(id);
+  const { token } = await params;
+  // The one place a visit is counted — `generateMetadata` above deliberately
+  // does not, or every page load would register as two views.
+  const result = await getProfileClaimPreview(token, { countView: true });
 
   if (!result.ok) {
     notFound();

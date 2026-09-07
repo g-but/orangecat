@@ -1,7 +1,10 @@
 /**
- * POST /api/profile-claims/[id]/claim — claim a pre-drafted profile.
- * Authenticated: the caller must already have (or have just created) their
- * own OrangeCat account. Copies the draft onto the caller's own profile.
+ * POST /api/profile-claims/token/[token]/claim — claim a pre-drafted profile.
+ *
+ * Authenticated: the caller must already have (or have just created) their own
+ * OrangeCat account, because the draft is copied onto their own profile row —
+ * and `profiles.id` is a validated FK to `auth.users(id)`, so there is nowhere
+ * to put it before the account exists.
  *
  * Thin HTTP layer — business rules live in @/domain/profileClaims/service.
  */
@@ -20,11 +23,11 @@ import { logger } from '@/utils/logger';
 import { claimProfileClaim } from '@/domain/profileClaims/service';
 
 export const POST = withAuth(
-  async (req: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
-    const { id } = await params;
-    const idValidation = getValidationError(validateUUID(id, 'claim id'));
-    if (idValidation) {
-      return idValidation;
+  async (req: AuthenticatedRequest, { params }: { params: Promise<{ token: string }> }) => {
+    const { token } = await params;
+    const tokenValidation = getValidationError(validateUUID(token, 'claim token'));
+    if (tokenValidation) {
+      return tokenValidation;
     }
 
     try {
@@ -35,7 +38,7 @@ export const POST = withAuth(
       }
 
       const result = await claimProfileClaim({
-        claimId: id,
+        claimToken: token,
         userId: user.id,
         userSupabase: supabase,
       });
@@ -47,13 +50,15 @@ export const POST = withAuth(
         if (result.code === 'not_found') {
           return apiNotFound(result.message);
         }
-        // expired / already_claimed / revoked — the link is understood, just unusable.
+        // expired / already_claimed / revoked / declined — the link is
+        // understood, it is just no longer usable.
         return apiConflict(result.message);
       }
 
       return apiSuccess({ username: result.data.username });
     } catch (error) {
-      logger.error('profile-claim claim failed', { error, id }, 'ProfileClaims');
+      // The token is a credential — it never goes in a log line.
+      logger.error('profile-claim claim failed', { error }, 'ProfileClaims');
       return handleApiError(error);
     }
   }

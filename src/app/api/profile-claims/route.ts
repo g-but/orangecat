@@ -72,7 +72,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     return apiCreated({
       id: result.data.id,
-      claimUrl: ROUTES.CLAIM(result.data.id),
+      // The link carries the TOKEN, never the row id — see ADR-0004 D4.
+      claimUrl: ROUTES.CLAIM(result.data.token),
     });
   } catch (error) {
     logger.error('profile-claims create failed', error, 'ProfileClaims');
@@ -94,10 +95,15 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
         name: claim.draft.name,
         status: claim.status,
         suggestedUsername: claim.suggested_username,
-        claimUrl: ROUTES.CLAIM(claim.id),
+        claimUrl: ROUTES.CLAIM(claim.token),
         createdAt: claim.created_at,
         claimedAt: claim.claimed_at,
         expiresAt: claim.expires_at,
+        // The funnel a creator actually needs: sent? opened? refused?
+        deliveredAt: claim.delivered_at,
+        firstViewedAt: claim.first_viewed_at,
+        viewCount: claim.view_count,
+        declinedAt: claim.declined_at,
       })),
     });
   } catch (error) {

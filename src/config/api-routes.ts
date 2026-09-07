@@ -238,8 +238,15 @@ export const API_ROUTES = {
   },
   PROFILE_CLAIMS: {
     BASE: '/api/profile-claims',
+    /** Creator-side, addressed by the row id (revoke). */
     BY_ID: (id: string) => `/api/profile-claims/${id}`,
-    CLAIM: (id: string) => `/api/profile-claims/${id}/claim`,
+    /**
+     * Public side, addressed by the credential. `id` addresses the row for its
+     * creator; `token` is what travels in a link — see ADR-0004 D4.
+     */
+    PREVIEW: (token: string) => `/api/profile-claims/token/${token}`,
+    CLAIM: (token: string) => `/api/profile-claims/token/${token}/claim`,
+    DECLINE: (token: string) => `/api/profile-claims/token/${token}/decline`,
   },
 } as const;
 
