@@ -117,7 +117,7 @@ export default function GroupSettingsPage() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toast.error('Group name is required');
+      toast.error('Organization name is required');
       return;
     }
     try {
@@ -187,7 +187,7 @@ export default function GroupSettingsPage() {
               id="group-name"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Group name"
+              placeholder="Organization name"
               className="mt-1"
             />
           </div>

@@ -307,10 +307,16 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
   },
 
   // ==================== COMMUNITY (Network building) ====================
+  // The TYPE stays `group` and so do the tables: renaming those is a
+  // 10-table migration with RLS policies and functions attached, for zero
+  // user-visible gain. What people READ is renamed, and that is what was
+  // unclear — the docs page literally explained the feature as "Groups are
+  // organizations on OrangeCat", which is the product using the better word
+  // to define the worse one.
   group: {
     type: 'group',
-    name: 'Group',
-    namePlural: 'Groups',
+    name: 'Organization',
+    namePlural: 'Organizations',
     tableName: ENTITY_TABLE_NAMES.group,
     userIdField: 'created_by',
     titleColumn: 'name',
@@ -321,8 +327,8 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     publicBasePath: '/groups',
     apiEndpoint: '/api/groups',
     hasTemplates: false,
-    description: 'Community groups and organizations',
-    createActionLabel: 'Start a community group',
+    description: 'Companies, nonprofits, DAOs and communities with a shared identity and treasury',
+    createActionLabel: 'Start an organization',
     category: 'community',
     createPriority: 1,
     paymentPattern: 'none',
