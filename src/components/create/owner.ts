@@ -9,33 +9,24 @@
  * tables join `actors` and `actors.user_id` has no FK, which would demote the
  * money guarantee from structural to conventional.
  *
- * So the third option does not resolve to an actor. It changes the SUBMIT
- * TARGET:
+ * ADR-0005 resolves it: the person becomes an `unclaimed` ACTOR — an
+ * identity that owns rows and cannot receive money — so the third option is
+ * two requests on the same rail, not a different rail:
  *
  *   me           → POST /api/<entity>
- *   group        → POST /api/<entity> { actor_id }
- *   someone else → POST /api/profile-claims { draft: { ..., entities: [...] } }
+ *   group        → POST /api/<entity> { actor_id: <group actor> }
+ *   someone else → POST /api/profile-claims { name }  → placeholder actor_id
+ *                  POST /api/<entity> { actor_id: <placeholder> }
  *
- * Same form, same fields, same validation — which is the whole argument for
- * routing this through the create form rather than a parallel "invite" flow: a
- * bar drafted for Karl has exactly the fields a bar has.
+ * Same form, same fields, same validation, same server-side authorization
+ * (`resolveCreationActor` admits the claim's steward). A studio set up for
+ * Maria has exactly the fields a studio has, and is hers from the first row.
  */
 
-import { GROUP_LABELS, type GroupLabel } from '@/config/group-labels';
 import type { EntityType } from '@/config/entity-registry';
-import { CURRENCY_CODES } from '@/config/currencies';
-import type { ClaimEntityDraft } from '@/domain/profileClaims/draft';
 
 /** `EntityConfig.type` is an EntityType OR the legacy literal 'organization'. */
 type ConfigEntityType = EntityType | 'organization';
-
-function isGroupLabel(value: string | undefined): value is GroupLabel {
-  return value !== undefined && Object.prototype.hasOwnProperty.call(GROUP_LABELS, value);
-}
-
-function isCurrencyCode(value: string | undefined): value is (typeof CURRENCY_CODES)[number] {
-  return value !== undefined && (CURRENCY_CODES as readonly string[]).includes(value);
-}
 
 export type CreateOwner =
   | { kind: 'me' }
@@ -45,72 +36,19 @@ export type CreateOwner =
 export const OWNER_ME: CreateOwner = { kind: 'me' };
 
 /**
- * Entity types a claim draft can actually carry.
+ * Entity types that can be created for someone who has no account yet.
  *
- * The option is offered ONLY for these. Showing "someone else" on an entity
- * type the claim cannot hold would take a creator through the whole form and
- * fail at the end — a dead end is worse than an absent option.
+ * ADR-0005: the thing is a real row owned by the person's placeholder actor,
+ * so any `actor_id`-owned entity on the shared create rail qualifies in
+ * principle. It is offered ONLY where the public page renders the unclaimed
+ * band and disables funding — otherwise a visitor sees a page with no
+ * explanation of whose it is. Projects first: that is the fundable, "she
+ * needs money for a studio" case. Groups are excluded by structure, not by
+ * choice — a group's owner is a `group_members` row, and that FKs to
+ * `profiles`, which a placeholder does not have.
  */
-export const CLAIMABLE_ENTITY_TYPES: readonly EntityType[] = ['group', 'project'];
+export const CLAIMABLE_ENTITY_TYPES: readonly EntityType[] = ['project'];
 
 export function canCreateForSomeoneElse(entityType: ConfigEntityType): boolean {
   return CLAIMABLE_ENTITY_TYPES.includes(entityType as EntityType);
-}
-
-/**
- * Map validated form values onto the claim's entity draft.
- *
- * Returns null when the entity type is not claimable, so a caller can never
- * silently post a draft that materialisation will not understand.
- */
-export function toClaimEntity(
-  entityType: ConfigEntityType,
-  values: Record<string, unknown>
-): ClaimEntityDraft | null {
-  const str = (key: string): string | undefined => {
-    const value = values[key];
-    return typeof value === 'string' && value.trim() !== '' ? value : undefined;
-  };
-
-  if (entityType === 'group') {
-    const name = str('name') ?? str('title');
-    if (!name) {
-      return null;
-    }
-    const rawLabel = str('label');
-    return {
-      kind: 'group',
-      name,
-      // A bar is a `groups` row with label='company'; the form's own label
-      // select is the SSOT for which one, so it is passed through rather than
-      // re-derived here.
-      label: isGroupLabel(rawLabel) ? rawLabel : 'circle',
-      description: str('description'),
-      tags: Array.isArray(values.tags) ? (values.tags as string[]) : undefined,
-    };
-  }
-
-  if (entityType === 'project') {
-    const title = str('title') ?? str('name');
-    const description = str('description');
-    // `projectSchema` REQUIRES a description, so a project drafted without one
-    // could never materialise. Refusing here means the CREATOR finds out at
-    // submit time, instead of the RECIPIENT finding out after they accept.
-    if (!title || !description) {
-      return null;
-    }
-    const goal = values.goal_amount;
-    const currency = str('currency');
-    return {
-      kind: 'project',
-      title,
-      description,
-      // Positive INTEGER, matching projectSchema — anything else would validate
-      // as a draft and fail at materialisation.
-      goalAmount: typeof goal === 'number' && Number.isInteger(goal) && goal > 0 ? goal : undefined,
-      currency: isCurrencyCode(currency) ? currency : undefined,
-    };
-  }
-
-  return null;
 }

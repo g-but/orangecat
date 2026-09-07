@@ -16,6 +16,9 @@ import { ROUTES } from '@/config/routes';
 import { APP_NAME, APP_KICKER, SITE_URL } from '@/config/brand';
 import { applyProfilePrivacy } from '@/config/profile-privacy';
 import { resolveHistoricalUsername } from '@/domain/lightning-address/username-history';
+import { getUnclaimedOwnerBySlug } from '@/domain/profileClaims/unclaimed';
+import { UnclaimedProfileView } from '@/components/claim/UnclaimedProfileView';
+import { looseClient } from '@/lib/supabase/untyped';
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -70,6 +73,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     username: string | null;
   } | null;
   if (!profile) {
+    const unclaimed = await getUnclaimedOwnerBySlug(supabase, targetUsername);
+    if (unclaimed) {
+      return {
+        title: `${unclaimed.name} · ${APP_NAME}`,
+        description: `${unclaimed.name} has a page on ${APP_NAME} that hasn’t been claimed yet.`,
+        // NOT indexed until its subject has accepted it (ADR-0005 D4). Public
+        // on-platform and by link; invisible to search engines until she says
+        // yes — that is the line between a growth mechanic and putting a real
+        // person's name into Google without asking.
+        robots: { index: false, follow: false },
+      };
+    }
     return {
       title: 'Profile Not Found',
       description: 'The profile you are looking for does not exist.',
@@ -180,6 +195,35 @@ export default async function PublicProfilePage({ params }: PageProps) {
         permanentRedirect(ROUTES.PROFILES.VIEW(current.username));
       }
     }
+
+    // ADR-0005 D7 — the slug of a person who has not accepted yet. Her studio
+    // was shared under this address before she had an account, and the link
+    // has to keep working: on claim the slug becomes her username, so this
+    // same URL resolves to a real profile afterwards.
+    const unclaimed = await getUnclaimedOwnerBySlug(supabase, targetUsername);
+    if (unclaimed) {
+      const { data: ownedProjects } = await looseClient(supabase)
+        .from(getTableName('project'))
+        .select('id, title, description')
+        .eq('actor_id', unclaimed.actorId)
+        .order('created_at', { ascending: false });
+
+      return (
+        <UnclaimedProfileView
+          name={unclaimed.name}
+          avatarUrl={unclaimed.avatarUrl}
+          stewardUsername={unclaimed.stewardUsername}
+          projects={
+            (ownedProjects ?? []) as Array<{
+              id: string;
+              title: string;
+              description: string | null;
+            }>
+          }
+        />
+      );
+    }
+
     notFound();
   }
 

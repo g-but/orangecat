@@ -18,12 +18,9 @@ import {
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
-import { createProfileClaim, listProfileClaimsCreatedBy } from '@/domain/profileClaims/service';
-import {
-  claimEntitySchema,
-  normalizeClaimDraft,
-  MAX_CLAIM_ENTITIES,
-} from '@/domain/profileClaims/draft';
+import { createProfileClaim } from '@/domain/profileClaims/service';
+import { listProfileClaimsCreatedBy } from '@/domain/profileClaims/creator';
+import { normalizeClaimDraft } from '@/domain/profileClaims/draft';
 import { ROUTES } from '@/config/routes';
 
 const socialLinkSchema = z.object({
@@ -45,11 +42,6 @@ const createClaimSchema = z.object({
   // `profiles.username` that skipped RESERVED_USERNAMES — `payments`,
   // `support`, `security` were all suggestible.
   suggestedUsername: usernameSchema.optional(),
-  // What this person will OWN once they accept (ADR-0004 D1) — a bar, a
-  // project. Capped, because materialisation runs on the recipient's behalf
-  // the moment they click accept, and an uncapped list would let one link mint
-  // arbitrarily many fundable rows for someone who clicked once.
-  entities: z.array(claimEntitySchema).max(MAX_CLAIM_ENTITIES).optional(),
 });
 
 export const POST = withAuth(async (req: AuthenticatedRequest) => {
@@ -67,7 +59,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         fields: parsed.error.issues.map(i => ({ field: i.path.join('.'), message: i.message })),
       });
     }
-    const { name, bio, avatarUrl, bannerUrl, website, socialLinks, suggestedUsername, entities } =
+    const { name, bio, avatarUrl, bannerUrl, website, socialLinks, suggestedUsername } =
       parsed.data;
 
     const result = await createProfileClaim({
@@ -75,7 +67,6 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       draft: {
         kind: 'person',
         profile: { name, bio, avatarUrl, bannerUrl, website, socialLinks },
-        ...(entities?.length ? { entities } : {}),
       },
       suggestedUsername,
     });
@@ -88,6 +79,11 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       id: result.data.id,
       // The link carries the TOKEN, never the row id — see ADR-0004 D4.
       claimUrl: ROUTES.CLAIM(result.data.token),
+      // The placeholder actor: pass it as `actor_id` when creating what this
+      // person will own, and the rows are theirs from the start (ADR-0005 D1).
+      actorId: result.data.actorId,
+      slug: result.data.slug,
+      pageUrl: ROUTES.PROFILES.VIEW(result.data.slug),
     });
   } catch (error) {
     logger.error('profile-claims create failed', error, 'ProfileClaims');
@@ -105,15 +101,11 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
 
     return apiSuccess({
       claims: result.data.map(claim => {
-        // Rows predating the entities[] shape carry a flat person draft.
+        // Rows predating the `{kind, profile}` shape carry a flat person draft.
         const draft = normalizeClaimDraft(claim.draft);
         return {
           id: claim.id,
           name: draft?.profile.name ?? 'Unnamed',
-          entities: (draft?.entities ?? []).map(e => ({
-            kind: e.kind,
-            name: e.kind === 'group' ? e.name : e.title,
-          })),
           status: claim.status,
           suggestedUsername: claim.suggested_username,
           claimUrl: ROUTES.CLAIM(claim.token),

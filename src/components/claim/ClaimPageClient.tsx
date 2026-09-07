@@ -29,8 +29,6 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
 
   const { draft, isExpired } = preview;
   const person = draft.profile;
-  // What this person will own the moment they accept — the bar, the project.
-  const entities = draft.entities ?? [];
   // The credential, not the row id — this is what the public routes address.
   const claimToken = preview.token;
 
@@ -44,21 +42,18 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
         setIsClaiming(false);
         return;
       }
-      const created = (body.data?.created ?? []) as Array<{ kind: string }>;
-      const incomplete = Boolean(body.data?.incomplete);
-      if (incomplete) {
-        // Partial materialisation is reported, never hidden — the recipient is
-        // told what didn't appear rather than left to notice the absence.
-        toast.warning('Some of it could not be created. Open the link again to finish.');
-      } else if (created.length > 0) {
-        toast.success(
-          `Welcome, ${person.name} — your profile and ${created.length === 1 ? 'your ' + created[0].kind : created.length + ' things'} are live.`
-        );
-      } else {
-        toast.success(`Welcome, ${person.name} — your profile is live.`);
-      }
+      toast.success(`Welcome, ${person.name} — it’s yours now.`);
+      // Land on the page that was theirs all along, under the same address
+      // (ADR-0005 D7): the slug became their handle where it was free.
       const username = body.data?.username as string | null;
-      router.push(username ? publicProfilePath(username) : ROUTES.PROFILES.ME);
+      const pageSlug = body.data?.pageSlug as string | null;
+      router.push(
+        username
+          ? publicProfilePath(username)
+          : pageSlug
+            ? publicProfilePath(pageSlug)
+            : ROUTES.PROFILES.ME
+      );
     } catch {
       toast.error('Could not claim this profile. Check your connection and try again.');
       setIsClaiming(false);
@@ -139,36 +134,6 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
               </div>
             )}
 
-            {entities.length > 0 && (
-              <div className="mt-6">
-                <p className="text-xs font-medium uppercase tracking-caps text-fg-muted">
-                  Comes with
-                </p>
-                <ul className="mt-2 space-y-2">
-                  {entities.map((entity, index) => (
-                    <li
-                      key={`${entity.kind}-${index}`}
-                      className="flex items-baseline justify-between gap-3 rounded-lg border border-border-subtle bg-surface-page px-4 py-3"
-                    >
-                      <span className="text-sm font-medium text-fg-primary">
-                        {entity.kind === 'group' ? entity.name : entity.title}
-                      </span>
-                      <span className="shrink-0 text-xs text-fg-muted">
-                        {entity.kind === 'group' ? entity.label : 'project'}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-2 text-xs text-fg-muted">
-                  {/* The single most important sentence on this page: nothing
-                      exists yet, and accepting is what creates it — owned by
-                      the person accepting, never transferred from anyone. */}
-                  {entities.length === 1 ? 'This doesn’t exist yet' : 'These don’t exist yet'} —
-                  they get created, owned by you, when you accept.
-                </p>
-              </div>
-            )}
-
             <div className="mt-6 rounded-lg border border-border-subtle bg-surface-page p-4 text-sm text-fg-secondary">
               Someone put this together for {person.name.split(' ')[0]} on {APP_NAME}. Claim it to
               take it over — edit anything, add your own payment methods, and make it yours.
@@ -192,7 +157,7 @@ export default function ClaimPageClient({ preview }: ClaimPageClientProps) {
                 onClick={handleClaim}
                 isLoading={isClaiming}
               >
-                {entities.length > 0 ? 'Claim this' : 'Claim this profile'}
+                Take it over
               </Button>
             ) : (
               <div className="mt-6 space-y-2">

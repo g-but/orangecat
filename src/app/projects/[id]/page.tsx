@@ -1,7 +1,10 @@
+import type { ProjectFull } from './projectFull';
 import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
 import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
+import { UnclaimedBand } from '@/components/claim/UnclaimedBand';
+import { getUnclaimedOwner } from '@/domain/profileClaims/unclaimed';
 import { ROUTES } from '@/config/routes';
 import { PublicEntityOwnerBar } from '@/components/public/PublicEntityOwnerBar';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
@@ -40,30 +43,6 @@ type ProjectMeta = {
   category: string | null;
   status: string;
   user_id: string;
-};
-
-// Mirrors ProjectPageClient's Project interface — all required fields plus known optionals
-type ProjectFull = {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string | null;
-  goal_amount: number | null;
-  raised_amount: number | null;
-  currency: string | null;
-  category: string | null;
-  status: string;
-  bitcoin_address: string | null;
-  lightning_address: string | null;
-  funding_purpose: string | null;
-  website_url: string | null;
-  tags: string[] | null;
-  created_at: string;
-  updated_at: string;
-  bitcoin_balance_btc?: number | null;
-  bitcoin_balance_updated_at?: string | null;
-  supporters_count?: number | null;
-  last_support_at?: string | null;
 };
 
 type ProfileSnippet = {
@@ -172,6 +151,11 @@ export default async function PublicProjectPage({ params }: PageProps) {
     notFound();
   }
 
+  // ADR-0005: the project may be owned by a placeholder — a person who has not
+  // accepted it yet. That owner has no profile, so the lookup below finds
+  // nothing; the band says whose it is instead of the page rendering ownerless.
+  const unclaimedOwner = await getUnclaimedOwner(supabase, project.actor_id);
+
   // Fetch profile separately (more reliable than JOIN)
   let profile: (ProfileSnippet & { id: string }) | null = null;
   if (project.user_id) {
@@ -268,6 +252,12 @@ export default async function PublicProjectPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdString(structuredData) }}
       />
+      {unclaimedOwner && (
+        <UnclaimedBand
+          ownerName={unclaimedOwner.name}
+          stewardUsername={unclaimedOwner.stewardUsername}
+        />
+      )}
       {isOwner && (
         <PublicEntityOwnerBar
           isOwnerPreview={isOwnerPreview}

@@ -34,6 +34,8 @@ const claimsRoute = read('src/app/api/profile-claims/route.ts');
 const apiRoutes = read('src/config/api-routes.ts');
 const claimClient = read('src/components/claim/ClaimPageClient.tsx');
 const service = read('src/domain/profileClaims/service.ts');
+// Creator-side operations live in `creator.ts` — see the split's rationale there.
+const creator = read('src/domain/profileClaims/creator.ts');
 
 describe('a claim link carries the token', () => {
   it('builds every claim URL from the token', () => {
@@ -74,7 +76,7 @@ describe('the service addresses each half by the right column', () => {
   });
 
   it('keeps revoke — a creator action — addressed by id', () => {
-    const revoke = service.slice(service.indexOf('export async function revokeProfileClaim'));
+    const revoke = creator.slice(creator.indexOf('export async function revokeProfileClaim'));
     expect(revoke.slice(0, 900)).toMatch(/\.eq\('id', id\)/);
   });
 
