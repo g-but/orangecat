@@ -1,16 +1,24 @@
 ---
-title: "The Two Halves of the Individual Singularity"
-excerpt: "Why production and transaction must be paired infrastructure — and where OrangeCat fits in the architecture of the leverage shift from companies to individuals."
-date: "2026-06-01"
-tags: ["Vision", "Cockpit", "AI Agents", "Bitcoin", "Lightning", "Singularity", "Pseudonymity", "Architecture"]
+title: 'The Two Halves of the Individual Singularity'
+excerpt: 'Why production and transaction must be paired infrastructure — and where OrangeCat fits in the architecture of the leverage shift from companies to individuals.'
+date: '2026-06-01'
+tags:
+  [
+    'Vision',
+    'Cockpit',
+    'AI Agents',
+    'Bitcoin',
+    'Lightning',
+    'Singularity',
+    'Pseudonymity',
+    'Architecture',
+  ]
 featured: false
-author: "OrangeCat Team"
+author: 'OrangeCat Team'
 published: true
 ---
 
-# The Two Halves of the Individual Singularity
-
-The phrase "individual singularity" sounds abstract until you ask the boring question: *what does it actually take?*
+The phrase "individual singularity" sounds abstract until you ask the boring question: _what does it actually take?_
 
 The honest answer is two things, not one.
 
@@ -106,4 +114,4 @@ The two halves of the individual singularity. Both halves, by the same author, w
 
 ---
 
-*This piece is published in parallel on Cockpit's Thoughts surface. It explains where OrangeCat fits in the larger architecture and why the pairing with Cockpit is structural, not opportunistic. The companion essay "From Two AIs to One" continues the argument into the convergence path that scales to nine billion builders.*
+_This piece is published in parallel on Cockpit's Thoughts surface. It explains where OrangeCat fits in the larger architecture and why the pairing with Cockpit is structural, not opportunistic. The companion essay "From Two AIs to One" continues the argument into the convergence path that scales to nine billion builders._

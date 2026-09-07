@@ -1,15 +1,6 @@
 /** @type {import('next').NextConfig} */
 
 const path = require('path');
-const withMDX = require('@next/mdx')({
-  extension: /\.mdx?$/,
-  options: {
-    remarkPlugins: [],
-    rehypePlugins: [],
-    // Remove providerImportSource to avoid client component issues
-  },
-});
-
 let withBundleAnalyzer = config => config;
 try {
   withBundleAnalyzer = require('@next/bundle-analyzer')({
@@ -28,17 +19,21 @@ const nextConfig = {
   // Fix workspace root detection to prevent watching entire home directory
   outputFileTracingRoot: __dirname,
 
+  // Next 16 builds with Turbopack. A `webpack` key without a `turbopack` key
+  // is a FATAL build error ("This may be a mistake") — @next/mdx used to
+  // supply the turbopack key implicitly; with MDX gone, acknowledge Turbopack
+  // explicitly. The webpack section below still applies to `next dev --webpack`
+  // style runs and is otherwise ignored by Turbopack.
+  turbopack: {},
+
   // Blog posts are read from content/blog at request time (src/lib/blog.ts).
   // File tracing only follows require/import graphs, so the standalone build
-  // shipped WITHOUT the mdx files — every post rendered as a frontmatter-less
+  // shipped WITHOUT the markdown files — every post rendered as a frontmatter-less
   // stub in prod. Explicitly include them for every route that reads them.
   outputFileTracingIncludes: {
     '/blog': ['./content/blog/**'],
     '/blog/[slug]': ['./content/blog/**'],
   },
-
-  // Support MDX files
-  pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
 
   // Externalize Supabase packages for server-side rendering
   // 'standalone' output is what the Hetzner self-host needs — opt in via
@@ -390,7 +385,7 @@ const nextConfig = {
   },
 };
 
-module.exports = withBundleAnalyzer(withMDX(nextConfig));
+module.exports = withBundleAnalyzer(nextConfig);
 
 // Performance monitoring
 if (process.env.NODE_ENV === 'production') {
