@@ -18,7 +18,8 @@ import {
 } from '@/lib/api/standardResponse';
 import { rateLimitWriteAsync, retryAfterSeconds } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
-import { createProfileClaim, listProfileClaimsCreatedBy } from '@/domain/profileClaims/service';
+import { createProfileClaim } from '@/domain/profileClaims/service';
+import { listProfileClaimsCreatedBy } from '@/domain/profileClaims/creator';
 import { normalizeClaimDraft } from '@/domain/profileClaims/draft';
 import { ROUTES } from '@/config/routes';
 

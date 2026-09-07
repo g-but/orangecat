@@ -419,6 +419,9 @@ export const ROUTES = {
     DOCUMENTS_CREATE: ENTITY_REGISTRY['document'].createPath,
     PROFILE_CLAIMS: '/dashboard/profile-claims',
     PROFILE_CLAIMS_NEW: '/dashboard/profile-claims/new',
+    /** Where creating for someone else lands: the link, and a way to send it. */
+    PROFILE_CLAIMS_SHARE: (claimId: string) =>
+      `/dashboard/profile-claims/${encodeURIComponent(claimId)}/share`,
     // Note: there is no /dashboard/settings page. Account settings live at
     // ROUTES.SETTINGS; AI settings at ROUTES.SETTINGS_AI.
   },

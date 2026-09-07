@@ -2,6 +2,7 @@ import { ZodError } from 'zod';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { API_ROUTES } from '@/config/api-routes';
+import { ROUTES } from '@/config/routes';
 import { apiErrorMessage } from '@/lib/api/errorMessage';
 import type { CreateOwner } from '../../owner';
 import { entityEvents } from '@/lib/analytics';
@@ -90,6 +91,7 @@ export async function executeEntityFormSubmit<T extends Record<string, unknown>>
     // first row, and every field, validation and template is the same one a
     // creator uses for themselves.
     let placeholderActorId: string | undefined;
+    let claimIdForShare: string | undefined;
     if (mode === 'create' && owner?.kind === 'someone-else') {
       const recipientName = owner.name.trim();
       if (!recipientName) {
@@ -112,6 +114,7 @@ export async function executeEntityFormSubmit<T extends Record<string, unknown>>
         return;
       }
       placeholderActorId = claimBody.data.actorId as string;
+      claimIdForShare = claimBody.data.id as string;
     }
 
     const url =
@@ -197,6 +200,13 @@ export async function executeEntityFormSubmit<T extends Record<string, unknown>>
     if (onSuccess) {
       showSuccessToast();
       onSuccess(result.data);
+    } else if (claimIdForShare) {
+      // Created for someone else (ADR-0005 D8): the outcome is a LINK, not a
+      // page. Land on the screen that hands it over — the link, a message
+      // already written, and one tap to send it — rather than on the entity,
+      // which belongs to someone who has not seen it yet.
+      clearDraft();
+      router.push(ROUTES.DASHBOARD.PROFILE_CLAIMS_SHARE(claimIdForShare));
     } else if (mode === 'create' && result.data?.id) {
       onEntityCreated({
         id: result.data.id,

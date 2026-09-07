@@ -123,22 +123,6 @@ export async function createProfileClaim(input: {
   return { ok: true, data: { id: claimId, token: data.token as string, actorId, slug } };
 }
 
-export async function listProfileClaimsCreatedBy(
-  createdBy: string
-): Promise<ProfileClaimResult<ProfileClaimRow[]>> {
-  const { data, error } = await looseClient(getAdminClient())
-    .from(DATABASE_TABLES.PROFILE_CLAIMS)
-    .select('*')
-    .eq('created_by', createdBy)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    logger.error('Failed to list profile claims', { error, createdBy });
-    return { ok: false, dbError: error };
-  }
-  return { ok: true, data: (data ?? []) as ProfileClaimRow[] };
-}
-
 /**
  * Public preview for the claim landing page — no auth required to view.
  *
@@ -230,40 +214,6 @@ export async function getProfileClaimPreview(
       claimedUsername,
     },
   };
-}
-
-/** Creator-only: pull a link before anyone uses it. */
-export async function revokeProfileClaim(
-  id: string,
-  requestedBy: string
-): Promise<ProfileClaimResult<null>> {
-  const { data: row, error: fetchError } = await looseClient(getAdminClient())
-    .from(DATABASE_TABLES.PROFILE_CLAIMS)
-    .select('created_by, status')
-    .eq('id', id)
-    .maybeSingle();
-
-  if (fetchError) {
-    return { ok: false, dbError: fetchError };
-  }
-  if (!row) {
-    return { ok: false, code: 'not_found', message: 'Claim not found' };
-  }
-  if (row.created_by !== requestedBy) {
-    return { ok: false, code: 'not_found', message: 'Claim not found' };
-  }
-  if (row.status !== 'pending') {
-    return { ok: false, code: 'already_claimed', message: 'Only a pending claim can be revoked' };
-  }
-
-  const { error } = await looseClient(getAdminClient())
-    .from(DATABASE_TABLES.PROFILE_CLAIMS)
-    .update({ status: 'revoked' })
-    .eq('id', id);
-  if (error) {
-    return { ok: false, dbError: error };
-  }
-  return { ok: true, data: null };
 }
 
 /**
