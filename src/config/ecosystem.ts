@@ -44,8 +44,13 @@ export const ECOSYSTEM = {
     siteUrl: solonOrigin.toString(),
   },
   support: {
-    lightningAddress:
-      process.env.NEXT_PUBLIC_ECOSYSTEM_LIGHTNING_ADDRESS ?? 'orangecat@getalby.com',
+    // Was orangecat@getalby.com, which 404s — the Alby account behind it no
+    // longer exists, and prod does not override this env var, so the "support
+    // the ecosystem" address could not be paid by anyone. Verified 2026-09-07:
+    // getalby.com/.well-known/lnurlp/orangecat returns a 404 HTML page, while
+    // coinos.io/.well-known/lnurlp/orangecat returns a payRequest, mints a real
+    // invoice, and supports LUD-21 verify (so settlement is detectable).
+    lightningAddress: process.env.NEXT_PUBLIC_ECOSYSTEM_LIGHTNING_ADDRESS ?? 'orangecat@coinos.io',
     bitcoinAddress:
       process.env.NEXT_PUBLIC_ECOSYSTEM_BITCOIN_ADDRESS ??
       'bc1q3hh4yklcmwtpnqmxyksw36yedg7zyfy6tzzqwz',
