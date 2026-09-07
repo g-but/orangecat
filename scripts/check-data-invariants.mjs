@@ -328,6 +328,33 @@ async function checkEmailDerivedUsernames() {
   }
 }
 
+// The same leak, one column over.
+//
+// The 2026-08-26 sweep cleared display names that were the email local part for
+// exactly this reason, and nothing watched the column afterwards. That gap
+// mattered the moment 20260907090000 added a write path setting `name` from
+// OAuth metadata: some providers put the address itself in that field, so a
+// repair for one leak is a plausible route back in for the other. The migration
+// guards it at write time; this is the gate behind the guard.
+const EMAIL_DERIVED_NAME_BASELINE = 0;
+
+async function checkEmailDerivedNames() {
+  const count = Number(await rpc('count_email_derived_names'));
+
+  if (count > EMAIL_DERIVED_NAME_BASELINE) {
+    violation(
+      'profiles.name_from_email',
+      `${count} profile(s) publish their email local part as a display NAME. A name is as ` +
+        `public as a handle — it renders in every thread, mention and profile card — so this ` +
+        `is the leak count_email_derived_usernames() watches, one column over. Find the write ` +
+        `path that set it before the count grows.`,
+      []
+    );
+  } else {
+    notes.push('profiles: no display name is an email local part');
+  }
+}
+
 /**
  * `@cat` must point at the Cat.
  *
@@ -588,6 +615,7 @@ async function main() {
     checkSilentlyDroppedCatTurns,
     checkOrphanedProfiles,
     checkEmailDerivedUsernames,
+    checkEmailDerivedNames,
     checkCatHandle,
     checkCatAnswersAreReadable,
     checkBrokenFunctions,
