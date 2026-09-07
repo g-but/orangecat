@@ -190,7 +190,12 @@ export function useAuthForm() {
       if (result.error) {
         throw new Error(getReadableError(result.error, 'Anonymous sign-in failed'));
       }
-      const redirectUrl = searchParams?.get('from') || '/dashboard';
+      // Same-origin paths only — `from` is attacker-suppliable via the URL.
+      // The session branch above already guards this; without the same check
+      // here, anonymous sign-in was an open redirect.
+      const anonFrom = searchParams?.get('from') || '/dashboard';
+      const redirectUrl =
+        anonFrom.startsWith('/') && !anonFrom.startsWith('//') ? anonFrom : '/dashboard';
       router.replace(redirectUrl);
     } catch (err) {
       // Surface the failure: anonymous sign-in can fail for environment
