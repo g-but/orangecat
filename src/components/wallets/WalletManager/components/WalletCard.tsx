@@ -7,6 +7,7 @@ import { Pencil, Trash2, Star, RefreshCw, Copy, AlertTriangle } from 'lucide-rea
 import { toast } from 'sonner';
 import { WALLET_CATEGORIES } from '@/types/wallet';
 import { WalletForm } from './WalletForm';
+import { WalletTransactions } from './WalletTransactions';
 import type { WalletCardProps } from '../types';
 import { truncateAddress } from '@/utils/string';
 import { displayBTC } from '@/services/currency/formatting';
@@ -73,7 +74,6 @@ export function WalletCard({
     },
     convertFromBTC
   );
-
 
   // The public receive handle to show + copy. A wallet may have an on-chain
   // address, a Lightning address, or only a wallet connection (NWC — no public
@@ -203,6 +203,15 @@ export function WalletCard({
               ? `Updated ${formatDateTime(wallet.balance_updated_at)}`
               : 'Not checked yet — refresh to read it from the blockchain'}
           </div>
+        </div>
+      )}
+
+      {/* History — same condition as the balance, and owner-only: the route
+          refuses anyone else, and an address's transactions are not ours to
+          publish on someone else's behalf. */}
+      {tracksOnChainBalance && isOwner && (
+        <div className="mb-4">
+          <WalletTransactions walletId={wallet.id} />
         </div>
       )}
 
