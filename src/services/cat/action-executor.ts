@@ -8,6 +8,7 @@
  * (entities, communication, organization, context, productivity, payments).
  */
 
+import { validateActionParameters } from './action-schemas';
 import type { AnySupabaseClient } from '@/lib/supabase/types';
 import { CAT_ACTIONS, type CatAction, type ActionCategory } from '@/config/cat-actions';
 import { CatPermissionService } from './permission-service';
@@ -94,6 +95,28 @@ export class CatActionExecutor {
       };
     }
 
+    // 1b. Validate parameters against the registry's own declaration
+    // (ADR-0006 D4). This ran nowhere before: the API schema is
+    // `z.record(unknown)` and model JSON went straight to the handler, so a
+    // missing required field surfaced as whatever that handler threw.
+    //
+    // Deliberately BEFORE the permission check. Malformed input is not a
+    // permission story, and an audit row saying "denied" would misattribute a
+    // typo to the user's grants. Nothing has been written at this point, so
+    // rejecting here costs nothing and — with the in-turn loop — hands the
+    // model a sentence it can correct on the next step.
+    const validation = validateActionParameters(actionId, parameters);
+    if (!validation.ok) {
+      return {
+        success: false,
+        code: 'invalid_parameters',
+        actionId,
+        status: 'failed',
+        error: validation.error,
+      };
+    }
+    const validatedParameters = validation.data ?? parameters;
+
     // 2. Check permission
     const permission = await this.permissionService.checkPermission(userId, actionId);
 
@@ -104,7 +127,7 @@ export class CatActionExecutor {
       await logDeniedAction(this.supabase, {
         userId,
         action,
-        parameters,
+        parameters: validatedParameters,
         reason,
         conversationId,
         messageId,
@@ -124,14 +147,14 @@ export class CatActionExecutor {
     const spendCheck = await this.permissionService.checkSpendCaps(
       userId,
       actionId,
-      extractBtcAmount(action, parameters)
+      extractBtcAmount(action, validatedParameters)
     );
     if (!spendCheck.allowed) {
       const reason = spendCheck.reason || 'Spend cap exceeded';
       await logDeniedAction(this.supabase, {
         userId,
         action,
-        parameters,
+        parameters: validatedParameters,
         reason,
         conversationId,
         messageId,
@@ -150,7 +173,7 @@ export class CatActionExecutor {
       const pendingAction = await this.createPendingAction(
         userId,
         action,
-        parameters,
+        validatedParameters,
         conversationId,
         messageId
       );
@@ -161,14 +184,21 @@ export class CatActionExecutor {
         status: 'pending_confirmation',
         pendingActionId: pendingAction.id,
         data: {
-          description: generateActionDescription(action, parameters),
+          description: generateActionDescription(action, validatedParameters),
           pendingAction,
         },
       };
     }
 
     // 4. Execute action
-    return this.performAction(userId, actorId, action, parameters, conversationId, messageId);
+    return this.performAction(
+      userId,
+      actorId,
+      action,
+      validatedParameters,
+      conversationId,
+      messageId
+    );
   }
 
   /**
