@@ -195,8 +195,20 @@ export function WalletCard({
               </button>
             )}
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-bitcoinOrange">
-            {displayBTC(wallet.balance_btc)}
+          {/* An unchecked balance is UNKNOWN, not zero. `balance_updated_at`
+              is null until someone reads the chain, and rendering that as
+              "0 BTC" in the headline asserted a number nobody had measured —
+              the small print below said "not checked yet" and lost the
+              argument to the big orange figure. A wallet holding 60,580 sats
+              displayed as 0 BTC while its own transaction list showed the
+              deposit (observed 2026-09-08). Same class as the xpub balance
+              this UI sits on top of: never present unmeasured as measured. */}
+          <div
+            className={`text-2xl sm:text-3xl font-bold ${
+              wallet.balance_updated_at ? 'text-bitcoinOrange' : 'text-fg-tertiary'
+            }`}
+          >
+            {wallet.balance_updated_at ? displayBTC(wallet.balance_btc) : '—'}
           </div>
           <div className="text-xs text-fg-secondary mt-2">
             {wallet.balance_updated_at
