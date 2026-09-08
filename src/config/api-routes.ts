@@ -67,6 +67,10 @@ export const API_ROUTES = {
     TRANSFER: '/api/wallets/transfer',
     ENTITY_VISIBILITY: '/api/wallets/entity-visibility',
     RECEIVE_STATUS: '/api/wallets/receive-status',
+    /** Owner-only on-chain history. Server-side: mempool.space must not be
+     *  called from a browser — that leaks the viewer's IP and the owner's
+     *  addresses to a third party. */
+    TRANSACTIONS: (id: string) => `/api/wallets/${id}/transactions`,
   },
   ENTITY_WALLETS: '/api/entity-wallets',
   /** What Bitcoin costs — our own origin, so no third-party call from a browser. */
