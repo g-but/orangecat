@@ -52,7 +52,7 @@ export type ActionRiskLevel = 'low' | 'medium' | 'high';
 
 interface ActionParameter {
   name: string;
-  type: 'string' | 'number' | 'boolean' | 'entity_id' | 'user_id' | 'btc' | 'array';
+  type: 'string' | 'number' | 'boolean' | 'entity_id' | 'user_id' | 'btc' | 'array' | 'object';
   required: boolean;
   description: string;
   default?: unknown;
@@ -595,7 +595,15 @@ export const CAT_ACTIONS: Record<string, CatAction> = {
     parameters: [
       { name: 'entity_type', type: 'string', required: true, description: 'Type of entity' },
       { name: 'entity_id', type: 'entity_id', required: true, description: 'Entity ID to update' },
-      { name: 'updates', type: 'string', required: true, description: 'Fields to update (JSON)' },
+      // An object, and always was — callers pass `{ title: '…' }`. Declaring
+      // it 'string' was harmless only while nothing validated the
+      // declaration; the moment something did, every update failed.
+      {
+        name: 'updates',
+        type: 'object',
+        required: true,
+        description: 'Fields to update, as an object',
+      },
     ],
     examples: [
       'Update my product price',
