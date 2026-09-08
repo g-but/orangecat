@@ -39,6 +39,7 @@ import {
 } from './public-entity-detail-config';
 import { MobileStickyCTA } from './PublicEntityStickyCTA';
 import FleetCrownBuildCta from '@/components/integrations/FleetCrownBuildCta';
+import SolonGovernCta from '@/components/integrations/SolonGovernCta';
 
 // Re-export config types + metadata helper for back-compat with the many
 // entity page/config modules that import them from here.
@@ -279,6 +280,16 @@ export default async function PublicEntityDetailPage({
                   entityType={config.entityType}
                   entityId={id}
                   sourcePath={viewRoute}
+                />
+              )}
+
+              {isOwner && config.entityType === 'investment' && (
+                <SolonGovernCta
+                  variant="card"
+                  entityType={config.entityType}
+                  entityId={id}
+                  sourcePath={viewRoute}
+                  title={entity.title}
                 />
               )}
 

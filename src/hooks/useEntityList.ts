@@ -92,6 +92,9 @@ export function useEntityList<T extends { id: string }>(
           signal,
         });
         if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error('Too many requests — wait a moment and try again.');
+          }
           throw new Error(`Failed to load items: ${response.statusText}`);
         }
 
